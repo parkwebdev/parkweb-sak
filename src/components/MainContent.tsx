@@ -13,7 +13,7 @@ const tabs = [
 
 export const MainContent: React.FC = () => {
   return (
-    <main className="flex-1 bg-background pt-8 pb-12 max-md:max-w-full">
+    <main className="flex-1 bg-muted/20 pt-8 pb-12 max-md:max-w-full">
       <header className="w-full font-semibold max-md:max-w-full">
         <div className="items-stretch flex w-full flex-col gap-5 px-8 py-0 max-md:max-w-full max-md:px-5">
           <div className="w-full gap-5 max-md:max-w-full">
