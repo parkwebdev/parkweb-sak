@@ -1,14 +1,11 @@
 import React from 'react';
 import { TabNavigation } from './TabNavigation';
-import { DataTable } from './DataTable';
+import { SoWGenerator } from './SoWGenerator';
 
 const tabs = [
-  { id: 'all-sessions', label: 'All sessions' },
-  { id: 'direct-traffic', label: 'Direct traffic' },
-  { id: 'organic-traffic', label: 'Organic traffic' },
-  { id: 'paid-traffic', label: 'Paid traffic' },
-  { id: 'mobile-users', label: 'Mobile users' },
-  { id: 'returning-users', label: 'Returning users' }
+  { id: 'generator', label: 'SoW Generator' },
+  { id: 'templates', label: 'Templates' },
+  { id: 'history', label: 'Generated SoWs' }
 ];
 
 export const MainContent: React.FC = () => {
@@ -20,14 +17,17 @@ export const MainContent: React.FC = () => {
             <div className="content-start flex-wrap flex w-full gap-[20px_16px] max-md:max-w-full">
               <div className="min-w-80 text-2xl text-foreground leading-none flex-1 shrink basis-[0%] gap-1 max-md:max-w-full">
                 <h1 className="text-foreground text-2xl font-semibold leading-8 tracking-tight max-md:max-w-full">
-                  Dashboard
+                  Scope of Work Generator
                 </h1>
+                <p className="text-muted-foreground text-sm font-normal mt-2">
+                  Create professional Scopes of Work for web design projects
+                </p>
               </div>
               <div className="items-center flex min-w-60 gap-3 text-sm leading-none">
                 <button className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden bg-background hover:bg-accent px-3.5 py-2.5 rounded-lg border-border">
                   <div className="justify-center items-center self-stretch flex my-auto px-0.5 py-0">
                     <div className="text-foreground text-sm leading-5 self-stretch my-auto">
-                      Export report
+                      Export Template
                     </div>
                   </div>
                 </button>
@@ -36,7 +36,7 @@ export const MainContent: React.FC = () => {
           </div>
           <TabNavigation
             tabs={tabs}
-            defaultActiveTab="all-sessions"
+            defaultActiveTab="generator"
             onTabChange={(tabId) => console.log('Tab changed:', tabId)}
           />
         </div>
@@ -44,7 +44,7 @@ export const MainContent: React.FC = () => {
 
       <section className="w-full mt-8 max-md:max-w-full">
         <div className="w-full px-8 py-0 max-md:max-w-full max-md:px-5">
-          <DataTable />
+          <SoWGenerator />
         </div>
       </section>
     </main>

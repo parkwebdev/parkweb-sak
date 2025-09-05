@@ -22,8 +22,8 @@ const navigationItems: NavigationItem[] = [
     isActive: false
   },
   {
-    id: 'dashboard',
-    label: 'Dashboard',
+    id: 'generator',
+    label: 'SoW Generator',
     icon: BarChart3,
     isActive: true
   },
