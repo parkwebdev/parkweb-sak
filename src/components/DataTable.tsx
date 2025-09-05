@@ -52,7 +52,7 @@ export const DataTable: React.FC = () => {
         <div className="flex w-full gap-4 flex-wrap pt-5 pb-0 px-6 max-md:max-w-full max-md:px-5">
           <div className="justify-center items-stretch flex min-w-60 flex-col text-lg text-foreground font-semibold leading-loose flex-1 shrink basis-[0%] gap-0.5 max-md:max-w-full">
             <div className="items-center flex w-full gap-2 max-md:max-w-full">
-              <h2 className="text-foreground text-lg leading-7 self-stretch my-auto">
+              <h2 className="text-foreground text-lg font-semibold leading-7 tracking-tight self-stretch my-auto">
                 Pages and screens
               </h2>
             </div>

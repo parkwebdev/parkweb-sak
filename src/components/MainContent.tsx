@@ -19,8 +19,8 @@ export const MainContent: React.FC = () => {
           <div className="w-full gap-5 max-md:max-w-full">
             <div className="content-start flex-wrap flex w-full gap-[20px_16px] max-md:max-w-full">
               <div className="min-w-80 text-2xl text-foreground leading-none flex-1 shrink basis-[0%] gap-1 max-md:max-w-full">
-                <h1 className="text-foreground text-2xl leading-8 max-md:max-w-full">
-                  Site traffic
+                <h1 className="text-foreground text-2xl font-semibold leading-8 tracking-tight max-md:max-w-full">
+                  Dashboard
                 </h1>
               </div>
               <div className="items-center flex min-w-60 gap-3 text-sm leading-none">
