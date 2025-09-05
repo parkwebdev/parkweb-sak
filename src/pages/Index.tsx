@@ -4,9 +4,13 @@ import { MainContent } from '@/components/MainContent';
 
 const Index = () => {
   return (
-    <div className="items-stretch flex flex-wrap bg-white min-h-screen">
-      <Sidebar />
-      <MainContent />
+    <div className="flex h-screen bg-muted/30">
+      <div className="fixed left-0 top-0 h-full z-10">
+        <Sidebar />
+      </div>
+      <div className="flex-1 ml-[296px] overflow-auto">
+        <MainContent />
+      </div>
     </div>
   );
 };

@@ -53,8 +53,8 @@ export const Sidebar: React.FC = () => {
   };
 
   return (
-    <aside className="items-stretch flex min-w-60 h-full w-[296px] bg-background pl-1 pr-0 py-1">
-      <div className="border shadow-sm min-w-60 w-full flex-1 shrink basis-[0%] bg-card rounded-xl border-border">
+    <aside className="items-stretch flex w-[296px] h-screen bg-background p-1">
+      <div className="border shadow-sm w-full flex-1 bg-card rounded-xl border-border">
         <nav className="w-full gap-5 pt-5">
           <header className="w-full whitespace-nowrap gap-5 px-5 py-0">
             <div className="flex min-h-[27px] w-[139px] max-w-full" />
@@ -71,14 +71,14 @@ export const Sidebar: React.FC = () => {
             <section className="w-full px-4 py-0">
               {navigationItems.map((item) => (
                 <div key={item.id} className="items-center flex w-full overflow-hidden px-0 py-0.5">
-                  <button className={`items-center flex min-w-60 w-full gap-3 flex-1 shrink basis-[0%] my-auto px-3 py-2 rounded-md ${
+                  <button className={`items-center flex w-full gap-3 flex-1 shrink basis-[0%] my-auto px-3 py-2 rounded-md ${
                     item.isActive ? 'bg-accent' : 'bg-transparent hover:bg-accent/50'
                   }`}>
                     <div className="items-center flex w-full gap-2 flex-1 shrink basis-[0%] my-auto">
                       <div className="items-center flex w-[22px] my-auto pr-0.5">
-                        <item.icon size={18} className="self-stretch my-auto" />
+                        <item.icon size={16} className="self-stretch my-auto" />
                       </div>
-                      <div className={`text-[15px] font-semibold leading-6 self-stretch my-auto ${
+                      <div className={`text-[14px] font-medium leading-5 self-stretch my-auto ${
                         item.isActive ? 'text-foreground' : 'text-muted-foreground'
                       }`}>
                         {item.label}
@@ -98,26 +98,26 @@ export const Sidebar: React.FC = () => {
                 <div className="items-center flex w-full overflow-hidden px-0 py-0.5">
                   <button
                     onClick={toggleFolders}
-                    className="items-center flex min-w-60 w-full gap-3 flex-1 shrink basis-[0%] bg-transparent my-auto px-3 py-2 rounded-md hover:bg-accent/50"
+                    className="items-center flex w-full gap-3 flex-1 shrink basis-[0%] bg-transparent my-auto px-3 py-2 rounded-md hover:bg-accent/50"
                   >
                     <div className="items-center flex gap-2 flex-1 shrink basis-[0%] my-auto">
                       <div className="items-center flex w-[22px] my-auto pr-0.5">
-                        <Folder size={18} />
+                        <Folder size={16} />
                       </div>
-                      <div className="text-muted-foreground text-[15px] font-semibold leading-6 self-stretch my-auto">
+                      <div className="text-muted-foreground text-[14px] font-medium leading-5 self-stretch my-auto">
                         Folders
                       </div>
                     </div>
-                    <ChevronDown size={16} className={`transition-transform ${foldersExpanded ? 'rotate-180' : ''}`} />
+                    <ChevronDown size={14} className={`transition-transform ${foldersExpanded ? 'rotate-180' : ''}`} />
                   </button>
                 </div>
                 {foldersExpanded && (
                   <div className="w-full pb-1">
                     {folderItems.map((item) => (
                       <div key={item.id} className="items-center flex w-full overflow-hidden px-0 py-0.5">
-                        <button className="items-center flex min-w-60 w-full gap-3 flex-1 shrink basis-[0%] bg-transparent my-auto pl-[42px] pr-3 py-2 rounded-md hover:bg-accent/50 max-md:pl-5">
-                          <div className="items-center flex gap-2 text-[15px] text-muted-foreground font-semibold flex-1 shrink basis-4 my-auto">
-                            <div className="text-muted-foreground text-[15px] leading-6 self-stretch my-auto">
+                        <button className="items-center flex w-full gap-3 flex-1 shrink basis-[0%] bg-transparent my-auto pl-[42px] pr-3 py-2 rounded-md hover:bg-accent/50 max-md:pl-5">
+                          <div className="items-center flex gap-2 text-[14px] text-muted-foreground font-medium flex-1 shrink basis-4 my-auto">
+                            <div className="text-muted-foreground text-[14px] leading-5 self-stretch my-auto">
                               {item.label}
                             </div>
                           </div>
@@ -141,7 +141,7 @@ export const Sidebar: React.FC = () => {
           </div>
         </nav>
 
-        <footer className="w-full gap-4 mt-[181px] pt-0 pb-4 px-4 max-md:mt-10">
+        <footer className="absolute bottom-0 left-0 right-0 gap-4 pt-0 pb-4 px-4">
           <UserAccountCard />
         </footer>
       </div>
