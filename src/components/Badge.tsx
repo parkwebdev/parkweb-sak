@@ -14,11 +14,11 @@ export const Badge: React.FC<BadgeProps> = ({
   const getVariantClasses = () => {
     switch (variant) {
       case 'folder':
-        return "items-center border shadow-[0_1px_2px_0_rgba(10,13,18,0.05)] flex gap-1 bg-white px-1.5 py-0.5 rounded-md border-solid border-[#D5D7DA]";
+        return "items-center border shadow-sm flex gap-1 bg-background px-1.5 py-0.5 rounded-md border-border";
       case 'online':
-        return "items-center border shadow-[0_1px_2px_0_rgba(10,13,18,0.05)] flex gap-1 text-xs text-[#414651] font-medium whitespace-nowrap text-center bg-white px-1.5 py-0.5 rounded-md border-solid border-[#D5D7DA]";
+        return "items-center border shadow-sm flex gap-1 text-xs text-foreground font-medium whitespace-nowrap text-center bg-background px-1.5 py-0.5 rounded-md border-border";
       default:
-        return "items-center border flex text-xs text-[#414651] font-medium whitespace-nowrap text-center bg-neutral-50 px-2 py-0.5 rounded-full border-solid border-[#E9EAEB]";
+        return "items-center border flex text-xs text-foreground font-medium whitespace-nowrap text-center bg-muted px-2 py-0.5 rounded-full border-border";
     }
   };
 
