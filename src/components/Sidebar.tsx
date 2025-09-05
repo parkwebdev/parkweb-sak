@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Home, BarChart3, FolderOpen, Folder, ChevronDown } from 'lucide-react';
 import { SearchInput } from './SearchInput';
 import { Badge } from './Badge';
 import { UserAccountCard } from './UserAccountCard';
@@ -6,7 +7,7 @@ import { UserAccountCard } from './UserAccountCard';
 interface NavigationItem {
   id: string;
   label: string;
-  icon: string;
+  icon: React.ComponentType<any>;
   isActive?: boolean;
   badge?: string;
   hasDropdown?: boolean;
@@ -17,19 +18,19 @@ const navigationItems: NavigationItem[] = [
   {
     id: 'home',
     label: 'Home',
-    icon: '🏠',
+    icon: Home,
     isActive: false
   },
   {
     id: 'dashboard',
     label: 'Dashboard',
-    icon: '📊',
+    icon: BarChart3,
     isActive: true
   },
   {
     id: 'projects',
     label: 'Projects',
-    icon: '📁',
+    icon: FolderOpen,
     isActive: false
   }
 ];
@@ -75,9 +76,9 @@ export const Sidebar: React.FC = () => {
                   }`}>
                     <div className="items-center flex w-full gap-2 flex-1 shrink basis-[0%] my-auto">
                       <div className="items-center flex w-[22px] my-auto pr-0.5">
-                        <span className="text-lg self-stretch my-auto">{item.icon}</span>
+                        <item.icon size={18} className="self-stretch my-auto" />
                       </div>
-                      <div className={`text-base font-semibold leading-6 self-stretch my-auto ${
+                      <div className={`text-[15px] font-semibold leading-6 self-stretch my-auto ${
                         item.isActive ? 'text-foreground' : 'text-muted-foreground'
                       }`}>
                         {item.label}
@@ -101,13 +102,13 @@ export const Sidebar: React.FC = () => {
                   >
                     <div className="items-center flex gap-2 flex-1 shrink basis-[0%] my-auto">
                       <div className="items-center flex w-[22px] my-auto pr-0.5">
-                        <span className="text-lg">📁</span>
+                        <Folder size={18} />
                       </div>
-                      <div className="text-muted-foreground text-base font-semibold leading-6 self-stretch my-auto">
+                      <div className="text-muted-foreground text-[15px] font-semibold leading-6 self-stretch my-auto">
                         Folders
                       </div>
                     </div>
-                    <span className="text-lg">⌄</span>
+                    <ChevronDown size={16} className={`transition-transform ${foldersExpanded ? 'rotate-180' : ''}`} />
                   </button>
                 </div>
                 {foldersExpanded && (
@@ -115,8 +116,8 @@ export const Sidebar: React.FC = () => {
                     {folderItems.map((item) => (
                       <div key={item.id} className="items-center flex w-full overflow-hidden px-0 py-0.5">
                         <button className="items-center flex min-w-60 w-full gap-3 flex-1 shrink basis-[0%] bg-transparent my-auto pl-[42px] pr-3 py-2 rounded-md hover:bg-accent/50 max-md:pl-5">
-                          <div className="items-center flex gap-2 text-base text-muted-foreground font-semibold flex-1 shrink basis-4 my-auto">
-                            <div className="text-muted-foreground text-base leading-6 self-stretch my-auto">
+                          <div className="items-center flex gap-2 text-[15px] text-muted-foreground font-semibold flex-1 shrink basis-4 my-auto">
+                            <div className="text-muted-foreground text-[15px] leading-6 self-stretch my-auto">
                               {item.label}
                             </div>
                           </div>

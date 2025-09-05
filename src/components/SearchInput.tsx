@@ -1,4 +1,5 @@
 import React from 'react';
+import { Search } from 'lucide-react';
 
 interface SearchInputProps {
   placeholder?: string;
@@ -17,7 +18,7 @@ export const SearchInput: React.FC<SearchInputProps> = ({
     <div className={`w-full gap-1.5 ${className}`}>
       <div className="items-center border shadow-sm flex w-full gap-2 overflow-hidden bg-background px-3 py-2 rounded-lg border-border">
         <div className="items-center self-stretch flex gap-2 text-base text-muted-foreground font-normal flex-1 shrink basis-[0%] my-auto">
-          <span className="text-muted-foreground">🔍</span>
+          <Search size={18} className="text-muted-foreground" />
           <input
             type="text"
             value={value}

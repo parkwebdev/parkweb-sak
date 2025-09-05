@@ -1,4 +1,5 @@
 import React from 'react';
+import { Folder } from 'lucide-react';
 
 interface BadgeProps {
   children: React.ReactNode;

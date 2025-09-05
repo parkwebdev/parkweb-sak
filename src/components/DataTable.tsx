@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Settings, ChevronDown, ArrowUpDown, Folder, Eye, Edit, Check } from 'lucide-react';
 import { SearchInput } from './SearchInput';
 import { Badge } from './Badge';
 import { ProgressBar } from './ProgressBar';
@@ -57,7 +58,7 @@ export const DataTable: React.FC = () => {
             </div>
           </div>
           <button className="w-5 hover:bg-accent rounded">
-            <span className="text-lg">⚙️</span>
+            <Settings size={18} />
           </button>
         </div>
         <div className="bg-border flex min-h-px w-full mt-5 max-md:max-w-full" />
@@ -88,7 +89,7 @@ export const DataTable: React.FC = () => {
               className="max-w-[296px] min-w-60 w-[296px]"
             />
             <button className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden text-sm text-foreground font-semibold leading-none bg-background px-3.5 py-2.5 rounded-lg border-border hover:bg-accent/50">
-              <span className="text-muted-foreground">🔽</span>
+              <ChevronDown size={16} className="text-muted-foreground" />
               <div className="justify-center items-center self-stretch flex my-auto px-0.5 py-0">
                 <div className="text-foreground text-sm leading-5 self-stretch my-auto">
                   Filters
@@ -106,15 +107,19 @@ export const DataTable: React.FC = () => {
               onClick={toggleAllSelection}
               className="self-stretch flex items-center justify-center w-5 my-auto"
             >
-              <div className={`border self-stretch flex min-h-5 w-5 h-5 my-auto rounded-md border-solid border-border ${
-                selectedRows.length === filteredData.length ? 'bg-primary' : ''
-              }`} />
+              <div className={`border self-stretch flex min-h-5 w-5 h-5 my-auto rounded-md border-solid border-border items-center justify-center ${
+                selectedRows.length === filteredData.length ? 'bg-primary border-primary' : 'bg-background'
+              }`}>
+                {selectedRows.length === filteredData.length && (
+                  <Check size={12} className="text-primary-foreground" />
+                )}
+              </div>
             </button>
             <div className="items-center self-stretch flex gap-1 text-xs text-muted-foreground font-semibold whitespace-nowrap my-auto">
               <div className="text-muted-foreground text-xs leading-[18px] self-stretch my-auto">
                 Page
               </div>
-              <span>↕️</span>
+              <ArrowUpDown size={12} />
             </div>
           </div>
           {filteredData.map((row) => (
@@ -123,9 +128,13 @@ export const DataTable: React.FC = () => {
                 onClick={() => toggleRowSelection(row.id)}
                 className="self-stretch flex items-center justify-center w-5 my-auto"
               >
-                <div className={`border self-stretch flex min-h-5 w-5 h-5 my-auto rounded-md border-solid border-border ${
-                  selectedRows.includes(row.id) ? 'bg-primary' : ''
-                }`} />
+                <div className={`border self-stretch flex min-h-5 w-5 h-5 my-auto rounded-md border-solid border-border items-center justify-center ${
+                  selectedRows.includes(row.id) ? 'bg-primary border-primary' : 'bg-background'
+                }`}>
+                  {selectedRows.includes(row.id) && (
+                    <Check size={12} className="text-primary-foreground" />
+                  )}
+                </div>
               </button>
               <div className="text-foreground text-sm font-medium leading-5 self-stretch my-auto">
                 {row.page}
@@ -140,7 +149,7 @@ export const DataTable: React.FC = () => {
               <div className="text-muted-foreground text-xs leading-[18px] self-stretch my-auto">
                 Sessions
               </div>
-              <span>↕️</span>
+              <ArrowUpDown size={12} />
             </div>
           </div>
           {filteredData.map((row) => (
@@ -158,7 +167,7 @@ export const DataTable: React.FC = () => {
               <div className="text-muted-foreground text-xs leading-[18px] self-stretch my-auto">
                 Avg time
               </div>
-              <span>↕️</span>
+              <ArrowUpDown size={12} />
             </div>
           </div>
           {filteredData.map((row) => (
@@ -176,7 +185,7 @@ export const DataTable: React.FC = () => {
               <div className="text-muted-foreground text-xs leading-[18px] self-stretch my-auto">
                 % of total
               </div>
-              <span>↕️</span>
+              <ArrowUpDown size={12} />
             </div>
           </div>
           {filteredData.map((row) => (
@@ -192,13 +201,13 @@ export const DataTable: React.FC = () => {
               <div className="text-muted-foreground text-xs leading-[18px] self-stretch my-auto">
                 Folder
               </div>
-              <span>↕️</span>
+              <ArrowUpDown size={12} />
             </div>
           </div>
           {filteredData.map((row) => (
             <div key={row.id} className="items-center flex min-h-[72px] w-full text-center px-6 py-4 border-b-border border-b border-solid max-md:px-5">
               <Badge variant="folder">
-                <span className="text-xs">📁</span>
+                <Folder size={12} />
                 <div className="text-foreground text-xs leading-[18px] self-stretch my-auto">
                   {row.folder}
                 </div>
@@ -212,10 +221,10 @@ export const DataTable: React.FC = () => {
           {filteredData.map((row) => (
             <div key={row.id} className="items-center flex min-h-[72px] w-full gap-0.5 p-4 border-b-border border-b border-solid">
               <button className="justify-center items-center flex overflow-hidden w-8 p-2 rounded-md hover:bg-accent">
-                <span className="text-sm">👁️</span>
+                <Eye size={16} />
               </button>
               <button className="justify-center items-center flex overflow-hidden w-8 p-2 rounded-md hover:bg-accent">
-                <span className="text-sm">✏️</span>
+                <Edit size={16} />
               </button>
             </div>
           ))}
