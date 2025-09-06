@@ -10,11 +10,11 @@ const Index = () => {
   };
 
   return (
-    <div className="flex h-screen bg-muted/30">
+    <div className="flex h-screen bg-background">
       <div className="fixed left-0 top-0 h-full z-10">
         <Sidebar />
       </div>
-      <div className="flex-1 ml-[296px] overflow-auto">
+      <div className="flex-1 ml-[296px] overflow-auto bg-background">
         <MainContent activeTab={activeTab} onTabChange={handleTabChange} />
       </div>
     </div>

@@ -4,6 +4,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { SearchInput } from './SearchInput';
 import { Badge } from './Badge';
 import { UserAccountCard } from './UserAccountCard';
+import { ThemeToggle } from './ThemeToggle';
 
 interface NavigationItem {
   id: string;
@@ -41,11 +42,14 @@ export const Sidebar: React.FC = () => {
   const location = useLocation();
 
   return (
-    <aside className="items-stretch flex w-[296px] h-screen bg-muted/20 p-1">
+    <aside className="items-stretch flex w-[296px] h-screen bg-background p-1">
       <div className="border shadow-sm w-full flex-1 bg-card rounded-xl border-border">
         <nav className="w-full gap-5 pt-5">
           <header className="w-full whitespace-nowrap gap-5 px-5 py-0">
-            <div className="flex min-h-[27px] w-[139px] max-w-full" />
+            <div className="flex min-h-[27px] w-full max-w-full items-center justify-between">
+              <div className="text-lg font-semibold text-foreground">Agency</div>
+              <ThemeToggle />
+            </div>
             <div className="w-full gap-2 mt-5">
               <SearchInput
                 placeholder="Search"
