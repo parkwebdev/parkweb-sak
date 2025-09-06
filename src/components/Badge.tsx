@@ -19,7 +19,7 @@ export const Badge: React.FC<BadgeProps> = ({
       case 'online':
         return "items-center border shadow-sm flex gap-1 text-xs text-foreground font-medium whitespace-nowrap text-center bg-background px-1.5 py-0.5 rounded-md border-border w-auto";
       case 'complete':
-        return "items-center flex text-xs font-medium whitespace-nowrap text-center bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 px-2 py-1 rounded-full w-auto";
+        return "items-center flex text-xs font-medium whitespace-nowrap text-center bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 px-2 py-1 rounded-full w-auto";
       case 'incomplete':
         return "items-center flex text-xs font-medium whitespace-nowrap text-center bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 px-2 py-1 rounded-full w-auto";
       case 'in-review':

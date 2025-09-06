@@ -205,6 +205,7 @@ const ScopeOfWorks = () => {
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
   const [sortBy, setSortBy] = useState<'client' | 'projectType' | 'industry' | 'status' | 'pages' | 'dateModified'>('dateModified');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [showTooltip, setShowTooltip] = useState<string | null>(null);
   const [showColumns, setShowColumns] = useState({
     companyName: true,
     clientName: true,
@@ -798,285 +799,150 @@ const ScopeOfWorks = () => {
               <CardContent className="p-0">
                 <TooltipProvider>
                   {viewMode === 'table' ? (
-                    <div className="w-full overflow-x-auto">
-                      <Table className="min-w-[1200px]">
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead className="w-12">
-                              <button
-                                onClick={toggleAllSelection}
-                                className="flex items-center justify-center w-5"
-                              >
-                                <div className={`border flex min-h-5 w-5 h-5 rounded-md border-solid border-border items-center justify-center ${
-                                  selectedRows.length === filteredData.length ? 'bg-primary border-primary' : 'bg-background'
-                                }`}>
-                                  {selectedRows.length === filteredData.length && (
-                                    <Check size={12} className="text-primary-foreground" />
-                                  )}
+                    <div className="divide-y divide-border">
+                      {filteredData.map((sow) => (
+                        <div key={sow.id} className="p-4 lg:p-6 hover:bg-muted/50 transition-colors">
+                          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex flex-col lg:flex-row lg:items-start gap-3 mb-3">
+                                <div className="min-w-0 flex-1">
+                                  <h3 className="font-medium text-base truncate mb-1">{sow.title}</h3>
+                                  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-sm text-muted-foreground">
+                                    <span className="truncate">{sow.client}</span>
+                                    <span className="hidden sm:inline">•</span>
+                                    <span className="truncate">{sow.clientContact}</span>
+                                    <span className="hidden sm:inline">•</span>
+                                    <a 
+                                      href={`mailto:${sow.email}`}
+                                      className="hover:underline truncate"
+                                    >
+                                      {sow.email}
+                                    </a>
+                                  </div>
                                 </div>
-                              </button>
-                            </TableHead>
-                            {showColumns.companyName && (
-                              <TableHead>Company Name</TableHead>
-                            )}
-                            {showColumns.clientName && (
-                              <TableHead>Client Name</TableHead>
-                            )}
-                            {showColumns.projectType && (
-                              <TableHead>Project Type</TableHead>
-                            )}
-                            {showColumns.industry && (
-                              <TableHead>Industry</TableHead>
-                            )}
-                            {showColumns.status && (
-                              <TableHead>Status</TableHead>
-                            )}
-                            {showColumns.pages && (
-                              <TableHead>Pages</TableHead>
-                            )}
-                            {showColumns.integrations && (
-                              <TableHead>Integrations</TableHead>
-                            )}
-                            {showColumns.dateModified && (
-                              <TableHead>Modified</TableHead>
-                            )}
-                            {showColumns.actions && (
-                              <TableHead className="text-right">Actions</TableHead>
-                            )}
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {filteredData.map((sow) => (
-                            <TableRow key={sow.id}>
-                              <TableCell>
-                                <button
-                                  onClick={() => toggleRowSelection(sow.id)}
-                                  className="flex items-center justify-center w-5"
-                                >
-                                  <div className={`border flex min-h-5 w-5 h-5 rounded-md border-solid border-border items-center justify-center ${
-                                    selectedRows.includes(sow.id) ? 'bg-primary border-primary' : 'bg-background'
-                                  }`}>
-                                    {selectedRows.includes(sow.id) && (
-                                      <Check size={12} className="text-primary-foreground" />
-                                    )}
-                                  </div>
-                                </button>
-                              </TableCell>
-                              {showColumns.companyName && (
-                                <TableCell>
-                                  <div className="font-medium text-sm whitespace-nowrap">{sow.client}</div>
-                                </TableCell>
-                              )}
-                              {showColumns.clientName && (
-                                <TableCell>
-                                  <div className="flex items-center gap-2 whitespace-nowrap">
-                                    <ClientAvatar name={sow.clientContact} size="sm" />
-                                    <span className="text-sm">{sow.clientContact}</span>
-                                  </div>
-                                </TableCell>
-                              )}
-                              {showColumns.projectType && (
-                                <TableCell>
-                                  <Badge variant="outline" className="text-xs w-auto whitespace-nowrap bg-muted">
-                                    {sow.projectType}
-                                  </Badge>
-                                </TableCell>
-                              )}
-                              {showColumns.industry && (
-                                <TableCell>
-                                  <Badge variant="outline" className="text-xs w-auto whitespace-nowrap bg-muted">
-                                    {sow.industry}
-                                  </Badge>
-                                </TableCell>
-                              )}
-                              {showColumns.status && (
-                                <TableCell>
-                                  <Badge variant={getBadgeVariant(sow.status)} className="text-xs w-auto whitespace-nowrap">
+                                <div className="flex items-center gap-2 flex-shrink-0">
+                                  <Badge variant={getBadgeVariant(sow.status)} className="text-xs w-auto">
                                     {sow.status}
                                   </Badge>
-                                </TableCell>
-                              )}
-                              {showColumns.pages && (
-                                <TableCell className="text-sm whitespace-nowrap">{sow.pages}</TableCell>
-                              )}
-                              {showColumns.integrations && (
-                                <TableCell>
-                                  {sow.integrations.length > 0 && (
-                                    <div className="flex items-center gap-1">
-                                    <Badge variant="outline" className="text-xs w-auto whitespace-nowrap bg-muted">
+                                  <Badge variant="outline" className="text-xs w-auto bg-muted">
+                                    {sow.projectType}
+                                  </Badge>
+                                  <Badge variant="outline" className="text-xs w-auto bg-muted">
+                                    {sow.industry}
+                                  </Badge>
+                                </div>
+                              </div>
+                              
+                              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6 text-sm text-muted-foreground mb-3">
+                                <span>Pages: {sow.pages}</span>
+                                <span>Modified: {formatDate(sow.dateModified)}</span>
+                                {sow.integrations.length > 0 && (
+                                  <div className="flex items-center gap-1">
+                                    <span>Integrations:</span>
+                                    <Badge variant="outline" className="text-xs w-auto bg-muted">
                                       {sow.integrations[0]}
                                     </Badge>
-                                      {sow.integrations.length > 1 && (
-                                        <Tooltip>
-                                          <TooltipTrigger asChild>
-                                            <div 
-                                              className="cursor-pointer"
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                // Tooltip will show on click due to the trigger
-                                              }}
-                                            >
-                                              <Badge variant="outline" className="text-xs w-auto whitespace-nowrap bg-muted hover:bg-muted/80">
-                                                +{sow.integrations.length - 1}
-                                              </Badge>
+                                    {sow.integrations.length > 1 && (
+                                      <Tooltip open={showTooltip === sow.id} onOpenChange={(open) => setShowTooltip(open ? sow.id : null)}>
+                                        <TooltipTrigger asChild>
+                                          <div 
+                                            className="cursor-pointer"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setShowTooltip(showTooltip === sow.id ? null : sow.id);
+                                            }}
+                                          >
+                                            <Badge variant="outline" className="text-xs w-auto bg-muted hover:bg-muted/80">
+                                              +{sow.integrations.length - 1}
+                                            </Badge>
+                                          </div>
+                                        </TooltipTrigger>
+                                        <TooltipContent className="z-50 bg-popover border border-border">
+                                          <div className="space-y-1">
+                                            <p className="font-medium">All Integrations:</p>
+                                            <div className="flex flex-wrap gap-1">
+                                              {sow.integrations.map((integration: string, index: number) => (
+                                                <Badge key={index} variant="outline" className="text-xs w-auto bg-muted">
+                                                  {integration}
+                                                </Badge>
+                                              ))}
                                             </div>
-                                          </TooltipTrigger>
-                                          <TooltipContent className="z-50 bg-popover border border-border">
-                                            <div className="space-y-1">
-                                              <p className="font-medium">All Integrations:</p>
-                                              <div className="flex flex-wrap gap-1">
-                                                {sow.integrations.map((integration: string, index: number) => (
-                                                  <Badge key={index} variant="outline" className="text-xs w-auto bg-muted">
-                                                    {integration}
-                                                  </Badge>
-                                                ))}
-                                              </div>
-                                            </div>
-                                          </TooltipContent>
-                                        </Tooltip>
-                                      )}
-                                    </div>
-                                  )}
-                                </TableCell>
-                              )}
-                              {showColumns.dateModified && (
-                                <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
-                                  {formatDate(sow.dateModified)}
-                                </TableCell>
-                              )}
-                              {showColumns.actions && (
-                                <TableCell className="text-right">
-                                  <div className="flex items-center justify-end gap-2">
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      className="h-7 px-2"
-                                      onClick={() => handleViewSow(sow)}
-                                    >
-                                      <Eye className="h-3 w-3" />
-                                    </Button>
-                                    <DropdownMenu>
-                                      <DropdownMenuTrigger asChild>
-                                        <Button
-                                          variant="outline"
-                                          size="sm"
-                                          className="h-7 px-2"
-                                        >
-                                          <MoreHorizontal className="h-3 w-3" />
-                                        </Button>
-                                      </DropdownMenuTrigger>
-                                      <DropdownMenuContent align="end">
-                                        <DropdownMenuItem onClick={() => handleEditSow(sow)}>
-                                          <Edit className="mr-2 h-4 w-4" />
-                                          Edit
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem onClick={() => handleDownloadPDF(sow)}>
-                                          <Download className="mr-2 h-4 w-4" />
-                                          Download PDF
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem onClick={() => handleDownloadDOC(sow)}>
-                                          <Download className="mr-2 h-4 w-4" />
-                                          Download DOC
-                                        </DropdownMenuItem>
-                                        {sow.status !== 'Approved' && (
-                                          <DropdownMenuItem>
-                                            <Send className="mr-2 h-4 w-4" />
-                                            Send to Client
-                                          </DropdownMenuItem>
-                                        )}
-                                      </DropdownMenuContent>
-                                    </DropdownMenu>
+                                          </div>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    )}
                                   </div>
-                                </TableCell>
-                              )}
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-7 px-2"
+                                onClick={() => handleViewSow(sow)}
+                              >
+                                <Eye className="h-3 w-3" />
+                              </Button>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-7 px-2"
+                                  >
+                                    <MoreHorizontal className="h-3 w-3" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem onClick={() => handleEditSow(sow)}>
+                                    <Edit className="mr-2 h-4 w-4" />
+                                    Edit
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleDownloadPDF(sow)}>
+                                    <Download className="mr-2 h-4 w-4" />
+                                    Download PDF
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleDownloadDOC(sow)}>
+                                    <Download className="mr-2 h-4 w-4" />
+                                    Download DOC
+                                  </DropdownMenuItem>
+                                  {sow.status !== 'Approved' && (
+                                    <DropdownMenuItem>
+                                      <Send className="mr-2 h-4 w-4" />
+                                      Send to Client
+                                    </DropdownMenuItem>
+                                  )}
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
                       {filteredData.map((sow) => (
-                        <Card key={sow.id} className="cursor-pointer hover:shadow-md transition-shadow">
+                        <Card 
+                          key={sow.id} 
+                          className="cursor-pointer hover:shadow-md transition-shadow"
+                          onClick={() => handleViewSow(sow)}
+                        >
                           <CardHeader className="pb-3">
                             <div className="flex items-start justify-between">
                               <CardTitle className="text-sm font-medium line-clamp-2">{sow.title}</CardTitle>
-                              <div className="flex items-center gap-1 ml-2">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="h-6 w-6 p-0"
-                                  onClick={() => handleViewSow(sow)}
-                                >
-                                  <Eye className="h-3 w-3" />
-                                </Button>
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      className="h-6 w-6 p-0"
-                                    >
-                                      <MoreHorizontal className="h-3 w-3" />
-                                    </Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end">
-                                    <DropdownMenuItem onClick={() => handleEditSow(sow)}>
-                                      <Edit className="mr-2 h-4 w-4" />
-                                      Edit
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => handleDownloadPDF(sow)}>
-                                      <Download className="mr-2 h-4 w-4" />
-                                      Download PDF
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => handleDownloadDOC(sow)}>
-                                      <Download className="mr-2 h-4 w-4" />
-                                      Download DOC
-                                    </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
-                              </div>
+                              <Badge variant={getBadgeVariant(sow.status)} className="text-xs w-auto ml-2">
+                                {sow.status}
+                              </Badge>
                             </div>
                             <CardDescription className="text-xs">{sow.client}</CardDescription>
                           </CardHeader>
                           <CardContent className="pt-0">
-                            <div className="space-y-3">
-                              <div className="flex items-center gap-2">
-                                <ClientAvatar name={sow.clientContact} size="sm" />
-                                <span className="text-xs text-muted-foreground">{sow.clientContact}</span>
-                              </div>
-                              
-                              <div className="flex flex-wrap gap-1">
-                                <Badge variant="outline" className="text-xs w-auto bg-muted">
-                                  {sow.projectType}
-                                </Badge>
-                                <Badge variant="outline" className="text-xs w-auto bg-muted">
-                                  {sow.industry}
-                                </Badge>
-                                <Badge variant={getBadgeVariant(sow.status)} className="text-xs w-auto">
-                                  {sow.status}
-                                </Badge>
-                              </div>
-                              
+                            <div className="space-y-2">
                               <div className="flex items-center justify-between text-xs text-muted-foreground">
                                 <span>{sow.pages} pages</span>
                                 <span>{formatDate(sow.dateModified)}</span>
                               </div>
-                              
-                              {sow.integrations.length > 0 && (
-                                <div className="flex flex-wrap gap-1">
-                                  {sow.integrations.slice(0, 2).map((integration: string, index: number) => (
-                                    <Badge key={index} variant="outline" className="text-xs w-auto bg-muted">
-                                      {integration}
-                                    </Badge>
-                                  ))}
-                                  {sow.integrations.length > 2 && (
-                                    <Badge variant="outline" className="text-xs w-auto bg-muted">
-                                      +{sow.integrations.length - 2}
-                                    </Badge>
-                                  )}
-                                </div>
-                              )}
                             </div>
                           </CardContent>
                         </Card>
