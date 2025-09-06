@@ -12,17 +12,16 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
   const progressWidth = Math.min(Math.max(percentage, 0), 100);
   
   return (
-    <div className={`items-center flex min-w-60 w-full gap-3 h-full flex-1 shrink basis-[0%] ${className}`}>
-      <div className="self-stretch flex-1 shrink basis-[0%] my-auto">
-        <div className="flex flex-col bg-muted rounded-full max-md:pr-5">
-          <div
-            className="flex shrink-0 h-2 bg-primary rounded-full"
-            style={{ width: `${progressWidth * 2.07}px` }}
-          />
-        </div>
+    <div className={`w-full space-y-1 ${className}`}>
+      <div className="flex justify-between items-center">
+        <span className="text-xs text-muted-foreground">Progress</span>
+        <span className="text-xs font-medium text-foreground">{percentage}%</span>
       </div>
-      <div className="text-muted-foreground text-sm font-medium leading-5 self-stretch my-auto">
-        {percentage}%
+      <div className="w-full bg-muted rounded-full h-1.5">
+        <div 
+          className="bg-success h-1.5 rounded-full transition-all duration-300" 
+          style={{ width: `${progressWidth}%` }}
+        />
       </div>
     </div>
   );

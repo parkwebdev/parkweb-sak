@@ -1,7 +1,6 @@
 import React from 'react';
 import { TabNavigation } from './TabNavigation';
 import { DataTable } from './DataTable';
-import { MetricCard } from './MetricCard';
 
 const tabs = [
   { id: 'onboarding', label: 'Onboarding' },
@@ -42,38 +41,6 @@ export const MainContent: React.FC<MainContentProps> = ({
                 </button>
               </div>
             </div>
-          </div>
-
-          {/* Compact Metrics */}
-          <div className="grid grid-cols-4 gap-4 mt-2">
-            <MetricCard 
-              title="Onboarding Forms" 
-              value="24" 
-              change="12%" 
-              changeType="positive" 
-              chartImage="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=300&h=120&fit=crop&crop=center"
-            />
-            <MetricCard 
-              title="Active Projects" 
-              value="18" 
-              change="8%" 
-              changeType="positive" 
-              chartImage="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=300&h=120&fit=crop&crop=center"
-            />
-            <MetricCard 
-              title="Completed Projects" 
-              value="156" 
-              change="23%" 
-              changeType="positive" 
-              chartImage="https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=300&h=120&fit=crop&crop=center"
-            />
-            <MetricCard 
-              title="Client Satisfaction" 
-              value="96%" 
-              change="2%" 
-              changeType="negative" 
-              chartImage="https://images.unsplash.com/photo-1590402494682-cd3fb53b1f70?w=300&h=120&fit=crop&crop=center"
-            />
           </div>
 
           <TabNavigation

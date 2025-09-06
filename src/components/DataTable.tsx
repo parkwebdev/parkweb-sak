@@ -274,11 +274,11 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
           <div className="flex min-h-11 w-full gap-3 bg-background px-3 py-3 border-b-border border-b border-solid" />
           {filteredData.map((row) => (
             <div key={row.id} className="items-center flex min-h-[72px] w-full gap-1 px-2 py-4 border-b-border border-b border-solid">
-              <button className="justify-center items-center flex overflow-hidden w-6 h-6 p-1 rounded-md hover:bg-accent">
-                <Eye size={12} />
+              <button className="justify-center items-center flex overflow-hidden w-5 h-5 p-1 rounded-sm hover:bg-accent">
+                <Eye size={10} />
               </button>
-              <button className="justify-center items-center flex overflow-hidden w-6 h-6 p-1 rounded-md hover:bg-accent">
-                <Edit size={12} />
+              <button className="justify-center items-center flex overflow-hidden w-5 h-5 p-1 rounded-sm hover:bg-accent">
+                <Edit size={10} />
               </button>
             </div>
           ))}

@@ -323,8 +323,7 @@ const Onboarding = () => {
                             className="h-7 px-2"
                             onClick={() => handleCopyToClipboard(client.onboardingUrl)}
                           >
-                            <Copy className="h-3 w-3 mr-1" />
-                            Copy
+                            <Copy className="h-3 w-3" />
                           </Button>
                           <Button
                             variant="outline"
@@ -332,8 +331,7 @@ const Onboarding = () => {
                             className="h-7 px-2"
                             onClick={() => handleSendEmail(client)}
                           >
-                            <Send className="h-3 w-3 mr-1" />
-                            Send
+                            <Send className="h-3 w-3" />
                           </Button>
                           {client.sowStatus && (
                             <Button size="sm" className="h-7 px-2">
