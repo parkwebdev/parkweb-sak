@@ -701,6 +701,27 @@ const ScopeOfWorks = () => {
                                 >
                                   <Send size={14} />
                                 </button>
+                                {sow.status === 'Approved' && (
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <button className="p-1 hover:bg-accent rounded">
+                                        <Download size={14} />
+                                      </button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                      <DropdownMenuLabel>Download Options</DropdownMenuLabel>
+                                      <DropdownMenuSeparator />
+                                      <DropdownMenuItem onClick={() => handleDownloadPDF(sow)}>
+                                        <Download className="mr-2 h-4 w-4" />
+                                        Download PDF
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem onClick={() => handleDownloadDOC(sow)}>
+                                        <Download className="mr-2 h-4 w-4" />
+                                        Download DOC
+                                      </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
+                                )}
                               </div>
                             </TableCell>
                           )}
