@@ -188,15 +188,93 @@ export type Database = {
         }
         Relationships: []
       }
+      user_preferences: {
+        Row: {
+          auto_save: boolean | null
+          compact_mode: boolean | null
+          created_at: string | null
+          default_project_view: string | null
+          id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          auto_save?: boolean | null
+          compact_mode?: boolean | null
+          created_at?: string | null
+          default_project_view?: string | null
+          id?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          auto_save?: boolean | null
+          compact_mode?: boolean | null
+          created_at?: string | null
+          default_project_view?: string | null
+          id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          permissions: Database["public"]["Enums"]["app_permission"][] | null
+          role: Database["public"]["Enums"]["app_role"]
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          permissions?: Database["public"]["Enums"]["app_permission"][] | null
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          permissions?: Database["public"]["Enums"]["app_permission"][] | null
+          role?: Database["public"]["Enums"]["app_role"]
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_role: {
+        Args: { target_user_id: string }
+        Returns: Database["public"]["Enums"]["app_role"]
+      }
+      has_permission: {
+        Args: {
+          permission_name: Database["public"]["Enums"]["app_permission"]
+          target_user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_permission:
+        | "manage_team"
+        | "view_team"
+        | "manage_projects"
+        | "view_projects"
+        | "manage_onboarding"
+        | "view_onboarding"
+        | "manage_scope_works"
+        | "view_scope_works"
+        | "manage_settings"
+        | "view_settings"
+      app_role: "admin" | "manager" | "member"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -323,6 +401,20 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_permission: [
+        "manage_team",
+        "view_team",
+        "manage_projects",
+        "view_projects",
+        "manage_onboarding",
+        "view_onboarding",
+        "manage_scope_works",
+        "view_scope_works",
+        "manage_settings",
+        "view_settings",
+      ],
+      app_role: ["admin", "manager", "member"],
+    },
   },
 } as const
