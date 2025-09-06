@@ -167,8 +167,20 @@ export const NotificationSettings: React.FC = () => {
   if (loading) {
     return (
       <Card>
-        <CardContent className="flex items-center justify-center py-8">
-          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+        <CardContent className="space-y-4 py-8">
+          <div className="space-y-6">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="space-y-2">
+                    <div className="h-4 w-32 bg-muted rounded animate-pulse" />
+                    <div className="h-3 w-48 bg-muted rounded animate-pulse" />
+                  </div>
+                </div>
+                <div className="h-6 w-12 bg-muted rounded animate-pulse" />
+              </div>
+            ))}
+          </div>
         </CardContent>
       </Card>
     );

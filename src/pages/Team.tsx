@@ -84,10 +84,44 @@ const Team = () => {
         <div className="fixed left-0 top-0 h-full z-30 transition-transform duration-300 lg:translate-x-0">
           <Sidebar />
         </div>
-        <div className={`flex-1 flex items-center justify-center transition-all duration-300 ${
+        
+        <div className={`flex-1 overflow-auto min-h-screen transition-all duration-300 ${
           isCollapsed ? 'lg:ml-[72px]' : 'lg:ml-[280px]'
         }`}>
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <main className="flex-1 bg-muted/30 min-h-screen pt-4 lg:pt-8 pb-12">
+            <div className="max-w-6xl mx-auto px-4 lg:px-8">
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="h-8 w-32 bg-muted rounded animate-pulse mb-2" />
+                    <div className="h-4 w-64 bg-muted rounded animate-pulse" />
+                  </div>
+                  <div className="h-8 w-32 bg-muted rounded animate-pulse" />
+                </div>
+                
+                <div className="space-y-4">
+                  {[1, 2, 3].map((i) => (
+                    <Card key={i} className="p-6 bg-background">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <div className="h-12 w-12 rounded-full bg-muted animate-pulse" />
+                          <div className="space-y-2">
+                            <div className="h-5 w-32 bg-muted rounded animate-pulse" />
+                            <div className="h-4 w-48 bg-muted rounded animate-pulse" />
+                            <div className="h-3 w-24 bg-muted rounded animate-pulse" />
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="h-6 w-16 bg-muted rounded animate-pulse" />
+                          <div className="h-8 w-8 bg-muted rounded animate-pulse" />
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </main>
         </div>
       </div>
     );
@@ -176,7 +210,7 @@ const Team = () => {
                   const initials = displayName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
                   
                   return (
-                    <Card key={member.id} className="p-6">
+                    <Card key={member.id} className="p-6 bg-background">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
                           <Avatar className="h-12 w-12">

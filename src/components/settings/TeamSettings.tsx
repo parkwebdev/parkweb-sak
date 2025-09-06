@@ -119,8 +119,22 @@ export const TeamSettings: React.FC = () => {
   if (loading) {
     return (
       <div className="space-y-6 lg:space-y-8">
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <div className="space-y-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 border border-border rounded-lg bg-background gap-4">
+              <div className="flex items-center space-x-4">
+                <div className="h-10 w-10 rounded-full bg-muted animate-pulse" />
+                <div className="space-y-2">
+                  <div className="h-4 w-32 bg-muted rounded animate-pulse" />
+                  <div className="h-3 w-48 bg-muted rounded animate-pulse" />
+                  <div className="h-3 w-24 bg-muted rounded animate-pulse" />
+                </div>
+              </div>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:space-x-4">
+                <div className="h-6 w-16 bg-muted rounded animate-pulse" />
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     );
@@ -170,7 +184,7 @@ export const TeamSettings: React.FC = () => {
 
       <div className="space-y-3">
         {teamMembers.map((member) => (
-          <div key={member.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 border border-border rounded-lg bg-muted/20 gap-4">
+          <div key={member.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 border border-border rounded-lg bg-background gap-4">
             <div className="flex items-center space-x-4">
               <Avatar>
                 <AvatarImage src={member.avatar_url || undefined} />

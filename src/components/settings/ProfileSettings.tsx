@@ -177,8 +177,17 @@ export const ProfileSettings: React.FC = () => {
   if (loading) {
     return (
       <div className="space-y-4">
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+        <div className="flex items-center space-x-4">
+          <div className="h-16 w-16 rounded-full bg-muted animate-pulse" />
+          <div className="space-y-2">
+            <div className="h-4 w-32 bg-muted rounded animate-pulse" />
+            <div className="h-3 w-48 bg-muted rounded animate-pulse" />
+          </div>
+        </div>
+        <div className="space-y-3">
+          <div className="h-10 bg-muted rounded animate-pulse" />
+          <div className="h-10 bg-muted rounded animate-pulse" />
+          <div className="h-10 bg-muted rounded animate-pulse" />
         </div>
       </div>
     );
