@@ -96,6 +96,16 @@ export const NotificationSettings: React.FC = () => {
     try {
       // If enabling browser notifications, request permission first
       if (key === 'browser_notifications' && value) {
+        if (!('Notification' in window)) {
+          toast({
+            title: "Not supported",
+            description: "Browser notifications are not supported in this environment.",
+            variant: "destructive",
+          });
+          setUpdating(false);
+          return;
+        }
+        
         const permission = await Notification.requestPermission();
         if (permission !== 'granted') {
           toast({
@@ -137,6 +147,15 @@ export const NotificationSettings: React.FC = () => {
   };
 
   const testNotification = async () => {
+    if (!('Notification' in window)) {
+      toast({
+        title: "Not supported",
+        description: "Browser notifications are not supported in this environment.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!preferences?.browser_notifications) {
       toast({
         title: "Browser notifications disabled",
@@ -310,12 +329,13 @@ export const NotificationSettings: React.FC = () => {
             <div>
               <p className="text-sm font-medium">Browser Permission</p>
               <p className="text-xs text-muted-foreground">
-                {Notification.permission === 'granted' ? 'Notifications are allowed' :
+                {!('Notification' in window) ? 'Notifications not supported in this environment' :
+                 Notification.permission === 'granted' ? 'Notifications are allowed' :
                  Notification.permission === 'denied' ? 'Notifications are blocked' :
                  'Notification permission not requested'}
               </p>
             </div>
-          {Notification.permission !== 'granted' && (
+          {('Notification' in window) && Notification.permission !== 'granted' && (
             <Button 
               variant="outline" 
               size="sm" 
@@ -345,6 +365,15 @@ export const NotificationSettings: React.FC = () => {
               }}
             >
               Enable Notifications
+            </Button>
+          )}
+          {('Notification' in window) && Notification.permission === 'granted' && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={testNotification}
+            >
+              Test Notification
             </Button>
           )}
           </div>
