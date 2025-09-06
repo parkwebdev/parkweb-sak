@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Sidebar } from '@/components/Sidebar';
 import { SearchInput } from '@/components/SearchInput';
-import { FileText, Plus, Filter, Eye, Edit, Copy, Clock, User, X, Save, Download, FileDown } from 'lucide-react';
+import { FileText, Plus, Filter, Eye, Edit, Copy, Clock, User, X, Save, Download, FileDown, Settings, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/Badge';
@@ -13,12 +13,21 @@ import { formatDate } from '@/lib/status-helpers';
 import { useToast } from '@/hooks/use-toast';
 import { generateScopeOfWorkPDF, generateScopeOfWorkDOC } from '@/lib/document-generator';
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuCheckboxItem,
 } from "@/components/ui/dropdown-menu";
 
 const scopeOfWorks = [
@@ -175,6 +184,15 @@ const ScopeOfWorks = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState('');
   const [editedTitle, setEditedTitle] = useState('');
+  const [activeTab, setActiveTab] = useState('all');
+  const [showColumns, setShowColumns] = useState({
+    client: true,
+    industry: true,
+    status: true,
+    pages: true,
+    integrations: true,
+    dateModified: true,
+  });
   const { toast } = useToast();
 
   const searchResults = scopeOfWorks.map(sow => ({
@@ -254,11 +272,45 @@ const ScopeOfWorks = () => {
     setEditedTitle('');
   };
 
-  const filteredScopeOfWorks = scopeOfWorks.filter(sow =>
-    sow.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    sow.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    sow.industry.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const getFilteredDataByTab = () => {
+    let filtered = scopeOfWorks;
+    
+    // Filter by tab
+    if (activeTab !== 'all') {
+      filtered = filtered.filter(sow => {
+        switch (activeTab) {
+          case 'approved':
+            return sow.status === 'Approved';
+          case 'review':
+            return sow.status === 'In Review';
+          case 'draft':
+            return sow.status === 'Draft';
+          default:
+            return true;
+        }
+      });
+    }
+    
+    // Filter by search term
+    if (searchTerm) {
+      filtered = filtered.filter(sow =>
+        sow.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        sow.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        sow.industry.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    
+    return filtered;
+  };
+
+  const filteredScopeOfWorks = getFilteredDataByTab();
+  
+  const toggleColumn = (column: string) => {
+    setShowColumns(prev => ({
+      ...prev,
+      [column]: !prev[column]
+    }));
+  };
 
   return (
     <div className="flex h-screen bg-muted/30">
@@ -270,19 +322,13 @@ const ScopeOfWorks = () => {
           <div className="max-w-7xl mx-auto px-8">
             {/* Header Section */}
             <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center gap-4">
-                <div className="border shadow-sm justify-center items-center flex gap-1 bg-primary text-primary-foreground px-3 py-1.5 rounded-lg border-border">
-                  <FileText size={14} />
-                  <div className="text-xs font-medium">{filteredScopeOfWorks.length}</div>
-                </div>
-                <div>
-                  <h1 className="text-foreground text-2xl font-semibold leading-tight mb-1">
-                    Scope of Works
-                  </h1>
-                  <p className="text-sm text-muted-foreground">
-                    Manage and review project scopes
-                  </p>
-                </div>
+              <div>
+                <h1 className="text-foreground text-2xl font-semibold leading-tight mb-1">
+                  Scope of Works
+                </h1>
+                <p className="text-sm text-muted-foreground">
+                  Manage and review project scopes
+                </p>
               </div>
               <Button className="flex items-center gap-2">
                 <Plus className="h-4 w-4" />
@@ -290,8 +336,52 @@ const ScopeOfWorks = () => {
               </Button>
             </div>
 
-            {/* Search and Filter Bar */}
-            <div className="mb-6 flex items-center gap-4">
+            {/* Filter Buttons */}
+            <div className="flex flex-wrap gap-2 mb-6">
+              <button
+                onClick={() => setActiveTab('all')}
+                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                  activeTab === 'all'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                }`}
+              >
+                All ({scopeOfWorks.length})
+              </button>
+              <button
+                onClick={() => setActiveTab('approved')}
+                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                  activeTab === 'approved'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                }`}
+              >
+                Approved ({scopeOfWorks.filter(s => s.status === 'Approved').length})
+              </button>
+              <button
+                onClick={() => setActiveTab('review')}
+                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                  activeTab === 'review'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                }`}
+              >
+                In Review ({scopeOfWorks.filter(s => s.status === 'In Review').length})
+              </button>
+              <button
+                onClick={() => setActiveTab('draft')}
+                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                  activeTab === 'draft'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                }`}
+              >
+                Draft ({scopeOfWorks.filter(s => s.status === 'Draft').length})
+              </button>
+            </div>
+
+            {/* Search and Controls */}
+            <div className="flex items-center gap-4 mb-6">
               <div className="flex-1 max-w-md">
                 <SearchInput
                   placeholder="Search projects..."
@@ -300,82 +390,144 @@ const ScopeOfWorks = () => {
                   searchResults={searchResults}
                 />
               </div>
-              <Button variant="outline" className="flex items-center gap-2">
-                <Filter className="h-4 w-4" />
-                Filter
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden text-xs text-foreground font-medium leading-none bg-background px-2 py-1.5 rounded-md border-border hover:bg-accent/50">
+                    <Settings size={16} className="text-muted-foreground" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuLabel>Show columns</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuCheckboxItem
+                    checked={showColumns.client}
+                    onCheckedChange={() => toggleColumn('client')}
+                  >
+                    Client
+                  </DropdownMenuCheckboxItem>
+                  <DropdownMenuCheckboxItem
+                    checked={showColumns.industry}
+                    onCheckedChange={() => toggleColumn('industry')}
+                  >
+                    Industry
+                  </DropdownMenuCheckboxItem>
+                  <DropdownMenuCheckboxItem
+                    checked={showColumns.status}
+                    onCheckedChange={() => toggleColumn('status')}
+                  >
+                    Status
+                  </DropdownMenuCheckboxItem>
+                  <DropdownMenuCheckboxItem
+                    checked={showColumns.pages}
+                    onCheckedChange={() => toggleColumn('pages')}
+                  >
+                    Pages
+                  </DropdownMenuCheckboxItem>
+                  <DropdownMenuCheckboxItem
+                    checked={showColumns.integrations}
+                    onCheckedChange={() => toggleColumn('integrations')}
+                  >
+                    Integrations
+                  </DropdownMenuCheckboxItem>
+                  <DropdownMenuCheckboxItem
+                    checked={showColumns.dateModified}
+                    onCheckedChange={() => toggleColumn('dateModified')}
+                  >
+                    Date Modified
+                  </DropdownMenuCheckboxItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden text-xs text-foreground font-medium leading-none bg-background px-2 py-1.5 rounded-md border-border hover:bg-accent/50">
+                    <Filter size={16} className="text-muted-foreground" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-80 p-4">
+                  <div className="space-y-4">
+                    <div>
+                      <Label className="text-sm font-medium">Industry</Label>
+                      <div className="mt-2 space-y-2">
+                        <label className="flex items-center space-x-2">
+                          <input type="checkbox" className="rounded border-gray-300" />
+                          <span className="text-sm">RV Park</span>
+                        </label>
+                        <label className="flex items-center space-x-2">
+                          <input type="checkbox" className="rounded border-gray-300" />
+                          <span className="text-sm">Capital & Syndication</span>
+                        </label>
+                        <label className="flex items-center space-x-2">
+                          <input type="checkbox" className="rounded border-gray-300" />
+                          <span className="text-sm">Local Business</span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
 
-            {/* Projects List */}
+            {/* Data Table */}
             <Card className="overflow-hidden">
-              <CardHeader className="border-b border-border">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <User size={14} className="text-primary" />
-                    <CardTitle className="text-base font-semibold">
-                      Projects
-                    </CardTitle>
-                  </div>
-                </div>
-              </CardHeader>
-
-              <CardContent className="p-0">
-                <div className="divide-y divide-border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Project Title</TableHead>
+                    {showColumns.client && <TableHead>Client</TableHead>}
+                    {showColumns.industry && <TableHead>Industry</TableHead>}
+                    {showColumns.status && <TableHead>Status</TableHead>}
+                    {showColumns.pages && <TableHead>Pages</TableHead>}
+                    {showColumns.integrations && <TableHead>Integrations</TableHead>}
+                    {showColumns.dateModified && <TableHead>Date Modified</TableHead>}
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {filteredScopeOfWorks.map((sow) => (
-                    <div key={sow.id} className="p-6 hover:bg-muted/50 transition-colors">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start gap-3 mb-3">
-                            <div className="min-w-0 flex-1">
-                              <h3 className="font-medium text-base truncate mb-1">{sow.title}</h3>
-                              <p className="text-sm text-muted-foreground truncate">
-                                <a 
-                                  href={`mailto:${sow.email}`}
-                                  className="hover:underline"
-                                >
-                                  {sow.clientContact}
-                                </a>
-                                <span className="mx-2">•</span>
-                                <span>{sow.industry}</span>
-                              </p>
-                            </div>
-                            <div className="flex items-center gap-2 flex-shrink-0">
-                              <Badge variant={getStatusBadgeVariant(sow.status)} className="text-xs px-2.5 py-1 w-auto">
-                                {sow.status}
-                              </Badge>
-                            </div>
-                          </div>
-                          
-                          <div className="flex items-center gap-4 text-xs text-muted-foreground mb-3">
-                            <span>{sow.pages} pages</span>
-                            <span>Updated {formatDate(sow.dateModified)}</span>
-                          </div>
-
-                          <div className="flex items-center gap-2">
-                            <div className="flex flex-wrap gap-1">
-                              {sow.integrations.slice(0, 3).map((integration) => (
-                                <Badge key={integration} variant="outline" className="text-xs px-2 py-0.5">
-                                  {integration}
-                                </Badge>
-                              ))}
-                              {sow.integrations.length > 3 && (
-                                <Badge variant="outline" className="text-xs px-2 py-0.5">
-                                  +{sow.integrations.length - 3}
-                                </Badge>
-                              )}
-                            </div>
-                          </div>
+                    <TableRow key={sow.id}>
+                      <TableCell className="font-medium">
+                        <div>
+                          <div className="font-medium">{sow.title}</div>
+                          <div className="text-sm text-muted-foreground">{sow.clientContact}</div>
                         </div>
-                        
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-7 px-2"
-                            onClick={() => handleCopyToClipboard(`/sow/${sow.id}`)}
-                          >
-                            <Copy className="h-3 w-3" />
-                          </Button>
+                      </TableCell>
+                      {showColumns.client && (
+                        <TableCell>{sow.client}</TableCell>
+                      )}
+                      {showColumns.industry && (
+                        <TableCell>{sow.industry}</TableCell>
+                      )}
+                      {showColumns.status && (
+                        <TableCell>
+                          <Badge variant={getStatusBadgeVariant(sow.status)}>
+                            {sow.status}
+                          </Badge>
+                        </TableCell>
+                      )}
+                      {showColumns.pages && (
+                        <TableCell>{sow.pages}</TableCell>
+                      )}
+                      {showColumns.integrations && (
+                        <TableCell>
+                          <div className="flex flex-wrap gap-1">
+                            {sow.integrations.slice(0, 2).map((integration) => (
+                              <Badge key={integration} variant="outline" className="text-xs">
+                                {integration}
+                              </Badge>
+                            ))}
+                            {sow.integrations.length > 2 && (
+                              <Badge variant="outline" className="text-xs">
+                                +{sow.integrations.length - 2}
+                              </Badge>
+                            )}
+                          </div>
+                        </TableCell>
+                      )}
+                      {showColumns.dateModified && (
+                        <TableCell>{formatDate(sow.dateModified)}</TableCell>
+                      )}
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-2">
                           <Button
                             variant="outline"
                             size="sm"
@@ -390,39 +542,14 @@ const ScopeOfWorks = () => {
                             className="h-7 px-2"
                             onClick={() => handleEditSow(sow)}
                           >
-                            <Edit className="h-3 w-3" />
+                            <Send className="h-3 w-3" />
                           </Button>
-                          {sow.status === 'Approved' && (
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="h-7 px-2"
-                                >
-                                  <Download className="h-3 w-3" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuLabel>Download Options</DropdownMenuLabel>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={() => handleDownloadPDF(sow)}>
-                                  <FileDown className="mr-2 h-4 w-4" />
-                                  Download PDF
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleDownloadDOC(sow)}>
-                                  <FileDown className="mr-2 h-4 w-4" />
-                                  Download DOC
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          )}
                         </div>
-                      </div>
-                    </div>
+                      </TableCell>
+                    </TableRow>
                   ))}
-                </div>
-              </CardContent>
+                </TableBody>
+              </Table>
             </Card>
 
             {/* Empty State */}
