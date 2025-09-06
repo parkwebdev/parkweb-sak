@@ -237,6 +237,7 @@ const ClientOnboarding = () => {
   const [showSOW, setShowSOW] = useState(false);
   const [sowData, setSowData] = useState(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isGeneratingSOW, setIsGeneratingSOW] = useState(false);
 
   // Email validation function
   const isValidEmail = (email: string): boolean => {
@@ -433,7 +434,10 @@ const ClientOnboarding = () => {
 
   const handleFinalSubmit = async () => {
     try {
-      const { error } = await supabase
+      setIsGeneratingSOW(true);
+      
+      // First, save the submission to the database
+      const { data: submission, error: submissionError } = await supabase
         .from('onboarding_submissions')
         .insert({
           user_id: '00000000-0000-0000-0000-000000000000', // Public submissions
@@ -445,20 +449,66 @@ const ClientOnboarding = () => {
           timeline: 'Not specified',
           description: JSON.stringify(onboardingData),
           status: 'pending'
+        })
+        .select()
+        .single();
+
+      if (submissionError) {
+        console.error('Error submitting onboarding:', submissionError);
+        setIsGeneratingSOW(false);
+        return;
+      }
+
+      // Now generate the SOW using OpenAI
+      const { data: generatedSOW, error: sowError } = await supabase.functions.invoke('generate-scope-of-work', {
+        body: {
+          clientData: {
+            client_name: onboardingData.contactName,
+            client_email: onboardingData.email,
+            project_type: onboardingData.industry,
+            description: `Company: ${onboardingData.companyName}\nIndustry: ${onboardingData.industry}\nProject Goals: ${onboardingData.projectGoals}\nTarget Audience: ${onboardingData.targetAudience}\nKey Features: ${onboardingData.keyFeatures.join(', ')}\nAdditional Notes: ${onboardingData.additionalNotes}`,
+            timeline: 'To be discussed',
+            budget_range: 'To be discussed',
+            industry: onboardingData.industry
+          }
+        }
+      });
+
+      if (sowError) {
+        console.error('Error generating SOW:', sowError);
+        setIsGeneratingSOW(false);
+        return;
+      }
+
+      // Save the generated SOW to the scope_of_works table
+      const { error: sowSaveError } = await supabase
+        .from('scope_of_works')
+        .insert({
+          user_id: '00000000-0000-0000-0000-000000000000', // Public submissions
+          title: generatedSOW.title,
+          content: generatedSOW.content,
+          client: generatedSOW.client,
+          client_contact: generatedSOW.client_contact,
+          email: generatedSOW.email,
+          industry: generatedSOW.industry,
+          project_type: generatedSOW.project_type,
+          status: generatedSOW.status,
+          pages: generatedSOW.pages
         });
 
-      if (error) {
-        console.error('Error submitting onboarding:', error);
-        return;
+      if (sowSaveError) {
+        console.error('Error saving generated SOW:', sowSaveError);
       }
 
       // Clear saved draft
       localStorage.removeItem('onboardingDraft');
       
+      setIsGeneratingSOW(false);
       setIsSubmitted(true);
       setShowSOW(false);
     } catch (error) {
       console.error('Error in handleFinalSubmit:', error);
+      setIsGeneratingSOW(false);
     }
   };
 
@@ -477,7 +527,7 @@ const ClientOnboarding = () => {
               Thank you, {clientName}!
             </h1>
             <p className="text-lg text-muted-foreground mb-6">
-              Your onboarding form and scope of work have been submitted successfully.
+              Your onboarding form has been submitted and a custom scope of work has been generated using AI for your review.
             </p>
             <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-6">
               <h3 className="font-semibold text-green-800 mb-2">What happens next?</h3>
@@ -1113,6 +1163,34 @@ const ClientOnboarding = () => {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Loading Dialog for SOW Generation */}
+      <Dialog open={isGeneratingSOW} onOpenChange={() => {}}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-3">
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div>
+              Generating Your Scope of Work
+            </DialogTitle>
+            <DialogDescription>
+              Please wait while we create a custom scope of work based on your project details. This may take a few moments.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-6 space-y-4">
+            <div className="bg-muted/50 p-4 rounded-lg">
+              <p className="text-sm text-muted-foreground">
+                ✨ Analyzing your project requirements...
+              </p>
+              <p className="text-sm text-muted-foreground mt-2">
+                🎯 Tailoring recommendations to your industry...
+              </p>
+              <p className="text-sm text-muted-foreground mt-2">
+                📋 Creating your professional scope of work...
+              </p>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </>
