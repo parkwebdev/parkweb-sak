@@ -32,7 +32,8 @@ import {
 const scopeOfWorks = [
   {
     id: '1',
-    title: 'Mountain View RV Park - Web Design',
+    title: 'Mountain View RV Park Website',
+    projectType: 'Web Design',
     client: 'Mountain View RV Park',
     clientContact: 'Sarah Johnson',
     email: 'sarah@mountainviewrv.com',
@@ -82,7 +83,8 @@ Total project duration: 7 weeks`
   },
   {
     id: '2',
-    title: 'Elite Capital Partners - Investment Portal',
+    title: 'Elite Capital Partners Portal',
+    projectType: 'Investment Portal',
     client: 'Elite Capital Partners',
     clientContact: 'Jessica Rodriguez',
     email: 'jessica@elitecapital.com',
@@ -126,7 +128,8 @@ Total project duration: 10 weeks`
   },
   {
     id: '3',
-    title: 'Local Plumbing Pro - Service Website',
+    title: 'Local Plumbing Pro Website',
+    projectType: 'Service Website',
     client: 'Local Plumbing Pro',
     clientContact: 'David Miller',
     email: 'david@localplumbingpro.com',
@@ -187,6 +190,7 @@ const ScopeOfWorks = () => {
   const [activeFilter, setActiveFilter] = useState<string>('view-all');
   const [showColumns, setShowColumns] = useState({
     client: true,
+    projectType: true,
     industry: true,
     status: true,
     pages: true,
@@ -308,6 +312,7 @@ const ScopeOfWorks = () => {
   const filteredData = getFilteredDataByTab().filter(row =>
     row.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     row.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    row.projectType.toLowerCase().includes(searchTerm.toLowerCase()) ||
     row.industry.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -335,9 +340,9 @@ const ScopeOfWorks = () => {
 
   const handleExportData = () => {
     const csvContent = "data:text/csv;charset=utf-8," 
-      + "Title,Client,Industry,Status,Pages,Date Created\n"
+      + "Title,Client,Project Type,Industry,Status,Pages,Date Created\n"
       + filteredData.map(sow => 
-          `"${sow.title}","${sow.client}","${sow.industry}","${sow.status}","${sow.pages}","${sow.dateCreated}"`
+          `"${sow.title}","${sow.client}","${sow.projectType}","${sow.industry}","${sow.status}","${sow.pages}","${sow.dateCreated}"`
         ).join("\n");
     
     const encodedUri = encodeURI(csvContent);
@@ -501,6 +506,12 @@ const ScopeOfWorks = () => {
                             Client
                           </DropdownMenuCheckboxItem>
                           <DropdownMenuCheckboxItem
+                            checked={showColumns.projectType}
+                            onCheckedChange={() => toggleColumn('projectType')}
+                          >
+                            Project Type
+                          </DropdownMenuCheckboxItem>
+                          <DropdownMenuCheckboxItem
                             checked={showColumns.industry}
                             onCheckedChange={() => toggleColumn('industry')}
                           >
@@ -564,6 +575,14 @@ const ScopeOfWorks = () => {
                           <TableHead className="min-w-0">
                             <div className="flex items-center gap-1">
                               <span>Client</span>
+                              <ArrowUpDown size={12} />
+                            </div>
+                          </TableHead>
+                        )}
+                        {showColumns.projectType && (
+                          <TableHead className="min-w-0">
+                            <div className="flex items-center gap-1">
+                              <span>Project Type</span>
                               <ArrowUpDown size={12} />
                             </div>
                           </TableHead>
@@ -646,6 +665,11 @@ const ScopeOfWorks = () => {
                           {showColumns.client && (
                             <TableCell className="text-muted-foreground whitespace-nowrap">
                               {sow.client}
+                            </TableCell>
+                          )}
+                          {showColumns.projectType && (
+                            <TableCell className="text-muted-foreground whitespace-nowrap">
+                              {sow.projectType}
                             </TableCell>
                           )}
                           {showColumns.industry && (
