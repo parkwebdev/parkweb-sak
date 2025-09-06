@@ -392,6 +392,22 @@ const ScopeOfWorks = () => {
     setColumnOrder(newOrder);
   };
 
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    e.dataTransfer.setData('text/plain', index.toString());
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    const dragIndex = parseInt(e.dataTransfer.getData('text/plain'));
+    if (dragIndex !== dropIndex) {
+      moveColumn(dragIndex, dropIndex);
+    }
+  };
+
   return (
     <div className="flex h-screen bg-muted/30">
       <div className="fixed left-0 top-0 h-full z-10">
@@ -533,23 +549,24 @@ const ScopeOfWorks = () => {
                           <DropdownMenuLabel>Column Order</DropdownMenuLabel>
                           
                           {columnOrder.map((column, index) => (
-                            <div key={column} className="flex items-center justify-between px-2 py-1">
-                              <span className="text-sm capitalize">{column.replace(/([A-Z])/g, ' $1').trim()}</span>
-                              <div className="flex gap-1">
-                                <button
-                                  onClick={() => moveColumn(index, Math.max(0, index - 1))}
-                                  disabled={index === 0}
-                                  className="p-1 hover:bg-accent rounded disabled:opacity-50"
-                                >
-                                  ↑
-                                </button>
-                                <button
-                                  onClick={() => moveColumn(index, Math.min(columnOrder.length - 1, index + 1))}
-                                  disabled={index === columnOrder.length - 1}
-                                  className="p-1 hover:bg-accent rounded disabled:opacity-50"
-                                >
-                                  ↓
-                                </button>
+                            <div 
+                              key={column} 
+                              className="flex items-center justify-between px-2 py-2 hover:bg-accent/50 cursor-move"
+                              draggable
+                              onDragStart={(e) => handleDragStart(e, index)}
+                              onDragOver={handleDragOver}
+                              onDrop={(e) => handleDrop(e, index)}
+                            >
+                              <div className="flex items-center gap-2">
+                                <div className="flex flex-col gap-0.5">
+                                  <div className="w-1 h-1 bg-muted-foreground rounded-full"></div>
+                                  <div className="w-1 h-1 bg-muted-foreground rounded-full"></div>
+                                  <div className="w-1 h-1 bg-muted-foreground rounded-full"></div>
+                                  <div className="w-1 h-1 bg-muted-foreground rounded-full"></div>
+                                  <div className="w-1 h-1 bg-muted-foreground rounded-full"></div>
+                                  <div className="w-1 h-1 bg-muted-foreground rounded-full"></div>
+                                </div>
+                                <span className="text-sm capitalize">{column.replace(/([A-Z])/g, ' $1').trim()}</span>
                               </div>
                             </div>
                           ))}
