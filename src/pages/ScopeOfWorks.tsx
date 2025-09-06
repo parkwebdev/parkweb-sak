@@ -28,6 +28,7 @@ import { formatDate, getBadgeVariant } from '@/lib/status-helpers';
 import { useToast } from '@/hooks/use-toast';
 import { useNotifications } from '@/hooks/useNotifications';
 import { generateScopeOfWorkPDF, generateScopeOfWorkDOC } from '@/lib/document-generator';
+import { GenerateSOWDialog } from '@/components/GenerateSOWDialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -99,6 +100,7 @@ const ScopeOfWorks = () => {
   });
   const [scopeOfWorks, setScopeOfWorks] = useState<ScopeOfWork[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showGenerateDialog, setShowGenerateDialog] = useState(false);
   
   const { toast } = useToast();
   const { createScopeWorkNotification } = useNotifications();
@@ -392,6 +394,60 @@ const ScopeOfWorks = () => {
     });
   };
 
+  const handleAIGenerated = async (generatedSOW: any) => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('scope_of_works')
+        .insert({
+          user_id: user.id,
+          title: generatedSOW.title,
+          content: generatedSOW.content,
+          client: generatedSOW.client,
+          client_contact: generatedSOW.client_contact,
+          email: generatedSOW.email,
+          industry: generatedSOW.industry,
+          project_type: generatedSOW.project_type,
+          status: generatedSOW.status,
+          pages: generatedSOW.pages,
+          integrations: [],
+          date_created: new Date().toISOString(),
+          date_modified: new Date().toISOString(),
+        })
+        .select()
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: "Success!",
+        description: "AI-generated scope of work has been saved.",
+      });
+
+      // Refresh the data to show the new SOW
+      fetchScopeOfWorks();
+      
+      // Optionally open the newly created SOW for review
+      if (data) {
+        setSelectedSow(data);
+        setEditedContent(data.content);
+        setEditedTitle(data.title);
+        setIsEditing(false);
+      }
+      
+    } catch (error: any) {
+      console.error('Error saving generated SOW:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save the generated scope of work. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="flex h-screen bg-muted/30">
       {/* Mobile overlay */}
@@ -430,15 +486,32 @@ const ScopeOfWorks = () => {
                       Scope of Works
                     </h1>
                   </div>
+                  <Button 
+                    onClick={() => setShowGenerateDialog(true)}
+                    size="sm"
+                    className="ml-auto flex items-center gap-2"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Generate with AI
+                  </Button>
                 </div>
                 
-                <div className="hidden lg:block">
-                  <h1 className="text-2xl font-semibold leading-tight mb-1">
-                    Scope of Works
-                  </h1>
-                  <p className="text-sm text-muted-foreground">
-                    Manage and track all project scope documents
-                  </p>
+                <div className="hidden lg:flex lg:items-center lg:justify-between lg:w-full">
+                  <div>
+                    <h1 className="text-2xl font-semibold leading-tight mb-1">
+                      Scope of Works
+                    </h1>
+                    <p className="text-sm text-muted-foreground">
+                      Manage and track all project scope documents
+                    </p>
+                  </div>
+                  <Button 
+                    onClick={() => setShowGenerateDialog(true)}
+                    className="flex items-center gap-2"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Generate with AI
+                  </Button>
                 </div>
               </div>
             </header>
@@ -972,6 +1045,13 @@ const ScopeOfWorks = () => {
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Generate SOW Dialog */}
+      <GenerateSOWDialog
+        open={showGenerateDialog}
+        onOpenChange={setShowGenerateDialog}
+        onGenerated={handleAIGenerated}
+      />
     </div>
   );
 };
