@@ -668,15 +668,28 @@ const ScopeOfWorks = () => {
                           {showColumns.integrations && (
                             <TableCell>
                               <div className="flex flex-wrap gap-1">
-                                {sow.integrations.slice(0, 2).map((integration) => (
-                                  <Badge key={integration} variant="outline" className="text-xs">
-                                    {integration}
-                                  </Badge>
-                                ))}
-                                {sow.integrations.length > 2 && (
+                                {sow.integrations.length > 0 && (
                                   <Badge variant="outline" className="text-xs">
-                                    +{sow.integrations.length - 2}
+                                    {sow.integrations[0]}
                                   </Badge>
+                                )}
+                                {sow.integrations.length > 1 && (
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <Badge variant="outline" className="text-xs cursor-pointer hover:bg-accent">
+                                        +{sow.integrations.length - 1}
+                                      </Badge>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="start" className="w-48 z-50">
+                                      <DropdownMenuLabel>All Integrations</DropdownMenuLabel>
+                                      <DropdownMenuSeparator />
+                                      {sow.integrations.map((integration, index) => (
+                                        <DropdownMenuItem key={integration} className="text-xs">
+                                          {integration}
+                                        </DropdownMenuItem>
+                                      ))}
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
                                 )}
                               </div>
                             </TableCell>
