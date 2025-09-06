@@ -30,7 +30,6 @@ export const GeneralSettings: React.FC = () => {
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <div className="flex items-center gap-2">
-                <Palette size={14} className="text-muted-foreground" />
                 <label className="text-sm font-medium">Theme</label>
               </div>
               <p className="text-xs text-muted-foreground">Choose your preferred color scheme</p>

@@ -39,15 +39,6 @@ const Settings = () => {
       }`}>
         <main className="flex-1 bg-muted/30 min-h-screen pt-4 lg:pt-8 pb-12">
           <div className="max-w-7xl mx-auto px-4 lg:px-8">
-            <header className="mb-6">
-              <h1 className="text-2xl font-semibold leading-tight mb-1">
-                Settings
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                Manage your account settings and preferences
-              </p>
-            </header>
-
             <SettingsLayout 
               activeTab={activeTab} 
               onTabChange={setActiveTab}

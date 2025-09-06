@@ -200,7 +200,6 @@ export const NotificationSettings: React.FC = () => {
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <div className="flex items-center gap-2">
-                <Mail size={14} className="text-muted-foreground" />
                 <Label htmlFor="email-notifications" className="text-sm font-medium">
                   Email Notifications
                 </Label>
@@ -220,7 +219,6 @@ export const NotificationSettings: React.FC = () => {
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <div className="flex items-center gap-2">
-                <Browser size={14} className="text-muted-foreground" />
                 <Label htmlFor="browser-notifications" className="text-sm font-medium">
                   Browser Notifications
                 </Label>
@@ -258,7 +256,6 @@ export const NotificationSettings: React.FC = () => {
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <div className="flex items-center gap-2">
-                <FileText size={14} className="text-muted-foreground" />
                 <Label htmlFor="scope-work-notifications" className="text-sm font-medium">
                   Scope of Work Updates
                 </Label>
@@ -278,7 +275,6 @@ export const NotificationSettings: React.FC = () => {
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <div className="flex items-center gap-2">
-                <Users size={14} className="text-muted-foreground" />
                 <Label htmlFor="onboarding-notifications" className="text-sm font-medium">
                   Client Onboarding
                 </Label>

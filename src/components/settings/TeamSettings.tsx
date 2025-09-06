@@ -170,7 +170,7 @@ export const TeamSettings: React.FC = () => {
 
       <div className="space-y-3">
         {teamMembers.map((member) => (
-          <div key={member.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 border border-border rounded-lg gap-4">
+          <div key={member.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 border border-border rounded-lg bg-muted/20 gap-4">
             <div className="flex items-center space-x-4">
               <Avatar>
                 <AvatarImage src={member.avatar_url || undefined} />
