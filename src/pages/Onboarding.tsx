@@ -41,6 +41,7 @@ const Onboarding = () => {
   const { isCollapsed } = useSidebar();
   const [clientLinks, setClientLinks] = useState<ClientLink[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sendingEmail, setSendingEmail] = useState<string | null>(null);
   const [newClient, setNewClient] = useState({
     client_name: '',
     company_name: '',
@@ -164,9 +165,55 @@ const Onboarding = () => {
     }
   };
 
-  const handleSendEmail = (client: ClientLink) => {
-    const { subject, body } = createEmailTemplate(client.client_name, client.company_name, createOnboardingUrl(client.client_name, client.company_name));
-    openEmailClient(client.email, subject, body);
+  const handleSendEmail = async (client: ClientLink) => {
+    try {
+      setSendingEmail(client.id);
+      const fullUrl = window.location.origin + createOnboardingUrl(client.client_name, client.company_name);
+      
+      console.log('Sending onboarding email to:', client.email, 'with URL:', fullUrl);
+      
+      const response = await supabase.functions.invoke('send-notification-email', {
+        body: {
+          to: client.email,
+          type: 'onboarding',
+          title: 'Your Personalized Onboarding Portal',
+          message: `Hi ${client.client_name},\n\nWe're excited to work with ${client.company_name} on your new website project!\n\nWe've created a personalized onboarding portal just for you. Please click the link below to get started:\n\n${fullUrl}\n\nThis will only take 10-15 minutes to complete and will help us create the perfect website for your business.\n\nIf you have any questions, feel free to reach out to us anytime.\n\nBest regards,\nThe Team`,
+          data: {
+            client_name: client.client_name,
+            company_name: client.company_name,
+            onboarding_url: fullUrl,
+            personal_note: client.personal_note
+          }
+        }
+      });
+
+      console.log('Email API response:', response);
+
+      if (response.error) {
+        console.error('Email sending failed:', response.error);
+        toast({
+          title: "Failed to send email",
+          description: "There was an error sending the onboarding email. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log('Email sent successfully to:', client.email);
+      toast({
+        title: "Email sent successfully!",
+        description: `Onboarding email sent to ${client.email}`,
+      });
+    } catch (error) {
+      console.error('Error sending onboarding email:', error);
+      toast({
+        title: "Failed to send email",
+        description: "There was an error sending the onboarding email. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setSendingEmail(null);
+    }
   };
 
   if (loading) {
@@ -460,9 +507,16 @@ const Onboarding = () => {
                               size="sm"
                               className="h-7 px-2 flex-1 sm:flex-initial"
                               onClick={() => handleSendEmail(client)}
+                              disabled={sendingEmail === client.id}
                             >
-                              <Send className="h-3 w-3" />
-                              <span className="ml-1 sm:hidden">Send</span>
+                              {sendingEmail === client.id ? (
+                                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-current" />
+                              ) : (
+                                <Send className="h-3 w-3" />
+                              )}
+                              <span className="ml-1 sm:hidden">
+                                {sendingEmail === client.id ? 'Sending...' : 'Send'}
+                              </span>
                             </Button>
                           </div>
                         </div>
