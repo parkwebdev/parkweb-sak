@@ -232,10 +232,6 @@ export const TeamSettings: React.FC = () => {
 
   const canManageRoles = ['admin', 'super_admin'].includes(currentUserRole);
 
-  console.log('Current user role:', currentUserRole);
-  console.log('Can manage roles:', canManageRoles);
-  console.log('Team members:', teamMembers.length);
-
   if (loading) {
     return (
       <div className="space-y-6 lg:space-y-8">
@@ -360,10 +356,6 @@ export const TeamSettings: React.FC = () => {
                     </Button>
                   </div>
                 )}
-                {/* DEBUG INFO - Remove this after testing */}
-                <div className="text-xs text-muted-foreground">
-                  Role: {currentUserRole} | Can manage: {canManageRoles.toString()} | Is you: {(member.user_id === user?.id).toString()}
-                </div>
               </div>
           </div>
         ))}
