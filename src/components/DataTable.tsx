@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Settings, ChevronDown, ArrowUpDown, Eye, Send, Check, User, Clock } from 'lucide-react';
+import { Settings, ChevronDown, ArrowUpDown, Eye, Send, Check, User, Clock, MoreHorizontal, Download, Eye as EyeIcon, Columns } from 'lucide-react';
 import { SearchInput } from './SearchInput';
 import { Badge } from './Badge';
 import { ProgressBar } from './ProgressBar';
@@ -12,6 +12,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+  DropdownMenuCheckboxItem,
+} from "@/components/ui/dropdown-menu";
 
 interface TableRow {
   id: string;
@@ -42,6 +51,14 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
   const [activeFilter, setActiveFilter] = useState<string>('view-all');
   const [currentActiveTab, setCurrentActiveTab] = useState(activeTab);
+  const [showColumns, setShowColumns] = useState({
+    companyName: true,
+    businessType: true,
+    submitted: true,
+    completion: true,
+    status: true,
+    actions: true,
+  });
 
   useEffect(() => {
     setCurrentActiveTab(activeTab);
@@ -97,6 +114,29 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
     );
   };
 
+  const handleExportData = () => {
+    const csvContent = "data:text/csv;charset=utf-8," 
+      + "Company Name,Client Name,Business Type,Submitted Date,Status,Completion\n"
+      + filteredData.map(row => 
+          `"${row.companyName}","${row.clientName}","${row.businessType}","${row.submittedDate}","${row.status}","${row.percentage}%"`
+        ).join("\n");
+    
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "client_data.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const toggleColumn = (column: keyof typeof showColumns) => {
+    setShowColumns(prev => ({
+      ...prev,
+      [column]: !prev[column]
+    }));
+  };
+
   return (
     <div className="w-full bg-card border border-border rounded-xl overflow-hidden">
       <header className="w-full">
@@ -115,7 +155,54 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
             </div>
           </div>
           <button className="w-4 hover:bg-accent rounded p-0.5">
-            <Settings size={14} />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Settings size={14} className="cursor-pointer" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>Table Settings</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                
+                <DropdownMenuItem onClick={handleExportData}>
+                  <Download className="mr-2 h-4 w-4" />
+                  Export to CSV
+                </DropdownMenuItem>
+                
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel>Show Columns</DropdownMenuLabel>
+                
+                <DropdownMenuCheckboxItem
+                  checked={showColumns.companyName}
+                  onCheckedChange={() => toggleColumn('companyName')}
+                >
+                  Company Name
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={showColumns.businessType}
+                  onCheckedChange={() => toggleColumn('businessType')}
+                >
+                  Business Type
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={showColumns.submitted}
+                  onCheckedChange={() => toggleColumn('submitted')}
+                >
+                  Submitted
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={showColumns.completion}
+                  onCheckedChange={() => toggleColumn('completion')}
+                >
+                  Completion
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={showColumns.status}
+                  onCheckedChange={() => toggleColumn('status')}
+                >
+                  Status
+                </DropdownMenuCheckboxItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </button>
         </div>
         <div className="bg-border flex min-h-px w-full" />
@@ -124,19 +211,23 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
       <div className="w-full">
         <div className="justify-between items-center flex w-full gap-3 flex-wrap px-4 py-2.5 rounded-lg max-md:px-3">
           <div className="border shadow-sm self-stretch flex overflow-hidden text-xs text-foreground font-medium leading-none my-auto rounded-md border-border max-md:flex-wrap">
-            {['View all', 'Complete', 'Incomplete', 'In Review'].map((filter, index) => (
-              <button
-                key={filter}
-                onClick={() => setActiveFilter(filter.toLowerCase().replace(' ', '-'))}
-                className={`justify-center items-center flex min-h-8 gap-1.5 px-2.5 py-1.5 max-md:px-2 max-md:text-xs ${
-                  index === 0 ? 'bg-muted' : 'bg-background hover:bg-accent/50'
-                } ${index < 3 ? 'border-r-border border-r border-solid' : ''}`}
-              >
-                <div className="text-foreground text-xs leading-4 self-stretch my-auto max-md:text-xs">
-                  {filter}
-                </div>
-              </button>
-            ))}
+            {['View all', 'Complete', 'Incomplete', 'In Review'].map((filter, index) => {
+              const filterKey = filter.toLowerCase().replace(' ', '-');
+              const isActive = activeFilter === filterKey;
+              return (
+                <button
+                  key={filter}
+                  onClick={() => setActiveFilter(filterKey)}
+                  className={`justify-center items-center flex min-h-8 gap-1.5 px-2.5 py-1.5 max-md:px-2 max-md:text-xs transition-colors ${
+                    isActive ? 'bg-primary text-primary-foreground' : 'bg-background hover:bg-accent/50'
+                  } ${index < 3 ? 'border-r-border border-r border-solid' : ''}`}
+                >
+                  <div className="text-xs leading-4 self-stretch my-auto max-md:text-xs">
+                    {filter}
+                  </div>
+                </button>
+              );
+            })}
           </div>
           <div className="self-stretch flex items-center gap-2.5 whitespace-nowrap my-auto max-md:w-full max-md:flex-wrap">
             <SearchInput
@@ -176,37 +267,49 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
                   </div>
                 </button>
               </TableHead>
-              <TableHead>
-                <div className="flex items-center gap-1">
-                  <span>Company Name</span>
-                  <ArrowUpDown size={12} />
-                </div>
-              </TableHead>
-              <TableHead>
-                <div className="flex items-center gap-1">
-                  <span>Business Type</span>
-                  <ArrowUpDown size={12} />
-                </div>
-              </TableHead>
-              <TableHead>
-                <div className="flex items-center gap-1">
-                  <span>Submitted</span>
-                  <ArrowUpDown size={12} />
-                </div>
-              </TableHead>
-              <TableHead>
-                <div className="flex items-center gap-1">
-                  <span>Completion</span>
-                  <ArrowUpDown size={12} />
-                </div>
-              </TableHead>
-              <TableHead>
-                <div className="flex items-center gap-1">
-                  <span>Status</span>
-                  <ArrowUpDown size={12} />
-                </div>
-              </TableHead>
-              <TableHead className="w-24">Actions</TableHead>
+              {showColumns.companyName && (
+                <TableHead>
+                  <div className="flex items-center gap-1">
+                    <span>Company Name</span>
+                    <ArrowUpDown size={12} />
+                  </div>
+                </TableHead>
+              )}
+              {showColumns.businessType && (
+                <TableHead>
+                  <div className="flex items-center gap-1">
+                    <span>Business Type</span>
+                    <ArrowUpDown size={12} />
+                  </div>
+                </TableHead>
+              )}
+              {showColumns.submitted && (
+                <TableHead>
+                  <div className="flex items-center gap-1">
+                    <span>Submitted</span>
+                    <ArrowUpDown size={12} />
+                  </div>
+                </TableHead>
+              )}
+              {showColumns.completion && (
+                <TableHead>
+                  <div className="flex items-center gap-1">
+                    <span>Completion</span>
+                    <ArrowUpDown size={12} />
+                  </div>
+                </TableHead>
+              )}
+              {showColumns.status && (
+                <TableHead>
+                  <div className="flex items-center gap-1">
+                    <span>Status</span>
+                    <ArrowUpDown size={12} />
+                  </div>
+                </TableHead>
+              )}
+              {showColumns.actions && (
+                <TableHead className="w-24">Actions</TableHead>
+              )}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -226,43 +329,55 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
                     </div>
                   </button>
                 </TableCell>
-                <TableCell>
-                  <div>
-                    <div className="font-medium">{row.companyName}</div>
-                    <div className="text-xs text-muted-foreground mt-1">
-                      <a 
-                        href={`mailto:${row.clientName.toLowerCase().replace(' ', '')}@example.com`}
-                        className="hover:underline"
-                      >
-                        {row.clientName}
-                      </a>
+                {showColumns.companyName && (
+                  <TableCell>
+                    <div>
+                      <div className="font-medium">{row.companyName}</div>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        <a 
+                          href={`mailto:${row.clientName.toLowerCase().replace(' ', '')}@example.com`}
+                          className="hover:underline"
+                        >
+                          {row.clientName}
+                        </a>
+                      </div>
                     </div>
-                  </div>
-                </TableCell>
-                <TableCell className="text-muted-foreground">
-                  {row.businessType}
-                </TableCell>
-                <TableCell className="text-muted-foreground">
-                  {new Date(row.submittedDate).toLocaleDateString()}
-                </TableCell>
-                <TableCell>
-                  <ProgressBar percentage={row.percentage} />
-                </TableCell>
-                <TableCell>
-                  <Badge variant={getBadgeVariant(row.status)}>
-                    {row.status}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <div className="flex gap-1">
-                    <button className="p-1 hover:bg-accent rounded">
-                      <Eye size={14} />
-                    </button>
-                    <button className="p-1 hover:bg-accent rounded">
-                      <Send size={14} />
-                    </button>
-                  </div>
-                </TableCell>
+                  </TableCell>
+                )}
+                {showColumns.businessType && (
+                  <TableCell className="text-muted-foreground">
+                    {row.businessType}
+                  </TableCell>
+                )}
+                {showColumns.submitted && (
+                  <TableCell className="text-muted-foreground">
+                    {new Date(row.submittedDate).toLocaleDateString()}
+                  </TableCell>
+                )}
+                {showColumns.completion && (
+                  <TableCell>
+                    <ProgressBar percentage={row.percentage} />
+                  </TableCell>
+                )}
+                {showColumns.status && (
+                  <TableCell>
+                    <Badge variant={getBadgeVariant(row.status)}>
+                      {row.status}
+                    </Badge>
+                  </TableCell>
+                )}
+                {showColumns.actions && (
+                  <TableCell>
+                    <div className="flex gap-1">
+                      <button className="p-1 hover:bg-accent rounded">
+                        <Eye size={14} />
+                      </button>
+                      <button className="p-1 hover:bg-accent rounded">
+                        <Send size={14} />
+                      </button>
+                    </div>
+                  </TableCell>
+                )}
               </TableRow>
             ))}
           </TableBody>
