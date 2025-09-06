@@ -4,7 +4,7 @@ import { SearchInput } from '@/components/SearchInput';
 import { 
   Settings01 as Settings, 
   FilterLines as Filter, 
-  DotsGrid as ArrowUpDown, 
+  ArrowsDown as ArrowUpDown, 
   Eye, 
   Send01 as Send, 
   Check, 
@@ -14,7 +14,7 @@ import {
   Save01 as Save, 
   X, 
   File02 as FileText, 
-  ChevronSelectorVertical as GripVertical 
+  DotsGrid as GripVertical 
 } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/Badge';
