@@ -108,13 +108,13 @@ const ScopeOfWorks = () => {
                     Scope of Works
                   </h1>
                   <p className="text-sm text-muted-foreground">
-                    Manage and review all project scope documents
+                    Manage and review project scopes
                   </p>
                 </div>
               </div>
               <Button className="flex items-center gap-2">
                 <Plus className="h-4 w-4" />
-                Create New SoW
+                Create New
               </Button>
             </div>
 
@@ -122,7 +122,7 @@ const ScopeOfWorks = () => {
             <div className="mb-6 flex items-center gap-4">
               <div className="flex-1 max-w-md">
                 <SearchInput
-                  placeholder="Search scope of works..."
+                  placeholder="Search projects..."
                   value={searchTerm}
                   onChange={setSearchTerm}
                   searchResults={searchResults}
@@ -130,21 +130,18 @@ const ScopeOfWorks = () => {
               </div>
               <Button variant="outline" className="flex items-center gap-2">
                 <Filter className="h-4 w-4" />
-                Filters
+                Filter
               </Button>
             </div>
 
-            {/* Scope of Works List */}
+            {/* Projects List */}
             <Card className="overflow-hidden">
               <CardHeader className="border-b border-border">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className="border shadow-sm justify-center items-center flex gap-1 bg-primary text-primary-foreground px-3 py-1.5 rounded-lg border-border">
-                      <FileText size={14} />
-                      <div className="text-xs font-medium">{filteredScopeOfWorks.length}</div>
-                    </div>
+                    <User size={14} className="text-primary" />
                     <CardTitle className="text-base font-semibold">
-                      Scope of Works Projects
+                      Projects
                     </CardTitle>
                   </div>
                 </div>
@@ -185,14 +182,13 @@ const ScopeOfWorks = () => {
                           </div>
                           
                           <div className="flex items-center gap-6 text-sm text-muted-foreground mb-3">
-                            <span>Industry: {sow.industry}</span>
-                            <span>Pages: {sow.pages}</span>
-                            <span>Created: {formatDate(sow.dateCreated)}</span>
-                            <span>Modified: {formatDate(sow.dateModified)}</span>
+                            <span>{sow.industry}</span>
+                            <span>{sow.pages} pages</span>
+                            <span>Created {formatDate(sow.dateCreated)}</span>
+                            <span>Updated {formatDate(sow.dateModified)}</span>
                           </div>
 
                           <div className="flex items-center gap-2">
-                            <span className="text-sm text-muted-foreground">Integrations:</span>
                             <div className="flex flex-wrap gap-1">
                               {sow.integrations.slice(0, 3).map((integration) => (
                                 <Badge key={integration} variant="outline" className="text-xs px-2 py-0.5">
@@ -201,7 +197,7 @@ const ScopeOfWorks = () => {
                               ))}
                               {sow.integrations.length > 3 && (
                                 <Badge variant="outline" className="text-xs px-2 py-0.5">
-                                  +{sow.integrations.length - 3} more
+                                  +{sow.integrations.length - 3}
                                 </Badge>
                               )}
                             </div>
@@ -244,14 +240,14 @@ const ScopeOfWorks = () => {
               <div className="text-center py-12">
                 <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <h3 className="text-lg font-semibold text-foreground mb-2">
-                  No Scope of Works Found
+                  No projects found
                 </h3>
                 <p className="text-muted-foreground mb-6">
-                  Try adjusting your search terms or create a new scope of work.
+                  Try different search terms or create a new project.
                 </p>
                 <Button className="flex items-center gap-2">
                   <Plus className="h-4 w-4" />
-                  Create New SoW
+                  Create New
                 </Button>
               </div>
             )}
