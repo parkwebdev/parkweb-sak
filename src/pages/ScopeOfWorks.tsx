@@ -41,6 +41,12 @@ import {
   DropdownMenuTrigger,
   DropdownMenuCheckboxItem,
 } from "@/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useSidebar } from '@/hooks/use-sidebar';
 
@@ -193,7 +199,8 @@ const ScopeOfWorks = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { isCollapsed } = useSidebar();
   const [showColumns, setShowColumns] = useState({
-    client: true,
+    companyName: true,
+    clientName: true,
     projectType: true,
     industry: true,
     status: true,
@@ -209,7 +216,8 @@ const ScopeOfWorks = () => {
     projectType: [] as string[],
   });
   const [columnOrder, setColumnOrder] = useState([
-    'client',
+    'companyName',
+    'clientName',
     'projectType', 
     'industry',
     'status',
@@ -335,7 +343,7 @@ const ScopeOfWorks = () => {
 
   const searchResults = filteredData.map(sow => ({
     title: sow.client,
-    subtitle: sow.projectType,
+    subtitle: sow.clientContact,
     id: sow.id
   }));
 
@@ -357,9 +365,9 @@ const ScopeOfWorks = () => {
 
   const handleExportData = () => {
     const csvContent = "data:text/csv;charset=utf-8," 
-      + "Client,Project Type,Industry,Status,Pages,Date Modified\n"
+      + "Company Name,Client Name,Project Type,Industry,Status,Pages,Date Modified\n"
       + filteredData.map(row => 
-          `"${row.client}","${row.projectType}","${row.industry}","${row.status}","${row.pages}","${row.dateModified}"`
+          `"${row.client}","${row.clientContact}","${row.projectType}","${row.industry}","${row.status}","${row.pages}","${row.dateModified}"`
         ).join("\n");
     
     const encodedUri = encodeURI(csvContent);
@@ -540,10 +548,16 @@ const ScopeOfWorks = () => {
                         <DropdownMenuLabel>Show Columns</DropdownMenuLabel>
                         
                         <DropdownMenuCheckboxItem
-                          checked={showColumns.client}
-                          onCheckedChange={() => toggleColumn('client')}
+                          checked={showColumns.companyName}
+                          onCheckedChange={() => toggleColumn('companyName')}
                         >
-                          Client
+                          Company Name
+                        </DropdownMenuCheckboxItem>
+                        <DropdownMenuCheckboxItem
+                          checked={showColumns.clientName}
+                          onCheckedChange={() => toggleColumn('clientName')}
+                        >
+                          Client Name
                         </DropdownMenuCheckboxItem>
                         <DropdownMenuCheckboxItem
                           checked={showColumns.projectType}
@@ -588,75 +602,84 @@ const ScopeOfWorks = () => {
               </div>
 
               <CardContent className="p-0">
-                <div className="w-full overflow-x-auto">
-                  <Table className="min-w-[800px]">
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-12">
-                          <button
-                            onClick={toggleAllSelection}
-                            className="flex items-center justify-center w-5"
-                          >
-                            <div className={`border flex min-h-5 w-5 h-5 rounded-md border-solid border-border items-center justify-center ${
-                              selectedRows.length === filteredData.length ? 'bg-primary border-primary' : 'bg-background'
-                            }`}>
-                              {selectedRows.length === filteredData.length && (
-                                <Check size={12} className="text-primary-foreground" />
-                              )}
-                            </div>
-                          </button>
-                        </TableHead>
-                        {showColumns.client && (
-                          <TableHead>
-                            <div className="flex items-center gap-1">
-                              <span>Client</span>
-                              <ArrowUpDown size={12} />
-                            </div>
+                <TooltipProvider>
+                  <div className="w-full overflow-x-auto">
+                    <Table className="min-w-[1200px]">
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="w-12">
+                            <button
+                              onClick={toggleAllSelection}
+                              className="flex items-center justify-center w-5"
+                            >
+                              <div className={`border flex min-h-5 w-5 h-5 rounded-md border-solid border-border items-center justify-center ${
+                                selectedRows.length === filteredData.length ? 'bg-primary border-primary' : 'bg-background'
+                              }`}>
+                                {selectedRows.length === filteredData.length && (
+                                  <Check size={12} className="text-primary-foreground" />
+                                )}
+                              </div>
+                            </button>
                           </TableHead>
-                        )}
-                        {showColumns.projectType && (
-                          <TableHead>
-                            <div className="flex items-center gap-1">
-                              <span>Project Type</span>
-                              <ArrowUpDown size={12} />
-                            </div>
-                          </TableHead>
-                        )}
-                        {showColumns.industry && (
-                          <TableHead>
-                            <div className="flex items-center gap-1">
-                              <span>Industry</span>
-                              <ArrowUpDown size={12} />
-                            </div>
-                          </TableHead>
-                        )}
-                        {showColumns.status && (
-                          <TableHead>
-                            <div className="flex items-center gap-1">
-                              <span>Status</span>
-                              <ArrowUpDown size={12} />
-                            </div>
-                          </TableHead>
-                        )}
-                        {showColumns.pages && (
-                          <TableHead>Pages</TableHead>
-                        )}
-                        {showColumns.integrations && (
-                          <TableHead>Integrations</TableHead>
-                        )}
-                        {showColumns.dateModified && (
-                          <TableHead>
-                            <div className="flex items-center gap-1">
-                              <span>Modified</span>
-                              <ArrowUpDown size={12} />
-                            </div>
-                          </TableHead>
-                        )}
-                        {showColumns.actions && (
-                          <TableHead className="text-right">Actions</TableHead>
-                        )}
-                      </TableRow>
-                    </TableHeader>
+                          {showColumns.companyName && (
+                            <TableHead>
+                              <div className="flex items-center gap-1">
+                                <span>Company Name</span>
+                                <ArrowUpDown size={12} />
+                              </div>
+                            </TableHead>
+                          )}
+                          {showColumns.clientName && (
+                            <TableHead>
+                              <div className="flex items-center gap-1">
+                                <span>Client Name</span>
+                                <ArrowUpDown size={12} />
+                              </div>
+                            </TableHead>
+                          )}
+                          {showColumns.projectType && (
+                            <TableHead>
+                              <div className="flex items-center gap-1">
+                                <span>Project Type</span>
+                                <ArrowUpDown size={12} />
+                              </div>
+                            </TableHead>
+                          )}
+                          {showColumns.industry && (
+                            <TableHead>
+                              <div className="flex items-center gap-1">
+                                <span>Industry</span>
+                                <ArrowUpDown size={12} />
+                              </div>
+                            </TableHead>
+                          )}
+                          {showColumns.status && (
+                            <TableHead>
+                              <div className="flex items-center gap-1">
+                                <span>Status</span>
+                                <ArrowUpDown size={12} />
+                              </div>
+                            </TableHead>
+                          )}
+                          {showColumns.pages && (
+                            <TableHead>Pages</TableHead>
+                          )}
+                          {showColumns.integrations && (
+                            <TableHead>Integrations</TableHead>
+                          )}
+                          {showColumns.dateModified && (
+                            <TableHead>
+                              <div className="flex items-center gap-1">
+                                <span>Modified</span>
+                                <ArrowUpDown size={12} />
+                              </div>
+                            </TableHead>
+                          )}
+                          {showColumns.actions && (
+                            <TableHead className="text-right">Actions</TableHead>
+                          )}
+                        </TableRow>
+                      </TableHeader>
                     <TableBody>
                       {filteredData.map((sow) => (
                         <TableRow key={sow.id}>
@@ -674,59 +697,77 @@ const ScopeOfWorks = () => {
                               </div>
                             </button>
                           </TableCell>
-                          {showColumns.client && (
+                          {showColumns.companyName && (
                             <TableCell>
-                              <div className="flex items-center gap-3">
-                                <ClientAvatar name={sow.client} size="sm" />
-                                <div>
-                                  <div className="font-medium text-sm">{sow.client}</div>
-                                  <div className="text-xs text-muted-foreground">{sow.clientContact}</div>
-                                </div>
+                              <div className="font-medium text-sm whitespace-nowrap">{sow.client}</div>
+                            </TableCell>
+                          )}
+                          {showColumns.clientName && (
+                            <TableCell>
+                              <div className="flex items-center gap-2 whitespace-nowrap">
+                                <ClientAvatar name={sow.clientContact} size="sm" />
+                                <span className="text-sm">{sow.clientContact}</span>
                               </div>
                             </TableCell>
                           )}
                           {showColumns.projectType && (
                             <TableCell>
-                              <Badge variant="outline" className="text-xs">
+                              <Badge variant="outline" className="text-xs w-auto whitespace-nowrap">
                                 {sow.projectType}
                               </Badge>
                             </TableCell>
                           )}
                           {showColumns.industry && (
                             <TableCell>
-                              <Badge variant="outline" className="text-xs">
+                              <Badge variant="outline" className="text-xs w-auto whitespace-nowrap">
                                 {sow.industry}
                               </Badge>
                             </TableCell>
                           )}
                           {showColumns.status && (
                             <TableCell>
-                              <Badge variant={getBadgeVariant(sow.status)} className="text-xs">
+                              <Badge variant={getBadgeVariant(sow.status)} className="text-xs w-auto whitespace-nowrap">
                                 {sow.status}
                               </Badge>
                             </TableCell>
                           )}
                           {showColumns.pages && (
-                            <TableCell className="text-sm">{sow.pages}</TableCell>
+                            <TableCell className="text-sm whitespace-nowrap">{sow.pages}</TableCell>
                           )}
                           {showColumns.integrations && (
                             <TableCell>
-                              <div className="flex flex-wrap gap-1">
-                                {sow.integrations.slice(0, 2).map((integration) => (
-                                  <Badge key={integration} variant="outline" className="text-xs">
-                                    {integration}
+                              {sow.integrations.length > 0 && (
+                                <div className="flex items-center gap-1">
+                                  <Badge variant="outline" className="text-xs w-auto whitespace-nowrap">
+                                    {sow.integrations[0]}
                                   </Badge>
-                                ))}
-                                {sow.integrations.length > 2 && (
-                                  <Badge variant="outline" className="text-xs">
-                                    +{sow.integrations.length - 2}
-                                  </Badge>
-                                )}
-                              </div>
+                                  {sow.integrations.length > 1 && (
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <Badge variant="outline" className="text-xs w-auto whitespace-nowrap cursor-help">
+                                          +{sow.integrations.length - 1}
+                                        </Badge>
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                        <div className="space-y-1">
+                                          <p className="font-medium">All Integrations:</p>
+                                          {sow.integrations.map((integration: string, index: number) => (
+                                            <div key={index} className="text-xs">
+                                              <Badge variant="outline" className="text-xs w-auto">
+                                                {integration}
+                                              </Badge>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  )}
+                                </div>
+                              )}
                             </TableCell>
                           )}
                           {showColumns.dateModified && (
-                            <TableCell className="text-sm text-muted-foreground">
+                            <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
                               {formatDate(sow.dateModified)}
                             </TableCell>
                           )}
@@ -772,8 +813,9 @@ const ScopeOfWorks = () => {
                         </TableRow>
                       ))}
                     </TableBody>
-                  </Table>
-                </div>
+                    </Table>
+                  </div>
+                </TooltipProvider>
               </CardContent>
             </Card>
           </div>
