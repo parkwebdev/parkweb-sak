@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Settings, ChevronDown, ArrowUpDown, Eye, Send, Check, User, Clock, MoreHorizontal, Download, Eye as EyeIcon, Columns, Calendar, Building2, Filter } from 'lucide-react';
+import { Settings, ChevronDown, ArrowUpDown, Eye, Send, Check, User, Clock, MoreHorizontal, Download, Eye as EyeIcon, Columns, Calendar, Building2, Filter, GripVertical } from 'lucide-react';
 import { SearchInput } from './SearchInput';
 import { Badge } from './Badge';
 import { ProgressBar } from './ProgressBar';
@@ -311,14 +311,7 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
                     onDrop={(e) => handleDrop(e, index)}
                   >
                     <div className="flex items-center gap-2">
-                      <div className="flex flex-col gap-0.5">
-                        <div className="w-1 h-1 bg-muted-foreground rounded-full"></div>
-                        <div className="w-1 h-1 bg-muted-foreground rounded-full"></div>
-                        <div className="w-1 h-1 bg-muted-foreground rounded-full"></div>
-                        <div className="w-1 h-1 bg-muted-foreground rounded-full"></div>
-                        <div className="w-1 h-1 bg-muted-foreground rounded-full"></div>
-                        <div className="w-1 h-1 bg-muted-foreground rounded-full"></div>
-                      </div>
+                      <GripVertical size={16} className="text-muted-foreground" />
                       <span className="text-sm capitalize">{column.replace(/([A-Z])/g, ' $1').trim()}</span>
                     </div>
                   </div>

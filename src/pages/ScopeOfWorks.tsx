@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Sidebar } from '@/components/Sidebar';
 import { SearchInput } from '@/components/SearchInput';
-import { Settings, Filter, ArrowUpDown, Eye, Send, Check, Download, Plus, Edit, Save, X, FileText } from 'lucide-react';
+import { Settings, Filter, ArrowUpDown, Eye, Send, Check, Download, Plus, Edit, Save, X, FileText, GripVertical } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/Badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -557,17 +557,10 @@ const ScopeOfWorks = () => {
                               onDragOver={handleDragOver}
                               onDrop={(e) => handleDrop(e, index)}
                             >
-                              <div className="flex items-center gap-2">
-                                <div className="flex flex-col gap-0.5">
-                                  <div className="w-1 h-1 bg-muted-foreground rounded-full"></div>
-                                  <div className="w-1 h-1 bg-muted-foreground rounded-full"></div>
-                                  <div className="w-1 h-1 bg-muted-foreground rounded-full"></div>
-                                  <div className="w-1 h-1 bg-muted-foreground rounded-full"></div>
-                                  <div className="w-1 h-1 bg-muted-foreground rounded-full"></div>
-                                  <div className="w-1 h-1 bg-muted-foreground rounded-full"></div>
-                                </div>
-                                <span className="text-sm capitalize">{column.replace(/([A-Z])/g, ' $1').trim()}</span>
-                              </div>
+                            <div className="flex items-center gap-2">
+                              <GripVertical size={16} className="text-muted-foreground" />
+                              <span className="text-sm capitalize">{column.replace(/([A-Z])/g, ' $1').trim()}</span>
+                            </div>
                             </div>
                           ))}
                           
