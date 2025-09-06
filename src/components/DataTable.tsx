@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Settings, ChevronDown, ArrowUpDown, Eye, Edit, Check, User, Clock } from 'lucide-react';
 import { SearchInput } from './SearchInput';
 import { Badge } from './Badge';
@@ -35,7 +35,7 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
   const [currentActiveTab, setCurrentActiveTab] = useState(activeTab);
 
   // Update internal state when prop changes
-  React.useEffect(() => {
+  useEffect(() => {
     setCurrentActiveTab(activeTab);
   }, [activeTab]);
 
