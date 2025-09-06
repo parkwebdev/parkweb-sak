@@ -180,8 +180,8 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
             </button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden text-xs text-foreground font-medium leading-none bg-background px-2.5 py-2 rounded-md border-border hover:bg-accent/50">
-                  <Settings size={14} className="text-muted-foreground" />
+                <button className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden text-xs text-foreground font-medium leading-none bg-background px-2 py-1.5 rounded-md border-border hover:bg-accent/50">
+                  <Settings size={16} className="text-muted-foreground" />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
