@@ -24,11 +24,15 @@ interface ClientLink {
   company_name: string;
   email: string;
   industry: string;
-  status: 'Sent' | 'In Progress' | 'Completed' | 'SOW Generated' | 'Approved';
+  status: string;
   date_sent: string;
   last_activity: string;
   onboarding_url: string;
-  sow_status?: 'Draft' | 'Client Review' | 'Agency Review' | 'Approved';
+  sow_status?: string | null;
+  personal_note?: string | null;
+  user_id: string;
+  created_at: string;
+  updated_at: string;
 }
 
 const Onboarding = () => {
@@ -38,11 +42,11 @@ const Onboarding = () => {
   const [clientLinks, setClientLinks] = useState<ClientLink[]>([]);
   const [loading, setLoading] = useState(true);
   const [newClient, setNewClient] = useState({
-    clientName: '',
-    companyName: '',
+    client_name: '',
+    company_name: '',
     email: '',
     industry: '',
-    personalNote: ''
+    personal_note: ''
   });
   const { toast } = useToast();
   const { user } = useAuth();
@@ -87,23 +91,59 @@ const Onboarding = () => {
     }
   };
 
-  const handleCreateLink = () => {
-    const onboardingUrl = createOnboardingUrl(newClient.clientName, newClient.companyName);
-    
-    // Reset form
-    setNewClient({
-      clientName: '',
-      companyName: '',
-      email: '',
-      industry: '',
-      personalNote: ''
-    });
-    setShowCreateDialog(false);
-    
-    toast({
-      title: "Onboarding link created!",
-      description: "The personalized onboarding link has been generated and copied to clipboard.",
-    });
+  const handleCreateLink = async () => {
+    if (!user) return;
+
+    try {
+      const onboardingUrl = createOnboardingUrl(newClient.client_name, newClient.company_name);
+      
+      const { error } = await supabase
+        .from('client_onboarding_links')
+        .insert({
+          client_name: newClient.client_name,
+          company_name: newClient.company_name,
+          email: newClient.email,
+          industry: newClient.industry,
+          personal_note: newClient.personal_note,
+          onboarding_url: onboardingUrl,
+          user_id: user.id
+        });
+
+      if (error) {
+        console.error('Error creating client link:', error);
+        toast({
+          title: "Error",
+          description: "Failed to create onboarding link. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Reset form
+      setNewClient({
+        client_name: '',
+        company_name: '',
+        email: '',
+        industry: '',
+        personal_note: ''
+      });
+      setShowCreateDialog(false);
+      
+      // Refresh the list
+      fetchClientLinks();
+      
+      toast({
+        title: "Onboarding link created!",
+        description: "The personalized onboarding link has been generated.",
+      });
+    } catch (error) {
+      console.error('Error creating client link:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create onboarding link. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleCopyToClipboard = async (url: string) => {
@@ -125,12 +165,30 @@ const Onboarding = () => {
   };
 
   const handleSendEmail = (client: ClientLink) => {
-    const fullUrl = window.location.origin + client.onboardingUrl;
-    const { subject, body } = createEmailTemplate(client.clientName, client.companyName, fullUrl);
+    const { subject, body } = createEmailTemplate(client.client_name, client.company_name, createOnboardingUrl(client.client_name, client.company_name));
     openEmailClient(client.email, subject, body);
   };
 
-  // Remove the old getStatusColor function since it's now imported from utils
+  if (loading) {
+    return (
+      <div className="flex h-screen bg-muted/30">
+        <div className={`flex-1 overflow-auto transition-all duration-300 ${
+          isCollapsed ? 'lg:ml-[72px]' : 'lg:ml-[280px]'
+        }`}>
+          <main className="flex-1 bg-muted/30 pt-4 lg:pt-8 pb-12">
+            <div className="max-w-7xl mx-auto px-4 lg:px-8">
+              <div className="flex items-center justify-center h-64">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                  <p className="text-muted-foreground">Loading client links...</p>
+                </div>
+              </div>
+            </div>
+          </main>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen bg-muted/30">
@@ -203,8 +261,8 @@ const Onboarding = () => {
                             id="clientName"
                             placeholder="John Smith"
                             className="h-8 text-sm"
-                            value={newClient.clientName}
-                            onChange={(e) => setNewClient(prev => ({ ...prev, clientName: e.target.value }))}
+                            value={newClient.client_name}
+                            onChange={(e) => setNewClient(prev => ({ ...prev, client_name: e.target.value }))}
                           />
                         </div>
                         <div className="space-y-1.5">
@@ -213,8 +271,8 @@ const Onboarding = () => {
                             id="companyName"
                             placeholder="ABC Company"
                             className="h-8 text-sm"
-                            value={newClient.companyName}
-                            onChange={(e) => setNewClient(prev => ({ ...prev, companyName: e.target.value }))}
+                            value={newClient.company_name}
+                            onChange={(e) => setNewClient(prev => ({ ...prev, company_name: e.target.value }))}
                           />
                         </div>
                       </div>
@@ -250,8 +308,8 @@ const Onboarding = () => {
                           id="personalNote"
                           placeholder="Add a personal message for the email"
                           className="min-h-[60px] text-sm resize-none"
-                          value={newClient.personalNote}
-                          onChange={(e) => setNewClient(prev => ({ ...prev, personalNote: e.target.value }))}
+                          value={newClient.personal_note}
+                          onChange={(e) => setNewClient(prev => ({ ...prev, personal_note: e.target.value }))}
                         />
                       </div>
                     </div>
@@ -262,7 +320,7 @@ const Onboarding = () => {
                       <Button 
                         size="sm"
                         onClick={handleCreateLink}
-                        disabled={!newClient.clientName || !newClient.companyName || !newClient.email}
+                        disabled={!newClient.client_name || !newClient.company_name || !newClient.email}
                       >
                         Create Link
                       </Button>
@@ -279,7 +337,7 @@ const Onboarding = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-xs font-medium text-muted-foreground">Total Links</p>
-                      <p className="text-lg lg:text-xl font-semibold">12</p>
+                      <p className="text-lg lg:text-xl font-semibold">{clientLinks.length}</p>
                     </div>
                     <Link2 className="h-4 w-4 lg:h-5 lg:w-5 text-info" />
                   </div>
@@ -290,7 +348,7 @@ const Onboarding = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-xs font-medium text-muted-foreground">In Progress</p>
-                      <p className="text-lg lg:text-xl font-semibold">5</p>
+                      <p className="text-lg lg:text-xl font-semibold">{clientLinks.filter(link => link.status === 'In Progress').length}</p>
                     </div>
                     <Clock className="h-4 w-4 lg:h-5 lg:w-5 text-warning" />
                   </div>
@@ -301,7 +359,7 @@ const Onboarding = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-xs font-medium text-muted-foreground">SOW Generated</p>
-                      <p className="text-lg lg:text-xl font-semibold">3</p>
+                      <p className="text-lg lg:text-xl font-semibold">{clientLinks.filter(link => link.status === 'SOW Generated').length}</p>
                     </div>
                     <FileText className="h-4 w-4 lg:h-5 lg:w-5 text-primary" />
                   </div>
@@ -312,7 +370,7 @@ const Onboarding = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-xs font-medium text-muted-foreground">Approved</p>
-                      <p className="text-lg lg:text-xl font-semibold">4</p>
+                      <p className="text-lg lg:text-xl font-semibold">{clientLinks.filter(link => link.status === 'Approved').length}</p>
                     </div>
                     <User className="h-4 w-4 lg:h-5 lg:w-5 text-success" />
                   </div>
@@ -329,21 +387,29 @@ const Onboarding = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="p-0">
-                 <div className="divide-y divide-border">
-                   {clientLinks.map((client) => (
-                     <div key={client.id} className="p-4 lg:p-6 hover:bg-muted/50 transition-colors">
-                       <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
-                         <div className="flex-1 min-w-0">
+                {clientLinks.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+                    <Link2 className="h-12 w-12 text-muted-foreground/50 mb-4" />
+                    <h3 className="text-lg font-medium text-foreground mb-2">No client links yet</h3>
+                    <p className="text-sm text-muted-foreground mb-6 max-w-sm">
+                      Create your first onboarding link to start managing client intake workflow.
+                    </p>
+                    <Button onClick={() => setShowCreateDialog(true)} size="sm">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Create Your First Link
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="divide-y divide-border">
+                    {clientLinks.map((client) => (
+                      <div key={client.id} className="p-4 lg:p-6 hover:bg-muted/50 transition-colors">
+                        <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+                          <div className="flex-1 min-w-0">
                             <div className="flex flex-col lg:flex-row lg:items-start gap-3 mb-3">
                               <div className="min-w-0 flex-1">
-                                <h3 className="font-medium text-base truncate mb-1">{client.companyName}</h3>
+                                <h3 className="font-medium text-base truncate mb-1">{client.company_name}</h3>
                                 <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-sm text-muted-foreground">
-                                  <a 
-                                    href={`mailto:${client.email}`}
-                                    className="hover:underline truncate"
-                                  >
-                                    {client.clientName}
-                                  </a>
+                                  <span className="truncate">{client.client_name}</span>
                                   <span className="hidden sm:inline">•</span>
                                   <a 
                                     href={`mailto:${client.email}`}
@@ -357,9 +423,9 @@ const Onboarding = () => {
                                 <Badge className={`${getStatusColor(client.status)} text-xs px-2.5 py-1 w-auto`}>
                                   {client.status}
                                 </Badge>
-                                {client.sowStatus && (
-                                  <Badge variant="outline" className="text-xs px-2.5 py-1 w-auto">
-                                    SOW: {client.sowStatus}
+                                {client.sow_status && (
+                                  <Badge variant={client.sow_status === 'Approved' ? 'complete' : 'outline'} className="text-xs px-2.5 py-1 w-auto">
+                                    SOW: {client.sow_status}
                                   </Badge>
                                 )}
                               </div>
@@ -375,34 +441,35 @@ const Onboarding = () => {
                             
                             <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6 text-sm text-muted-foreground">
                               <span>Industry: {client.industry}</span>
-                              <span>Sent: {formatDate(client.dateSent)}</span>
-                              <span>Last: {formatDate(client.lastActivity)}</span>
+                              <span>Sent: {formatDate(client.date_sent)}</span>
+                              <span>Last: {formatDate(client.last_activity)}</span>
                             </div>
-                         </div>
+                          </div>
                           <div className="flex items-center gap-2 flex-shrink-0">
-                           <Button
-                             variant="outline"
-                             size="sm"
-                             className="h-7 px-2 flex-1 sm:flex-initial"
-                             onClick={() => handleCopyToClipboard(client.onboardingUrl)}
-                           >
-                             <Copy className="h-3 w-3" />
-                             <span className="ml-1 sm:hidden">Copy</span>
-                           </Button>
-                           <Button
-                             variant="outline"
-                             size="sm"
-                             className="h-7 px-2 flex-1 sm:flex-initial"
-                             onClick={() => handleSendEmail(client)}
-                           >
-                             <Send className="h-3 w-3" />
-                             <span className="ml-1 sm:hidden">Send</span>
-                           </Button>
-                         </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-7 px-2 flex-1 sm:flex-initial"
+                              onClick={() => handleCopyToClipboard(client.onboarding_url)}
+                            >
+                              <Copy className="h-3 w-3" />
+                              <span className="ml-1 sm:hidden">Copy</span>
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-7 px-2 flex-1 sm:flex-initial"
+                              onClick={() => handleSendEmail(client)}
+                            >
+                              <Send className="h-3 w-3" />
+                              <span className="ml-1 sm:hidden">Send</span>
+                            </Button>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>

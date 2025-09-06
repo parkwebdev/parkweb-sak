@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Menu01 as Menu, Link01 as Link2, Copy01 as Copy, User01 as User, File02 as FileText, Clock, Eye, ClockCheck, AlertTriangle } from '@untitledui/icons';
 import { TabNavigation } from './TabNavigation';
 import { DataTable } from './DataTable';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/Badge';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 const tabs = [
   { id: 'onboarding', label: 'Onboarding' },
@@ -22,19 +24,71 @@ export const MainContent: React.FC<MainContentProps> = ({
   onTabChange,
   onMenuClick
 }) => {
-  // Mock data for stats
-  const onboardingStats = {
-    total: 12,
-    inProgress: 5,
-    completed: 4,
-    sowGenerated: 3
-  };
+  const { user } = useAuth();
+  const [stats, setStats] = useState({
+    onboarding: {
+      total: 0,
+      inProgress: 0,
+      completed: 0,
+      sowGenerated: 0,
+      approved: 0
+    },
+    scopeOfWorks: {
+      total: 0,
+      draft: 0,
+      inReview: 0,
+      approved: 0
+    }
+  });
 
-  const scopeOfWorksStats = {
-    total: 8,
-    draft: 3,
-    inReview: 2,
-    approved: 3
+  useEffect(() => {
+    if (user) {
+      fetchStats();
+    }
+  }, [user]);
+
+  const fetchStats = async () => {
+    try {
+      // Fetch onboarding stats
+      const { data: onboardingData, error: onboardingError } = await supabase
+        .from('client_onboarding_links')
+        .select('status, sow_status');
+
+      if (onboardingError) {
+        console.error('Error fetching onboarding stats:', onboardingError);
+      } else {
+        const onboardingStats = {
+          total: onboardingData?.length || 0,
+          inProgress: onboardingData?.filter(item => item.status === 'In Progress').length || 0,
+          completed: onboardingData?.filter(item => item.status === 'Completed').length || 0,
+          sowGenerated: onboardingData?.filter(item => item.status === 'SOW Generated').length || 0,
+          approved: onboardingData?.filter(item => item.status === 'Approved').length || 0
+        };
+
+        // Fetch scope of works stats
+        const { data: sowData, error: sowError } = await supabase
+          .from('scope_of_works')
+          .select('status');
+
+        if (sowError) {
+          console.error('Error fetching scope of works stats:', sowError);
+        } else {
+          const scopeOfWorksStats = {
+            total: sowData?.length || 0,
+            draft: sowData?.filter(item => item.status === 'Draft').length || 0,
+            inReview: sowData?.filter(item => item.status === 'Client Review' || item.status === 'Agency Review').length || 0,
+            approved: sowData?.filter(item => item.status === 'Approved').length || 0
+          };
+
+          setStats({
+            onboarding: onboardingStats,
+            scopeOfWorks: scopeOfWorksStats
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    }
   };
 
   return (
@@ -83,7 +137,7 @@ export const MainContent: React.FC<MainContentProps> = ({
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-xs font-medium text-muted-foreground">Total Links</p>
-                    <p className="text-lg lg:text-xl font-semibold">12</p>
+                    <p className="text-lg lg:text-xl font-semibold">{stats.onboarding.total}</p>
                   </div>
                   <Link2 className="h-4 w-4 lg:h-5 lg:w-5 text-info" />
                 </div>
@@ -94,7 +148,7 @@ export const MainContent: React.FC<MainContentProps> = ({
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-xs font-medium text-muted-foreground">In Progress</p>
-                    <p className="text-lg lg:text-xl font-semibold">5</p>
+                    <p className="text-lg lg:text-xl font-semibold">{stats.onboarding.inProgress}</p>
                   </div>
                   <Clock className="h-4 w-4 lg:h-5 lg:w-5 text-warning" />
                 </div>
@@ -105,7 +159,7 @@ export const MainContent: React.FC<MainContentProps> = ({
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-xs font-medium text-muted-foreground">SOW Generated</p>
-                    <p className="text-lg lg:text-xl font-semibold">3</p>
+                    <p className="text-lg lg:text-xl font-semibold">{stats.onboarding.sowGenerated}</p>
                   </div>
                   <FileText className="h-4 w-4 lg:h-5 lg:w-5 text-primary" />
                 </div>
@@ -116,7 +170,7 @@ export const MainContent: React.FC<MainContentProps> = ({
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-xs font-medium text-muted-foreground">Approved</p>
-                    <p className="text-lg lg:text-xl font-semibold">4</p>
+                    <p className="text-lg lg:text-xl font-semibold">{stats.onboarding.approved}</p>
                   </div>
                   <User className="h-4 w-4 lg:h-5 lg:w-5 text-success" />
                 </div>
