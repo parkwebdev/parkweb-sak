@@ -335,22 +335,27 @@ export const TeamSettings: React.FC = () => {
                       )
                   }
                 </Badge>
+                {/* DEBUG INFO - shows current user's role and management permissions */}
+                <div className="text-xs text-muted-foreground mt-2 p-2 bg-muted/50 rounded">
+                  Current User Role: {currentUserRole} | Can Manage: {canManageRoles.toString()} | Is You: {(member.user_id === user?.id).toString()}
+                </div>
+                
                 {canManageRoles && member.user_id !== user?.id && (
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 mt-2">
                     <Button 
-                      variant="outline" 
+                      variant="secondary"
                       size="sm"
                       onClick={() => handleEditRole(member)}
-                      className="h-7 px-3 text-xs"
+                      className="h-8 px-4 text-sm bg-blue-100 text-blue-700 border border-blue-300 hover:bg-blue-200 font-medium"
                     >
-                      <Settings size={14} className="mr-1" />
+                      <Settings size={16} className="mr-2" />
                       Edit Role
                     </Button>
                     <Button 
-                      variant="outline" 
+                      variant="destructive"
                       size="sm"
                       onClick={() => handleRemoveMember(member)}
-                      className="h-7 px-3 text-xs border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+                      className="h-8 px-4 text-sm font-medium"
                     >
                       Remove
                     </Button>
