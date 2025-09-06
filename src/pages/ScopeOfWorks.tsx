@@ -1,7 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { Sidebar } from '@/components/Sidebar';
 import { SearchInput } from '@/components/SearchInput';
-import { Settings, Filter, ArrowUpDown, Eye, Send, Check, Download, Plus, Edit, Save, X, FileText, GripVertical } from 'lucide-react';
+import { 
+  Settings01 as Settings, 
+  FilterLines as Filter, 
+  ArrowDown as ArrowUpDown, 
+  Eye, 
+  Send01 as Send, 
+  Check, 
+  Download01 as Download, 
+  Plus, 
+  Edit01 as Edit, 
+  Save01 as Save, 
+  X, 
+  File02 as FileText, 
+  Dotpoints01 as GripVertical 
+} from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/Badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
