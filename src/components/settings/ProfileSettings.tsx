@@ -10,8 +10,8 @@ import { useToast } from '@/hooks/use-toast';
 
 export const ProfileSettings: React.FC = () => {
   const [profile, setProfile] = useState({
-    name: 'Olivia Rhye',
-    email: 'olivia@sodium.app',
+    name: 'Aaron Chachamovits',
+    email: 'aaron@parkweb.app',
     phone: '(555) 123-4567',
   });
 

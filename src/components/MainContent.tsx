@@ -1,7 +1,9 @@
 import React from 'react';
-import { Menu01 as Menu } from '@untitledui/icons';
+import { Menu01 as Menu, Link01 as Link2, Copy01 as Copy, User01 as User, File02 as FileText, Clock, Eye, ClockCheck, AlertTriangle } from '@untitledui/icons';
 import { TabNavigation } from './TabNavigation';
 import { DataTable } from './DataTable';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/Badge';
 
 const tabs = [
   { id: 'onboarding', label: 'Onboarding' },
@@ -20,6 +22,21 @@ export const MainContent: React.FC<MainContentProps> = ({
   onTabChange,
   onMenuClick
 }) => {
+  // Mock data for stats
+  const onboardingStats = {
+    total: 12,
+    inProgress: 5,
+    completed: 4,
+    sowGenerated: 3
+  };
+
+  const scopeOfWorksStats = {
+    total: 8,
+    draft: 3,
+    inReview: 2,
+    approved: 3
+  };
+
   return (
     <main className="flex-1 bg-muted/30 min-h-screen pt-4 lg:pt-8 pb-12">
       <header className="w-full font-medium">
@@ -55,6 +72,119 @@ export const MainContent: React.FC<MainContentProps> = ({
                   </div>
                 </button>
               </div>
+            </div>
+          </div>
+
+          {/* Stats Overview */}
+          <div className="w-full">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+              {/* Onboarding Stats */}
+              <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/50 dark:to-blue-900/30 border-blue-200 dark:border-blue-800">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-blue-900 dark:text-blue-100 flex items-center gap-2">
+                    <Link2 className="h-4 w-4" />
+                    Total Links
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-blue-900 dark:text-blue-100">{onboardingStats.total}</div>
+                  <p className="text-xs text-blue-700 dark:text-blue-200">Client onboarding links</p>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950/50 dark:to-orange-900/30 border-orange-200 dark:border-orange-800">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-orange-900 dark:text-orange-100 flex items-center gap-2">
+                    <Clock className="h-4 w-4" />
+                    In Progress
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-orange-900 dark:text-orange-100">{onboardingStats.inProgress}</div>
+                  <p className="text-xs text-orange-700 dark:text-orange-200">Active onboardings</p>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/50 dark:to-green-900/30 border-green-200 dark:border-green-800">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-green-900 dark:text-green-100 flex items-center gap-2">
+                    <ClockCheck className="h-4 w-4" />
+                    Completed
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-green-900 dark:text-green-100">{onboardingStats.completed}</div>
+                  <p className="text-xs text-green-700 dark:text-green-200">Finished onboardings</p>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950/50 dark:to-purple-900/30 border-purple-200 dark:border-purple-800">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-purple-900 dark:text-purple-100 flex items-center gap-2">
+                    <FileText className="h-4 w-4" />
+                    SOW Generated
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-purple-900 dark:text-purple-100">{onboardingStats.sowGenerated}</div>
+                  <p className="text-xs text-purple-700 dark:text-purple-200">Scopes created</p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Scope of Works Stats */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+              <Card className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950/50 dark:to-slate-900/30 border-slate-200 dark:border-slate-800">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                    <FileText className="h-4 w-4" />
+                    Total Projects
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">{scopeOfWorksStats.total}</div>
+                  <p className="text-xs text-slate-700 dark:text-slate-200">All scope of works</p>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-950/50 dark:to-yellow-900/30 border-yellow-200 dark:border-yellow-800">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-yellow-900 dark:text-yellow-100 flex items-center gap-2">
+                    <Copy className="h-4 w-4" />
+                    Draft
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-yellow-900 dark:text-yellow-100">{scopeOfWorksStats.draft}</div>
+                  <p className="text-xs text-yellow-700 dark:text-yellow-200">Work in progress</p>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950/50 dark:to-blue-900/30 border-blue-200 dark:border-blue-800">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-blue-900 dark:text-blue-100 flex items-center gap-2">
+                    <Eye className="h-4 w-4" />
+                    In Review
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-blue-900 dark:text-blue-100">{scopeOfWorksStats.inReview}</div>
+                  <p className="text-xs text-blue-700 dark:text-blue-200">Under review</p>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950/50 dark:to-green-900/30 border-green-200 dark:border-green-800">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-green-900 dark:text-green-100 flex items-center gap-2">
+                    <ClockCheck className="h-4 w-4" />
+                    Approved
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-green-900 dark:text-green-100">{scopeOfWorksStats.approved}</div>
+                  <p className="text-xs text-green-700 dark:text-green-200">Ready to go</p>
+                </CardContent>
+              </Card>
             </div>
           </div>
 

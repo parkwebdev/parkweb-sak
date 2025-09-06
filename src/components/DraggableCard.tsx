@@ -78,9 +78,10 @@ export const DraggableCard: React.FC<DraggableCardProps> = ({
       <div
         ref={setNodeRef}
         style={style}
-        className={`bg-card border border-border rounded-lg p-3 transition-all cursor-pointer group ${
+        className={`bg-card border border-border rounded-lg p-3 transition-all cursor-pointer ${
           isDragging ? 'opacity-50 shadow-lg' : 'hover:shadow-md'
         }`}
+        onClick={() => onView(sow)}
         {...attributes}
         {...listeners}
       >
@@ -101,71 +102,6 @@ export const DraggableCard: React.FC<DraggableCardProps> = ({
               )}
             </div>
           </button>
-          
-          <div className="flex gap-1 ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button 
-                  className="p-1 hover:bg-accent rounded text-muted-foreground hover:text-foreground"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onView(sow);
-                  }}
-                >
-                  <Eye size={12} />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>View details</p>
-              </TooltipContent>
-            </Tooltip>
-            
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button 
-                  className="p-1 hover:bg-accent rounded text-muted-foreground hover:text-foreground"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onEdit(sow);
-                  }}
-                >
-                  <Edit size={12} />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Edit scope</p>
-              </TooltipContent>
-            </Tooltip>
-            
-            {sow.status === 'Approved' && (onDownloadPDF || onDownloadDOC) && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button 
-                    className="p-1 hover:bg-accent rounded text-muted-foreground hover:text-foreground"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <Download size={12} />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuLabel>Download Options</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  {onDownloadPDF && (
-                    <DropdownMenuItem onClick={() => onDownloadPDF(sow)}>
-                      <Download className="mr-2 h-4 w-4" />
-                      Download PDF
-                    </DropdownMenuItem>
-                  )}
-                  {onDownloadDOC && (
-                    <DropdownMenuItem onClick={() => onDownloadDOC(sow)}>
-                      <Download className="mr-2 h-4 w-4" />
-                      Download DOC
-                    </DropdownMenuItem>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
-          </div>
         </div>
 
         {/* Card Content */}

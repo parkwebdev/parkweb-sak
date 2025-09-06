@@ -22,22 +22,22 @@ interface TeamMember {
 const mockTeamMembers: TeamMember[] = [
   {
     id: '1',
-    name: 'Olivia Rhye',
-    email: 'olivia@sodium.app',
+    name: 'Aaron Chachamovits',
+    email: 'aaron@parkweb.app',
     role: 'admin',
     status: 'active',
   },
   {
     id: '2',
     name: 'John Smith',
-    email: 'john@sodium.app',
+    email: 'john@parkweb.app',
     role: 'manager',
     status: 'active',
   },
   {
     id: '3',
     name: 'Sarah Johnson',
-    email: 'sarah@sodium.app',
+    email: 'sarah@parkweb.app',
     role: 'member',
     status: 'pending',
   },

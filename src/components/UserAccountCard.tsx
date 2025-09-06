@@ -20,8 +20,8 @@ export const UserAccountCard: React.FC<UserAccountCardProps> = ({ isCollapsed = 
           }`}>
             <div className="relative">
               <Avatar className={isCollapsed ? "h-7 w-7" : "h-9 w-9"}>
-                <AvatarImage src="" alt="Olivia Rhye" />
-                <AvatarFallback className={`font-medium ${isCollapsed ? 'text-xs' : 'text-sm'}`}>OR</AvatarFallback>
+                <AvatarImage src="" alt="Aaron Chachamovits" />
+                <AvatarFallback className={`font-medium ${isCollapsed ? 'text-xs' : 'text-sm'}`}>AC</AvatarFallback>
               </Avatar>
               <div className={`bg-green-500 absolute rounded-full border-2 border-background ${
                 isCollapsed ? 'w-2 h-2 -bottom-0 -right-0' : 'w-3 h-3 -bottom-0.5 -right-0.5'
@@ -30,10 +30,10 @@ export const UserAccountCard: React.FC<UserAccountCardProps> = ({ isCollapsed = 
             {!isCollapsed && (
               <div className="text-left min-w-0 flex-1">
                 <div className="text-foreground text-sm font-semibold leading-5 truncate">
-                  Olivia Rhye
+                  Aaron Chachamovits
                 </div>
                 <div className="text-muted-foreground text-sm font-normal leading-5 truncate">
-                  olivia@sodium.app
+                  aaron@parkweb.app
                 </div>
               </div>
             )}

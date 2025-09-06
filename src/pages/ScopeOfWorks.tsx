@@ -659,7 +659,7 @@ const ScopeOfWorks = () => {
                             <Filter size={16} className="text-muted-foreground" />
                           </button>
                         </DropdownMenuTrigger>
-                         <DropdownMenuContent align="end" className="w-80 p-4 z-50">
+                         <DropdownMenuContent align="end" className="w-96 p-4 z-50 max-h-[80vh] overflow-y-auto">
                            <div className="text-sm font-medium mb-2">Advanced Filters</div>
                            <DropdownMenuSeparator />
                            
