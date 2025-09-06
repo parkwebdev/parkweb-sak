@@ -139,7 +139,7 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
 
       <div className="w-full overflow-x-auto">
         <div className="border flex min-w-[1200px] bg-background border-border">
-        <div className="min-w-[250px] flex-1">
+        <div className="w-[280px] flex-shrink-0">
           <div className="items-center flex min-h-11 w-full gap-3 bg-background px-4 py-3 border-b-border border-b border-solid">
             <button
               onClick={toggleAllSelection}
@@ -174,15 +174,15 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
                   )}
                 </div>
               </button>
-              <div className="text-foreground text-sm font-medium leading-5 flex-1 min-w-0">
-                <div className="truncate">{row.companyName}</div>
-                <div className="text-xs text-muted-foreground truncate">{row.clientName}</div>
+              <div className="text-foreground text-sm font-medium leading-5 w-full">
+                <div className="truncate font-medium">{row.companyName}</div>
+                <div className="text-xs text-muted-foreground truncate mt-1">{row.clientName}</div>
               </div>
             </div>
           ))}
         </div>
 
-        <div className="w-[180px] flex-shrink-0">
+        <div className="w-[160px] flex-shrink-0">
           <div className="items-center flex min-h-11 w-full gap-3 text-xs text-muted-foreground font-semibold bg-background px-4 py-3 border-b-border border-b border-solid">
             <div className="items-center self-stretch flex gap-1 my-auto">
               <div className="text-muted-foreground text-xs leading-[18px] self-stretch my-auto">
@@ -200,7 +200,7 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
           ))}
         </div>
 
-        <div className="w-[120px] flex-shrink-0">
+        <div className="w-[100px] flex-shrink-0">
           <div className="items-center flex min-h-11 w-full gap-3 text-xs text-muted-foreground font-semibold bg-background px-4 py-3 border-b-border border-b border-solid">
             <div className="items-center self-stretch flex gap-1 my-auto">
               <div className="text-muted-foreground text-xs leading-[18px] self-stretch my-auto">
@@ -218,7 +218,7 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
           ))}
         </div>
 
-        <div className="w-[200px] flex-shrink-0">
+        <div className="w-[180px] flex-shrink-0">
           <div className="items-center flex min-h-11 w-full gap-3 text-xs text-muted-foreground font-semibold bg-background px-4 py-3 border-b-border border-b border-solid">
             <div className="items-center self-stretch flex gap-1 my-auto">
               <div className="text-muted-foreground text-xs leading-[18px] self-stretch my-auto">
@@ -234,8 +234,8 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
           ))}
         </div>
 
-        <div className="w-[120px] flex-shrink-0">
-          <div className="items-center flex min-h-11 w-full gap-3 text-muted-foreground font-semibold bg-background px-4 py-3 border-b-border border-b border-solid">
+        <div className="w-[130px] flex-shrink-0">
+          <div className="items-center flex min-h-11 w-full gap-3 text-muted-foreground font-semibold bg-background px-3 py-3 border-b-border border-b border-solid">
             <div className="items-center self-stretch flex gap-1 my-auto">
               <div className="text-muted-foreground text-xs leading-[18px] self-stretch my-auto">
                 Status
@@ -247,12 +247,12 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
             <div key={row.id} className="items-center flex min-h-[72px] w-full px-2 py-4 border-b-border border-b border-solid">
               <Badge 
                 variant={row.status === 'Complete' ? 'default' : row.status === 'In Review' ? 'online' : 'folder'}
-                className="w-full justify-center text-xs"
+                className="w-full justify-center text-xs px-1"
               >
-                {row.status === 'Complete' && <Check size={10} />}
-                {row.status === 'In Review' && <Clock size={10} />}
-                {row.status === 'Incomplete' && <User size={10} />}
-                <span className="ml-1 truncate text-xs">
+                {row.status === 'Complete' && <Check size={10} className="mr-1" />}
+                {row.status === 'In Review' && <Clock size={10} className="mr-1" />}
+                {row.status === 'Incomplete' && <User size={10} className="mr-1" />}
+                <span className="truncate text-xs">
                   {row.status}
                 </span>
               </Badge>
@@ -260,15 +260,15 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
           ))}
         </div>
 
-        <div className="w-[100px] flex-shrink-0">
-          <div className="flex min-h-11 w-full gap-3 bg-background px-4 py-3 border-b-border border-b border-solid" />
+        <div className="w-[80px] flex-shrink-0">
+          <div className="flex min-h-11 w-full gap-3 bg-background px-2 py-3 border-b-border border-b border-solid" />
           {filteredData.map((row) => (
-            <div key={row.id} className="items-center flex min-h-[72px] w-full gap-1 px-2 py-4 border-b-border border-b border-solid">
-              <button className="justify-center items-center flex overflow-hidden w-8 p-2 rounded-md hover:bg-accent">
-                <Eye size={14} />
+            <div key={row.id} className="items-center flex min-h-[72px] w-full gap-1 px-1 py-4 border-b-border border-b border-solid">
+              <button className="justify-center items-center flex overflow-hidden w-6 h-6 p-1 rounded-md hover:bg-accent">
+                <Eye size={12} />
               </button>
-              <button className="justify-center items-center flex overflow-hidden w-8 p-2 rounded-md hover:bg-accent">
-                <Edit size={14} />
+              <button className="justify-center items-center flex overflow-hidden w-6 h-6 p-1 rounded-md hover:bg-accent">
+                <Edit size={12} />
               </button>
             </div>
           ))}
