@@ -215,8 +215,8 @@ const ScopeOfWorks = () => {
   const [advancedFilters, setAdvancedFilters] = useState({
     dateFrom: '',
     dateTo: '',
-    industry: '',
-    projectType: '',
+    industry: [] as string[],
+    projectType: [] as string[],
   });
   const [columnOrder, setColumnOrder] = useState([
     'client',
@@ -228,6 +228,10 @@ const ScopeOfWorks = () => {
     'dateModified'
   ]);
   const { toast } = useToast();
+
+  // Extract unique industries and project types from data
+  const availableIndustries = [...new Set(scopeOfWorks.map(item => item.industry))];
+  const availableProjectTypes = [...new Set(scopeOfWorks.map(item => item.projectType))];
 
   const handleCopyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -324,14 +328,14 @@ const ScopeOfWorks = () => {
         new Date(item.dateCreated) <= new Date(advancedFilters.dateTo)
       );
     }
-    if (advancedFilters.industry) {
+    if (advancedFilters.industry.length > 0) {
       filtered = filtered.filter(item => 
-        item.industry.toLowerCase().includes(advancedFilters.industry.toLowerCase())
+        advancedFilters.industry.includes(item.industry)
       );
     }
-    if (advancedFilters.projectType) {
+    if (advancedFilters.projectType.length > 0) {
       filtered = filtered.filter(item => 
-        item.projectType.toLowerCase().includes(advancedFilters.projectType.toLowerCase())
+        advancedFilters.projectType.includes(item.projectType)
       );
     }
 
@@ -394,9 +398,41 @@ const ScopeOfWorks = () => {
     setAdvancedFilters({
       dateFrom: '',
       dateTo: '',
-      industry: '',
-      projectType: '',
+      industry: [],
+      projectType: [],
     });
+  };
+
+  const toggleIndustryFilter = (industry: string) => {
+    setAdvancedFilters(prev => ({
+      ...prev,
+      industry: prev.industry.includes(industry)
+        ? prev.industry.filter(i => i !== industry)
+        : [...prev.industry, industry]
+    }));
+  };
+
+  const toggleProjectTypeFilter = (projectType: string) => {
+    setAdvancedFilters(prev => ({
+      ...prev,
+      projectType: prev.projectType.includes(projectType)
+        ? prev.projectType.filter(pt => pt !== projectType)
+        : [...prev.projectType, projectType]
+    }));
+  };
+
+  const removeIndustryFilter = (industry: string) => {
+    setAdvancedFilters(prev => ({
+      ...prev,
+      industry: prev.industry.filter(i => i !== industry)
+    }));
+  };
+
+  const removeProjectTypeFilter = (projectType: string) => {
+    setAdvancedFilters(prev => ({
+      ...prev,
+      projectType: prev.projectType.filter(pt => pt !== projectType)
+    }));
   };
 
   const moveColumn = (fromIndex: number, toIndex: number) => {
@@ -518,22 +554,80 @@ const ScopeOfWorks = () => {
                             
                             <div>
                               <label className="text-sm font-medium mb-2 block">Industry</label>
-                              <Input
-                                placeholder="Filter by industry..."
-                                value={advancedFilters.industry}
-                                onChange={(e) => setAdvancedFilters(prev => ({...prev, industry: e.target.value}))}
-                                className="text-xs"
-                              />
+                              <div className="space-y-2">
+                                {/* Active industry filters */}
+                                {advancedFilters.industry.length > 0 && (
+                                  <div className="flex flex-wrap gap-1">
+                                    {advancedFilters.industry.map((industry) => (
+                                      <span 
+                                        key={industry}
+                                        className="inline-flex items-center gap-1 bg-primary/10 text-primary px-2 py-1 rounded-md text-xs"
+                                      >
+                                        {industry}
+                                        <button
+                                          onClick={() => removeIndustryFilter(industry)}
+                                          className="hover:bg-primary/20 rounded-full p-0.5"
+                                        >
+                                          <X size={10} />
+                                        </button>
+                                      </span>
+                                    ))}
+                                  </div>
+                                )}
+                                {/* Available industry options */}
+                                <div className="flex flex-wrap gap-1">
+                                  {availableIndustries
+                                    .filter(industry => !advancedFilters.industry.includes(industry))
+                                    .map((industry) => (
+                                    <button
+                                      key={industry}
+                                      onClick={() => toggleIndustryFilter(industry)}
+                                      className="inline-flex items-center bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground px-2 py-1 rounded-md text-xs transition-colors"
+                                    >
+                                      {industry}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
                             </div>
                             
                             <div>
                               <label className="text-sm font-medium mb-2 block">Project Type</label>
-                              <Input
-                                placeholder="Filter by project type..."
-                                value={advancedFilters.projectType}
-                                onChange={(e) => setAdvancedFilters(prev => ({...prev, projectType: e.target.value}))}
-                                className="text-xs"
-                              />
+                              <div className="space-y-2">
+                                {/* Active project type filters */}
+                                {advancedFilters.projectType.length > 0 && (
+                                  <div className="flex flex-wrap gap-1">
+                                    {advancedFilters.projectType.map((projectType) => (
+                                      <span 
+                                        key={projectType}
+                                        className="inline-flex items-center gap-1 bg-primary/10 text-primary px-2 py-1 rounded-md text-xs"
+                                      >
+                                        {projectType}
+                                        <button
+                                          onClick={() => removeProjectTypeFilter(projectType)}
+                                          className="hover:bg-primary/20 rounded-full p-0.5"
+                                        >
+                                          <X size={10} />
+                                        </button>
+                                      </span>
+                                    ))}
+                                  </div>
+                                )}
+                                {/* Available project type options */}
+                                <div className="flex flex-wrap gap-1">
+                                  {availableProjectTypes
+                                    .filter(projectType => !advancedFilters.projectType.includes(projectType))
+                                    .map((projectType) => (
+                                    <button
+                                      key={projectType}
+                                      onClick={() => toggleProjectTypeFilter(projectType)}
+                                      className="inline-flex items-center bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground px-2 py-1 rounded-md text-xs transition-colors"
+                                    >
+                                      {projectType}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
                             </div>
                             
                             <div className="flex gap-2 pt-2">
