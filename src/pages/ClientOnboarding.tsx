@@ -10,6 +10,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ProgressBar } from '@/components/ProgressBar';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { Badge } from '@/components/ui/badge';
+import { Upload, Plus, X } from 'lucide-react';
 
 interface OnboardingData {
   // Company Information
@@ -28,11 +30,12 @@ interface OnboardingData {
   // Project Information
   projectGoals: string;
   targetAudience: string;
+  audienceTags: string[];
   keyFeatures: string[];
   
   // Additional Information
   currentWebsite: string;
-  competitorSites: string;
+  competitorWebsites: string[];
   brandingAssets: boolean;
   brandingFiles: FileList | null;
   contentReady: boolean;
@@ -68,6 +71,19 @@ const featureOptions = [
   'SEO Optimization',
   'Analytics Dashboard'
 ];
+
+const audienceTagsByIndustry = {
+  'RV Park/Resort': ['Families', 'Retirees', 'Adventure Travelers', 'Seasonal Visitors', 'Pet Owners', 'Outdoor Enthusiasts'],
+  'Manufactured Home Community': ['First-time Homebuyers', 'Retirees', 'Young Families', 'Budget-conscious Buyers', 'Local Residents'],
+  'Local Business (Service-Based)': ['Local Residents', 'Homeowners', 'Small Businesses', 'Emergency Services', 'Repeat Customers'],
+  'National Business': ['Enterprise Clients', 'Small Businesses', 'Industry Professionals', 'Decision Makers', 'B2B Customers'],
+  'Capital & Syndication Company': ['Accredited Investors', 'High Net Worth Individuals', 'Investment Groups', 'Real Estate Investors', 'Institutional Investors'],
+  'Healthcare': ['Patients', 'Families', 'Insurance Providers', 'Medical Professionals', 'Elderly Care'],
+  'Education': ['Students', 'Parents', 'Educators', 'Alumni', 'Academic Staff'],
+  'Non-profit': ['Donors', 'Volunteers', 'Community Members', 'Grant Organizations', 'Beneficiaries'],
+  'E-commerce': ['Online Shoppers', 'Mobile Users', 'Bargain Hunters', 'Loyal Customers', 'Social Media Users'],
+  'Other': ['General Public', 'Target Demographics', 'Local Community', 'Online Users', 'Service Seekers']
+};
 
 const steps = [
   { id: 1, title: 'Welcome', description: 'Getting started' },
@@ -209,9 +225,10 @@ const ClientOnboarding = () => {
     address: '',
     projectGoals: '',
     targetAudience: '',
+    audienceTags: [],
     keyFeatures: [],
     currentWebsite: '',
-    competitorSites: '',
+    competitorWebsites: [''],
     brandingAssets: false,
     brandingFiles: null,
     contentReady: false,
@@ -238,6 +255,36 @@ const ClientOnboarding = () => {
       keyFeatures: prev.keyFeatures.includes(feature)
         ? prev.keyFeatures.filter(f => f !== feature)
         : [...prev.keyFeatures, feature]
+    }));
+  };
+
+  const handleAudienceTagToggle = (tag: string) => {
+    setOnboardingData(prev => ({
+      ...prev,
+      audienceTags: prev.audienceTags.includes(tag)
+        ? prev.audienceTags.filter(t => t !== tag)
+        : [...prev.audienceTags, tag]
+    }));
+  };
+
+  const addCompetitorWebsite = () => {
+    setOnboardingData(prev => ({
+      ...prev,
+      competitorWebsites: [...prev.competitorWebsites, '']
+    }));
+  };
+
+  const removeCompetitorWebsite = (index: number) => {
+    setOnboardingData(prev => ({
+      ...prev,
+      competitorWebsites: prev.competitorWebsites.filter((_, i) => i !== index)
+    }));
+  };
+
+  const updateCompetitorWebsite = (index: number, value: string) => {
+    setOnboardingData(prev => ({
+      ...prev,
+      competitorWebsites: prev.competitorWebsites.map((site, i) => i === index ? value : site)
     }));
   };
 
@@ -456,8 +503,8 @@ const ClientOnboarding = () => {
                 </div>
                 <div>
                   <Label htmlFor="phone" className="text-sm font-medium mb-2 block">Phone Number</Label>
-                  <div className="flex">
-                    <div className="flex items-center px-3 border border-r-0 rounded-l-md bg-muted text-sm">
+                  <div className="flex items-center">
+                    <div className="flex items-center px-3 py-2 border border-r-0 rounded-l-md bg-muted text-sm whitespace-nowrap">
                       🇺🇸 +1
                     </div>
                     <Input
@@ -472,20 +519,25 @@ const ClientOnboarding = () => {
                         }
                         updateData('phone', value);
                       }}
-                      className="rounded-l-none"
+                      className="rounded-l-none flex-1"
                     />
                   </div>
                 </div>
               </div>
               <div>
                 <Label htmlFor="address" className="text-sm font-medium mb-2 block">Business Address</Label>
-                <Textarea
+                <Input
                   id="address"
-                  placeholder="Street address, city, state, zip code"
+                  placeholder="123 Main St, City, State 12345"
                   value={onboardingData.address}
                   onChange={(e) => updateData('address', e.target.value)}
-                  rows={2}
+                  list="address-suggestions"
                 />
+                <datalist id="address-suggestions">
+                  <option value="123 Main Street" />
+                  <option value="456 Oak Avenue" />
+                  <option value="789 Pine Road" />
+                </datalist>
               </div>
             </CardContent>
           </Card>
@@ -515,13 +567,42 @@ const ClientOnboarding = () => {
               </div>
               <div>
                 <Label htmlFor="targetAudience" className="text-sm font-medium mb-2 block">Who is your target audience? *</Label>
+                {onboardingData.industry && audienceTagsByIndustry[onboardingData.industry] && (
+                  <div className="mb-3">
+                    <p className="text-sm text-muted-foreground mb-2">Quick select for {onboardingData.industry}:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {audienceTagsByIndustry[onboardingData.industry].map((tag) => (
+                        <Badge
+                          key={tag}
+                          variant={onboardingData.audienceTags.includes(tag) ? "default" : "outline"}
+                          className="cursor-pointer"
+                          onClick={() => handleAudienceTagToggle(tag)}
+                        >
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 <Textarea
                   id="targetAudience"
-                  placeholder="e.g., Families looking for RV parks, small businesses needing plumbing services..."
+                  placeholder="Describe your target audience or add to the selected tags above..."
                   value={onboardingData.targetAudience}
                   onChange={(e) => updateData('targetAudience', e.target.value)}
                   rows={3}
                 />
+                {onboardingData.audienceTags.length > 0 && (
+                  <div className="mt-2">
+                    <p className="text-xs text-muted-foreground mb-1">Selected audience tags:</p>
+                    <div className="flex flex-wrap gap-1">
+                      {onboardingData.audienceTags.map((tag) => (
+                        <Badge key={tag} variant="secondary" className="text-xs">
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -569,16 +650,43 @@ const ClientOnboarding = () => {
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
-                <Label htmlFor="competitorSites" className="text-sm font-medium mb-2 block">Competitor websites you admire (optional)</Label>
-                <Textarea
-                  id="competitorSites"
-                  placeholder="List any websites you like and what you like about them..."
-                  value={onboardingData.competitorSites}
-                  onChange={(e) => updateData('competitorSites', e.target.value)}
-                  rows={2}
-                />
+                <div className="flex items-center justify-between mb-3">
+                  <Label className="text-sm font-medium">Competitor websites you admire (optional)</Label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={addCompetitorWebsite}
+                    className="flex items-center gap-1"
+                  >
+                    <Plus className="h-3 w-3" />
+                    Add Website
+                  </Button>
+                </div>
+                <div className="space-y-3">
+                  {onboardingData.competitorWebsites.map((site, index) => (
+                    <div key={index} className="flex gap-2">
+                      <Input
+                        placeholder="https://example.com - What you like about this site"
+                        value={site}
+                        onChange={(e) => updateCompetitorWebsite(index, e.target.value)}
+                        className="flex-1"
+                      />
+                      {onboardingData.competitorWebsites.length > 1 && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeCompetitorWebsite(index)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
-              <div className="space-y-3">
+              <div className="space-y-6">
                 <div className="flex items-center space-x-2">
                   <Checkbox
                     id="brandingAssets"
@@ -589,26 +697,6 @@ const ClientOnboarding = () => {
                     I have existing branding assets (logo, colors, fonts)
                   </Label>
                 </div>
-                
-                {onboardingData.brandingAssets && (
-                  <div className="ml-6 p-4 border rounded-lg bg-muted/30">
-                    <Label htmlFor="brandingFiles" className="text-sm font-medium mb-2 block">
-                      Upload Branding Assets
-                    </Label>
-                    <Input
-                      id="brandingFiles"
-                      type="file"
-                      multiple
-                      accept=".svg,.eps,.ai,.pdf,.png,.jpg,.jpeg"
-                      onChange={(e) => updateData('brandingFiles', e.target.files)}
-                      className="mb-2"
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      We prefer vector formats like SVG, EPS, AI, or PDF files when possible. 
-                      You can also upload high-resolution PNG or JPG files.
-                    </p>
-                  </div>
-                )}
                 
                 <div className="flex items-center space-x-2">
                   <Checkbox
@@ -621,6 +709,35 @@ const ClientOnboarding = () => {
                   </Label>
                 </div>
               </div>
+
+              {onboardingData.brandingAssets && (
+                <div className="w-full">
+                  <Label className="text-sm font-medium mb-2 block">
+                    Upload Branding Assets
+                  </Label>
+                  <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center hover:border-muted-foreground/50 transition-colors">
+                    <Upload className="h-8 w-8 text-muted-foreground mx-auto mb-3" />
+                    <div className="mb-2">
+                      <Label htmlFor="brandingFiles" className="cursor-pointer text-sm font-medium text-primary hover:text-primary/80">
+                        Choose files
+                      </Label>
+                      <span className="text-sm text-muted-foreground"> or drag and drop</span>
+                    </div>
+                    <Input
+                      id="brandingFiles"
+                      type="file"
+                      multiple
+                      accept=".svg,.eps,.ai,.pdf,.png,.jpg,.jpeg"
+                      onChange={(e) => updateData('brandingFiles', e.target.files)}
+                      className="hidden"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      We prefer vector formats like SVG, EPS, AI, or PDF files when possible. 
+                      You can also upload high-resolution PNG or JPG files.
+                    </p>
+                  </div>
+                </div>
+              )}
               <div>
                 <Label htmlFor="additionalNotes" className="text-sm font-medium mb-2 block">Additional notes or questions</Label>
                 <Textarea
@@ -670,7 +787,7 @@ const ClientOnboarding = () => {
                 </ul>
               </div>
 
-              <Button className="w-full px-6 py-2" size="lg" onClick={handleSubmit}>
+              <Button className="w-full px-8 py-3" size="lg" onClick={handleSubmit}>
                 Generate My Scope of Work
               </Button>
             </CardContent>
@@ -717,14 +834,14 @@ const ClientOnboarding = () => {
               variant="outline" 
               onClick={prevStep} 
               disabled={onboardingData.currentStep === 1}
-              className="px-6 py-2"
+              className="px-8 py-3"
             >
               Previous
             </Button>
             <Button 
               onClick={nextStep} 
               disabled={onboardingData.currentStep === steps.length}
-              className="px-6 py-2"
+              className="px-8 py-3"
             >
               {onboardingData.currentStep === steps.length ? 'Complete' : 'Next Step'}
             </Button>
@@ -801,10 +918,10 @@ const ClientOnboarding = () => {
               </div>
 
               <div className="flex gap-4">
-                <Button variant="outline" onClick={() => setShowSOW(false)} className="px-6 py-2">
+                <Button variant="outline" onClick={() => setShowSOW(false)} className="px-8 py-3">
                   Request Changes
                 </Button>
-                <Button onClick={handleFinalSubmit} className="px-6 py-2">
+                <Button onClick={handleFinalSubmit} className="px-8 py-3">
                   Approve & Submit
                 </Button>
               </div>
