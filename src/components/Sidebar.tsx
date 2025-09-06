@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Home01 as Home, Grid01 as Grid, File02 as FileText, Users01 as Users, X } from '@untitledui/icons';
+import { Home01 as Home, Grid01 as Grid, File02 as FileText, Users01 as Users, X, ChevronLeft, ChevronRight } from '@untitledui/icons';
 import { Link, useLocation } from 'react-router-dom';
 import { SearchInput } from './SearchInput';
 import { Badge } from './Badge';
@@ -43,6 +43,7 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const location = useLocation();
 
   const searchResults = navigationItems.map(item => ({
@@ -54,14 +55,21 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
   }));
 
   return (
-    <aside className="items-stretch flex w-[280px] h-screen bg-muted/30 p-1">
+    <aside className={`items-stretch flex ${isCollapsed ? 'w-[72px]' : 'w-[280px]'} h-screen bg-muted/30 p-1 transition-all duration-300`}>
       <div className="border shadow-sm w-full flex-1 bg-card rounded-xl border-border">
         <nav className="w-full gap-4 pt-4">
           <header className="w-full whitespace-nowrap gap-4 px-4 py-0">
             <div className="flex min-h-[24px] w-full max-w-full items-center justify-between">
-              <div className="text-base font-semibold text-foreground">Agency</div>
+              {!isCollapsed && <div className="text-base font-semibold text-foreground">Agency</div>}
               <div className="flex items-center gap-2">
-                <ThemeToggle />
+                <button
+                  onClick={() => setIsCollapsed(!isCollapsed)}
+                  className="p-1 rounded-md hover:bg-accent/50 text-muted-foreground hover:text-foreground"
+                  title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                >
+                  {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+                </button>
+                {!isCollapsed && <ThemeToggle />}
                 {onClose && (
                   <button
                     onClick={onClose}
@@ -72,14 +80,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
                 )}
               </div>
             </div>
-            <div className="w-full gap-2 mt-4">
-              <SearchInput
-                placeholder="Search"
-                value={searchTerm}
-                onChange={setSearchTerm}
-                searchResults={searchResults}
-              />
-            </div>
+            {!isCollapsed && (
+              <div className="w-full gap-2 mt-4">
+                <SearchInput
+                  placeholder="Search"
+                  value={searchTerm}
+                  onChange={setSearchTerm}
+                  searchResults={searchResults}
+                />
+              </div>
+            )}
           </header>
 
           <div className="w-full mt-4">
@@ -93,16 +103,19 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
                       className={`items-center flex w-full gap-2.5 flex-1 shrink basis-[0%] my-auto px-2.5 py-1.5 rounded-md transition-colors text-sm ${
                         isActive ? 'bg-accent text-accent-foreground' : 'bg-transparent hover:bg-accent/50 text-muted-foreground hover:text-foreground'
                       }`}
+                      title={isCollapsed ? item.label : ''}
                     >
-                      <div className="items-center flex w-full gap-2 flex-1 shrink basis-[0%] my-auto">
+                      <div className={`items-center flex w-full gap-2 flex-1 shrink basis-[0%] my-auto ${isCollapsed ? 'justify-center' : ''}`}>
                         <div className="items-center flex w-[18px] my-auto pr-0.5">
                           <item.icon size={14} className="self-stretch my-auto" />
                         </div>
-                        <div className={`text-sm font-medium leading-4 self-stretch my-auto ${
-                          isActive ? 'text-accent-foreground' : ''
-                        }`}>
-                          {item.label}
-                        </div>
+                        {!isCollapsed && (
+                          <div className={`text-sm font-medium leading-4 self-stretch my-auto ${
+                            isActive ? 'text-accent-foreground' : ''
+                          }`}>
+                            {item.label}
+                          </div>
+                        )}
                       </div>
                     </Link>
                   </div>

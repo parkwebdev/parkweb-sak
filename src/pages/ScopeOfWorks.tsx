@@ -18,6 +18,7 @@ import {
 } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/Badge';
+import { ClientAvatar } from '@/components/ClientAvatar';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
@@ -746,64 +747,61 @@ const ScopeOfWorks = () => {
 
                   {/* Kanban Columns */}
                   <div className="flex gap-6 overflow-x-auto pb-4 min-h-[600px]">
-                    {/* Draft Column */}
+                     {/* Draft Column */}
                     <div className="flex-shrink-0 w-80 bg-card/50 rounded-lg border border-border">
-                      <div className="p-4 border-b border-border">
+                      <div className="p-3 border-b border-border">
                         <div className="flex items-center justify-between">
-                          <h3 className="font-semibold flex items-center gap-2">
-                            <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                          <h3 className="text-sm font-medium flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
                             Draft
                           </h3>
-                          <Badge variant="outline" className="text-xs">
+                          <Badge variant="outline" className="text-xs px-1.5 py-0.5">
                             {filteredData.filter(sow => sow.status === 'Draft').length}
                           </Badge>
                         </div>
                       </div>
-                      <div className="p-4 space-y-3 max-h-[500px] overflow-y-auto">
+                      <div className="p-3 space-y-2 max-h-[500px] overflow-y-auto">
                         {filteredData.filter(sow => sow.status === 'Draft').map((sow) => (
-                          <div key={sow.id} className="bg-card border border-border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer">
-                            <div className="flex items-start justify-between mb-3">
+                          <div key={sow.id} className="bg-card border border-border rounded-lg p-3 hover:shadow-md transition-shadow cursor-pointer">
+                            <div className="flex items-start justify-between mb-2">
                               <button
                                 onClick={() => toggleRowSelection(sow.id)}
-                                className="flex items-center justify-center w-5 mt-1"
+                                className="flex items-center justify-center w-4 mt-0.5"
                               >
-                                <div className={`border flex min-h-5 w-5 h-5 rounded-md border-solid border-border items-center justify-center ${
+                                <div className={`border flex min-h-4 w-4 h-4 rounded border-solid border-border items-center justify-center ${
                                   selectedRows.includes(sow.id) ? 'bg-primary border-primary' : 'bg-background'
                                 }`}>
                                   {selectedRows.includes(sow.id) && (
-                                    <Check size={12} className="text-primary-foreground" />
+                                    <Check size={10} className="text-primary-foreground" />
                                   )}
                                 </div>
                               </button>
                               <div className="flex gap-1 ml-2">
                                 <button 
-                                  className="p-1 hover:bg-accent rounded"
+                                  className="p-1 hover:bg-accent rounded text-muted-foreground hover:text-foreground"
                                   onClick={() => handleViewSow(sow)}
                                 >
-                                  <Eye size={14} />
+                                  <Eye size={12} />
                                 </button>
                                 <button 
-                                  className="p-1 hover:bg-accent rounded"
+                                  className="p-1 hover:bg-accent rounded text-muted-foreground hover:text-foreground"
                                   onClick={() => handleEditSow(sow)}
                                 >
-                                  <Edit size={14} />
+                                  <Edit size={12} />
                                 </button>
                               </div>
                             </div>
-                            <div className="mb-3">
-                              <h4 className="font-medium text-sm line-clamp-2 mb-1">{sow.title}</h4>
-                              <p className="text-xs text-muted-foreground">{sow.client}</p>
-                              <a 
-                                href={`mailto:${sow.email}`}
-                                className="text-xs text-muted-foreground hover:underline"
-                              >
-                                {sow.clientContact}
-                              </a>
+                            <div className="mb-2">
+                              <h4 className="font-medium text-sm line-clamp-2 mb-1.5">{sow.title}</h4>
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                <ClientAvatar name={sow.client} size="sm" />
+                                <span className="truncate">{sow.client}</span>
+                              </div>
                             </div>
                             {showColumns.projectType && showColumns.industry && (
-                              <div className="flex flex-wrap gap-1 mb-3">
-                                {showColumns.projectType && <Badge variant="outline" className="text-xs">{sow.projectType}</Badge>}
-                                {showColumns.industry && <Badge variant="outline" className="text-xs">{sow.industry}</Badge>}
+                              <div className="flex flex-wrap gap-1 mb-2">
+                                {showColumns.projectType && <Badge variant="outline" className="text-xs px-1.5 py-0.5">{sow.projectType}</Badge>}
+                                {showColumns.industry && <Badge variant="outline" className="text-xs px-1.5 py-0.5">{sow.industry}</Badge>}
                               </div>
                             )}
                             <div className="flex items-center justify-between text-xs text-muted-foreground">
@@ -812,11 +810,11 @@ const ScopeOfWorks = () => {
                             </div>
                             {showColumns.integrations && sow.integrations.length > 0 && (
                               <div className="flex items-center gap-1 mt-2">
-                                <Badge variant="outline" className="text-xs">
+                                <Badge variant="outline" className="text-xs px-1.5 py-0.5">
                                   {sow.integrations[0]}
                                 </Badge>
                                 {sow.integrations.length > 1 && (
-                                  <Badge variant="outline" className="text-xs">
+                                  <Badge variant="outline" className="text-xs px-1.5 py-0.5">
                                     +{sow.integrations.length - 1}
                                   </Badge>
                                 )}
@@ -829,62 +827,59 @@ const ScopeOfWorks = () => {
 
                     {/* In Review Column */}
                     <div className="flex-shrink-0 w-80 bg-card/50 rounded-lg border border-border">
-                      <div className="p-4 border-b border-border">
+                      <div className="p-3 border-b border-border">
                         <div className="flex items-center justify-between">
-                          <h3 className="font-semibold flex items-center gap-2">
-                            <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                          <h3 className="text-sm font-medium flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-blue-500"></div>
                             In Review
                           </h3>
-                          <Badge variant="outline" className="text-xs">
+                          <Badge variant="outline" className="text-xs px-1.5 py-0.5">
                             {filteredData.filter(sow => sow.status === 'In Review').length}
                           </Badge>
                         </div>
                       </div>
-                      <div className="p-4 space-y-3 max-h-[500px] overflow-y-auto">
+                      <div className="p-3 space-y-2 max-h-[500px] overflow-y-auto">
                         {filteredData.filter(sow => sow.status === 'In Review').map((sow) => (
-                          <div key={sow.id} className="bg-card border border-border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer">
-                            <div className="flex items-start justify-between mb-3">
+                          <div key={sow.id} className="bg-card border border-border rounded-lg p-3 hover:shadow-md transition-shadow cursor-pointer">
+                            <div className="flex items-start justify-between mb-2">
                               <button
                                 onClick={() => toggleRowSelection(sow.id)}
-                                className="flex items-center justify-center w-5 mt-1"
+                                className="flex items-center justify-center w-4 mt-0.5"
                               >
-                                <div className={`border flex min-h-5 w-5 h-5 rounded-md border-solid border-border items-center justify-center ${
+                                <div className={`border flex min-h-4 w-4 h-4 rounded border-solid border-border items-center justify-center ${
                                   selectedRows.includes(sow.id) ? 'bg-primary border-primary' : 'bg-background'
                                 }`}>
                                   {selectedRows.includes(sow.id) && (
-                                    <Check size={12} className="text-primary-foreground" />
+                                    <Check size={10} className="text-primary-foreground" />
                                   )}
                                 </div>
                               </button>
                               <div className="flex gap-1 ml-2">
                                 <button 
-                                  className="p-1 hover:bg-accent rounded"
+                                  className="p-1 hover:bg-accent rounded text-muted-foreground hover:text-foreground"
                                   onClick={() => handleViewSow(sow)}
                                 >
-                                  <Eye size={14} />
+                                  <Eye size={12} />
                                 </button>
                                 <button 
-                                  className="p-1 hover:bg-accent rounded"
+                                  className="p-1 hover:bg-accent rounded text-muted-foreground hover:text-foreground"
                                   onClick={() => handleEditSow(sow)}
                                 >
-                                  <Edit size={14} />
+                                  <Edit size={12} />
                                 </button>
                               </div>
                             </div>
-                            <div className="mb-3">
-                              <h4 className="font-medium text-sm line-clamp-2 mb-1">{sow.title}</h4>
-                              <p className="text-xs text-muted-foreground">{sow.client}</p>
-                              <a 
-                                href={`mailto:${sow.email}`}
-                                className="text-xs text-muted-foreground hover:underline"
-                              >
-                                {sow.clientContact}
-                              </a>
+                            <div className="mb-2">
+                              <h4 className="font-medium text-sm line-clamp-2 mb-1.5">{sow.title}</h4>
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                <ClientAvatar name={sow.client} size="sm" />
+                                <span className="truncate">{sow.client}</span>
+                              </div>
                             </div>
                             {showColumns.projectType && showColumns.industry && (
-                              <div className="flex flex-wrap gap-1 mb-3">
-                                {showColumns.projectType && <Badge variant="outline" className="text-xs">{sow.projectType}</Badge>}
-                                {showColumns.industry && <Badge variant="outline" className="text-xs">{sow.industry}</Badge>}
+                              <div className="flex flex-wrap gap-1 mb-2">
+                                {showColumns.projectType && <Badge variant="outline" className="text-xs px-1.5 py-0.5">{sow.projectType}</Badge>}
+                                {showColumns.industry && <Badge variant="outline" className="text-xs px-1.5 py-0.5">{sow.industry}</Badge>}
                               </div>
                             )}
                             <div className="flex items-center justify-between text-xs text-muted-foreground">
@@ -893,11 +888,11 @@ const ScopeOfWorks = () => {
                             </div>
                             {showColumns.integrations && sow.integrations.length > 0 && (
                               <div className="flex items-center gap-1 mt-2">
-                                <Badge variant="outline" className="text-xs">
+                                <Badge variant="outline" className="text-xs px-1.5 py-0.5">
                                   {sow.integrations[0]}
                                 </Badge>
                                 {sow.integrations.length > 1 && (
-                                  <Badge variant="outline" className="text-xs">
+                                  <Badge variant="outline" className="text-xs px-1.5 py-0.5">
                                     +{sow.integrations.length - 1}
                                   </Badge>
                                 )}
@@ -910,50 +905,50 @@ const ScopeOfWorks = () => {
 
                     {/* Approved Column */}
                     <div className="flex-shrink-0 w-80 bg-card/50 rounded-lg border border-border">
-                      <div className="p-4 border-b border-border">
+                      <div className="p-3 border-b border-border">
                         <div className="flex items-center justify-between">
-                          <h3 className="font-semibold flex items-center gap-2">
-                            <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                          <h3 className="text-sm font-medium flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-green-500"></div>
                             Approved
                           </h3>
-                          <Badge variant="outline" className="text-xs">
+                          <Badge variant="outline" className="text-xs px-1.5 py-0.5">
                             {filteredData.filter(sow => sow.status === 'Approved').length}
                           </Badge>
                         </div>
                       </div>
-                      <div className="p-4 space-y-3 max-h-[500px] overflow-y-auto">
+                      <div className="p-3 space-y-2 max-h-[500px] overflow-y-auto">
                         {filteredData.filter(sow => sow.status === 'Approved').map((sow) => (
-                          <div key={sow.id} className="bg-card border border-border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer">
-                            <div className="flex items-start justify-between mb-3">
+                          <div key={sow.id} className="bg-card border border-border rounded-lg p-3 hover:shadow-md transition-shadow cursor-pointer">
+                            <div className="flex items-start justify-between mb-2">
                               <button
                                 onClick={() => toggleRowSelection(sow.id)}
-                                className="flex items-center justify-center w-5 mt-1"
+                                className="flex items-center justify-center w-4 mt-0.5"
                               >
-                                <div className={`border flex min-h-5 w-5 h-5 rounded-md border-solid border-border items-center justify-center ${
+                                <div className={`border flex min-h-4 w-4 h-4 rounded border-solid border-border items-center justify-center ${
                                   selectedRows.includes(sow.id) ? 'bg-primary border-primary' : 'bg-background'
                                 }`}>
                                   {selectedRows.includes(sow.id) && (
-                                    <Check size={12} className="text-primary-foreground" />
+                                    <Check size={10} className="text-primary-foreground" />
                                   )}
                                 </div>
                               </button>
                               <div className="flex gap-1 ml-2">
                                 <button 
-                                  className="p-1 hover:bg-accent rounded"
+                                  className="p-1 hover:bg-accent rounded text-muted-foreground hover:text-foreground"
                                   onClick={() => handleViewSow(sow)}
                                 >
-                                  <Eye size={14} />
+                                  <Eye size={12} />
                                 </button>
                                 <button 
-                                  className="p-1 hover:bg-accent rounded"
+                                  className="p-1 hover:bg-accent rounded text-muted-foreground hover:text-foreground"
                                   onClick={() => handleEditSow(sow)}
                                 >
-                                  <Edit size={14} />
+                                  <Edit size={12} />
                                 </button>
                                 <DropdownMenu>
                                   <DropdownMenuTrigger asChild>
-                                    <button className="p-1 hover:bg-accent rounded">
-                                      <Download size={14} />
+                                    <button className="p-1 hover:bg-accent rounded text-muted-foreground hover:text-foreground">
+                                      <Download size={12} />
                                     </button>
                                   </DropdownMenuTrigger>
                                   <DropdownMenuContent align="end">
@@ -971,15 +966,12 @@ const ScopeOfWorks = () => {
                                 </DropdownMenu>
                               </div>
                             </div>
-                            <div className="mb-3">
-                              <h4 className="font-medium text-sm line-clamp-2 mb-1">{sow.title}</h4>
-                              <p className="text-xs text-muted-foreground">{sow.client}</p>
-                              <a 
-                                href={`mailto:${sow.email}`}
-                                className="text-xs text-muted-foreground hover:underline"
-                              >
-                                {sow.clientContact}
-                              </a>
+                            <div className="mb-2">
+                              <h4 className="font-medium text-sm line-clamp-2 mb-1.5">{sow.title}</h4>
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                <ClientAvatar name={sow.client} size="sm" />
+                                <span className="truncate">{sow.client}</span>
+                              </div>
                             </div>
                             {showColumns.projectType && showColumns.industry && (
                               <div className="flex flex-wrap gap-1 mb-3">
