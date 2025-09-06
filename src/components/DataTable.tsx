@@ -206,13 +206,8 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
             />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden text-xs text-foreground font-medium leading-none bg-background px-2.5 py-2 rounded-md border-border hover:bg-accent/50 max-md:px-2">
-                  <Filter size={12} className="text-muted-foreground" />
-                  <div className="justify-center items-center self-stretch flex my-auto px-0.5 py-0 max-md:hidden">
-                    <div className="text-foreground text-xs leading-4 self-stretch my-auto">
-                      Filters
-                    </div>
-                  </div>
+                <button className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden text-xs text-foreground font-medium leading-none bg-background px-2 py-1.5 rounded-md border-border hover:bg-accent/50">
+                  <Filter size={16} className="text-muted-foreground" />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-80 p-4">
