@@ -9,6 +9,11 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+// Rate limiting storage
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+const RATE_LIMIT_WINDOW = 60000; // 1 minute
+const RATE_LIMIT_MAX_REQUESTS = 10; // 10 emails per minute per IP
+
 interface EmailRequest {
   to: string;
   type: 'scope_work' | 'onboarding' | 'system' | 'team';
@@ -17,6 +22,92 @@ interface EmailRequest {
   data?: any;
 }
 
+// Input validation functions
+const validateEmail = (email: string): { isValid: boolean; error?: string } => {
+  if (!email || typeof email !== 'string') {
+    return { isValid: false, error: 'Email is required' };
+  }
+  
+  const trimmed = email.trim();
+  if (trimmed.length > 254) {
+    return { isValid: false, error: 'Email too long' };
+  }
+  
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(trimmed)) {
+    return { isValid: false, error: 'Invalid email format' };
+  }
+  
+  return { isValid: true };
+};
+
+const validateText = (text: string, fieldName: string, maxLength = 500): { isValid: boolean; sanitized: string; error?: string } => {
+  if (!text || typeof text !== 'string') {
+    return { isValid: false, sanitized: '', error: `${fieldName} is required` };
+  }
+  
+  const trimmed = text.trim();
+  if (trimmed.length === 0) {
+    return { isValid: false, sanitized: '', error: `${fieldName} cannot be empty` };
+  }
+  
+  if (trimmed.length > maxLength) {
+    return { isValid: false, sanitized: '', error: `${fieldName} too long (max ${maxLength} characters)` };
+  }
+  
+  // Basic sanitization - remove potential HTML tags
+  const sanitized = trimmed.replace(/<[^>]*>/g, '');
+  
+  return { isValid: true, sanitized };
+};
+
+const validateType = (type: string): { isValid: boolean; error?: string } => {
+  const allowedTypes = ['scope_work', 'onboarding', 'system', 'team'];
+  if (!allowedTypes.includes(type)) {
+    return { isValid: false, error: 'Invalid notification type' };
+  }
+  return { isValid: true };
+};
+
+const checkRateLimit = (clientIP: string): boolean => {
+  const now = Date.now();
+  const clientData = rateLimitMap.get(clientIP);
+  
+  if (!clientData || now > clientData.resetTime) {
+    rateLimitMap.set(clientIP, { count: 1, resetTime: now + RATE_LIMIT_WINDOW });
+    return true;
+  }
+  
+  if (clientData.count >= RATE_LIMIT_MAX_REQUESTS) {
+    return false;
+  }
+  
+  clientData.count++;
+  return true;
+};
+
+const sanitizeData = (data: any): any => {
+  if (!data) return data;
+  
+  if (typeof data === 'string') {
+    return data.replace(/<[^>]*>/g, '').trim();
+  }
+  
+  if (typeof data === 'object' && data !== null) {
+    const sanitized: any = {};
+    for (const [key, value] of Object.entries(data)) {
+      if (typeof value === 'string') {
+        sanitized[key] = value.replace(/<[^>]*>/g, '').trim();
+      } else {
+        sanitized[key] = value;
+      }
+    }
+    return sanitized;
+  }
+  
+  return data;
+};
+
 const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
@@ -24,28 +115,131 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const emailRequest: EmailRequest = await req.json();
+    // Get client IP for rate limiting
+    const clientIP = req.headers.get('x-forwarded-for') || 
+                     req.headers.get('x-real-ip') || 
+                     'unknown';
+
+    // Check rate limit
+    if (!checkRateLimit(clientIP)) {
+      console.warn(`Rate limit exceeded for IP: ${clientIP}`);
+      return new Response(
+        JSON.stringify({ error: 'Rate limit exceeded. Please try again later.' }),
+        {
+          status: 429,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
+    // Validate request method
+    if (req.method !== 'POST') {
+      return new Response(
+        JSON.stringify({ error: 'Method not allowed' }),
+        {
+          status: 405,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
+    // Parse and validate request body
+    let emailRequest: EmailRequest;
+    try {
+      emailRequest = await req.json();
+    } catch (error) {
+      console.error('Invalid JSON in request body:', error);
+      return new Response(
+        JSON.stringify({ error: 'Invalid JSON in request body' }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
     console.log("Email request received:", emailRequest);
 
     const { to, type, title, message, data } = emailRequest;
 
-    if (!to || !title || !message) {
-      throw new Error("Missing required fields: to, title, or message");
+    // Validate all required fields
+    const emailValidation = validateEmail(to);
+    if (!emailValidation.isValid) {
+      return new Response(
+        JSON.stringify({ error: emailValidation.error }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
     }
 
+    const typeValidation = validateType(type);
+    if (!typeValidation.isValid) {
+      return new Response(
+        JSON.stringify({ error: typeValidation.error }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
+    const titleValidation = validateText(title, 'Title', 200);
+    if (!titleValidation.isValid) {
+      return new Response(
+        JSON.stringify({ error: titleValidation.error }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
+    const messageValidation = validateText(message, 'Message', 1000);
+    if (!messageValidation.isValid) {
+      return new Response(
+        JSON.stringify({ error: messageValidation.error }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
+    // Sanitize input data
+    const sanitizedTo = to.trim().toLowerCase();
+    const sanitizedTitle = titleValidation.sanitized;
+    const sanitizedMessage = messageValidation.sanitized;
+    const sanitizedData = sanitizeData(data);
+
     // Generate email content based on notification type
-    const emailContent = generateEmailContent(type, title, message, data);
+    const emailContent = generateEmailContent(type, sanitizedTitle, sanitizedMessage, sanitizedData);
 
     const emailResponse = await resend.emails.send({
       from: "Agency <notifications@lovable.app>", // You'll need to configure this domain in Resend
-      to: [to],
+      to: [sanitizedTo],
       subject: emailContent.subject,
       html: emailContent.html,
     });
 
+    if (emailResponse.error) {
+      console.error("Resend API error:", emailResponse.error);
+      return new Response(
+        JSON.stringify({ error: 'Failed to send email' }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
     console.log("Email sent successfully:", emailResponse);
 
-    return new Response(JSON.stringify(emailResponse), {
+    return new Response(JSON.stringify({ 
+      success: true, 
+      messageId: emailResponse.data?.id 
+    }), {
       status: 200,
       headers: {
         "Content-Type": "application/json",
@@ -53,9 +247,9 @@ const handler = async (req: Request): Promise<Response> => {
       },
     });
   } catch (error: any) {
-    console.error("Error in send-notification-email function:", error);
+    console.error("Unexpected error in send-notification-email function:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: 'Internal server error' }),
       {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },
