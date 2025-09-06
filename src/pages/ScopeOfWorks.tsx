@@ -605,8 +605,8 @@ const ScopeOfWorks = () => {
                     </p>
                   </div>
                   <div className="items-center flex min-w-0 lg:min-w-48 gap-2.5 text-xs leading-none">
-                    <Button className="flex items-center gap-2 w-full lg:w-auto">
-                      <Plus className="h-4 w-4" />
+                    <Button className="flex items-center gap-2 w-full lg:w-auto h-8 text-xs">
+                      <Plus className="h-3 w-3" />
                       Create New
                     </Button>
                   </div>
@@ -1016,8 +1016,8 @@ const ScopeOfWorks = () => {
                 <p className="text-muted-foreground mb-6">
                   Try different search terms or create a new project.
                 </p>
-                <Button className="flex items-center gap-2">
-                  <Plus className="h-4 w-4" />
+                <Button className="flex items-center gap-2 h-8 text-xs">
+                  <Plus className="h-3 w-3" />
                   Create New
                 </Button>
               </div>

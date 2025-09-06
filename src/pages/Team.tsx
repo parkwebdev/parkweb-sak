@@ -120,10 +120,10 @@ const Team = () => {
                 </div>
                 <Dialog open={isInviteOpen} onOpenChange={setIsInviteOpen}>
                   <DialogTrigger asChild>
-                    <Button>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Invite Member
-                    </Button>
+                <Button className="h-8 text-xs">
+                  <Plus className="h-3 w-3 mr-2" />
+                  Invite Member
+                </Button>
                   </DialogTrigger>
                   <DialogContent>
                     <DialogHeader>

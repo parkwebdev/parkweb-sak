@@ -24,7 +24,7 @@ export const UserAccountCard: React.FC<UserAccountCardProps> = ({ isCollapsed = 
                 <AvatarFallback className={`font-medium ${isCollapsed ? 'text-xs' : 'text-sm'}`}>AC</AvatarFallback>
               </Avatar>
               <div className={`bg-green-500 absolute rounded-full border-2 border-background ${
-                isCollapsed ? 'w-2 h-2 -bottom-0 -right-0' : 'w-3 h-3 -bottom-0.5 -right-0.5'
+                isCollapsed ? 'w-2.5 h-2.5 -bottom-0 -right-0' : 'w-3 h-3 -bottom-0.5 -right-0.5'
               }`} />
             </div>
             {!isCollapsed && (

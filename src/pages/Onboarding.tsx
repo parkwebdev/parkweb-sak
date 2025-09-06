@@ -187,7 +187,7 @@ const Onboarding = () => {
                 
                 <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
                   <DialogTrigger asChild>
-                    <Button size="sm" className="h-8 w-full lg:w-auto">
+                    <Button size="sm" className="h-8 w-full lg:w-auto text-xs">
                       <Plus className="h-3 w-3 mr-1.5" />
                       Create Link
                     </Button>
