@@ -257,7 +257,7 @@ export const GeneralSettings: React.FC = () => {
               onValueChange={(value) => updatePreference('default_project_view', value)}
               disabled={updating}
             >
-              <SelectTrigger className="w-40">
+              <SelectTrigger className="w-48">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

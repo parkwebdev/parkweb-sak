@@ -232,6 +232,10 @@ export const TeamSettings: React.FC = () => {
 
   const canManageRoles = ['admin', 'super_admin'].includes(currentUserRole);
 
+  console.log('Current user role:', currentUserRole);
+  console.log('Can manage roles:', canManageRoles);
+  console.log('Team members:', teamMembers.length);
+
   if (loading) {
     return (
       <div className="space-y-6 lg:space-y-8">
@@ -338,24 +342,28 @@ export const TeamSettings: React.FC = () => {
                 {canManageRoles && member.user_id !== user?.id && (
                   <div className="flex items-center gap-2">
                     <Button 
-                      variant="ghost" 
+                      variant="outline" 
                       size="sm"
                       onClick={() => handleEditRole(member)}
-                      className="h-6 px-2 text-xs"
+                      className="h-7 px-3 text-xs"
                     >
-                      <Settings size={12} className="mr-1" />
+                      <Settings size={14} className="mr-1" />
                       Edit Role
                     </Button>
                     <Button 
-                      variant="ghost" 
+                      variant="outline" 
                       size="sm"
                       onClick={() => handleRemoveMember(member)}
-                      className="h-6 px-2 text-xs text-destructive hover:text-destructive"
+                      className="h-7 px-3 text-xs border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
                     >
                       Remove
                     </Button>
                   </div>
                 )}
+                {/* DEBUG INFO - Remove this after testing */}
+                <div className="text-xs text-muted-foreground">
+                  Role: {currentUserRole} | Can manage: {canManageRoles.toString()} | Is you: {(member.user_id === user?.id).toString()}
+                </div>
               </div>
           </div>
         ))}

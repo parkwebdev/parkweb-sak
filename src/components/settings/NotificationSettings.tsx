@@ -315,11 +315,12 @@ export const NotificationSettings: React.FC = () => {
                  'Notification permission not requested'}
               </p>
             </div>
-            {Notification.permission !== 'granted' && (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={async () => {
+          {Notification.permission !== 'granted' && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={async () => {
+                try {
                   const permission = await Notification.requestPermission();
                   if (permission === 'granted') {
                     toast({
@@ -333,11 +334,19 @@ export const NotificationSettings: React.FC = () => {
                       variant: "destructive",
                     });
                   }
-                }}
-              >
-                Enable Notifications
-              </Button>
-            )}
+                } catch (error) {
+                  console.error('Notification permission error:', error);
+                  toast({
+                    title: "Error",
+                    description: "Failed to request notification permission.",
+                    variant: "destructive",
+                  });
+                }
+              }}
+            >
+              Enable Notifications
+            </Button>
+          )}
           </div>
         </CardContent>
       </Card>

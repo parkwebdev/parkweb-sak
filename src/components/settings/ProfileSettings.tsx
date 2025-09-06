@@ -220,7 +220,7 @@ export const ProfileSettings: React.FC = () => {
             </div>
             <div className="text-center sm:text-left">
               <p className="text-xs text-muted-foreground mt-2">
-                Hover over avatar to change • JPG, GIF or PNG • Max 800KB
+                Click avatar to change profile picture
               </p>
             </div>
           </div>
