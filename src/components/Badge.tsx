@@ -3,7 +3,7 @@ import { Folder } from 'lucide-react';
 
 interface BadgeProps {
   children: React.ReactNode;
-  variant?: 'default' | 'folder' | 'online' | 'complete' | 'incomplete' | 'in-review';
+  variant?: 'default' | 'folder' | 'online' | 'complete' | 'incomplete' | 'in-review' | 'outline';
   className?: string;
 }
 
@@ -24,6 +24,8 @@ export const Badge: React.FC<BadgeProps> = ({
         return "items-center flex text-xs font-medium whitespace-nowrap text-center bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 px-2 py-1 rounded-full w-auto";
       case 'in-review':
         return "items-center flex text-xs font-medium whitespace-nowrap text-center bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-200 px-2 py-1 rounded-full w-auto";
+      case 'outline':
+        return "items-center border flex text-xs text-foreground font-medium whitespace-nowrap text-center bg-transparent px-2 py-1 rounded-full border-border w-auto";
       default:
         return "items-center border flex text-xs text-foreground font-medium whitespace-nowrap text-center bg-muted px-2 py-1 rounded-full border-border w-auto";
     }

@@ -1,16 +1,20 @@
 import React, { useState } from 'react';
 import { Sidebar } from '@/components/Sidebar';
 import { SearchInput } from '@/components/SearchInput';
-import { FileText, Plus, Filter } from 'lucide-react';
+import { FileText, Plus, Filter, Eye, Edit, Copy, Clock, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@/components/Badge';
+import { formatDate } from '@/lib/status-helpers';
+import { useToast } from '@/hooks/use-toast';
 
 const scopeOfWorks = [
   {
     id: '1',
     title: 'Mountain View RV Park - Web Design',
     client: 'Mountain View RV Park',
+    clientContact: 'Sarah Johnson',
+    email: 'sarah@mountainviewrv.com',
     industry: 'RV Park',
     status: 'Approved',
     dateCreated: '2024-01-15',
@@ -22,6 +26,8 @@ const scopeOfWorks = [
     id: '2',
     title: 'Elite Capital Partners - Investment Portal',
     client: 'Elite Capital Partners',
+    clientContact: 'Jessica Rodriguez',
+    email: 'jessica@elitecapital.com',
     industry: 'Capital & Syndication',
     status: 'In Review',
     dateCreated: '2024-01-10',
@@ -33,6 +39,8 @@ const scopeOfWorks = [
     id: '3',
     title: 'Local Plumbing Pro - Service Website',
     client: 'Local Plumbing Pro',
+    clientContact: 'David Miller',
+    email: 'david@localplumbingpro.com',
     industry: 'Local Business',
     status: 'Draft',
     dateCreated: '2024-01-08',
@@ -42,8 +50,22 @@ const scopeOfWorks = [
   }
 ];
 
+const getStatusBadgeVariant = (status: string) => {
+  switch (status) {
+    case 'Approved':
+      return 'complete';
+    case 'In Review':
+      return 'in-review';
+    case 'Draft':
+      return 'incomplete';
+    default:
+      return 'default';
+  }
+};
+
 const ScopeOfWorks = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const { toast } = useToast();
 
   const searchResults = scopeOfWorks.map(sow => ({
     id: sow.id,
@@ -52,30 +74,49 @@ const ScopeOfWorks = () => {
     category: 'Scope of Works'
   }));
 
+  const handleCopyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast({
+      title: "Copied to clipboard",
+      description: "Link has been copied to your clipboard.",
+    });
+  };
+
+  const filteredScopeOfWorks = scopeOfWorks.filter(sow =>
+    sow.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    sow.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    sow.industry.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <div className="flex h-screen bg-muted/30">
       <div className="fixed left-0 top-0 h-full z-10">
         <Sidebar />
       </div>
-      <div className="flex-1 ml-[280px] overflow-auto">
-        <main className="flex-1 bg-muted/20 pt-8 pb-12">
+      <div className="flex-1 ml-[280px] overflow-auto min-h-screen">
+        <main className="flex-1 bg-muted/30 pt-8 pb-12">
           <div className="max-w-7xl mx-auto px-8">
-            <header className="mb-8">
-              <div className="flex items-center justify-between">
+            {/* Header Section */}
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-4">
+                <div className="border shadow-sm justify-center items-center flex gap-1 bg-primary text-primary-foreground px-3 py-1.5 rounded-lg border-border">
+                  <FileText size={14} />
+                  <div className="text-xs font-medium">{filteredScopeOfWorks.length}</div>
+                </div>
                 <div>
-                  <h1 className="text-foreground text-3xl font-semibold leading-8 tracking-tight mb-2">
+                  <h1 className="text-foreground text-2xl font-semibold leading-tight mb-1">
                     Scope of Works
                   </h1>
-                  <p className="text-muted-foreground">
+                  <p className="text-sm text-muted-foreground">
                     Manage and review all project scope documents
                   </p>
                 </div>
-                <Button className="flex items-center gap-2">
-                  <Plus className="h-4 w-4" />
-                  Create New SoW
-                </Button>
               </div>
-            </header>
+              <Button className="flex items-center gap-2">
+                <Plus className="h-4 w-4" />
+                Create New SoW
+              </Button>
+            </div>
 
             {/* Search and Filter Bar */}
             <div className="mb-6 flex items-center gap-4">
@@ -93,76 +134,124 @@ const ScopeOfWorks = () => {
               </Button>
             </div>
 
-            {/* SoW Grid */}
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {scopeOfWorks.map((sow) => (
-                <Card key={sow.id} className="hover:shadow-md transition-shadow cursor-pointer">
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <FileText className="h-5 w-5 text-primary" />
-                      <Badge variant={
-                        sow.status === 'Approved' ? 'default' : 
-                        sow.status === 'In Review' ? 'secondary' : 
-                        'outline'
-                      }>
-                        {sow.status}
-                      </Badge>
+            {/* Scope of Works List */}
+            <Card className="overflow-hidden">
+              <CardHeader className="border-b border-border">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="border shadow-sm justify-center items-center flex gap-1 bg-primary text-primary-foreground px-3 py-1.5 rounded-lg border-border">
+                      <FileText size={14} />
+                      <div className="text-xs font-medium">{filteredScopeOfWorks.length}</div>
                     </div>
-                    <CardTitle className="text-lg leading-tight">
-                      {sow.title}
+                    <CardTitle className="text-base font-semibold">
+                      Scope of Works Projects
                     </CardTitle>
-                    <CardDescription>
-                      {sow.client} • {sow.industry}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Pages:</span>
-                        <span className="font-medium">{sow.pages}</span>
-                      </div>
-                      
-                      <div>
-                        <span className="text-sm text-muted-foreground mb-2 block">Integrations:</span>
-                        <div className="flex flex-wrap gap-1">
-                          {sow.integrations.slice(0, 2).map((integration) => (
-                            <Badge key={integration} variant="outline" className="text-xs">
-                              {integration}
-                            </Badge>
-                          ))}
-                          {sow.integrations.length > 2 && (
-                            <Badge variant="outline" className="text-xs">
-                              +{sow.integrations.length - 2} more
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
+                  </div>
+                </div>
+              </CardHeader>
 
-                      <div className="pt-2 border-t border-border">
-                        <div className="flex justify-between text-xs text-muted-foreground">
-                          <span>Created: {new Date(sow.dateCreated).toLocaleDateString()}</span>
-                          <span>Modified: {new Date(sow.dateModified).toLocaleDateString()}</span>
+              <CardContent className="p-0">
+                <div className="divide-y divide-border">
+                  {filteredScopeOfWorks.map((sow) => (
+                    <div key={sow.id} className="p-6 hover:bg-muted/50 transition-colors">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start gap-3 mb-3">
+                            <div className="min-w-0 flex-1">
+                              <h3 className="font-medium text-base truncate mb-1">{sow.title}</h3>
+                              <p className="text-sm text-muted-foreground truncate">
+                                <span className="font-medium">{sow.client}</span>
+                                <span className="mx-2">•</span>
+                                <a 
+                                  href={`mailto:${sow.email}`}
+                                  className="hover:underline"
+                                >
+                                  {sow.clientContact}
+                                </a>
+                                <span className="mx-2">•</span>
+                                <a 
+                                  href={`mailto:${sow.email}`}
+                                  className="hover:underline"
+                                >
+                                  {sow.email}
+                                </a>
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              <Badge variant={getStatusBadgeVariant(sow.status)} className="text-xs px-2.5 py-1 w-auto">
+                                {sow.status}
+                              </Badge>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center gap-6 text-sm text-muted-foreground mb-3">
+                            <span>Industry: {sow.industry}</span>
+                            <span>Pages: {sow.pages}</span>
+                            <span>Created: {formatDate(sow.dateCreated)}</span>
+                            <span>Modified: {formatDate(sow.dateModified)}</span>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-muted-foreground">Integrations:</span>
+                            <div className="flex flex-wrap gap-1">
+                              {sow.integrations.slice(0, 3).map((integration) => (
+                                <Badge key={integration} variant="outline" className="text-xs px-2 py-0.5">
+                                  {integration}
+                                </Badge>
+                              ))}
+                              {sow.integrations.length > 3 && (
+                                <Badge variant="outline" className="text-xs px-2 py-0.5">
+                                  +{sow.integrations.length - 3} more
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-7 px-2"
+                            onClick={() => handleCopyToClipboard(`/sow/${sow.id}`)}
+                          >
+                            <Copy className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-7 px-2"
+                          >
+                            <Eye className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-7 px-2"
+                          >
+                            <Edit className="h-3 w-3" />
+                          </Button>
                         </div>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
 
-            {/* Empty State for New Users */}
-            {scopeOfWorks.length === 0 && (
+            {/* Empty State */}
+            {filteredScopeOfWorks.length === 0 && searchTerm && (
               <div className="text-center py-12">
                 <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <h3 className="text-lg font-semibold text-foreground mb-2">
-                  No Scope of Works Yet
+                  No Scope of Works Found
                 </h3>
                 <p className="text-muted-foreground mb-6">
-                  Create your first scope of work to get started with project management.
+                  Try adjusting your search terms or create a new scope of work.
                 </p>
                 <Button className="flex items-center gap-2">
                   <Plus className="h-4 w-4" />
-                  Create Your First SoW
+                  Create New SoW
                 </Button>
               </div>
             )}
