@@ -537,7 +537,7 @@ const ScopeOfWorks = () => {
                 </header>
 
                 <div className="w-full overflow-x-auto">
-                  <Table>
+                  <Table className="table-auto">
                     <TableHeader>
                       <TableRow>
                         <TableHead className="w-12">
@@ -554,14 +554,14 @@ const ScopeOfWorks = () => {
                             </div>
                           </button>
                         </TableHead>
-                        <TableHead>
+                        <TableHead className="min-w-0">
                           <div className="flex items-center gap-1">
                             <span>Project Title</span>
                             <ArrowUpDown size={12} />
                           </div>
                         </TableHead>
                         {showColumns.client && (
-                          <TableHead>
+                          <TableHead className="min-w-0">
                             <div className="flex items-center gap-1">
                               <span>Client</span>
                               <ArrowUpDown size={12} />
@@ -569,7 +569,7 @@ const ScopeOfWorks = () => {
                           </TableHead>
                         )}
                         {showColumns.industry && (
-                          <TableHead>
+                          <TableHead className="min-w-0">
                             <div className="flex items-center gap-1">
                               <span>Industry</span>
                               <ArrowUpDown size={12} />
@@ -577,7 +577,7 @@ const ScopeOfWorks = () => {
                           </TableHead>
                         )}
                         {showColumns.status && (
-                          <TableHead>
+                          <TableHead className="min-w-0">
                             <div className="flex items-center gap-1">
                               <span>Status</span>
                               <ArrowUpDown size={12} />
@@ -585,7 +585,7 @@ const ScopeOfWorks = () => {
                           </TableHead>
                         )}
                         {showColumns.pages && (
-                          <TableHead>
+                          <TableHead className="min-w-0">
                             <div className="flex items-center gap-1">
                               <span>Pages</span>
                               <ArrowUpDown size={12} />
@@ -593,7 +593,7 @@ const ScopeOfWorks = () => {
                           </TableHead>
                         )}
                         {showColumns.integrations && (
-                          <TableHead>
+                          <TableHead className="min-w-0">
                             <div className="flex items-center gap-1">
                               <span>Integrations</span>
                               <ArrowUpDown size={12} />
@@ -601,7 +601,7 @@ const ScopeOfWorks = () => {
                           </TableHead>
                         )}
                         {showColumns.dateModified && (
-                          <TableHead>
+                          <TableHead className="min-w-0">
                             <div className="flex items-center gap-1">
                               <span>Date Modified</span>
                               <ArrowUpDown size={12} />
@@ -631,9 +631,9 @@ const ScopeOfWorks = () => {
                             </button>
                           </TableCell>
                           <TableCell>
-                            <div>
-                              <div className="font-medium">{sow.title}</div>
-                              <div className="text-xs text-muted-foreground mt-1">
+                            <div className="min-w-0">
+                              <div className="font-medium whitespace-nowrap">{sow.title}</div>
+                              <div className="text-xs text-muted-foreground mt-1 whitespace-nowrap">
                                 <a 
                                   href={`mailto:${sow.email}`}
                                   className="hover:underline"
@@ -644,12 +644,12 @@ const ScopeOfWorks = () => {
                             </div>
                           </TableCell>
                           {showColumns.client && (
-                            <TableCell className="text-muted-foreground">
+                            <TableCell className="text-muted-foreground whitespace-nowrap">
                               {sow.client}
                             </TableCell>
                           )}
                           {showColumns.industry && (
-                            <TableCell className="text-muted-foreground">
+                            <TableCell className="text-muted-foreground whitespace-nowrap">
                               {sow.industry}
                             </TableCell>
                           )}
@@ -661,13 +661,13 @@ const ScopeOfWorks = () => {
                             </TableCell>
                           )}
                           {showColumns.pages && (
-                            <TableCell className="text-muted-foreground">
+                            <TableCell className="text-muted-foreground whitespace-nowrap">
                               {sow.pages}
                             </TableCell>
                           )}
                           {showColumns.integrations && (
                             <TableCell>
-                              <div className="flex flex-wrap gap-1">
+                              <div className="flex items-center gap-1 whitespace-nowrap">
                                 {sow.integrations.length > 0 && (
                                   <Badge variant="outline" className="text-xs">
                                     {sow.integrations[0]}
@@ -695,7 +695,7 @@ const ScopeOfWorks = () => {
                             </TableCell>
                           )}
                           {showColumns.dateModified && (
-                            <TableCell className="text-muted-foreground">
+                            <TableCell className="text-muted-foreground whitespace-nowrap">
                               {formatDate(sow.dateModified)}
                             </TableCell>
                           )}
