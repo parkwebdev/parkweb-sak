@@ -138,8 +138,8 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
       </div>
 
       <div className="w-full overflow-x-auto">
-        <div className="border flex min-w-[1400px] bg-background border-border">
-        <div className="w-[240px] flex-shrink-0">
+        <div className="border flex w-full bg-background border-border">
+        <div className="flex-1">
           <div className="items-center flex min-h-11 w-full gap-3 bg-background px-4 py-3 border-b-border border-b border-solid">
             <button
               onClick={toggleAllSelection}
@@ -182,7 +182,7 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
           ))}
         </div>
 
-        <div className="w-[220px] flex-shrink-0">
+        <div className="w-48">
           <div className="items-center flex min-h-11 w-full gap-3 text-xs text-muted-foreground font-semibold bg-background px-4 py-3 border-b-border border-b border-solid">
             <div className="items-center self-stretch flex gap-1 my-auto">
               <div className="text-muted-foreground text-xs leading-[18px] self-stretch my-auto">
@@ -200,7 +200,7 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
           ))}
         </div>
 
-        <div className="w-[120px] flex-shrink-0">
+        <div className="w-28">
           <div className="items-center flex min-h-11 w-full gap-3 text-xs text-muted-foreground font-semibold bg-background px-4 py-3 border-b-border border-b border-solid">
             <div className="items-center self-stretch flex gap-1 my-auto">
               <div className="text-muted-foreground text-xs leading-[18px] self-stretch my-auto">
@@ -218,7 +218,7 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
           ))}
         </div>
 
-        <div className="w-[240px] flex-shrink-0">
+        <div className="flex-1">
           <div className="items-center flex min-h-11 w-full gap-3 text-xs text-muted-foreground font-semibold bg-background px-4 py-3 border-b-border border-b border-solid">
             <div className="items-center self-stretch flex gap-1 my-auto">
               <div className="text-muted-foreground text-xs leading-[18px] self-stretch my-auto">
@@ -236,7 +236,7 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
           ))}
         </div>
 
-        <div className="w-[140px] flex-shrink-0">
+        <div className="w-32">
           <div className="items-center flex min-h-11 w-full gap-3 text-muted-foreground font-semibold bg-background px-4 py-3 border-b-border border-b border-solid">
             <div className="items-center self-stretch flex gap-1 my-auto">
               <div className="text-muted-foreground text-xs leading-[18px] self-stretch my-auto">
@@ -262,7 +262,7 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
           ))}
         </div>
 
-        <div className="w-[90px] flex-shrink-0">
+        <div className="w-20">
           <div className="flex min-h-11 w-full gap-3 bg-background px-3 py-3 border-b-border border-b border-solid" />
           {filteredData.map((row) => (
             <div key={row.id} className="items-center flex min-h-[72px] w-full gap-1 px-2 py-4 border-b-border border-b border-solid">
