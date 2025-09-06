@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Settings, ChevronDown, ArrowUpDown, Eye, Send, Check, User, Clock, MoreHorizontal, Download, Eye as EyeIcon, Columns } from 'lucide-react';
+import { Settings, ChevronDown, ArrowUpDown, Eye, Send, Check, User, Clock, MoreHorizontal, Download, Eye as EyeIcon, Columns, Calendar, Building2, Filter } from 'lucide-react';
 import { SearchInput } from './SearchInput';
 import { Badge } from './Badge';
 import { ProgressBar } from './ProgressBar';
@@ -21,6 +21,8 @@ import {
   DropdownMenuTrigger,
   DropdownMenuCheckboxItem,
 } from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 interface TableRow {
   id: string;
@@ -59,6 +61,12 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
     status: true,
     actions: true,
   });
+  const [advancedFilters, setAdvancedFilters] = useState({
+    dateFrom: '',
+    dateTo: '',
+    businessType: '',
+    completionRange: [0, 100],
+  });
 
   useEffect(() => {
     setCurrentActiveTab(activeTab);
@@ -82,6 +90,23 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
       } else if (activeFilter === 'in-review') {
         filtered = filtered.filter(item => item.status === 'In Review');
       }
+    }
+
+    // Apply advanced filters
+    if (advancedFilters.dateFrom) {
+      filtered = filtered.filter(item => 
+        new Date(item.submittedDate) >= new Date(advancedFilters.dateFrom)
+      );
+    }
+    if (advancedFilters.dateTo) {
+      filtered = filtered.filter(item => 
+        new Date(item.submittedDate) <= new Date(advancedFilters.dateTo)
+      );
+    }
+    if (advancedFilters.businessType) {
+      filtered = filtered.filter(item => 
+        item.businessType.toLowerCase().includes(advancedFilters.businessType.toLowerCase())
+      );
     }
 
     return filtered;
@@ -138,6 +163,15 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
     }));
   };
 
+  const resetAdvancedFilters = () => {
+    setAdvancedFilters({
+      dateFrom: '',
+      dateTo: '',
+      businessType: '',
+      completionRange: [0, 100],
+    });
+  };
+
   return (
     <div className="w-full bg-card border border-border rounded-xl overflow-hidden">
       {/* New Header with Filters, Search, and Settings */}
@@ -170,14 +204,60 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
               searchResults={searchResults}
               className="max-w-[240px] min-w-48 w-[240px] max-md:w-full max-md:min-w-0"
             />
-            <button className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden text-xs text-foreground font-medium leading-none bg-background px-2.5 py-2 rounded-md border-border hover:bg-accent/50 max-md:px-2">
-              <ChevronDown size={12} className="text-muted-foreground" />
-              <div className="justify-center items-center self-stretch flex my-auto px-0.5 py-0 max-md:hidden">
-                <div className="text-foreground text-xs leading-4 self-stretch my-auto">
-                  Filters
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden text-xs text-foreground font-medium leading-none bg-background px-2.5 py-2 rounded-md border-border hover:bg-accent/50 max-md:px-2">
+                  <Filter size={12} className="text-muted-foreground" />
+                  <div className="justify-center items-center self-stretch flex my-auto px-0.5 py-0 max-md:hidden">
+                    <div className="text-foreground text-xs leading-4 self-stretch my-auto">
+                      Filters
+                    </div>
+                  </div>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-80 p-4">
+                <DropdownMenuLabel>Advanced Filters</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Date Range</label>
+                    <div className="flex gap-2">
+                      <Input
+                        type="date"
+                        placeholder="From"
+                        value={advancedFilters.dateFrom}
+                        onChange={(e) => setAdvancedFilters(prev => ({...prev, dateFrom: e.target.value}))}
+                        className="text-xs"
+                      />
+                      <Input
+                        type="date"
+                        placeholder="To"
+                        value={advancedFilters.dateTo}
+                        onChange={(e) => setAdvancedFilters(prev => ({...prev, dateTo: e.target.value}))}
+                        className="text-xs"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Business Type</label>
+                    <Input
+                      placeholder="Filter by business type..."
+                      value={advancedFilters.businessType}
+                      onChange={(e) => setAdvancedFilters(prev => ({...prev, businessType: e.target.value}))}
+                      className="text-xs"
+                    />
+                  </div>
+                  
+                  <div className="flex gap-2 pt-2">
+                    <Button size="sm" variant="outline" onClick={resetAdvancedFilters} className="text-xs">
+                      Clear All
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            </button>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden text-xs text-foreground font-medium leading-none bg-background px-2 py-1.5 rounded-md border-border hover:bg-accent/50">

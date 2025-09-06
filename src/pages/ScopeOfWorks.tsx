@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Sidebar } from '@/components/Sidebar';
 import { SearchInput } from '@/components/SearchInput';
-import { FileText, Plus, Filter, Eye, Edit, Copy, Clock, User, X, Save } from 'lucide-react';
+import { FileText, Plus, Filter, Eye, Edit, Copy, Clock, User, X, Save, Download, FileDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/Badge';
@@ -11,6 +11,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { formatDate } from '@/lib/status-helpers';
 import { useToast } from '@/hooks/use-toast';
+import { generateScopeOfWorkPDF, generateScopeOfWorkDOC } from '@/lib/document-generator';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const scopeOfWorks = [
   {
@@ -205,6 +214,39 @@ const ScopeOfWorks = () => {
     setIsEditing(false);
   };
 
+  const handleDownloadPDF = (sow: any) => {
+    try {
+      const doc = generateScopeOfWorkPDF(sow);
+      doc.save(`${sow.title.replace(/[^a-zA-Z0-9]/g, '_')}_ScopeOfWork.pdf`);
+      toast({
+        title: "PDF Generated",
+        description: "Scope of work PDF has been downloaded.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to generate PDF. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDownloadDOC = (sow: any) => {
+    try {
+      generateScopeOfWorkDOC(sow);
+      toast({
+        title: "DOC Generated",
+        description: "Scope of work DOC has been downloaded.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to generate DOC. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleCloseModal = () => {
     setSelectedSow(null);
     setIsEditing(false);
@@ -350,6 +392,31 @@ const ScopeOfWorks = () => {
                           >
                             <Edit className="h-3 w-3" />
                           </Button>
+                          {sow.status === 'Approved' && (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-7 px-2"
+                                >
+                                  <Download className="h-3 w-3" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuLabel>Download Options</DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={() => handleDownloadPDF(sow)}>
+                                  <FileDown className="mr-2 h-4 w-4" />
+                                  Download PDF
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleDownloadDOC(sow)}>
+                                  <FileDown className="mr-2 h-4 w-4" />
+                                  Download DOC
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          )}
                         </div>
                       </div>
                     </div>
