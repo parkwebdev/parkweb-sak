@@ -247,13 +247,6 @@ export const NotificationSettings: React.FC = () => {
             />
           </div>
 
-          {preferences.browser_notifications && (
-            <div className="pl-6 pt-2">
-              <Button variant="outline" size="sm" onClick={testNotification}>
-                Test Browser Notification
-              </Button>
-            </div>
-          )}
         </CardContent>
       </Card>
 

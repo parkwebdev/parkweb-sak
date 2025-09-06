@@ -145,8 +145,7 @@ export const TeamSettings: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <Dialog open={isInviteOpen} onOpenChange={setIsInviteOpen}>
           <DialogTrigger asChild>
-            <Button className="w-full sm:w-auto ml-auto">
-              <Plus size={16} className="mr-2" />
+            <Button size="sm" className="w-full sm:w-auto ml-auto">
               Invite Member
             </Button>
           </DialogTrigger>
