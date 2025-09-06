@@ -383,32 +383,26 @@ const Onboarding = () => {
                               <span>Last: {formatDate(client.lastActivity)}</span>
                             </div>
                          </div>
-                         <div className="flex items-center gap-2 flex-shrink-0">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-7 px-2 flex-1 sm:flex-initial"
-                            onClick={() => handleCopyToClipboard(client.onboardingUrl)}
-                          >
-                            <Copy className="h-3 w-3" />
-                            <span className="ml-1 sm:hidden">Copy</span>
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-7 px-2 flex-1 sm:flex-initial"
-                            onClick={() => handleSendEmail(client)}
-                          >
-                            <Send className="h-3 w-3" />
-                            <span className="ml-1 sm:hidden">Send</span>
-                          </Button>
-                          {client.sowStatus && (
-                            <Button variant="outline" size="sm" className="h-7 px-2">
-                              <Eye className="h-3 w-3" />
-                              <span className="ml-1 sm:hidden">View</span>
-                            </Button>
-                          )}
-                        </div>
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                           <Button
+                             variant="outline"
+                             size="sm"
+                             className="h-7 px-2 flex-1 sm:flex-initial"
+                             onClick={() => handleCopyToClipboard(client.onboardingUrl)}
+                           >
+                             <Copy className="h-3 w-3" />
+                             <span className="ml-1 sm:hidden">Copy</span>
+                           </Button>
+                           <Button
+                             variant="outline"
+                             size="sm"
+                             className="h-7 px-2 flex-1 sm:flex-initial"
+                             onClick={() => handleSendEmail(client)}
+                           >
+                             <Send className="h-3 w-3" />
+                             <span className="ml-1 sm:hidden">Send</span>
+                           </Button>
+                         </div>
                       </div>
                     </div>
                   ))}

@@ -527,9 +527,11 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
                       <button className="p-1 hover:bg-accent rounded">
                         <Eye size={14} />
                       </button>
-                      <button className="p-1 hover:bg-accent rounded">
-                        <Send size={14} />
-                      </button>
+                      {row.status !== 'Complete' && (
+                        <button className="p-1 hover:bg-accent rounded">
+                          <Send size={14} />
+                        </button>
+                      )}
                     </div>
                   </TableCell>
                 )}
