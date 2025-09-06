@@ -81,7 +81,6 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNotifi
           filter: `user_id=eq.${user.id}`
         },
         (payload) => {
-          console.log('New notification received:', payload);
           const newNotification = payload.new as Notification;
           
           setNotifications(prev => [newNotification, ...prev]);
@@ -111,7 +110,6 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNotifi
           filter: `user_id=eq.${user.id}`
         },
         (payload) => {
-          console.log('Notification updated:', payload);
           const updatedNotification = payload.new as Notification;
           
           setNotifications(prev => 

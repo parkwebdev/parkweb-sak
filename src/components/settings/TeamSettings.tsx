@@ -1,159 +1,23 @@
-import React, { useState, useEffect } from 'react';
-import { Plus, Mail01 as Mail, X, Settings01 as Settings } from '@untitledui/icons';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { RoleManagementDialog } from './RoleManagementDialog';
-
-interface TeamMember {
-  id: string;
-  user_id: string;
-  display_name: string | null;
-  email: string | null;
-  avatar_url: string | null;
-  created_at: string;
-  role?: string;
-  permissions?: string[];
-}
+import { TeamMemberCard } from '@/components/team/TeamMemberCard';
+import { InviteMemberDialog } from '@/components/team/InviteMemberDialog';
+import { useTeam } from '@/hooks/useTeam';
+import { TeamMember } from '@/types/team';
 
 export const TeamSettings: React.FC = () => {
-  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [isInviteOpen, setIsInviteOpen] = useState(false);
-  const [inviteEmail, setInviteEmail] = useState('');
   const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
   const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
-  const [currentUserRole, setCurrentUserRole] = useState<string>('member');
-  const { toast } = useToast();
   const { user } = useAuth();
-
-  useEffect(() => {
-    fetchTeamMembers();
-    fetchCurrentUserRole();
-  }, []);
-
-  const fetchCurrentUserRole = async () => {
-    if (!user) return;
-    
-    try {
-      const { data, error } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user.id)
-        .single();
-
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error fetching user role:', error);
-        return;
-      }
-
-      setCurrentUserRole(data?.role || 'member');
-    } catch (error) {
-      console.error('Error in fetchCurrentUserRole:', error);
-    }
-  };
-
-  const fetchTeamMembers = async () => {
-    try {
-      const { data: profilesData, error: profilesError } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (profilesError) {
-        console.error('Error fetching team members:', profilesError);
-        toast({
-          title: "Error",
-          description: "Failed to load team members.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Fetch roles for all members
-      const { data: rolesData, error: rolesError } = await supabase
-        .from('user_roles')
-        .select('user_id, role, permissions');
-
-      if (rolesError) {
-        console.error('Error fetching roles:', rolesError);
-      }
-
-      // Combine profile and role data
-      const membersWithRoles = (profilesData || []).map(profile => {
-        const roleData = rolesData?.find(r => r.user_id === profile.user_id);
-        return {
-          ...profile,
-          role: roleData?.role || 'member',
-          permissions: roleData?.permissions || [],
-        };
-      });
-
-      setTeamMembers(membersWithRoles);
-    } catch (error) {
-      console.error('Error in fetchTeamMembers:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleInviteMember = async () => {
-    if (!inviteEmail) {
-      toast({
-        title: "Error",
-        description: "Please enter an email address.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      const { error } = await supabase.functions.invoke('send-notification-email', {
-        body: {
-          to: inviteEmail,
-          type: 'team_invitation',
-          title: 'Team Invitation',
-          message: `You've been invited to join our team! Click the link below to get started.`,
-          data: {
-            invited_by: user?.email || 'Team Admin',
-          }
-        }
-      });
-
-      if (error) {
-        console.error('Error sending invitation:', error);
-        toast({
-          title: "Failed to send invitation",
-          description: "There was an error sending the invitation email.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      toast({
-        title: "Invitation sent",
-        description: `Team invitation sent to ${inviteEmail}`,
-      });
-      
-      setInviteEmail('');
-      setIsInviteOpen(false);
-    } catch (error) {
-      console.error('Error in handleInviteMember:', error);
-      toast({
-        title: "Error",
-        description: "Failed to send invitation.",
-        variant: "destructive",
-      });
-    }
-  };
+  const { 
+    teamMembers, 
+    loading, 
+    canManageRoles, 
+    inviteMember, 
+    removeMember, 
+    updateMemberRole 
+  } = useTeam();
 
   const handleEditRole = (member: TeamMember) => {
     setSelectedMember(member);
@@ -164,73 +28,12 @@ export const TeamSettings: React.FC = () => {
     if (!confirm(`Are you sure you want to remove ${member.display_name || member.email} from the team?`)) {
       return;
     }
-
-    try {
-      // Remove from user_roles table
-      const { error: roleError } = await supabase
-        .from('user_roles')
-        .delete()
-        .eq('user_id', member.user_id);
-
-      if (roleError) {
-        console.error('Error removing user role:', roleError);
-      }
-
-      // Remove from profiles table
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('user_id', member.user_id);
-
-      if (profileError) {
-        console.error('Error removing user profile:', profileError);
-        toast({
-          title: "Remove failed",
-          description: "Failed to remove team member.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      toast({
-        title: "Member removed",
-        description: `${member.display_name || member.email} has been removed from the team.`,
-      });
-
-      // Refresh the team members list
-      fetchTeamMembers();
-    } catch (error) {
-      console.error('Error in handleRemoveMember:', error);
-      toast({
-        title: "Remove failed", 
-        description: "An error occurred while removing the team member.",
-        variant: "destructive",
-      });
-    }
+    await removeMember(member);
   };
 
-  const formatJoinDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
+  const handleInviteMember = async (email: string): Promise<boolean> => {
+    return await inviteMember({ email });
   };
-
-  const getRoleColor = (role: string) => {
-    switch (role) {
-      case 'super_admin':
-        return 'bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900/20 dark:text-purple-300 dark:border-purple-800';
-      case 'admin':
-        return 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800';
-      case 'manager':
-        return 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800';
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-800/50 dark:text-gray-300 dark:border-gray-700';
-    }
-  };
-
-  const canManageRoles = ['admin', 'super_admin'].includes(currentUserRole);
 
   if (loading) {
     return (
@@ -259,111 +62,22 @@ export const TeamSettings: React.FC = () => {
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <Dialog open={isInviteOpen} onOpenChange={setIsInviteOpen}>
-          <DialogTrigger asChild>
-            <Button size="sm" className="w-full sm:w-auto ml-auto">
-              Invite Member
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Invite Team Member</DialogTitle>
-              <DialogDescription>
-                Send an invitation to a new team member via email.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="email">Email Address <span className="text-destructive">*</span></Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="Enter email address"
-                  value={inviteEmail}
-                  onChange={(e) => setInviteEmail(e.target.value)}
-                />
-              </div>
-              <div className="flex justify-end space-x-2">
-                <Button variant="outline" onClick={() => setIsInviteOpen(false)}>
-                  Cancel
-                </Button>
-                <Button onClick={handleInviteMember}>
-                  <Mail size={16} className="mr-2" />
-                  Send Invitation
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <InviteMemberDialog onInvite={handleInviteMember} />
       </div>
 
       <div className="space-y-3">
         {teamMembers.map((member) => (
-          <div key={member.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 border border-border rounded-lg bg-background gap-4">
-            <div className="flex items-center space-x-4">
-              <Avatar>
-                <AvatarImage src={member.avatar_url || undefined} />
-                <AvatarFallback>
-                  {member.display_name 
-                    ? member.display_name.split(' ').map(n => n[0]).join('').toUpperCase()
-                    : member.email?.substring(0, 2).toUpperCase() || 'U'
-                  }
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <h3 className="text-sm font-medium text-foreground">
-                  {member.display_name || member.email?.split('@')[0] || 'Unknown User'}
-                </h3>
-                <p className="text-xs text-muted-foreground">{member.email}</p>
-                <p className="text-xs text-muted-foreground">
-                  Joined {formatJoinDate(member.created_at)}
-                </p>
-              </div>
-            </div>
-            
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:space-x-4">
-                <Badge className={`text-xs capitalize ${getRoleColor(member.role || 'member')}`}>
-                  {member.user_id === user?.id 
-                    ? (
-                        member.role === 'super_admin' ? 'Super Admin (You)' :
-                        member.role === 'admin' ? 'Admin (You)' : 
-                        `${member.role || 'Member'} (You)`
-                      )
-                    : (
-                        member.role === 'super_admin' ? 'Super Admin' :
-                        member.role || 'Member'
-                      )
-                  }
-                </Badge>
-                {/* Show Edit Role button for: 1) Admins managing others, 2) Users managing themselves */}
-                {((canManageRoles && member.user_id !== user?.id) || (member.user_id === user?.id)) && (
-                  <div className="flex items-center gap-1 mt-2">
-                    <Button 
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleEditRole(member)}
-                      className="h-8 w-8 p-0"
-                    >
-                      <Settings size={16} />
-                    </Button>
-                    {/* Only show remove for admins managing others, not for self-management */}
-                    {canManageRoles && member.user_id !== user?.id && (
-                      <Button 
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleRemoveMember(member)}
-                        className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
-                      >
-                        <X size={16} />
-                      </Button>
-                    )}
-                  </div>
-                )}
-              </div>
-          </div>
+          <TeamMemberCard
+            key={member.id}
+            member={member}
+            currentUserId={user?.id}
+            canManageRoles={canManageRoles}
+            onEditRole={handleEditRole}
+            onRemove={handleRemoveMember}
+          />
         ))}
         
-        {teamMembers.length === 0 && (
+        {teamMembers.length === 0 && !loading && (
           <div className="text-center py-8 text-muted-foreground text-sm">
             No team members found.
           </div>
@@ -377,9 +91,8 @@ export const TeamSettings: React.FC = () => {
           setIsRoleDialogOpen(false);
           setSelectedMember(null);
         }}
-        onUpdate={() => {
-          fetchTeamMembers();
-          fetchCurrentUserRole();
+        onUpdate={async (member: TeamMember, role: string, permissions: string[]) => {
+          await updateMemberRole(member, role as any, permissions);
         }}
       />
     </div>

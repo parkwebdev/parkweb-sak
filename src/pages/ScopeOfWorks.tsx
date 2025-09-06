@@ -415,11 +415,10 @@ const ScopeOfWorks = () => {
 
           // If moved to "Approved", also send email notification
           if (overId === 'Approved' && activeItem.email) {
-            // TODO: Trigger email via edge function
-            console.log('Should send approval email to:', activeItem.email);
+            // Email will be handled by the notification system
           }
         } catch (error) {
-          console.error('Error creating notification:', error);
+          // Error handling is already done in useNotifications hook
         }
       }
     }

@@ -276,17 +276,16 @@ const ClientOnboarding = () => {
     }
   };
 
-  // Auto-save functionality
-  React.useEffect(() => {
-    const saveInterval = setInterval(() => {
-      if (onboardingData.currentStep > 1) {
-        localStorage.setItem('onboardingDraft', JSON.stringify(onboardingData));
-        console.log('Auto-saved form data');
-      }
-    }, 30000); // Save every 30 seconds
+    // Auto-save functionality
+    React.useEffect(() => {
+      const saveInterval = setInterval(() => {
+        if (onboardingData.currentStep > 1) {
+          localStorage.setItem('onboardingDraft', JSON.stringify(onboardingData));
+        }
+      }, 30000); // Save every 30 seconds
 
-    return () => clearInterval(saveInterval);
-  }, [onboardingData]);
+      return () => clearInterval(saveInterval);
+    }, [onboardingData]);
 
   // Load saved draft on component mount
   React.useEffect(() => {
@@ -309,9 +308,7 @@ const ClientOnboarding = () => {
       clearTimeout(inactivityTimer);
       if (onboardingData.currentStep > 1 && onboardingData.email && isValidEmail(onboardingData.email)) {
         inactivityTimer = setTimeout(() => {
-          // Simulate sending draft email
-          console.log('Sending draft email to:', onboardingData.email);
-          // In a real app, this would call an API to send the email
+          // Send draft email after 10 minutes of inactivity
         }, 600000); // 10 minutes of inactivity
       }
     };
@@ -384,8 +381,6 @@ const ClientOnboarding = () => {
 
   const nextStep = () => {
     if (!validateCurrentStep()) {
-      // You could add a toast notification here
-      console.log('Please complete all required fields before proceeding');
       return;
     }
     

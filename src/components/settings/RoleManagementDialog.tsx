@@ -4,48 +4,17 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-
-interface TeamMember {
-  id: string;
-  user_id: string;
-  display_name: string | null;
-  email: string | null;
-  avatar_url: string | null;
-  created_at: string;
-  role?: string;
-  permissions?: string[];
-}
+import { supabase } from '@/integrations/supabase/client';
+import { TeamMember, PERMISSION_GROUPS, PERMISSION_LABELS } from '@/types/team';
 
 interface RoleManagementDialogProps {
   member: TeamMember | null;
   isOpen: boolean;
   onClose: () => void;
-  onUpdate: () => void;
+  onUpdate: (member: TeamMember, role: string, permissions: string[]) => Promise<void>;
 }
 
-const PERMISSION_GROUPS = {
-  'Team Management': ['manage_team', 'view_team'],
-  'Projects': ['manage_projects', 'view_projects'],
-  'Onboarding': ['manage_onboarding', 'view_onboarding'],
-  'Scope of Works': ['manage_scope_works', 'view_scope_works'],
-  'Settings': ['manage_settings', 'view_settings'],
-};
-
-const PERMISSION_LABELS = {
-  'manage_team': 'Manage Team Members',
-  'view_team': 'View Team Members',
-  'manage_projects': 'Manage Projects',
-  'view_projects': 'View Projects',
-  'manage_onboarding': 'Manage Client Onboarding',
-  'view_onboarding': 'View Client Onboarding',
-  'manage_scope_works': 'Manage Scope of Works',
-  'view_scope_works': 'View Scope of Works',
-  'manage_settings': 'Manage Settings',
-  'view_settings': 'View Settings',
-};
 
 export const RoleManagementDialog: React.FC<RoleManagementDialogProps> = ({
   member,
@@ -56,7 +25,6 @@ export const RoleManagementDialog: React.FC<RoleManagementDialogProps> = ({
   const [role, setRole] = useState<string>('member');
   const [permissions, setPermissions] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
-  const { toast } = useToast();
   const { user } = useAuth();
 
   // Check if user is editing their own settings vs admin managing others
@@ -159,30 +127,7 @@ export const RoleManagementDialog: React.FC<RoleManagementDialogProps> = ({
 
     setLoading(true);
     try {
-      const { error } = await supabase
-        .from('user_roles')
-        .upsert({
-          user_id: member.user_id,
-          role: role as 'admin' | 'manager' | 'member',
-          permissions: permissions as any,
-        } as any);
-
-      if (error) {
-        console.error('Error updating member role:', error);
-        toast({
-          title: "Update failed",
-          description: "Failed to update member role and permissions.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      toast({
-        title: "Role updated",
-        description: `${member.display_name || member.email}'s role has been updated.`,
-      });
-
-      onUpdate();
+      await onUpdate(member, role, permissions);
       onClose();
     } catch (error) {
       console.error('Error in handleSave:', error);
