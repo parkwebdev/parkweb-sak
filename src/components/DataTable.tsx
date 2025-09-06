@@ -234,7 +234,7 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
           ))}
         </div>
 
-        <div className="w-[150px] flex-shrink-0">
+        <div className="w-[120px] flex-shrink-0">
           <div className="items-center flex min-h-11 w-full gap-3 text-muted-foreground font-semibold bg-background px-4 py-3 border-b-border border-b border-solid">
             <div className="items-center self-stretch flex gap-1 my-auto">
               <div className="text-muted-foreground text-xs leading-[18px] self-stretch my-auto">
@@ -244,14 +244,17 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
             </div>
           </div>
           {filteredData.map((row) => (
-            <div key={row.id} className="items-center flex min-h-[72px] w-full px-4 py-4 border-b-border border-b border-solid">
-              <Badge variant={row.status === 'Complete' ? 'default' : row.status === 'In Review' ? 'online' : 'folder'}>
-                {row.status === 'Complete' && <Check size={12} />}
-                {row.status === 'In Review' && <Clock size={12} />}
-                {row.status === 'Incomplete' && <User size={12} />}
-                <div className="text-foreground text-xs leading-[18px] ml-1 truncate">
+            <div key={row.id} className="items-center flex min-h-[72px] w-full px-2 py-4 border-b-border border-b border-solid">
+              <Badge 
+                variant={row.status === 'Complete' ? 'default' : row.status === 'In Review' ? 'online' : 'folder'}
+                className="w-full justify-center text-xs"
+              >
+                {row.status === 'Complete' && <Check size={10} />}
+                {row.status === 'In Review' && <Clock size={10} />}
+                {row.status === 'Incomplete' && <User size={10} />}
+                <span className="ml-1 truncate text-xs">
                   {row.status}
-                </div>
+                </span>
               </Badge>
             </div>
           ))}

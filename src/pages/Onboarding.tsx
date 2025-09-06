@@ -1,411 +1,135 @@
 import React, { useState } from 'react';
 import { Sidebar } from '@/components/Sidebar';
-import { ArrowRight, CheckCircle, FileText, Users, Building2, MapPin, Briefcase } from 'lucide-react';
+import { Plus, Link2, Copy, Send, User, Building2, Calendar, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { useToast } from '@/hooks/use-toast';
 
-interface ProjectData {
+interface ClientLink {
+  id: string;
   clientName: string;
-  projectType: string;
+  companyName: string;
+  email: string;
   industry: string;
-  goals: string;
-  currentStep: number;
+  status: 'Sent' | 'In Progress' | 'Completed' | 'SOW Generated' | 'Approved';
+  dateSent: string;
+  lastActivity: string;
+  onboardingUrl: string;
+  sowStatus?: 'Draft' | 'Client Review' | 'Agency Review' | 'Approved';
 }
 
-const industryOptions = [
-  { value: 'local-business', label: 'Local Business (Service-Based)', icon: Building2 },
-  { value: 'national-business', label: 'National Business', icon: MapPin },
-  { value: 'rv-park', label: 'RV Park/Resort', icon: Users },
-  { value: 'manufactured-home', label: 'Manufactured Home Community', icon: Users },
-  { value: 'capital-syndication', label: 'Capital & Syndication Company', icon: Briefcase }
-];
-
-const steps = [
-  { id: 1, title: 'Project Overview', description: 'Basic project information' },
-  { id: 2, title: 'Industry Selection', description: 'Choose client industry type' },
-  { id: 3, title: 'Goals & Requirements', description: 'Define project objectives' },
-  { id: 4, title: 'Website Structure', description: 'Plan site architecture' },
-  { id: 5, title: 'Content & Assets', description: 'Media and branding requirements' },
-  { id: 6, title: 'Review & Generate', description: 'Finalize Scope of Work' }
+const clientLinks: ClientLink[] = [
+  {
+    id: '1',
+    clientName: 'Sarah Johnson',
+    companyName: 'Mountain View RV Park',
+    email: 'sarah@mountainviewrv.com',
+    industry: 'RV Park',
+    status: 'SOW Generated',
+    dateSent: '2024-01-15',
+    lastActivity: '2024-01-16',
+    onboardingUrl: '/client-onboarding?name=Sarah%20Johnson&company=Mountain%20View%20RV%20Park&token=abc123',
+    sowStatus: 'Client Review'
+  },
+  {
+    id: '2',
+    clientName: 'Michael Chen',
+    companyName: 'Sunset Manufacturing',
+    email: 'michael@sunsetmfg.com',
+    industry: 'Manufactured Home Community',
+    status: 'In Progress',
+    dateSent: '2024-01-12',
+    lastActivity: '2024-01-14',
+    onboardingUrl: '/client-onboarding?name=Michael%20Chen&company=Sunset%20Manufacturing&token=def456'
+  },
+  {
+    id: '3',
+    clientName: 'Jessica Rodriguez',
+    companyName: 'Elite Capital Partners',
+    email: 'jessica@elitecapital.com',
+    industry: 'Capital & Syndication',
+    status: 'Sent',
+    dateSent: '2024-01-10',
+    lastActivity: '2024-01-10',
+    onboardingUrl: '/client-onboarding?name=Jessica%20Rodriguez&company=Elite%20Capital%20Partners&token=ghi789'
+  }
 ];
 
 const Onboarding = () => {
-  const [projectData, setProjectData] = useState<ProjectData>({
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [newClient, setNewClient] = useState({
     clientName: '',
-    projectType: 'Web Design',
+    companyName: '',
+    email: '',
     industry: '',
-    goals: '',
-    currentStep: 1
+    personalNote: ''
   });
+  const { toast } = useToast();
 
-  const updateProjectData = (field: keyof ProjectData, value: string | number) => {
-    setProjectData(prev => ({ ...prev, [field]: value }));
+  const handleCreateLink = () => {
+    // Generate unique token and URL
+    const token = Math.random().toString(36).substring(2, 15);
+    const baseUrl = window.location.origin;
+    const onboardingUrl = `${baseUrl}/client-onboarding?name=${encodeURIComponent(newClient.clientName)}&company=${encodeURIComponent(newClient.companyName)}&token=${token}`;
+    
+    console.log('Generated onboarding link:', onboardingUrl);
+    
+    // Reset form
+    setNewClient({
+      clientName: '',
+      companyName: '',
+      email: '',
+      industry: '',
+      personalNote: ''
+    });
+    setShowCreateDialog(false);
+    
+    toast({
+      title: "Onboarding link created!",
+      description: "The personalized onboarding link has been generated and copied to clipboard.",
+    });
   };
 
-  const nextStep = () => {
-    if (projectData.currentStep < steps.length) {
-      updateProjectData('currentStep', projectData.currentStep + 1);
-    }
+  const copyToClipboard = (url: string) => {
+    navigator.clipboard.writeText(window.location.origin + url);
+    toast({
+      title: "Link copied!",
+      description: "The onboarding link has been copied to your clipboard.",
+    });
   };
 
-  const prevStep = () => {
-    if (projectData.currentStep > 1) {
-      updateProjectData('currentStep', projectData.currentStep - 1);
-    }
+  const sendEmail = (client: ClientLink) => {
+    const subject = `Welcome ${client.clientName} - Let's get started on ${client.companyName}'s new website!`;
+    const body = `Hi ${client.clientName},
+
+Thank you for choosing us for ${client.companyName}'s website project! 
+
+To get started, please complete our personalized onboarding form using the link below:
+${window.location.origin}${client.onboardingUrl}
+
+This will help us understand your needs and create the perfect website for your business.
+
+Best regards,
+Your Web Design Team`;
+
+    const mailtoUrl = `mailto:${client.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.open(mailtoUrl);
   };
 
-  const renderStepContent = () => {
-    switch (projectData.currentStep) {
-      case 1:
-        return (
-          <Card className="w-full">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5" />
-                Welcome to SoW Creation Training
-              </CardTitle>
-              <CardDescription>
-                A Scope of Work (SoW) is essential for both client clarity and internal project management. 
-                It serves as a roadmap that defines what will be delivered and helps prevent scope creep.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="companyName">Company Name *</Label>
-                <Input
-                  id="companyName"
-                  placeholder="e.g., Snowy Owl Mobile Home Park"
-                  value={projectData.clientName}
-                  onChange={(e) => updateProjectData('clientName', e.target.value)}
-                />
-              </div>
-              <div>
-                <Label htmlFor="projectType">Project Type *</Label>
-                <Select value={projectData.projectType} onValueChange={(value) => updateProjectData('projectType', value)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Web Design">Web Design</SelectItem>
-                    <SelectItem value="Branding + Web">Branding + Web Design</SelectItem>
-                    <SelectItem value="E-commerce">E-commerce Development</SelectItem>
-                    <SelectItem value="Redesign">Website Redesign</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="bg-muted/50 p-4 rounded-lg">
-                <p className="text-sm text-muted-foreground">
-                  <strong>Why this matters:</strong> Clear project identification helps set proper expectations 
-                  and ensures we're aligned on deliverables from the start.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        );
-
-      case 2:
-        return (
-          <Card className="w-full">
-            <CardHeader>
-              <CardTitle>Industry Selection</CardTitle>
-              <CardDescription>
-                Different industries require specific features and pages. Selecting the right industry 
-                ensures we include all necessary modules for your client's business type.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-3">
-                {industryOptions.map((option) => (
-                  <div
-                    key={option.value}
-                    className={`border rounded-lg p-4 cursor-pointer transition-colors ${
-                      projectData.industry === option.value 
-                        ? 'border-primary bg-primary/5' 
-                        : 'border-border hover:border-primary/50'
-                    }`}
-                    onClick={() => updateProjectData('industry', option.value)}
-                  >
-                    <div className="flex items-center gap-3">
-                      <option.icon className="h-5 w-5 text-primary" />
-                      <span className="font-medium">{option.label}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              {projectData.industry && (
-                <div className="bg-muted/50 p-4 rounded-lg">
-                  <p className="text-sm text-muted-foreground">
-                    <strong>Industry-specific features will include:</strong>
-                    {projectData.industry === 'rv-park' && ' Facilities & Amenities, Rates, Park Map, Booking System, Resident Portal'}
-                    {projectData.industry === 'local-business' && ' Services, Testimonials, Portfolio, FAQ, Appointment Booking'}
-                    {projectData.industry === 'national-business' && ' Services, Industries Served, Locations Page, Resources, Careers'}
-                    {projectData.industry === 'manufactured-home' && ' Home Listings, Rates, Community Features, Resident Portal'}
-                    {projectData.industry === 'capital-syndication' && ' Investor Portal, Portfolio, Team Bios, Legal/Compliance Pages'}
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        );
-
-      case 3:
-        return (
-          <Card className="w-full">
-            <CardHeader>
-              <CardTitle>Project Goals & Requirements</CardTitle>
-              <CardDescription>
-                Clear goals help us design a website that achieves specific business outcomes. 
-                This section becomes crucial for measuring project success.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="goals">Main Project Goals *</Label>
-                <Textarea
-                  id="goals"
-                  placeholder="e.g., Boost bookings by 30%, showcase amenities to attract new residents, streamline payment process for current residents"
-                  value={projectData.goals}
-                  onChange={(e) => updateProjectData('goals', e.target.value)}
-                  rows={4}
-                />
-              </div>
-              <div className="bg-muted/50 p-4 rounded-lg">
-                <p className="text-sm text-muted-foreground">
-                  <strong>Pro tip:</strong> Specific, measurable goals help us design features that drive results. 
-                  Vague goals like "look professional" are harder to achieve and measure.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        );
-
-      case 4:
-        return (
-          <Card className="w-full">
-            <CardHeader>
-              <CardTitle>Website Structure Planning</CardTitle>
-              <CardDescription>
-                Every website needs universal foundation pages, plus industry-specific modules. 
-                This ensures nothing important is missed.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <h4 className="font-semibold mb-3 flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4 text-green-500" />
-                  Universal Foundation (Always Included)
-                </h4>
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    Header & Navigation
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    Footer with Contact Info
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    Responsive Design
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    SEO Optimization
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    Contact Methods
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    Call-to-Action Buttons
-                  </div>
-                </div>
-              </div>
-
-              {projectData.industry && (
-                <div>
-                  <h4 className="font-semibold mb-3 flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-blue-500" />
-                    Industry-Specific Pages
-                  </h4>
-                  <div className="grid grid-cols-1 gap-2 text-sm">
-                    {projectData.industry === 'rv-park' && (
-                      <>
-                        <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                          Facilities & Amenities Showcase
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                          Rates & Pricing Page
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                          Interactive Park Map
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                          Online Booking System
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                          Resident Portal Access
-                        </div>
-                      </>
-                    )}
-                    {projectData.industry === 'local-business' && (
-                      <>
-                        <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                          Services/Products Showcase
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                          Customer Testimonials
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                          Portfolio/Case Studies
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                          FAQ Section
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                          Appointment Booking
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              <div className="bg-muted/50 p-4 rounded-lg">
-                <p className="text-sm text-muted-foreground">
-                  <strong>Why this structure matters:</strong> Universal pages ensure professional standards, 
-                  while industry-specific modules address unique business needs. This prevents both 
-                  over-engineering and missing critical features.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        );
-
-      case 5:
-        return (
-          <Card className="w-full">
-            <CardHeader>
-              <CardTitle>Content & Asset Requirements</CardTitle>
-              <CardDescription>
-                Defining what the client provides vs. what we create prevents delays and clarifies responsibilities.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <h4 className="font-semibold mb-3 text-green-600">What We Provide:</h4>
-                <div className="grid grid-cols-1 gap-2 text-sm">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                    Professional website design & development
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                    Technical integrations (booking, payments, CRM)
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                    Content formatting & optimization
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                    SEO setup & responsive design
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <h4 className="font-semibold mb-3 text-blue-600">What Client Provides:</h4>
-                <div className="grid grid-cols-1 gap-2 text-sm">
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-blue-500 rounded"></div>
-                    Logo files (preferably SVG format)
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-blue-500 rounded"></div>
-                    High-quality photos (property, team, products)
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-blue-500 rounded"></div>
-                    Written content & copy
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-blue-500 rounded"></div>
-                    Branding guidelines (colors, fonts)
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-blue-500 rounded"></div>
-                    Integration credentials (booking systems, etc.)
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-blue-500 rounded"></div>
-                    Legal documents (policies, terms)
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-muted/50 p-4 rounded-lg">
-                <p className="text-sm text-muted-foreground">
-                  <strong>Pro tip:</strong> Clear responsibility division prevents project delays. 
-                  When clients know exactly what to provide and when, projects run smoother and stay on timeline.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        );
-
-      case 6:
-        return (
-          <Card className="w-full">
-            <CardHeader>
-              <CardTitle>Review & Generate SoW</CardTitle>
-              <CardDescription>
-                Review all information before generating your professional Scope of Work document.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="bg-card border rounded-lg p-4">
-                <h4 className="font-semibold mb-2">Project Summary:</h4>
-                <div className="space-y-1 text-sm">
-                  <p><strong>Company:</strong> {projectData.clientName || 'Not specified'}</p>
-                  <p><strong>Project Type:</strong> {projectData.projectType}</p>
-                  <p><strong>Industry:</strong> {industryOptions.find(opt => opt.value === projectData.industry)?.label || 'Not selected'}</p>
-                  <p><strong>Goals:</strong> {projectData.goals || 'Not specified'}</p>
-                </div>
-              </div>
-
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <h4 className="font-semibold text-green-800 mb-2">Ready to Generate!</h4>
-                <p className="text-sm text-green-700">
-                  Your Scope of Work will include all universal foundation elements plus industry-specific 
-                  modules tailored to {projectData.clientName}'s business needs.
-                </p>
-              </div>
-
-              <Button className="w-full" size="lg">
-                Generate Professional SoW Document
-              </Button>
-            </CardContent>
-          </Card>
-        );
-
-      default:
-        return null;
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'Sent': return 'bg-blue-100 text-blue-800';
+      case 'In Progress': return 'bg-yellow-100 text-yellow-800';
+      case 'Completed': return 'bg-green-100 text-green-800';
+      case 'SOW Generated': return 'bg-purple-100 text-purple-800';
+      case 'Approved': return 'bg-green-100 text-green-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -416,80 +140,216 @@ const Onboarding = () => {
       </div>
       <div className="flex-1 ml-[296px] overflow-auto">
         <main className="flex-1 bg-muted/20 pt-8 pb-12">
-          <div className="max-w-4xl mx-auto px-8">
+          <div className="max-w-7xl mx-auto px-8">
             <header className="mb-8">
-              <h1 className="text-foreground text-3xl font-semibold leading-8 tracking-tight mb-2">
-                SoW Creation Training
-              </h1>
-              <p className="text-muted-foreground">
-                Learn to create professional Scopes of Work that prevent scope creep and ensure client satisfaction.
-              </p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-foreground text-3xl font-semibold leading-8 tracking-tight mb-2">
+                    Client Onboarding Management
+                  </h1>
+                  <p className="text-muted-foreground">
+                    Generate personalized onboarding links and manage client intake workflow
+                  </p>
+                </div>
+                <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+                  <DialogTrigger asChild>
+                    <Button className="flex items-center gap-2">
+                      <Plus className="h-4 w-4" />
+                      Create Onboarding Link
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[500px]">
+                    <DialogHeader>
+                      <DialogTitle>Create Personalized Onboarding Link</DialogTitle>
+                      <DialogDescription>
+                        Generate a custom onboarding link for your client with their information pre-filled.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="clientName">Client Name *</Label>
+                          <Input
+                            id="clientName"
+                            placeholder="John Smith"
+                            value={newClient.clientName}
+                            onChange={(e) => setNewClient(prev => ({ ...prev, clientName: e.target.value }))}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="companyName">Company Name *</Label>
+                          <Input
+                            id="companyName"
+                            placeholder="ABC Company"
+                            value={newClient.companyName}
+                            onChange={(e) => setNewClient(prev => ({ ...prev, companyName: e.target.value }))}
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <Label htmlFor="email">Email Address *</Label>
+                        <Input
+                          id="email"
+                          type="email"
+                          placeholder="john@abccompany.com"
+                          value={newClient.email}
+                          onChange={(e) => setNewClient(prev => ({ ...prev, email: e.target.value }))}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="industry">Industry</Label>
+                        <Select value={newClient.industry} onValueChange={(value) => setNewClient(prev => ({ ...prev, industry: value }))}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select industry" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="rv-park">RV Park/Resort</SelectItem>
+                            <SelectItem value="manufactured-home">Manufactured Home Community</SelectItem>
+                            <SelectItem value="local-business">Local Business</SelectItem>
+                            <SelectItem value="national-business">National Business</SelectItem>
+                            <SelectItem value="capital-syndication">Capital & Syndication</SelectItem>
+                            <SelectItem value="other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="personalNote">Personal Note (Optional)</Label>
+                        <Textarea
+                          id="personalNote"
+                          placeholder="Add a personal message that will be included in the email"
+                          value={newClient.personalNote}
+                          onChange={(e) => setNewClient(prev => ({ ...prev, personalNote: e.target.value }))}
+                          rows={3}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex justify-end gap-2">
+                      <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
+                        Cancel
+                      </Button>
+                      <Button 
+                        onClick={handleCreateLink}
+                        disabled={!newClient.clientName || !newClient.companyName || !newClient.email}
+                      >
+                        Create Link
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </div>
             </header>
 
-            {/* Progress Steps */}
-            <div className="mb-8">
-              <div className="flex items-center justify-between mb-4">
-                {steps.map((step, index) => (
-                  <div key={step.id} className="flex items-center">
-                    <div className={`flex items-center justify-center w-8 h-8 rounded-full border-2 text-sm font-medium ${
-                      step.id === projectData.currentStep 
-                        ? 'border-primary bg-primary text-primary-foreground' 
-                        : step.id < projectData.currentStep 
-                        ? 'border-green-500 bg-green-500 text-white' 
-                        : 'border-border bg-background text-muted-foreground'
-                    }`}>
-                      {step.id < projectData.currentStep ? (
-                        <CheckCircle className="h-4 w-4" />
-                      ) : (
-                        step.id
-                      )}
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Total Links</p>
+                      <p className="text-2xl font-bold">12</p>
                     </div>
-                    {index < steps.length - 1 && (
-                      <div className={`w-full h-0.5 mx-2 ${
-                        step.id < projectData.currentStep ? 'bg-green-500' : 'bg-border'
-                      }`} />
-                    )}
+                    <Link2 className="h-8 w-8 text-blue-500" />
                   </div>
-                ))}
-              </div>
-              <div className="text-center">
-                <h2 className="text-xl font-semibold text-foreground">
-                  {steps[projectData.currentStep - 1]?.title}
-                </h2>
-                <p className="text-muted-foreground">
-                  {steps[projectData.currentStep - 1]?.description}
-                </p>
-              </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">In Progress</p>
+                      <p className="text-2xl font-bold">5</p>
+                    </div>
+                    <Clock className="h-8 w-8 text-yellow-500" />
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">SOW Generated</p>
+                      <p className="text-2xl font-bold">3</p>
+                    </div>
+                    <Building2 className="h-8 w-8 text-purple-500" />
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Approved</p>
+                      <p className="text-2xl font-bold">4</p>
+                    </div>
+                    <User className="h-8 w-8 text-green-500" />
+                  </div>
+                </CardContent>
+              </Card>
             </div>
 
-            {/* Step Content */}
-            <div className="mb-8">
-              {renderStepContent()}
-            </div>
-
-            {/* Navigation Buttons */}
-            <div className="flex justify-between">
-              <Button 
-                variant="outline" 
-                onClick={prevStep} 
-                disabled={projectData.currentStep === 1}
-              >
-                Previous
-              </Button>
-              <Button 
-                onClick={nextStep} 
-                disabled={
-                  projectData.currentStep === steps.length ||
-                  (projectData.currentStep === 1 && !projectData.clientName) ||
-                  (projectData.currentStep === 2 && !projectData.industry) ||
-                  (projectData.currentStep === 3 && !projectData.goals)
-                }
-                className="flex items-center gap-2"
-              >
-                {projectData.currentStep === steps.length ? 'Complete' : 'Next Step'}
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </div>
+            {/* Client Links Table */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Client Onboarding Links</CardTitle>
+                <CardDescription>
+                  Manage all your client onboarding links and track their progress
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {clientLinks.map((client) => (
+                    <div key={client.id} className="border rounded-lg p-4 hover:bg-muted/50 transition-colors">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <div>
+                              <h3 className="font-semibold text-foreground">{client.companyName}</h3>
+                              <p className="text-sm text-muted-foreground">{client.clientName} • {client.email}</p>
+                            </div>
+                            <Badge className={getStatusColor(client.status)}>
+                              {client.status}
+                            </Badge>
+                            {client.sowStatus && (
+                              <Badge variant="outline">
+                                SOW: {client.sowStatus}
+                              </Badge>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                            <span>Industry: {client.industry}</span>
+                            <span>Sent: {new Date(client.dateSent).toLocaleDateString()}</span>
+                            <span>Last Activity: {new Date(client.lastActivity).toLocaleDateString()}</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => copyToClipboard(client.onboardingUrl)}
+                          >
+                            <Copy className="h-4 w-4 mr-2" />
+                            Copy Link
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => sendEmail(client)}
+                          >
+                            <Send className="h-4 w-4 mr-2" />
+                            Send Email
+                          </Button>
+                          {client.sowStatus && (
+                            <Button size="sm">
+                              View SOW
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </main>
       </div>

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { ArrowRight, CheckCircle, Building2, User, Mail, Phone, MapPin, Globe, MessageSquare } from 'lucide-react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { ArrowRight, CheckCircle, Building2, User, Mail, Phone, MapPin, Globe, MessageSquare, FileText, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 interface OnboardingData {
   // Company Information
@@ -79,8 +80,119 @@ const steps = [
   { id: 7, title: 'Review & Submit', description: 'Confirm your information' }
 ];
 
+// Auto-generated SOW content based on form data
+const generateScopeOfWork = (data: OnboardingData) => {
+  const universalFeatures = [
+    'Professional Header with Logo and Navigation',
+    'Footer with Contact Information and Legal Links',
+    'Fully Responsive Design (Desktop, Tablet, Mobile)',
+    'SEO Optimization (Meta Tags, Alt Text, Headings)',
+    'Contact Forms and Methods',
+    'Call-to-Action Buttons Throughout Site'
+  ];
+
+  const industryFeatures: { [key: string]: string[] } = {
+    'RV Park/Resort': [
+      'Facilities & Amenities Showcase',
+      'Rates & Pricing Page',
+      'Interactive Park Map',
+      'Online Booking System',
+      'Photo Gallery of Amenities',
+      'Things To Do in Area',
+      'Resident Portal Access'
+    ],
+    'Manufactured Home Community': [
+      'Available Homes Listings',
+      'Community Features Page',
+      'Lot Rent & Pricing',
+      'Application Process',
+      'Resident Portal',
+      'Community Events Calendar',
+      'Photo Gallery'
+    ],
+    'Local Business (Service-Based)': [
+      'Services Overview Pages',
+      'Customer Testimonials Section',
+      'Portfolio/Case Studies',
+      'FAQ Section',
+      'Appointment Booking System',
+      'Service Area Map',
+      'About Us/Team Page'
+    ],
+    'National Business': [
+      'Services/Solutions Overview',
+      'Industries Served Pages',
+      'Locations/Service Areas',
+      'Resources Section (Blog, Downloads)',
+      'Careers Page',
+      'Case Studies/Success Stories',
+      'Contact Forms by Location'
+    ],
+    'Capital & Syndication Company': [
+      'Investor Relations Portal',
+      'Portfolio/Past Deals Showcase',
+      'Team & Leadership Bios',
+      'How Investment Process Works',
+      'FAQ for Investors',
+      'Legal/Compliance Pages',
+      'Secure Document Access'
+    ]
+  };
+
+  return {
+    projectOverview: {
+      clientName: data.companyName,
+      projectType: 'Professional Website Design & Development',
+      industry: data.industry,
+      goals: data.projectGoals.split(',').map(goal => goal.trim()),
+      timeline: data.timeline,
+      budget: data.budget
+    },
+    websiteStructure: {
+      universalPages: [
+        'Home Page',
+        'About Us',
+        'Contact Us',
+        'Privacy Policy',
+        'Terms of Service'
+      ],
+      industrySpecificPages: industryFeatures[data.industry] || [],
+      selectedFeatures: data.keyFeatures
+    },
+    contentRequirements: {
+      weProvide: [
+        'Professional website design & development',
+        'Technical integrations and functionality',
+        'Content formatting & optimization',
+        'SEO setup & responsive design',
+        'Testing and quality assurance',
+        'Initial training and handoff'
+      ],
+      clientProvides: [
+        'Logo files (preferably SVG format)',
+        'High-quality photos and media',
+        'Written content and copy',
+        'Branding guidelines (colors, fonts)',
+        'Integration credentials (if applicable)',
+        'Legal documents (policies, terms)'
+      ]
+    },
+    features: [...universalFeatures, ...(industryFeatures[data.industry] || [])],
+    timeline: data.timeline,
+    budget: data.budget,
+    nextSteps: [
+      'Review and approve this Scope of Work',
+      'Provide initial content and assets',
+      'Schedule project kickoff meeting',
+      'Begin design phase',
+      'Regular progress reviews'
+    ]
+  };
+};
+
 const ClientOnboarding = () => {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const clientName = searchParams.get('name') || 'Valued Client';
   const companyName = searchParams.get('company') || 'Your Company';
 
@@ -108,6 +220,10 @@ const ClientOnboarding = () => {
     currentStep: 1
   });
 
+  const [showSOW, setShowSOW] = useState(false);
+  const [sowData, setSowData] = useState(null);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+
   const updateData = (field: keyof OnboardingData, value: any) => {
     setOnboardingData(prev => ({ ...prev, [field]: value }));
   };
@@ -132,6 +248,48 @@ const ClientOnboarding = () => {
       updateData('currentStep', onboardingData.currentStep - 1);
     }
   };
+
+  const handleSubmit = () => {
+    const generatedSOW = generateScopeOfWork(onboardingData);
+    setSowData(generatedSOW);
+    setShowSOW(true);
+  };
+
+  const handleFinalSubmit = () => {
+    setIsSubmitted(true);
+    setShowSOW(false);
+    // Here you would typically send the data to your backend
+  };
+
+  if (isSubmitted) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 flex items-center justify-center">
+        <Card className="max-w-2xl mx-auto">
+          <CardContent className="text-center p-12">
+            <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-6" />
+            <h1 className="text-3xl font-bold text-foreground mb-4">
+              Thank you, {clientName}!
+            </h1>
+            <p className="text-lg text-muted-foreground mb-6">
+              Your onboarding form and scope of work have been submitted successfully.
+            </p>
+            <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-6">
+              <h3 className="font-semibold text-green-800 mb-2">What happens next?</h3>
+              <ul className="text-left text-green-700 space-y-2">
+                <li>• Our team will review your submission within 24 hours</li>
+                <li>• We'll contact you to discuss any questions or clarifications</li>
+                <li>• Once approved, we'll send you a project proposal and contract</li>
+                <li>• After signing, we'll schedule your project kickoff meeting</li>
+              </ul>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              If you have any questions, feel free to contact us at info@yourwebdesigncompany.com
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   const renderStepContent = () => {
     switch (onboardingData.currentStep) {
@@ -166,7 +324,7 @@ const ClientOnboarding = () => {
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckCircle className="h-4 w-4 text-green-500" />
-                    <span>We'll follow up within 24 hours</span>
+                    <span>We'll generate a custom scope of work for you to review</span>
                   </li>
                 </ul>
               </div>
@@ -204,7 +362,7 @@ const ClientOnboarding = () => {
                   <SelectTrigger>
                     <SelectValue placeholder="Select your industry" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-background border border-border z-50">
                     {industryOptions.map((option) => (
                       <SelectItem key={option} value={option}>{option}</SelectItem>
                     ))}
@@ -217,7 +375,7 @@ const ClientOnboarding = () => {
                   <SelectTrigger>
                     <SelectValue placeholder="Select company size" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-background border border-border z-50">
                     <SelectItem value="1-10">1-10 employees</SelectItem>
                     <SelectItem value="11-50">11-50 employees</SelectItem>
                     <SelectItem value="51-200">51-200 employees</SelectItem>
@@ -385,7 +543,7 @@ const ClientOnboarding = () => {
                     <SelectTrigger>
                       <SelectValue placeholder="Select timeline" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-background border border-border z-50">
                       <SelectItem value="asap">ASAP</SelectItem>
                       <SelectItem value="1-month">Within 1 month</SelectItem>
                       <SelectItem value="2-3-months">2-3 months</SelectItem>
@@ -400,7 +558,7 @@ const ClientOnboarding = () => {
                     <SelectTrigger>
                       <SelectValue placeholder="Select budget range" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-background border border-border z-50">
                       <SelectItem value="under-5k">Under $5,000</SelectItem>
                       <SelectItem value="5k-10k">$5,000 - $10,000</SelectItem>
                       <SelectItem value="10k-25k">$10,000 - $25,000</SelectItem>
@@ -476,7 +634,7 @@ const ClientOnboarding = () => {
             <CardHeader>
               <CardTitle>Review & Submit</CardTitle>
               <CardDescription>
-                Please review your information before submitting. We'll be in touch soon!
+                Please review your information before submitting. We'll generate a custom scope of work for you to review.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -498,18 +656,18 @@ const ClientOnboarding = () => {
                 </div>
               </div>
               
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <h4 className="font-semibold text-green-800 mb-2">What happens next?</h4>
-                <ul className="text-sm text-green-700 space-y-1">
-                  <li>• We'll review your information within 24 hours</li>
-                  <li>• Our team will prepare a detailed proposal</li>
-                  <li>• We'll schedule a call to discuss your project</li>
-                  <li>• Once approved, we'll begin the design process</li>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h4 className="font-semibold text-blue-800 mb-2">What happens next?</h4>
+                <ul className="text-sm text-blue-700 space-y-1">
+                  <li>• We'll generate a custom Scope of Work based on your answers</li>
+                  <li>• You can review and request changes to the scope</li>
+                  <li>• Once you approve, we'll receive your submission</li>
+                  <li>• Our team will contact you within 24 hours to get started</li>
                 </ul>
               </div>
 
-              <Button className="w-full" size="lg">
-                Submit Onboarding Form
+              <Button className="w-full" size="lg" onClick={handleSubmit}>
+                Generate My Scope of Work
               </Button>
             </CardContent>
           </Card>
@@ -521,69 +679,151 @@ const ClientOnboarding = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
-      <div className="max-w-3xl mx-auto px-6 py-12">
-        {/* Progress Steps */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            {steps.map((step, index) => (
-              <div key={step.id} className="flex items-center">
-                <div className={`flex items-center justify-center w-8 h-8 rounded-full border-2 text-sm font-medium ${
-                  step.id === onboardingData.currentStep 
-                    ? 'border-primary bg-primary text-primary-foreground' 
-                    : step.id < onboardingData.currentStep 
-                    ? 'border-green-500 bg-green-500 text-white' 
-                    : 'border-border bg-background text-muted-foreground'
-                }`}>
-                  {step.id < onboardingData.currentStep ? (
-                    <CheckCircle className="h-4 w-4" />
-                  ) : (
-                    step.id
+    <>
+      <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
+        <div className="max-w-3xl mx-auto px-6 py-12">
+          {/* Progress Steps */}
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-4">
+              {steps.map((step, index) => (
+                <div key={step.id} className="flex items-center">
+                  <div className={`flex items-center justify-center w-8 h-8 rounded-full border-2 text-sm font-medium ${
+                    step.id === onboardingData.currentStep 
+                      ? 'border-primary bg-primary text-primary-foreground' 
+                      : step.id < onboardingData.currentStep 
+                      ? 'border-green-500 bg-green-500 text-white' 
+                      : 'border-border bg-background text-muted-foreground'
+                  }`}>
+                    {step.id < onboardingData.currentStep ? (
+                      <CheckCircle className="h-4 w-4" />
+                    ) : (
+                      step.id
+                    )}
+                  </div>
+                  {index < steps.length - 1 && (
+                    <div className={`w-full h-0.5 mx-2 ${
+                      step.id < onboardingData.currentStep ? 'bg-green-500' : 'bg-border'
+                    }`} />
                   )}
                 </div>
-                {index < steps.length - 1 && (
-                  <div className={`w-full h-0.5 mx-2 ${
-                    step.id < onboardingData.currentStep ? 'bg-green-500' : 'bg-border'
-                  }`} />
-                )}
-              </div>
-            ))}
+              ))}
+            </div>
+            <div className="text-center">
+              <h2 className="text-xl font-semibold text-foreground">
+                {steps[onboardingData.currentStep - 1]?.title}
+              </h2>
+              <p className="text-muted-foreground">
+                Step {onboardingData.currentStep} of {steps.length}
+              </p>
+            </div>
           </div>
-          <div className="text-center">
-            <h2 className="text-xl font-semibold text-foreground">
-              {steps[onboardingData.currentStep - 1]?.title}
-            </h2>
-            <p className="text-muted-foreground">
-              Step {onboardingData.currentStep} of {steps.length}
-            </p>
+
+          {/* Step Content */}
+          <div className="mb-8">
+            {renderStepContent()}
           </div>
-        </div>
 
-        {/* Step Content */}
-        <div className="mb-8">
-          {renderStepContent()}
-        </div>
-
-        {/* Navigation Buttons */}
-        <div className="flex justify-between">
-          <Button 
-            variant="outline" 
-            onClick={prevStep} 
-            disabled={onboardingData.currentStep === 1}
-          >
-            Previous
-          </Button>
-          <Button 
-            onClick={nextStep} 
-            disabled={onboardingData.currentStep === steps.length}
-            className="flex items-center gap-2"
-          >
-            {onboardingData.currentStep === steps.length ? 'Complete' : 'Next Step'}
-            <ArrowRight className="h-4 w-4" />
-          </Button>
+          {/* Navigation Buttons */}
+          <div className="flex justify-between">
+            <Button 
+              variant="outline" 
+              onClick={prevStep} 
+              disabled={onboardingData.currentStep === 1}
+            >
+              Previous
+            </Button>
+            <Button 
+              onClick={nextStep} 
+              disabled={onboardingData.currentStep === steps.length}
+              className="flex items-center gap-2"
+            >
+              {onboardingData.currentStep === steps.length ? 'Complete' : 'Next Step'}
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </div>
-    </div>
+
+      {/* Scope of Work Review Dialog */}
+      <Dialog open={showSOW} onOpenChange={setShowSOW}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Your Custom Scope of Work
+            </DialogTitle>
+            <DialogDescription>
+              Review the generated scope of work. You can request changes before final submission.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {sowData && (
+            <div className="space-y-6 py-4">
+              <div>
+                <h3 className="text-lg font-semibold mb-3">Project Overview</h3>
+                <div className="bg-muted/50 p-4 rounded-lg space-y-2">
+                  <p><strong>Client:</strong> {sowData.projectOverview.clientName}</p>
+                  <p><strong>Project Type:</strong> {sowData.projectOverview.projectType}</p>
+                  <p><strong>Industry:</strong> {sowData.projectOverview.industry}</p>
+                  <p><strong>Timeline:</strong> {sowData.projectOverview.timeline}</p>
+                  <p><strong>Budget Range:</strong> {sowData.projectOverview.budget}</p>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-lg font-semibold mb-3">Website Structure</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <h4 className="font-medium mb-2">Universal Pages</h4>
+                    <ul className="text-sm space-y-1">
+                      {sowData.websiteStructure.universalPages.map((page, index) => (
+                        <li key={index} className="flex items-center gap-2">
+                          <CheckCircle className="h-3 w-3 text-green-500" />
+                          {page}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div>
+                    <h4 className="font-medium mb-2">Industry-Specific Pages</h4>
+                    <ul className="text-sm space-y-1">
+                      {sowData.websiteStructure.industrySpecificPages.map((page, index) => (
+                        <li key={index} className="flex items-center gap-2">
+                          <CheckCircle className="h-3 w-3 text-blue-500" />
+                          {page}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-lg font-semibold mb-3">Selected Features</h3>
+                <div className="grid grid-cols-2 gap-2">
+                  {sowData.websiteStructure.selectedFeatures.map((feature, index) => (
+                    <div key={index} className="flex items-center gap-2 text-sm">
+                      <CheckCircle className="h-3 w-3 text-primary" />
+                      {feature}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex gap-4">
+                <Button variant="outline" onClick={() => setShowSOW(false)}>
+                  Request Changes
+                </Button>
+                <Button onClick={handleFinalSubmit} className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4" />
+                  Approve & Submit
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 
