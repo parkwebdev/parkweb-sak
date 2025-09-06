@@ -13,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { INDUSTRY_OPTIONS } from '@/lib/constants';
 import { getStatusColor, formatDate } from '@/lib/status-helpers';
 import { createOnboardingUrl, createEmailTemplate, openEmailClient, copyToClipboard } from '@/lib/form-helpers';
+import { ProgressBar } from '@/components/ProgressBar';
 
 interface ClientLink {
   id: string;
@@ -74,6 +75,18 @@ const Onboarding = () => {
     personalNote: ''
   });
   const { toast } = useToast();
+
+  // Function to calculate progress percentage based on status
+  const getProgressPercentage = (status: ClientLink['status']) => {
+    switch (status) {
+      case 'Sent': return 20;
+      case 'In Progress': return 40;
+      case 'Completed': return 60;
+      case 'SOW Generated': return 80;
+      case 'Approved': return 100;
+      default: return 0;
+    }
+  };
 
   const handleCreateLink = () => {
     const onboardingUrl = createOnboardingUrl(newClient.clientName, newClient.companyName);
@@ -292,41 +305,50 @@ const Onboarding = () => {
                      <div key={client.id} className="p-6 hover:bg-muted/50 transition-colors">
                        <div className="flex items-start justify-between gap-4">
                          <div className="flex-1 min-w-0">
-                           <div className="flex items-start gap-3 mb-3">
-                             <div className="min-w-0 flex-1">
-                               <h3 className="font-medium text-base truncate mb-1">{client.companyName}</h3>
-                               <p className="text-sm text-muted-foreground truncate">
-                                 <a 
-                                   href={`mailto:${client.email}`}
-                                   className="hover:underline"
-                                 >
-                                   {client.clientName}
-                                 </a>
-                                 <span className="mx-2">•</span>
-                                 <a 
-                                   href={`mailto:${client.email}`}
-                                   className="hover:underline"
-                                 >
-                                   {client.email}
-                                 </a>
-                               </p>
-                             </div>
-                             <div className="flex items-center gap-2 flex-shrink-0">
-                               <Badge className={`${getStatusColor(client.status)} border text-xs px-2.5 py-1 w-auto`}>
-                                 {client.status}
-                               </Badge>
-                               {client.sowStatus && (
-                                 <Badge variant="outline" className="text-xs px-2.5 py-1 w-auto border">
-                                   SOW: {client.sowStatus}
-                                 </Badge>
-                               )}
-                             </div>
-                           </div>
-                           <div className="flex items-center gap-6 text-sm text-muted-foreground">
-                             <span>Industry: {client.industry}</span>
-                             <span>Sent: {formatDate(client.dateSent)}</span>
-                             <span>Last Activity: {formatDate(client.lastActivity)}</span>
-                           </div>
+                            <div className="flex items-start gap-3 mb-3">
+                              <div className="min-w-0 flex-1">
+                                <h3 className="font-medium text-base truncate mb-1">{client.companyName}</h3>
+                                <p className="text-sm text-muted-foreground truncate">
+                                  <a 
+                                    href={`mailto:${client.email}`}
+                                    className="hover:underline"
+                                  >
+                                    {client.clientName}
+                                  </a>
+                                  <span className="mx-2">•</span>
+                                  <a 
+                                    href={`mailto:${client.email}`}
+                                    className="hover:underline"
+                                  >
+                                    {client.email}
+                                  </a>
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-2 flex-shrink-0">
+                                <Badge className={`${getStatusColor(client.status)} border text-xs px-2.5 py-1 w-auto`}>
+                                  {client.status}
+                                </Badge>
+                                {client.sowStatus && (
+                                  <Badge variant="outline" className="text-xs px-2.5 py-1 w-auto border">
+                                    SOW: {client.sowStatus}
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                            
+                            {/* Progress Bar */}
+                            <div className="mb-3">
+                              <ProgressBar 
+                                percentage={getProgressPercentage(client.status)} 
+                                className="max-w-xs"
+                              />
+                            </div>
+                            
+                            <div className="flex items-center gap-6 text-sm text-muted-foreground">
+                              <span>Industry: {client.industry}</span>
+                              <span>Sent: {formatDate(client.dateSent)}</span>
+                              <span>Last Activity: {formatDate(client.lastActivity)}</span>
+                            </div>
                          </div>
                          <div className="flex items-center gap-2 flex-shrink-0">
                           <Button
