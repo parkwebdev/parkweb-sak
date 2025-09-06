@@ -691,7 +691,7 @@ const ClientOnboarding = () => {
                     step.id === onboardingData.currentStep 
                       ? 'border-primary bg-primary text-primary-foreground' 
                       : step.id < onboardingData.currentStep 
-                      ? 'border-green-500 bg-green-500 text-white' 
+                      ? 'border-success bg-success text-success-foreground' 
                       : 'border-border bg-background text-muted-foreground'
                   }`}>
                     {step.id < onboardingData.currentStep ? (

@@ -10,6 +10,9 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
+import { INDUSTRY_OPTIONS } from '@/lib/constants';
+import { getStatusColor, formatDate } from '@/lib/status-helpers';
+import { createOnboardingUrl, createEmailTemplate, openEmailClient, copyToClipboard } from '@/lib/form-helpers';
 
 interface ClientLink {
   id: string;
@@ -73,12 +76,7 @@ const Onboarding = () => {
   const { toast } = useToast();
 
   const handleCreateLink = () => {
-    // Generate unique token and URL
-    const token = Math.random().toString(36).substring(2, 15);
-    const baseUrl = window.location.origin;
-    const onboardingUrl = `${baseUrl}/client-onboarding?name=${encodeURIComponent(newClient.clientName)}&company=${encodeURIComponent(newClient.companyName)}&token=${token}`;
-    
-    console.log('Generated onboarding link:', onboardingUrl);
+    const onboardingUrl = createOnboardingUrl(newClient.clientName, newClient.companyName);
     
     // Reset form
     setNewClient({
@@ -96,42 +94,31 @@ const Onboarding = () => {
     });
   };
 
-  const copyToClipboard = (url: string) => {
-    navigator.clipboard.writeText(window.location.origin + url);
-    toast({
-      title: "Link copied!",
-      description: "The onboarding link has been copied to your clipboard.",
-    });
-  };
-
-  const sendEmail = (client: ClientLink) => {
-    const subject = `Welcome ${client.clientName} - Let's get started on ${client.companyName}'s new website!`;
-    const body = `Hi ${client.clientName},
-
-Thank you for choosing us for ${client.companyName}'s website project! 
-
-To get started, please complete our personalized onboarding form using the link below:
-${window.location.origin}${client.onboardingUrl}
-
-This will help us understand your needs and create the perfect website for your business.
-
-Best regards,
-Your Web Design Team`;
-
-    const mailtoUrl = `mailto:${client.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    window.open(mailtoUrl);
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Sent': return 'bg-blue-100 text-blue-800';
-      case 'In Progress': return 'bg-yellow-100 text-yellow-800';
-      case 'Completed': return 'bg-green-100 text-green-800';
-      case 'SOW Generated': return 'bg-purple-100 text-purple-800';
-      case 'Approved': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
+  const handleCopyToClipboard = async (url: string) => {
+    const fullUrl = window.location.origin + url;
+    const success = await copyToClipboard(fullUrl);
+    
+    if (success) {
+      toast({
+        title: "Link copied!",
+        description: "The onboarding link has been copied to your clipboard.",
+      });
+    } else {
+      toast({
+        title: "Copy failed",
+        description: "Please try copying the link manually.",
+        variant: "destructive",
+      });
     }
   };
+
+  const handleSendEmail = (client: ClientLink) => {
+    const fullUrl = window.location.origin + client.onboardingUrl;
+    const { subject, body } = createEmailTemplate(client.clientName, client.companyName, fullUrl);
+    openEmailClient(client.email, subject, body);
+  };
+
+  // Remove the old getStatusColor function since it's now imported from utils
 
   return (
     <div className="flex h-screen bg-muted/30">
@@ -203,12 +190,11 @@ Your Web Design Team`;
                             <SelectValue placeholder="Select industry" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="rv-park">RV Park/Resort</SelectItem>
-                            <SelectItem value="manufactured-home">Manufactured Home Community</SelectItem>
-                            <SelectItem value="local-business">Local Business</SelectItem>
-                            <SelectItem value="national-business">National Business</SelectItem>
-                            <SelectItem value="capital-syndication">Capital & Syndication</SelectItem>
-                            <SelectItem value="other">Other</SelectItem>
+                            {INDUSTRY_OPTIONS.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                       </div>
@@ -248,7 +234,7 @@ Your Web Design Team`;
                       <p className="text-sm font-medium text-muted-foreground">Total Links</p>
                       <p className="text-2xl font-bold">12</p>
                     </div>
-                    <Link2 className="h-8 w-8 text-blue-500" />
+                    <Link2 className="h-8 w-8 text-info" />
                   </div>
                 </CardContent>
               </Card>
@@ -259,7 +245,7 @@ Your Web Design Team`;
                       <p className="text-sm font-medium text-muted-foreground">In Progress</p>
                       <p className="text-2xl font-bold">5</p>
                     </div>
-                    <Clock className="h-8 w-8 text-yellow-500" />
+                    <Clock className="h-8 w-8 text-warning" />
                   </div>
                 </CardContent>
               </Card>
@@ -270,7 +256,7 @@ Your Web Design Team`;
                       <p className="text-sm font-medium text-muted-foreground">SOW Generated</p>
                       <p className="text-2xl font-bold">3</p>
                     </div>
-                    <Building2 className="h-8 w-8 text-purple-500" />
+                    <Building2 className="h-8 w-8 text-primary" />
                   </div>
                 </CardContent>
               </Card>
@@ -281,7 +267,7 @@ Your Web Design Team`;
                       <p className="text-sm font-medium text-muted-foreground">Approved</p>
                       <p className="text-2xl font-bold">4</p>
                     </div>
-                    <User className="h-8 w-8 text-green-500" />
+                    <User className="h-8 w-8 text-success" />
                   </div>
                 </CardContent>
               </Card>
@@ -306,7 +292,7 @@ Your Web Design Team`;
                               <h3 className="font-semibold text-foreground">{client.companyName}</h3>
                               <p className="text-sm text-muted-foreground">{client.clientName} • {client.email}</p>
                             </div>
-                            <Badge className={getStatusColor(client.status)}>
+                            <Badge className={`${getStatusColor(client.status)} border`}>
                               {client.status}
                             </Badge>
                             {client.sowStatus && (
@@ -317,15 +303,15 @@ Your Web Design Team`;
                           </div>
                           <div className="flex items-center gap-4 text-sm text-muted-foreground">
                             <span>Industry: {client.industry}</span>
-                            <span>Sent: {new Date(client.dateSent).toLocaleDateString()}</span>
-                            <span>Last Activity: {new Date(client.lastActivity).toLocaleDateString()}</span>
+                            <span>Sent: {formatDate(client.dateSent)}</span>
+                            <span>Last Activity: {formatDate(client.lastActivity)}</span>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => copyToClipboard(client.onboardingUrl)}
+                            onClick={() => handleCopyToClipboard(client.onboardingUrl)}
                           >
                             <Copy className="h-4 w-4 mr-2" />
                             Copy Link
@@ -333,7 +319,7 @@ Your Web Design Team`;
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => sendEmail(client)}
+                            onClick={() => handleSendEmail(client)}
                           >
                             <Send className="h-4 w-4 mr-2" />
                             Send Email
