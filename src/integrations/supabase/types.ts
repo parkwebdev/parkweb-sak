@@ -274,7 +274,7 @@ export type Database = {
         | "view_scope_works"
         | "manage_settings"
         | "view_settings"
-      app_role: "admin" | "manager" | "member"
+      app_role: "admin" | "manager" | "member" | "super_admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -414,7 +414,7 @@ export const Constants = {
         "manage_settings",
         "view_settings",
       ],
-      app_role: ["admin", "manager", "member"],
+      app_role: ["admin", "manager", "member", "super_admin"],
     },
   },
 } as const
