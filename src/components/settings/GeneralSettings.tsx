@@ -58,6 +58,14 @@ export const GeneralSettings: React.FC = () => {
   const updatePreference = async (key: keyof typeof preferences, value: any) => {
     if (!user) return;
 
+    // Update local state immediately for responsive UI
+    setPreferences(prev => ({ ...prev, [key]: value }));
+
+    // Apply compact mode immediately to body
+    if (key === 'compact_mode') {
+      document.body.classList.toggle('compact-mode', value);
+    }
+
     setUpdating(true);
     try {
       const { error } = await supabase
@@ -66,10 +74,16 @@ export const GeneralSettings: React.FC = () => {
           user_id: user.id,
           [key]: value,
           ...preferences,
+          [key]: value, // Ensure the new value overwrites
         } as any);
 
       if (error) {
         console.error('Error updating preference:', error);
+        // Revert local state on error
+        setPreferences(prev => ({ ...prev, [key]: !value }));
+        if (key === 'compact_mode') {
+          document.body.classList.toggle('compact-mode', !value);
+        }
         toast({
           title: "Update failed",
           description: "Failed to update preference.",
@@ -78,19 +92,24 @@ export const GeneralSettings: React.FC = () => {
         return;
       }
 
-      setPreferences(prev => ({ ...prev, [key]: value }));
-
-      // Apply compact mode immediately to body
-      if (key === 'compact_mode') {
-        document.body.classList.toggle('compact-mode', value);
-      }
+      // Show success toast with specific messaging
+      const messages = {
+        auto_save: value ? "Auto-save enabled" : "Auto-save disabled",
+        compact_mode: value ? "Compact mode enabled" : "Compact mode disabled",
+        default_project_view: `Default view set to ${value}`,
+      };
 
       toast({
-        title: "Settings updated",
-        description: "Your preferences have been saved.",
+        title: messages[key as keyof typeof messages] || "Setting updated",
+        description: value ? "Your preference has been saved." : "Your preference has been updated.",
       });
     } catch (error) {
       console.error('Error in updatePreference:', error);
+      // Revert local state on error
+      setPreferences(prev => ({ ...prev, [key]: !value }));
+      if (key === 'compact_mode') {
+        document.body.classList.toggle('compact-mode', !value);
+      }
     } finally {
       setUpdating(false);
     }
@@ -236,9 +255,9 @@ export const GeneralSettings: React.FC = () => {
       </Card>
 
       <div className="flex justify-end">
-        <Button onClick={handleSave} disabled={updating || loading} size="sm">
-          {updating ? "Saving..." : "Save All Changes"}
-        </Button>
+        <p className="text-xs text-muted-foreground">
+          Changes are saved automatically
+        </p>
       </div>
     </div>
   );

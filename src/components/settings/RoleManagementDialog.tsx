@@ -94,7 +94,9 @@ export const RoleManagementDialog: React.FC<RoleManagementDialogProps> = ({
     setRole(newRole);
     
     // Auto-assign permissions based on role
-    if (newRole === 'admin') {
+    if (newRole === 'super_admin') {
+      setPermissions(Object.keys(PERMISSION_LABELS));
+    } else if (newRole === 'admin') {
       setPermissions(Object.keys(PERMISSION_LABELS));
     } else if (newRole === 'manager') {
       setPermissions([
@@ -173,6 +175,7 @@ export const RoleManagementDialog: React.FC<RoleManagementDialogProps> = ({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="super_admin">Super Admin</SelectItem>
                 <SelectItem value="admin">Admin</SelectItem>
                 <SelectItem value="manager">Manager</SelectItem>
                 <SelectItem value="member">Member</SelectItem>
