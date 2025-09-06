@@ -59,7 +59,8 @@ export const GeneralSettings: React.FC = () => {
     if (!user) return;
 
     // Update local state immediately for responsive UI
-    setPreferences(prev => ({ ...prev, [key]: value }));
+    const newPreferences = { ...preferences, [key]: value };
+    setPreferences(newPreferences);
 
     // Apply compact mode immediately to body
     if (key === 'compact_mode') {
@@ -68,21 +69,38 @@ export const GeneralSettings: React.FC = () => {
 
     setUpdating(true);
     try {
-      const { error } = await supabase
+      // Use UPDATE instead of UPSERT to avoid duplicate key issues
+      const { data: existingData } = await supabase
         .from('user_preferences')
-        .upsert({
-          user_id: user.id,
-          [key]: value,
-          ...preferences,
-          [key]: value, // Ensure the new value overwrites
-        } as any);
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+
+      let error;
+      if (existingData) {
+        // Update existing record
+        const result = await supabase
+          .from('user_preferences')
+          .update({ [key]: value })
+          .eq('user_id', user.id);
+        error = result.error;
+      } else {
+        // Insert new record
+        const result = await supabase
+          .from('user_preferences')
+          .insert({
+            user_id: user.id,
+            [key]: value,
+          } as any);
+        error = result.error;
+      }
 
       if (error) {
         console.error('Error updating preference:', error);
         // Revert local state on error
-        setPreferences(prev => ({ ...prev, [key]: !value }));
+        setPreferences(preferences);
         if (key === 'compact_mode') {
-          document.body.classList.toggle('compact-mode', !value);
+          document.body.classList.toggle('compact-mode', preferences.compact_mode);
         }
         toast({
           title: "Update failed",
@@ -95,7 +113,7 @@ export const GeneralSettings: React.FC = () => {
       // Show success toast with specific messaging
       const messages = {
         auto_save: value ? "Auto-save enabled" : "Auto-save disabled",
-        compact_mode: value ? "Compact mode enabled" : "Compact mode disabled",
+        compact_mode: value ? "Compact mode enabled" : "Compact mode disabled", 
         default_project_view: `Default view set to ${value}`,
       };
 
@@ -106,9 +124,9 @@ export const GeneralSettings: React.FC = () => {
     } catch (error) {
       console.error('Error in updatePreference:', error);
       // Revert local state on error
-      setPreferences(prev => ({ ...prev, [key]: !value }));
+      setPreferences(preferences);
       if (key === 'compact_mode') {
-        document.body.classList.toggle('compact-mode', !value);
+        document.body.classList.toggle('compact-mode', preferences.compact_mode);
       }
     } finally {
       setUpdating(false);

@@ -160,6 +160,55 @@ export const TeamSettings: React.FC = () => {
     setIsRoleDialogOpen(true);
   };
 
+  const handleRemoveMember = async (member: TeamMember) => {
+    if (!confirm(`Are you sure you want to remove ${member.display_name || member.email} from the team?`)) {
+      return;
+    }
+
+    try {
+      // Remove from user_roles table
+      const { error: roleError } = await supabase
+        .from('user_roles')
+        .delete()
+        .eq('user_id', member.user_id);
+
+      if (roleError) {
+        console.error('Error removing user role:', roleError);
+      }
+
+      // Remove from profiles table
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('user_id', member.user_id);
+
+      if (profileError) {
+        console.error('Error removing user profile:', profileError);
+        toast({
+          title: "Remove failed",
+          description: "Failed to remove team member.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Member removed",
+        description: `${member.display_name || member.email} has been removed from the team.`,
+      });
+
+      // Refresh the team members list
+      fetchTeamMembers();
+    } catch (error) {
+      console.error('Error in handleRemoveMember:', error);
+      toast({
+        title: "Remove failed", 
+        description: "An error occurred while removing the team member.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const formatJoinDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -287,15 +336,25 @@ export const TeamSettings: React.FC = () => {
                   }
                 </Badge>
                 {canManageRoles && member.user_id !== user?.id && (
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={() => handleEditRole(member)}
-                    className="h-6 px-2"
-                  >
-                    <Settings size={12} className="mr-1" />
-                    Edit
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => handleEditRole(member)}
+                      className="h-6 px-2 text-xs"
+                    >
+                      <Settings size={12} className="mr-1" />
+                      Edit Role
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => handleRemoveMember(member)}
+                      className="h-6 px-2 text-xs text-destructive hover:text-destructive"
+                    >
+                      Remove
+                    </Button>
+                  </div>
                 )}
               </div>
           </div>

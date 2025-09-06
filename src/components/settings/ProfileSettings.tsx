@@ -204,22 +204,23 @@ export const ProfileSettings: React.FC = () => {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-6">
-            <Avatar className="h-16 w-16 mx-auto sm:mx-0">
-              <AvatarImage src={profile.avatar_url} />
-              <AvatarFallback className="text-sm">
-                {profile.display_name 
-                  ? profile.display_name.split(' ').map(n => n[0]).join('').toUpperCase()
-                  : <User size={24} />
-                }
-              </AvatarFallback>
-            </Avatar>
+            <div className="relative group cursor-pointer mx-auto sm:mx-0">
+              <Avatar className="h-16 w-16">
+                <AvatarImage src={profile.avatar_url} />
+                <AvatarFallback className="text-sm">
+                  {profile.display_name 
+                    ? profile.display_name.split(' ').map(n => n[0]).join('').toUpperCase()
+                    : <User size={24} />
+                  }
+                </AvatarFallback>
+              </Avatar>
+              <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                <Camera size={20} className="text-white" />
+              </div>
+            </div>
             <div className="text-center sm:text-left">
-              <Button variant="outline" size="sm" className="w-full sm:w-auto">
-                <Camera size={14} className="mr-2" />
-                Change Avatar
-              </Button>
               <p className="text-xs text-muted-foreground mt-2">
-                JPG, GIF or PNG. Max size of 800KB.
+                Hover over avatar to change • JPG, GIF or PNG • Max 800KB
               </p>
             </div>
           </div>
