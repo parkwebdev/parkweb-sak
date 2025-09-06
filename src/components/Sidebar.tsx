@@ -39,12 +39,18 @@ const bottomItems: NavigationItem[] = [];
 
 interface SidebarProps {
   onClose?: () => void;
+  onCollapseChange?: (collapsed: boolean) => void;
+  isCollapsed?: boolean;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ onClose, onCollapseChange, isCollapsed = false }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [isCollapsed, setIsCollapsed] = useState(false);
   const location = useLocation();
+
+  const handleCollapseToggle = () => {
+    const newCollapsed = !isCollapsed;
+    onCollapseChange?.(newCollapsed);
+  };
 
   const searchResults = navigationItems.map(item => ({
     id: item.id,
@@ -63,13 +69,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
               {!isCollapsed && <div className="text-base font-semibold text-foreground">Agency</div>}
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => setIsCollapsed(!isCollapsed)}
+                  onClick={handleCollapseToggle}
                   className="p-1 rounded-md hover:bg-accent/50 text-muted-foreground hover:text-foreground"
                   title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
                 >
                   {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
                 </button>
-                {!isCollapsed && <ThemeToggle />}
+                <ThemeToggle isCollapsed={isCollapsed} />
                 {onClose && (
                   <button
                     onClick={onClose}
@@ -126,7 +132,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
         </nav>
 
         <footer className="absolute bottom-0 left-0 right-0 gap-3 pt-0 pb-3 px-3">
-          <UserAccountCard />
+          <UserAccountCard isCollapsed={isCollapsed} />
         </footer>
       </div>
     </aside>

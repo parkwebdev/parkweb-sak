@@ -4,27 +4,39 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Link } from 'react-router-dom';
 
-export const UserAccountCard: React.FC = () => {
+interface UserAccountCardProps {
+  isCollapsed?: boolean;
+}
+
+export const UserAccountCard: React.FC<UserAccountCardProps> = ({ isCollapsed = false }) => {
   return (
-    <div className="border shadow-sm relative flex w-full gap-3 bg-card p-3 rounded-xl border-border">
+    <div className={`relative flex w-full gap-3 bg-card rounded-xl transition-all ${
+      isCollapsed ? 'p-1.5 justify-center' : 'border shadow-sm p-3 border-border'
+    }`}>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className="flex items-center gap-3 flex-1 min-w-0 hover:bg-accent/50 rounded-lg p-1 -m-1 transition-colors">
+          <button className={`flex items-center hover:bg-accent/50 rounded-lg transition-colors ${
+            isCollapsed ? 'p-1 -m-1' : 'gap-3 flex-1 min-w-0 p-1 -m-1'
+          }`}>
             <div className="relative">
-              <Avatar className="h-9 w-9">
+              <Avatar className={isCollapsed ? "h-7 w-7" : "h-9 w-9"}>
                 <AvatarImage src="" alt="Olivia Rhye" />
-                <AvatarFallback className="text-sm font-medium">OR</AvatarFallback>
+                <AvatarFallback className={`font-medium ${isCollapsed ? 'text-xs' : 'text-sm'}`}>OR</AvatarFallback>
               </Avatar>
-              <div className="bg-green-500 absolute w-3 h-3 rounded-full border-2 border-background -bottom-0.5 -right-0.5" />
+              <div className={`bg-green-500 absolute rounded-full border-2 border-background ${
+                isCollapsed ? 'w-2 h-2 -bottom-0 -right-0' : 'w-3 h-3 -bottom-0.5 -right-0.5'
+              }`} />
             </div>
-            <div className="text-left min-w-0 flex-1">
-              <div className="text-foreground text-sm font-semibold leading-5 truncate">
-                Olivia Rhye
+            {!isCollapsed && (
+              <div className="text-left min-w-0 flex-1">
+                <div className="text-foreground text-sm font-semibold leading-5 truncate">
+                  Olivia Rhye
+                </div>
+                <div className="text-muted-foreground text-sm font-normal leading-5 truncate">
+                  olivia@sodium.app
+                </div>
               </div>
-              <div className="text-muted-foreground text-sm font-normal leading-5 truncate">
-                olivia@sodium.app
-              </div>
-            </div>
+            )}
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48">

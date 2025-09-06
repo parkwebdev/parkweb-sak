@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Sidebar } from '@/components/Sidebar';
 import { SearchInput } from '@/components/SearchInput';
+import { DraggableCard } from '@/components/DraggableCard';
 import { 
   Settings01 as Settings, 
   FilterLines as Filter, 
@@ -35,6 +36,21 @@ import {
   DropdownMenuTrigger,
   DropdownMenuCheckboxItem,
 } from "@/components/ui/dropdown-menu";
+import {
+  DndContext,
+  DragEndEvent,
+  DragOverEvent,
+  DragOverlay,
+  DragStartEvent,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
 
 const scopeOfWorks = [
   {
@@ -174,6 +190,8 @@ Total project duration: 4 weeks`
   }
 ];
 
+const COLUMN_ORDER = ['Draft', 'In Review', 'Approved'];
+
 const getStatusBadgeVariant = (status: string) => {
   switch (status) {
     case 'Approved':
@@ -196,6 +214,7 @@ const ScopeOfWorks = () => {
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
   const [activeFilter, setActiveFilter] = useState<string>('view-all');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showColumns, setShowColumns] = useState({
     client: true,
     projectType: true,
@@ -221,11 +240,24 @@ const ScopeOfWorks = () => {
     'integrations',
     'dateModified'
   ]);
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [sortBy, setSortBy] = useState<'date' | 'title' | 'client'>('date');
+  const [activeCard, setActiveCard] = useState<string | null>(null);
+  const [data, setData] = useState(scopeOfWorks);
+  
   const { toast } = useToast();
+  
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    })
+  );
 
   // Extract unique industries and project types from data
-  const availableIndustries = [...new Set(scopeOfWorks.map(item => item.industry))];
-  const availableProjectTypes = [...new Set(scopeOfWorks.map(item => item.projectType))];
+  const availableIndustries = [...new Set(data.map(item => item.industry))];
+  const availableProjectTypes = [...new Set(data.map(item => item.projectType))];
 
   const handleCopyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -250,6 +282,13 @@ const ScopeOfWorks = () => {
   };
 
   const handleSaveChanges = () => {
+    // Update the data
+    setData(prev => prev.map(item => 
+      item.id === selectedSow.id 
+        ? { ...item, title: editedTitle, content: editedContent }
+        : item
+    ));
+    
     toast({
       title: "Changes saved",
       description: "Your scope of work has been updated.",
@@ -297,8 +336,68 @@ const ScopeOfWorks = () => {
     setEditedTitle('');
   };
 
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveCard(event.active.id as string);
+  };
+
+  const handleDragOver = (event: DragOverEvent) => {
+    const { active, over } = event;
+    
+    if (!over) return;
+    
+    const activeId = active.id as string;
+    const overId = over.id as string;
+    
+    // Find the containers
+    const activeItem = data.find(item => item.id === activeId);
+    const overItem = data.find(item => item.id === overId);
+    
+    if (!activeItem) return;
+    
+    // If we're dragging over a column name, update the status
+    if (COLUMN_ORDER.includes(overId)) {
+      if (activeItem.status !== overId) {
+        setData(prev => prev.map(item => 
+          item.id === activeId 
+            ? { ...item, status: overId }
+            : item
+        ));
+      }
+    }
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveCard(null);
+    
+    if (!over) return;
+    
+    const activeId = active.id as string;
+    const overId = over.id as string;
+    
+    const activeItem = data.find(item => item.id === activeId);
+    
+    if (!activeItem) return;
+    
+    // If we're dropping on a column, update the status
+    if (COLUMN_ORDER.includes(overId)) {
+      if (activeItem.status !== overId) {
+        setData(prev => prev.map(item => 
+          item.id === activeId 
+            ? { ...item, status: overId, dateModified: new Date().toISOString().split('T')[0] }
+            : item
+        ));
+        
+        toast({
+          title: "Status Updated",
+          description: `"${activeItem.title}" moved to ${overId}`,
+        });
+      }
+    }
+  };
+
   const getFilteredDataByTab = () => {
-    let filtered = [...scopeOfWorks];
+    let filtered = [...data];
     
     // Apply active filter
     if (activeFilter !== 'view-all') {
@@ -332,6 +431,26 @@ const ScopeOfWorks = () => {
         advancedFilters.projectType.includes(item.projectType)
       );
     }
+
+    // Apply sorting
+    filtered.sort((a, b) => {
+      let comparison = 0;
+      
+      switch (sortBy) {
+        case 'title':
+          comparison = a.title.localeCompare(b.title);
+          break;
+        case 'client':
+          comparison = a.client.localeCompare(b.client);
+          break;
+        case 'date':
+        default:
+          comparison = new Date(a.dateModified).getTime() - new Date(b.dateModified).getTime();
+          break;
+      }
+      
+      return sortOrder === 'asc' ? comparison : -comparison;
+    });
 
     return filtered;
   };
@@ -429,26 +548,12 @@ const ScopeOfWorks = () => {
     }));
   };
 
-  const moveColumn = (fromIndex: number, toIndex: number) => {
-    const newOrder = [...columnOrder];
-    const [movedColumn] = newOrder.splice(fromIndex, 1);
-    newOrder.splice(toIndex, 0, movedColumn);
-    setColumnOrder(newOrder);
-  };
-
-  const handleDragStart = (e: React.DragEvent, index: number) => {
-    e.dataTransfer.setData('text/plain', index.toString());
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-  };
-
-  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
-    e.preventDefault();
-    const dragIndex = parseInt(e.dataTransfer.getData('text/plain'));
-    if (dragIndex !== dropIndex) {
-      moveColumn(dragIndex, dropIndex);
+  const handleSort = (field: 'date' | 'title' | 'client') => {
+    if (sortBy === field) {
+      setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(field);
+      setSortOrder('asc');
     }
   };
 
@@ -466,11 +571,17 @@ const ScopeOfWorks = () => {
       <div className={`fixed left-0 top-0 h-full z-30 transition-transform duration-300 lg:translate-x-0 ${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
-        <Sidebar onClose={() => setSidebarOpen(false)} />
+        <Sidebar 
+          onClose={() => setSidebarOpen(false)} 
+          onCollapseChange={setSidebarCollapsed}
+          isCollapsed={sidebarCollapsed}
+        />
       </div>
       
       {/* Main content */}
-      <div className="flex-1 lg:ml-[280px] overflow-auto min-h-screen">
+      <div className={`flex-1 overflow-auto min-h-screen transition-all duration-300 ${
+        sidebarCollapsed ? 'lg:ml-[72px]' : 'lg:ml-[280px]'
+      }`}>
         <main className="flex-1 bg-muted/30 min-h-screen pt-4 lg:pt-8 pb-12">
           <header className="w-full font-medium">
             <div className="items-stretch flex w-full flex-col gap-4 px-4 lg:px-8 py-0">
@@ -551,7 +662,7 @@ const ScopeOfWorks = () => {
                             <Filter size={16} className="text-muted-foreground" />
                           </button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-80 p-4">
+                        <DropdownMenuContent align="end" className="w-80 p-4 z-50">
                           <DropdownMenuLabel>Advanced Filters</DropdownMenuLabel>
                           <DropdownMenuSeparator />
                           
@@ -564,14 +675,14 @@ const ScopeOfWorks = () => {
                                   placeholder="From"
                                   value={advancedFilters.dateFrom}
                                   onChange={(e) => setAdvancedFilters(prev => ({...prev, dateFrom: e.target.value}))}
-                                  className="text-xs"
+                                  className="text-xs h-8"
                                 />
                                 <Input
                                   type="date"
                                   placeholder="To"
                                   value={advancedFilters.dateTo}
                                   onChange={(e) => setAdvancedFilters(prev => ({...prev, dateTo: e.target.value}))}
-                                  className="text-xs"
+                                  className="text-xs h-8"
                                 />
                               </div>
                             </div>
@@ -662,6 +773,32 @@ const ScopeOfWorks = () => {
                           </div>
                         </DropdownMenuContent>
                       </DropdownMenu>
+                      
+                      {/* Column Sorting */}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden text-xs text-foreground font-medium leading-none bg-background px-2 py-1.5 rounded-md border-border hover:bg-accent/50">
+                            <ArrowUpDown size={16} className="text-muted-foreground" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48">
+                          <DropdownMenuLabel>Sort By</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => handleSort('date')}>
+                            <ArrowUpDown className="mr-2 h-4 w-4" />
+                            Date {sortBy === 'date' && `(${sortOrder})`}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleSort('title')}>
+                            <ArrowUpDown className="mr-2 h-4 w-4" />
+                            Title {sortBy === 'title' && `(${sortOrder})`}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleSort('client')}>
+                            <ArrowUpDown className="mr-2 h-4 w-4" />
+                            Client {sortBy === 'client' && `(${sortOrder})`}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <button className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden text-xs text-foreground font-medium leading-none bg-background px-2 py-1.5 rounded-md border-border hover:bg-accent/50">
@@ -746,260 +883,126 @@ const ScopeOfWorks = () => {
                   </div>
 
                   {/* Kanban Columns */}
-                  <div className="flex gap-6 overflow-x-auto pb-4 min-h-[600px]">
-                     {/* Draft Column */}
-                    <div className="flex-shrink-0 w-80 bg-card/50 rounded-lg border border-border">
-                      <div className="p-3 border-b border-border">
-                        <div className="flex items-center justify-between">
-                          <h3 className="text-sm font-medium flex items-center gap-2">
-                            <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
-                            Draft
-                          </h3>
-                          <Badge variant="outline" className="text-xs px-1.5 py-0.5">
-                            {filteredData.filter(sow => sow.status === 'Draft').length}
-                          </Badge>
-                        </div>
-                      </div>
-                      <div className="p-3 space-y-2 max-h-[500px] overflow-y-auto">
-                        {filteredData.filter(sow => sow.status === 'Draft').map((sow) => (
-                          <div key={sow.id} className="bg-card border border-border rounded-lg p-3 hover:shadow-md transition-shadow cursor-pointer">
-                            <div className="flex items-start justify-between mb-2">
-                              <button
-                                onClick={() => toggleRowSelection(sow.id)}
-                                className="flex items-center justify-center w-4 mt-0.5"
-                              >
-                                <div className={`border flex min-h-4 w-4 h-4 rounded border-solid border-border items-center justify-center ${
-                                  selectedRows.includes(sow.id) ? 'bg-primary border-primary' : 'bg-background'
-                                }`}>
-                                  {selectedRows.includes(sow.id) && (
-                                    <Check size={10} className="text-primary-foreground" />
-                                  )}
-                                </div>
-                              </button>
-                              <div className="flex gap-1 ml-2">
-                                <button 
-                                  className="p-1 hover:bg-accent rounded text-muted-foreground hover:text-foreground"
-                                  onClick={() => handleViewSow(sow)}
-                                >
-                                  <Eye size={12} />
-                                </button>
-                                <button 
-                                  className="p-1 hover:bg-accent rounded text-muted-foreground hover:text-foreground"
-                                  onClick={() => handleEditSow(sow)}
-                                >
-                                  <Edit size={12} />
-                                </button>
-                              </div>
-                            </div>
-                            <div className="mb-2">
-                              <h4 className="font-medium text-sm line-clamp-2 mb-1.5">{sow.title}</h4>
-                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                <ClientAvatar name={sow.client} size="sm" />
-                                <span className="truncate">{sow.client}</span>
-                              </div>
-                            </div>
-                            {showColumns.projectType && showColumns.industry && (
-                              <div className="flex flex-wrap gap-1 mb-2">
-                                {showColumns.projectType && <Badge variant="outline" className="text-xs px-1.5 py-0.5">{sow.projectType}</Badge>}
-                                {showColumns.industry && <Badge variant="outline" className="text-xs px-1.5 py-0.5">{sow.industry}</Badge>}
-                              </div>
-                            )}
-                            <div className="flex items-center justify-between text-xs text-muted-foreground">
-                              {showColumns.pages && <span>{sow.pages} pages</span>}
-                              {showColumns.dateModified && <span>{formatDate(sow.dateModified)}</span>}
-                            </div>
-                            {showColumns.integrations && sow.integrations.length > 0 && (
-                              <div className="flex items-center gap-1 mt-2">
-                                <Badge variant="outline" className="text-xs px-1.5 py-0.5">
-                                  {sow.integrations[0]}
-                                </Badge>
-                                {sow.integrations.length > 1 && (
-                                  <Badge variant="outline" className="text-xs px-1.5 py-0.5">
-                                    +{sow.integrations.length - 1}
-                                  </Badge>
-                                )}
-                              </div>
-                            )}
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragStart={handleDragStart}
+                    onDragOver={handleDragOver}
+                    onDragEnd={handleDragEnd}
+                  >
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 min-h-[600px]">
+                      {/* Draft Column */}
+                      <div className="bg-card/50 rounded-lg border border-border flex flex-col">
+                        <div className="p-3 border-b border-border">
+                          <div className="flex items-center justify-between">
+                            <h3 className="text-sm font-medium flex items-center gap-2">
+                              <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
+                              Draft
+                            </h3>
+                            <Badge variant="outline" className="text-xs px-1.5 py-0.5">
+                              {filteredData.filter(sow => sow.status === 'Draft').length}
+                            </Badge>
                           </div>
-                        ))}
+                        </div>
+                        <SortableContext
+                          items={filteredData.filter(sow => sow.status === 'Draft').map(sow => sow.id)}
+                          strategy={verticalListSortingStrategy}
+                        >
+                          <div className="p-3 space-y-2 flex-1 overflow-y-auto">
+                            {filteredData.filter(sow => sow.status === 'Draft').map((sow) => (
+                              <DraggableCard
+                                key={sow.id}
+                                sow={sow}
+                                isSelected={selectedRows.includes(sow.id)}
+                                onToggleSelection={toggleRowSelection}
+                                onView={handleViewSow}
+                                onEdit={handleEditSow}
+                                showColumns={showColumns}
+                              />
+                            ))}
+                          </div>
+                        </SortableContext>
+                      </div>
+
+                      {/* In Review Column */}
+                      <div className="bg-card/50 rounded-lg border border-border flex flex-col">
+                        <div className="p-3 border-b border-border">
+                          <div className="flex items-center justify-between">
+                            <h3 className="text-sm font-medium flex items-center gap-2">
+                              <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                              In Review
+                            </h3>
+                            <Badge variant="outline" className="text-xs px-1.5 py-0.5">
+                              {filteredData.filter(sow => sow.status === 'In Review').length}
+                            </Badge>
+                          </div>
+                        </div>
+                        <SortableContext
+                          items={filteredData.filter(sow => sow.status === 'In Review').map(sow => sow.id)}
+                          strategy={verticalListSortingStrategy}
+                        >
+                          <div className="p-3 space-y-2 flex-1 overflow-y-auto">
+                            {filteredData.filter(sow => sow.status === 'In Review').map((sow) => (
+                              <DraggableCard
+                                key={sow.id}
+                                sow={sow}
+                                isSelected={selectedRows.includes(sow.id)}
+                                onToggleSelection={toggleRowSelection}
+                                onView={handleViewSow}
+                                onEdit={handleEditSow}
+                                showColumns={showColumns}
+                              />
+                            ))}
+                          </div>
+                        </SortableContext>
+                      </div>
+
+                      {/* Approved Column */}
+                      <div className="bg-card/50 rounded-lg border border-border flex flex-col">
+                        <div className="p-3 border-b border-border">
+                          <div className="flex items-center justify-between">
+                            <h3 className="text-sm font-medium flex items-center gap-2">
+                              <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                              Approved
+                            </h3>
+                            <Badge variant="outline" className="text-xs px-1.5 py-0.5">
+                              {filteredData.filter(sow => sow.status === 'Approved').length}
+                            </Badge>
+                          </div>
+                        </div>
+                        <SortableContext
+                          items={filteredData.filter(sow => sow.status === 'Approved').map(sow => sow.id)}
+                          strategy={verticalListSortingStrategy}
+                        >
+                          <div className="p-3 space-y-2 flex-1 overflow-y-auto">
+                            {filteredData.filter(sow => sow.status === 'Approved').map((sow) => (
+                              <DraggableCard
+                                key={sow.id}
+                                sow={sow}
+                                isSelected={selectedRows.includes(sow.id)}
+                                onToggleSelection={toggleRowSelection}
+                                onView={handleViewSow}
+                                onEdit={handleEditSow}
+                                onDownloadPDF={handleDownloadPDF}
+                                onDownloadDOC={handleDownloadDOC}
+                                showColumns={showColumns}
+                              />
+                            ))}
+                          </div>
+                        </SortableContext>
                       </div>
                     </div>
 
-                    {/* In Review Column */}
-                    <div className="flex-shrink-0 w-80 bg-card/50 rounded-lg border border-border">
-                      <div className="p-3 border-b border-border">
-                        <div className="flex items-center justify-between">
-                          <h3 className="text-sm font-medium flex items-center gap-2">
-                            <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                            In Review
-                          </h3>
-                          <Badge variant="outline" className="text-xs px-1.5 py-0.5">
-                            {filteredData.filter(sow => sow.status === 'In Review').length}
-                          </Badge>
-                        </div>
-                      </div>
-                      <div className="p-3 space-y-2 max-h-[500px] overflow-y-auto">
-                        {filteredData.filter(sow => sow.status === 'In Review').map((sow) => (
-                          <div key={sow.id} className="bg-card border border-border rounded-lg p-3 hover:shadow-md transition-shadow cursor-pointer">
-                            <div className="flex items-start justify-between mb-2">
-                              <button
-                                onClick={() => toggleRowSelection(sow.id)}
-                                className="flex items-center justify-center w-4 mt-0.5"
-                              >
-                                <div className={`border flex min-h-4 w-4 h-4 rounded border-solid border-border items-center justify-center ${
-                                  selectedRows.includes(sow.id) ? 'bg-primary border-primary' : 'bg-background'
-                                }`}>
-                                  {selectedRows.includes(sow.id) && (
-                                    <Check size={10} className="text-primary-foreground" />
-                                  )}
-                                </div>
-                              </button>
-                              <div className="flex gap-1 ml-2">
-                                <button 
-                                  className="p-1 hover:bg-accent rounded text-muted-foreground hover:text-foreground"
-                                  onClick={() => handleViewSow(sow)}
-                                >
-                                  <Eye size={12} />
-                                </button>
-                                <button 
-                                  className="p-1 hover:bg-accent rounded text-muted-foreground hover:text-foreground"
-                                  onClick={() => handleEditSow(sow)}
-                                >
-                                  <Edit size={12} />
-                                </button>
-                              </div>
-                            </div>
-                            <div className="mb-2">
-                              <h4 className="font-medium text-sm line-clamp-2 mb-1.5">{sow.title}</h4>
-                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                <ClientAvatar name={sow.client} size="sm" />
-                                <span className="truncate">{sow.client}</span>
-                              </div>
-                            </div>
-                            {showColumns.projectType && showColumns.industry && (
-                              <div className="flex flex-wrap gap-1 mb-2">
-                                {showColumns.projectType && <Badge variant="outline" className="text-xs px-1.5 py-0.5">{sow.projectType}</Badge>}
-                                {showColumns.industry && <Badge variant="outline" className="text-xs px-1.5 py-0.5">{sow.industry}</Badge>}
-                              </div>
-                            )}
-                            <div className="flex items-center justify-between text-xs text-muted-foreground">
-                              {showColumns.pages && <span>{sow.pages} pages</span>}
-                              {showColumns.dateModified && <span>{formatDate(sow.dateModified)}</span>}
-                            </div>
-                            {showColumns.integrations && sow.integrations.length > 0 && (
-                              <div className="flex items-center gap-1 mt-2">
-                                <Badge variant="outline" className="text-xs px-1.5 py-0.5">
-                                  {sow.integrations[0]}
-                                </Badge>
-                                {sow.integrations.length > 1 && (
-                                  <Badge variant="outline" className="text-xs px-1.5 py-0.5">
-                                    +{sow.integrations.length - 1}
-                                  </Badge>
-                                )}
-                              </div>
-                            )}
+                    <DragOverlay>
+                      {activeCard ? (
+                        <div className="bg-card border border-border rounded-lg p-3 shadow-lg opacity-90">
+                          <div className="font-medium text-sm line-clamp-2">
+                            {data.find(item => item.id === activeCard)?.title}
                           </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Approved Column */}
-                    <div className="flex-shrink-0 w-80 bg-card/50 rounded-lg border border-border">
-                      <div className="p-3 border-b border-border">
-                        <div className="flex items-center justify-between">
-                          <h3 className="text-sm font-medium flex items-center gap-2">
-                            <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                            Approved
-                          </h3>
-                          <Badge variant="outline" className="text-xs px-1.5 py-0.5">
-                            {filteredData.filter(sow => sow.status === 'Approved').length}
-                          </Badge>
                         </div>
-                      </div>
-                      <div className="p-3 space-y-2 max-h-[500px] overflow-y-auto">
-                        {filteredData.filter(sow => sow.status === 'Approved').map((sow) => (
-                          <div key={sow.id} className="bg-card border border-border rounded-lg p-3 hover:shadow-md transition-shadow cursor-pointer">
-                            <div className="flex items-start justify-between mb-2">
-                              <button
-                                onClick={() => toggleRowSelection(sow.id)}
-                                className="flex items-center justify-center w-4 mt-0.5"
-                              >
-                                <div className={`border flex min-h-4 w-4 h-4 rounded border-solid border-border items-center justify-center ${
-                                  selectedRows.includes(sow.id) ? 'bg-primary border-primary' : 'bg-background'
-                                }`}>
-                                  {selectedRows.includes(sow.id) && (
-                                    <Check size={10} className="text-primary-foreground" />
-                                  )}
-                                </div>
-                              </button>
-                              <div className="flex gap-1 ml-2">
-                                <button 
-                                  className="p-1 hover:bg-accent rounded text-muted-foreground hover:text-foreground"
-                                  onClick={() => handleViewSow(sow)}
-                                >
-                                  <Eye size={12} />
-                                </button>
-                                <button 
-                                  className="p-1 hover:bg-accent rounded text-muted-foreground hover:text-foreground"
-                                  onClick={() => handleEditSow(sow)}
-                                >
-                                  <Edit size={12} />
-                                </button>
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <button className="p-1 hover:bg-accent rounded text-muted-foreground hover:text-foreground">
-                                      <Download size={12} />
-                                    </button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end">
-                                    <DropdownMenuLabel>Download Options</DropdownMenuLabel>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem onClick={() => handleDownloadPDF(sow)}>
-                                      <Download className="mr-2 h-4 w-4" />
-                                      Download PDF
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => handleDownloadDOC(sow)}>
-                                      <Download className="mr-2 h-4 w-4" />
-                                      Download DOC
-                                    </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
-                              </div>
-                            </div>
-                            <div className="mb-2">
-                              <h4 className="font-medium text-sm line-clamp-2 mb-1.5">{sow.title}</h4>
-                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                <ClientAvatar name={sow.client} size="sm" />
-                                <span className="truncate">{sow.client}</span>
-                              </div>
-                            </div>
-                            {showColumns.projectType && showColumns.industry && (
-                              <div className="flex flex-wrap gap-1 mb-3">
-                                {showColumns.projectType && <Badge variant="outline" className="text-xs">{sow.projectType}</Badge>}
-                                {showColumns.industry && <Badge variant="outline" className="text-xs">{sow.industry}</Badge>}
-                              </div>
-                            )}
-                            <div className="flex items-center justify-between text-xs text-muted-foreground">
-                              {showColumns.pages && <span>{sow.pages} pages</span>}
-                              {showColumns.dateModified && <span>{formatDate(sow.dateModified)}</span>}
-                            </div>
-                            {showColumns.integrations && sow.integrations.length > 0 && (
-                              <div className="flex items-center gap-1 mt-2">
-                                <Badge variant="outline" className="text-xs">
-                                  {sow.integrations[0]}
-                                </Badge>
-                                {sow.integrations.length > 1 && (
-                                  <Badge variant="outline" className="text-xs">
-                                    +{sow.integrations.length - 1}
-                                  </Badge>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
+                      ) : null}
+                    </DragOverlay>
+                  </DndContext>
                 </div>
               </div>
             </div>
