@@ -13,7 +13,9 @@ import {
   Edit01 as Edit, 
   DotsHorizontal as MoreHorizontal,
   Grid01 as Grid,
-  List
+  List,
+  ArrowUp as SortAsc,
+  ArrowDown as SortDesc
 } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/Badge';
@@ -526,396 +528,555 @@ const ScopeOfWorks = () => {
                     </div>
                   </div>
                   
-                  {/* Search and controls */}
-                  <div className="flex items-center gap-2.5 w-full lg:w-auto">
-                    <SimpleSearch
-                      placeholder="Search"
-                      value={searchTerm}
-                      onChange={setSearchTerm}
-                      className="flex-1 lg:max-w-[240px] lg:min-w-48 lg:w-[240px]"
-                    />
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden text-xs text-foreground font-medium leading-none bg-background px-2 py-1.5 rounded-md border-border hover:bg-accent/50">
-                          <Filter size={16} className="text-muted-foreground" />
-                          <ArrowUpDown size={16} className="text-muted-foreground" />
-                        </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-80 p-4">
-                        <DropdownMenuLabel className="px-0">Advanced Filters</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        
-                        <div className="space-y-4 pt-2">
-                          <div>
-                            <label className="text-sm font-medium mb-2 block">Date Range</label>
-                            <div className="flex gap-2">
-                              <Input
-                                type="date"
-                                placeholder="From"
-                                value={advancedFilters.dateFrom}
-                                onChange={(e) => setAdvancedFilters(prev => ({...prev, dateFrom: e.target.value}))}
-                                className="text-xs"
-                              />
-                              <Input
-                                type="date"
-                                placeholder="To"
-                                value={advancedFilters.dateTo}
-                                onChange={(e) => setAdvancedFilters(prev => ({...prev, dateTo: e.target.value}))}
-                                className="text-xs"
-                              />
-                            </div>
-                          </div>
-                          
-                          <div>
-                            <label className="text-sm font-medium mb-2 block">Industry</label>
-                            <div className="flex flex-wrap gap-1">
-                              {availableIndustries.map((industry) => (
-                                <button
-                                  key={industry}
-                                  onClick={() => {
-                                    const newIndustry = advancedFilters.industry.includes(industry)
-                                      ? advancedFilters.industry.filter(i => i !== industry)
-                                      : [...advancedFilters.industry, industry];
-                                    setAdvancedFilters(prev => ({...prev, industry: newIndustry}));
-                                  }}
-                                >
-                                  <Badge
-                                    variant={advancedFilters.industry.includes(industry) ? "default" : "outline"}
-                                    className="text-xs cursor-pointer w-auto"
-                                  >
-                                    {industry}
-                                  </Badge>
-                                </button>
-                              ))}
-                            </div>
-                          </div>
+                   {/* Search and controls */}
+                   <div className="flex items-center gap-2.5 w-full lg:w-auto">
+                     <SimpleSearch
+                       placeholder="Search"
+                       value={searchTerm}
+                       onChange={setSearchTerm}
+                       className="flex-1 lg:max-w-[240px] lg:min-w-48 lg:w-[240px]"
+                     />
+                     
+                     {/* Filter Button */}
+                     <DropdownMenu>
+                       <DropdownMenuTrigger asChild>
+                         <button className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden text-xs text-foreground font-medium leading-none bg-background px-2 py-1.5 rounded-md border-border hover:bg-accent/50">
+                           <Filter size={16} className="text-muted-foreground" />
+                         </button>
+                       </DropdownMenuTrigger>
+                       <DropdownMenuContent align="end" className="w-80 p-4">
+                         <DropdownMenuLabel className="p-0 mb-2">Advanced Filters</DropdownMenuLabel>
+                         <DropdownMenuSeparator />
+                         
+                         <div className="space-y-4 pt-2">
+                           <div>
+                             <label className="text-sm font-medium mb-2 block">Date Range</label>
+                             <div className="flex gap-2 px-1">
+                               <Input
+                                 type="date"
+                                 placeholder="From"
+                                 value={advancedFilters.dateFrom}
+                                 onChange={(e) => setAdvancedFilters(prev => ({...prev, dateFrom: e.target.value}))}
+                                 className="text-xs"
+                               />
+                               <Input
+                                 type="date"
+                                 placeholder="To"
+                                 value={advancedFilters.dateTo}
+                                 onChange={(e) => setAdvancedFilters(prev => ({...prev, dateTo: e.target.value}))}
+                                 className="text-xs"
+                               />
+                             </div>
+                           </div>
+                           
+                           <div>
+                             <label className="text-sm font-medium mb-2 block">Industry</label>
+                             <div className="flex flex-wrap gap-1">
+                               {availableIndustries.map((industry) => (
+                                 <button
+                                   key={industry}
+                                   onClick={() => {
+                                     const newIndustry = advancedFilters.industry.includes(industry)
+                                       ? advancedFilters.industry.filter(i => i !== industry)
+                                       : [...advancedFilters.industry, industry];
+                                     setAdvancedFilters(prev => ({...prev, industry: newIndustry}));
+                                   }}
+                                 >
+                                   <Badge
+                                     variant={advancedFilters.industry.includes(industry) ? "default" : "outline"}
+                                     className="text-xs cursor-pointer w-auto"
+                                   >
+                                     {industry}
+                                   </Badge>
+                                 </button>
+                               ))}
+                             </div>
+                           </div>
 
-                          <div>
-                            <label className="text-sm font-medium mb-2 block">Project Type</label>
-                            <div className="flex flex-wrap gap-1">
-                              {availableProjectTypes.map((type) => (
-                                <button
-                                  key={type}
-                                  onClick={() => {
-                                    const newType = advancedFilters.projectType.includes(type)
-                                      ? advancedFilters.projectType.filter(t => t !== type)
-                                      : [...advancedFilters.projectType, type];
-                                    setAdvancedFilters(prev => ({...prev, projectType: newType}));
-                                  }}
-                                >
-                                  <Badge
-                                    variant={advancedFilters.projectType.includes(type) ? "default" : "outline"}
-                                    className="text-xs cursor-pointer w-auto"
-                                  >
-                                    {type}
-                                  </Badge>
-                                </button>
-                              ))}
-                            </div>
-                          </div>
+                           <div>
+                             <label className="text-sm font-medium mb-2 block">Project Type</label>
+                             <div className="flex flex-wrap gap-1">
+                               {availableProjectTypes.map((type) => (
+                                 <button
+                                   key={type}
+                                   onClick={() => {
+                                     const newType = advancedFilters.projectType.includes(type)
+                                       ? advancedFilters.projectType.filter(t => t !== type)
+                                       : [...advancedFilters.projectType, type];
+                                     setAdvancedFilters(prev => ({...prev, projectType: newType}));
+                                   }}
+                                 >
+                                   <Badge
+                                     variant={advancedFilters.projectType.includes(type) ? "default" : "outline"}
+                                     className="text-xs cursor-pointer w-auto"
+                                   >
+                                     {type}
+                                   </Badge>
+                                 </button>
+                               ))}
+                             </div>
+                           </div>
 
-                          <div>
-                            <label className="text-sm font-medium mb-2 block">Status</label>
-                            <div className="flex flex-wrap gap-1">
-                              {availableStatuses.map((status) => (
-                                <button
-                                  key={status}
-                                  onClick={() => {
-                                    const newStatus = advancedFilters.status.includes(status)
-                                      ? advancedFilters.status.filter(s => s !== status)
-                                      : [...advancedFilters.status, status];
-                                    setAdvancedFilters(prev => ({...prev, status: newStatus}));
-                                  }}
-                                >
-                                  <Badge
-                                    variant={advancedFilters.status.includes(status) ? "default" : "outline"}
-                                    className="text-xs cursor-pointer w-auto"
-                                  >
-                                    {status}
-                                  </Badge>
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                          
-                          <div className="flex gap-2 pt-2">
-                            <Button size="sm" variant="outline" onClick={resetAdvancedFilters} className="text-xs">
-                              Clear All
-                            </Button>
-                          </div>
-                        </div>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden text-xs text-foreground font-medium leading-none bg-background px-2 py-1.5 rounded-md border-border hover:bg-accent/50">
-                          <Settings size={16} className="text-muted-foreground" />
-                        </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-56">
-                        <DropdownMenuLabel>Table Settings</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        
-                        <DropdownMenuItem onClick={handleExportData}>
-                          <Download className="mr-2 h-4 w-4" />
-                          Export to CSV
-                        </DropdownMenuItem>
-                        
-                        <DropdownMenuSeparator />
-                        <DropdownMenuLabel>Show Columns</DropdownMenuLabel>
-                        
-                        <DropdownMenuCheckboxItem
-                          checked={showColumns.companyName}
-                          onCheckedChange={() => toggleColumn('companyName')}
-                        >
-                          Company Name
-                        </DropdownMenuCheckboxItem>
-                        <DropdownMenuCheckboxItem
-                          checked={showColumns.clientName}
-                          onCheckedChange={() => toggleColumn('clientName')}
-                        >
-                          Client Name
-                        </DropdownMenuCheckboxItem>
-                        <DropdownMenuCheckboxItem
-                          checked={showColumns.projectType}
-                          onCheckedChange={() => toggleColumn('projectType')}
-                        >
-                          Project Type
-                        </DropdownMenuCheckboxItem>
-                        <DropdownMenuCheckboxItem
-                          checked={showColumns.industry}
-                          onCheckedChange={() => toggleColumn('industry')}
-                        >
-                          Industry
-                        </DropdownMenuCheckboxItem>
-                        <DropdownMenuCheckboxItem
-                          checked={showColumns.status}
-                          onCheckedChange={() => toggleColumn('status')}
-                        >
-                          Status
-                        </DropdownMenuCheckboxItem>
-                        <DropdownMenuCheckboxItem
-                          checked={showColumns.pages}
-                          onCheckedChange={() => toggleColumn('pages')}
-                        >
-                          Pages
-                        </DropdownMenuCheckboxItem>
-                        <DropdownMenuCheckboxItem
-                          checked={showColumns.integrations}
-                          onCheckedChange={() => toggleColumn('integrations')}
-                        >
-                          Integrations
-                        </DropdownMenuCheckboxItem>
-                        <DropdownMenuCheckboxItem
-                          checked={showColumns.dateModified}
-                          onCheckedChange={() => toggleColumn('dateModified')}
-                        >
-                          Date Modified
-                        </DropdownMenuCheckboxItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleViewModeToggle}
-                      className="h-8 px-2"
-                    >
-                      {viewMode === 'table' ? <Grid size={16} /> : <List size={16} />}
-                    </Button>
-                  </div>
+                           <div>
+                             <label className="text-sm font-medium mb-2 block">Status</label>
+                             <div className="flex flex-wrap gap-1">
+                               {availableStatuses.map((status) => (
+                                 <button
+                                   key={status}
+                                   onClick={() => {
+                                     const newStatus = advancedFilters.status.includes(status)
+                                       ? advancedFilters.status.filter(s => s !== status)
+                                       : [...advancedFilters.status, status];
+                                     setAdvancedFilters(prev => ({...prev, status: newStatus}));
+                                   }}
+                                 >
+                                   <Badge
+                                     variant={advancedFilters.status.includes(status) ? "default" : "outline"}
+                                     className="text-xs cursor-pointer w-auto"
+                                   >
+                                     {status}
+                                   </Badge>
+                                 </button>
+                               ))}
+                             </div>
+                           </div>
+                           
+                           <div className="flex gap-2 pt-2">
+                             <Button size="sm" variant="outline" onClick={resetAdvancedFilters} className="text-xs">
+                               Clear All
+                             </Button>
+                           </div>
+                         </div>
+                       </DropdownMenuContent>
+                     </DropdownMenu>
+
+                     {/* Sort Button */}
+                     <DropdownMenu>
+                       <DropdownMenuTrigger asChild>
+                         <button className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden text-xs text-foreground font-medium leading-none bg-background px-2 py-1.5 rounded-md border-border hover:bg-accent/50">
+                           {sortOrder === 'asc' ? <SortAsc size={16} className="text-muted-foreground" /> : <SortDesc size={16} className="text-muted-foreground" />}
+                         </button>
+                       </DropdownMenuTrigger>
+                       <DropdownMenuContent align="end" className="w-48">
+                         <DropdownMenuLabel>Sort by</DropdownMenuLabel>
+                         <DropdownMenuSeparator />
+                         
+                         <DropdownMenuItem onClick={() => handleSort('client')}>
+                           Company Name
+                           {sortBy === 'client' && (
+                             <div className="ml-auto">
+                               {sortOrder === 'asc' ? <SortAsc size={14} /> : <SortDesc size={14} />}
+                             </div>
+                           )}
+                         </DropdownMenuItem>
+                         <DropdownMenuItem onClick={() => handleSort('status')}>
+                           Status
+                           {sortBy === 'status' && (
+                             <div className="ml-auto">
+                               {sortOrder === 'asc' ? <SortAsc size={14} /> : <SortDesc size={14} />}
+                             </div>
+                           )}
+                         </DropdownMenuItem>
+                         <DropdownMenuItem onClick={() => handleSort('projectType')}>
+                           Project Type
+                           {sortBy === 'projectType' && (
+                             <div className="ml-auto">
+                               {sortOrder === 'asc' ? <SortAsc size={14} /> : <SortDesc size={14} />}
+                             </div>
+                           )}
+                         </DropdownMenuItem>
+                         <DropdownMenuItem onClick={() => handleSort('industry')}>
+                           Industry
+                           {sortBy === 'industry' && (
+                             <div className="ml-auto">
+                               {sortOrder === 'asc' ? <SortAsc size={14} /> : <SortDesc size={14} />}
+                             </div>
+                           )}
+                         </DropdownMenuItem>
+                         <DropdownMenuItem onClick={() => handleSort('pages')}>
+                           Pages
+                           {sortBy === 'pages' && (
+                             <div className="ml-auto">
+                               {sortOrder === 'asc' ? <SortAsc size={14} /> : <SortDesc size={14} />}
+                             </div>
+                           )}
+                         </DropdownMenuItem>
+                         <DropdownMenuItem onClick={() => handleSort('dateModified')}>
+                           Date Modified
+                           {sortBy === 'dateModified' && (
+                             <div className="ml-auto">
+                               {sortOrder === 'asc' ? <SortAsc size={14} /> : <SortDesc size={14} />}
+                             </div>
+                           )}
+                         </DropdownMenuItem>
+                       </DropdownMenuContent>
+                     </DropdownMenu>
+                     
+                     {/* Settings Button */}
+                     <DropdownMenu>
+                       <DropdownMenuTrigger asChild>
+                         <button className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden text-xs text-foreground font-medium leading-none bg-background px-2 py-1.5 rounded-md border-border hover:bg-accent/50">
+                           <Settings size={16} className="text-muted-foreground" />
+                         </button>
+                       </DropdownMenuTrigger>
+                       <DropdownMenuContent align="end" className="w-56">
+                         <DropdownMenuLabel>Table Settings</DropdownMenuLabel>
+                         <DropdownMenuSeparator />
+                         
+                         <DropdownMenuItem onClick={handleExportData}>
+                           <Download className="mr-2 h-4 w-4" />
+                           Export to CSV
+                         </DropdownMenuItem>
+                         
+                         <DropdownMenuSeparator />
+                         <DropdownMenuLabel>Show Columns</DropdownMenuLabel>
+                         
+                         <DropdownMenuCheckboxItem
+                           checked={showColumns.companyName}
+                           onCheckedChange={() => toggleColumn('companyName')}
+                         >
+                           Company Name
+                         </DropdownMenuCheckboxItem>
+                         <DropdownMenuCheckboxItem
+                           checked={showColumns.clientName}
+                           onCheckedChange={() => toggleColumn('clientName')}
+                         >
+                           Client Name
+                         </DropdownMenuCheckboxItem>
+                         <DropdownMenuCheckboxItem
+                           checked={showColumns.projectType}
+                           onCheckedChange={() => toggleColumn('projectType')}
+                         >
+                           Project Type
+                         </DropdownMenuCheckboxItem>
+                         <DropdownMenuCheckboxItem
+                           checked={showColumns.industry}
+                           onCheckedChange={() => toggleColumn('industry')}
+                         >
+                           Industry
+                         </DropdownMenuCheckboxItem>
+                         <DropdownMenuCheckboxItem
+                           checked={showColumns.status}
+                           onCheckedChange={() => toggleColumn('status')}
+                         >
+                           Status
+                         </DropdownMenuCheckboxItem>
+                         <DropdownMenuCheckboxItem
+                           checked={showColumns.pages}
+                           onCheckedChange={() => toggleColumn('pages')}
+                         >
+                           Pages
+                         </DropdownMenuCheckboxItem>
+                         <DropdownMenuCheckboxItem
+                           checked={showColumns.integrations}
+                           onCheckedChange={() => toggleColumn('integrations')}
+                         >
+                           Integrations
+                         </DropdownMenuCheckboxItem>
+                         <DropdownMenuCheckboxItem
+                           checked={showColumns.dateModified}
+                           onCheckedChange={() => toggleColumn('dateModified')}
+                         >
+                           Date Modified
+                         </DropdownMenuCheckboxItem>
+                       </DropdownMenuContent>
+                     </DropdownMenu>
+
+                     {/* View Toggle Button */}
+                     <Button
+                       variant="outline"
+                       size="sm"
+                       onClick={handleViewModeToggle}
+                       className="h-8 px-2"
+                     >
+                       {viewMode === 'table' ? <Grid size={16} /> : <List size={16} />}
+                     </Button>
+                   </div>
                 </div>
               </div>
 
               <CardContent className="p-0">
                 <TooltipProvider>
-                  <div className="w-full overflow-x-auto">
-                    <Table className="min-w-[1200px]">
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className="w-12">
-                            <button
-                              onClick={toggleAllSelection}
-                              className="flex items-center justify-center w-5"
-                            >
-                              <div className={`border flex min-h-5 w-5 h-5 rounded-md border-solid border-border items-center justify-center ${
-                                selectedRows.length === filteredData.length ? 'bg-primary border-primary' : 'bg-background'
-                              }`}>
-                                {selectedRows.length === filteredData.length && (
-                                  <Check size={12} className="text-primary-foreground" />
-                                )}
-                              </div>
-                            </button>
-                          </TableHead>
-                          {showColumns.companyName && (
-                            <TableHead>Company Name</TableHead>
-                          )}
-                          {showColumns.clientName && (
-                            <TableHead>Client Name</TableHead>
-                          )}
-                          {showColumns.projectType && (
-                            <TableHead>Project Type</TableHead>
-                          )}
-                          {showColumns.industry && (
-                            <TableHead>Industry</TableHead>
-                          )}
-                          {showColumns.status && (
-                            <TableHead>Status</TableHead>
-                          )}
-                          {showColumns.pages && (
-                            <TableHead>Pages</TableHead>
-                          )}
-                          {showColumns.integrations && (
-                            <TableHead>Integrations</TableHead>
-                          )}
-                          {showColumns.dateModified && (
-                            <TableHead>Modified</TableHead>
-                          )}
-                          {showColumns.actions && (
-                            <TableHead className="text-right">Actions</TableHead>
-                          )}
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {filteredData.map((sow) => (
-                          <TableRow key={sow.id}>
-                            <TableCell>
+                  {viewMode === 'table' ? (
+                    <div className="w-full overflow-x-auto">
+                      <Table className="min-w-[1200px]">
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="w-12">
                               <button
-                                onClick={() => toggleRowSelection(sow.id)}
+                                onClick={toggleAllSelection}
                                 className="flex items-center justify-center w-5"
                               >
                                 <div className={`border flex min-h-5 w-5 h-5 rounded-md border-solid border-border items-center justify-center ${
-                                  selectedRows.includes(sow.id) ? 'bg-primary border-primary' : 'bg-background'
+                                  selectedRows.length === filteredData.length ? 'bg-primary border-primary' : 'bg-background'
                                 }`}>
-                                  {selectedRows.includes(sow.id) && (
+                                  {selectedRows.length === filteredData.length && (
                                     <Check size={12} className="text-primary-foreground" />
                                   )}
                                 </div>
                               </button>
-                            </TableCell>
+                            </TableHead>
                             {showColumns.companyName && (
-                              <TableCell>
-                                <div className="font-medium text-sm whitespace-nowrap">{sow.client}</div>
-                              </TableCell>
+                              <TableHead>Company Name</TableHead>
                             )}
                             {showColumns.clientName && (
-                              <TableCell>
-                                <div className="flex items-center gap-2 whitespace-nowrap">
-                                  <ClientAvatar name={sow.clientContact} size="sm" />
-                                  <span className="text-sm">{sow.clientContact}</span>
-                                </div>
-                              </TableCell>
+                              <TableHead>Client Name</TableHead>
                             )}
                             {showColumns.projectType && (
-                              <TableCell>
-                                <Badge variant="outline" className="text-xs w-auto whitespace-nowrap">
-                                  {sow.projectType}
-                                </Badge>
-                              </TableCell>
+                              <TableHead>Project Type</TableHead>
                             )}
                             {showColumns.industry && (
-                              <TableCell>
-                                <Badge variant="outline" className="text-xs w-auto whitespace-nowrap">
-                                  {sow.industry}
-                                </Badge>
-                              </TableCell>
+                              <TableHead>Industry</TableHead>
                             )}
                             {showColumns.status && (
-                              <TableCell>
-                                <Badge variant={getBadgeVariant(sow.status)} className="text-xs w-auto whitespace-nowrap">
-                                  {sow.status}
-                                </Badge>
-                              </TableCell>
+                              <TableHead>Status</TableHead>
                             )}
                             {showColumns.pages && (
-                              <TableCell className="text-sm whitespace-nowrap">{sow.pages}</TableCell>
+                              <TableHead>Pages</TableHead>
                             )}
                             {showColumns.integrations && (
-                              <TableCell>
-                                {sow.integrations.length > 0 && (
-                                  <div className="flex items-center gap-1">
-                                    <Badge variant="outline" className="text-xs w-auto whitespace-nowrap">
-                                      {sow.integrations[0]}
-                                    </Badge>
-                                    {sow.integrations.length > 1 && (
-                                      <Tooltip>
-                                        <TooltipTrigger asChild>
-                                          <Badge variant="outline" className="text-xs w-auto whitespace-nowrap cursor-pointer">
-                                            +{sow.integrations.length - 1}
-                                          </Badge>
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                          <div className="space-y-1">
-                                            <p className="font-medium">All Integrations:</p>
-                                            <div className="flex flex-wrap gap-1">
-                                              {sow.integrations.map((integration: string, index: number) => (
-                                                <Badge key={index} variant="outline" className="text-xs w-auto">
-                                                  {integration}
-                                                </Badge>
-                                              ))}
-                                            </div>
-                                          </div>
-                                        </TooltipContent>
-                                      </Tooltip>
-                                    )}
-                                  </div>
-                                )}
-                              </TableCell>
+                              <TableHead>Integrations</TableHead>
                             )}
                             {showColumns.dateModified && (
-                              <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
-                                {formatDate(sow.dateModified)}
-                              </TableCell>
+                              <TableHead>Modified</TableHead>
                             )}
                             {showColumns.actions && (
-                              <TableCell className="text-right">
-                                <div className="flex items-center justify-end gap-2">
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-7 px-2"
-                                    onClick={() => handleViewSow(sow)}
-                                  >
-                                    <Eye className="h-3 w-3" />
-                                  </Button>
-                                  <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                      <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="h-7 px-2"
-                                      >
-                                        <MoreHorizontal className="h-3 w-3" />
-                                      </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end">
-                                      <DropdownMenuItem onClick={() => handleEditSow(sow)}>
-                                        <Edit className="mr-2 h-4 w-4" />
-                                        Edit
-                                      </DropdownMenuItem>
-                                      <DropdownMenuItem onClick={() => handleDownloadPDF(sow)}>
-                                        <Download className="mr-2 h-4 w-4" />
-                                        Download PDF
-                                      </DropdownMenuItem>
-                                      <DropdownMenuItem onClick={() => handleDownloadDOC(sow)}>
-                                        <Download className="mr-2 h-4 w-4" />
-                                        Download DOC
-                                      </DropdownMenuItem>
-                                      {sow.status !== 'Approved' && (
-                                        <DropdownMenuItem>
-                                          <Send className="mr-2 h-4 w-4" />
-                                          Send to Client
-                                        </DropdownMenuItem>
-                                      )}
-                                    </DropdownMenuContent>
-                                  </DropdownMenu>
-                                </div>
-                              </TableCell>
+                              <TableHead className="text-right">Actions</TableHead>
                             )}
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
+                        </TableHeader>
+                        <TableBody>
+                          {filteredData.map((sow) => (
+                            <TableRow key={sow.id}>
+                              <TableCell>
+                                <button
+                                  onClick={() => toggleRowSelection(sow.id)}
+                                  className="flex items-center justify-center w-5"
+                                >
+                                  <div className={`border flex min-h-5 w-5 h-5 rounded-md border-solid border-border items-center justify-center ${
+                                    selectedRows.includes(sow.id) ? 'bg-primary border-primary' : 'bg-background'
+                                  }`}>
+                                    {selectedRows.includes(sow.id) && (
+                                      <Check size={12} className="text-primary-foreground" />
+                                    )}
+                                  </div>
+                                </button>
+                              </TableCell>
+                              {showColumns.companyName && (
+                                <TableCell>
+                                  <div className="font-medium text-sm whitespace-nowrap">{sow.client}</div>
+                                </TableCell>
+                              )}
+                              {showColumns.clientName && (
+                                <TableCell>
+                                  <div className="flex items-center gap-2 whitespace-nowrap">
+                                    <ClientAvatar name={sow.clientContact} size="sm" />
+                                    <span className="text-sm">{sow.clientContact}</span>
+                                  </div>
+                                </TableCell>
+                              )}
+                              {showColumns.projectType && (
+                                <TableCell>
+                                  <Badge variant="outline" className="text-xs w-auto whitespace-nowrap">
+                                    {sow.projectType}
+                                  </Badge>
+                                </TableCell>
+                              )}
+                              {showColumns.industry && (
+                                <TableCell>
+                                  <Badge variant="outline" className="text-xs w-auto whitespace-nowrap">
+                                    {sow.industry}
+                                  </Badge>
+                                </TableCell>
+                              )}
+                              {showColumns.status && (
+                                <TableCell>
+                                  <Badge variant={getBadgeVariant(sow.status)} className="text-xs w-auto whitespace-nowrap">
+                                    {sow.status}
+                                  </Badge>
+                                </TableCell>
+                              )}
+                              {showColumns.pages && (
+                                <TableCell className="text-sm whitespace-nowrap">{sow.pages}</TableCell>
+                              )}
+                              {showColumns.integrations && (
+                                <TableCell>
+                                  {sow.integrations.length > 0 && (
+                                    <div className="flex items-center gap-1">
+                                      <Badge variant="outline" className="text-xs w-auto whitespace-nowrap">
+                                        {sow.integrations[0]}
+                                      </Badge>
+                                      {sow.integrations.length > 1 && (
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <div className="cursor-pointer">
+                                              <Badge variant="outline" className="text-xs w-auto whitespace-nowrap">
+                                                +{sow.integrations.length - 1}
+                                              </Badge>
+                                            </div>
+                                          </TooltipTrigger>
+                                          <TooltipContent className="z-50 bg-popover border border-border">
+                                            <div className="space-y-1">
+                                              <p className="font-medium">All Integrations:</p>
+                                              <div className="flex flex-wrap gap-1">
+                                                {sow.integrations.map((integration: string, index: number) => (
+                                                  <Badge key={index} variant="outline" className="text-xs w-auto">
+                                                    {integration}
+                                                  </Badge>
+                                                ))}
+                                              </div>
+                                            </div>
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      )}
+                                    </div>
+                                  )}
+                                </TableCell>
+                              )}
+                              {showColumns.dateModified && (
+                                <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                                  {formatDate(sow.dateModified)}
+                                </TableCell>
+                              )}
+                              {showColumns.actions && (
+                                <TableCell className="text-right">
+                                  <div className="flex items-center justify-end gap-2">
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="h-7 px-2"
+                                      onClick={() => handleViewSow(sow)}
+                                    >
+                                      <Eye className="h-3 w-3" />
+                                    </Button>
+                                    <DropdownMenu>
+                                      <DropdownMenuTrigger asChild>
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          className="h-7 px-2"
+                                        >
+                                          <MoreHorizontal className="h-3 w-3" />
+                                        </Button>
+                                      </DropdownMenuTrigger>
+                                      <DropdownMenuContent align="end">
+                                        <DropdownMenuItem onClick={() => handleEditSow(sow)}>
+                                          <Edit className="mr-2 h-4 w-4" />
+                                          Edit
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => handleDownloadPDF(sow)}>
+                                          <Download className="mr-2 h-4 w-4" />
+                                          Download PDF
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => handleDownloadDOC(sow)}>
+                                          <Download className="mr-2 h-4 w-4" />
+                                          Download DOC
+                                        </DropdownMenuItem>
+                                        {sow.status !== 'Approved' && (
+                                          <DropdownMenuItem>
+                                            <Send className="mr-2 h-4 w-4" />
+                                            Send to Client
+                                          </DropdownMenuItem>
+                                        )}
+                                      </DropdownMenuContent>
+                                    </DropdownMenu>
+                                  </div>
+                                </TableCell>
+                              )}
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+                      {filteredData.map((sow) => (
+                        <Card key={sow.id} className="cursor-pointer hover:shadow-md transition-shadow">
+                          <CardHeader className="pb-3">
+                            <div className="flex items-start justify-between">
+                              <CardTitle className="text-sm font-medium line-clamp-2">{sow.title}</CardTitle>
+                              <div className="flex items-center gap-1 ml-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-6 w-6 p-0"
+                                  onClick={() => handleViewSow(sow)}
+                                >
+                                  <Eye className="h-3 w-3" />
+                                </Button>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="h-6 w-6 p-0"
+                                    >
+                                      <MoreHorizontal className="h-3 w-3" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={() => handleEditSow(sow)}>
+                                      <Edit className="mr-2 h-4 w-4" />
+                                      Edit
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleDownloadPDF(sow)}>
+                                      <Download className="mr-2 h-4 w-4" />
+                                      Download PDF
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleDownloadDOC(sow)}>
+                                      <Download className="mr-2 h-4 w-4" />
+                                      Download DOC
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </div>
+                            </div>
+                            <CardDescription className="text-xs">{sow.client}</CardDescription>
+                          </CardHeader>
+                          <CardContent className="pt-0">
+                            <div className="space-y-3">
+                              <div className="flex items-center gap-2">
+                                <ClientAvatar name={sow.clientContact} size="sm" />
+                                <span className="text-xs text-muted-foreground">{sow.clientContact}</span>
+                              </div>
+                              
+                              <div className="flex flex-wrap gap-1">
+                                <Badge variant="outline" className="text-xs w-auto">
+                                  {sow.projectType}
+                                </Badge>
+                                <Badge variant="outline" className="text-xs w-auto">
+                                  {sow.industry}
+                                </Badge>
+                                <Badge variant={getBadgeVariant(sow.status)} className="text-xs w-auto">
+                                  {sow.status}
+                                </Badge>
+                              </div>
+                              
+                              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                                <span>{sow.pages} pages</span>
+                                <span>{formatDate(sow.dateModified)}</span>
+                              </div>
+                              
+                              {sow.integrations.length > 0 && (
+                                <div className="flex flex-wrap gap-1">
+                                  {sow.integrations.slice(0, 2).map((integration: string, index: number) => (
+                                    <Badge key={index} variant="outline" className="text-xs w-auto">
+                                      {integration}
+                                    </Badge>
+                                  ))}
+                                  {sow.integrations.length > 2 && (
+                                    <Badge variant="outline" className="text-xs w-auto">
+                                      +{sow.integrations.length - 2}
+                                    </Badge>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
                 </TooltipProvider>
               </CardContent>
             </Card>
