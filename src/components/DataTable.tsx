@@ -1,8 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { Settings, ChevronDown, ArrowUpDown, Eye, Edit, Check, User, Clock } from 'lucide-react';
+import { Settings, ChevronDown, ArrowUpDown, Eye, Send, Check, User, Clock } from 'lucide-react';
 import { SearchInput } from './SearchInput';
 import { Badge } from './Badge';
 import { ProgressBar } from './ProgressBar';
+import { getBadgeVariant } from '@/lib/status-helpers';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 interface TableRow {
   id: string;
@@ -31,72 +40,76 @@ interface DataTableProps {
 export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
-  const [activeFilter, setActiveFilter] = useState('view-all');
+  const [activeFilter, setActiveFilter] = useState<string>('view-all');
   const [currentActiveTab, setCurrentActiveTab] = useState(activeTab);
 
-  // Update internal state when prop changes
   useEffect(() => {
     setCurrentActiveTab(activeTab);
   }, [activeTab]);
 
   const getFilteredDataByTab = () => {
-    let data = tableData;
+    let filtered = [...tableData];
     
-    if (currentActiveTab === 'onboarding') {
-      data = data.filter(row => row.status === 'Incomplete' || row.status === 'In Review');
+    if (currentActiveTab === 'completed') {
+      filtered = filtered.filter(item => item.status === 'Complete');
     } else if (currentActiveTab === 'scope-of-work') {
-      data = data.filter(row => row.status === 'In Review');
-    } else if (currentActiveTab === 'completed') {
-      data = data.filter(row => row.status === 'Complete');
+      filtered = filtered.filter(item => item.percentage >= 80);
     }
 
-    // Apply additional filters
     if (activeFilter !== 'view-all') {
-      const filterStatus = activeFilter.replace('-', ' ').split(' ').map(word => 
-        word.charAt(0).toUpperCase() + word.slice(1)
-      ).join(' ') as 'Complete' | 'Incomplete' | 'In Review';
-      
-      data = data.filter(row => row.status === filterStatus);
+      if (activeFilter === 'complete') {
+        filtered = filtered.filter(item => item.status === 'Complete');
+      } else if (activeFilter === 'incomplete') {
+        filtered = filtered.filter(item => item.status === 'Incomplete');
+      } else if (activeFilter === 'in-review') {
+        filtered = filtered.filter(item => item.status === 'In Review');
+      }
     }
 
-    return data;
+    return filtered;
   };
 
   const filteredData = getFilteredDataByTab().filter(row =>
     row.companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    row.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     row.businessType.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const searchResults = filteredData.map(item => ({
-    id: item.id,
-    title: item.companyName,
-    description: `${item.businessType} • ${item.status}`,
-    category: 'Companies'
+  const searchResults = filteredData.map(row => ({
+    title: row.companyName,
+    subtitle: row.clientName,
+    id: row.id
   }));
 
   const toggleRowSelection = (id: string) => {
-    setSelectedRows(prev =>
-      prev.includes(id)
+    setSelectedRows(prev => 
+      prev.includes(id) 
         ? prev.filter(rowId => rowId !== id)
         : [...prev, id]
     );
   };
 
   const toggleAllSelection = () => {
-    setSelectedRows(prev =>
-      prev.length === filteredData.length ? [] : filteredData.map(row => row.id)
+    setSelectedRows(
+      selectedRows.length === filteredData.length 
+        ? [] 
+        : filteredData.map(row => row.id)
     );
   };
 
   return (
-    <div className="border shadow-sm w-full overflow-hidden bg-card rounded-lg border-border">
-      <header className="w-full gap-4 bg-muted/50">
-        <div className="flex w-full gap-3 flex-wrap pt-3 pb-0 px-4 max-md:px-3">
-          <div className="justify-center items-stretch flex min-w-48 flex-col text-base text-foreground font-medium leading-relaxed flex-1 shrink basis-[0%] gap-0.5">
-            <div className="items-center flex w-full gap-2">
-              <h2 className="text-foreground text-base font-medium leading-6 self-stretch my-auto">
-                {currentActiveTab === 'onboarding' ? 'Onboarding Forms' : 
-                 currentActiveTab === 'scope-of-work' ? 'Scope of Work Documents' : 
+    <div className="w-full bg-card border border-border rounded-xl overflow-hidden">
+      <header className="w-full">
+        <div className="items-center flex w-full gap-4 bg-background px-4 py-4">
+          <div className="text-foreground text-base font-semibold leading-6 flex-1">
+            <div className="items-center flex gap-2">
+              <div className="border shadow-sm justify-center items-center flex gap-1 bg-primary text-primary-foreground px-3 py-1.5 rounded-lg border-border">
+                <User size={14} />
+                <div className="text-xs font-medium">{filteredData.length}</div>
+              </div>
+              <h2 className="text-base font-semibold">
+                {currentActiveTab === 'onboarding' ? 'Client Onboarding Forms' :
+                 currentActiveTab === 'scope-of-work' ? 'Scope of Work Projects' :
                  'Completed Projects'}
               </h2>
             </div>
@@ -105,7 +118,7 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
             <Settings size={14} />
           </button>
         </div>
-        <div className="bg-border flex min-h-px w-full mt-3" />
+        <div className="bg-border flex min-h-px w-full" />
       </header>
 
       <div className="w-full">
@@ -146,165 +159,137 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
       </div>
 
       <div className="w-full overflow-x-auto">
-        <div className="border flex w-full bg-background border-border">
-        <div className="flex-1">
-          <div className="items-center flex min-h-11 w-full gap-3 bg-background px-4 py-3 border-b-border border-b border-solid">
-            <button
-              onClick={toggleAllSelection}
-              className="self-stretch flex items-center justify-center w-5 my-auto"
-            >
-              <div className={`border self-stretch flex min-h-5 w-5 h-5 my-auto rounded-md border-solid border-border items-center justify-center ${
-                selectedRows.length === filteredData.length ? 'bg-primary border-primary' : 'bg-background'
-              }`}>
-                {selectedRows.length === filteredData.length && (
-                  <Check size={12} className="text-primary-foreground" />
-                )}
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-12">
+                <button
+                  onClick={toggleAllSelection}
+                  className="flex items-center justify-center w-5"
+                >
+                  <div className={`border flex min-h-5 w-5 h-5 rounded-md border-solid border-border items-center justify-center ${
+                    selectedRows.length === filteredData.length ? 'bg-primary border-primary' : 'bg-background'
+                  }`}>
+                    {selectedRows.length === filteredData.length && (
+                      <Check size={12} className="text-primary-foreground" />
+                    )}
+                  </div>
+                </button>
+              </TableHead>
+              <TableHead>
+                <div className="flex items-center gap-1">
+                  <span>Company Name</span>
+                  <ArrowUpDown size={12} />
+                </div>
+              </TableHead>
+              <TableHead>
+                <div className="flex items-center gap-1">
+                  <span>Business Type</span>
+                  <ArrowUpDown size={12} />
+                </div>
+              </TableHead>
+              <TableHead>
+                <div className="flex items-center gap-1">
+                  <span>Submitted</span>
+                  <ArrowUpDown size={12} />
+                </div>
+              </TableHead>
+              <TableHead>
+                <div className="flex items-center gap-1">
+                  <span>Completion</span>
+                  <ArrowUpDown size={12} />
+                </div>
+              </TableHead>
+              <TableHead>
+                <div className="flex items-center gap-1">
+                  <span>Status</span>
+                  <ArrowUpDown size={12} />
+                </div>
+              </TableHead>
+              <TableHead className="w-24">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredData.map((row) => (
+              <TableRow key={row.id}>
+                <TableCell>
+                  <button
+                    onClick={() => toggleRowSelection(row.id)}
+                    className="flex items-center justify-center w-5"
+                  >
+                    <div className={`border flex min-h-5 w-5 h-5 rounded-md border-solid border-border items-center justify-center ${
+                      selectedRows.includes(row.id) ? 'bg-primary border-primary' : 'bg-background'
+                    }`}>
+                      {selectedRows.includes(row.id) && (
+                        <Check size={12} className="text-primary-foreground" />
+                      )}
+                    </div>
+                  </button>
+                </TableCell>
+                <TableCell>
+                  <div>
+                    <div className="font-medium">{row.companyName}</div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      <a 
+                        href={`mailto:${row.clientName.toLowerCase().replace(' ', '')}@example.com`}
+                        className="hover:underline"
+                      >
+                        {row.clientName}
+                      </a>
+                    </div>
+                  </div>
+                </TableCell>
+                <TableCell className="text-muted-foreground">
+                  {row.businessType}
+                </TableCell>
+                <TableCell className="text-muted-foreground">
+                  {new Date(row.submittedDate).toLocaleDateString()}
+                </TableCell>
+                <TableCell>
+                  <ProgressBar percentage={row.percentage} />
+                </TableCell>
+                <TableCell>
+                  <Badge variant={getBadgeVariant(row.status)}>
+                    {row.status}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  <div className="flex gap-1">
+                    <button className="p-1 hover:bg-accent rounded">
+                      <Eye size={14} />
+                    </button>
+                    <button className="p-1 hover:bg-accent rounded">
+                      <Send size={14} />
+                    </button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+
+      <footer className="bg-muted/30 w-full">
+        <div className="justify-between items-center flex w-full gap-5 px-4 py-3 max-md:flex-wrap max-md:px-3">
+          <div className="text-muted-foreground text-sm leading-5">
+            Page 1 of 10
+          </div>
+          <div className="items-center flex gap-1">
+            <button className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden bg-background px-3 py-2 rounded-lg border-border hover:bg-accent/50">
+              <div className="justify-center items-center self-stretch flex my-auto px-0.5 py-0">
+                <div className="text-foreground text-sm leading-5 self-stretch my-auto">
+                  Previous
+                </div>
               </div>
             </button>
-            <div className="items-center self-stretch flex gap-1 text-xs text-muted-foreground font-semibold whitespace-nowrap my-auto">
-              <div className="text-muted-foreground text-xs leading-[18px] self-stretch my-auto">
-                Company Name
-              </div>
-              <ArrowUpDown size={12} />
-            </div>
-          </div>
-          {filteredData.map((row) => (
-            <div key={row.id} className="items-center flex min-h-[72px] w-full gap-3 px-4 py-4 border-b-border border-b border-solid">
-              <button
-                onClick={() => toggleRowSelection(row.id)}
-                className="self-stretch flex items-center justify-center w-5 my-auto"
-              >
-                <div className={`border self-stretch flex min-h-5 w-5 h-5 my-auto rounded-md border-solid border-border items-center justify-center ${
-                  selectedRows.includes(row.id) ? 'bg-primary border-primary' : 'bg-background'
-                }`}>
-                  {selectedRows.includes(row.id) && (
-                    <Check size={12} className="text-primary-foreground" />
-                  )}
+            <button className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden bg-background px-3 py-2 rounded-lg border-border hover:bg-accent/50">
+              <div className="justify-center items-center self-stretch flex my-auto px-0.5 py-0">
+                <div className="text-foreground text-sm leading-5 self-stretch my-auto">
+                  Next
                 </div>
-              </button>
-              <div className="text-foreground text-sm font-medium leading-5 w-full">
-                <div className="truncate font-medium">{row.companyName}</div>
-                <div className="text-xs text-muted-foreground truncate mt-1">{row.clientName}</div>
               </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="w-48">
-          <div className="items-center flex min-h-11 w-full gap-3 text-xs text-muted-foreground font-semibold bg-background px-4 py-3 border-b-border border-b border-solid">
-            <div className="items-center self-stretch flex gap-1 my-auto">
-              <div className="text-muted-foreground text-xs leading-[18px] self-stretch my-auto">
-                Business Type
-              </div>
-              <ArrowUpDown size={12} />
-            </div>
+            </button>
           </div>
-          {filteredData.map((row) => (
-            <div key={row.id} className="items-center flex min-h-[72px] w-full px-4 py-4 border-b-border border-b border-solid">
-              <div className="text-muted-foreground text-sm leading-5 w-full truncate">
-                {row.businessType}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="w-28">
-          <div className="items-center flex min-h-11 w-full gap-3 text-xs text-muted-foreground font-semibold bg-background px-4 py-3 border-b-border border-b border-solid">
-            <div className="items-center self-stretch flex gap-1 my-auto">
-              <div className="text-muted-foreground text-xs leading-[18px] self-stretch my-auto">
-                Submitted
-              </div>
-              <ArrowUpDown size={12} />
-            </div>
-          </div>
-          {filteredData.map((row) => (
-            <div key={row.id} className="items-center flex min-h-[72px] w-full px-4 py-4 border-b-border border-b border-solid">
-              <div className="text-muted-foreground text-sm leading-5 w-full">
-                {new Date(row.submittedDate).toLocaleDateString()}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="flex-1">
-          <div className="items-center flex min-h-11 w-full gap-3 text-xs text-muted-foreground font-semibold bg-background px-4 py-3 border-b-border border-b border-solid">
-            <div className="items-center self-stretch flex gap-1 my-auto">
-              <div className="text-muted-foreground text-xs leading-[18px] self-stretch my-auto">
-                Completion
-              </div>
-              <ArrowUpDown size={12} />
-            </div>
-          </div>
-          {filteredData.map((row) => (
-            <div key={row.id} className="items-stretch flex min-h-[72px] w-full px-4 py-4 border-b-border border-b border-solid">
-              <div className="w-full">
-                <ProgressBar percentage={row.percentage} />
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="w-32">
-          <div className="items-center flex min-h-11 w-full gap-3 text-muted-foreground font-semibold bg-background px-4 py-3 border-b-border border-b border-solid">
-            <div className="items-center self-stretch flex gap-1 my-auto">
-              <div className="text-muted-foreground text-xs leading-[18px] self-stretch my-auto">
-                Status
-              </div>
-              <ArrowUpDown size={12} />
-            </div>
-          </div>
-          {filteredData.map((row) => (
-            <div key={row.id} className="items-center flex min-h-[72px] w-full px-3 py-4 border-b-border border-b border-solid">
-              <Badge 
-                variant={row.status === 'Complete' ? 'default' : row.status === 'In Review' ? 'online' : 'folder'}
-                className="w-full justify-center text-xs px-2"
-              >
-                {row.status === 'Complete' && <Check size={10} className="mr-1" />}
-                {row.status === 'In Review' && <Clock size={10} className="mr-1" />}
-                {row.status === 'Incomplete' && <User size={10} className="mr-1" />}
-                <span className="truncate text-xs">
-                  {row.status}
-                </span>
-              </Badge>
-            </div>
-          ))}
-        </div>
-
-        <div className="w-20">
-          <div className="flex min-h-11 w-full gap-3 bg-background px-3 py-3 border-b-border border-b border-solid" />
-          {filteredData.map((row) => (
-            <div key={row.id} className="items-center flex min-h-[72px] w-full gap-1 px-2 py-4 border-b-border border-b border-solid">
-              <button className="justify-center items-center flex overflow-hidden w-5 h-5 p-1 rounded-sm hover:bg-accent">
-                <Eye size={10} />
-              </button>
-              <button className="justify-center items-center flex overflow-hidden w-5 h-5 p-1 rounded-sm hover:bg-accent">
-                <Edit size={10} />
-              </button>
-            </div>
-          ))}
-        </div>
-      </div>
-      </div>
-
-      <footer className="justify-center items-center flex w-full gap-3 text-sm leading-none flex-wrap pt-3 pb-4 px-6">
-        <div className="text-foreground text-sm font-medium leading-5 self-stretch my-auto">
-          Page 1 of 10
-        </div>
-        <div className="items-center self-stretch flex gap-3 text-foreground font-semibold whitespace-nowrap flex-wrap flex-1 justify-end my-auto">
-          <button className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden bg-background px-3 py-2 rounded-lg border-border hover:bg-accent/50">
-            <div className="justify-center items-center self-stretch flex my-auto px-0.5 py-0">
-              <div className="text-foreground text-sm leading-5 self-stretch my-auto">
-                Previous
-              </div>
-            </div>
-          </button>
-          <button className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden bg-background px-3 py-2 rounded-lg border-border hover:bg-accent/50">
-            <div className="justify-center items-center self-stretch flex my-auto px-0.5 py-0">
-              <div className="text-foreground text-sm leading-5 self-stretch my-auto">
-                Next
-              </div>
-            </div>
-          </button>
         </div>
       </footer>
     </div>

@@ -18,7 +18,7 @@ export const MainContent: React.FC<MainContentProps> = ({
   onTabChange 
 }) => {
   return (
-    <main className="flex-1 bg-muted/20 pt-6 pb-8">
+    <main className="flex-1 bg-muted/30 min-h-screen pt-6 pb-8">
       <header className="w-full font-medium">
         <div className="items-stretch flex w-full flex-col gap-4 px-6 py-0 max-md:px-4">
           <div className="w-full gap-4">

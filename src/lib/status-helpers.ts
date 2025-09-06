@@ -27,7 +27,7 @@ export const getStatusColor = (status: string, type: 'onboarding' | 'project' = 
     case 'Incomplete':
       return 'folder';
     default:
-      return 'outline';
+      return 'default';
   }
 };
 
@@ -51,6 +51,19 @@ export const formatDate = (dateString: string, options?: Intl.DateTimeFormatOpti
     day: 'numeric',
     ...options,
   });
+};
+
+export const getBadgeVariant = (status: string): 'default' | 'online' | 'folder' => {
+  switch (status) {
+    case 'Complete':
+      return 'default';
+    case 'In Review':
+      return 'online';
+    case 'Incomplete':
+      return 'folder';
+    default:
+      return 'default';
+  }
 };
 
 export type StatusType = 'Sent' | 'In Progress' | 'Completed' | 'SOW Generated' | 'Approved' | 'Complete' | 'Incomplete' | 'In Review';
