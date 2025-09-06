@@ -169,32 +169,31 @@ export const DraggableCard: React.FC<DraggableCardProps> = ({
         </div>
 
         {/* Card Content */}
-        <div className="mb-2">
-          <div className="flex items-start justify-between mb-1.5">
-            <h4 className="font-medium text-sm line-clamp-2 flex-1">{sow.title}</h4>
-          </div>
-          
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        <div className="mb-3">
+          <h4 className="font-medium text-sm line-clamp-2 mb-2">{sow.title}</h4>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
             <ClientAvatar name={sow.client} size="sm" />
             <span className="truncate">{sow.client}</span>
           </div>
         </div>
 
         {/* Due Date */}
-        <div className="flex items-center gap-1 mb-2">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
-                Due {formatDate(mockDueDate)}
-              </span>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Due date: {formatDate(mockDueDate)}</p>
-            </TooltipContent>
-          </Tooltip>
-        </div>
+        {mockDueDate && (
+          <div className="mb-2">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
+                  Due {formatDate(mockDueDate)}
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Due date: {formatDate(mockDueDate)}</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+        )}
 
-        {/* Badges */}
+        {/* Badges - Only show if enabled and available */}
         {(showColumns.projectType || showColumns.industry) && (
           <div className="flex flex-wrap gap-1 mb-2">
             {showColumns.projectType && (
@@ -210,7 +209,7 @@ export const DraggableCard: React.FC<DraggableCardProps> = ({
           </div>
         )}
 
-        {/* Footer */}
+        {/* Footer - Minimal info */}
         <div className="flex items-center justify-between text-xs text-muted-foreground">
           {showColumns.pages && <span>{sow.pages} pages</span>}
           {showColumns.dateModified && (
@@ -225,46 +224,27 @@ export const DraggableCard: React.FC<DraggableCardProps> = ({
           )}
         </div>
 
-        {/* Integrations */}
+        {/* Integrations - Only show first one */}
         {showColumns.integrations && sow.integrations.length > 0 && (
           <div className="flex items-center gap-1 mt-2">
             <Tooltip>
               <TooltipTrigger asChild>
                 <Badge variant="outline" className="text-xs px-1.5 py-0.5">
                   {sow.integrations[0]}
+                  {sow.integrations.length > 1 && ` +${sow.integrations.length - 1}`}
                 </Badge>
               </TooltipTrigger>
               <TooltipContent>
-                <p>Integration: {sow.integrations[0]}</p>
+                <div>
+                  <p>Integrations:</p>
+                  {sow.integrations.map((integration: string, index: number) => (
+                    <p key={index} className="text-xs">• {integration}</p>
+                  ))}
+                </div>
               </TooltipContent>
             </Tooltip>
-            {sow.integrations.length > 1 && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Badge variant="outline" className="text-xs px-1.5 py-0.5">
-                    +{sow.integrations.length - 1}
-                  </Badge>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <div>
-                    <p>Additional integrations:</p>
-                    {sow.integrations.slice(1).map((integration: string, index: number) => (
-                      <p key={index} className="text-xs">• {integration}</p>
-                    ))}
-                  </div>
-                </TooltipContent>
-              </Tooltip>
-            )}
           </div>
         )}
-
-        {/* Hover Preview (Expandable Content) */}
-        <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute left-0 top-0 w-full h-full bg-card/95 backdrop-blur-sm rounded-lg p-3 pointer-events-none z-10">
-          <div className="text-xs text-muted-foreground">
-            <div className="font-medium mb-1">{sow.title}</div>
-            <div className="line-clamp-3">{sow.content.substring(0, 150)}...</div>
-          </div>
-        </div>
       </div>
     </TooltipProvider>
   );

@@ -51,6 +51,7 @@ import {
   SortableContext,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
+import { useSidebar } from '@/hooks/use-sidebar';
 
 const scopeOfWorks = [
   {
@@ -214,7 +215,7 @@ const ScopeOfWorks = () => {
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
   const [activeFilter, setActiveFilter] = useState<string>('view-all');
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const { isCollapsed } = useSidebar();
   const [showColumns, setShowColumns] = useState({
     client: true,
     projectType: true,
@@ -571,16 +572,12 @@ const ScopeOfWorks = () => {
       <div className={`fixed left-0 top-0 h-full z-30 transition-transform duration-300 lg:translate-x-0 ${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
-        <Sidebar 
-          onClose={() => setSidebarOpen(false)} 
-          onCollapseChange={setSidebarCollapsed}
-          isCollapsed={sidebarCollapsed}
-        />
+        <Sidebar onClose={() => setSidebarOpen(false)} />
       </div>
       
       {/* Main content */}
       <div className={`flex-1 overflow-auto min-h-screen transition-all duration-300 ${
-        sidebarCollapsed ? 'lg:ml-[72px]' : 'lg:ml-[280px]'
+        isCollapsed ? 'lg:ml-[72px]' : 'lg:ml-[280px]'
       }`}>
         <main className="flex-1 bg-muted/30 min-h-screen pt-4 lg:pt-8 pb-12">
           <header className="w-full font-medium">
@@ -662,11 +659,11 @@ const ScopeOfWorks = () => {
                             <Filter size={16} className="text-muted-foreground" />
                           </button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-80 p-4 z-50">
-                          <DropdownMenuLabel>Advanced Filters</DropdownMenuLabel>
-                          <DropdownMenuSeparator />
-                          
-                          <div className="space-y-4">
+                         <DropdownMenuContent align="end" className="w-80 p-4 z-50">
+                           <div className="text-sm font-medium mb-2">Advanced Filters</div>
+                           <DropdownMenuSeparator />
+                           
+                           <div className="space-y-4">
                             <div>
                               <label className="text-sm font-medium mb-2 block">Date Range</label>
                               <div className="flex gap-2">

@@ -5,6 +5,7 @@ import { SearchInput } from './SearchInput';
 import { Badge } from './Badge';
 import { UserAccountCard } from './UserAccountCard';
 import { ThemeToggle } from './ThemeToggle';
+import { useSidebar } from '@/hooks/use-sidebar';
 
 interface NavigationItem {
   id: string;
@@ -39,18 +40,12 @@ const bottomItems: NavigationItem[] = [];
 
 interface SidebarProps {
   onClose?: () => void;
-  onCollapseChange?: (collapsed: boolean) => void;
-  isCollapsed?: boolean;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ onClose, onCollapseChange, isCollapsed = false }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const location = useLocation();
-
-  const handleCollapseToggle = () => {
-    const newCollapsed = !isCollapsed;
-    onCollapseChange?.(newCollapsed);
-  };
+  const { isCollapsed, toggle } = useSidebar();
 
   const searchResults = navigationItems.map(item => ({
     id: item.id,
@@ -69,13 +64,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose, onCollapseChange, isC
               {!isCollapsed && <div className="text-base font-semibold text-foreground">Agency</div>}
               <div className="flex items-center gap-2">
                 <button
-                  onClick={handleCollapseToggle}
+                  onClick={toggle}
                   className="p-1 rounded-md hover:bg-accent/50 text-muted-foreground hover:text-foreground"
                   title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
                 >
                   {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
                 </button>
-                <ThemeToggle isCollapsed={isCollapsed} />
                 {onClose && (
                   <button
                     onClick={onClose}
@@ -100,6 +94,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose, onCollapseChange, isC
 
           <div className="w-full mt-4">
             <section className="w-full px-3 py-0">
+              {isCollapsed && (
+                <div className="mb-3 px-2.5">
+                  <ThemeToggle isCollapsed={isCollapsed} />
+                </div>
+              )}
               {navigationItems.map((item) => {
                 const isActive = location.pathname === item.path;
                 return (
@@ -127,6 +126,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose, onCollapseChange, isC
                   </div>
                 );
               })}
+              {!isCollapsed && (
+                <div className="mt-3 px-2.5">
+                  <ThemeToggle isCollapsed={isCollapsed} />
+                </div>
+              )}
             </section>
           </div>
         </nav>

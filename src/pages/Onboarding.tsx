@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@/components/Badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
@@ -14,6 +14,7 @@ import { INDUSTRY_OPTIONS } from '@/lib/constants';
 import { getStatusColor, formatDate } from '@/lib/status-helpers';
 import { createOnboardingUrl, createEmailTemplate, openEmailClient, copyToClipboard } from '@/lib/form-helpers';
 import { ProgressBar } from '@/components/ProgressBar';
+import { useSidebar } from '@/hooks/use-sidebar';
 
 interface ClientLink {
   id: string;
@@ -68,6 +69,7 @@ const clientLinks: ClientLink[] = [
 const Onboarding = () => {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { isCollapsed } = useSidebar();
   const [newClient, setNewClient] = useState({
     clientName: '',
     companyName: '',
@@ -152,7 +154,9 @@ const Onboarding = () => {
       </div>
       
       {/* Main content */}
-      <div className="flex-1 lg:ml-[280px] overflow-auto">
+      <div className={`flex-1 overflow-auto transition-all duration-300 ${
+        isCollapsed ? 'lg:ml-[72px]' : 'lg:ml-[280px]'
+      }`}>
         <main className="flex-1 bg-muted/30 pt-4 lg:pt-8 pb-12">
           <div className="max-w-7xl mx-auto px-4 lg:px-8">
             {/* Compact Header */}
@@ -354,11 +358,11 @@ const Onboarding = () => {
                                 </div>
                               </div>
                               <div className="flex items-center gap-2 flex-shrink-0">
-                                <Badge className={`${getStatusColor(client.status)} border text-xs px-2.5 py-1 w-auto`}>
+                                <Badge className={`${getStatusColor(client.status)} text-xs px-2.5 py-1 w-auto`}>
                                   {client.status}
                                 </Badge>
                                 {client.sowStatus && (
-                                  <Badge variant="outline" className="text-xs px-2.5 py-1 w-auto border">
+                                  <Badge variant="outline" className="text-xs px-2.5 py-1 w-auto">
                                     SOW: {client.sowStatus}
                                   </Badge>
                                 )}
