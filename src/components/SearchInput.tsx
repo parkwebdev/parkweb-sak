@@ -47,6 +47,9 @@ export const SearchInput: React.FC<SearchInputProps> = ({
         e.preventDefault();
         setOpen((open) => !open);
       }
+      if (e.key === "Escape") {
+        setOpen(false);
+      }
     };
 
     document.addEventListener("keydown", down);
@@ -57,9 +60,13 @@ export const SearchInput: React.FC<SearchInputProps> = ({
     setSearchValue(newValue);
     onChange?.(newValue);
     
-    // Show dialog when user starts typing
+    // Show dialog when user starts typing, but only if not already open
     if (newValue.length > 0 && !open) {
       setOpen(true);
+    }
+    // Close dialog when search is cleared
+    if (newValue.length === 0) {
+      setOpen(false);
     }
   };
 

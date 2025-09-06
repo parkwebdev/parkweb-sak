@@ -10,7 +10,7 @@ const Index = () => {
   };
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex h-screen bg-muted/30">
       <div className="fixed left-0 top-0 h-full z-10">
         <Sidebar />
       </div>

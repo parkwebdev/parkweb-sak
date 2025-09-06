@@ -263,7 +263,7 @@ const ClientOnboarding = () => {
 
   if (isSubmitted) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 flex items-center justify-center">
+      <div className="min-h-screen bg-muted/30 flex items-center justify-center">
         <Card className="max-w-2xl mx-auto">
           <CardContent className="text-center p-12">
             <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-6" />
@@ -680,7 +680,7 @@ const ClientOnboarding = () => {
 
   return (
     <>
-      <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
+      <div className="min-h-screen bg-muted/30">
         <div className="max-w-3xl mx-auto px-6 py-12">
           {/* Progress Steps */}
           <div className="mb-8">

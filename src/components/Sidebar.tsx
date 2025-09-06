@@ -50,7 +50,7 @@ export const Sidebar: React.FC = () => {
   }));
 
   return (
-    <aside className="items-stretch flex w-[280px] h-screen bg-background p-1">
+    <aside className="items-stretch flex w-[280px] h-screen bg-muted/30 p-1">
       <div className="border shadow-sm w-full flex-1 bg-card rounded-xl border-border">
         <nav className="w-full gap-4 pt-4">
           <header className="w-full whitespace-nowrap gap-4 px-4 py-0">

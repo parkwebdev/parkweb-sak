@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Sidebar } from '@/components/Sidebar';
-import { Plus, Link2, Copy, Send, User, Building2, Clock } from 'lucide-react';
+import { Plus, Link2, Copy, Send, User, FileText, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -261,7 +261,7 @@ const Onboarding = () => {
                       <p className="text-xs font-medium text-muted-foreground">SOW Generated</p>
                       <p className="text-xl font-semibold">3</p>
                     </div>
-                    <Building2 className="h-5 w-5 text-primary" />
+                    <FileText className="h-5 w-5 text-primary" />
                   </div>
                 </CardContent>
               </Card>
