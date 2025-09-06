@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, X, Check, Clock, AlertCircle, CheckCircle, Info } from '@untitledui/icons';
+import { Bell02 as Bell, X, Check, Clock, AlertTriangle as AlertCircle, CheckCircle, InfoCircle as Info } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,12 +14,13 @@ import { formatDistanceToNow } from 'date-fns';
 interface Notification {
   id: string;
   user_id: string;
-  type: 'scope_work' | 'onboarding' | 'system' | 'team';
+  type: string; // Changed from union type to string to match DB
   title: string;
   message: string;
   read: boolean;
   created_at: string;
-  data?: any;
+  updated_at: string;
+  data?: any; // This matches the JSON type from the database
 }
 
 interface NotificationCenterProps {

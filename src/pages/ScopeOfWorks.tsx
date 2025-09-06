@@ -26,6 +26,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { formatDate, getBadgeVariant } from '@/lib/status-helpers';
 import { useToast } from '@/hooks/use-toast';
+import { useNotifications } from '@/hooks/useNotifications';
 import { generateScopeOfWorkPDF, generateScopeOfWorkDOC } from '@/lib/document-generator';
 import {
   DropdownMenu,
@@ -247,6 +248,7 @@ const ScopeOfWorks = () => {
   const [data, setData] = useState(scopeOfWorks);
   
   const { toast } = useToast();
+  const { createScopeWorkNotification } = useNotifications();
   
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -367,7 +369,7 @@ const ScopeOfWorks = () => {
     }
   };
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     setActiveCard(null);
     
@@ -393,6 +395,32 @@ const ScopeOfWorks = () => {
           title: "Status Updated",
           description: `"${activeItem.title}" moved to ${overId}`,
         });
+
+        // Create notification for status change
+        try {
+          await createScopeWorkNotification(
+            `Scope of Work Status Changed`,
+            `"${activeItem.title}" has been moved to ${overId} status.`,
+            {
+              sowId: activeItem.id,
+              sowTitle: activeItem.title,
+              client: activeItem.client,
+              oldStatus: activeItem.status,
+              newStatus: overId,
+              projectType: activeItem.projectType,
+              clientContact: activeItem.clientContact,
+              clientEmail: activeItem.email
+            }
+          );
+
+          // If moved to "Approved", also send email notification
+          if (overId === 'Approved' && activeItem.email) {
+            // TODO: Trigger email via edge function
+            console.log('Should send approval email to:', activeItem.email);
+          }
+        } catch (error) {
+          console.error('Error creating notification:', error);
+        }
       }
     }
   };

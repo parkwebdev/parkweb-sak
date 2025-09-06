@@ -5,6 +5,7 @@ import { SearchInput } from './SearchInput';
 import { Badge } from './Badge';
 import { UserAccountCard } from './UserAccountCard';
 import { ThemeToggle } from './ThemeToggle';
+import { NotificationCenter } from './notifications/NotificationCenter';
 import { useSidebar } from '@/hooks/use-sidebar';
 
 interface NavigationItem {
@@ -63,6 +64,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
             <div className="flex min-h-[24px] w-full max-w-full items-center justify-between">
               {!isCollapsed && <div className="text-base font-semibold text-foreground">Agency</div>}
               <div className="flex items-center gap-2">
+                {!isCollapsed && <NotificationCenter />}
                 <button
                   onClick={toggle}
                   className="p-1 rounded-md hover:bg-accent/50 text-muted-foreground hover:text-foreground"
