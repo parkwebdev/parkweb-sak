@@ -1,14 +1,92 @@
 import React from 'react';
-import { User01 as User, Settings01 as Settings } from '@untitledui/icons';
+import { User01 as User, Settings01 as Settings, LogOut01 as LogOut } from '@untitledui/icons';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+
+interface UserProfile {
+  display_name: string | null;
+  email: string | null;
+  avatar_url: string | null;
+}
 
 interface UserAccountCardProps {
   isCollapsed?: boolean;
 }
 
 export const UserAccountCard: React.FC<UserAccountCardProps> = ({ isCollapsed = false }) => {
+  const { user, signOut } = useAuth();
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if (user) {
+      fetchProfile();
+    }
+  }, [user]);
+
+  const fetchProfile = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('display_name, email, avatar_url')
+        .eq('user_id', user.id)
+        .single();
+
+      if (error) {
+        console.error('Error fetching profile:', error);
+      } else {
+        setProfile(data);
+      }
+    } catch (error) {
+      console.error('Error in fetchProfile:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      toast({
+        title: "Signed out",
+        description: "You have been signed out successfully.",
+      });
+      navigate('/auth');
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to sign out. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  if (!user || loading) {
+    return (
+      <div className={`relative flex w-full gap-3 bg-card rounded-xl transition-all ${
+        isCollapsed ? 'p-1.5 justify-center' : 'border shadow-sm p-3 border-border'
+      }`}>
+        <div className="animate-pulse">
+          <div className={`bg-muted rounded-full ${isCollapsed ? 'h-7 w-7' : 'h-9 w-9'}`} />
+        </div>
+      </div>
+    );
+  }
+
+  const displayName = profile?.display_name || user.user_metadata?.display_name || user.email?.split('@')[0] || 'User';
+  const email = profile?.email || user.email || '';
+  const avatarUrl = profile?.avatar_url || '';
+  const initials = displayName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+
   return (
     <div className={`relative flex w-full gap-3 bg-card rounded-xl transition-all ${
       isCollapsed ? 'p-1.5 justify-center' : 'border shadow-sm p-3 border-border'
@@ -20,8 +98,10 @@ export const UserAccountCard: React.FC<UserAccountCardProps> = ({ isCollapsed = 
           }`}>
             <div className="relative">
               <Avatar className={isCollapsed ? "h-7 w-7" : "h-9 w-9"}>
-                <AvatarImage src="" alt="Aaron Chachamovits" />
-                <AvatarFallback className={`font-medium ${isCollapsed ? 'text-xs' : 'text-sm'}`}>AC</AvatarFallback>
+                <AvatarImage src={avatarUrl} alt={displayName} />
+                <AvatarFallback className={`font-medium ${isCollapsed ? 'text-xs' : 'text-sm'}`}>
+                  {initials}
+                </AvatarFallback>
               </Avatar>
               <div className={`bg-green-500 absolute rounded-full border-2 border-background ${
                 isCollapsed ? 'w-2.5 h-2.5 -bottom-0 -right-0' : 'w-3 h-3 -bottom-0.5 -right-0.5'
@@ -30,10 +110,10 @@ export const UserAccountCard: React.FC<UserAccountCardProps> = ({ isCollapsed = 
             {!isCollapsed && (
               <div className="text-left min-w-0 flex-1">
                 <div className="text-foreground text-sm font-semibold leading-5 truncate">
-                  Aaron Chachamovits
+                  {displayName}
                 </div>
                 <div className="text-muted-foreground text-sm font-normal leading-5 truncate">
-                  aaron@parkweb.app
+                  {email}
                 </div>
               </div>
             )}
@@ -41,14 +121,28 @@ export const UserAccountCard: React.FC<UserAccountCardProps> = ({ isCollapsed = 
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48">
           <DropdownMenuItem asChild>
-            <Link to="/profile" className="w-full">Profile</Link>
+            <Link to="/profile" className="w-full flex items-center gap-2">
+              <User size={16} />
+              Profile
+            </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link to="/team" className="w-full">Team</Link>
+            <Link to="/team" className="w-full flex items-center gap-2">
+              <User size={16} />
+              Team
+            </Link>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem asChild>
-            <Link to="/settings" className="w-full">Settings</Link>
+            <Link to="/settings" className="w-full flex items-center gap-2">
+              <Settings size={16} />
+              Settings
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
+            <LogOut size={16} className="mr-2" />
+            Sign Out
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
