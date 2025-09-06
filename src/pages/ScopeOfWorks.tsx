@@ -198,7 +198,6 @@ const ScopeOfWorks = () => {
   };
 
   const handleSaveChanges = () => {
-    // In a real app, this would save to a backend
     toast({
       title: "Changes saved",
       description: "Your scope of work has been updated.",
