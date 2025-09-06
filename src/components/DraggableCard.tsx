@@ -5,10 +5,7 @@ import {
   Eye, 
   Edit01 as Edit, 
   Download01 as Download,
-  Check,
-  Clock,
-  AlertTriangle,
-  Flag01 as Flag
+  Check
 } from '@untitledui/icons';
 import { Badge } from '@/components/Badge';
 import { ClientAvatar } from '@/components/ClientAvatar';
@@ -49,32 +46,6 @@ interface DraggableCardProps {
   };
 }
 
-const getPriorityIcon = (priority: string) => {
-  switch (priority) {
-    case 'high':
-      return <AlertTriangle className="w-3 h-3 text-red-500" />;
-    case 'medium':
-      return <Clock className="w-3 h-3 text-yellow-500" />;
-    case 'low':
-      return <Flag className="w-3 h-3 text-green-500" />;
-    default:
-      return null;
-  }
-};
-
-const getPriorityColor = (priority: string) => {
-  switch (priority) {
-    case 'high':
-      return 'bg-red-100 text-red-700 border-red-200';
-    case 'medium':
-      return 'bg-yellow-100 text-yellow-700 border-yellow-200';
-    case 'low':
-      return 'bg-green-100 text-green-700 border-green-200';
-    default:
-      return 'bg-gray-100 text-gray-700 border-gray-200';
-  }
-};
-
 export const DraggableCard: React.FC<DraggableCardProps> = ({
   sow,
   isSelected,
@@ -99,8 +70,7 @@ export const DraggableCard: React.FC<DraggableCardProps> = ({
     transition,
   };
 
-  // Add mock priority and due date for demonstration
-  const mockPriority = sow.id === '1' ? 'high' : sow.id === '2' ? 'medium' : 'low';
+  // Add mock due date for demonstration
   const mockDueDate = sow.status === 'Draft' ? '2024-02-15' : sow.status === 'In Review' ? '2024-02-20' : '2024-02-25';
 
   return (
@@ -202,18 +172,6 @@ export const DraggableCard: React.FC<DraggableCardProps> = ({
         <div className="mb-2">
           <div className="flex items-start justify-between mb-1.5">
             <h4 className="font-medium text-sm line-clamp-2 flex-1">{sow.title}</h4>
-            {getPriorityIcon(mockPriority) && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="ml-2">
-                    {getPriorityIcon(mockPriority)}
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>{mockPriority.charAt(0).toUpperCase() + mockPriority.slice(1)} priority</p>
-                </TooltipContent>
-              </Tooltip>
-            )}
           </div>
           
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -222,15 +180,11 @@ export const DraggableCard: React.FC<DraggableCardProps> = ({
           </div>
         </div>
 
-        {/* Priority Badge */}
+        {/* Due Date */}
         <div className="flex items-center gap-1 mb-2">
-          <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium border ${getPriorityColor(mockPriority)}`}>
-            {getPriorityIcon(mockPriority)}
-            {mockPriority.charAt(0).toUpperCase() + mockPriority.slice(1)}
-          </span>
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className="text-xs text-muted-foreground">
+              <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
                 Due {formatDate(mockDueDate)}
               </span>
             </TooltipTrigger>
