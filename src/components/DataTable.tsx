@@ -21,6 +21,8 @@ import { SearchInput } from './SearchInput';
 import { Badge } from './Badge';
 import { ProgressBar } from './ProgressBar';
 import { getBadgeVariant } from '@/lib/status-helpers';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   Table,
   TableBody,
@@ -51,25 +53,18 @@ interface TableRow {
   percentage: number;
 }
 
-const tableData: TableRow[] = [
-  { id: '1', companyName: 'Mountain View RV Park', clientName: 'Sarah Johnson', businessType: 'RV Park', submittedDate: '2024-01-15', status: 'Complete', percentage: 100 },
-  { id: '2', companyName: 'Sunset Manufacturing', clientName: 'Michael Chen', businessType: 'Manufactured Home Community', submittedDate: '2024-01-12', status: 'Incomplete', percentage: 45 },
-  { id: '3', companyName: 'Elite Capital Partners', clientName: 'Jessica Rodriguez', businessType: 'Capital & Syndication', submittedDate: '2024-01-10', status: 'In Review', percentage: 85 },
-  { id: '4', companyName: 'Local Plumbing Pro', clientName: 'David Miller', businessType: 'Local Business', submittedDate: '2024-01-08', status: 'Complete', percentage: 100 },
-  { id: '5', companyName: 'National Tech Solutions', clientName: 'Amanda Foster', businessType: 'National Business', submittedDate: '2024-01-05', status: 'Incomplete', percentage: 30 },
-  { id: '6', companyName: 'Riverside Communities', clientName: 'Robert Thompson', businessType: 'Manufactured Home Community', submittedDate: '2024-01-03', status: 'In Review', percentage: 70 },
-  { id: '7', companyName: 'Premier Investment Group', clientName: 'Lisa Anderson', businessType: 'Capital & Syndication', submittedDate: '2024-01-01', status: 'Complete', percentage: 100 },
-];
-
 interface DataTableProps {
   activeTab?: string;
 }
 
 export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }) => {
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
   const [activeFilter, setActiveFilter] = useState<string>('view-all');
   const [currentActiveTab, setCurrentActiveTab] = useState(activeTab);
+  const [tableData, setTableData] = useState<TableRow[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showColumns, setShowColumns] = useState({
     companyName: true,
     businessType: true,
@@ -96,14 +91,109 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
     setCurrentActiveTab(activeTab);
   }, [activeTab]);
 
+  useEffect(() => {
+    if (user) {
+      fetchTableData();
+    }
+  }, [user, currentActiveTab]);
+
+  const fetchTableData = async () => {
+    try {
+      setLoading(true);
+      let data: TableRow[] = [];
+      
+      if (currentActiveTab === 'onboarding') {
+        // Fetch client onboarding links
+        const { data: onboardingData, error } = await supabase
+          .from('client_onboarding_links')
+          .select('*')
+          .order('date_sent', { ascending: false });
+
+        if (error) {
+          console.error('Error fetching onboarding data:', error);
+          return;
+        }
+
+        data = onboardingData?.map(item => ({
+          id: item.id,
+          companyName: item.company_name,
+          clientName: item.client_name,
+          businessType: item.industry,
+          submittedDate: new Date(item.date_sent).toISOString().split('T')[0],
+          status: item.status === 'Completed' || item.status === 'Approved' ? 'Complete' as const : 
+                 item.status === 'In Progress' || item.status === 'SOW Generated' ? 'In Review' as const : 
+                 'Incomplete' as const,
+          percentage: item.status === 'Completed' || item.status === 'Approved' ? 100 : 
+                     item.status === 'SOW Generated' ? 85 :
+                     item.status === 'In Progress' ? 60 : 25
+        })) || [];
+      } else if (currentActiveTab === 'scope-of-work') {
+        // Fetch scope of works
+        const { data: sowData, error } = await supabase
+          .from('scope_of_works')
+          .select('*')
+          .order('date_created', { ascending: false });
+
+        if (error) {
+          console.error('Error fetching scope of work data:', error);
+          return;
+        }
+
+        data = sowData?.map(item => ({
+          id: item.id,
+          companyName: item.client,
+          clientName: item.client_contact,
+          businessType: item.industry,
+          submittedDate: new Date(item.date_created).toISOString().split('T')[0],
+          status: item.status === 'Approved' ? 'Complete' as const : 
+                 item.status === 'Client Review' || item.status === 'Agency Review' ? 'In Review' as const : 
+                 'Incomplete' as const,
+          percentage: item.status === 'Approved' ? 100 : 
+                     item.status === 'Client Review' || item.status === 'Agency Review' ? 75 : 
+                     25
+        })) || [];
+      } else if (currentActiveTab === 'completed') {
+        // Fetch completed items from both tables
+        const [onboardingResult, sowResult] = await Promise.all([
+          supabase.from('client_onboarding_links').select('*').eq('status', 'Approved'),
+          supabase.from('scope_of_works').select('*').eq('status', 'Approved')
+        ]);
+
+        const completedOnboarding = onboardingResult.data?.map(item => ({
+          id: item.id,
+          companyName: item.company_name,
+          clientName: item.client_name,
+          businessType: item.industry,
+          submittedDate: new Date(item.date_sent).toISOString().split('T')[0],
+          status: 'Complete' as const,
+          percentage: 100
+        })) || [];
+
+        const completedSOW = sowResult.data?.map(item => ({
+          id: item.id,
+          companyName: item.client,
+          clientName: item.client_contact,
+          businessType: item.industry,
+          submittedDate: new Date(item.date_created).toISOString().split('T')[0],
+          status: 'Complete' as const,
+          percentage: 100
+        })) || [];
+
+        data = [...completedOnboarding, ...completedSOW].sort((a, b) => 
+          new Date(b.submittedDate).getTime() - new Date(a.submittedDate).getTime()
+        );
+      }
+      
+      setTableData(data);
+    } catch (error) {
+      console.error('Error fetching table data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const getFilteredDataByTab = () => {
     let filtered = [...tableData];
-    
-    if (currentActiveTab === 'completed') {
-      filtered = filtered.filter(item => item.status === 'Complete');
-    } else if (currentActiveTab === 'scope-of-work') {
-      filtered = filtered.filter(item => item.percentage >= 80);
-    }
 
     // Apply active filter
     if (activeFilter !== 'view-all') {
@@ -218,6 +308,16 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
       moveColumn(dragIndex, dropIndex);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="w-full bg-card border border-border rounded-xl overflow-hidden">
+        <div className="flex items-center justify-center py-8">
+          <div className="text-muted-foreground">Loading...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full bg-card border border-border rounded-xl overflow-hidden">

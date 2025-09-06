@@ -68,7 +68,7 @@ const Team = () => {
   const handleInvite = () => {
     if (!inviteEmail) return;
     
-    // Mock invite logic - in real app this would send an actual invitation
+    // TODO: Implement actual team invitation system with database
     toast({
       title: "Invitation sent",
       description: `Invitation sent to ${inviteEmail}`,

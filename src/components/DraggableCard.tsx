@@ -70,8 +70,16 @@ export const DraggableCard: React.FC<DraggableCardProps> = ({
     transition,
   };
 
-  // Add mock due date for demonstration
-  const mockDueDate = sow.status === 'Draft' ? '2024-02-15' : sow.status === 'In Review' ? '2024-02-20' : '2024-02-25';
+  // Calculate estimated due date based on project creation date and status
+  const getDueDate = (status: string, createdDate: string) => {
+    const created = new Date(createdDate);
+    const daysToAdd = status === 'Draft' ? 7 : status === 'Client Review' || status === 'Agency Review' ? 14 : 21;
+    const dueDate = new Date(created);
+    dueDate.setDate(dueDate.getDate() + daysToAdd);
+    return dueDate.toISOString().split('T')[0];
+  };
+
+  const dueDate = getDueDate(sow.status, sow.date_created);
 
   return (
     <TooltipProvider>
@@ -114,16 +122,16 @@ export const DraggableCard: React.FC<DraggableCardProps> = ({
         </div>
 
         {/* Due Date */}
-        {mockDueDate && (
+        {dueDate && (
           <div className="mb-2">
             <Tooltip>
               <TooltipTrigger asChild>
                 <span className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
-                  Due {formatDate(mockDueDate)}
+                  Due {formatDate(dueDate)}
                 </span>
               </TooltipTrigger>
               <TooltipContent>
-                <p>Due date: {formatDate(mockDueDate)}</p>
+                <p>Estimated due date: {formatDate(dueDate)}</p>
               </TooltipContent>
             </Tooltip>
           </div>
