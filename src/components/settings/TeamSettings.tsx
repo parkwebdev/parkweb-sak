@@ -116,18 +116,18 @@ export const TeamSettings: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between mb-6">
+    <div className="space-y-6 lg:space-y-8">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-lg font-semibold text-foreground mb-1">Team Management</h1>
+          <h3 className="text-base lg:text-lg font-semibold text-foreground mb-1">Team Settings</h3>
           <p className="text-sm text-muted-foreground">
-            Manage your team members, roles, and permissions
+            Manage team members and permissions
           </p>
         </div>
         
         <Dialog open={isInviteOpen} onOpenChange={setIsInviteOpen}>
           <DialogTrigger asChild>
-            <Button>
+            <Button className="w-full sm:w-auto">
               <Plus size={16} className="mr-2" />
               Invite Member
             </Button>
@@ -187,7 +187,7 @@ export const TeamSettings: React.FC = () => {
         <CardContent>
           <div className="space-y-4">
             {teamMembers.map((member) => (
-              <div key={member.id} className="flex items-center justify-between p-4 border border-border rounded-lg">
+              <div key={member.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 border border-border rounded-lg gap-4">
                 <div className="flex items-center space-x-4">
                   <Avatar>
                     <AvatarImage src={member.avatar} />
@@ -201,36 +201,40 @@ export const TeamSettings: React.FC = () => {
                   </div>
                 </div>
                 
-                <div className="flex items-center space-x-4">
-                  <Badge className={getRoleColor(member.role)}>
-                    {member.role.charAt(0).toUpperCase() + member.role.slice(1)}
-                  </Badge>
-                  <Badge className={getStatusColor(member.status)}>
-                    {member.status.charAt(0).toUpperCase() + member.status.slice(1)}
-                  </Badge>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:space-x-4">
+                  <div className="flex gap-2">
+                    <Badge className={getRoleColor(member.role)}>
+                      {member.role.charAt(0).toUpperCase() + member.role.slice(1)}
+                    </Badge>
+                    <Badge className={getStatusColor(member.status)}>
+                      {member.status.charAt(0).toUpperCase() + member.status.slice(1)}
+                    </Badge>
+                  </div>
                   
-                  <Select 
-                    value={member.role} 
-                    onValueChange={(value: 'admin' | 'manager' | 'member') => handleRoleChange(member.id, value)}
-                  >
-                    <SelectTrigger className="w-32">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="z-50 bg-popover">
-                      <SelectItem value="member">Member</SelectItem>
-                      <SelectItem value="manager">Manager</SelectItem>
-                      <SelectItem value="admin">Admin</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleRemoveMember(member.id)}
-                    className="text-destructive hover:text-destructive"
-                  >
-                    <X size={16} />
-                  </Button>
+                  <div className="flex gap-2 w-full sm:w-auto">
+                    <Select 
+                      value={member.role} 
+                      onValueChange={(value: 'admin' | 'manager' | 'member') => handleRoleChange(member.id, value)}
+                    >
+                      <SelectTrigger className="flex-1 sm:w-32">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="z-50 bg-popover">
+                        <SelectItem value="member">Member</SelectItem>
+                        <SelectItem value="manager">Manager</SelectItem>
+                        <SelectItem value="admin">Admin</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleRemoveMember(member.id)}
+                      className="text-destructive hover:text-destructive"
+                    >
+                      <X size={16} />
+                    </Button>
+                  </div>
                 </div>
               </div>
             ))}

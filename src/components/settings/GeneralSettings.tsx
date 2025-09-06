@@ -61,11 +61,11 @@ export const GeneralSettings: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="mb-6">
-        <h1 className="text-lg font-semibold text-foreground mb-1">General Settings</h1>
+    <div className="space-y-6 lg:space-y-8">
+      <div>
+        <h3 className="text-base lg:text-lg font-semibold text-foreground mb-1">General Settings</h3>
         <p className="text-sm text-muted-foreground">
-          Manage your application preferences and account settings
+          Configure your application preferences
         </p>
       </div>
 
@@ -152,7 +152,7 @@ export const GeneralSettings: React.FC = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="language">Language</Label>
               <Select value={preferences.language} onValueChange={(value) => handlePreferenceChange('language', value)}>
@@ -181,7 +181,7 @@ export const GeneralSettings: React.FC = () => {
                 </SelectContent>
               </Select>
             </div>
-            <div>
+            <div className="sm:col-span-1">
               <Label htmlFor="date-format">Date Format</Label>
               <Select value={preferences.dateFormat} onValueChange={(value) => handlePreferenceChange('dateFormat', value)}>
                 <SelectTrigger>
@@ -229,7 +229,7 @@ export const GeneralSettings: React.FC = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-between p-4 border border-destructive/20 rounded-lg bg-destructive/5">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 border border-destructive/20 rounded-lg bg-destructive/5 gap-4">
             <div>
               <h4 className="font-medium text-foreground">Delete Account</h4>
               <p className="text-sm text-muted-foreground">
@@ -239,7 +239,7 @@ export const GeneralSettings: React.FC = () => {
             <Button 
               variant="destructive" 
               onClick={() => setShowDeleteDialog(true)}
-              className="ml-4"
+              className="w-full sm:w-auto"
             >
               <Trash size={16} className="mr-2" />
               Delete Account

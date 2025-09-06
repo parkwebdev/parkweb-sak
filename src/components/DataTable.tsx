@@ -223,33 +223,38 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
     <div className="w-full bg-card border border-border rounded-xl overflow-hidden">
       {/* New Header with Filters, Search, and Settings */}
       <header className="w-full border-b border-border">
-        <div className="justify-between items-center flex w-full gap-3 flex-wrap px-4 py-3">
-          <div className="border shadow-sm self-stretch flex overflow-hidden text-xs text-foreground font-medium leading-none my-auto rounded-md border-border max-md:flex-wrap">
-            {['View all', 'Complete', 'Incomplete', 'In Review'].map((filter, index) => {
-              const filterKey = filter.toLowerCase().replace(' ', '-');
-              const isActive = activeFilter === filterKey;
-              return (
-                <button
-                  key={filter}
-                  onClick={() => setActiveFilter(filterKey)}
-                  className={`justify-center items-center flex min-h-8 gap-1.5 px-2.5 py-1.5 max-md:px-2 max-md:text-xs transition-colors ${
-                    isActive ? 'bg-primary text-primary-foreground' : 'bg-background hover:bg-accent/50'
-                  } ${index < 3 ? 'border-r-border border-r border-solid' : ''}`}
-                >
-                  <div className="text-xs leading-4 self-stretch my-auto max-md:text-xs">
-                    {filter}
-                  </div>
-                </button>
-              );
-            })}
+        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-3 px-4 py-3">
+          {/* Filter buttons - scrollable on mobile */}
+          <div className="overflow-x-auto">
+            <div className="border shadow-sm flex overflow-hidden text-xs text-foreground font-medium leading-none rounded-md border-border min-w-max">
+              {['View all', 'Complete', 'Incomplete', 'In Review'].map((filter, index) => {
+                const filterKey = filter.toLowerCase().replace(' ', '-');
+                const isActive = activeFilter === filterKey;
+                return (
+                  <button
+                    key={filter}
+                    onClick={() => setActiveFilter(filterKey)}
+                    className={`justify-center items-center flex min-h-8 gap-1.5 px-2.5 py-1.5 transition-colors whitespace-nowrap ${
+                      isActive ? 'bg-primary text-primary-foreground' : 'bg-background hover:bg-accent/50'
+                    } ${index < 3 ? 'border-r-border border-r border-solid' : ''}`}
+                  >
+                    <div className="text-xs leading-4 self-stretch my-auto">
+                      {filter}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
           </div>
-          <div className="self-stretch flex items-center gap-2.5 whitespace-nowrap my-auto max-md:w-full max-md:flex-wrap">
+          
+          {/* Search and controls */}
+          <div className="flex items-center gap-2.5 w-full lg:w-auto">
             <SearchInput
               placeholder="Search"
               value={searchTerm}
               onChange={setSearchTerm}
               searchResults={searchResults}
-              className="max-w-[240px] min-w-48 w-[240px] max-md:w-full max-md:min-w-0"
+              className="flex-1 lg:max-w-[240px] lg:min-w-48 lg:w-[240px]"
             />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -374,7 +379,7 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
       </header>
 
       <div className="w-full overflow-x-auto">
-        <Table>
+        <Table className="min-w-[800px]">
           <TableHeader>
             <TableRow>
               <TableHead className="w-12">

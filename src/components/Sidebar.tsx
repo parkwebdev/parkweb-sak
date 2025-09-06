@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Home01 as Home, Grid01 as Grid, File02 as FileText, Users01 as Users } from '@untitledui/icons';
+import { Home01 as Home, Grid01 as Grid, File02 as FileText, Users01 as Users, X } from '@untitledui/icons';
 import { Link, useLocation } from 'react-router-dom';
 import { SearchInput } from './SearchInput';
 import { Badge } from './Badge';
@@ -37,7 +37,11 @@ const navigationItems: NavigationItem[] = [
 
 const bottomItems: NavigationItem[] = [];
 
-export const Sidebar: React.FC = () => {
+interface SidebarProps {
+  onClose?: () => void;
+}
+
+export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const location = useLocation();
 
@@ -56,7 +60,17 @@ export const Sidebar: React.FC = () => {
           <header className="w-full whitespace-nowrap gap-4 px-4 py-0">
             <div className="flex min-h-[24px] w-full max-w-full items-center justify-between">
               <div className="text-base font-semibold text-foreground">Agency</div>
-              <ThemeToggle />
+              <div className="flex items-center gap-2">
+                <ThemeToggle />
+                {onClose && (
+                  <button
+                    onClick={onClose}
+                    className="lg:hidden p-1 rounded-md hover:bg-accent/50 text-muted-foreground hover:text-foreground"
+                  >
+                    <X size={16} />
+                  </button>
+                )}
+              </div>
             </div>
             <div className="w-full gap-2 mt-4">
               <SearchInput

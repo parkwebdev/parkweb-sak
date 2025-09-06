@@ -53,11 +53,11 @@ export const ProfileSettings: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="mb-6">
-        <h1 className="text-lg font-semibold text-foreground mb-1">Profile Settings</h1>
+    <div className="space-y-6 lg:space-y-8">
+      <div>
+        <h3 className="text-base lg:text-lg font-semibold text-foreground mb-1">Profile Settings</h3>
         <p className="text-sm text-muted-foreground">
-          Manage your personal information and preferences
+          Manage your personal information
         </p>
       </div>
 
@@ -69,15 +69,15 @@ export const ProfileSettings: React.FC = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="flex items-center space-x-6">
-            <Avatar className="h-20 w-20">
+          <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-6">
+            <Avatar className="h-20 w-20 mx-auto sm:mx-0">
               <AvatarImage src="" />
               <AvatarFallback className="text-lg">
                 <User size={32} />
               </AvatarFallback>
             </Avatar>
-            <div>
-              <Button variant="outline">
+            <div className="text-center sm:text-left">
+              <Button variant="outline" className="w-full sm:w-auto">
                 <Camera size={16} className="mr-2" />
                 Change Avatar
               </Button>
@@ -87,8 +87,8 @@ export const ProfileSettings: React.FC = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-1.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5 sm:col-span-2 md:col-span-1">
               <Label htmlFor="name">Full Name</Label>
               <Input
                 id="name"
@@ -96,7 +96,7 @@ export const ProfileSettings: React.FC = () => {
                 onChange={(e) => handleInputChange('name', e.target.value)}
               />
             </div>
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 sm:col-span-2 md:col-span-1">
               <Label htmlFor="email">Email Address</Label>
               <Input
                 id="email"
@@ -105,7 +105,7 @@ export const ProfileSettings: React.FC = () => {
                 onChange={(e) => handleInputChange('email', e.target.value)}
               />
             </div>
-            <div className="space-y-1.5">
+            <div className="space-y-1.5 sm:col-span-2 md:col-span-1">
               <Label htmlFor="phone">Phone Number</Label>
               <Input
                 id="phone"
@@ -118,7 +118,7 @@ export const ProfileSettings: React.FC = () => {
           </div>
 
           <div className="flex justify-end">
-            <Button onClick={handleSave}>
+            <Button onClick={handleSave} className="w-full sm:w-auto">
               Save Changes
             </Button>
           </div>
@@ -146,7 +146,7 @@ export const ProfileSettings: React.FC = () => {
             <Input id="confirm-password" type="password" />
           </div>
           <div className="flex justify-end">
-            <Button variant="outline">
+            <Button variant="outline" className="w-full sm:w-auto">
               Update Password
             </Button>
           </div>

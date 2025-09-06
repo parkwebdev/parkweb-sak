@@ -202,6 +202,7 @@ const ScopeOfWorks = () => {
   const [editedTitle, setEditedTitle] = useState('');
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
   const [activeFilter, setActiveFilter] = useState<string>('view-all');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showColumns, setShowColumns] = useState({
     client: true,
     projectType: true,
@@ -460,25 +461,50 @@ const ScopeOfWorks = () => {
 
   return (
     <div className="flex h-screen bg-muted/30">
-      <div className="fixed left-0 top-0 h-full z-10">
-        <Sidebar />
+      {/* Mobile overlay */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-20 lg:hidden" 
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+      
+      {/* Sidebar */}
+      <div className={`fixed left-0 top-0 h-full z-30 transition-transform duration-300 lg:translate-x-0 ${
+        sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+      }`}>
+        <Sidebar onClose={() => setSidebarOpen(false)} />
       </div>
-      <div className="flex-1 ml-[280px] overflow-auto min-h-screen">
-        <main className="flex-1 bg-muted/30 min-h-screen pt-8 pb-12">
+      
+      {/* Main content */}
+      <div className="flex-1 lg:ml-[280px] overflow-auto min-h-screen">
+        <main className="flex-1 bg-muted/30 min-h-screen pt-4 lg:pt-8 pb-12">
           <header className="w-full font-medium">
-            <div className="items-stretch flex w-full flex-col gap-4 px-8 py-0 max-md:px-4">
+            <div className="items-stretch flex w-full flex-col gap-4 px-4 lg:px-8 py-0">
               <div className="w-full gap-4">
-                <div className="content-start flex-wrap flex w-full gap-[16px_12px]">
-                  <div className="min-w-64 text-xl text-foreground leading-none flex-1 shrink basis-[0%] gap-1">
-                    <h1 className="text-foreground text-2xl font-semibold leading-tight mb-1">
+                <div className="content-start flex-wrap flex w-full gap-4 lg:gap-[16px_12px]">
+                  <div className="flex items-center gap-3 lg:hidden w-full mb-2">
+                    <button
+                      onClick={() => setSidebarOpen(true)}
+                      className="p-2 rounded-md hover:bg-accent/50 text-muted-foreground hover:text-foreground"
+                    >
+                      <Plus size={20} />
+                    </button>
+                    <h1 className="text-foreground text-xl font-semibold leading-tight">
+                      Scope of Works
+                    </h1>
+                  </div>
+                
+                  <div className="min-w-0 lg:min-w-64 text-xl text-foreground leading-none flex-1 shrink basis-[0%] gap-1">
+                    <h1 className="hidden lg:block text-foreground text-2xl font-semibold leading-tight mb-1">
                       Scope of Works
                     </h1>
                     <p className="text-sm text-muted-foreground">
                       Manage and review project scopes
                     </p>
                   </div>
-                  <div className="items-center flex min-w-48 gap-2.5 text-xs leading-none">
-                    <Button className="flex items-center gap-2">
+                  <div className="items-center flex min-w-0 lg:min-w-48 gap-2.5 text-xs leading-none">
+                    <Button className="flex items-center gap-2 w-full lg:w-auto">
                       <Plus className="h-4 w-4" />
                       Create New
                     </Button>
@@ -489,15 +515,17 @@ const ScopeOfWorks = () => {
           </header>
 
           <section className="w-full mt-6">
-            <div className="w-full px-8 py-0 max-md:px-4">
+            <div className="w-full px-4 lg:px-8 py-0">
               <div className="w-full bg-card border border-border rounded-xl overflow-hidden">
                 {/* Header with Filters, Search, and Settings */}
                 <header className="w-full border-b border-border">
-                  <div className="justify-between items-center flex w-full gap-3 flex-wrap px-4 py-3">
-                    <div className="border shadow-sm self-stretch flex overflow-hidden text-xs text-foreground font-medium leading-none my-auto rounded-md border-border max-md:flex-wrap">
-                      {['View all', 'Approved', 'In Review', 'Draft'].map((filter, index) => {
-                        const filterKey = filter.toLowerCase().replace(' ', '-');
-                        const isActive = activeFilter === filterKey;
+                  <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-3 px-4 py-3">
+                    {/* Filter buttons - scrollable on mobile */}
+                    <div className="overflow-x-auto">
+                      <div className="border shadow-sm flex overflow-hidden text-xs text-foreground font-medium leading-none rounded-md border-border min-w-max">
+                        {['View all', 'Approved', 'In Review', 'Draft'].map((filter, index) => {
+                          const filterKey = filter.toLowerCase().replace(' ', '-');
+                          const isActive = activeFilter === filterKey;
                         return (
                           <button
                             key={filter}
@@ -512,15 +540,17 @@ const ScopeOfWorks = () => {
                           </button>
                         );
                       })}
-                    </div>
-                    <div className="self-stretch flex items-center gap-2.5 whitespace-nowrap my-auto max-md:w-full max-md:flex-wrap">
-                      <SearchInput
-                        placeholder="Search"
-                        value={searchTerm}
-                        onChange={setSearchTerm}
-                        searchResults={searchResults}
-                        className="max-w-[240px] min-w-48 w-[240px] max-md:w-full max-md:min-w-0"
-                      />
+                     </div>
+                     
+                     {/* Search and controls */}
+                     <div className="flex items-center gap-2.5 w-full lg:w-auto">
+                       <SearchInput
+                         placeholder="Search"
+                         value={searchTerm}
+                         onChange={setSearchTerm}
+                         searchResults={searchResults}
+                         className="flex-1 lg:max-w-[240px] lg:min-w-48 lg:w-[240px]"
+                       />
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <button className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden text-xs text-foreground font-medium leading-none bg-background px-2 py-1.5 rounded-md border-border hover:bg-accent/50">

@@ -67,6 +67,7 @@ const clientLinks: ClientLink[] = [
 
 const Onboarding = () => {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [newClient, setNewClient] = useState({
     clientName: '',
     companyName: '',
@@ -135,16 +136,43 @@ const Onboarding = () => {
 
   return (
     <div className="flex h-screen bg-muted/30">
-      <div className="fixed left-0 top-0 h-full z-10">
-        <Sidebar />
+      {/* Mobile overlay */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-20 lg:hidden" 
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+      
+      {/* Sidebar */}
+      <div className={`fixed left-0 top-0 h-full z-30 transition-transform duration-300 lg:translate-x-0 ${
+        sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+      }`}>
+        <Sidebar onClose={() => setSidebarOpen(false)} />
       </div>
-      <div className="flex-1 ml-[280px] overflow-auto">
-        <main className="flex-1 bg-muted/30 pt-8 pb-12">
-          <div className="max-w-7xl mx-auto px-8">
+      
+      {/* Main content */}
+      <div className="flex-1 lg:ml-[280px] overflow-auto">
+        <main className="flex-1 bg-muted/30 pt-4 lg:pt-8 pb-12">
+          <div className="max-w-7xl mx-auto px-4 lg:px-8">
             {/* Compact Header */}
             <header className="mb-6">
-              <div className="flex items-center justify-between">
-                <div>
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                <div className="flex items-center gap-3 lg:hidden">
+                  <button
+                    onClick={() => setSidebarOpen(true)}
+                    className="p-2 rounded-md hover:bg-accent/50 text-muted-foreground hover:text-foreground"
+                  >
+                    <Plus size={20} />
+                  </button>
+                  <div>
+                    <h1 className="text-xl font-semibold leading-tight">
+                      Client Onboarding
+                    </h1>
+                  </div>
+                </div>
+                
+                <div className="hidden lg:block">
                   <h1 className="text-2xl font-semibold leading-tight mb-1">
                     Client Onboarding
                   </h1>
@@ -152,14 +180,15 @@ const Onboarding = () => {
                     Generate personalized onboarding links and manage client intake workflow
                   </p>
                 </div>
+                
                 <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
                   <DialogTrigger asChild>
-                    <Button size="sm" className="h-8">
+                    <Button size="sm" className="h-8 w-full lg:w-auto">
                       <Plus className="h-3 w-3 mr-1.5" />
                       Create Link
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="sm:max-w-[480px]">
+                  <DialogContent className="sm:max-w-[480px] mx-4">
                     <DialogHeader>
                       <DialogTitle className="text-lg">Create Onboarding Link</DialogTitle>
                       <DialogDescription className="text-sm">
@@ -167,7 +196,7 @@ const Onboarding = () => {
                       </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-3 py-4">
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div className="space-y-1.5">
                           <Label htmlFor="clientName" className="text-xs font-medium">Client Name *</Label>
                           <Input
@@ -244,15 +273,15 @@ const Onboarding = () => {
             </header>
 
             {/* Compact Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
               <Card className="compact-card">
                 <CardContent className="compact-content">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-xs font-medium text-muted-foreground">Total Links</p>
-                      <p className="text-xl font-semibold">12</p>
+                      <p className="text-lg lg:text-xl font-semibold">12</p>
                     </div>
-                    <Link2 className="h-5 w-5 text-info" />
+                    <Link2 className="h-4 w-4 lg:h-5 lg:w-5 text-info" />
                   </div>
                 </CardContent>
               </Card>
@@ -261,9 +290,9 @@ const Onboarding = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-xs font-medium text-muted-foreground">In Progress</p>
-                      <p className="text-xl font-semibold">5</p>
+                      <p className="text-lg lg:text-xl font-semibold">5</p>
                     </div>
-                    <Clock className="h-5 w-5 text-warning" />
+                    <Clock className="h-4 w-4 lg:h-5 lg:w-5 text-warning" />
                   </div>
                 </CardContent>
               </Card>
@@ -272,9 +301,9 @@ const Onboarding = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-xs font-medium text-muted-foreground">SOW Generated</p>
-                      <p className="text-xl font-semibold">3</p>
+                      <p className="text-lg lg:text-xl font-semibold">3</p>
                     </div>
-                    <FileText className="h-5 w-5 text-primary" />
+                    <FileText className="h-4 w-4 lg:h-5 lg:w-5 text-primary" />
                   </div>
                 </CardContent>
               </Card>
@@ -283,9 +312,9 @@ const Onboarding = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-xs font-medium text-muted-foreground">Approved</p>
-                      <p className="text-xl font-semibold">4</p>
+                      <p className="text-lg lg:text-xl font-semibold">4</p>
                     </div>
-                    <User className="h-5 w-5 text-success" />
+                    <User className="h-4 w-4 lg:h-5 lg:w-5 text-success" />
                   </div>
                 </CardContent>
               </Card>
@@ -302,27 +331,27 @@ const Onboarding = () => {
               <CardContent className="p-0">
                  <div className="divide-y divide-border">
                    {clientLinks.map((client) => (
-                     <div key={client.id} className="p-6 hover:bg-muted/50 transition-colors">
-                       <div className="flex items-start justify-between gap-4">
+                     <div key={client.id} className="p-4 lg:p-6 hover:bg-muted/50 transition-colors">
+                       <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
                          <div className="flex-1 min-w-0">
-                            <div className="flex items-start gap-3 mb-3">
+                            <div className="flex flex-col lg:flex-row lg:items-start gap-3 mb-3">
                               <div className="min-w-0 flex-1">
                                 <h3 className="font-medium text-base truncate mb-1">{client.companyName}</h3>
-                                <p className="text-sm text-muted-foreground truncate">
+                                <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-sm text-muted-foreground">
                                   <a 
                                     href={`mailto:${client.email}`}
-                                    className="hover:underline"
+                                    className="hover:underline truncate"
                                   >
                                     {client.clientName}
                                   </a>
-                                  <span className="mx-2">•</span>
+                                  <span className="hidden sm:inline">•</span>
                                   <a 
                                     href={`mailto:${client.email}`}
-                                    className="hover:underline"
+                                    className="hover:underline truncate"
                                   >
                                     {client.email}
                                   </a>
-                                </p>
+                                </div>
                               </div>
                               <div className="flex items-center gap-2 flex-shrink-0">
                                 <Badge className={`${getStatusColor(client.status)} border text-xs px-2.5 py-1 w-auto`}>
@@ -340,36 +369,39 @@ const Onboarding = () => {
                             <div className="mb-3">
                               <ProgressBar 
                                 percentage={getProgressPercentage(client.status)} 
-                                className="max-w-xs"
+                                className="max-w-full lg:max-w-xs"
                               />
                             </div>
                             
-                            <div className="flex items-center gap-6 text-sm text-muted-foreground">
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6 text-sm text-muted-foreground">
                               <span>Industry: {client.industry}</span>
                               <span>Sent: {formatDate(client.dateSent)}</span>
-                              <span>Last Activity: {formatDate(client.lastActivity)}</span>
+                              <span>Last: {formatDate(client.lastActivity)}</span>
                             </div>
                          </div>
                          <div className="flex items-center gap-2 flex-shrink-0">
                           <Button
                             variant="outline"
                             size="sm"
-                            className="h-7 px-2"
+                            className="h-7 px-2 flex-1 sm:flex-initial"
                             onClick={() => handleCopyToClipboard(client.onboardingUrl)}
                           >
                             <Copy className="h-3 w-3" />
+                            <span className="ml-1 sm:hidden">Copy</span>
                           </Button>
                           <Button
                             variant="outline"
                             size="sm"
-                            className="h-7 px-2"
+                            className="h-7 px-2 flex-1 sm:flex-initial"
                             onClick={() => handleSendEmail(client)}
                           >
                             <Send className="h-3 w-3" />
+                            <span className="ml-1 sm:hidden">Send</span>
                           </Button>
                           {client.sowStatus && (
                             <Button variant="outline" size="sm" className="h-7 px-2">
                               <Eye className="h-3 w-3" />
+                              <span className="ml-1 sm:hidden">View</span>
                             </Button>
                           )}
                         </div>
