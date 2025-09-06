@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, Settings } from 'lucide-react';
+import { User01 as User, Settings01 as Settings } from '@untitledui/icons';
 
 export const UserAccountCard: React.FC = () => {
   return (

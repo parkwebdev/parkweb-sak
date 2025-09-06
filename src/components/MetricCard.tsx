@@ -1,5 +1,5 @@
 import React from 'react';
-import { MoreHorizontal, TrendingUp, TrendingDown } from 'lucide-react';
+import { DotsHorizontal as MoreHorizontal, TrendUp01 as TrendingUp, TrendDown01 as TrendingDown } from '@untitledui/icons';
 
 interface MetricCardProps {
   title: string;

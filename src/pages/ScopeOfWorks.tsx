@@ -2,20 +2,20 @@ import React, { useState, useEffect } from 'react';
 import { Sidebar } from '@/components/Sidebar';
 import { SearchInput } from '@/components/SearchInput';
 import { 
-  Settings, 
-  Filter, 
-  ArrowUpDown, 
+  Settings01 as Settings, 
+  FilterLines as Filter, 
+  ArrowsDown as ArrowUpDown, 
   Eye, 
-  Send, 
+  Send01 as Send, 
   Check, 
-  Download, 
+  Download01 as Download, 
   Plus, 
-  Edit, 
-  Save, 
+  Edit01 as Edit, 
+  Save01 as Save, 
   X, 
-  FileText, 
-  GripVertical 
-} from 'lucide-react';
+  File02 as FileText, 
+  ChevronSelectorVertical as GripVertical 
+} from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/Badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';

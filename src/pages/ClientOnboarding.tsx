@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { ArrowRight, CheckCircle, Building2, User, Mail, Phone, MapPin, Globe, MessageSquare, FileText, Eye } from 'lucide-react';
+import { ArrowRight, CheckCircle, Building07 as Building2, User01 as User, Mail01 as Mail, Phone as Phone, MarkerPin01 as MapPin, Globe06 as Globe, MessageChatSquare as MessageSquare, File02 as FileText, Eye as Eye } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';

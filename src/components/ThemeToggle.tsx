@@ -1,4 +1,4 @@
-import { Moon, Sun } from 'lucide-react';
+import { Moon02 as Moon, Sun } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search } from 'lucide-react';
+import { SearchSm as Search } from '@untitledui/icons';
 import {
   CommandDialog,
   CommandInput,
