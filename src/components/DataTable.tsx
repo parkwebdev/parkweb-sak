@@ -73,6 +73,7 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
       filtered = filtered.filter(item => item.percentage >= 80);
     }
 
+    // Apply active filter
     if (activeFilter !== 'view-all') {
       if (activeFilter === 'complete') {
         filtered = filtered.filter(item => item.status === 'Complete');
@@ -139,25 +140,49 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
 
   return (
     <div className="w-full bg-card border border-border rounded-xl overflow-hidden">
-      <header className="w-full">
-        <div className="items-center flex w-full gap-4 bg-background px-4 py-4">
-          <div className="text-foreground text-base font-semibold leading-6 flex-1">
-            <div className="items-center flex gap-2">
-              <div className="border shadow-sm justify-center items-center flex gap-1 bg-primary text-primary-foreground px-3 py-1.5 rounded-lg border-border">
-                <User size={14} />
-                <div className="text-xs font-medium">{filteredData.length}</div>
-              </div>
-              <h2 className="text-base font-semibold">
-                {currentActiveTab === 'onboarding' ? 'Client Onboarding Forms' :
-                 currentActiveTab === 'scope-of-work' ? 'Scope of Work Projects' :
-                 'Completed Projects'}
-              </h2>
-            </div>
+      {/* New Header with Filters, Search, and Settings */}
+      <header className="w-full border-b border-border">
+        <div className="justify-between items-center flex w-full gap-3 flex-wrap px-4 py-3">
+          <div className="border shadow-sm self-stretch flex overflow-hidden text-xs text-foreground font-medium leading-none my-auto rounded-md border-border max-md:flex-wrap">
+            {['View all', 'Complete', 'Incomplete', 'In Review'].map((filter, index) => {
+              const filterKey = filter.toLowerCase().replace(' ', '-');
+              const isActive = activeFilter === filterKey;
+              return (
+                <button
+                  key={filter}
+                  onClick={() => setActiveFilter(filterKey)}
+                  className={`justify-center items-center flex min-h-8 gap-1.5 px-2.5 py-1.5 max-md:px-2 max-md:text-xs transition-colors ${
+                    isActive ? 'bg-primary text-primary-foreground' : 'bg-background hover:bg-accent/50'
+                  } ${index < 3 ? 'border-r-border border-r border-solid' : ''}`}
+                >
+                  <div className="text-xs leading-4 self-stretch my-auto max-md:text-xs">
+                    {filter}
+                  </div>
+                </button>
+              );
+            })}
           </div>
-          <button className="w-4 hover:bg-accent rounded p-0.5">
+          <div className="self-stretch flex items-center gap-2.5 whitespace-nowrap my-auto max-md:w-full max-md:flex-wrap">
+            <SearchInput
+              placeholder="Search"
+              value={searchTerm}
+              onChange={setSearchTerm}
+              searchResults={searchResults}
+              className="max-w-[240px] min-w-48 w-[240px] max-md:w-full max-md:min-w-0"
+            />
+            <button className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden text-xs text-foreground font-medium leading-none bg-background px-2.5 py-2 rounded-md border-border hover:bg-accent/50 max-md:px-2">
+              <ChevronDown size={12} className="text-muted-foreground" />
+              <div className="justify-center items-center self-stretch flex my-auto px-0.5 py-0 max-md:hidden">
+                <div className="text-foreground text-xs leading-4 self-stretch my-auto">
+                  Filters
+                </div>
+              </div>
+            </button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Settings size={14} className="cursor-pointer" />
+                <button className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden text-xs text-foreground font-medium leading-none bg-background px-2.5 py-2 rounded-md border-border hover:bg-accent/50">
+                  <Settings size={12} className="text-muted-foreground" />
+                </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel>Table Settings</DropdownMenuLabel>
@@ -203,51 +228,9 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
                 </DropdownMenuCheckboxItem>
               </DropdownMenuContent>
             </DropdownMenu>
-          </button>
+          </div>
         </div>
-        <div className="bg-border flex min-h-px w-full" />
       </header>
-
-      <div className="w-full">
-        <div className="justify-between items-center flex w-full gap-3 flex-wrap px-4 py-2.5 rounded-lg max-md:px-3">
-          <div className="border shadow-sm self-stretch flex overflow-hidden text-xs text-foreground font-medium leading-none my-auto rounded-md border-border max-md:flex-wrap">
-            {['View all', 'Complete', 'Incomplete', 'In Review'].map((filter, index) => {
-              const filterKey = filter.toLowerCase().replace(' ', '-');
-              const isActive = activeFilter === filterKey;
-              return (
-                <button
-                  key={filter}
-                  onClick={() => setActiveFilter(filterKey)}
-                  className={`justify-center items-center flex min-h-8 gap-1.5 px-2.5 py-1.5 max-md:px-2 max-md:text-xs transition-colors ${
-                    isActive ? 'bg-primary text-primary-foreground' : 'bg-background hover:bg-accent/50'
-                  } ${index < 3 ? 'border-r-border border-r border-solid' : ''}`}
-                >
-                  <div className="text-xs leading-4 self-stretch my-auto max-md:text-xs">
-                    {filter}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-          <div className="self-stretch flex items-center gap-2.5 whitespace-nowrap my-auto max-md:w-full max-md:flex-wrap">
-            <SearchInput
-              placeholder="Search"
-              value={searchTerm}
-              onChange={setSearchTerm}
-              searchResults={searchResults}
-              className="max-w-[240px] min-w-48 w-[240px] max-md:w-full max-md:min-w-0"
-            />
-            <button className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden text-xs text-foreground font-medium leading-none bg-background px-2.5 py-2 rounded-md border-border hover:bg-accent/50 max-md:px-2">
-              <ChevronDown size={12} className="text-muted-foreground" />
-              <div className="justify-center items-center self-stretch flex my-auto px-0.5 py-0 max-md:hidden">
-                <div className="text-foreground text-xs leading-4 self-stretch my-auto">
-                  Filters
-                </div>
-              </div>
-            </button>
-          </div>
-        </div>
-      </div>
 
       <div className="w-full overflow-x-auto">
         <Table>
