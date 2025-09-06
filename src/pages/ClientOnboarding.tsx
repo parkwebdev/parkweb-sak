@@ -206,13 +206,7 @@ const ClientOnboarding = () => {
   const navigate = useNavigate();
   const clientName = searchParams.get('name') || 'Valued Client';
   const companyName = searchParams.get('company') || 'Your Company';
-
-  // Email validation function
-  const isValidEmail = (email: string): boolean => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
-
+  
   const [onboardingData, setOnboardingData] = useState<OnboardingData>({
     companyName: companyName,
     industry: '',
@@ -239,6 +233,105 @@ const ClientOnboarding = () => {
   const [showSOW, setShowSOW] = useState(false);
   const [sowData, setSowData] = useState(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
+
+  // Email validation function
+  const isValidEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  // Form validation for each step
+  const validateCurrentStep = (): boolean => {
+    const { currentStep } = onboardingData;
+    
+    switch (currentStep) {
+      case 1:
+        return true; // Welcome step
+      case 2:
+        return !!(
+          onboardingData.companyName?.trim() &&
+          onboardingData.industry?.trim() &&
+          onboardingData.companyDescription?.trim()
+        );
+      case 3:
+        return !!(
+          onboardingData.contactName?.trim() &&
+          onboardingData.email?.trim() &&
+          isValidEmail(onboardingData.email)
+        );
+      case 4:
+        return !!(
+          onboardingData.projectGoals?.trim() &&
+          onboardingData.targetAudience?.trim()
+        );
+      case 5:
+        return true; // Features are optional
+      case 6:
+        return true; // Additional info is optional
+      case 7:
+        return true; // Review step
+      default:
+        return false;
+    }
+  };
+
+  // Auto-save functionality
+  React.useEffect(() => {
+    const saveInterval = setInterval(() => {
+      if (onboardingData.currentStep > 1) {
+        localStorage.setItem('onboardingDraft', JSON.stringify(onboardingData));
+        console.log('Auto-saved form data');
+      }
+    }, 30000); // Save every 30 seconds
+
+    return () => clearInterval(saveInterval);
+  }, [onboardingData]);
+
+  // Load saved draft on component mount
+  React.useEffect(() => {
+    const savedDraft = localStorage.getItem('onboardingDraft');
+    if (savedDraft) {
+      try {
+        const parsedDraft = JSON.parse(savedDraft);
+        setOnboardingData(parsedDraft);
+      } catch (error) {
+        console.error('Error loading saved draft:', error);
+      }
+    }
+  }, []);
+
+  // Inactivity tracker for draft email
+  React.useEffect(() => {
+    let inactivityTimer: NodeJS.Timeout;
+    
+    const resetTimer = () => {
+      clearTimeout(inactivityTimer);
+      if (onboardingData.currentStep > 1 && onboardingData.email && isValidEmail(onboardingData.email)) {
+        inactivityTimer = setTimeout(() => {
+          // Simulate sending draft email
+          console.log('Sending draft email to:', onboardingData.email);
+          // In a real app, this would call an API to send the email
+        }, 600000); // 10 minutes of inactivity
+      }
+    };
+
+    // Reset timer on any user activity
+    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
+    events.forEach(event => {
+      document.addEventListener(event, resetTimer, true);
+    });
+
+    resetTimer();
+
+    return () => {
+      clearTimeout(inactivityTimer);
+      events.forEach(event => {
+        document.removeEventListener(event, resetTimer, true);
+      });
+    };
+  }, [onboardingData.currentStep, onboardingData.email]);
+
+
 
   // Calculate progress percentage based on current step
   const getProgressPercentage = () => {
@@ -289,6 +382,12 @@ const ClientOnboarding = () => {
   };
 
   const nextStep = () => {
+    if (!validateCurrentStep()) {
+      // You could add a toast notification here
+      console.log('Please complete all required fields before proceeding');
+      return;
+    }
+    
     if (onboardingData.currentStep < steps.length) {
       updateData('currentStep', onboardingData.currentStep + 1);
     }
@@ -404,7 +503,9 @@ const ClientOnboarding = () => {
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
-                <Label htmlFor="companyName" className="text-sm font-medium mb-2 block">Company Name *</Label>
+                <Label htmlFor="companyName" className="text-sm font-medium mb-2 block">
+                  Company Name <span className="text-destructive">*</span>
+                </Label>
                 <Input
                   id="companyName"
                   value={onboardingData.companyName}
@@ -412,7 +513,9 @@ const ClientOnboarding = () => {
                 />
               </div>
               <div>
-                <Label htmlFor="industry" className="text-sm font-medium mb-2 block">Industry *</Label>
+                <Label htmlFor="industry" className="text-sm font-medium mb-2 block">
+                  Industry <span className="text-destructive">*</span>
+                </Label>
                 <Select value={onboardingData.industry} onValueChange={(value) => updateData('industry', value)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select your industry" />
@@ -434,7 +537,9 @@ const ClientOnboarding = () => {
                 />
               </div>
               <div>
-                <Label htmlFor="companyDescription" className="text-sm font-medium mb-2 block">Brief Company Description *</Label>
+                <Label htmlFor="companyDescription" className="text-sm font-medium mb-2 block">
+                  Brief Company Description <span className="text-destructive">*</span>
+                </Label>
                 <Textarea
                   id="companyDescription"
                   placeholder="Tell us what your company does and what makes it special..."
@@ -461,7 +566,9 @@ const ClientOnboarding = () => {
             <CardContent className="space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="contactName" className="text-sm font-medium mb-2 block">Full Name *</Label>
+                  <Label htmlFor="contactName" className="text-sm font-medium mb-2 block">
+                    Full Name <span className="text-destructive">*</span>
+                  </Label>
                   <Input
                     id="contactName"
                     value={onboardingData.contactName}
@@ -480,7 +587,9 @@ const ClientOnboarding = () => {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="email" className="text-sm font-medium mb-2 block">Email Address *</Label>
+                  <Label htmlFor="email" className="text-sm font-medium mb-2 block">
+                    Email Address <span className="text-destructive">*</span>
+                  </Label>
                   <Input
                     id="email"
                     type="email"
@@ -556,7 +665,9 @@ const ClientOnboarding = () => {
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
-                <Label htmlFor="projectGoals" className="text-sm font-medium mb-2 block">What are your main goals for this website? *</Label>
+                <Label htmlFor="projectGoals" className="text-sm font-medium mb-2 block">
+                  What are your main goals for this website? <span className="text-destructive">*</span>
+                </Label>
                 <Textarea
                   id="projectGoals"
                   placeholder="e.g., Increase online bookings, showcase our services, improve customer communication..."
@@ -566,7 +677,9 @@ const ClientOnboarding = () => {
                 />
               </div>
               <div>
-                <Label htmlFor="targetAudience" className="text-sm font-medium mb-2 block">Who is your target audience? *</Label>
+                <Label htmlFor="targetAudience" className="text-sm font-medium mb-2 block">
+                  Who is your target audience? <span className="text-destructive">*</span>
+                </Label>
                 {onboardingData.industry && audienceTagsByIndustry[onboardingData.industry] && (
                   <div className="mb-3">
                     <p className="text-sm text-muted-foreground mb-2">Quick select for {onboardingData.industry}:</p>
@@ -840,7 +953,7 @@ const ClientOnboarding = () => {
             </Button>
             <Button 
               onClick={nextStep} 
-              disabled={onboardingData.currentStep === steps.length}
+              disabled={onboardingData.currentStep === steps.length || !validateCurrentStep()}
               className="px-8 py-3"
             >
               {onboardingData.currentStep === steps.length ? 'Complete' : 'Next Step'}
