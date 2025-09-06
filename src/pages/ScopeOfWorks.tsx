@@ -157,8 +157,6 @@ const ScopeOfWorks = () => {
                             <div className="min-w-0 flex-1">
                               <h3 className="font-medium text-base truncate mb-1">{sow.title}</h3>
                               <p className="text-sm text-muted-foreground truncate">
-                                <span className="font-medium">{sow.client}</span>
-                                <span className="mx-2">•</span>
                                 <a 
                                   href={`mailto:${sow.email}`}
                                   className="hover:underline"
@@ -166,12 +164,7 @@ const ScopeOfWorks = () => {
                                   {sow.clientContact}
                                 </a>
                                 <span className="mx-2">•</span>
-                                <a 
-                                  href={`mailto:${sow.email}`}
-                                  className="hover:underline"
-                                >
-                                  {sow.email}
-                                </a>
+                                <span>{sow.industry}</span>
                               </p>
                             </div>
                             <div className="flex items-center gap-2 flex-shrink-0">
@@ -181,26 +174,9 @@ const ScopeOfWorks = () => {
                             </div>
                           </div>
                           
-                          <div className="flex items-center gap-6 text-sm text-muted-foreground mb-3">
-                            <span>{sow.industry}</span>
+                          <div className="flex items-center gap-4 text-xs text-muted-foreground">
                             <span>{sow.pages} pages</span>
-                            <span>Created {formatDate(sow.dateCreated)}</span>
                             <span>Updated {formatDate(sow.dateModified)}</span>
-                          </div>
-
-                          <div className="flex items-center gap-2">
-                            <div className="flex flex-wrap gap-1">
-                              {sow.integrations.slice(0, 3).map((integration) => (
-                                <Badge key={integration} variant="outline" className="text-xs px-2 py-0.5">
-                                  {integration}
-                                </Badge>
-                              ))}
-                              {sow.integrations.length > 3 && (
-                                <Badge variant="outline" className="text-xs px-2 py-0.5">
-                                  +{sow.integrations.length - 3}
-                                </Badge>
-                              )}
-                            </div>
                           </div>
                         </div>
                         
