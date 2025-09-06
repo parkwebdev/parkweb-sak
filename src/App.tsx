@@ -1,23 +1,20 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from '@/contexts/AuthContext';
-import { ThemeProvider } from '@/components/ThemeProvider';
-import { Toaster } from '@/components/ui/toaster';
-import { Toaster as Sonner } from '@/components/ui/sonner';
-import { TooltipProvider } from '@/components/ui/tooltip';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ProtectedRoute } from '@/components/ProtectedRoute';
-import { Layout } from '@/components/Layout';
-
-// Pages
-import Index from '@/pages/Index';
-import Auth from '@/pages/Auth';
-import Profile from '@/pages/Profile';
-import Settings from '@/pages/Settings';
-import Team from '@/pages/Team';
-import NotFound from '@/pages/NotFound';
-import Onboarding from '@/pages/Onboarding';
-import ScopeOfWorks from '@/pages/ScopeOfWorks';
-import ClientOnboarding from '@/pages/ClientOnboarding';
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ThemeProvider } from "@/components/ThemeProvider";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
+import Index from "./pages/Index";
+import Auth from "./pages/Auth";
+import Onboarding from "./pages/Onboarding";
+import ClientOnboarding from "./pages/ClientOnboarding";
+import ScopeOfWorks from "./pages/ScopeOfWorks";
+import Settings from "./pages/Settings";
+import Profile from "./pages/Profile";
+import Team from "./pages/Team";
+import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
@@ -26,31 +23,47 @@ const App = () => (
     <ThemeProvider defaultTheme="dark" storageKey="app-ui-theme">
       <TooltipProvider>
         <Toaster />
-        <Toaster />
-        <Router>
+        <Sonner />
+        <BrowserRouter>
           <AuthProvider>
             <Routes>
               <Route path="/auth" element={<Auth />} />
-              <Route path="/client-onboarding" element={<ClientOnboarding />} />
-              
-              {/* Protected routes with layout */}
               <Route path="/" element={
                 <ProtectedRoute>
-                  <Layout />
+                  <Index />
                 </ProtectedRoute>
-              }>
-                <Route index element={<Index />} />
-                <Route path="onboarding" element={<Onboarding />} />
-                <Route path="scope-of-works" element={<ScopeOfWorks />} />
-                <Route path="profile" element={<Profile />} />
-                <Route path="settings" element={<Settings />} />
-                <Route path="team" element={<Team />} />
-              </Route>
-              
+              } />
+              <Route path="/onboarding" element={
+                <ProtectedRoute>
+                  <Onboarding />
+                </ProtectedRoute>
+              } />
+              <Route path="/client-onboarding" element={<ClientOnboarding />} />
+              <Route path="/scope-of-works" element={
+                <ProtectedRoute>
+                  <ScopeOfWorks />
+                </ProtectedRoute>
+              } />
+              <Route path="/settings" element={
+                <ProtectedRoute>
+                  <Settings />
+                </ProtectedRoute>
+              } />
+              <Route path="/profile" element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              } />
+              <Route path="/team" element={
+                <ProtectedRoute>
+                  <Team />
+                </ProtectedRoute>
+              } />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
           </AuthProvider>
-        </Router>
+        </BrowserRouter>
       </TooltipProvider>
     </ThemeProvider>
   </QueryClientProvider>
