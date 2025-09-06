@@ -14,7 +14,144 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      notification_preferences: {
+        Row: {
+          browser_notifications: boolean | null
+          created_at: string
+          email_notifications: boolean | null
+          id: string
+          onboarding_notifications: boolean | null
+          scope_work_notifications: boolean | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          browser_notifications?: boolean | null
+          created_at?: string
+          email_notifications?: boolean | null
+          id?: string
+          onboarding_notifications?: boolean | null
+          scope_work_notifications?: boolean | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          browser_notifications?: boolean | null
+          created_at?: string
+          email_notifications?: boolean | null
+          id?: string
+          onboarding_notifications?: boolean | null
+          scope_work_notifications?: boolean | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      onboarding_submissions: {
+        Row: {
+          budget_range: string | null
+          client_email: string
+          client_name: string
+          description: string | null
+          id: string
+          industry: string | null
+          project_type: string | null
+          status: string | null
+          submitted_at: string
+          timeline: string | null
+          user_id: string
+        }
+        Insert: {
+          budget_range?: string | null
+          client_email: string
+          client_name: string
+          description?: string | null
+          id?: string
+          industry?: string | null
+          project_type?: string | null
+          status?: string | null
+          submitted_at?: string
+          timeline?: string | null
+          user_id: string
+        }
+        Update: {
+          budget_range?: string | null
+          client_email?: string
+          client_name?: string
+          description?: string | null
+          id?: string
+          industry?: string | null
+          project_type?: string | null
+          status?: string | null
+          submitted_at?: string
+          timeline?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string | null
+          email: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      scope_work_approvals: {
+        Row: {
+          approved_at: string | null
+          client_email: string | null
+          client_name: string
+          created_at: string
+          id: string
+          sow_title: string
+          status: string | null
+          user_id: string
+        }
+        Insert: {
+          approved_at?: string | null
+          client_email?: string | null
+          client_name: string
+          created_at?: string
+          id?: string
+          sow_title: string
+          status?: string | null
+          user_id: string
+        }
+        Update: {
+          approved_at?: string | null
+          client_email?: string | null
+          client_name?: string
+          created_at?: string
+          id?: string
+          sow_title?: string
+          status?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
