@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Home01 as Home, BarChart03 as BarChart3, File02 as FileText, Users01 as Users } from '@untitledui/icons';
+import { Home01 as Home, Grid01 as Grid, File02 as FileText, Users01 as Users } from '@untitledui/icons';
 import { Link, useLocation } from 'react-router-dom';
 import { SearchInput } from './SearchInput';
 import { Badge } from './Badge';
@@ -18,7 +18,7 @@ const navigationItems: NavigationItem[] = [
   {
     id: 'dashboard',
     label: 'Dashboard',
-    icon: BarChart3,
+    icon: Grid,
     path: '/'
   },
   {

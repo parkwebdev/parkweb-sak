@@ -15,7 +15,6 @@ interface OnboardingData {
   // Company Information
   companyName: string;
   industry: string;
-  companySize: string;
   website: string;
   companyDescription: string;
   
@@ -30,13 +29,12 @@ interface OnboardingData {
   projectGoals: string;
   targetAudience: string;
   keyFeatures: string[];
-  timeline: string;
-  budget: string;
   
   // Additional Information
   currentWebsite: string;
   competitorSites: string;
   brandingAssets: boolean;
+  brandingFiles: FileList | null;
   contentReady: boolean;
   additionalNotes: string;
   
@@ -76,7 +74,7 @@ const steps = [
   { id: 2, title: 'Company Info', description: 'Tell us about your business' },
   { id: 3, title: 'Contact Details', description: 'Your contact information' },
   { id: 4, title: 'Project Goals', description: 'What you want to achieve' },
-  { id: 5, title: 'Features & Timeline', description: 'Project specifications' },
+  { id: 5, title: 'Features', description: 'Project specifications' },
   { id: 6, title: 'Additional Info', description: 'Final details' },
   { id: 7, title: 'Review & Submit', description: 'Confirm your information' }
 ];
@@ -145,9 +143,7 @@ const generateScopeOfWork = (data: OnboardingData) => {
       clientName: data.companyName,
       projectType: 'Professional Website Design & Development',
       industry: data.industry,
-      goals: data.projectGoals.split(',').map(goal => goal.trim()),
-      timeline: data.timeline,
-      budget: data.budget
+      goals: data.projectGoals.split(',').map(goal => goal.trim())
     },
     websiteStructure: {
       universalPages: [
@@ -179,8 +175,6 @@ const generateScopeOfWork = (data: OnboardingData) => {
       ]
     },
     features: [...universalFeatures, ...(industryFeatures[data.industry] || [])],
-    timeline: data.timeline,
-    budget: data.budget,
     nextSteps: [
       'Review and approve this Scope of Work',
       'Provide initial content and assets',
@@ -197,10 +191,15 @@ const ClientOnboarding = () => {
   const clientName = searchParams.get('name') || 'Valued Client';
   const companyName = searchParams.get('company') || 'Your Company';
 
+  // Email validation function
+  const isValidEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
   const [onboardingData, setOnboardingData] = useState<OnboardingData>({
     companyName: companyName,
     industry: '',
-    companySize: '',
     website: '',
     companyDescription: '',
     contactName: clientName,
@@ -211,11 +210,10 @@ const ClientOnboarding = () => {
     projectGoals: '',
     targetAudience: '',
     keyFeatures: [],
-    timeline: '',
-    budget: '',
     currentWebsite: '',
     competitorSites: '',
     brandingAssets: false,
+    brandingFiles: null,
     contentReady: false,
     additionalNotes: '',
     currentStep: 1
@@ -357,9 +355,9 @@ const ClientOnboarding = () => {
                 Help us understand your business so we can create a website that perfectly represents your brand.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6">
               <div>
-                <Label htmlFor="companyName">Company Name *</Label>
+                <Label htmlFor="companyName" className="text-sm font-medium mb-2 block">Company Name *</Label>
                 <Input
                   id="companyName"
                   value={onboardingData.companyName}
@@ -367,7 +365,7 @@ const ClientOnboarding = () => {
                 />
               </div>
               <div>
-                <Label htmlFor="industry">Industry *</Label>
+                <Label htmlFor="industry" className="text-sm font-medium mb-2 block">Industry *</Label>
                 <Select value={onboardingData.industry} onValueChange={(value) => updateData('industry', value)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select your industry" />
@@ -380,21 +378,7 @@ const ClientOnboarding = () => {
                 </Select>
               </div>
               <div>
-                <Label htmlFor="companySize">Company Size</Label>
-                <Select value={onboardingData.companySize} onValueChange={(value) => updateData('companySize', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select company size" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-background border border-border z-50">
-                    <SelectItem value="1-10">1-10 employees</SelectItem>
-                    <SelectItem value="11-50">11-50 employees</SelectItem>
-                    <SelectItem value="51-200">51-200 employees</SelectItem>
-                    <SelectItem value="200+">200+ employees</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="website">Current Website (if any)</Label>
+                <Label htmlFor="website" className="text-sm font-medium mb-2 block">Current Website (if any)</Label>
                 <Input
                   id="website"
                   placeholder="https://yourwebsite.com"
@@ -403,7 +387,7 @@ const ClientOnboarding = () => {
                 />
               </div>
               <div>
-                <Label htmlFor="companyDescription">Brief Company Description *</Label>
+                <Label htmlFor="companyDescription" className="text-sm font-medium mb-2 block">Brief Company Description *</Label>
                 <Textarea
                   id="companyDescription"
                   placeholder="Tell us what your company does and what makes it special..."
@@ -427,10 +411,10 @@ const ClientOnboarding = () => {
                 We'll use this information to keep you updated on your project's progress.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="contactName">Full Name *</Label>
+                  <Label htmlFor="contactName" className="text-sm font-medium mb-2 block">Full Name *</Label>
                   <Input
                     id="contactName"
                     value={onboardingData.contactName}
@@ -438,7 +422,7 @@ const ClientOnboarding = () => {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="title">Job Title</Label>
+                  <Label htmlFor="title" className="text-sm font-medium mb-2 block">Job Title</Label>
                   <Input
                     id="title"
                     placeholder="e.g., CEO, Marketing Manager"
@@ -449,26 +433,52 @@ const ClientOnboarding = () => {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="email">Email Address *</Label>
+                  <Label htmlFor="email" className="text-sm font-medium mb-2 block">Email Address *</Label>
                   <Input
                     id="email"
                     type="email"
                     value={onboardingData.email}
-                    onChange={(e) => updateData('email', e.target.value)}
+                    onChange={(e) => {
+                      let value = e.target.value;
+                      // Auto-correct common typos
+                      value = value.replace(/\.con$/, '.com');
+                      value = value.replace(/\.cmo$/, '.com');
+                      value = value.replace(/\.ocm$/, '.com');
+                      value = value.replace(/\.gmai\./, '.gmail.');
+                      value = value.replace(/\.yahho\./, '.yahoo.');
+                      updateData('email', value);
+                    }}
+                    className={`${onboardingData.email && !isValidEmail(onboardingData.email) ? 'border-destructive' : ''}`}
                   />
+                  {onboardingData.email && !isValidEmail(onboardingData.email) && (
+                    <p className="text-sm text-destructive mt-1">Please enter a valid email address</p>
+                  )}
                 </div>
                 <div>
-                  <Label htmlFor="phone">Phone Number</Label>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    value={onboardingData.phone}
-                    onChange={(e) => updateData('phone', e.target.value)}
-                  />
+                  <Label htmlFor="phone" className="text-sm font-medium mb-2 block">Phone Number</Label>
+                  <div className="flex">
+                    <div className="flex items-center px-3 border border-r-0 rounded-l-md bg-muted text-sm">
+                      🇺🇸 +1
+                    </div>
+                    <Input
+                      id="phone"
+                      type="tel"
+                      placeholder="(123) 456-7890"
+                      value={onboardingData.phone}
+                      onChange={(e) => {
+                        let value = e.target.value.replace(/\D/g, '');
+                        if (value.length >= 3) {
+                          value = `(${value.slice(0, 3)}) ${value.slice(3, 6)}${value.length > 6 ? '-' + value.slice(6, 10) : ''}`;
+                        }
+                        updateData('phone', value);
+                      }}
+                      className="rounded-l-none"
+                    />
+                  </div>
                 </div>
               </div>
               <div>
-                <Label htmlFor="address">Business Address</Label>
+                <Label htmlFor="address" className="text-sm font-medium mb-2 block">Business Address</Label>
                 <Textarea
                   id="address"
                   placeholder="Street address, city, state, zip code"
@@ -492,9 +502,9 @@ const ClientOnboarding = () => {
                 Help us understand what you want to achieve with your new website.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6">
               <div>
-                <Label htmlFor="projectGoals">What are your main goals for this website? *</Label>
+                <Label htmlFor="projectGoals" className="text-sm font-medium mb-2 block">What are your main goals for this website? *</Label>
                 <Textarea
                   id="projectGoals"
                   placeholder="e.g., Increase online bookings, showcase our services, improve customer communication..."
@@ -504,7 +514,7 @@ const ClientOnboarding = () => {
                 />
               </div>
               <div>
-                <Label htmlFor="targetAudience">Who is your target audience? *</Label>
+                <Label htmlFor="targetAudience" className="text-sm font-medium mb-2 block">Who is your target audience? *</Label>
                 <Textarea
                   id="targetAudience"
                   placeholder="e.g., Families looking for RV parks, small businesses needing plumbing services..."
@@ -528,7 +538,7 @@ const ClientOnboarding = () => {
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
-                <Label className="text-base font-medium">Which features would you like? (Select all that apply)</Label>
+                <Label className="text-base font-medium mb-3 block">Which features would you like? (Select all that apply)</Label>
                 <div className="grid grid-cols-2 gap-3 mt-3">
                   {featureOptions.map((feature) => (
                     <div key={feature} className="flex items-center space-x-2">
@@ -544,38 +554,6 @@ const ClientOnboarding = () => {
                   ))}
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="timeline">Preferred Timeline</Label>
-                  <Select value={onboardingData.timeline} onValueChange={(value) => updateData('timeline', value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select timeline" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-background border border-border z-50">
-                      <SelectItem value="asap">ASAP</SelectItem>
-                      <SelectItem value="1-month">Within 1 month</SelectItem>
-                      <SelectItem value="2-3-months">2-3 months</SelectItem>
-                      <SelectItem value="3-6-months">3-6 months</SelectItem>
-                      <SelectItem value="flexible">Flexible</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="budget">Budget Range</Label>
-                  <Select value={onboardingData.budget} onValueChange={(value) => updateData('budget', value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select budget range" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-background border border-border z-50">
-                      <SelectItem value="under-5k">Under $5,000</SelectItem>
-                      <SelectItem value="5k-10k">$5,000 - $10,000</SelectItem>
-                      <SelectItem value="10k-25k">$10,000 - $25,000</SelectItem>
-                      <SelectItem value="25k-50k">$25,000 - $50,000</SelectItem>
-                      <SelectItem value="50k+">$50,000+</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
             </CardContent>
           </Card>
         );
@@ -589,9 +567,9 @@ const ClientOnboarding = () => {
                 A few more details to help us prepare for your project.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6">
               <div>
-                <Label htmlFor="competitorSites">Competitor websites you admire (optional)</Label>
+                <Label htmlFor="competitorSites" className="text-sm font-medium mb-2 block">Competitor websites you admire (optional)</Label>
                 <Textarea
                   id="competitorSites"
                   placeholder="List any websites you like and what you like about them..."
@@ -611,6 +589,27 @@ const ClientOnboarding = () => {
                     I have existing branding assets (logo, colors, fonts)
                   </Label>
                 </div>
+                
+                {onboardingData.brandingAssets && (
+                  <div className="ml-6 p-4 border rounded-lg bg-muted/30">
+                    <Label htmlFor="brandingFiles" className="text-sm font-medium mb-2 block">
+                      Upload Branding Assets
+                    </Label>
+                    <Input
+                      id="brandingFiles"
+                      type="file"
+                      multiple
+                      accept=".svg,.eps,.ai,.pdf,.png,.jpg,.jpeg"
+                      onChange={(e) => updateData('brandingFiles', e.target.files)}
+                      className="mb-2"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      We prefer vector formats like SVG, EPS, AI, or PDF files when possible. 
+                      You can also upload high-resolution PNG or JPG files.
+                    </p>
+                  </div>
+                )}
+                
                 <div className="flex items-center space-x-2">
                   <Checkbox
                     id="contentReady"
@@ -623,7 +622,7 @@ const ClientOnboarding = () => {
                 </div>
               </div>
               <div>
-                <Label htmlFor="additionalNotes">Additional notes or questions</Label>
+                <Label htmlFor="additionalNotes" className="text-sm font-medium mb-2 block">Additional notes or questions</Label>
                 <Textarea
                   id="additionalNotes"
                   placeholder="Anything else you'd like us to know about your project..."
@@ -655,9 +654,6 @@ const ClientOnboarding = () => {
                 </div>
                 <div>
                   <strong>Contact:</strong> {onboardingData.contactName} ({onboardingData.email})
-                </div>
-                <div>
-                  <strong>Timeline:</strong> {onboardingData.timeline}
                 </div>
                 <div>
                   <strong>Selected Features:</strong> {onboardingData.keyFeatures.length} features selected
@@ -761,8 +757,6 @@ const ClientOnboarding = () => {
                   <p><strong>Client:</strong> {sowData.projectOverview.clientName}</p>
                   <p><strong>Project Type:</strong> {sowData.projectOverview.projectType}</p>
                   <p><strong>Industry:</strong> {sowData.projectOverview.industry}</p>
-                  <p><strong>Timeline:</strong> {sowData.projectOverview.timeline}</p>
-                  <p><strong>Budget Range:</strong> {sowData.projectOverview.budget}</p>
                 </div>
               </div>
 
