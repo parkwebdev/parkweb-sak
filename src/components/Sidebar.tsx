@@ -96,11 +96,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
 
           <div className="w-full mt-4">
             <section className="w-full px-3 py-0">
-              {isCollapsed && (
-                <div className="mb-3 flex justify-center">
-                  <ThemeToggle isCollapsed={isCollapsed} />
-                </div>
-              )}
               {navigationItems.map((item) => {
                 const isActive = location.pathname === item.path;
                 return (
@@ -136,7 +131,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
 
         <footer className="absolute bottom-0 left-0 right-0 gap-3 pt-0 pb-3 px-3">
           {!isCollapsed && (
-            <div className="mb-3 px-2.5">
+            <div className="mb-3 px-2.5 flex items-center justify-between">
+              <span className="text-sm font-medium text-foreground">Theme</span>
+              <ThemeToggle isCollapsed={isCollapsed} />
+            </div>
+          )}
+          {isCollapsed && (
+            <div className="mb-3 flex justify-center">
               <ThemeToggle isCollapsed={isCollapsed} />
             </div>
           )}

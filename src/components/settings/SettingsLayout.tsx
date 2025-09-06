@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { Settings01 as Settings, User01 as User, Users01 as Users, Menu01 as Menu } from '@untitledui/icons';
+import { Settings01 as Settings, User01 as User, Users01 as Users, Menu01 as Menu, Bell02 as Bell } from '@untitledui/icons';
 import { cn } from '@/lib/utils';
 
 interface SettingsLayoutProps {
   children: React.ReactNode;
 }
 
-export type SettingsTab = 'general' | 'profile' | 'team';
+export type SettingsTab = 'general' | 'profile' | 'team' | 'notifications';
 
 interface SettingsMenuItemProps {
   id: SettingsTab;
@@ -55,6 +55,7 @@ export const SettingsLayout: React.FC<SettingsLayoutContentProps> = ({
   const menuItems = [
     { id: 'general' as SettingsTab, label: 'General', icon: Settings },
     { id: 'profile' as SettingsTab, label: 'Profile', icon: User },
+    { id: 'notifications' as SettingsTab, label: 'Notifications', icon: Bell },
     { id: 'team' as SettingsTab, label: 'Team', icon: Users },
   ];
 
