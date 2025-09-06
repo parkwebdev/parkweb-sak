@@ -94,6 +94,20 @@ export const NotificationSettings: React.FC = () => {
 
     setUpdating(true);
     try {
+      // If enabling browser notifications, request permission first
+      if (key === 'browser_notifications' && value) {
+        const permission = await Notification.requestPermission();
+        if (permission !== 'granted') {
+          toast({
+            title: "Permission denied",
+            description: "Browser notifications require permission to be enabled.",
+            variant: "destructive",
+          });
+          setUpdating(false);
+          return;
+        }
+      }
+
       const { error } = await supabase
         .from('notification_preferences')
         .update({ [key]: value })
@@ -110,11 +124,6 @@ export const NotificationSettings: React.FC = () => {
       }
 
       setPreferences(prev => prev ? { ...prev, [key]: value } : null);
-
-      // If enabling browser notifications, request permission
-      if (key === 'browser_notifications' && value) {
-        await requestBrowserNotificationPermission();
-      }
 
       toast({
         title: "Preferences updated",
@@ -180,11 +189,10 @@ export const NotificationSettings: React.FC = () => {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Bell size={20} />
+          <CardTitle className="text-sm font-semibold">
             General Notifications
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-xs">
             Configure how you want to receive notifications
           </CardDescription>
         </CardHeader>
@@ -192,12 +200,12 @@ export const NotificationSettings: React.FC = () => {
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <div className="flex items-center gap-2">
-                <Mail size={16} className="text-muted-foreground" />
-                <Label htmlFor="email-notifications" className="text-base font-medium">
+                <Mail size={14} className="text-muted-foreground" />
+                <Label htmlFor="email-notifications" className="text-sm font-medium">
                   Email Notifications
                 </Label>
               </div>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-xs text-muted-foreground">
                 Receive notifications via email
               </p>
             </div>
@@ -212,12 +220,12 @@ export const NotificationSettings: React.FC = () => {
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <div className="flex items-center gap-2">
-                <Browser size={16} className="text-muted-foreground" />
-                <Label htmlFor="browser-notifications" className="text-base font-medium">
+                <Browser size={14} className="text-muted-foreground" />
+                <Label htmlFor="browser-notifications" className="text-sm font-medium">
                   Browser Notifications
                 </Label>
               </div>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-xs text-muted-foreground">
                 Show desktop notifications in your browser
               </p>
             </div>
@@ -241,8 +249,8 @@ export const NotificationSettings: React.FC = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Notification Types</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-sm font-semibold">Notification Types</CardTitle>
+          <CardDescription className="text-xs">
             Choose which types of activities you want to be notified about
           </CardDescription>
         </CardHeader>
@@ -250,12 +258,12 @@ export const NotificationSettings: React.FC = () => {
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <div className="flex items-center gap-2">
-                <FileText size={16} className="text-muted-foreground" />
-                <Label htmlFor="scope-work-notifications" className="text-base font-medium">
+                <FileText size={14} className="text-muted-foreground" />
+                <Label htmlFor="scope-work-notifications" className="text-sm font-medium">
                   Scope of Work Updates
                 </Label>
               </div>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-xs text-muted-foreground">
                 Get notified when scope of work status changes
               </p>
             </div>
@@ -270,12 +278,12 @@ export const NotificationSettings: React.FC = () => {
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <div className="flex items-center gap-2">
-                <Users size={16} className="text-muted-foreground" />
-                <Label htmlFor="onboarding-notifications" className="text-base font-medium">
+                <Users size={14} className="text-muted-foreground" />
+                <Label htmlFor="onboarding-notifications" className="text-sm font-medium">
                   Client Onboarding
                 </Label>
               </div>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-xs text-muted-foreground">
                 Get notified about new client onboarding submissions
               </p>
             </div>
@@ -291,16 +299,16 @@ export const NotificationSettings: React.FC = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Notification Status</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-sm font-semibold">Notification Status</CardTitle>
+          <CardDescription className="text-xs">
             Current browser notification permission status
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium">Browser Permission</p>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm font-medium">Browser Permission</p>
+              <p className="text-xs text-muted-foreground">
                 {Notification.permission === 'granted' ? 'Notifications are allowed' :
                  Notification.permission === 'denied' ? 'Notifications are blocked' :
                  'Notification permission not requested'}
@@ -310,7 +318,21 @@ export const NotificationSettings: React.FC = () => {
               <Button 
                 variant="outline" 
                 size="sm" 
-                onClick={requestBrowserNotificationPermission}
+                onClick={async () => {
+                  const permission = await Notification.requestPermission();
+                  if (permission === 'granted') {
+                    toast({
+                      title: "Notifications enabled",
+                      description: "You will now receive browser notifications.",
+                    });
+                  } else {
+                    toast({
+                      title: "Permission denied",
+                      description: "Browser notifications were not enabled.",
+                      variant: "destructive",
+                    });
+                  }
+                }}
               >
                 Enable Notifications
               </Button>
