@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { ProgressBar } from '@/components/ProgressBar';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Badge } from '@/components/ui/badge';
-import { Upload, Plus, X } from 'lucide-react';
+import { UploadCloud01, Plus, X } from '@untitledui/icons';
 
 interface OnboardingData {
   // Company Information
@@ -716,7 +716,7 @@ const ClientOnboarding = () => {
                     Upload Branding Assets
                   </Label>
                   <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center hover:border-muted-foreground/50 transition-colors">
-                    <Upload className="h-8 w-8 text-muted-foreground mx-auto mb-3" />
+                    <UploadCloud01 className="h-8 w-8 text-muted-foreground mx-auto mb-3" />
                     <div className="mb-2">
                       <Label htmlFor="brandingFiles" className="cursor-pointer text-sm font-medium text-primary hover:text-primary/80">
                         Choose files
