@@ -89,54 +89,54 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
   };
 
   return (
-    <div className="border shadow-sm w-full overflow-hidden bg-card rounded-xl border-border">
-      <header className="w-full gap-5 bg-background">
-        <div className="flex w-full gap-4 flex-wrap pt-5 pb-0 px-6 max-md:px-5">
-          <div className="justify-center items-stretch flex min-w-60 flex-col text-lg text-foreground font-semibold leading-loose flex-1 shrink basis-[0%] gap-0.5">
+    <div className="border shadow-sm w-full overflow-hidden bg-card rounded-lg border-border">
+      <header className="w-full gap-4 bg-muted/50">
+        <div className="flex w-full gap-3 flex-wrap pt-3 pb-0 px-4 max-md:px-3">
+          <div className="justify-center items-stretch flex min-w-48 flex-col text-base text-foreground font-medium leading-relaxed flex-1 shrink basis-[0%] gap-0.5">
             <div className="items-center flex w-full gap-2">
-              <h2 className="text-foreground text-lg font-semibold leading-7 tracking-tight self-stretch my-auto">
+              <h2 className="text-foreground text-base font-medium leading-6 self-stretch my-auto">
                 {currentActiveTab === 'onboarding' ? 'Onboarding Forms' : 
                  currentActiveTab === 'scope-of-work' ? 'Scope of Work Documents' : 
                  'Completed Projects'}
               </h2>
             </div>
           </div>
-          <button className="w-5 hover:bg-accent rounded">
-            <Settings size={18} />
+          <button className="w-4 hover:bg-accent rounded p-0.5">
+            <Settings size={14} />
           </button>
         </div>
-        <div className="bg-border flex min-h-px w-full mt-5" />
+        <div className="bg-border flex min-h-px w-full mt-3" />
       </header>
 
       <div className="w-full">
-        <div className="justify-between items-center flex w-full gap-4 flex-wrap px-6 py-3 rounded-xl max-md:px-5">
-          <div className="border shadow-sm self-stretch flex overflow-hidden text-sm text-foreground font-semibold leading-none my-auto rounded-lg border-border max-md:flex-wrap">
+        <div className="justify-between items-center flex w-full gap-3 flex-wrap px-4 py-2.5 rounded-lg max-md:px-3">
+          <div className="border shadow-sm self-stretch flex overflow-hidden text-xs text-foreground font-medium leading-none my-auto rounded-md border-border max-md:flex-wrap">
             {['View all', 'Complete', 'Incomplete', 'In Review'].map((filter, index) => (
               <button
                 key={filter}
                 onClick={() => setActiveFilter(filter.toLowerCase().replace(' ', '-'))}
-                className={`justify-center items-center flex min-h-10 gap-2 px-3 py-2 max-md:px-2 max-md:text-xs ${
+                className={`justify-center items-center flex min-h-8 gap-1.5 px-2.5 py-1.5 max-md:px-2 max-md:text-xs ${
                   index === 0 ? 'bg-muted' : 'bg-background hover:bg-accent/50'
                 } ${index < 3 ? 'border-r-border border-r border-solid' : ''}`}
               >
-                <div className="text-foreground text-sm leading-5 self-stretch my-auto max-md:text-xs">
+                <div className="text-foreground text-xs leading-4 self-stretch my-auto max-md:text-xs">
                   {filter}
                 </div>
               </button>
             ))}
           </div>
-          <div className="self-stretch flex items-center gap-3 whitespace-nowrap my-auto max-md:w-full max-md:flex-wrap">
+          <div className="self-stretch flex items-center gap-2.5 whitespace-nowrap my-auto max-md:w-full max-md:flex-wrap">
             <SearchInput
               placeholder="Search"
               value={searchTerm}
               onChange={setSearchTerm}
               searchResults={searchResults}
-              className="max-w-[296px] min-w-60 w-[296px] max-md:w-full max-md:min-w-0"
+              className="max-w-[240px] min-w-48 w-[240px] max-md:w-full max-md:min-w-0"
             />
-            <button className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden text-sm text-foreground font-semibold leading-none bg-background px-3.5 py-2.5 rounded-lg border-border hover:bg-accent/50 max-md:px-2">
-              <ChevronDown size={16} className="text-muted-foreground" />
+            <button className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden text-xs text-foreground font-medium leading-none bg-background px-2.5 py-2 rounded-md border-border hover:bg-accent/50 max-md:px-2">
+              <ChevronDown size={12} className="text-muted-foreground" />
               <div className="justify-center items-center self-stretch flex my-auto px-0.5 py-0 max-md:hidden">
-                <div className="text-foreground text-sm leading-5 self-stretch my-auto">
+                <div className="text-foreground text-xs leading-4 self-stretch my-auto">
                   Filters
                 </div>
               </div>

@@ -1,6 +1,7 @@
 import React from 'react';
 import { TabNavigation } from './TabNavigation';
 import { DataTable } from './DataTable';
+import { MetricCard } from './MetricCard';
 
 const tabs = [
   { id: 'onboarding', label: 'Onboarding' },
@@ -18,20 +19,23 @@ export const MainContent: React.FC<MainContentProps> = ({
   onTabChange 
 }) => {
   return (
-    <main className="flex-1 bg-background pt-8 pb-12">
-      <header className="w-full font-semibold">
-        <div className="items-stretch flex w-full flex-col gap-5 px-8 py-0 max-md:px-5">
-          <div className="w-full gap-5">
-            <div className="content-start flex-wrap flex w-full gap-[20px_16px]">
-              <div className="min-w-80 text-2xl text-foreground leading-none flex-1 shrink basis-[0%] gap-1">
-                <h1 className="text-foreground text-2xl font-semibold leading-8 tracking-tight">
+    <main className="flex-1 bg-muted/20 pt-6 pb-8">
+      <header className="w-full font-medium">
+        <div className="items-stretch flex w-full flex-col gap-4 px-6 py-0 max-md:px-4">
+          <div className="w-full gap-4">
+            <div className="content-start flex-wrap flex w-full gap-[16px_12px]">
+              <div className="min-w-64 text-xl text-foreground leading-none flex-1 shrink basis-[0%] gap-1">
+                <h1 className="text-foreground text-2xl font-semibold leading-tight mb-1">
                   Dashboard
                 </h1>
+                <p className="text-sm text-muted-foreground">
+                  Overview of client onboarding and project metrics
+                </p>
               </div>
-              <div className="items-center flex min-w-60 gap-3 text-sm leading-none">
-                <button className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden bg-card hover:bg-accent px-3.5 py-2.5 rounded-lg border-border">
+              <div className="items-center flex min-w-48 gap-2.5 text-xs leading-none">
+                <button className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden bg-card hover:bg-accent px-3 py-2 rounded-md border-border">
                   <div className="justify-center items-center self-stretch flex my-auto px-0.5 py-0">
-                    <div className="text-foreground text-sm leading-5 self-stretch my-auto">
+                    <div className="text-foreground text-xs leading-4 self-stretch my-auto">
                       Export report
                     </div>
                   </div>
@@ -39,6 +43,39 @@ export const MainContent: React.FC<MainContentProps> = ({
               </div>
             </div>
           </div>
+
+          {/* Compact Metrics */}
+          <div className="grid grid-cols-4 gap-4 mt-2">
+            <MetricCard 
+              title="Onboarding Forms" 
+              value="24" 
+              change="12%" 
+              changeType="positive" 
+              chartImage="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=300&h=120&fit=crop&crop=center"
+            />
+            <MetricCard 
+              title="Active Projects" 
+              value="18" 
+              change="8%" 
+              changeType="positive" 
+              chartImage="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=300&h=120&fit=crop&crop=center"
+            />
+            <MetricCard 
+              title="Completed Projects" 
+              value="156" 
+              change="23%" 
+              changeType="positive" 
+              chartImage="https://images.unsplash.com/photo-1611224923853-80b023f02d71?w=300&h=120&fit=crop&crop=center"
+            />
+            <MetricCard 
+              title="Client Satisfaction" 
+              value="96%" 
+              change="2%" 
+              changeType="negative" 
+              chartImage="https://images.unsplash.com/photo-1590402494682-cd3fb53b1f70?w=300&h=120&fit=crop&crop=center"
+            />
+          </div>
+
           <TabNavigation
             tabs={tabs}
             defaultActiveTab={activeTab}
@@ -47,8 +84,8 @@ export const MainContent: React.FC<MainContentProps> = ({
         </div>
       </header>
 
-      <section className="w-full mt-8">
-        <div className="w-full px-8 py-0 max-md:px-5">
+      <section className="w-full mt-6">
+        <div className="w-full px-6 py-0 max-md:px-4">
           <DataTable activeTab={activeTab} />
         </div>
       </section>

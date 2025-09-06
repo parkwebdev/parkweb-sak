@@ -14,7 +14,7 @@ const Index = () => {
       <div className="fixed left-0 top-0 h-full z-10">
         <Sidebar />
       </div>
-      <div className="flex-1 ml-[296px] overflow-auto bg-background">
+      <div className="flex-1 ml-[280px] overflow-auto bg-background">
         <MainContent activeTab={activeTab} onTabChange={handleTabChange} />
       </div>
     </div>

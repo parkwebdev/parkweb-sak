@@ -24,18 +24,18 @@ export const TabNavigation: React.FC<TabNavigationProps> = ({
   };
 
   return (
-    <div className="items-center border flex gap-0.5 text-sm leading-none flex-wrap bg-muted mt-5 rounded-lg border-border max-md:max-w-full">
+    <div className="items-center border flex gap-0.5 text-xs leading-none flex-wrap bg-muted mt-4 rounded-md border-border max-md:max-w-full">
       {tabs.map((tab) => (
         <button
           key={tab.id}
           onClick={() => handleTabClick(tab.id)}
-          className={`justify-center items-center flex min-h-9 gap-2 overflow-hidden my-auto px-3 py-2 rounded-lg ${
+          className={`justify-center items-center flex min-h-7 gap-1.5 overflow-hidden my-auto px-2.5 py-1.5 rounded-sm ${
             activeTab === tab.id
               ? 'border shadow-sm text-foreground bg-background border-border'
               : 'text-muted-foreground hover:bg-background/50'
           }`}
         >
-          <div className={`text-sm leading-5 self-stretch my-auto ${
+          <div className={`text-xs leading-4 self-stretch my-auto ${
             activeTab === tab.id ? 'text-foreground' : 'text-muted-foreground'
           }`}>
             {tab.label}

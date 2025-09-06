@@ -57,7 +57,7 @@ const ScopeOfWorks = () => {
       <div className="fixed left-0 top-0 h-full z-10">
         <Sidebar />
       </div>
-      <div className="flex-1 ml-[296px] overflow-auto">
+      <div className="flex-1 ml-[280px] overflow-auto">
         <main className="flex-1 bg-muted/20 pt-8 pb-12">
           <div className="max-w-7xl mx-auto px-8">
             <header className="mb-8">

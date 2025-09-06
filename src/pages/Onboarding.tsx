@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Sidebar } from '@/components/Sidebar';
-import { Plus, Link2, Copy, Send, User, Building2, Calendar, Clock } from 'lucide-react';
+import { Plus, Link2, Copy, Send, User, Building2, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -125,68 +125,72 @@ const Onboarding = () => {
       <div className="fixed left-0 top-0 h-full z-10">
         <Sidebar />
       </div>
-      <div className="flex-1 ml-[296px] overflow-auto">
-        <main className="flex-1 bg-muted/20 pt-8 pb-12">
-          <div className="max-w-7xl mx-auto px-8">
-            <header className="mb-8">
+      <div className="flex-1 ml-[280px] overflow-auto">
+        <main className="flex-1 bg-muted/20 pt-6 pb-8">
+          <div className="max-w-6xl mx-auto px-6">
+            {/* Compact Header */}
+            <header className="mb-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h1 className="text-foreground text-3xl font-semibold leading-8 tracking-tight mb-2">
-                    Client Onboarding Management
+                  <h1 className="text-2xl font-semibold leading-tight mb-1">
+                    Client Onboarding
                   </h1>
-                  <p className="text-muted-foreground">
+                  <p className="text-sm text-muted-foreground">
                     Generate personalized onboarding links and manage client intake workflow
                   </p>
                 </div>
                 <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
                   <DialogTrigger asChild>
-                    <Button className="flex items-center gap-2">
-                      <Plus className="h-4 w-4" />
-                      Create Onboarding Link
+                    <Button size="sm" className="h-8">
+                      <Plus className="h-3 w-3 mr-1.5" />
+                      Create Link
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="sm:max-w-[500px]">
+                  <DialogContent className="sm:max-w-[480px]">
                     <DialogHeader>
-                      <DialogTitle>Create Personalized Onboarding Link</DialogTitle>
-                      <DialogDescription>
+                      <DialogTitle className="text-lg">Create Onboarding Link</DialogTitle>
+                      <DialogDescription className="text-sm">
                         Generate a custom onboarding link for your client with their information pre-filled.
                       </DialogDescription>
                     </DialogHeader>
-                    <div className="space-y-4 py-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <Label htmlFor="clientName">Client Name *</Label>
+                    <div className="space-y-3 py-4">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1.5">
+                          <Label htmlFor="clientName" className="text-xs font-medium">Client Name *</Label>
                           <Input
                             id="clientName"
                             placeholder="John Smith"
+                            className="h-8 text-sm"
                             value={newClient.clientName}
                             onChange={(e) => setNewClient(prev => ({ ...prev, clientName: e.target.value }))}
                           />
                         </div>
-                        <div>
-                          <Label htmlFor="companyName">Company Name *</Label>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="companyName" className="text-xs font-medium">Company Name *</Label>
                           <Input
                             id="companyName"
                             placeholder="ABC Company"
+                            className="h-8 text-sm"
                             value={newClient.companyName}
                             onChange={(e) => setNewClient(prev => ({ ...prev, companyName: e.target.value }))}
                           />
                         </div>
                       </div>
-                      <div>
-                        <Label htmlFor="email">Email Address *</Label>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="email" className="text-xs font-medium">Email Address *</Label>
                         <Input
                           id="email"
                           type="email"
                           placeholder="john@abccompany.com"
+                          className="h-8 text-sm"
                           value={newClient.email}
                           onChange={(e) => setNewClient(prev => ({ ...prev, email: e.target.value }))}
                         />
                       </div>
-                      <div>
-                        <Label htmlFor="industry">Industry</Label>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="industry" className="text-xs font-medium">Industry</Label>
                         <Select value={newClient.industry} onValueChange={(value) => setNewClient(prev => ({ ...prev, industry: value }))}>
-                          <SelectTrigger>
+                          <SelectTrigger className="h-8 text-sm">
                             <SelectValue placeholder="Select industry" />
                           </SelectTrigger>
                           <SelectContent>
@@ -198,22 +202,23 @@ const Onboarding = () => {
                           </SelectContent>
                         </Select>
                       </div>
-                      <div>
-                        <Label htmlFor="personalNote">Personal Note (Optional)</Label>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="personalNote" className="text-xs font-medium">Personal Note (Optional)</Label>
                         <Textarea
                           id="personalNote"
-                          placeholder="Add a personal message that will be included in the email"
+                          placeholder="Add a personal message for the email"
+                          className="min-h-[60px] text-sm resize-none"
                           value={newClient.personalNote}
                           onChange={(e) => setNewClient(prev => ({ ...prev, personalNote: e.target.value }))}
-                          rows={3}
                         />
                       </div>
                     </div>
                     <div className="flex justify-end gap-2">
-                      <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
+                      <Button variant="outline" size="sm" onClick={() => setShowCreateDialog(false)}>
                         Cancel
                       </Button>
                       <Button 
+                        size="sm"
                         onClick={handleCreateLink}
                         disabled={!newClient.clientName || !newClient.companyName || !newClient.email}
                       >
@@ -225,107 +230,113 @@ const Onboarding = () => {
               </div>
             </header>
 
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-              <Card>
-                <CardContent className="p-6">
+            {/* Compact Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+              <Card className="compact-card">
+                <CardContent className="compact-content">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Total Links</p>
-                      <p className="text-2xl font-bold">12</p>
+                      <p className="text-xs font-medium text-muted-foreground">Total Links</p>
+                      <p className="text-xl font-semibold">12</p>
                     </div>
-                    <Link2 className="h-8 w-8 text-info" />
+                    <Link2 className="h-5 w-5 text-info" />
                   </div>
                 </CardContent>
               </Card>
-              <Card>
-                <CardContent className="p-6">
+              <Card className="compact-card">
+                <CardContent className="compact-content">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">In Progress</p>
-                      <p className="text-2xl font-bold">5</p>
+                      <p className="text-xs font-medium text-muted-foreground">In Progress</p>
+                      <p className="text-xl font-semibold">5</p>
                     </div>
-                    <Clock className="h-8 w-8 text-warning" />
+                    <Clock className="h-5 w-5 text-warning" />
                   </div>
                 </CardContent>
               </Card>
-              <Card>
-                <CardContent className="p-6">
+              <Card className="compact-card">
+                <CardContent className="compact-content">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">SOW Generated</p>
-                      <p className="text-2xl font-bold">3</p>
+                      <p className="text-xs font-medium text-muted-foreground">SOW Generated</p>
+                      <p className="text-xl font-semibold">3</p>
                     </div>
-                    <Building2 className="h-8 w-8 text-primary" />
+                    <Building2 className="h-5 w-5 text-primary" />
                   </div>
                 </CardContent>
               </Card>
-              <Card>
-                <CardContent className="p-6">
+              <Card className="compact-card">
+                <CardContent className="compact-content">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Approved</p>
-                      <p className="text-2xl font-bold">4</p>
+                      <p className="text-xs font-medium text-muted-foreground">Approved</p>
+                      <p className="text-xl font-semibold">4</p>
                     </div>
-                    <User className="h-8 w-8 text-success" />
+                    <User className="h-5 w-5 text-success" />
                   </div>
                 </CardContent>
               </Card>
             </div>
 
-            {/* Client Links Table */}
+            {/* Compact Client Links */}
             <Card>
-              <CardHeader>
-                <CardTitle>Client Onboarding Links</CardTitle>
-                <CardDescription>
+              <CardHeader className="compact-header border-b">
+                <CardTitle className="text-base">Client Onboarding Links</CardTitle>
+                <CardDescription className="text-xs">
                   Manage all your client onboarding links and track their progress
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
+              <CardContent className="p-0">
+                <div className="divide-y">
                   {clientLinks.map((client) => (
-                    <div key={client.id} className="border rounded-lg p-4 hover:bg-muted/50 transition-colors">
+                    <div key={client.id} className="p-4 hover:bg-muted/50 transition-colors">
                       <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <div>
-                              <h3 className="font-semibold text-foreground">{client.companyName}</h3>
-                              <p className="text-sm text-muted-foreground">{client.clientName} • {client.email}</p>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className="min-w-0 flex-1">
+                              <h3 className="font-medium text-sm truncate">{client.companyName}</h3>
+                              <p className="text-xs text-muted-foreground truncate">
+                                {client.clientName} • {client.email}
+                              </p>
                             </div>
-                            <Badge className={`${getStatusColor(client.status)} border`}>
-                              {client.status}
-                            </Badge>
-                            {client.sowStatus && (
-                              <Badge variant="outline">
-                                SOW: {client.sowStatus}
+                            <div className="flex items-center gap-1.5 flex-shrink-0">
+                              <Badge className={`${getStatusColor(client.status)} border text-xs px-1.5 py-0.5`}>
+                                {client.status}
                               </Badge>
-                            )}
+                              {client.sowStatus && (
+                                <Badge variant="outline" className="text-xs px-1.5 py-0.5">
+                                  SOW: {client.sowStatus}
+                                </Badge>
+                              )}
+                            </div>
                           </div>
-                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                          <div className="flex items-center gap-4 text-xs text-muted-foreground">
                             <span>Industry: {client.industry}</span>
                             <span>Sent: {formatDate(client.dateSent)}</span>
                             <span>Last Activity: {formatDate(client.lastActivity)}</span>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1.5 ml-4">
                           <Button
                             variant="outline"
                             size="sm"
+                            className="h-7 px-2"
                             onClick={() => handleCopyToClipboard(client.onboardingUrl)}
                           >
-                            <Copy className="h-4 w-4 mr-2" />
-                            Copy Link
+                            <Copy className="h-3 w-3 mr-1" />
+                            Copy
                           </Button>
                           <Button
                             variant="outline"
                             size="sm"
+                            className="h-7 px-2"
                             onClick={() => handleSendEmail(client)}
                           >
-                            <Send className="h-4 w-4 mr-2" />
-                            Send Email
+                            <Send className="h-3 w-3 mr-1" />
+                            Send
                           </Button>
                           {client.sowStatus && (
-                            <Button size="sm">
+                            <Button size="sm" className="h-7 px-2">
                               View SOW
                             </Button>
                           )}
