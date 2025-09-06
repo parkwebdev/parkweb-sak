@@ -88,21 +88,21 @@ export const SearchInput: React.FC<SearchInputProps> = ({
         onClick={() => setOpen(true)}
       >
         <div className="items-center border shadow-sm flex w-full gap-2 overflow-hidden bg-background px-3 py-2 rounded-lg border-border cursor-pointer hover:bg-accent/50 transition-colors">
-          <div className="items-center self-stretch flex gap-2 text-base text-muted-foreground font-normal flex-1 shrink basis-[0%] my-auto">
-            <Search size={18} className="text-muted-foreground" />
+          <div className="items-center self-stretch flex gap-2 text-sm text-muted-foreground font-normal flex-1 shrink basis-[0%] my-auto">
+            <Search size={14} className="text-muted-foreground" />
             <input
               type="text"
               value={searchValue}
               onChange={(e) => handleValueChange(e.target.value)}
               placeholder={placeholder}
-              className="text-foreground text-ellipsis text-base leading-6 self-stretch flex-1 shrink basis-[0%] my-auto bg-transparent border-none outline-none placeholder:text-muted-foreground cursor-pointer"
+              className="text-foreground text-ellipsis text-sm leading-5 self-stretch flex-1 shrink basis-[0%] my-auto bg-transparent border-none outline-none placeholder:text-muted-foreground cursor-pointer"
               readOnly
             />
           </div>
-          <div className="rounded border self-stretch flex text-xs text-muted-foreground font-medium my-auto px-1 py-px border-border">
-            <div className="text-muted-foreground text-xs leading-[18px]">
+          <div className="rounded border flex items-center justify-center text-xs text-muted-foreground font-medium px-1.5 py-0.5 border-border min-w-[28px]">
+            <span className="text-muted-foreground text-xs leading-none">
               ⌘K
-            </div>
+            </span>
           </div>
         </div>
       </div>
