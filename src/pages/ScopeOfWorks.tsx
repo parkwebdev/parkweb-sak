@@ -877,14 +877,14 @@ const ScopeOfWorks = () => {
                               )}
                               {showColumns.projectType && (
                                 <TableCell>
-                                  <Badge variant="outline" className="text-xs w-auto whitespace-nowrap">
+                                  <Badge variant="outline" className="text-xs w-auto whitespace-nowrap bg-muted">
                                     {sow.projectType}
                                   </Badge>
                                 </TableCell>
                               )}
                               {showColumns.industry && (
                                 <TableCell>
-                                  <Badge variant="outline" className="text-xs w-auto whitespace-nowrap">
+                                  <Badge variant="outline" className="text-xs w-auto whitespace-nowrap bg-muted">
                                     {sow.industry}
                                   </Badge>
                                 </TableCell>
@@ -903,14 +903,20 @@ const ScopeOfWorks = () => {
                                 <TableCell>
                                   {sow.integrations.length > 0 && (
                                     <div className="flex items-center gap-1">
-                                      <Badge variant="outline" className="text-xs w-auto whitespace-nowrap">
-                                        {sow.integrations[0]}
-                                      </Badge>
+                                    <Badge variant="outline" className="text-xs w-auto whitespace-nowrap bg-muted">
+                                      {sow.integrations[0]}
+                                    </Badge>
                                       {sow.integrations.length > 1 && (
                                         <Tooltip>
                                           <TooltipTrigger asChild>
-                                            <div className="cursor-pointer">
-                                              <Badge variant="outline" className="text-xs w-auto whitespace-nowrap">
+                                            <div 
+                                              className="cursor-pointer"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                // Tooltip will show on click due to the trigger
+                                              }}
+                                            >
+                                              <Badge variant="outline" className="text-xs w-auto whitespace-nowrap bg-muted hover:bg-muted/80">
                                                 +{sow.integrations.length - 1}
                                               </Badge>
                                             </div>
@@ -920,7 +926,7 @@ const ScopeOfWorks = () => {
                                               <p className="font-medium">All Integrations:</p>
                                               <div className="flex flex-wrap gap-1">
                                                 {sow.integrations.map((integration: string, index: number) => (
-                                                  <Badge key={index} variant="outline" className="text-xs w-auto">
+                                                  <Badge key={index} variant="outline" className="text-xs w-auto bg-muted">
                                                     {integration}
                                                   </Badge>
                                                 ))}
@@ -1041,10 +1047,10 @@ const ScopeOfWorks = () => {
                               </div>
                               
                               <div className="flex flex-wrap gap-1">
-                                <Badge variant="outline" className="text-xs w-auto">
+                                <Badge variant="outline" className="text-xs w-auto bg-muted">
                                   {sow.projectType}
                                 </Badge>
-                                <Badge variant="outline" className="text-xs w-auto">
+                                <Badge variant="outline" className="text-xs w-auto bg-muted">
                                   {sow.industry}
                                 </Badge>
                                 <Badge variant={getBadgeVariant(sow.status)} className="text-xs w-auto">
@@ -1060,12 +1066,12 @@ const ScopeOfWorks = () => {
                               {sow.integrations.length > 0 && (
                                 <div className="flex flex-wrap gap-1">
                                   {sow.integrations.slice(0, 2).map((integration: string, index: number) => (
-                                    <Badge key={index} variant="outline" className="text-xs w-auto">
+                                    <Badge key={index} variant="outline" className="text-xs w-auto bg-muted">
                                       {integration}
                                     </Badge>
                                   ))}
                                   {sow.integrations.length > 2 && (
-                                    <Badge variant="outline" className="text-xs w-auto">
+                                    <Badge variant="outline" className="text-xs w-auto bg-muted">
                                       +{sow.integrations.length - 2}
                                     </Badge>
                                   )}
