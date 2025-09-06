@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Settings01 as Settings, 
   ChevronDown, 
-  ArrowsDown as ArrowUpDown, 
+  DotsGrid as ArrowUpDown, 
   Eye, 
   Send01 as Send, 
   Check, 

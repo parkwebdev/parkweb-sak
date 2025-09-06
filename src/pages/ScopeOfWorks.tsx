@@ -4,7 +4,7 @@ import { SearchInput } from '@/components/SearchInput';
 import { 
   Settings01 as Settings, 
   FilterLines as Filter, 
-  ArrowsDown as ArrowUpDown, 
+  DotsGrid as ArrowUpDown, 
   Eye, 
   Send01 as Send, 
   Check, 
