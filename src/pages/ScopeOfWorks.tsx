@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
 import { Sidebar } from '@/components/Sidebar';
 import { SearchInput } from '@/components/SearchInput';
-import { FileText, Plus, Filter, Eye, Edit, Copy, Clock, User } from 'lucide-react';
+import { FileText, Plus, Filter, Eye, Edit, Copy, Clock, User, X, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/Badge';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { formatDate } from '@/lib/status-helpers';
 import { useToast } from '@/hooks/use-toast';
 
@@ -20,7 +24,44 @@ const scopeOfWorks = [
     dateCreated: '2024-01-15',
     dateModified: '2024-01-16',
     pages: 8,
-    integrations: ['Booking System', 'Payment Gateway', 'Google Maps']
+    integrations: ['Booking System', 'Payment Gateway', 'Google Maps'],
+    content: `# Mountain View RV Park - Web Design Project
+
+## Project Overview
+Create a modern, responsive website for Mountain View RV Park that showcases amenities and enables online bookings.
+
+## Scope of Work
+
+### Phase 1: Design & Planning
+- Site architecture and wireframes
+- Visual design mockups
+- Content strategy
+
+### Phase 2: Development
+- Responsive website development
+- Booking system integration
+- Payment gateway setup
+- Google Maps integration
+
+### Phase 3: Testing & Launch
+- Cross-browser testing
+- Mobile optimization
+- SEO implementation
+- Go-live support
+
+## Deliverables
+- 8 fully designed and developed pages
+- Booking system with calendar
+- Payment processing capability
+- Mobile-responsive design
+- SEO optimization
+
+## Timeline
+- Phase 1: 2 weeks
+- Phase 2: 4 weeks  
+- Phase 3: 1 week
+
+Total project duration: 7 weeks`
   },
   {
     id: '2',
@@ -33,7 +74,38 @@ const scopeOfWorks = [
     dateCreated: '2024-01-10',
     dateModified: '2024-01-12',
     pages: 12,
-    integrations: ['Investor Portal', 'Document Management', 'CRM']
+    integrations: ['Investor Portal', 'Document Management', 'CRM'],
+    content: `# Elite Capital Partners - Investment Portal
+
+## Project Overview
+Develop a comprehensive investment portal for managing investor relations and deal flow.
+
+## Scope of Work
+
+### Phase 1: Portal Architecture
+- User authentication system
+- Investor dashboard design
+- Document management structure
+
+### Phase 2: Core Features
+- Deal presentation system
+- Investment tracking
+- Communication tools
+- Reporting capabilities
+
+### Phase 3: Integration & Security
+- CRM integration
+- Security implementation
+- Compliance features
+
+## Deliverables
+- 12-page investor portal
+- Document management system
+- CRM integration
+- Security protocols
+
+## Timeline
+Total project duration: 10 weeks`
   },
   {
     id: '3',
@@ -46,7 +118,32 @@ const scopeOfWorks = [
     dateCreated: '2024-01-08',
     dateModified: '2024-01-08',
     pages: 6,
-    integrations: ['Appointment Booking', 'Contact Forms']
+    integrations: ['Appointment Booking', 'Contact Forms'],
+    content: `# Local Plumbing Pro - Service Website
+
+## Project Overview
+Create a professional website for local plumbing services with online appointment booking.
+
+## Scope of Work
+
+### Phase 1: Website Development
+- Service pages design
+- Contact forms setup
+- Appointment booking system
+
+### Phase 2: Optimization
+- Local SEO implementation
+- Mobile optimization
+- Performance optimization
+
+## Deliverables
+- 6-page service website
+- Online appointment booking
+- Contact form integration
+- Local SEO setup
+
+## Timeline
+Total project duration: 4 weeks`
   }
 ];
 
@@ -65,6 +162,10 @@ const getStatusBadgeVariant = (status: string) => {
 
 const ScopeOfWorks = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedSow, setSelectedSow] = useState<any>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedContent, setEditedContent] = useState('');
+  const [editedTitle, setEditedTitle] = useState('');
   const { toast } = useToast();
 
   const searchResults = scopeOfWorks.map(sow => ({
@@ -80,6 +181,36 @@ const ScopeOfWorks = () => {
       title: "Copied to clipboard",
       description: "Link has been copied to your clipboard.",
     });
+  };
+
+  const handleViewSow = (sow: any) => {
+    setSelectedSow(sow);
+    setEditedContent(sow.content);
+    setEditedTitle(sow.title);
+    setIsEditing(false);
+  };
+
+  const handleEditSow = (sow: any) => {
+    setSelectedSow(sow);
+    setEditedContent(sow.content);
+    setEditedTitle(sow.title);
+    setIsEditing(true);
+  };
+
+  const handleSaveChanges = () => {
+    // In a real app, this would save to a backend
+    toast({
+      title: "Changes saved",
+      description: "Your scope of work has been updated.",
+    });
+    setIsEditing(false);
+  };
+
+  const handleCloseModal = () => {
+    setSelectedSow(null);
+    setIsEditing(false);
+    setEditedContent('');
+    setEditedTitle('');
   };
 
   const filteredScopeOfWorks = scopeOfWorks.filter(sow =>
@@ -174,9 +305,24 @@ const ScopeOfWorks = () => {
                             </div>
                           </div>
                           
-                          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                          <div className="flex items-center gap-4 text-xs text-muted-foreground mb-3">
                             <span>{sow.pages} pages</span>
                             <span>Updated {formatDate(sow.dateModified)}</span>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <div className="flex flex-wrap gap-1">
+                              {sow.integrations.slice(0, 3).map((integration) => (
+                                <Badge key={integration} variant="outline" className="text-xs px-2 py-0.5">
+                                  {integration}
+                                </Badge>
+                              ))}
+                              {sow.integrations.length > 3 && (
+                                <Badge variant="outline" className="text-xs px-2 py-0.5">
+                                  +{sow.integrations.length - 3}
+                                </Badge>
+                              )}
+                            </div>
                           </div>
                         </div>
                         
@@ -193,6 +339,7 @@ const ScopeOfWorks = () => {
                             variant="outline"
                             size="sm"
                             className="h-7 px-2"
+                            onClick={() => handleViewSow(sow)}
                           >
                             <Eye className="h-3 w-3" />
                           </Button>
@@ -200,6 +347,7 @@ const ScopeOfWorks = () => {
                             variant="outline"
                             size="sm"
                             className="h-7 px-2"
+                            onClick={() => handleEditSow(sow)}
                           >
                             <Edit className="h-3 w-3" />
                           </Button>
@@ -227,6 +375,96 @@ const ScopeOfWorks = () => {
                 </Button>
               </div>
             )}
+
+            {/* Scope of Work Viewer/Editor Modal */}
+            <Dialog open={!!selectedSow} onOpenChange={handleCloseModal}>
+              <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
+                <DialogHeader className="flex-shrink-0">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <DialogTitle className="text-lg font-semibold">
+                        {isEditing ? 'Edit Scope of Work' : 'Scope of Work'}
+                      </DialogTitle>
+                      {selectedSow && (
+                        <Badge variant={getStatusBadgeVariant(selectedSow.status)} className="text-xs px-2 py-1">
+                          {selectedSow.status}
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {!isEditing ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setIsEditing(true)}
+                          className="flex items-center gap-2"
+                        >
+                          <Edit className="h-3 w-3" />
+                          Edit
+                        </Button>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setIsEditing(false)}
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={handleSaveChanges}
+                            className="flex items-center gap-2"
+                          >
+                            <Save className="h-3 w-3" />
+                            Save
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  {selectedSow && (
+                    <DialogDescription className="text-sm text-muted-foreground">
+                      {selectedSow.clientContact} • {selectedSow.industry} • {selectedSow.pages} pages
+                    </DialogDescription>
+                  )}
+                </DialogHeader>
+
+                <div className="flex-1 overflow-hidden">
+                  {isEditing ? (
+                    <div className="flex flex-col h-full gap-4">
+                      <div>
+                        <Label htmlFor="title" className="text-sm font-medium">Project Title</Label>
+                        <Input
+                          id="title"
+                          value={editedTitle}
+                          onChange={(e) => setEditedTitle(e.target.value)}
+                          className="mt-1"
+                        />
+                      </div>
+                      <div className="flex-1 flex flex-col">
+                        <Label htmlFor="content" className="text-sm font-medium mb-2">Scope of Work Content</Label>
+                        <Textarea
+                          id="content"
+                          value={editedContent}
+                          onChange={(e) => setEditedContent(e.target.value)}
+                          className="flex-1 min-h-[400px] font-mono text-sm resize-none"
+                          placeholder="Enter your scope of work content here..."
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="h-full overflow-y-auto pr-2">
+                      <div className="prose prose-sm max-w-none">
+                        <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed">
+                          {selectedSow?.content}
+                        </pre>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
         </main>
       </div>
