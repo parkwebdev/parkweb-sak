@@ -11,7 +11,9 @@ import {
   Download01 as Download, 
   Plus, 
   Edit01 as Edit, 
-  DotsHorizontal as MoreHorizontal 
+  DotsHorizontal as MoreHorizontal,
+  Grid01 as Grid,
+  List
 } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/Badge';
@@ -536,13 +538,14 @@ const ScopeOfWorks = () => {
                       <DropdownMenuTrigger asChild>
                         <button className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden text-xs text-foreground font-medium leading-none bg-background px-2 py-1.5 rounded-md border-border hover:bg-accent/50">
                           <Filter size={16} className="text-muted-foreground" />
+                          <ArrowUpDown size={16} className="text-muted-foreground" />
                         </button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-80 p-4">
-                        <DropdownMenuLabel>Advanced Filters</DropdownMenuLabel>
+                        <DropdownMenuLabel className="px-0">Advanced Filters</DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         
-                        <div className="space-y-4">
+                        <div className="space-y-4 pt-2">
                           <div>
                             <label className="text-sm font-medium mb-2 block">Date Range</label>
                             <div className="flex gap-2">
@@ -643,14 +646,6 @@ const ScopeOfWorks = () => {
                         </div>
                       </DropdownMenuContent>
                     </DropdownMenu>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleViewModeToggle}
-                      className="h-8 px-2"
-                    >
-                      {viewMode === 'table' ? 'Cards' : 'Table'}
-                    </Button>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <button className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden text-xs text-foreground font-medium leading-none bg-background px-2 py-1.5 rounded-md border-border hover:bg-accent/50">
@@ -719,6 +714,14 @@ const ScopeOfWorks = () => {
                         </DropdownMenuCheckboxItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleViewModeToggle}
+                      className="h-8 px-2"
+                    >
+                      {viewMode === 'table' ? <Grid size={16} /> : <List size={16} />}
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -744,84 +747,28 @@ const ScopeOfWorks = () => {
                             </button>
                           </TableHead>
                           {showColumns.companyName && (
-                            <TableHead>
-                              <button 
-                                className="flex items-center gap-1 hover:text-foreground"
-                                onClick={() => handleSort('client')}
-                              >
-                                <span>Company Name</span>
-                                <ArrowUpDown size={12} className={sortBy === 'client' ? 'text-primary' : ''} />
-                              </button>
-                            </TableHead>
+                            <TableHead>Company Name</TableHead>
                           )}
                           {showColumns.clientName && (
-                            <TableHead>
-                              <button 
-                                className="flex items-center gap-1 hover:text-foreground"
-                                onClick={() => handleSort('client')}
-                              >
-                                <span>Client Name</span>
-                                <ArrowUpDown size={12} className={sortBy === 'client' ? 'text-primary' : ''} />
-                              </button>
-                            </TableHead>
+                            <TableHead>Client Name</TableHead>
                           )}
                           {showColumns.projectType && (
-                            <TableHead>
-                              <button 
-                                className="flex items-center gap-1 hover:text-foreground"
-                                onClick={() => handleSort('projectType')}
-                              >
-                                <span>Project Type</span>
-                                <ArrowUpDown size={12} className={sortBy === 'projectType' ? 'text-primary' : ''} />
-                              </button>
-                            </TableHead>
+                            <TableHead>Project Type</TableHead>
                           )}
                           {showColumns.industry && (
-                            <TableHead>
-                              <button 
-                                className="flex items-center gap-1 hover:text-foreground"
-                                onClick={() => handleSort('industry')}
-                              >
-                                <span>Industry</span>
-                                <ArrowUpDown size={12} className={sortBy === 'industry' ? 'text-primary' : ''} />
-                              </button>
-                            </TableHead>
+                            <TableHead>Industry</TableHead>
                           )}
                           {showColumns.status && (
-                            <TableHead>
-                              <button 
-                                className="flex items-center gap-1 hover:text-foreground"
-                                onClick={() => handleSort('status')}
-                              >
-                                <span>Status</span>
-                                <ArrowUpDown size={12} className={sortBy === 'status' ? 'text-primary' : ''} />
-                              </button>
-                            </TableHead>
+                            <TableHead>Status</TableHead>
                           )}
                           {showColumns.pages && (
-                            <TableHead>
-                              <button 
-                                className="flex items-center gap-1 hover:text-foreground"
-                                onClick={() => handleSort('pages')}
-                              >
-                                <span>Pages</span>
-                                <ArrowUpDown size={12} className={sortBy === 'pages' ? 'text-primary' : ''} />
-                              </button>
-                            </TableHead>
+                            <TableHead>Pages</TableHead>
                           )}
                           {showColumns.integrations && (
                             <TableHead>Integrations</TableHead>
                           )}
                           {showColumns.dateModified && (
-                            <TableHead>
-                              <button 
-                                className="flex items-center gap-1 hover:text-foreground"
-                                onClick={() => handleSort('dateModified')}
-                              >
-                                <span>Modified</span>
-                                <ArrowUpDown size={12} className={sortBy === 'dateModified' ? 'text-primary' : ''} />
-                              </button>
-                            </TableHead>
+                            <TableHead>Modified</TableHead>
                           )}
                           {showColumns.actions && (
                             <TableHead className="text-right">Actions</TableHead>
@@ -892,7 +839,7 @@ const ScopeOfWorks = () => {
                                     {sow.integrations.length > 1 && (
                                       <Tooltip>
                                         <TooltipTrigger asChild>
-                                          <Badge variant="outline" className="text-xs w-auto whitespace-nowrap cursor-help">
+                                          <Badge variant="outline" className="text-xs w-auto whitespace-nowrap cursor-pointer">
                                             +{sow.integrations.length - 1}
                                           </Badge>
                                         </TooltipTrigger>
