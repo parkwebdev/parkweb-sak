@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { ProgressBar } from '@/components/ProgressBar';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Badge } from '@/components/ui/badge';
+import { AddressAutocomplete } from '@/components/AddressAutocomplete';
 import { UploadCloud01, Plus, X } from '@untitledui/icons';
 
 interface OnboardingData {
@@ -40,6 +41,7 @@ interface OnboardingData {
   brandingAssets: boolean;
   brandingFiles: FileList | null;
   contentReady: boolean;
+  contentFiles: FileList | null;
   additionalNotes: string;
   
   currentStep: number;
@@ -227,6 +229,7 @@ const ClientOnboarding = () => {
     brandingAssets: false,
     brandingFiles: null,
     contentReady: false,
+    contentFiles: null,
     additionalNotes: '',
     currentStep: 1
   });
@@ -656,18 +659,11 @@ const ClientOnboarding = () => {
               </div>
               <div>
                 <Label htmlFor="address" className="text-sm font-medium mb-2 block">Business Address</Label>
-                <Input
-                  id="address"
-                  placeholder="123 Main St, City, State 12345"
+                <AddressAutocomplete
                   value={onboardingData.address}
-                  onChange={(e) => updateData('address', e.target.value)}
-                  list="address-suggestions"
+                  onChange={(value) => updateData('address', value)}
+                  placeholder="Start typing your business address..."
                 />
-                <datalist id="address-suggestions">
-                  <option value="123 Main Street" />
-                  <option value="456 Oak Avenue" />
-                  <option value="789 Pine Road" />
-                </datalist>
               </div>
             </CardContent>
           </Card>
@@ -868,6 +864,35 @@ const ClientOnboarding = () => {
                     <p className="text-xs text-muted-foreground">
                       We prefer vector formats like SVG, EPS, AI, or PDF files when possible. 
                       You can also upload high-resolution PNG or JPG files.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {onboardingData.contentReady && (
+                <div className="w-full">
+                  <Label className="text-sm font-medium mb-2 block">
+                    Upload Content Files
+                  </Label>
+                  <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center hover:border-muted-foreground/50 transition-colors">
+                    <UploadCloud01 className="h-8 w-8 text-muted-foreground mx-auto mb-3" />
+                    <div className="mb-2">
+                      <Label htmlFor="contentFiles" className="cursor-pointer text-sm font-medium text-primary hover:text-primary/80">
+                        Choose files
+                      </Label>
+                      <span className="text-sm text-muted-foreground"> or drag and drop</span>
+                    </div>
+                    <Input
+                      id="contentFiles"
+                      type="file"
+                      multiple
+                      accept=".doc,.docx,.pdf,.docm"
+                      onChange={(e) => updateData('contentFiles', e.target.files)}
+                      className="hidden"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Upload your content in DOC, DOCX, PDF, or DOCM format.
+                      These will be used to populate your website with your text content.
                     </p>
                   </div>
                 </div>

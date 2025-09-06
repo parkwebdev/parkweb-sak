@@ -106,7 +106,7 @@ export const DraggableCard: React.FC<DraggableCardProps> = ({
 
         {/* Card Content */}
         <div className="mb-3">
-          <h4 className="font-medium text-sm line-clamp-2 mb-2">{sow.title}</h4>
+          <h4 className="font-medium text-sm line-clamp-2 mb-2">{sow.client}</h4>
           <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
             <ClientAvatar name={sow.client} size="sm" />
             <span className="truncate">{sow.client}</span>

@@ -218,11 +218,6 @@ export const ProfileSettings: React.FC = () => {
                 <Camera size={20} className="text-white" />
               </div>
             </div>
-            <div className="text-center sm:text-left">
-              <p className="text-xs text-muted-foreground mt-2">
-                Click avatar to change profile picture
-              </p>
-            </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
