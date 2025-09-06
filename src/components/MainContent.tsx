@@ -117,15 +117,6 @@ export const MainContent: React.FC<MainContentProps> = ({
                   Overview of client onboarding and project metrics
                 </p>
               </div>
-              <div className="items-center flex min-w-0 lg:min-w-48 gap-2.5 text-xs leading-none">
-                <button className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden bg-card hover:bg-accent px-3 py-2 rounded-md border-border">
-                  <div className="justify-center items-center self-stretch flex my-auto px-0.5 py-0">
-                    <div className="text-foreground text-xs leading-4 self-stretch my-auto">
-                      Export report
-                    </div>
-                  </div>
-                </button>
-              </div>
             </div>
           </div>
 

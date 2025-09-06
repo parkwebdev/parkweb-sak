@@ -183,10 +183,10 @@ const Profile = () => {
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div className="flex items-center gap-6">
-                    <Avatar 
-                      className="h-20 w-20 cursor-pointer hover:opacity-80 transition-opacity"
-                      onClick={() => fileInputRef.current?.click()}
-                    >
+    <Avatar 
+      className="h-20 w-20 cursor-pointer hover:opacity-80 transition-opacity"
+      onClick={() => fileInputRef.current?.click()}
+    >
                       <AvatarImage src={profile?.avatar_url || ''} alt={displayName_value} />
                       <AvatarFallback className="text-lg">{initials}</AvatarFallback>
                     </Avatar>

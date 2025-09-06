@@ -334,9 +334,36 @@ const ClientOnboarding = () => {
 
 
 
-  // Calculate progress percentage based on current step
-  const getProgressPercentage = () => {
-    return Math.round((onboardingData.currentStep / steps.length) * 100);
+  const getProgressPercentage = (data: OnboardingData) => {
+    const totalFields = 17; // Total number of required/important fields
+    let completedFields = 0;
+    
+    // Company Information (4 fields)
+    if (data.companyName?.trim()) completedFields++;
+    if (data.industry?.trim()) completedFields++;
+    if (data.website?.trim()) completedFields++;
+    if (data.companyDescription?.trim()) completedFields++;
+    
+    // Contact Information (4 fields)
+    if (data.contactName?.trim()) completedFields++;
+    if (data.title?.trim()) completedFields++;
+    if (data.email?.trim() && isValidEmail(data.email)) completedFields++;
+    if (data.phone?.trim()) completedFields++;
+    
+    // Project Information (4 fields)
+    if (data.projectGoals?.trim()) completedFields++;
+    if (data.targetAudience?.trim()) completedFields++;
+    if (data.audienceTags?.length > 0) completedFields++;
+    if (data.keyFeatures?.length > 0) completedFields++;
+    
+    // Additional Information (5 fields)
+    if (data.currentWebsite?.trim()) completedFields++;
+    if (data.competitorWebsites?.some(site => site.trim())) completedFields++;
+    if (data.brandingAssets !== undefined) completedFields++;
+    if (data.contentReady !== undefined) completedFields++;
+    if (data.additionalNotes?.trim()) completedFields++;
+    
+    return Math.round((completedFields / totalFields) * 100);
   };
 
   const updateData = (field: keyof OnboardingData, value: any) => {
@@ -974,7 +1001,7 @@ const ClientOnboarding = () => {
               </p>
             </div>
             <ProgressBar 
-              percentage={getProgressPercentage()} 
+              percentage={getProgressPercentage(onboardingData)} 
               className="max-w-md mx-auto"
             />
             <p className="text-center text-sm text-muted-foreground mt-2">

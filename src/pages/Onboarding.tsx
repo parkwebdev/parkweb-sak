@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Sidebar } from '@/components/Sidebar';
-import { Plus, Link01 as Link2, Copy01 as Copy, Send01 as Send, User01 as User, File02 as FileText, Clock as Clock, Eye as Eye } from '@untitledui/icons';
+import { Plus, Link01 as Link2, Copy01 as Copy, Send01 as Send, User01 as User, File02 as FileText, Clock as Clock, Eye as Eye, Trash01 as Trash } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -17,6 +17,7 @@ import { ProgressBar } from '@/components/ProgressBar';
 import { useSidebar } from '@/hooks/use-sidebar';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog';
 
 interface ClientLink {
   id: string;
@@ -42,12 +43,15 @@ const Onboarding = () => {
   const [clientLinks, setClientLinks] = useState<ClientLink[]>([]);
   const [loading, setLoading] = useState(true);
   const [sendingEmail, setSendingEmail] = useState<string | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [selectedForDelete, setSelectedForDelete] = useState<string[]>([]);
+  const [deleteConfirmation, setDeleteConfirmation] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
   const [newClient, setNewClient] = useState({
     client_name: '',
     company_name: '',
     email: '',
-    industry: '',
-    personal_note: ''
+    industry: ''
   });
   const { toast } = useToast();
   const { user } = useAuth();
@@ -105,7 +109,6 @@ const Onboarding = () => {
           company_name: newClient.company_name,
           email: newClient.email,
           industry: newClient.industry,
-          personal_note: newClient.personal_note,
           onboarding_url: onboardingUrl,
           user_id: user.id
         });
@@ -125,8 +128,7 @@ const Onboarding = () => {
         client_name: '',
         company_name: '',
         email: '',
-        industry: '',
-        personal_note: ''
+        industry: ''
       });
       setShowCreateDialog(false);
       
@@ -178,12 +180,11 @@ const Onboarding = () => {
           type: 'onboarding',
           title: 'Your Personalized Onboarding Portal',
           message: `Hi ${client.client_name},\n\nWe're excited to work with ${client.company_name} on your new website project!\n\nWe've created a personalized onboarding portal just for you. Please click the link below to get started:\n\n${fullUrl}\n\nThis will only take 10-15 minutes to complete and will help us create the perfect website for your business.\n\nIf you have any questions, feel free to reach out to us anytime.\n\nBest regards,\nThe Team`,
-          data: {
-            client_name: client.client_name,
-            company_name: client.company_name,
-            onboarding_url: fullUrl,
-            personal_note: client.personal_note
-          }
+            data: {
+              client_name: client.client_name,
+              company_name: client.company_name,
+              onboarding_url: fullUrl
+            }
         }
       });
 
@@ -214,6 +215,63 @@ const Onboarding = () => {
     } finally {
       setSendingEmail(null);
     }
+  };
+
+  const handleDeleteSelected = async () => {
+    if (!user || selectedForDelete.length === 0) return;
+    
+    setIsDeleting(true);
+    try {
+      const { error } = await supabase
+        .from('client_onboarding_links')
+        .delete()
+        .in('id', selectedForDelete);
+
+      if (error) {
+        console.error('Error deleting client links:', error);
+        toast({
+          title: "Error",
+          description: "Failed to delete selected items. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Items deleted",
+        description: `Successfully deleted ${selectedForDelete.length} item(s).`,
+      });
+      
+      setSelectedForDelete([]);
+      setShowDeleteDialog(false);
+      setDeleteConfirmation('');
+      fetchClientLinks();
+    } catch (error) {
+      console.error('Error deleting client links:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete selected items. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const toggleSelection = (id: string) => {
+    setSelectedForDelete(prev => 
+      prev.includes(id) 
+        ? prev.filter(item => item !== id)
+        : [...prev, id]
+    );
+  };
+
+  const toggleAllSelection = () => {
+    setSelectedForDelete(
+      selectedForDelete.length === clientLinks.length 
+        ? [] 
+        : clientLinks.map(link => link.id)
+    );
   };
 
   if (loading) {
@@ -349,16 +407,6 @@ const Onboarding = () => {
                           </SelectContent>
                         </Select>
                       </div>
-                      <div className="space-y-1.5">
-                        <Label htmlFor="personalNote" className="text-xs font-medium">Personal Note (Optional)</Label>
-                        <Textarea
-                          id="personalNote"
-                          placeholder="Add a personal message for the email"
-                          className="min-h-[60px] text-sm resize-none"
-                          value={newClient.personal_note}
-                          onChange={(e) => setNewClient(prev => ({ ...prev, personal_note: e.target.value }))}
-                        />
-                      </div>
                     </div>
                     <div className="flex justify-end gap-2">
                       <Button variant="outline" size="sm" onClick={() => setShowCreateDialog(false)}>
@@ -428,7 +476,20 @@ const Onboarding = () => {
             {/* Compact Client Links */}
             <Card>
               <CardHeader className="compact-header border-b">
-                <CardTitle className="text-base">Client Onboarding Links</CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-base">Client Onboarding Links</CardTitle>
+                  {selectedForDelete.length > 0 && (
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => setShowDeleteDialog(true)}
+                      className="h-7 px-2"
+                    >
+                      <Trash className="h-3 w-3 mr-1" />
+                      Delete ({selectedForDelete.length})
+                    </Button>
+                  )}
+                </div>
                 <CardDescription className="text-xs">
                   Manage all your client onboarding links and track their progress
                 </CardDescription>
