@@ -138,8 +138,8 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
       </div>
 
       <div className="w-full overflow-x-auto">
-        <div className="border flex min-w-[1200px] bg-background border-border">
-        <div className="w-[280px] flex-shrink-0">
+        <div className="border flex min-w-[1400px] bg-background border-border">
+        <div className="w-[240px] flex-shrink-0">
           <div className="items-center flex min-h-11 w-full gap-3 bg-background px-4 py-3 border-b-border border-b border-solid">
             <button
               onClick={toggleAllSelection}
@@ -182,7 +182,7 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
           ))}
         </div>
 
-        <div className="w-[160px] flex-shrink-0">
+        <div className="w-[220px] flex-shrink-0">
           <div className="items-center flex min-h-11 w-full gap-3 text-xs text-muted-foreground font-semibold bg-background px-4 py-3 border-b-border border-b border-solid">
             <div className="items-center self-stretch flex gap-1 my-auto">
               <div className="text-muted-foreground text-xs leading-[18px] self-stretch my-auto">
@@ -200,7 +200,7 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
           ))}
         </div>
 
-        <div className="w-[100px] flex-shrink-0">
+        <div className="w-[120px] flex-shrink-0">
           <div className="items-center flex min-h-11 w-full gap-3 text-xs text-muted-foreground font-semibold bg-background px-4 py-3 border-b-border border-b border-solid">
             <div className="items-center self-stretch flex gap-1 my-auto">
               <div className="text-muted-foreground text-xs leading-[18px] self-stretch my-auto">
@@ -218,7 +218,7 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
           ))}
         </div>
 
-        <div className="w-[180px] flex-shrink-0">
+        <div className="w-[240px] flex-shrink-0">
           <div className="items-center flex min-h-11 w-full gap-3 text-xs text-muted-foreground font-semibold bg-background px-4 py-3 border-b-border border-b border-solid">
             <div className="items-center self-stretch flex gap-1 my-auto">
               <div className="text-muted-foreground text-xs leading-[18px] self-stretch my-auto">
@@ -228,14 +228,16 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
             </div>
           </div>
           {filteredData.map((row) => (
-            <div key={row.id} className="items-stretch flex min-h-[72px] w-full gap-3 px-4 py-4 border-b-border border-b border-solid">
-              <ProgressBar percentage={row.percentage} />
+            <div key={row.id} className="items-stretch flex min-h-[72px] w-full px-4 py-4 border-b-border border-b border-solid">
+              <div className="w-full">
+                <ProgressBar percentage={row.percentage} />
+              </div>
             </div>
           ))}
         </div>
 
-        <div className="w-[130px] flex-shrink-0">
-          <div className="items-center flex min-h-11 w-full gap-3 text-muted-foreground font-semibold bg-background px-3 py-3 border-b-border border-b border-solid">
+        <div className="w-[140px] flex-shrink-0">
+          <div className="items-center flex min-h-11 w-full gap-3 text-muted-foreground font-semibold bg-background px-4 py-3 border-b-border border-b border-solid">
             <div className="items-center self-stretch flex gap-1 my-auto">
               <div className="text-muted-foreground text-xs leading-[18px] self-stretch my-auto">
                 Status
@@ -244,10 +246,10 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
             </div>
           </div>
           {filteredData.map((row) => (
-            <div key={row.id} className="items-center flex min-h-[72px] w-full px-2 py-4 border-b-border border-b border-solid">
+            <div key={row.id} className="items-center flex min-h-[72px] w-full px-3 py-4 border-b-border border-b border-solid">
               <Badge 
                 variant={row.status === 'Complete' ? 'default' : row.status === 'In Review' ? 'online' : 'folder'}
-                className="w-full justify-center text-xs px-1"
+                className="w-full justify-center text-xs px-2"
               >
                 {row.status === 'Complete' && <Check size={10} className="mr-1" />}
                 {row.status === 'In Review' && <Clock size={10} className="mr-1" />}
@@ -260,10 +262,10 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
           ))}
         </div>
 
-        <div className="w-[80px] flex-shrink-0">
-          <div className="flex min-h-11 w-full gap-3 bg-background px-2 py-3 border-b-border border-b border-solid" />
+        <div className="w-[90px] flex-shrink-0">
+          <div className="flex min-h-11 w-full gap-3 bg-background px-3 py-3 border-b-border border-b border-solid" />
           {filteredData.map((row) => (
-            <div key={row.id} className="items-center flex min-h-[72px] w-full gap-1 px-1 py-4 border-b-border border-b border-solid">
+            <div key={row.id} className="items-center flex min-h-[72px] w-full gap-1 px-2 py-4 border-b-border border-b border-solid">
               <button className="justify-center items-center flex overflow-hidden w-6 h-6 p-1 rounded-md hover:bg-accent">
                 <Eye size={12} />
               </button>
