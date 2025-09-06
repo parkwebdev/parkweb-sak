@@ -48,11 +48,11 @@ export const DataTable: React.FC = () => {
   };
 
   return (
-    <div className="border shadow-sm w-full overflow-hidden bg-card rounded-xl border-border max-md:max-w-full">
-      <header className="w-full gap-5 bg-background max-md:max-w-full">
-        <div className="flex w-full gap-4 flex-wrap pt-5 pb-0 px-6 max-md:max-w-full max-md:px-5">
-          <div className="justify-center items-stretch flex min-w-60 flex-col text-lg text-foreground font-semibold leading-loose flex-1 shrink basis-[0%] gap-0.5 max-md:max-w-full">
-            <div className="items-center flex w-full gap-2 max-md:max-w-full">
+    <div className="border shadow-sm w-full overflow-hidden bg-card rounded-xl border-border">
+      <header className="w-full gap-5 bg-background">
+        <div className="flex w-full gap-4 flex-wrap pt-5 pb-0 px-6 max-md:px-5">
+          <div className="justify-center items-stretch flex min-w-60 flex-col text-lg text-foreground font-semibold leading-loose flex-1 shrink basis-[0%] gap-0.5">
+            <div className="items-center flex w-full gap-2">
               <h2 className="text-foreground text-lg font-semibold leading-7 tracking-tight self-stretch my-auto">
                 Client Onboarding Forms
               </h2>
@@ -62,36 +62,36 @@ export const DataTable: React.FC = () => {
             <Settings size={18} />
           </button>
         </div>
-        <div className="bg-border flex min-h-px w-full mt-5 max-md:max-w-full" />
+        <div className="bg-border flex min-h-px w-full mt-5" />
       </header>
 
-      <div className="w-full max-md:max-w-full">
-        <div className="justify-between items-center flex w-full gap-[40px_100px] flex-wrap px-6 py-3 rounded-xl max-md:max-w-full max-md:px-5">
-          <div className="border shadow-sm self-stretch flex overflow-hidden text-sm text-foreground font-semibold leading-none my-auto rounded-lg border-border">
+      <div className="w-full">
+        <div className="justify-between items-center flex w-full gap-4 flex-wrap px-6 py-3 rounded-xl max-md:px-5">
+          <div className="border shadow-sm self-stretch flex overflow-hidden text-sm text-foreground font-semibold leading-none my-auto rounded-lg border-border max-md:flex-wrap">
             {['View all', 'Complete', 'Incomplete', 'In Review'].map((filter, index) => (
               <button
                 key={filter}
                 onClick={() => setActiveFilter(filter.toLowerCase().replace(' ', '-'))}
-                className={`justify-center items-center flex min-h-10 gap-2 px-4 py-2 ${
+                className={`justify-center items-center flex min-h-10 gap-2 px-3 py-2 max-md:px-2 max-md:text-xs ${
                   index === 0 ? 'bg-muted' : 'bg-background hover:bg-accent/50'
                 } ${index < 3 ? 'border-r-border border-r border-solid' : ''}`}
               >
-                <div className="text-foreground text-sm leading-5 self-stretch my-auto">
+                <div className="text-foreground text-sm leading-5 self-stretch my-auto max-md:text-xs">
                   {filter}
                 </div>
               </button>
             ))}
           </div>
-          <div className="self-stretch flex min-w-60 items-center gap-3 whitespace-nowrap my-auto">
+          <div className="self-stretch flex items-center gap-3 whitespace-nowrap my-auto max-md:w-full max-md:flex-wrap">
             <SearchInput
               placeholder="Search"
               value={searchTerm}
               onChange={setSearchTerm}
-              className="max-w-[296px] min-w-60 w-[296px]"
+              className="max-w-[296px] min-w-60 w-[296px] max-md:w-full max-md:min-w-0"
             />
-            <button className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden text-sm text-foreground font-semibold leading-none bg-background px-3.5 py-2.5 rounded-lg border-border hover:bg-accent/50">
+            <button className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden text-sm text-foreground font-semibold leading-none bg-background px-3.5 py-2.5 rounded-lg border-border hover:bg-accent/50 max-md:px-2">
               <ChevronDown size={16} className="text-muted-foreground" />
-              <div className="justify-center items-center self-stretch flex my-auto px-0.5 py-0">
+              <div className="justify-center items-center self-stretch flex my-auto px-0.5 py-0 max-md:hidden">
                 <div className="text-foreground text-sm leading-5 self-stretch my-auto">
                   Filters
                 </div>
@@ -101,9 +101,10 @@ export const DataTable: React.FC = () => {
         </div>
       </div>
 
-      <div className="border flex w-full overflow-hidden flex-wrap bg-background border-border max-md:max-w-full">
-        <div className="min-w-60 flex-1 shrink basis-[0%]">
-          <div className="items-center flex min-h-11 w-full gap-3 bg-background px-6 py-3 border-b-border border-b border-solid max-md:px-5">
+      <div className="w-full overflow-x-auto">
+        <div className="border flex min-w-[800px] bg-background border-border">
+        <div className="min-w-[200px] flex-1 shrink basis-[0%]">
+          <div className="items-center flex min-h-11 w-full gap-3 bg-background px-6 py-3 border-b-border border-b border-solid max-md:px-3">
             <button
               onClick={toggleAllSelection}
               className="self-stretch flex items-center justify-center w-5 my-auto"
@@ -124,7 +125,7 @@ export const DataTable: React.FC = () => {
             </div>
           </div>
           {filteredData.map((row) => (
-            <div key={row.id} className="items-center flex min-h-[72px] w-full gap-3 px-6 py-4 border-b-border border-b border-solid max-md:px-5">
+            <div key={row.id} className="items-center flex min-h-[72px] w-full gap-3 px-6 py-4 border-b-border border-b border-solid max-md:px-3">
               <button
                 onClick={() => toggleRowSelection(row.id)}
                 className="self-stretch flex items-center justify-center w-5 my-auto"
@@ -144,8 +145,8 @@ export const DataTable: React.FC = () => {
           ))}
         </div>
 
-        <div className="text-sm text-muted-foreground font-normal whitespace-nowrap w-[140px]">
-          <div className="items-center flex min-h-11 w-full gap-3 text-xs text-muted-foreground font-semibold bg-background px-6 py-3 border-b-border border-b border-solid max-md:px-5">
+        <div className="text-sm text-muted-foreground font-normal whitespace-nowrap w-[140px] max-md:w-[120px]">
+          <div className="items-center flex min-h-11 w-full gap-3 text-xs text-muted-foreground font-semibold bg-background px-6 py-3 border-b-border border-b border-solid max-md:px-3">
             <div className="items-center self-stretch flex gap-1 my-auto">
               <div className="text-muted-foreground text-xs leading-[18px] self-stretch my-auto">
                 Business Type
@@ -154,7 +155,7 @@ export const DataTable: React.FC = () => {
             </div>
           </div>
           {filteredData.map((row) => (
-            <div key={row.id} className="items-center flex min-h-[72px] w-full leading-none px-6 py-4 border-b-border border-b border-solid max-md:px-5">
+            <div key={row.id} className="items-center flex min-h-[72px] w-full leading-none px-6 py-4 border-b-border border-b border-solid max-md:px-3">
               <div className="text-muted-foreground text-sm leading-5 self-stretch my-auto">
                 {row.businessType}
               </div>
@@ -233,8 +234,9 @@ export const DataTable: React.FC = () => {
           ))}
         </div>
       </div>
+      </div>
 
-      <footer className="justify-center items-center flex w-full gap-3 text-sm leading-none flex-wrap pt-3 pb-4 px-6 max-md:max-w-full max-md:px-5">
+      <footer className="justify-center items-center flex w-full gap-3 text-sm leading-none flex-wrap pt-3 pb-4 px-6 max-md:px-5">
         <div className="text-foreground text-sm font-medium leading-5 self-stretch my-auto">
           Page 1 of 10
         </div>
