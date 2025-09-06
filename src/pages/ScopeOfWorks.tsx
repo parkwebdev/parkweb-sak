@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Sidebar } from '@/components/Sidebar';
-import { FileText, Plus, Search, Filter } from 'lucide-react';
+import { SearchInput } from '@/components/SearchInput';
+import { FileText, Plus, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 
 const scopeOfWorks = [
@@ -43,6 +43,15 @@ const scopeOfWorks = [
 ];
 
 const ScopeOfWorks = () => {
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const searchResults = scopeOfWorks.map(sow => ({
+    id: sow.id,
+    title: sow.title,
+    description: `${sow.client} • ${sow.industry} • ${sow.status}`,
+    category: 'Scope of Works'
+  }));
+
   return (
     <div className="flex h-screen bg-muted/30">
       <div className="fixed left-0 top-0 h-full z-10">
@@ -70,11 +79,12 @@ const ScopeOfWorks = () => {
 
             {/* Search and Filter Bar */}
             <div className="mb-6 flex items-center gap-4">
-              <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                <Input
+              <div className="flex-1 max-w-md">
+                <SearchInput
                   placeholder="Search scope of works..."
-                  className="pl-10"
+                  value={searchTerm}
+                  onChange={setSearchTerm}
+                  searchResults={searchResults}
                 />
               </div>
               <Button variant="outline" className="flex items-center gap-2">

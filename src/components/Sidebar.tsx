@@ -41,6 +41,14 @@ export const Sidebar: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const location = useLocation();
 
+  const searchResults = navigationItems.map(item => ({
+    id: item.id,
+    title: item.label,
+    description: `Navigate to ${item.label}`,
+    category: 'Navigation',
+    action: () => window.location.href = item.path
+  }));
+
   return (
     <aside className="items-stretch flex w-[296px] h-screen bg-background p-1">
       <div className="border shadow-sm w-full flex-1 bg-card rounded-xl border-border">
@@ -55,6 +63,7 @@ export const Sidebar: React.FC = () => {
                 placeholder="Search"
                 value={searchTerm}
                 onChange={setSearchTerm}
+                searchResults={searchResults}
               />
             </div>
           </header>

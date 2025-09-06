@@ -67,6 +67,13 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
     row.businessType.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const searchResults = filteredData.map(item => ({
+    id: item.id,
+    title: item.companyName,
+    description: `${item.businessType} • ${item.status}`,
+    category: 'Companies'
+  }));
+
   const toggleRowSelection = (id: string) => {
     setSelectedRows(prev =>
       prev.includes(id)
@@ -123,6 +130,7 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
               placeholder="Search"
               value={searchTerm}
               onChange={setSearchTerm}
+              searchResults={searchResults}
               className="max-w-[296px] min-w-60 w-[296px] max-md:w-full max-md:min-w-0"
             />
             <button className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden text-sm text-foreground font-semibold leading-none bg-background px-3.5 py-2.5 rounded-lg border-border hover:bg-accent/50 max-md:px-2">
