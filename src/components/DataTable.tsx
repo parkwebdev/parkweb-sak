@@ -6,7 +6,7 @@ import { ProgressBar } from './ProgressBar';
 
 interface TableRow {
   id: string;
-  clientName: string;
+  companyName: string;
   businessType: string;
   submittedDate: string;
   status: 'Complete' | 'Incomplete' | 'In Review';
@@ -14,22 +14,55 @@ interface TableRow {
 }
 
 const tableData: TableRow[] = [
-  { id: '1', clientName: 'Mountain View RV Park', businessType: 'RV Park', submittedDate: '2024-01-15', status: 'Complete', percentage: 100 },
-  { id: '2', clientName: 'Sunset Manufacturing', businessType: 'Manufactured Home Community', submittedDate: '2024-01-12', status: 'Incomplete', percentage: 45 },
-  { id: '3', clientName: 'Elite Capital Partners', businessType: 'Capital & Syndication', submittedDate: '2024-01-10', status: 'In Review', percentage: 85 },
-  { id: '4', clientName: 'Local Plumbing Pro', businessType: 'Local Business', submittedDate: '2024-01-08', status: 'Complete', percentage: 100 },
-  { id: '5', clientName: 'National Tech Solutions', businessType: 'National Business', submittedDate: '2024-01-05', status: 'Incomplete', percentage: 30 },
-  { id: '6', clientName: 'Riverside Communities', businessType: 'Manufactured Home Community', submittedDate: '2024-01-03', status: 'In Review', percentage: 70 },
-  { id: '7', clientName: 'Premier Investment Group', businessType: 'Capital & Syndication', submittedDate: '2024-01-01', status: 'Complete', percentage: 100 },
+  { id: '1', companyName: 'Mountain View RV Park', businessType: 'RV Park', submittedDate: '2024-01-15', status: 'Complete', percentage: 100 },
+  { id: '2', companyName: 'Sunset Manufacturing', businessType: 'Manufactured Home Community', submittedDate: '2024-01-12', status: 'Incomplete', percentage: 45 },
+  { id: '3', companyName: 'Elite Capital Partners', businessType: 'Capital & Syndication', submittedDate: '2024-01-10', status: 'In Review', percentage: 85 },
+  { id: '4', companyName: 'Local Plumbing Pro', businessType: 'Local Business', submittedDate: '2024-01-08', status: 'Complete', percentage: 100 },
+  { id: '5', companyName: 'National Tech Solutions', businessType: 'National Business', submittedDate: '2024-01-05', status: 'Incomplete', percentage: 30 },
+  { id: '6', companyName: 'Riverside Communities', businessType: 'Manufactured Home Community', submittedDate: '2024-01-03', status: 'In Review', percentage: 70 },
+  { id: '7', companyName: 'Premier Investment Group', businessType: 'Capital & Syndication', submittedDate: '2024-01-01', status: 'Complete', percentage: 100 },
 ];
 
-export const DataTable: React.FC = () => {
+interface DataTableProps {
+  activeTab?: string;
+}
+
+export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
   const [activeFilter, setActiveFilter] = useState('view-all');
+  const [currentActiveTab, setCurrentActiveTab] = useState(activeTab);
 
-  const filteredData = tableData.filter(row =>
-    row.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  // Update internal state when prop changes
+  React.useEffect(() => {
+    setCurrentActiveTab(activeTab);
+  }, [activeTab]);
+
+  const getFilteredDataByTab = () => {
+    let data = tableData;
+    
+    if (currentActiveTab === 'onboarding') {
+      data = data.filter(row => row.status === 'Incomplete' || row.status === 'In Review');
+    } else if (currentActiveTab === 'scope-of-work') {
+      data = data.filter(row => row.status === 'In Review');
+    } else if (currentActiveTab === 'completed') {
+      data = data.filter(row => row.status === 'Complete');
+    }
+
+    // Apply additional filters
+    if (activeFilter !== 'view-all') {
+      const filterStatus = activeFilter.replace('-', ' ').split(' ').map(word => 
+        word.charAt(0).toUpperCase() + word.slice(1)
+      ).join(' ') as 'Complete' | 'Incomplete' | 'In Review';
+      
+      data = data.filter(row => row.status === filterStatus);
+    }
+
+    return data;
+  };
+
+  const filteredData = getFilteredDataByTab().filter(row =>
+    row.companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     row.businessType.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -54,7 +87,9 @@ export const DataTable: React.FC = () => {
           <div className="justify-center items-stretch flex min-w-60 flex-col text-lg text-foreground font-semibold leading-loose flex-1 shrink basis-[0%] gap-0.5">
             <div className="items-center flex w-full gap-2">
               <h2 className="text-foreground text-lg font-semibold leading-7 tracking-tight self-stretch my-auto">
-                Client Onboarding Forms
+                {currentActiveTab === 'onboarding' ? 'Onboarding Forms' : 
+                 currentActiveTab === 'scope-of-work' ? 'Scope of Work Documents' : 
+                 'Completed Projects'}
               </h2>
             </div>
           </div>
@@ -119,7 +154,7 @@ export const DataTable: React.FC = () => {
             </button>
             <div className="items-center self-stretch flex gap-1 text-xs text-muted-foreground font-semibold whitespace-nowrap my-auto">
               <div className="text-muted-foreground text-xs leading-[18px] self-stretch my-auto">
-                Client Name
+                Company Name
               </div>
               <ArrowUpDown size={12} />
             </div>
@@ -139,7 +174,7 @@ export const DataTable: React.FC = () => {
                 </div>
               </button>
               <div className="text-foreground text-sm font-medium leading-5 self-stretch my-auto">
-                {row.clientName}
+                {row.companyName}
               </div>
             </div>
           ))}

@@ -15,12 +15,6 @@ interface NavigationItem {
 
 const navigationItems: NavigationItem[] = [
   {
-    id: 'home',
-    label: 'Home',
-    icon: Home,
-    path: '/'
-  },
-  {
     id: 'dashboard',
     label: 'Dashboard',
     icon: BarChart3,

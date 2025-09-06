@@ -8,15 +8,23 @@ const tabs = [
   { id: 'completed', label: 'Completed' }
 ];
 
-export const MainContent: React.FC = () => {
+interface MainContentProps {
+  activeTab?: string;
+  onTabChange?: (tabId: string) => void;
+}
+
+export const MainContent: React.FC<MainContentProps> = ({ 
+  activeTab = 'onboarding', 
+  onTabChange 
+}) => {
   return (
-    <main className="flex-1 bg-muted/20 pt-8 pb-12 max-md:max-w-full">
-      <header className="w-full font-semibold max-md:max-w-full">
-        <div className="items-stretch flex w-full flex-col gap-5 px-8 py-0 max-md:max-w-full max-md:px-5">
-          <div className="w-full gap-5 max-md:max-w-full">
-            <div className="content-start flex-wrap flex w-full gap-[20px_16px] max-md:max-w-full">
-              <div className="min-w-80 text-2xl text-foreground leading-none flex-1 shrink basis-[0%] gap-1 max-md:max-w-full">
-                <h1 className="text-foreground text-2xl font-semibold leading-8 tracking-tight max-md:max-w-full">
+    <main className="flex-1 bg-muted/20 pt-8 pb-12">
+      <header className="w-full font-semibold">
+        <div className="items-stretch flex w-full flex-col gap-5 px-8 py-0 max-md:px-5">
+          <div className="w-full gap-5">
+            <div className="content-start flex-wrap flex w-full gap-[20px_16px]">
+              <div className="min-w-80 text-2xl text-foreground leading-none flex-1 shrink basis-[0%] gap-1">
+                <h1 className="text-foreground text-2xl font-semibold leading-8 tracking-tight">
                   Dashboard
                 </h1>
               </div>
@@ -33,15 +41,15 @@ export const MainContent: React.FC = () => {
           </div>
           <TabNavigation
             tabs={tabs}
-            defaultActiveTab="onboarding"
-            onTabChange={(tabId) => console.log('Tab changed:', tabId)}
+            defaultActiveTab={activeTab}
+            onTabChange={onTabChange}
           />
         </div>
       </header>
 
-      <section className="w-full mt-8 max-md:max-w-full">
-        <div className="w-full px-8 py-0 max-md:max-w-full max-md:px-5">
-          <DataTable />
+      <section className="w-full mt-8">
+        <div className="w-full px-8 py-0 max-md:px-5">
+          <DataTable activeTab={activeTab} />
         </div>
       </section>
     </main>

@@ -75,9 +75,9 @@ const Onboarding = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="clientName">Client Name *</Label>
+                <Label htmlFor="companyName">Company Name *</Label>
                 <Input
-                  id="clientName"
+                  id="companyName"
                   placeholder="e.g., Snowy Owl Mobile Home Park"
                   value={projectData.clientName}
                   onChange={(e) => updateProjectData('clientName', e.target.value)}
@@ -382,7 +382,7 @@ const Onboarding = () => {
               <div className="bg-card border rounded-lg p-4">
                 <h4 className="font-semibold mb-2">Project Summary:</h4>
                 <div className="space-y-1 text-sm">
-                  <p><strong>Client:</strong> {projectData.clientName || 'Not specified'}</p>
+                  <p><strong>Company:</strong> {projectData.clientName || 'Not specified'}</p>
                   <p><strong>Project Type:</strong> {projectData.projectType}</p>
                   <p><strong>Industry:</strong> {industryOptions.find(opt => opt.value === projectData.industry)?.label || 'Not selected'}</p>
                   <p><strong>Goals:</strong> {projectData.goals || 'Not specified'}</p>
