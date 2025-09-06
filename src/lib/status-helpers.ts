@@ -56,10 +56,12 @@ export const formatDate = (dateString: string, options?: Intl.DateTimeFormatOpti
 export const getBadgeVariant = (status: string): 'default' | 'online' | 'folder' | 'complete' | 'incomplete' | 'in-review' => {
   switch (status) {
     case 'Complete':
+    case 'Approved':
       return 'complete';
     case 'In Review':
       return 'in-review';
     case 'Incomplete':
+    case 'Draft':
       return 'incomplete';
     default:
       return 'default';
