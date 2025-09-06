@@ -269,8 +269,8 @@ const ClientOnboarding = () => {
 
   if (isSubmitted) {
     return (
-      <div className="min-h-screen bg-muted/30 flex items-center justify-center">
-        <div className="absolute top-6 right-6">
+      <div className="min-h-screen bg-muted/30 flex items-center justify-center relative">
+        <div className="fixed bottom-6 left-6">
           <ThemeToggle />
         </div>
         <Card className="max-w-2xl mx-auto">
@@ -688,17 +688,12 @@ const ClientOnboarding = () => {
 
   return (
     <>
-      <div className="min-h-screen bg-muted/30">
+      <div className="min-h-screen bg-muted/30 relative">
         <div className="max-w-3xl mx-auto px-6 py-12">
-          {/* Header with theme toggle */}
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-bold text-foreground">Website Project Onboarding</h1>
-            <ThemeToggle />
-          </div>
-          
           {/* Progress Bar */}
           <div className="mb-8">
             <div className="text-center mb-4">
+              <h1 className="text-2xl font-bold text-foreground mb-2">Website Project Onboarding</h1>
               <h2 className="text-xl font-semibold text-foreground">
                 {steps[onboardingData.currentStep - 1]?.title}
               </h2>
@@ -738,6 +733,11 @@ const ClientOnboarding = () => {
               {onboardingData.currentStep === steps.length ? 'Complete' : 'Next Step'}
             </Button>
           </div>
+        </div>
+        
+        {/* Theme toggle in bottom left corner */}
+        <div className="fixed bottom-6 left-6">
+          <ThemeToggle />
         </div>
       </div>
 
