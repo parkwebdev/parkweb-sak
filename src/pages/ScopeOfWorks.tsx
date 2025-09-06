@@ -539,11 +539,12 @@ const ScopeOfWorks = () => {
                             </div>
                           </button>
                         );
-                      })}
-                     </div>
-                     
-                     {/* Search and controls */}
-                     <div className="flex items-center gap-2.5 w-full lg:w-auto">
+                       })}
+                      </div>
+                    </div>
+                    
+                    {/* Search and controls */}
+                    <div className="flex items-center gap-2.5 w-full lg:w-auto">
                        <SearchInput
                          placeholder="Search"
                          value={searchTerm}
