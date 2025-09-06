@@ -117,9 +117,9 @@ export const TeamSettings: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-xl font-semibold text-foreground mb-1">Team Management</h1>
+          <h1 className="text-lg font-semibold text-foreground mb-1">Team Management</h1>
           <p className="text-sm text-muted-foreground">
             Manage your team members, roles, and permissions
           </p>
@@ -140,7 +140,7 @@ export const TeamSettings: React.FC = () => {
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
-              <div>
+              <div className="space-y-1.5">
                 <Label htmlFor="email">Email Address <span className="text-destructive">*</span></Label>
                 <Input
                   id="email"
@@ -150,13 +150,13 @@ export const TeamSettings: React.FC = () => {
                   onChange={(e) => setInviteEmail(e.target.value)}
                 />
               </div>
-              <div>
+              <div className="space-y-1.5">
                 <Label htmlFor="role">Role <span className="text-destructive">*</span></Label>
                 <Select value={inviteRole} onValueChange={(value: 'admin' | 'manager' | 'member') => setInviteRole(value)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select a role" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="z-50 bg-popover">
                     <SelectItem value="member">Member</SelectItem>
                     <SelectItem value="manager">Manager</SelectItem>
                     <SelectItem value="admin">Admin</SelectItem>
@@ -216,7 +216,7 @@ export const TeamSettings: React.FC = () => {
                     <SelectTrigger className="w-32">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="z-50 bg-popover">
                       <SelectItem value="member">Member</SelectItem>
                       <SelectItem value="manager">Manager</SelectItem>
                       <SelectItem value="admin">Admin</SelectItem>

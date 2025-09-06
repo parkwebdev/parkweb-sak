@@ -62,8 +62,8 @@ export const GeneralSettings: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="mb-8">
-        <h1 className="text-xl font-semibold text-foreground mb-1">General Settings</h1>
+      <div className="mb-6">
+        <h1 className="text-lg font-semibold text-foreground mb-1">General Settings</h1>
         <p className="text-sm text-muted-foreground">
           Manage your application preferences and account settings
         </p>
@@ -91,7 +91,7 @@ export const GeneralSettings: React.FC = () => {
               <SelectTrigger className="w-32">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="z-50 bg-popover">
                 <SelectItem value="light">Light</SelectItem>
                 <SelectItem value="dark">Dark</SelectItem>
                 <SelectItem value="system">System</SelectItem>
@@ -159,7 +159,7 @@ export const GeneralSettings: React.FC = () => {
                 <SelectTrigger>
                   <SelectValue placeholder="Select language" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="z-50 bg-popover">
                   <SelectItem value="en">English</SelectItem>
                   <SelectItem value="es">Spanish</SelectItem>
                   <SelectItem value="fr">French</SelectItem>
@@ -173,7 +173,7 @@ export const GeneralSettings: React.FC = () => {
                 <SelectTrigger>
                   <SelectValue placeholder="Select timezone" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="z-50 bg-popover">
                   <SelectItem value="America/Los_Angeles">Pacific Time</SelectItem>
                   <SelectItem value="America/Denver">Mountain Time</SelectItem>
                   <SelectItem value="America/Chicago">Central Time</SelectItem>
@@ -187,7 +187,7 @@ export const GeneralSettings: React.FC = () => {
                 <SelectTrigger>
                   <SelectValue placeholder="Select date format" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="z-50 bg-popover">
                   <SelectItem value="MM/DD/YYYY">MM/DD/YYYY</SelectItem>
                   <SelectItem value="DD/MM/YYYY">DD/MM/YYYY</SelectItem>
                   <SelectItem value="YYYY-MM-DD">YYYY-MM-DD</SelectItem>

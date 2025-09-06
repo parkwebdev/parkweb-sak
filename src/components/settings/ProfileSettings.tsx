@@ -12,10 +12,7 @@ export const ProfileSettings: React.FC = () => {
   const [profile, setProfile] = useState({
     name: 'Olivia Rhye',
     email: 'olivia@sodium.app',
-    bio: 'Product Manager at Sodium Agency',
-    phone: '+1 (555) 123-4567',
-    location: 'San Francisco, CA',
-    website: 'https://oliviarhye.com',
+    phone: '(555) 123-4567',
   });
 
   const { toast } = useToast();
@@ -34,10 +31,31 @@ export const ProfileSettings: React.FC = () => {
     }));
   };
 
+  const formatPhoneNumber = (value: string) => {
+    // Remove all non-digits
+    const digits = value.replace(/\D/g, '');
+    
+    // Format as (XXX) XXX-XXXX
+    if (digits.length >= 10) {
+      return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
+    } else if (digits.length >= 6) {
+      return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+    } else if (digits.length >= 3) {
+      return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+    } else {
+      return digits;
+    }
+  };
+
+  const handlePhoneChange = (value: string) => {
+    const formatted = formatPhoneNumber(value);
+    handleInputChange('phone', formatted);
+  };
+
   return (
     <div className="space-y-6">
-      <div className="mb-8">
-        <h1 className="text-xl font-semibold text-foreground mb-1">Profile Settings</h1>
+      <div className="mb-6">
+        <h1 className="text-lg font-semibold text-foreground mb-1">Profile Settings</h1>
         <p className="text-sm text-muted-foreground">
           Manage your personal information and preferences
         </p>
@@ -70,7 +88,7 @@ export const ProfileSettings: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
+            <div className="space-y-1.5">
               <Label htmlFor="name">Full Name</Label>
               <Input
                 id="name"
@@ -78,7 +96,7 @@ export const ProfileSettings: React.FC = () => {
                 onChange={(e) => handleInputChange('name', e.target.value)}
               />
             </div>
-            <div>
+            <div className="space-y-1.5">
               <Label htmlFor="email">Email Address</Label>
               <Input
                 id="email"
@@ -87,40 +105,14 @@ export const ProfileSettings: React.FC = () => {
                 onChange={(e) => handleInputChange('email', e.target.value)}
               />
             </div>
-            <div>
+            <div className="space-y-1.5">
               <Label htmlFor="phone">Phone Number</Label>
               <Input
                 id="phone"
                 type="tel"
+                placeholder="(555) 123-4567"
                 value={profile.phone}
-                onChange={(e) => handleInputChange('phone', e.target.value)}
-              />
-            </div>
-            <div>
-              <Label htmlFor="location">Location</Label>
-              <Input
-                id="location"
-                value={profile.location}
-                onChange={(e) => handleInputChange('location', e.target.value)}
-              />
-            </div>
-            <div className="md:col-span-2">
-              <Label htmlFor="website">Website</Label>
-              <Input
-                id="website"
-                type="url"
-                value={profile.website}
-                onChange={(e) => handleInputChange('website', e.target.value)}
-              />
-            </div>
-            <div className="md:col-span-2">
-              <Label htmlFor="bio">Bio</Label>
-              <Textarea
-                id="bio"
-                placeholder="Tell us about yourself..."
-                value={profile.bio}
-                onChange={(e) => handleInputChange('bio', e.target.value)}
-                rows={4}
+                onChange={(e) => handlePhoneChange(e.target.value)}
               />
             </div>
           </div>
@@ -141,15 +133,15 @@ export const ProfileSettings: React.FC = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div>
+          <div className="space-y-1.5">
             <Label htmlFor="current-password">Current Password</Label>
             <Input id="current-password" type="password" />
           </div>
-          <div>
+          <div className="space-y-1.5">
             <Label htmlFor="new-password">New Password</Label>
             <Input id="new-password" type="password" />
           </div>
-          <div>
+          <div className="space-y-1.5">
             <Label htmlFor="confirm-password">Confirm New Password</Label>
             <Input id="confirm-password" type="password" />
           </div>
