@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Sidebar } from '@/components/Sidebar';
-import { Plus, Link2, Copy, Send, User, FileText, Clock } from 'lucide-react';
+import { Plus, Link2, Copy, Send, User, FileText, Clock, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -287,36 +287,48 @@ const Onboarding = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="p-0">
-                <div className="divide-y">
-                  {clientLinks.map((client) => (
-                    <div key={client.id} className="p-4 hover:bg-muted/50 transition-colors">
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-2">
-                            <div className="min-w-0 flex-1">
-                              <h3 className="font-medium text-sm truncate">{client.companyName}</h3>
-                              <p className="text-xs text-muted-foreground truncate">
-                                {client.clientName} • {client.email}
-                              </p>
-                            </div>
-                             <div className="flex items-center gap-1.5 flex-shrink-0">
-                               <Badge className={`${getStatusColor(client.status)} border text-xs px-2 py-1 w-auto`}>
+                 <div className="divide-y divide-border">
+                   {clientLinks.map((client) => (
+                     <div key={client.id} className="p-6 hover:bg-muted/50 transition-colors">
+                       <div className="flex items-start justify-between gap-4">
+                         <div className="flex-1 min-w-0">
+                           <div className="flex items-start gap-3 mb-3">
+                             <div className="min-w-0 flex-1">
+                               <h3 className="font-medium text-base truncate mb-1">{client.companyName}</h3>
+                               <p className="text-sm text-muted-foreground truncate">
+                                 <a 
+                                   href={`mailto:${client.email}`}
+                                   className="hover:underline"
+                                 >
+                                   {client.clientName}
+                                 </a>
+                                 <span className="mx-2">•</span>
+                                 <a 
+                                   href={`mailto:${client.email}`}
+                                   className="hover:underline"
+                                 >
+                                   {client.email}
+                                 </a>
+                               </p>
+                             </div>
+                             <div className="flex items-center gap-2 flex-shrink-0">
+                               <Badge className={`${getStatusColor(client.status)} border text-xs px-2.5 py-1 w-auto`}>
                                  {client.status}
                                </Badge>
                                {client.sowStatus && (
-                                 <Badge variant="outline" className="text-xs px-2 py-1 w-auto">
+                                 <Badge variant="outline" className="text-xs px-2.5 py-1 w-auto border">
                                    SOW: {client.sowStatus}
                                  </Badge>
                                )}
                              </div>
-                          </div>
-                          <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                            <span>Industry: {client.industry}</span>
-                            <span>Sent: {formatDate(client.dateSent)}</span>
-                            <span>Last Activity: {formatDate(client.lastActivity)}</span>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-1.5 ml-4">
+                           </div>
+                           <div className="flex items-center gap-6 text-sm text-muted-foreground">
+                             <span>Industry: {client.industry}</span>
+                             <span>Sent: {formatDate(client.dateSent)}</span>
+                             <span>Last Activity: {formatDate(client.lastActivity)}</span>
+                           </div>
+                         </div>
+                         <div className="flex items-center gap-2 flex-shrink-0">
                           <Button
                             variant="outline"
                             size="sm"
@@ -334,8 +346,8 @@ const Onboarding = () => {
                             <Send className="h-3 w-3" />
                           </Button>
                           {client.sowStatus && (
-                            <Button size="sm" className="h-7 px-2">
-                              View SOW
+                            <Button variant="outline" size="sm" className="h-7 px-2">
+                              <Eye className="h-3 w-3" />
                             </Button>
                           )}
                         </div>

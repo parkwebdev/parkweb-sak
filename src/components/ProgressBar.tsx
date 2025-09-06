@@ -11,13 +11,13 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
 }) => {
   const getProgressColor = (percent: number) => {
     if (percent >= 75) {
-      return 'bg-gradient-to-r from-green-400 to-green-600';
+      return 'bg-green-500 dark:bg-gradient-to-r dark:from-green-400 dark:to-green-600';
     } else if (percent >= 50) {
-      return 'bg-gradient-to-r from-blue-400 to-blue-600';
+      return 'bg-blue-500 dark:bg-gradient-to-r dark:from-blue-400 dark:to-blue-600';
     } else if (percent >= 25) {
-      return 'bg-gradient-to-r from-yellow-400 to-yellow-600';
+      return 'bg-yellow-500 dark:bg-gradient-to-r dark:from-yellow-400 dark:to-yellow-600';
     } else {
-      return 'bg-gradient-to-r from-red-400 to-red-600';
+      return 'bg-red-500 dark:bg-gradient-to-r dark:from-red-400 dark:to-red-600';
     }
   };
 
