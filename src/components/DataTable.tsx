@@ -1,22 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Settings01 as Settings, 
+  Settings, 
   ChevronDown, 
-  ArrowDown as ArrowUpDown, 
+  ArrowUpDown, 
   Eye, 
-  Send01 as Send, 
+  Send, 
   Check, 
-  User01 as User, 
+  User, 
   Clock, 
-  DotsHorizontal as MoreHorizontal, 
-  Download01 as Download, 
+  MoreHorizontal, 
+  Download, 
   Eye as EyeIcon, 
-  Columns01 as Columns, 
+  Columns, 
   Calendar, 
-  Building07 as Building2, 
-  FilterLines as Filter, 
-  Dotpoints01 as GripVertical 
-} from '@untitledui/icons';
+  Building2, 
+  Filter, 
+  GripVertical 
+} from 'lucide-react';
 import { SearchInput } from './SearchInput';
 import { Badge } from './Badge';
 import { ProgressBar } from './ProgressBar';
