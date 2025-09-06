@@ -202,7 +202,17 @@ const ScopeOfWorks = () => {
     dateFrom: '',
     dateTo: '',
     industry: '',
+    projectType: '',
   });
+  const [columnOrder, setColumnOrder] = useState([
+    'client',
+    'projectType', 
+    'industry',
+    'status',
+    'pages',
+    'integrations',
+    'dateModified'
+  ]);
   const { toast } = useToast();
 
   const handleCopyToClipboard = (text: string) => {
@@ -305,6 +315,11 @@ const ScopeOfWorks = () => {
         item.industry.toLowerCase().includes(advancedFilters.industry.toLowerCase())
       );
     }
+    if (advancedFilters.projectType) {
+      filtered = filtered.filter(item => 
+        item.projectType.toLowerCase().includes(advancedFilters.projectType.toLowerCase())
+      );
+    }
 
     return filtered;
   };
@@ -366,7 +381,15 @@ const ScopeOfWorks = () => {
       dateFrom: '',
       dateTo: '',
       industry: '',
+      projectType: '',
     });
+  };
+
+  const moveColumn = (fromIndex: number, toIndex: number) => {
+    const newOrder = [...columnOrder];
+    const [movedColumn] = newOrder.splice(fromIndex, 1);
+    newOrder.splice(toIndex, 0, movedColumn);
+    setColumnOrder(newOrder);
   };
 
   return (
@@ -473,6 +496,16 @@ const ScopeOfWorks = () => {
                               />
                             </div>
                             
+                            <div>
+                              <label className="text-sm font-medium mb-2 block">Project Type</label>
+                              <Input
+                                placeholder="Filter by project type..."
+                                value={advancedFilters.projectType}
+                                onChange={(e) => setAdvancedFilters(prev => ({...prev, projectType: e.target.value}))}
+                                className="text-xs"
+                              />
+                            </div>
+                            
                             <div className="flex gap-2 pt-2">
                               <Button size="sm" variant="outline" onClick={resetAdvancedFilters} className="text-xs">
                                 Clear All
@@ -495,6 +528,31 @@ const ScopeOfWorks = () => {
                             <Download className="mr-2 h-4 w-4" />
                             Export to CSV
                           </DropdownMenuItem>
+                          
+                          <DropdownMenuSeparator />
+                          <DropdownMenuLabel>Column Order</DropdownMenuLabel>
+                          
+                          {columnOrder.map((column, index) => (
+                            <div key={column} className="flex items-center justify-between px-2 py-1">
+                              <span className="text-sm capitalize">{column.replace(/([A-Z])/g, ' $1').trim()}</span>
+                              <div className="flex gap-1">
+                                <button
+                                  onClick={() => moveColumn(index, Math.max(0, index - 1))}
+                                  disabled={index === 0}
+                                  className="p-1 hover:bg-accent rounded disabled:opacity-50"
+                                >
+                                  ↑
+                                </button>
+                                <button
+                                  onClick={() => moveColumn(index, Math.min(columnOrder.length - 1, index + 1))}
+                                  disabled={index === columnOrder.length - 1}
+                                  className="p-1 hover:bg-accent rounded disabled:opacity-50"
+                                >
+                                  ↓
+                                </button>
+                              </div>
+                            </div>
+                          ))}
                           
                           <DropdownMenuSeparator />
                           <DropdownMenuLabel>Show Columns</DropdownMenuLabel>
@@ -571,62 +629,77 @@ const ScopeOfWorks = () => {
                             <ArrowUpDown size={12} />
                           </div>
                         </TableHead>
-                        {showColumns.client && (
-                          <TableHead className="min-w-0">
-                            <div className="flex items-center gap-1">
-                              <span>Client</span>
-                              <ArrowUpDown size={12} />
-                            </div>
-                          </TableHead>
-                        )}
-                        {showColumns.projectType && (
-                          <TableHead className="min-w-0">
-                            <div className="flex items-center gap-1">
-                              <span>Project Type</span>
-                              <ArrowUpDown size={12} />
-                            </div>
-                          </TableHead>
-                        )}
-                        {showColumns.industry && (
-                          <TableHead className="min-w-0">
-                            <div className="flex items-center gap-1">
-                              <span>Industry</span>
-                              <ArrowUpDown size={12} />
-                            </div>
-                          </TableHead>
-                        )}
-                        {showColumns.status && (
-                          <TableHead className="min-w-0">
-                            <div className="flex items-center gap-1">
-                              <span>Status</span>
-                              <ArrowUpDown size={12} />
-                            </div>
-                          </TableHead>
-                        )}
-                        {showColumns.pages && (
-                          <TableHead className="min-w-0">
-                            <div className="flex items-center gap-1">
-                              <span>Pages</span>
-                              <ArrowUpDown size={12} />
-                            </div>
-                          </TableHead>
-                        )}
-                        {showColumns.integrations && (
-                          <TableHead className="min-w-0">
-                            <div className="flex items-center gap-1">
-                              <span>Integrations</span>
-                              <ArrowUpDown size={12} />
-                            </div>
-                          </TableHead>
-                        )}
-                        {showColumns.dateModified && (
-                          <TableHead className="min-w-0">
-                            <div className="flex items-center gap-1">
-                              <span>Date Modified</span>
-                              <ArrowUpDown size={12} />
-                            </div>
-                          </TableHead>
-                        )}
+                        {columnOrder.map(column => {
+                          if (!showColumns[column as keyof typeof showColumns]) return null;
+                          
+                          switch(column) {
+                            case 'client':
+                              return (
+                                <TableHead key="client" className="min-w-0">
+                                  <div className="flex items-center gap-1">
+                                    <span>Client</span>
+                                    <ArrowUpDown size={12} />
+                                  </div>
+                                </TableHead>
+                              );
+                            case 'projectType':
+                              return (
+                                <TableHead key="projectType" className="min-w-0">
+                                  <div className="flex items-center gap-1">
+                                    <span>Project Type</span>
+                                    <ArrowUpDown size={12} />
+                                  </div>
+                                </TableHead>
+                              );
+                            case 'industry':
+                              return (
+                                <TableHead key="industry" className="min-w-0">
+                                  <div className="flex items-center gap-1">
+                                    <span>Industry</span>
+                                    <ArrowUpDown size={12} />
+                                  </div>
+                                </TableHead>
+                              );
+                            case 'status':
+                              return (
+                                <TableHead key="status" className="min-w-0">
+                                  <div className="flex items-center gap-1">
+                                    <span>Status</span>
+                                    <ArrowUpDown size={12} />
+                                  </div>
+                                </TableHead>
+                              );
+                            case 'pages':
+                              return (
+                                <TableHead key="pages" className="min-w-0">
+                                  <div className="flex items-center gap-1">
+                                    <span>Pages</span>
+                                    <ArrowUpDown size={12} />
+                                  </div>
+                                </TableHead>
+                              );
+                            case 'integrations':
+                              return (
+                                <TableHead key="integrations" className="min-w-0">
+                                  <div className="flex items-center gap-1">
+                                    <span>Integrations</span>
+                                    <ArrowUpDown size={12} />
+                                  </div>
+                                </TableHead>
+                              );
+                            case 'dateModified':
+                              return (
+                                <TableHead key="dateModified" className="min-w-0">
+                                  <div className="flex items-center gap-1">
+                                    <span>Date Modified</span>
+                                    <ArrowUpDown size={12} />
+                                  </div>
+                                </TableHead>
+                              );
+                            default:
+                              return null;
+                          }
+                        })}
                         {showColumns.actions && (
                           <TableHead className="w-24">Actions</TableHead>
                         )}
@@ -662,67 +735,82 @@ const ScopeOfWorks = () => {
                               </div>
                             </div>
                           </TableCell>
-                          {showColumns.client && (
-                            <TableCell className="text-muted-foreground whitespace-nowrap">
-                              {sow.client}
-                            </TableCell>
-                          )}
-                          {showColumns.projectType && (
-                            <TableCell className="text-muted-foreground whitespace-nowrap">
-                              {sow.projectType}
-                            </TableCell>
-                          )}
-                          {showColumns.industry && (
-                            <TableCell className="text-muted-foreground whitespace-nowrap">
-                              {sow.industry}
-                            </TableCell>
-                          )}
-                          {showColumns.status && (
-                            <TableCell>
-                              <Badge variant={getBadgeVariant(sow.status)}>
-                                {sow.status}
-                              </Badge>
-                            </TableCell>
-                          )}
-                          {showColumns.pages && (
-                            <TableCell className="text-muted-foreground whitespace-nowrap">
-                              {sow.pages}
-                            </TableCell>
-                          )}
-                          {showColumns.integrations && (
-                            <TableCell>
-                              <div className="flex items-center gap-1 whitespace-nowrap">
-                                {sow.integrations.length > 0 && (
-                                  <Badge variant="outline" className="text-xs">
-                                    {sow.integrations[0]}
-                                  </Badge>
-                                )}
-                                {sow.integrations.length > 1 && (
-                                  <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                      <Badge variant="outline" className="text-xs cursor-pointer hover:bg-accent">
-                                        +{sow.integrations.length - 1}
-                                      </Badge>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="start" className="w-48 z-50">
-                                      <DropdownMenuLabel>All Integrations</DropdownMenuLabel>
-                                      <DropdownMenuSeparator />
-                                      {sow.integrations.map((integration, index) => (
-                                        <DropdownMenuItem key={integration} className="text-xs">
-                                          {integration}
-                                        </DropdownMenuItem>
-                                      ))}
-                                    </DropdownMenuContent>
-                                  </DropdownMenu>
-                                )}
-                              </div>
-                            </TableCell>
-                          )}
-                          {showColumns.dateModified && (
-                            <TableCell className="text-muted-foreground whitespace-nowrap">
-                              {formatDate(sow.dateModified)}
-                            </TableCell>
-                          )}
+                          {columnOrder.map(column => {
+                            if (!showColumns[column as keyof typeof showColumns]) return null;
+                            
+                            switch(column) {
+                              case 'client':
+                                return (
+                                  <TableCell key="client" className="text-muted-foreground whitespace-nowrap">
+                                    {sow.client}
+                                  </TableCell>
+                                );
+                              case 'projectType':
+                                return (
+                                  <TableCell key="projectType" className="text-muted-foreground whitespace-nowrap">
+                                    {sow.projectType}
+                                  </TableCell>
+                                );
+                              case 'industry':
+                                return (
+                                  <TableCell key="industry" className="text-muted-foreground whitespace-nowrap">
+                                    {sow.industry}
+                                  </TableCell>
+                                );
+                              case 'status':
+                                return (
+                                  <TableCell key="status">
+                                    <Badge variant={getBadgeVariant(sow.status)}>
+                                      {sow.status}
+                                    </Badge>
+                                  </TableCell>
+                                );
+                              case 'pages':
+                                return (
+                                  <TableCell key="pages" className="text-muted-foreground whitespace-nowrap">
+                                    {sow.pages}
+                                  </TableCell>
+                                );
+                              case 'integrations':
+                                return (
+                                  <TableCell key="integrations">
+                                    <div className="flex items-center gap-1 whitespace-nowrap">
+                                      {sow.integrations.length > 0 && (
+                                        <Badge variant="outline" className="text-xs">
+                                          {sow.integrations[0]}
+                                        </Badge>
+                                      )}
+                                      {sow.integrations.length > 1 && (
+                                        <DropdownMenu>
+                                          <DropdownMenuTrigger asChild>
+                                            <Badge variant="outline" className="text-xs cursor-pointer hover:bg-accent">
+                                              +{sow.integrations.length - 1}
+                                            </Badge>
+                                          </DropdownMenuTrigger>
+                                          <DropdownMenuContent align="start" className="w-48 z-50">
+                                            <DropdownMenuLabel>All Integrations</DropdownMenuLabel>
+                                            <DropdownMenuSeparator />
+                                            {sow.integrations.map((integration, index) => (
+                                              <DropdownMenuItem key={integration} className="text-xs">
+                                                {integration}
+                                              </DropdownMenuItem>
+                                            ))}
+                                          </DropdownMenuContent>
+                                        </DropdownMenu>
+                                      )}
+                                    </div>
+                                  </TableCell>
+                                );
+                              case 'dateModified':
+                                return (
+                                  <TableCell key="dateModified" className="text-muted-foreground whitespace-nowrap">
+                                    {formatDate(sow.dateModified)}
+                                  </TableCell>
+                                );
+                              default:
+                                return null;
+                            }
+                          })}
                           {showColumns.actions && (
                             <TableCell>
                               <div className="flex gap-1">

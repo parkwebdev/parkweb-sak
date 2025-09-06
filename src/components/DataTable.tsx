@@ -61,6 +61,13 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
     status: true,
     actions: true,
   });
+  const [columnOrder, setColumnOrder] = useState([
+    'companyName',
+    'businessType',
+    'submitted', 
+    'completion',
+    'status'
+  ]);
   const [advancedFilters, setAdvancedFilters] = useState({
     dateFrom: '',
     dateTo: '',
@@ -172,6 +179,13 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
     });
   };
 
+  const moveColumn = (fromIndex: number, toIndex: number) => {
+    const newOrder = [...columnOrder];
+    const [movedColumn] = newOrder.splice(fromIndex, 1);
+    newOrder.splice(toIndex, 0, movedColumn);
+    setColumnOrder(newOrder);
+  };
+
   return (
     <div className="w-full bg-card border border-border rounded-xl overflow-hidden">
       {/* New Header with Filters, Search, and Settings */}
@@ -269,6 +283,31 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
                 </DropdownMenuItem>
                 
                 <DropdownMenuSeparator />
+                <DropdownMenuLabel>Column Order</DropdownMenuLabel>
+                
+                {columnOrder.map((column, index) => (
+                  <div key={column} className="flex items-center justify-between px-2 py-1">
+                    <span className="text-sm capitalize">{column.replace(/([A-Z])/g, ' $1').trim()}</span>
+                    <div className="flex gap-1">
+                      <button
+                        onClick={() => moveColumn(index, Math.max(0, index - 1))}
+                        disabled={index === 0}
+                        className="p-1 hover:bg-accent rounded disabled:opacity-50"
+                      >
+                        ↑
+                      </button>
+                      <button
+                        onClick={() => moveColumn(index, Math.min(columnOrder.length - 1, index + 1))}
+                        disabled={index === columnOrder.length - 1}
+                        className="p-1 hover:bg-accent rounded disabled:opacity-50"
+                      >
+                        ↓
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                
+                <DropdownMenuSeparator />
                 <DropdownMenuLabel>Show Columns</DropdownMenuLabel>
                 
                 <DropdownMenuCheckboxItem
@@ -325,46 +364,59 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
                   </div>
                 </button>
               </TableHead>
-              {showColumns.companyName && (
-                <TableHead>
-                  <div className="flex items-center gap-1">
-                    <span>Company Name</span>
-                    <ArrowUpDown size={12} />
-                  </div>
-                </TableHead>
-              )}
-              {showColumns.businessType && (
-                <TableHead>
-                  <div className="flex items-center gap-1">
-                    <span>Business Type</span>
-                    <ArrowUpDown size={12} />
-                  </div>
-                </TableHead>
-              )}
-              {showColumns.submitted && (
-                <TableHead>
-                  <div className="flex items-center gap-1">
-                    <span>Submitted</span>
-                    <ArrowUpDown size={12} />
-                  </div>
-                </TableHead>
-              )}
-              {showColumns.completion && (
-                <TableHead>
-                  <div className="flex items-center gap-1">
-                    <span>Completion</span>
-                    <ArrowUpDown size={12} />
-                  </div>
-                </TableHead>
-              )}
-              {showColumns.status && (
-                <TableHead>
-                  <div className="flex items-center gap-1">
-                    <span>Status</span>
-                    <ArrowUpDown size={12} />
-                  </div>
-                </TableHead>
-              )}
+              {columnOrder.map(column => {
+                if (!showColumns[column as keyof typeof showColumns]) return null;
+                
+                switch(column) {
+                  case 'companyName':
+                    return (
+                      <TableHead key="companyName">
+                        <div className="flex items-center gap-1">
+                          <span>Company Name</span>
+                          <ArrowUpDown size={12} />
+                        </div>
+                      </TableHead>
+                    );
+                  case 'businessType':
+                    return (
+                      <TableHead key="businessType">
+                        <div className="flex items-center gap-1">
+                          <span>Business Type</span>
+                          <ArrowUpDown size={12} />
+                        </div>
+                      </TableHead>
+                    );
+                  case 'submitted':
+                    return (
+                      <TableHead key="submitted">
+                        <div className="flex items-center gap-1">
+                          <span>Submitted</span>
+                          <ArrowUpDown size={12} />
+                        </div>
+                      </TableHead>
+                    );
+                  case 'completion':
+                    return (
+                      <TableHead key="completion">
+                        <div className="flex items-center gap-1">
+                          <span>Completion</span>
+                          <ArrowUpDown size={12} />
+                        </div>
+                      </TableHead>
+                    );
+                  case 'status':
+                    return (
+                      <TableHead key="status">
+                        <div className="flex items-center gap-1">
+                          <span>Status</span>
+                          <ArrowUpDown size={12} />
+                        </div>
+                      </TableHead>
+                    );
+                  default:
+                    return null;
+                }
+              })}
               {showColumns.actions && (
                 <TableHead className="w-24">Actions</TableHead>
               )}
@@ -387,43 +439,56 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
                     </div>
                   </button>
                 </TableCell>
-                {showColumns.companyName && (
-                  <TableCell>
-                    <div>
-                      <div className="font-medium">{row.companyName}</div>
-                      <div className="text-xs text-muted-foreground mt-1">
-                        <a 
-                          href={`mailto:${row.clientName.toLowerCase().replace(' ', '')}@example.com`}
-                          className="hover:underline"
-                        >
-                          {row.clientName}
-                        </a>
-                      </div>
-                    </div>
-                  </TableCell>
-                )}
-                {showColumns.businessType && (
-                  <TableCell className="text-muted-foreground">
-                    {row.businessType}
-                  </TableCell>
-                )}
-                {showColumns.submitted && (
-                  <TableCell className="text-muted-foreground">
-                    {new Date(row.submittedDate).toLocaleDateString()}
-                  </TableCell>
-                )}
-                {showColumns.completion && (
-                  <TableCell>
-                    <ProgressBar percentage={row.percentage} />
-                  </TableCell>
-                )}
-                {showColumns.status && (
-                  <TableCell>
-                    <Badge variant={getBadgeVariant(row.status)}>
-                      {row.status}
-                    </Badge>
-                  </TableCell>
-                )}
+                {columnOrder.map(column => {
+                  if (!showColumns[column as keyof typeof showColumns]) return null;
+                  
+                  switch(column) {
+                    case 'companyName':
+                      return (
+                        <TableCell key="companyName">
+                          <div>
+                            <div className="font-medium">{row.companyName}</div>
+                            <div className="text-xs text-muted-foreground mt-1">
+                              <a 
+                                href={`mailto:${row.clientName.toLowerCase().replace(' ', '')}@example.com`}
+                                className="hover:underline"
+                              >
+                                {row.clientName}
+                              </a>
+                            </div>
+                          </div>
+                        </TableCell>
+                      );
+                    case 'businessType':
+                      return (
+                        <TableCell key="businessType" className="text-muted-foreground">
+                          {row.businessType}
+                        </TableCell>
+                      );
+                    case 'submitted':
+                      return (
+                        <TableCell key="submitted" className="text-muted-foreground">
+                          {new Date(row.submittedDate).toLocaleDateString()}
+                        </TableCell>
+                      );
+                    case 'completion':
+                      return (
+                        <TableCell key="completion">
+                          <ProgressBar percentage={row.percentage} />
+                        </TableCell>
+                      );
+                    case 'status':
+                      return (
+                        <TableCell key="status">
+                          <Badge variant={getBadgeVariant(row.status)}>
+                            {row.status}
+                          </Badge>
+                        </TableCell>
+                      );
+                    default:
+                      return null;
+                  }
+                })}
                 {showColumns.actions && (
                   <TableCell>
                     <div className="flex gap-1">
