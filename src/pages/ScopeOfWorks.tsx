@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Sidebar } from '@/components/Sidebar';
-import { SearchInput } from '@/components/SearchInput';
+import { SimpleSearch } from '@/components/SimpleSearch';
 import { 
   Settings01 as Settings, 
   FilterLines as Filter, 
@@ -198,6 +198,9 @@ const ScopeOfWorks = () => {
   const [activeFilter, setActiveFilter] = useState<string>('view-all');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { isCollapsed } = useSidebar();
+  const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
+  const [sortBy, setSortBy] = useState<'client' | 'projectType' | 'industry' | 'status' | 'pages' | 'dateModified'>('dateModified');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [showColumns, setShowColumns] = useState({
     companyName: true,
     clientName: true,
@@ -214,24 +217,30 @@ const ScopeOfWorks = () => {
     dateTo: '',
     industry: [] as string[],
     projectType: [] as string[],
+    status: [] as string[],
+    pages: { min: 0, max: 20 },
   });
-  const [columnOrder, setColumnOrder] = useState([
-    'companyName',
-    'clientName',
-    'projectType', 
-    'industry',
-    'status',
-    'pages',
-    'integrations',
-    'dateModified'
-  ]);
   
   const { toast } = useToast();
   const { createScopeWorkNotification } = useNotifications();
 
-  // Extract unique industries and project types from data
+  // Extract unique values from data
   const availableIndustries = [...new Set(scopeOfWorks.map(item => item.industry))];
   const availableProjectTypes = [...new Set(scopeOfWorks.map(item => item.projectType))];
+  const availableStatuses = [...new Set(scopeOfWorks.map(item => item.status))];
+
+  const handleSort = (column: typeof sortBy) => {
+    if (sortBy === column) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(column);
+      setSortOrder('asc');
+    }
+  };
+
+  const handleViewModeToggle = () => {
+    setViewMode(viewMode === 'table' ? 'cards' : 'table');
+  };
 
   const handleViewSow = (sow: any) => {
     setSelectedSow(sow);
@@ -330,6 +339,45 @@ const ScopeOfWorks = () => {
         advancedFilters.projectType.includes(item.projectType)
       );
     }
+    if (advancedFilters.status.length > 0) {
+      filtered = filtered.filter(item => 
+        advancedFilters.status.includes(item.status)
+      );
+    }
+    if (advancedFilters.pages.min > 0 || advancedFilters.pages.max < 20) {
+      filtered = filtered.filter(item => 
+        item.pages >= advancedFilters.pages.min && item.pages <= advancedFilters.pages.max
+      );
+    }
+
+    // Apply sorting
+    filtered.sort((a, b) => {
+      let comparison = 0;
+      
+      switch (sortBy) {
+        case 'client':
+          comparison = a.client.localeCompare(b.client);
+          break;
+        case 'projectType':
+          comparison = a.projectType.localeCompare(b.projectType);
+          break;
+        case 'industry':
+          comparison = a.industry.localeCompare(b.industry);
+          break;
+        case 'status':
+          comparison = a.status.localeCompare(b.status);
+          break;
+        case 'pages':
+          comparison = a.pages - b.pages;
+          break;
+        case 'dateModified':
+        default:
+          comparison = new Date(a.dateModified).getTime() - new Date(b.dateModified).getTime();
+          break;
+      }
+      
+      return sortOrder === 'asc' ? comparison : -comparison;
+    });
 
     return filtered;
   };
@@ -392,6 +440,8 @@ const ScopeOfWorks = () => {
       dateTo: '',
       industry: [],
       projectType: [],
+      status: [],
+      pages: { min: 0, max: 20 },
     });
   };
 
@@ -448,13 +498,6 @@ const ScopeOfWorks = () => {
 
             {/* Scope of Works Table */}
             <Card>
-              <CardHeader className="compact-header border-b">
-                <CardTitle className="text-base">Scope of Works</CardTitle>
-                <CardDescription className="text-xs">
-                  View and manage all project scope documents
-                </CardDescription>
-              </CardHeader>
-              
               {/* Table Header with Filters */}
               <div className="border-b border-border">
                 <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-3 px-4 py-3">
@@ -483,11 +526,10 @@ const ScopeOfWorks = () => {
                   
                   {/* Search and controls */}
                   <div className="flex items-center gap-2.5 w-full lg:w-auto">
-                    <SearchInput
+                    <SimpleSearch
                       placeholder="Search"
                       value={searchTerm}
                       onChange={setSearchTerm}
-                      searchResults={searchResults}
                       className="flex-1 lg:max-w-[240px] lg:min-w-48 lg:w-[240px]"
                     />
                     <DropdownMenu>
@@ -521,6 +563,78 @@ const ScopeOfWorks = () => {
                             </div>
                           </div>
                           
+                          <div>
+                            <label className="text-sm font-medium mb-2 block">Industry</label>
+                            <div className="flex flex-wrap gap-1">
+                              {availableIndustries.map((industry) => (
+                                <button
+                                  key={industry}
+                                  onClick={() => {
+                                    const newIndustry = advancedFilters.industry.includes(industry)
+                                      ? advancedFilters.industry.filter(i => i !== industry)
+                                      : [...advancedFilters.industry, industry];
+                                    setAdvancedFilters(prev => ({...prev, industry: newIndustry}));
+                                  }}
+                                >
+                                  <Badge
+                                    variant={advancedFilters.industry.includes(industry) ? "default" : "outline"}
+                                    className="text-xs cursor-pointer w-auto"
+                                  >
+                                    {industry}
+                                  </Badge>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div>
+                            <label className="text-sm font-medium mb-2 block">Project Type</label>
+                            <div className="flex flex-wrap gap-1">
+                              {availableProjectTypes.map((type) => (
+                                <button
+                                  key={type}
+                                  onClick={() => {
+                                    const newType = advancedFilters.projectType.includes(type)
+                                      ? advancedFilters.projectType.filter(t => t !== type)
+                                      : [...advancedFilters.projectType, type];
+                                    setAdvancedFilters(prev => ({...prev, projectType: newType}));
+                                  }}
+                                >
+                                  <Badge
+                                    variant={advancedFilters.projectType.includes(type) ? "default" : "outline"}
+                                    className="text-xs cursor-pointer w-auto"
+                                  >
+                                    {type}
+                                  </Badge>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div>
+                            <label className="text-sm font-medium mb-2 block">Status</label>
+                            <div className="flex flex-wrap gap-1">
+                              {availableStatuses.map((status) => (
+                                <button
+                                  key={status}
+                                  onClick={() => {
+                                    const newStatus = advancedFilters.status.includes(status)
+                                      ? advancedFilters.status.filter(s => s !== status)
+                                      : [...advancedFilters.status, status];
+                                    setAdvancedFilters(prev => ({...prev, status: newStatus}));
+                                  }}
+                                >
+                                  <Badge
+                                    variant={advancedFilters.status.includes(status) ? "default" : "outline"}
+                                    className="text-xs cursor-pointer w-auto"
+                                  >
+                                    {status}
+                                  </Badge>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                          
                           <div className="flex gap-2 pt-2">
                             <Button size="sm" variant="outline" onClick={resetAdvancedFilters} className="text-xs">
                               Clear All
@@ -529,6 +643,14 @@ const ScopeOfWorks = () => {
                         </div>
                       </DropdownMenuContent>
                     </DropdownMenu>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleViewModeToggle}
+                      className="h-8 px-2"
+                    >
+                      {viewMode === 'table' ? 'Cards' : 'Table'}
+                    </Button>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <button className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden text-xs text-foreground font-medium leading-none bg-background px-2 py-1.5 rounded-md border-border hover:bg-accent/50">
@@ -623,56 +745,82 @@ const ScopeOfWorks = () => {
                           </TableHead>
                           {showColumns.companyName && (
                             <TableHead>
-                              <div className="flex items-center gap-1">
+                              <button 
+                                className="flex items-center gap-1 hover:text-foreground"
+                                onClick={() => handleSort('client')}
+                              >
                                 <span>Company Name</span>
-                                <ArrowUpDown size={12} />
-                              </div>
+                                <ArrowUpDown size={12} className={sortBy === 'client' ? 'text-primary' : ''} />
+                              </button>
                             </TableHead>
                           )}
                           {showColumns.clientName && (
                             <TableHead>
-                              <div className="flex items-center gap-1">
+                              <button 
+                                className="flex items-center gap-1 hover:text-foreground"
+                                onClick={() => handleSort('client')}
+                              >
                                 <span>Client Name</span>
-                                <ArrowUpDown size={12} />
-                              </div>
+                                <ArrowUpDown size={12} className={sortBy === 'client' ? 'text-primary' : ''} />
+                              </button>
                             </TableHead>
                           )}
                           {showColumns.projectType && (
                             <TableHead>
-                              <div className="flex items-center gap-1">
+                              <button 
+                                className="flex items-center gap-1 hover:text-foreground"
+                                onClick={() => handleSort('projectType')}
+                              >
                                 <span>Project Type</span>
-                                <ArrowUpDown size={12} />
-                              </div>
+                                <ArrowUpDown size={12} className={sortBy === 'projectType' ? 'text-primary' : ''} />
+                              </button>
                             </TableHead>
                           )}
                           {showColumns.industry && (
                             <TableHead>
-                              <div className="flex items-center gap-1">
+                              <button 
+                                className="flex items-center gap-1 hover:text-foreground"
+                                onClick={() => handleSort('industry')}
+                              >
                                 <span>Industry</span>
-                                <ArrowUpDown size={12} />
-                              </div>
+                                <ArrowUpDown size={12} className={sortBy === 'industry' ? 'text-primary' : ''} />
+                              </button>
                             </TableHead>
                           )}
                           {showColumns.status && (
                             <TableHead>
-                              <div className="flex items-center gap-1">
+                              <button 
+                                className="flex items-center gap-1 hover:text-foreground"
+                                onClick={() => handleSort('status')}
+                              >
                                 <span>Status</span>
-                                <ArrowUpDown size={12} />
-                              </div>
+                                <ArrowUpDown size={12} className={sortBy === 'status' ? 'text-primary' : ''} />
+                              </button>
                             </TableHead>
                           )}
                           {showColumns.pages && (
-                            <TableHead>Pages</TableHead>
+                            <TableHead>
+                              <button 
+                                className="flex items-center gap-1 hover:text-foreground"
+                                onClick={() => handleSort('pages')}
+                              >
+                                <span>Pages</span>
+                                <ArrowUpDown size={12} className={sortBy === 'pages' ? 'text-primary' : ''} />
+                              </button>
+                            </TableHead>
                           )}
                           {showColumns.integrations && (
                             <TableHead>Integrations</TableHead>
                           )}
                           {showColumns.dateModified && (
                             <TableHead>
-                              <div className="flex items-center gap-1">
+                              <button 
+                                className="flex items-center gap-1 hover:text-foreground"
+                                onClick={() => handleSort('dateModified')}
+                              >
                                 <span>Modified</span>
-                                <ArrowUpDown size={12} />
-                              </div>
+                                <ArrowUpDown size={12} className={sortBy === 'dateModified' ? 'text-primary' : ''} />
+                              </button>
                             </TableHead>
                           )}
                           {showColumns.actions && (
@@ -680,139 +828,145 @@ const ScopeOfWorks = () => {
                           )}
                         </TableRow>
                       </TableHeader>
-                    <TableBody>
-                      {filteredData.map((sow) => (
-                        <TableRow key={sow.id}>
-                          <TableCell>
-                            <button
-                              onClick={() => toggleRowSelection(sow.id)}
-                              className="flex items-center justify-center w-5"
-                            >
-                              <div className={`border flex min-h-5 w-5 h-5 rounded-md border-solid border-border items-center justify-center ${
-                                selectedRows.includes(sow.id) ? 'bg-primary border-primary' : 'bg-background'
-                              }`}>
-                                {selectedRows.includes(sow.id) && (
-                                  <Check size={12} className="text-primary-foreground" />
-                                )}
-                              </div>
-                            </button>
-                          </TableCell>
-                          {showColumns.companyName && (
+                      <TableBody>
+                        {filteredData.map((sow) => (
+                          <TableRow key={sow.id}>
                             <TableCell>
-                              <div className="font-medium text-sm whitespace-nowrap">{sow.client}</div>
-                            </TableCell>
-                          )}
-                          {showColumns.clientName && (
-                            <TableCell>
-                              <div className="flex items-center gap-2 whitespace-nowrap">
-                                <ClientAvatar name={sow.clientContact} size="sm" />
-                                <span className="text-sm">{sow.clientContact}</span>
-                              </div>
-                            </TableCell>
-                          )}
-                          {showColumns.projectType && (
-                            <TableCell>
-                              <Badge variant="outline" className="text-xs w-auto whitespace-nowrap">
-                                {sow.projectType}
-                              </Badge>
-                            </TableCell>
-                          )}
-                          {showColumns.industry && (
-                            <TableCell>
-                              <Badge variant="outline" className="text-xs w-auto whitespace-nowrap">
-                                {sow.industry}
-                              </Badge>
-                            </TableCell>
-                          )}
-                          {showColumns.status && (
-                            <TableCell>
-                              <Badge variant={getBadgeVariant(sow.status)} className="text-xs w-auto whitespace-nowrap">
-                                {sow.status}
-                              </Badge>
-                            </TableCell>
-                          )}
-                          {showColumns.pages && (
-                            <TableCell className="text-sm whitespace-nowrap">{sow.pages}</TableCell>
-                          )}
-                          {showColumns.integrations && (
-                            <TableCell>
-                              {sow.integrations.length > 0 && (
-                                <div className="flex items-center gap-1">
-                                  <Badge variant="outline" className="text-xs w-auto whitespace-nowrap">
-                                    {sow.integrations[0]}
-                                  </Badge>
-                                  {sow.integrations.length > 1 && (
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <Badge variant="outline" className="text-xs w-auto whitespace-nowrap cursor-help">
-                                          +{sow.integrations.length - 1}
-                                        </Badge>
-                                      </TooltipTrigger>
-                                      <TooltipContent>
-                                        <div className="space-y-1">
-                                          <p className="font-medium">All Integrations:</p>
-                                          {sow.integrations.map((integration: string, index: number) => (
-                                            <div key={index} className="text-xs">
-                                              <Badge variant="outline" className="text-xs w-auto">
-                                                {integration}
-                                              </Badge>
-                                            </div>
-                                          ))}
-                                        </div>
-                                      </TooltipContent>
-                                    </Tooltip>
+                              <button
+                                onClick={() => toggleRowSelection(sow.id)}
+                                className="flex items-center justify-center w-5"
+                              >
+                                <div className={`border flex min-h-5 w-5 h-5 rounded-md border-solid border-border items-center justify-center ${
+                                  selectedRows.includes(sow.id) ? 'bg-primary border-primary' : 'bg-background'
+                                }`}>
+                                  {selectedRows.includes(sow.id) && (
+                                    <Check size={12} className="text-primary-foreground" />
                                   )}
                                 </div>
-                              )}
+                              </button>
                             </TableCell>
-                          )}
-                          {showColumns.dateModified && (
-                            <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
-                              {formatDate(sow.dateModified)}
-                            </TableCell>
-                          )}
-                          {showColumns.actions && (
-                            <TableCell className="text-right">
-                              <div className="flex items-center justify-end gap-2">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="h-7 px-2"
-                                  onClick={() => handleViewSow(sow)}
-                                >
-                                  <Eye className="h-3 w-3" />
-                                </Button>
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      className="h-7 px-2"
-                                    >
-                                      <MoreHorizontal className="h-3 w-3" />
-                                    </Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end">
-                                    <DropdownMenuItem onClick={() => handleEditSow(sow)}>
-                                      <Edit className="mr-2 h-4 w-4" />
-                                      Edit
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => handleDownloadPDF(sow)}>
-                                      <Download className="mr-2 h-4 w-4" />
-                                      Download PDF
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => handleDownloadDOC(sow)}>
-                                      <Download className="mr-2 h-4 w-4" />
-                                      Download DOC
-                                    </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
-                              </div>
-                            </TableCell>
-                          )}
-                        </TableRow>
-                      ))}
-                    </TableBody>
+                            {showColumns.companyName && (
+                              <TableCell>
+                                <div className="font-medium text-sm whitespace-nowrap">{sow.client}</div>
+                              </TableCell>
+                            )}
+                            {showColumns.clientName && (
+                              <TableCell>
+                                <div className="flex items-center gap-2 whitespace-nowrap">
+                                  <ClientAvatar name={sow.clientContact} size="sm" />
+                                  <span className="text-sm">{sow.clientContact}</span>
+                                </div>
+                              </TableCell>
+                            )}
+                            {showColumns.projectType && (
+                              <TableCell>
+                                <Badge variant="outline" className="text-xs w-auto whitespace-nowrap">
+                                  {sow.projectType}
+                                </Badge>
+                              </TableCell>
+                            )}
+                            {showColumns.industry && (
+                              <TableCell>
+                                <Badge variant="outline" className="text-xs w-auto whitespace-nowrap">
+                                  {sow.industry}
+                                </Badge>
+                              </TableCell>
+                            )}
+                            {showColumns.status && (
+                              <TableCell>
+                                <Badge variant={getBadgeVariant(sow.status)} className="text-xs w-auto whitespace-nowrap">
+                                  {sow.status}
+                                </Badge>
+                              </TableCell>
+                            )}
+                            {showColumns.pages && (
+                              <TableCell className="text-sm whitespace-nowrap">{sow.pages}</TableCell>
+                            )}
+                            {showColumns.integrations && (
+                              <TableCell>
+                                {sow.integrations.length > 0 && (
+                                  <div className="flex items-center gap-1">
+                                    <Badge variant="outline" className="text-xs w-auto whitespace-nowrap">
+                                      {sow.integrations[0]}
+                                    </Badge>
+                                    {sow.integrations.length > 1 && (
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <Badge variant="outline" className="text-xs w-auto whitespace-nowrap cursor-help">
+                                            +{sow.integrations.length - 1}
+                                          </Badge>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          <div className="space-y-1">
+                                            <p className="font-medium">All Integrations:</p>
+                                            <div className="flex flex-wrap gap-1">
+                                              {sow.integrations.map((integration: string, index: number) => (
+                                                <Badge key={index} variant="outline" className="text-xs w-auto">
+                                                  {integration}
+                                                </Badge>
+                                              ))}
+                                            </div>
+                                          </div>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    )}
+                                  </div>
+                                )}
+                              </TableCell>
+                            )}
+                            {showColumns.dateModified && (
+                              <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                                {formatDate(sow.dateModified)}
+                              </TableCell>
+                            )}
+                            {showColumns.actions && (
+                              <TableCell className="text-right">
+                                <div className="flex items-center justify-end gap-2">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-7 px-2"
+                                    onClick={() => handleViewSow(sow)}
+                                  >
+                                    <Eye className="h-3 w-3" />
+                                  </Button>
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-7 px-2"
+                                      >
+                                        <MoreHorizontal className="h-3 w-3" />
+                                      </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                      <DropdownMenuItem onClick={() => handleEditSow(sow)}>
+                                        <Edit className="mr-2 h-4 w-4" />
+                                        Edit
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem onClick={() => handleDownloadPDF(sow)}>
+                                        <Download className="mr-2 h-4 w-4" />
+                                        Download PDF
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem onClick={() => handleDownloadDOC(sow)}>
+                                        <Download className="mr-2 h-4 w-4" />
+                                        Download DOC
+                                      </DropdownMenuItem>
+                                      {sow.status !== 'Approved' && (
+                                        <DropdownMenuItem>
+                                          <Send className="mr-2 h-4 w-4" />
+                                          Send to Client
+                                        </DropdownMenuItem>
+                                      )}
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
+                                </div>
+                              </TableCell>
+                            )}
+                          </TableRow>
+                        ))}
+                      </TableBody>
                     </Table>
                   </div>
                 </TooltipProvider>
