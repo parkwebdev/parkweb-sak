@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { ArrowRight, CheckCircle, Building07 as Building2, User01 as User, Mail01 as Mail, Phone as Phone, MarkerPin01 as MapPin, Globe06 as Globe, MessageChatSquare as MessageSquare, File02 as FileText, Eye as Eye } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -9,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ProgressBar } from '@/components/ProgressBar';
 
 interface OnboardingData {
   // Company Information
@@ -224,6 +224,11 @@ const ClientOnboarding = () => {
   const [sowData, setSowData] = useState(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
+  // Calculate progress percentage based on current step
+  const getProgressPercentage = () => {
+    return Math.round((onboardingData.currentStep / steps.length) * 100);
+  };
+
   const updateData = (field: keyof OnboardingData, value: any) => {
     setOnboardingData(prev => ({ ...prev, [field]: value }));
   };
@@ -266,7 +271,9 @@ const ClientOnboarding = () => {
       <div className="min-h-screen bg-muted/30 flex items-center justify-center">
         <Card className="max-w-2xl mx-auto">
           <CardContent className="text-center p-12">
-            <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-6" />
+            <div className="h-16 w-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <span className="text-green-600 text-2xl">✓</span>
+            </div>
             <h1 className="text-3xl font-bold text-foreground mb-4">
               Thank you, {clientName}!
             </h1>
@@ -298,7 +305,7 @@ const ClientOnboarding = () => {
           <Card className="w-full">
             <CardHeader className="text-center">
               <div className="mx-auto mb-4 w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
-                <Building2 className="h-8 w-8 text-primary" />
+                <span className="text-primary text-2xl font-bold">★</span>
               </div>
               <CardTitle className="text-2xl">Welcome, {clientName}!</CardTitle>
               <CardDescription className="text-lg">
@@ -311,19 +318,19 @@ const ClientOnboarding = () => {
                 <h4 className="font-semibold text-primary mb-2">What to expect:</h4>
                 <ul className="space-y-2 text-sm">
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <span className="text-green-500">✓</span>
                     <span>7 simple steps to complete</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <span className="text-green-500">✓</span>
                     <span>Takes about 10-15 minutes</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <span className="text-green-500">✓</span>
                     <span>Your progress is automatically saved</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <span className="text-green-500">✓</span>
                     <span>We'll generate a custom scope of work for you to review</span>
                   </li>
                 </ul>
@@ -339,8 +346,7 @@ const ClientOnboarding = () => {
         return (
           <Card className="w-full">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Building2 className="h-5 w-5" />
+              <CardTitle>
                 Tell us about {companyName}
               </CardTitle>
               <CardDescription>
@@ -410,8 +416,7 @@ const ClientOnboarding = () => {
         return (
           <Card className="w-full">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="h-5 w-5" />
+              <CardTitle>
                 Contact Information
               </CardTitle>
               <CardDescription>
@@ -476,8 +481,7 @@ const ClientOnboarding = () => {
         return (
           <Card className="w-full">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MessageSquare className="h-5 w-5" />
+              <CardTitle>
                 Project Goals & Audience
               </CardTitle>
               <CardDescription>
@@ -666,7 +670,7 @@ const ClientOnboarding = () => {
                 </ul>
               </div>
 
-              <Button className="w-full" size="lg" onClick={handleSubmit}>
+              <Button className="w-full px-6 py-2" size="lg" onClick={handleSubmit}>
                 Generate My Scope of Work
               </Button>
             </CardContent>
@@ -682,40 +686,23 @@ const ClientOnboarding = () => {
     <>
       <div className="min-h-screen bg-muted/30">
         <div className="max-w-3xl mx-auto px-6 py-12">
-          {/* Progress Steps */}
+          {/* Progress Bar */}
           <div className="mb-8">
-            <div className="flex items-center justify-between mb-4">
-              {steps.map((step, index) => (
-                <div key={step.id} className="flex items-center">
-                  <div className={`flex items-center justify-center w-8 h-8 rounded-full border-2 text-sm font-medium ${
-                    step.id === onboardingData.currentStep 
-                      ? 'border-primary bg-primary text-primary-foreground' 
-                      : step.id < onboardingData.currentStep 
-                      ? 'border-success bg-success text-success-foreground' 
-                      : 'border-border bg-background text-muted-foreground'
-                  }`}>
-                    {step.id < onboardingData.currentStep ? (
-                      <CheckCircle className="h-4 w-4" />
-                    ) : (
-                      step.id
-                    )}
-                  </div>
-                  {index < steps.length - 1 && (
-                    <div className={`w-full h-0.5 mx-2 ${
-                      step.id < onboardingData.currentStep ? 'bg-green-500' : 'bg-border'
-                    }`} />
-                  )}
-                </div>
-              ))}
-            </div>
-            <div className="text-center">
+            <div className="text-center mb-4">
               <h2 className="text-xl font-semibold text-foreground">
                 {steps[onboardingData.currentStep - 1]?.title}
               </h2>
-              <p className="text-muted-foreground">
-                Step {onboardingData.currentStep} of {steps.length}
+              <p className="text-muted-foreground mb-4">
+                {steps[onboardingData.currentStep - 1]?.description}
               </p>
             </div>
+            <ProgressBar 
+              percentage={getProgressPercentage()} 
+              className="max-w-md mx-auto"
+            />
+            <p className="text-center text-sm text-muted-foreground mt-2">
+              Step {onboardingData.currentStep} of {steps.length}
+            </p>
           </div>
 
           {/* Step Content */}
@@ -729,16 +716,16 @@ const ClientOnboarding = () => {
               variant="outline" 
               onClick={prevStep} 
               disabled={onboardingData.currentStep === 1}
+              className="px-6 py-2"
             >
               Previous
             </Button>
             <Button 
               onClick={nextStep} 
               disabled={onboardingData.currentStep === steps.length}
-              className="flex items-center gap-2"
+              className="px-6 py-2"
             >
               {onboardingData.currentStep === steps.length ? 'Complete' : 'Next Step'}
-              <ArrowRight className="h-4 w-4" />
             </Button>
           </div>
         </div>
@@ -748,8 +735,7 @@ const ClientOnboarding = () => {
       <Dialog open={showSOW} onOpenChange={setShowSOW}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5" />
+            <DialogTitle>
               Your Custom Scope of Work
             </DialogTitle>
             <DialogDescription>
@@ -778,7 +764,7 @@ const ClientOnboarding = () => {
                     <ul className="text-sm space-y-1">
                       {sowData.websiteStructure.universalPages.map((page, index) => (
                         <li key={index} className="flex items-center gap-2">
-                          <CheckCircle className="h-3 w-3 text-green-500" />
+                          <span className="text-green-500">✓</span>
                           {page}
                         </li>
                       ))}
@@ -789,7 +775,7 @@ const ClientOnboarding = () => {
                     <ul className="text-sm space-y-1">
                       {sowData.websiteStructure.industrySpecificPages.map((page, index) => (
                         <li key={index} className="flex items-center gap-2">
-                          <CheckCircle className="h-3 w-3 text-blue-500" />
+                          <span className="text-blue-500">✓</span>
                           {page}
                         </li>
                       ))}
@@ -803,7 +789,7 @@ const ClientOnboarding = () => {
                 <div className="grid grid-cols-2 gap-2">
                   {sowData.websiteStructure.selectedFeatures.map((feature, index) => (
                     <div key={index} className="flex items-center gap-2 text-sm">
-                      <CheckCircle className="h-3 w-3 text-primary" />
+                      <span className="text-primary">✓</span>
                       {feature}
                     </div>
                   ))}
@@ -811,11 +797,10 @@ const ClientOnboarding = () => {
               </div>
 
               <div className="flex gap-4">
-                <Button variant="outline" onClick={() => setShowSOW(false)}>
+                <Button variant="outline" onClick={() => setShowSOW(false)} className="px-6 py-2">
                   Request Changes
                 </Button>
-                <Button onClick={handleFinalSubmit} className="flex items-center gap-2">
-                  <CheckCircle className="h-4 w-4" />
+                <Button onClick={handleFinalSubmit} className="px-6 py-2">
                   Approve & Submit
                 </Button>
               </div>
