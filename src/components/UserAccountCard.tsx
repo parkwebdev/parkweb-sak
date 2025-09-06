@@ -1,5 +1,7 @@
 import React from 'react';
 import { User01 as User, Settings01 as Settings } from '@untitledui/icons';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Link } from 'react-router-dom';
 
 export const UserAccountCard: React.FC = () => {
   return (
@@ -20,9 +22,25 @@ export const UserAccountCard: React.FC = () => {
           </div>
         </div>
       </div>
-      <button className="justify-center items-center absolute z-0 flex min-h-8 overflow-hidden w-8 h-8 p-1.5 rounded-md right-1.5 top-1.5 hover:bg-accent">
-        <Settings size={16} />
-      </button>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button className="justify-center items-center absolute z-0 flex min-h-8 overflow-hidden w-8 h-8 p-1.5 rounded-md right-1.5 top-1.5 hover:bg-accent">
+            <Settings size={16} />
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-48">
+          <DropdownMenuItem asChild>
+            <Link to="/profile" className="w-full">Profile</Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link to="/team" className="w-full">Team</Link>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem asChild>
+            <Link to="/settings" className="w-full">Settings</Link>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   );
 };

@@ -32,6 +32,12 @@ const navigationItems: NavigationItem[] = [
     label: 'Scope of Works',
     icon: FileText,
     path: '/scope-of-works'
+  },
+  {
+    id: 'team',
+    label: 'Team',
+    icon: Users,
+    path: '/team'
   }
 ];
 

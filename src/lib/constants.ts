@@ -11,6 +11,9 @@ export const ROUTES = {
   onboarding: '/onboarding',
   clientOnboarding: '/client-onboarding',
   scopeOfWorks: '/scope-of-works',
+  team: '/team',
+  profile: '/profile',
+  settings: '/settings',
 } as const;
 
 export const INDUSTRY_OPTIONS = [

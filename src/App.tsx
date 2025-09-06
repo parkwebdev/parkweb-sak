@@ -8,6 +8,9 @@ import Index from "./pages/Index";
 import Onboarding from "./pages/Onboarding";
 import ClientOnboarding from "./pages/ClientOnboarding";
 import ScopeOfWorks from "./pages/ScopeOfWorks";
+import Team from "./pages/Team";
+import Profile from "./pages/Profile";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +27,9 @@ const App = () => (
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/client-onboarding" element={<ClientOnboarding />} />
             <Route path="/scope-of-works" element={<ScopeOfWorks />} />
+            <Route path="/team" element={<Team />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/settings" element={<Settings />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
