@@ -3,12 +3,9 @@ import { TabNavigation } from './TabNavigation';
 import { DataTable } from './DataTable';
 
 const tabs = [
-  { id: 'all-sessions', label: 'All sessions' },
-  { id: 'direct-traffic', label: 'Direct traffic' },
-  { id: 'organic-traffic', label: 'Organic traffic' },
-  { id: 'paid-traffic', label: 'Paid traffic' },
-  { id: 'mobile-users', label: 'Mobile users' },
-  { id: 'returning-users', label: 'Returning users' }
+  { id: 'onboarding', label: 'Onboarding' },
+  { id: 'scope-of-work', label: 'Scope Of Work' },
+  { id: 'completed', label: 'Completed' }
 ];
 
 export const MainContent: React.FC = () => {
@@ -36,7 +33,7 @@ export const MainContent: React.FC = () => {
           </div>
           <TabNavigation
             tabs={tabs}
-            defaultActiveTab="all-sessions"
+            defaultActiveTab="onboarding"
             onTabChange={(tabId) => console.log('Tab changed:', tabId)}
           />
         </div>

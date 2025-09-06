@@ -1,26 +1,26 @@
 import React, { useState } from 'react';
-import { Settings, ChevronDown, ArrowUpDown, Folder, Eye, Edit, Check } from 'lucide-react';
+import { Settings, ChevronDown, ArrowUpDown, Eye, Edit, Check, User, Clock } from 'lucide-react';
 import { SearchInput } from './SearchInput';
 import { Badge } from './Badge';
 import { ProgressBar } from './ProgressBar';
 
 interface TableRow {
   id: string;
-  page: string;
-  sessions: string;
-  avgTime: string;
+  clientName: string;
+  businessType: string;
+  submittedDate: string;
+  status: 'Complete' | 'Incomplete' | 'In Review';
   percentage: number;
-  folder: string;
 }
 
 const tableData: TableRow[] = [
-  { id: '1', page: 'sodium.app', sessions: '4,288', avgTime: '1m 24s', percentage: 62.4, folder: 'General' },
-  { id: '2', page: 'sodium.app/free-icons', sessions: '582', avgTime: '1m 8s', percentage: 8.2, folder: 'General' },
-  { id: '3', page: 'sodium.app/icons', sessions: '464', avgTime: '1m 12s', percentage: 7.6, folder: 'General' },
-  { id: '4', page: 'sodium.app/components', sessions: '446', avgTime: '2m 22s', percentage: 7.2, folder: 'General' },
-  { id: '5', page: 'sodium.app/pricing', sessions: '382', avgTime: '48s', percentage: 7.0, folder: 'General' },
-  { id: '6', page: 'sodium.app/faqs', sessions: '326', avgTime: '56s', percentage: 6.4, folder: 'General' },
-  { id: '7', page: 'sodium.app/blog', sessions: '262', avgTime: '1m 14s', percentage: 5.4, folder: 'General' },
+  { id: '1', clientName: 'Mountain View RV Park', businessType: 'RV Park', submittedDate: '2024-01-15', status: 'Complete', percentage: 100 },
+  { id: '2', clientName: 'Sunset Manufacturing', businessType: 'Manufactured Home Community', submittedDate: '2024-01-12', status: 'Incomplete', percentage: 45 },
+  { id: '3', clientName: 'Elite Capital Partners', businessType: 'Capital & Syndication', submittedDate: '2024-01-10', status: 'In Review', percentage: 85 },
+  { id: '4', clientName: 'Local Plumbing Pro', businessType: 'Local Business', submittedDate: '2024-01-08', status: 'Complete', percentage: 100 },
+  { id: '5', clientName: 'National Tech Solutions', businessType: 'National Business', submittedDate: '2024-01-05', status: 'Incomplete', percentage: 30 },
+  { id: '6', clientName: 'Riverside Communities', businessType: 'Manufactured Home Community', submittedDate: '2024-01-03', status: 'In Review', percentage: 70 },
+  { id: '7', clientName: 'Premier Investment Group', businessType: 'Capital & Syndication', submittedDate: '2024-01-01', status: 'Complete', percentage: 100 },
 ];
 
 export const DataTable: React.FC = () => {
@@ -29,7 +29,8 @@ export const DataTable: React.FC = () => {
   const [activeFilter, setActiveFilter] = useState('view-all');
 
   const filteredData = tableData.filter(row =>
-    row.page.toLowerCase().includes(searchTerm.toLowerCase())
+    row.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    row.businessType.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const toggleRowSelection = (id: string) => {
@@ -53,7 +54,7 @@ export const DataTable: React.FC = () => {
           <div className="justify-center items-stretch flex min-w-60 flex-col text-lg text-foreground font-semibold leading-loose flex-1 shrink basis-[0%] gap-0.5 max-md:max-w-full">
             <div className="items-center flex w-full gap-2 max-md:max-w-full">
               <h2 className="text-foreground text-lg font-semibold leading-7 tracking-tight self-stretch my-auto">
-                Pages and screens
+                Client Onboarding Forms
               </h2>
             </div>
           </div>
@@ -67,13 +68,13 @@ export const DataTable: React.FC = () => {
       <div className="w-full max-md:max-w-full">
         <div className="justify-between items-center flex w-full gap-[40px_100px] flex-wrap px-6 py-3 rounded-xl max-md:max-w-full max-md:px-5">
           <div className="border shadow-sm self-stretch flex overflow-hidden text-sm text-foreground font-semibold leading-none my-auto rounded-lg border-border">
-            {['View all', 'Public', 'Private'].map((filter, index) => (
+            {['View all', 'Complete', 'Incomplete', 'In Review'].map((filter, index) => (
               <button
                 key={filter}
                 onClick={() => setActiveFilter(filter.toLowerCase().replace(' ', '-'))}
                 className={`justify-center items-center flex min-h-10 gap-2 px-4 py-2 ${
                   index === 0 ? 'bg-muted' : 'bg-background hover:bg-accent/50'
-                } ${index < 2 ? 'border-r-border border-r border-solid' : ''}`}
+                } ${index < 3 ? 'border-r-border border-r border-solid' : ''}`}
               >
                 <div className="text-foreground text-sm leading-5 self-stretch my-auto">
                   {filter}
@@ -117,7 +118,7 @@ export const DataTable: React.FC = () => {
             </button>
             <div className="items-center self-stretch flex gap-1 text-xs text-muted-foreground font-semibold whitespace-nowrap my-auto">
               <div className="text-muted-foreground text-xs leading-[18px] self-stretch my-auto">
-                Page
+                Client Name
               </div>
               <ArrowUpDown size={12} />
             </div>
@@ -137,17 +138,17 @@ export const DataTable: React.FC = () => {
                 </div>
               </button>
               <div className="text-foreground text-sm font-medium leading-5 self-stretch my-auto">
-                {row.page}
+                {row.clientName}
               </div>
             </div>
           ))}
         </div>
 
-        <div className="text-sm text-muted-foreground font-normal whitespace-nowrap w-[117px]">
+        <div className="text-sm text-muted-foreground font-normal whitespace-nowrap w-[140px]">
           <div className="items-center flex min-h-11 w-full gap-3 text-xs text-muted-foreground font-semibold bg-background px-6 py-3 border-b-border border-b border-solid max-md:px-5">
             <div className="items-center self-stretch flex gap-1 my-auto">
               <div className="text-muted-foreground text-xs leading-[18px] self-stretch my-auto">
-                Sessions
+                Business Type
               </div>
               <ArrowUpDown size={12} />
             </div>
@@ -155,7 +156,7 @@ export const DataTable: React.FC = () => {
           {filteredData.map((row) => (
             <div key={row.id} className="items-center flex min-h-[72px] w-full leading-none px-6 py-4 border-b-border border-b border-solid max-md:px-5">
               <div className="text-muted-foreground text-sm leading-5 self-stretch my-auto">
-                {row.sessions}
+                {row.businessType}
               </div>
             </div>
           ))}
@@ -165,7 +166,7 @@ export const DataTable: React.FC = () => {
           <div className="items-center flex min-h-11 w-full gap-3 text-xs text-muted-foreground font-semibold bg-background px-6 py-3 border-b-border border-b border-solid max-md:px-5">
             <div className="items-center self-stretch flex gap-1 my-auto">
               <div className="text-muted-foreground text-xs leading-[18px] self-stretch my-auto">
-                Avg time
+                Submitted
               </div>
               <ArrowUpDown size={12} />
             </div>
@@ -173,7 +174,7 @@ export const DataTable: React.FC = () => {
           {filteredData.map((row) => (
             <div key={row.id} className="items-center flex min-h-[72px] w-full leading-none px-6 py-4 border-b-border border-b border-solid max-md:px-5">
               <div className="text-muted-foreground text-sm leading-5 self-stretch my-auto">
-                {row.avgTime}
+                {new Date(row.submittedDate).toLocaleDateString()}
               </div>
             </div>
           ))}
@@ -183,7 +184,7 @@ export const DataTable: React.FC = () => {
           <div className="items-center flex min-h-11 w-full gap-3 text-xs text-muted-foreground font-semibold bg-background px-6 py-3 border-b-border border-b border-solid max-md:px-5">
             <div className="items-center self-stretch flex gap-1 my-auto">
               <div className="text-muted-foreground text-xs leading-[18px] self-stretch my-auto">
-                % of total
+                Completion
               </div>
               <ArrowUpDown size={12} />
             </div>
@@ -199,17 +200,19 @@ export const DataTable: React.FC = () => {
           <div className="items-center flex min-h-11 w-full gap-3 text-muted-foreground font-semibold bg-background px-6 py-3 border-b-border border-b border-solid max-md:px-5">
             <div className="items-center self-stretch flex gap-1 my-auto">
               <div className="text-muted-foreground text-xs leading-[18px] self-stretch my-auto">
-                Folder
+                Status
               </div>
               <ArrowUpDown size={12} />
             </div>
           </div>
           {filteredData.map((row) => (
             <div key={row.id} className="items-center flex min-h-[72px] w-full text-center px-6 py-4 border-b-border border-b border-solid max-md:px-5">
-              <Badge variant="folder">
-                <Folder size={12} />
+              <Badge variant={row.status === 'Complete' ? 'default' : row.status === 'In Review' ? 'online' : 'folder'}>
+                {row.status === 'Complete' && <Check size={12} />}
+                {row.status === 'In Review' && <Clock size={12} />}
+                {row.status === 'Incomplete' && <User size={12} />}
                 <div className="text-foreground text-xs leading-[18px] self-stretch my-auto">
-                  {row.folder}
+                  {row.status}
                 </div>
               </Badge>
             </div>
