@@ -95,7 +95,7 @@ export const SearchInput: React.FC<SearchInputProps> = ({
               value={searchValue}
               onChange={(e) => handleValueChange(e.target.value)}
               placeholder={placeholder}
-              className="text-foreground text-ellipsis text-sm leading-5 self-stretch flex-1 shrink basis-[0%] my-auto bg-transparent border-none outline-none placeholder:text-muted-foreground cursor-pointer"
+              className="text-foreground text-ellipsis text-xs leading-4 self-stretch flex-1 shrink basis-[0%] my-auto bg-transparent border-none outline-none placeholder:text-muted-foreground cursor-pointer"
               readOnly
             />
           </div>

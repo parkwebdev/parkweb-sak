@@ -4,28 +4,28 @@ export const getStatusColor = (status: string, type: 'onboarding' | 'project' = 
   if (type === 'onboarding') {
     switch (status) {
       case 'Sent': 
-        return 'bg-info/10 text-info-foreground border-info/20';
+        return 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-800';
       case 'In Progress': 
-        return 'bg-warning/10 text-warning-foreground border-warning/20';
+        return 'bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-200 border-orange-200 dark:border-orange-800';
       case 'Completed': 
-        return 'bg-success/10 text-success-foreground border-success/20';
+        return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 border-green-200 dark:border-green-800';
       case 'SOW Generated': 
-        return 'bg-primary/10 text-primary-foreground border-primary/20';
+        return 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-200 border-purple-200 dark:border-purple-800';
       case 'Approved': 
-        return 'bg-success/10 text-success-foreground border-success/20';
+        return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 border-green-200 dark:border-green-800';
       default: 
-        return 'bg-muted text-muted-foreground border-border';
+        return 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-700';
     }
   }
   
   // Project status colors
   switch (status) {
     case 'Complete':
-      return 'default';
+      return 'complete';
     case 'In Review':
-      return 'online';
+      return 'in-review';
     case 'Incomplete':
-      return 'folder';
+      return 'incomplete';
     default:
       return 'default';
   }
@@ -53,14 +53,14 @@ export const formatDate = (dateString: string, options?: Intl.DateTimeFormatOpti
   });
 };
 
-export const getBadgeVariant = (status: string): 'default' | 'online' | 'folder' => {
+export const getBadgeVariant = (status: string): 'default' | 'online' | 'folder' | 'complete' | 'incomplete' | 'in-review' => {
   switch (status) {
     case 'Complete':
-      return 'default';
+      return 'complete';
     case 'In Review':
-      return 'online';
+      return 'in-review';
     case 'Incomplete':
-      return 'folder';
+      return 'incomplete';
     default:
       return 'default';
   }

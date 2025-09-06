@@ -299,16 +299,16 @@ const Onboarding = () => {
                                 {client.clientName} • {client.email}
                               </p>
                             </div>
-                            <div className="flex items-center gap-1.5 flex-shrink-0">
-                              <Badge className={`${getStatusColor(client.status)} border text-xs px-1.5 py-0.5`}>
-                                {client.status}
-                              </Badge>
-                              {client.sowStatus && (
-                                <Badge variant="outline" className="text-xs px-1.5 py-0.5">
-                                  SOW: {client.sowStatus}
-                                </Badge>
-                              )}
-                            </div>
+                             <div className="flex items-center gap-1.5 flex-shrink-0">
+                               <Badge className={`${getStatusColor(client.status)} border text-xs px-2 py-1 w-auto`}>
+                                 {client.status}
+                               </Badge>
+                               {client.sowStatus && (
+                                 <Badge variant="outline" className="text-xs px-2 py-1 w-auto">
+                                   SOW: {client.sowStatus}
+                                 </Badge>
+                               )}
+                             </div>
                           </div>
                           <div className="flex items-center gap-4 text-xs text-muted-foreground">
                             <span>Industry: {client.industry}</span>
