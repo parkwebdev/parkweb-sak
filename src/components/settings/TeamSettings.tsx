@@ -335,30 +335,28 @@ export const TeamSettings: React.FC = () => {
                       )
                   }
                 </Badge>
-                {/* DEBUG INFO - shows current user's role and management permissions */}
-                <div className="text-xs text-muted-foreground mt-2 p-2 bg-muted/50 rounded">
-                  Current User Role: {currentUserRole} | Can Manage: {canManageRoles.toString()} | Is You: {(member.user_id === user?.id).toString()}
-                </div>
-                
-                {canManageRoles && member.user_id !== user?.id && (
-                  <div className="flex items-center gap-2 mt-2">
+                {/* Show Edit Role button for: 1) Admins managing others, 2) Users managing themselves */}
+                {((canManageRoles && member.user_id !== user?.id) || (member.user_id === user?.id)) && (
+                  <div className="flex items-center gap-1 mt-2">
                     <Button 
-                      variant="secondary"
+                      variant="ghost"
                       size="sm"
                       onClick={() => handleEditRole(member)}
-                      className="h-8 px-4 text-sm bg-blue-100 text-blue-700 border border-blue-300 hover:bg-blue-200 font-medium"
+                      className="h-8 w-8 p-0"
                     >
-                      <Settings size={16} className="mr-2" />
-                      Edit Role
+                      <Settings size={16} />
                     </Button>
-                    <Button 
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => handleRemoveMember(member)}
-                      className="h-8 px-4 text-sm font-medium"
-                    >
-                      Remove
-                    </Button>
+                    {/* Only show remove for admins managing others, not for self-management */}
+                    {canManageRoles && member.user_id !== user?.id && (
+                      <Button 
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRemoveMember(member)}
+                        className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                      >
+                        <X size={16} />
+                      </Button>
+                    )}
                   </div>
                 )}
               </div>
