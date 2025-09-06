@@ -14,6 +14,57 @@ export type Database = {
   }
   public: {
     Tables: {
+      client_onboarding_links: {
+        Row: {
+          client_name: string
+          company_name: string
+          created_at: string
+          date_sent: string
+          email: string
+          id: string
+          industry: string
+          last_activity: string
+          onboarding_url: string
+          personal_note: string | null
+          sow_status: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          client_name: string
+          company_name: string
+          created_at?: string
+          date_sent?: string
+          email: string
+          id?: string
+          industry: string
+          last_activity?: string
+          onboarding_url: string
+          personal_note?: string | null
+          sow_status?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          client_name?: string
+          company_name?: string
+          created_at?: string
+          date_sent?: string
+          email?: string
+          id?: string
+          industry?: string
+          last_activity?: string
+          onboarding_url?: string
+          personal_note?: string | null
+          sow_status?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       notification_preferences: {
         Row: {
           browser_notifications: boolean | null
@@ -150,6 +201,63 @@ export type Database = {
           display_name?: string | null
           email?: string | null
           id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      scope_of_works: {
+        Row: {
+          client: string
+          client_contact: string
+          content: string
+          created_at: string
+          date_created: string
+          date_modified: string
+          email: string
+          id: string
+          industry: string
+          integrations: string[] | null
+          pages: number
+          project_type: string
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          client: string
+          client_contact: string
+          content: string
+          created_at?: string
+          date_created?: string
+          date_modified?: string
+          email: string
+          id?: string
+          industry: string
+          integrations?: string[] | null
+          pages?: number
+          project_type: string
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          client?: string
+          client_contact?: string
+          content?: string
+          created_at?: string
+          date_created?: string
+          date_modified?: string
+          email?: string
+          id?: string
+          industry?: string
+          integrations?: string[] | null
+          pages?: number
+          project_type?: string
+          status?: string
+          title?: string
           updated_at?: string
           user_id?: string
         }

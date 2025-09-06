@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Sidebar } from '@/components/Sidebar';
 import { Plus, Link01 as Link2, Copy01 as Copy, Send01 as Send, User01 as User, File02 as FileText, Clock as Clock, Eye as Eye } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
@@ -15,61 +15,28 @@ import { getStatusColor, formatDate } from '@/lib/status-helpers';
 import { createOnboardingUrl, createEmailTemplate, openEmailClient, copyToClipboard } from '@/lib/form-helpers';
 import { ProgressBar } from '@/components/ProgressBar';
 import { useSidebar } from '@/hooks/use-sidebar';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ClientLink {
   id: string;
-  clientName: string;
-  companyName: string;
+  client_name: string;
+  company_name: string;
   email: string;
   industry: string;
   status: 'Sent' | 'In Progress' | 'Completed' | 'SOW Generated' | 'Approved';
-  dateSent: string;
-  lastActivity: string;
-  onboardingUrl: string;
-  sowStatus?: 'Draft' | 'Client Review' | 'Agency Review' | 'Approved';
+  date_sent: string;
+  last_activity: string;
+  onboarding_url: string;
+  sow_status?: 'Draft' | 'Client Review' | 'Agency Review' | 'Approved';
 }
-
-const clientLinks: ClientLink[] = [
-  {
-    id: '1',
-    clientName: 'Sarah Johnson',
-    companyName: 'Mountain View RV Park',
-    email: 'sarah@mountainviewrv.com',
-    industry: 'RV Park',
-    status: 'SOW Generated',
-    dateSent: '2024-01-15',
-    lastActivity: '2024-01-16',
-    onboardingUrl: '/client-onboarding?name=Sarah%20Johnson&company=Mountain%20View%20RV%20Park&token=abc123',
-    sowStatus: 'Client Review'
-  },
-  {
-    id: '2',
-    clientName: 'Michael Chen',
-    companyName: 'Sunset Manufacturing',
-    email: 'michael@sunsetmfg.com',
-    industry: 'Manufactured Home Community',
-    status: 'In Progress',
-    dateSent: '2024-01-12',
-    lastActivity: '2024-01-14',
-    onboardingUrl: '/client-onboarding?name=Michael%20Chen&company=Sunset%20Manufacturing&token=def456'
-  },
-  {
-    id: '3',
-    clientName: 'Jessica Rodriguez',
-    companyName: 'Elite Capital Partners',
-    email: 'jessica@elitecapital.com',
-    industry: 'Capital & Syndication',
-    status: 'Sent',
-    dateSent: '2024-01-10',
-    lastActivity: '2024-01-10',
-    onboardingUrl: '/client-onboarding?name=Jessica%20Rodriguez&company=Elite%20Capital%20Partners&token=ghi789'
-  }
-];
 
 const Onboarding = () => {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { isCollapsed } = useSidebar();
+  const [clientLinks, setClientLinks] = useState<ClientLink[]>([]);
+  const [loading, setLoading] = useState(true);
   const [newClient, setNewClient] = useState({
     clientName: '',
     companyName: '',
@@ -78,6 +45,35 @@ const Onboarding = () => {
     personalNote: ''
   });
   const { toast } = useToast();
+  const { user } = useAuth();
+
+  // Fetch client links from database
+  useEffect(() => {
+    if (user) {
+      fetchClientLinks();
+    }
+  }, [user]);
+
+  const fetchClientLinks = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('client_onboarding_links')
+        .select('*')
+        .order('date_sent', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching client links:', error);
+        return;
+      }
+
+      setClientLinks(data || []);
+    } catch (error) {
+      console.error('Error fetching client links:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Function to calculate progress percentage based on status
   const getProgressPercentage = (status: ClientLink['status']) => {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Sidebar } from '@/components/Sidebar';
 import { SimpleSearch } from '@/components/SimpleSearch';
 import { 
@@ -29,14 +29,6 @@ import { useToast } from '@/hooks/use-toast';
 import { useNotifications } from '@/hooks/useNotifications';
 import { generateScopeOfWorkPDF, generateScopeOfWorkDOC } from '@/lib/document-generator';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -53,148 +45,28 @@ import {
 } from "@/components/ui/tooltip";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useSidebar } from '@/hooks/use-sidebar';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
-const scopeOfWorks = [
-  {
-    id: '1',
-    title: 'Mountain View RV Park Website',
-    projectType: 'Web Design',
-    client: 'Mountain View RV Park',
-    clientContact: 'Sarah Johnson',
-    email: 'sarah@mountainviewrv.com',
-    industry: 'RV Park',
-    status: 'Approved',
-    dateCreated: '2024-01-15',
-    dateModified: '2024-01-16',
-    pages: 8,
-    integrations: ['Booking System', 'Payment Gateway', 'Google Maps'],
-    content: `# Mountain View RV Park - Web Design Project
-
-## Project Overview
-Create a modern, responsive website for Mountain View RV Park that showcases amenities and enables online bookings.
-
-## Scope of Work
-
-### Phase 1: Design & Planning
-- Site architecture and wireframes
-- Visual design mockups
-- Content strategy
-
-### Phase 2: Development
-- Responsive website development
-- Booking system integration
-- Payment gateway setup
-- Google Maps integration
-
-### Phase 3: Testing & Launch
-- Cross-browser testing
-- Mobile optimization
-- SEO implementation
-- Go-live support
-
-## Deliverables
-- 8 fully designed and developed pages
-- Booking system with calendar
-- Payment processing capability
-- Mobile-responsive design
-- SEO optimization
-
-## Timeline
-- Phase 1: 2 weeks
-- Phase 2: 4 weeks  
-- Phase 3: 1 week
-
-Total project duration: 7 weeks`
-  },
-  {
-    id: '2',
-    title: 'Elite Capital Partners Portal',
-    projectType: 'Investment Portal',
-    client: 'Elite Capital Partners',
-    clientContact: 'Jessica Rodriguez',
-    email: 'jessica@elitecapital.com',
-    industry: 'Capital & Syndication',
-    status: 'In Review',
-    dateCreated: '2024-01-10',
-    dateModified: '2024-01-12',
-    pages: 12,
-    integrations: ['Investor Portal', 'Document Management', 'CRM'],
-    content: `# Elite Capital Partners - Investment Portal
-
-## Project Overview
-Develop a comprehensive investment portal for managing investor relations and deal flow.
-
-## Scope of Work
-
-### Phase 1: Portal Architecture
-- User authentication system
-- Investor dashboard design
-- Document management structure
-
-### Phase 2: Core Features
-- Deal presentation system
-- Investment tracking
-- Communication tools
-- Reporting capabilities
-
-### Phase 3: Integration & Security
-- CRM integration
-- Security implementation
-- Compliance features
-
-## Deliverables
-- 12-page investor portal
-- Document management system
-- CRM integration
-- Security protocols
-
-## Timeline
-Total project duration: 10 weeks`
-  },
-  {
-    id: '3',
-    title: 'Local Plumbing Pro Website',
-    projectType: 'Service Website',
-    client: 'Local Plumbing Pro',
-    clientContact: 'David Miller',
-    email: 'david@localplumbingpro.com',
-    industry: 'Local Business',
-    status: 'Draft',
-    dateCreated: '2024-01-08',
-    dateModified: '2024-01-08',
-    pages: 6,
-    integrations: ['Appointment Booking', 'Contact Forms'],
-    content: `# Local Plumbing Pro - Service Website
-
-## Project Overview
-Create a professional website for local plumbing services with online appointment booking.
-
-## Scope of Work
-
-### Phase 1: Website Development
-- Service pages design
-- Contact forms setup
-- Appointment booking system
-
-### Phase 2: Optimization
-- Local SEO implementation
-- Mobile optimization
-- Performance optimization
-
-## Deliverables
-- 6-page service website
-- Online appointment booking
-- Contact form integration
-- Local SEO setup
-
-## Timeline
-Total project duration: 4 weeks`
-  }
-];
+interface ScopeOfWork {
+  id: string;
+  title: string;
+  project_type: string;
+  client: string;
+  client_contact: string;
+  email: string;
+  industry: string;
+  status: string;
+  date_created: string;
+  date_modified: string;
+  pages: number;
+  integrations: string[];
+  content: string;
+}
 
 const ScopeOfWorks = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedSow, setSelectedSow] = useState<any>(null);
+  const [selectedSow, setSelectedSow] = useState<ScopeOfWork | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState('');
   const [editedTitle, setEditedTitle] = useState('');
@@ -203,7 +75,7 @@ const ScopeOfWorks = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { isCollapsed } = useSidebar();
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
-  const [sortBy, setSortBy] = useState<'client' | 'projectType' | 'industry' | 'status' | 'pages' | 'dateModified'>('dateModified');
+  const [sortBy, setSortBy] = useState<'client' | 'project_type' | 'industry' | 'status' | 'pages' | 'date_modified'>('date_modified');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [showTooltip, setShowTooltip] = useState<string | null>(null);
   const [showColumns, setShowColumns] = useState({
@@ -225,13 +97,54 @@ const ScopeOfWorks = () => {
     status: [] as string[],
     pages: { min: 0, max: 20 },
   });
+  const [scopeOfWorks, setScopeOfWorks] = useState<ScopeOfWork[]>([]);
+  const [loading, setLoading] = useState(true);
   
   const { toast } = useToast();
   const { createScopeWorkNotification } = useNotifications();
+  const { user } = useAuth();
+
+  // Fetch scope of works from database
+  useEffect(() => {
+    if (user) {
+      fetchScopeOfWorks();
+    }
+  }, [user]);
+
+  const fetchScopeOfWorks = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('scope_of_works')
+        .select('*')
+        .order('date_modified', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching scope of works:', error);
+        toast({
+          title: "Error",
+          description: "Failed to fetch scope of works.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setScopeOfWorks(data || []);
+    } catch (error) {
+      console.error('Error fetching scope of works:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch scope of works.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Extract unique values from data
   const availableIndustries = [...new Set(scopeOfWorks.map(item => item.industry))];
-  const availableProjectTypes = [...new Set(scopeOfWorks.map(item => item.projectType))];
+  const availableProjectTypes = [...new Set(scopeOfWorks.map(item => item.project_type))];
   const availableStatuses = [...new Set(scopeOfWorks.map(item => item.status))];
 
   const handleSort = (column: typeof sortBy) => {
@@ -247,29 +160,58 @@ const ScopeOfWorks = () => {
     setViewMode(viewMode === 'table' ? 'cards' : 'table');
   };
 
-  const handleViewSow = (sow: any) => {
+  const handleViewSow = (sow: ScopeOfWork) => {
     setSelectedSow(sow);
     setEditedContent(sow.content);
     setEditedTitle(sow.title);
     setIsEditing(false);
   };
 
-  const handleEditSow = (sow: any) => {
+  const handleEditSow = (sow: ScopeOfWork) => {
     setSelectedSow(sow);
     setEditedContent(sow.content);
     setEditedTitle(sow.title);
     setIsEditing(true);
   };
 
-  const handleSaveChanges = () => {    
-    toast({
-      title: "Changes saved",
-      description: "Your scope of work has been updated.",
-    });
-    setIsEditing(false);
+  const handleSaveChanges = async () => {
+    if (!selectedSow || !user) return;
+
+    try {
+      const { error } = await supabase
+        .from('scope_of_works')
+        .update({
+          title: editedTitle,
+          content: editedContent,
+          date_modified: new Date().toISOString(),
+        })
+        .eq('id', selectedSow.id);
+
+      if (error) {
+        toast({
+          title: "Error",
+          description: "Failed to save changes.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Changes saved",
+        description: "Your scope of work has been updated.",
+      });
+      setIsEditing(false);
+      fetchScopeOfWorks(); // Refresh the data
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to save changes.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleDownloadPDF = (sow: any) => {
+  const handleDownloadPDF = (sow: ScopeOfWork) => {
     try {
       const doc = generateScopeOfWorkPDF(sow);
       doc.save(`${sow.title.replace(/[^a-zA-Z0-9]/g, '_')}_ScopeOfWork.pdf`);
@@ -286,7 +228,7 @@ const ScopeOfWorks = () => {
     }
   };
 
-  const handleDownloadDOC = (sow: any) => {
+  const handleDownloadDOC = (sow: ScopeOfWork) => {
     try {
       generateScopeOfWorkDOC(sow);
       toast({
@@ -326,12 +268,12 @@ const ScopeOfWorks = () => {
     // Apply advanced filters
     if (advancedFilters.dateFrom) {
       filtered = filtered.filter(item => 
-        new Date(item.dateCreated) >= new Date(advancedFilters.dateFrom)
+        new Date(item.date_created) >= new Date(advancedFilters.dateFrom)
       );
     }
     if (advancedFilters.dateTo) {
       filtered = filtered.filter(item => 
-        new Date(item.dateCreated) <= new Date(advancedFilters.dateTo)
+        new Date(item.date_created) <= new Date(advancedFilters.dateTo)
       );
     }
     if (advancedFilters.industry.length > 0) {
@@ -341,7 +283,7 @@ const ScopeOfWorks = () => {
     }
     if (advancedFilters.projectType.length > 0) {
       filtered = filtered.filter(item => 
-        advancedFilters.projectType.includes(item.projectType)
+        advancedFilters.projectType.includes(item.project_type)
       );
     }
     if (advancedFilters.status.length > 0) {
@@ -363,8 +305,8 @@ const ScopeOfWorks = () => {
         case 'client':
           comparison = a.client.localeCompare(b.client);
           break;
-        case 'projectType':
-          comparison = a.projectType.localeCompare(b.projectType);
+        case 'project_type':
+          comparison = a.project_type.localeCompare(b.project_type);
           break;
         case 'industry':
           comparison = a.industry.localeCompare(b.industry);
@@ -375,9 +317,9 @@ const ScopeOfWorks = () => {
         case 'pages':
           comparison = a.pages - b.pages;
           break;
-        case 'dateModified':
+        case 'date_modified':
         default:
-          comparison = new Date(a.dateModified).getTime() - new Date(b.dateModified).getTime();
+          comparison = new Date(a.date_modified).getTime() - new Date(b.date_modified).getTime();
           break;
       }
       
@@ -390,13 +332,13 @@ const ScopeOfWorks = () => {
   const filteredData = getFilteredDataByTab().filter(row =>
     row.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     row.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    row.projectType.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    row.project_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
     row.industry.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const searchResults = filteredData.map(sow => ({
     title: sow.client,
-    subtitle: sow.clientContact,
+    subtitle: sow.client_contact,
     id: sow.id
   }));
 
@@ -420,7 +362,7 @@ const ScopeOfWorks = () => {
     const csvContent = "data:text/csv;charset=utf-8," 
       + "Company Name,Client Name,Project Type,Industry,Status,Pages,Date Modified\n"
       + filteredData.map(row => 
-          `"${row.client}","${row.clientContact}","${row.projectType}","${row.industry}","${row.status}","${row.pages}","${row.dateModified}"`
+          `"${row.client}","${row.client_contact}","${row.project_type}","${row.industry}","${row.status}","${row.pages}","${row.date_modified}"`
         ).join("\n");
     
     const encodedUri = encodeURI(csvContent);
@@ -529,427 +471,437 @@ const ScopeOfWorks = () => {
                     </div>
                   </div>
                   
-                   {/* Search and controls */}
-                   <div className="flex items-center gap-2.5 w-full lg:w-auto">
-                     <SimpleSearch
-                       placeholder="Search"
-                       value={searchTerm}
-                       onChange={setSearchTerm}
-                       className="flex-1 lg:max-w-[240px] lg:min-w-48 lg:w-[240px]"
-                     />
+                  {/* Search and controls */}
+                  <div className="flex items-center gap-2.5 w-full lg:w-auto">
+                    <SimpleSearch
+                      placeholder="Search"
+                      value={searchTerm}
+                      onChange={setSearchTerm}
+                      className="flex-1 lg:max-w-[240px] lg:min-w-48 lg:w-[240px]"
+                    />
+                    
+                    {/* Filter Button */}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden text-xs text-foreground font-medium leading-none bg-background px-2 py-1.5 rounded-md border-border hover:bg-accent/50">
+                          <Filter size={16} className="text-muted-foreground" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-80 p-4">
+                        <DropdownMenuLabel className="p-0 mb-2">Advanced Filters</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        
+                        <div className="space-y-4 pt-2">
+                          <div>
+                            <label className="text-sm font-medium mb-2 block">Date Range</label>
+                            <div className="flex gap-2 px-1">
+                              <Input
+                                type="date"
+                                placeholder="From"
+                                value={advancedFilters.dateFrom}
+                                onChange={(e) => setAdvancedFilters(prev => ({...prev, dateFrom: e.target.value}))}
+                                className="text-xs"
+                              />
+                              <Input
+                                type="date"
+                                placeholder="To"
+                                value={advancedFilters.dateTo}
+                                onChange={(e) => setAdvancedFilters(prev => ({...prev, dateTo: e.target.value}))}
+                                className="text-xs"
+                              />
+                            </div>
+                          </div>
+                          
+                          <div>
+                            <label className="text-sm font-medium mb-2 block">Industry</label>
+                            <div className="flex flex-wrap gap-1">
+                              {availableIndustries.map((industry) => (
+                                <button
+                                  key={industry}
+                                  onClick={() => {
+                                    const newIndustry = advancedFilters.industry.includes(industry)
+                                      ? advancedFilters.industry.filter(i => i !== industry)
+                                      : [...advancedFilters.industry, industry];
+                                    setAdvancedFilters(prev => ({...prev, industry: newIndustry}));
+                                  }}
+                                >
+                                  <Badge
+                                    variant={advancedFilters.industry.includes(industry) ? "default" : "outline"}
+                                    className="text-xs cursor-pointer w-auto"
+                                  >
+                                    {industry}
+                                  </Badge>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div>
+                            <label className="text-sm font-medium mb-2 block">Project Type</label>
+                            <div className="flex flex-wrap gap-1">
+                              {availableProjectTypes.map((type) => (
+                                <button
+                                  key={type}
+                                  onClick={() => {
+                                    const newType = advancedFilters.projectType.includes(type)
+                                      ? advancedFilters.projectType.filter(t => t !== type)
+                                      : [...advancedFilters.projectType, type];
+                                    setAdvancedFilters(prev => ({...prev, projectType: newType}));
+                                  }}
+                                >
+                                  <Badge
+                                    variant={advancedFilters.projectType.includes(type) ? "default" : "outline"}
+                                    className="text-xs cursor-pointer w-auto"
+                                  >
+                                    {type}
+                                  </Badge>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div>
+                            <label className="text-sm font-medium mb-2 block">Status</label>
+                            <div className="flex flex-wrap gap-1">
+                              {availableStatuses.map((status) => (
+                                <button
+                                  key={status}
+                                  onClick={() => {
+                                    const newStatus = advancedFilters.status.includes(status)
+                                      ? advancedFilters.status.filter(s => s !== status)
+                                      : [...advancedFilters.status, status];
+                                    setAdvancedFilters(prev => ({...prev, status: newStatus}));
+                                  }}
+                                >
+                                  <Badge
+                                    variant={advancedFilters.status.includes(status) ? "default" : "outline"}
+                                    className="text-xs cursor-pointer w-auto"
+                                  >
+                                    {status}
+                                  </Badge>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                          
+                          <div className="flex gap-2 pt-2">
+                            <Button size="sm" variant="outline" onClick={resetAdvancedFilters} className="text-xs">
+                              Clear All
+                            </Button>
+                          </div>
+                        </div>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+
+                    {/* Sort Button */}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden text-xs text-foreground font-medium leading-none bg-background px-2 py-1.5 rounded-md border-border hover:bg-accent/50">
+                          {sortOrder === 'asc' ? <SortAsc size={16} className="text-muted-foreground" /> : <SortDesc size={16} className="text-muted-foreground" />}
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-48">
+                        <DropdownMenuLabel>Sort by</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        
+                        <DropdownMenuItem onClick={() => handleSort('client')}>
+                          Company Name
+                          {sortBy === 'client' && (
+                            <div className="ml-auto">
+                              {sortOrder === 'asc' ? <SortAsc size={14} /> : <SortDesc size={14} />}
+                            </div>
+                          )}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleSort('status')}>
+                          Status
+                          {sortBy === 'status' && (
+                            <div className="ml-auto">
+                              {sortOrder === 'asc' ? <SortAsc size={14} /> : <SortDesc size={14} />}
+                            </div>
+                          )}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleSort('project_type')}>
+                          Project Type
+                          {sortBy === 'project_type' && (
+                            <div className="ml-auto">
+                              {sortOrder === 'asc' ? <SortAsc size={14} /> : <SortDesc size={14} />}
+                            </div>
+                          )}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleSort('industry')}>
+                          Industry
+                          {sortBy === 'industry' && (
+                            <div className="ml-auto">
+                              {sortOrder === 'asc' ? <SortAsc size={14} /> : <SortDesc size={14} />}
+                            </div>
+                          )}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleSort('pages')}>
+                          Pages
+                          {sortBy === 'pages' && (
+                            <div className="ml-auto">
+                              {sortOrder === 'asc' ? <SortAsc size={14} /> : <SortDesc size={14} />}
+                            </div>
+                          )}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleSort('date_modified')}>
+                          Date Modified
+                          {sortBy === 'date_modified' && (
+                            <div className="ml-auto">
+                              {sortOrder === 'asc' ? <SortAsc size={14} /> : <SortDesc size={14} />}
+                            </div>
+                          )}
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                      
-                     {/* Filter Button */}
-                     <DropdownMenu>
-                       <DropdownMenuTrigger asChild>
-                         <button className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden text-xs text-foreground font-medium leading-none bg-background px-2 py-1.5 rounded-md border-border hover:bg-accent/50">
-                           <Filter size={16} className="text-muted-foreground" />
-                         </button>
-                       </DropdownMenuTrigger>
-                       <DropdownMenuContent align="end" className="w-80 p-4">
-                         <DropdownMenuLabel className="p-0 mb-2">Advanced Filters</DropdownMenuLabel>
-                         <DropdownMenuSeparator />
-                         
-                         <div className="space-y-4 pt-2">
-                           <div>
-                             <label className="text-sm font-medium mb-2 block">Date Range</label>
-                             <div className="flex gap-2 px-1">
-                               <Input
-                                 type="date"
-                                 placeholder="From"
-                                 value={advancedFilters.dateFrom}
-                                 onChange={(e) => setAdvancedFilters(prev => ({...prev, dateFrom: e.target.value}))}
-                                 className="text-xs"
-                               />
-                               <Input
-                                 type="date"
-                                 placeholder="To"
-                                 value={advancedFilters.dateTo}
-                                 onChange={(e) => setAdvancedFilters(prev => ({...prev, dateTo: e.target.value}))}
-                                 className="text-xs"
-                               />
-                             </div>
-                           </div>
-                           
-                           <div>
-                             <label className="text-sm font-medium mb-2 block">Industry</label>
-                             <div className="flex flex-wrap gap-1">
-                               {availableIndustries.map((industry) => (
-                                 <button
-                                   key={industry}
-                                   onClick={() => {
-                                     const newIndustry = advancedFilters.industry.includes(industry)
-                                       ? advancedFilters.industry.filter(i => i !== industry)
-                                       : [...advancedFilters.industry, industry];
-                                     setAdvancedFilters(prev => ({...prev, industry: newIndustry}));
-                                   }}
-                                 >
-                                   <Badge
-                                     variant={advancedFilters.industry.includes(industry) ? "default" : "outline"}
-                                     className="text-xs cursor-pointer w-auto"
-                                   >
-                                     {industry}
-                                   </Badge>
-                                 </button>
-                               ))}
-                             </div>
-                           </div>
+                    {/* Settings Button */}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden text-xs text-foreground font-medium leading-none bg-background px-2 py-1.5 rounded-md border-border hover:bg-accent/50">
+                          <Settings size={16} className="text-muted-foreground" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-56">
+                        <DropdownMenuLabel>Table Settings</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        
+                        <DropdownMenuItem onClick={handleExportData}>
+                          <Download className="mr-2 h-4 w-4" />
+                          Export to CSV
+                        </DropdownMenuItem>
+                        
+                        <DropdownMenuSeparator />
+                        <DropdownMenuLabel>Show Columns</DropdownMenuLabel>
+                        
+                        <DropdownMenuCheckboxItem
+                          checked={showColumns.companyName}
+                          onCheckedChange={() => toggleColumn('companyName')}
+                        >
+                          Company Name
+                        </DropdownMenuCheckboxItem>
+                        <DropdownMenuCheckboxItem
+                          checked={showColumns.clientName}
+                          onCheckedChange={() => toggleColumn('clientName')}
+                        >
+                          Client Name
+                        </DropdownMenuCheckboxItem>
+                        <DropdownMenuCheckboxItem
+                          checked={showColumns.projectType}
+                          onCheckedChange={() => toggleColumn('projectType')}
+                        >
+                          Project Type
+                        </DropdownMenuCheckboxItem>
+                        <DropdownMenuCheckboxItem
+                          checked={showColumns.industry}
+                          onCheckedChange={() => toggleColumn('industry')}
+                        >
+                          Industry
+                        </DropdownMenuCheckboxItem>
+                        <DropdownMenuCheckboxItem
+                          checked={showColumns.status}
+                          onCheckedChange={() => toggleColumn('status')}
+                        >
+                          Status
+                        </DropdownMenuCheckboxItem>
+                        <DropdownMenuCheckboxItem
+                          checked={showColumns.pages}
+                          onCheckedChange={() => toggleColumn('pages')}
+                        >
+                          Pages
+                        </DropdownMenuCheckboxItem>
+                        <DropdownMenuCheckboxItem
+                          checked={showColumns.integrations}
+                          onCheckedChange={() => toggleColumn('integrations')}
+                        >
+                          Integrations
+                        </DropdownMenuCheckboxItem>
+                        <DropdownMenuCheckboxItem
+                          checked={showColumns.dateModified}
+                          onCheckedChange={() => toggleColumn('dateModified')}
+                        >
+                          Date Modified
+                        </DropdownMenuCheckboxItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
 
-                           <div>
-                             <label className="text-sm font-medium mb-2 block">Project Type</label>
-                             <div className="flex flex-wrap gap-1">
-                               {availableProjectTypes.map((type) => (
-                                 <button
-                                   key={type}
-                                   onClick={() => {
-                                     const newType = advancedFilters.projectType.includes(type)
-                                       ? advancedFilters.projectType.filter(t => t !== type)
-                                       : [...advancedFilters.projectType, type];
-                                     setAdvancedFilters(prev => ({...prev, projectType: newType}));
-                                   }}
-                                 >
-                                   <Badge
-                                     variant={advancedFilters.projectType.includes(type) ? "default" : "outline"}
-                                     className="text-xs cursor-pointer w-auto"
-                                   >
-                                     {type}
-                                   </Badge>
-                                 </button>
-                               ))}
-                             </div>
-                           </div>
-
-                           <div>
-                             <label className="text-sm font-medium mb-2 block">Status</label>
-                             <div className="flex flex-wrap gap-1">
-                               {availableStatuses.map((status) => (
-                                 <button
-                                   key={status}
-                                   onClick={() => {
-                                     const newStatus = advancedFilters.status.includes(status)
-                                       ? advancedFilters.status.filter(s => s !== status)
-                                       : [...advancedFilters.status, status];
-                                     setAdvancedFilters(prev => ({...prev, status: newStatus}));
-                                   }}
-                                 >
-                                   <Badge
-                                     variant={advancedFilters.status.includes(status) ? "default" : "outline"}
-                                     className="text-xs cursor-pointer w-auto"
-                                   >
-                                     {status}
-                                   </Badge>
-                                 </button>
-                               ))}
-                             </div>
-                           </div>
-                           
-                           <div className="flex gap-2 pt-2">
-                             <Button size="sm" variant="outline" onClick={resetAdvancedFilters} className="text-xs">
-                               Clear All
-                             </Button>
-                           </div>
-                         </div>
-                       </DropdownMenuContent>
-                     </DropdownMenu>
-
-                     {/* Sort Button */}
-                     <DropdownMenu>
-                       <DropdownMenuTrigger asChild>
-                         <button className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden text-xs text-foreground font-medium leading-none bg-background px-2 py-1.5 rounded-md border-border hover:bg-accent/50">
-                           {sortOrder === 'asc' ? <SortAsc size={16} className="text-muted-foreground" /> : <SortDesc size={16} className="text-muted-foreground" />}
-                         </button>
-                       </DropdownMenuTrigger>
-                       <DropdownMenuContent align="end" className="w-48">
-                         <DropdownMenuLabel>Sort by</DropdownMenuLabel>
-                         <DropdownMenuSeparator />
-                         
-                         <DropdownMenuItem onClick={() => handleSort('client')}>
-                           Company Name
-                           {sortBy === 'client' && (
-                             <div className="ml-auto">
-                               {sortOrder === 'asc' ? <SortAsc size={14} /> : <SortDesc size={14} />}
-                             </div>
-                           )}
-                         </DropdownMenuItem>
-                         <DropdownMenuItem onClick={() => handleSort('status')}>
-                           Status
-                           {sortBy === 'status' && (
-                             <div className="ml-auto">
-                               {sortOrder === 'asc' ? <SortAsc size={14} /> : <SortDesc size={14} />}
-                             </div>
-                           )}
-                         </DropdownMenuItem>
-                         <DropdownMenuItem onClick={() => handleSort('projectType')}>
-                           Project Type
-                           {sortBy === 'projectType' && (
-                             <div className="ml-auto">
-                               {sortOrder === 'asc' ? <SortAsc size={14} /> : <SortDesc size={14} />}
-                             </div>
-                           )}
-                         </DropdownMenuItem>
-                         <DropdownMenuItem onClick={() => handleSort('industry')}>
-                           Industry
-                           {sortBy === 'industry' && (
-                             <div className="ml-auto">
-                               {sortOrder === 'asc' ? <SortAsc size={14} /> : <SortDesc size={14} />}
-                             </div>
-                           )}
-                         </DropdownMenuItem>
-                         <DropdownMenuItem onClick={() => handleSort('pages')}>
-                           Pages
-                           {sortBy === 'pages' && (
-                             <div className="ml-auto">
-                               {sortOrder === 'asc' ? <SortAsc size={14} /> : <SortDesc size={14} />}
-                             </div>
-                           )}
-                         </DropdownMenuItem>
-                         <DropdownMenuItem onClick={() => handleSort('dateModified')}>
-                           Date Modified
-                           {sortBy === 'dateModified' && (
-                             <div className="ml-auto">
-                               {sortOrder === 'asc' ? <SortAsc size={14} /> : <SortDesc size={14} />}
-                             </div>
-                           )}
-                         </DropdownMenuItem>
-                       </DropdownMenuContent>
-                     </DropdownMenu>
-                     
-                     {/* Settings Button */}
-                     <DropdownMenu>
-                       <DropdownMenuTrigger asChild>
-                         <button className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden text-xs text-foreground font-medium leading-none bg-background px-2 py-1.5 rounded-md border-border hover:bg-accent/50">
-                           <Settings size={16} className="text-muted-foreground" />
-                         </button>
-                       </DropdownMenuTrigger>
-                       <DropdownMenuContent align="end" className="w-56">
-                         <DropdownMenuLabel>Table Settings</DropdownMenuLabel>
-                         <DropdownMenuSeparator />
-                         
-                         <DropdownMenuItem onClick={handleExportData}>
-                           <Download className="mr-2 h-4 w-4" />
-                           Export to CSV
-                         </DropdownMenuItem>
-                         
-                         <DropdownMenuSeparator />
-                         <DropdownMenuLabel>Show Columns</DropdownMenuLabel>
-                         
-                         <DropdownMenuCheckboxItem
-                           checked={showColumns.companyName}
-                           onCheckedChange={() => toggleColumn('companyName')}
-                         >
-                           Company Name
-                         </DropdownMenuCheckboxItem>
-                         <DropdownMenuCheckboxItem
-                           checked={showColumns.clientName}
-                           onCheckedChange={() => toggleColumn('clientName')}
-                         >
-                           Client Name
-                         </DropdownMenuCheckboxItem>
-                         <DropdownMenuCheckboxItem
-                           checked={showColumns.projectType}
-                           onCheckedChange={() => toggleColumn('projectType')}
-                         >
-                           Project Type
-                         </DropdownMenuCheckboxItem>
-                         <DropdownMenuCheckboxItem
-                           checked={showColumns.industry}
-                           onCheckedChange={() => toggleColumn('industry')}
-                         >
-                           Industry
-                         </DropdownMenuCheckboxItem>
-                         <DropdownMenuCheckboxItem
-                           checked={showColumns.status}
-                           onCheckedChange={() => toggleColumn('status')}
-                         >
-                           Status
-                         </DropdownMenuCheckboxItem>
-                         <DropdownMenuCheckboxItem
-                           checked={showColumns.pages}
-                           onCheckedChange={() => toggleColumn('pages')}
-                         >
-                           Pages
-                         </DropdownMenuCheckboxItem>
-                         <DropdownMenuCheckboxItem
-                           checked={showColumns.integrations}
-                           onCheckedChange={() => toggleColumn('integrations')}
-                         >
-                           Integrations
-                         </DropdownMenuCheckboxItem>
-                         <DropdownMenuCheckboxItem
-                           checked={showColumns.dateModified}
-                           onCheckedChange={() => toggleColumn('dateModified')}
-                         >
-                           Date Modified
-                         </DropdownMenuCheckboxItem>
-                       </DropdownMenuContent>
-                     </DropdownMenu>
-
-                     {/* View Toggle Button */}
-                     <Button
-                       variant="outline"
-                       size="sm"
-                       onClick={handleViewModeToggle}
-                       className="h-8 px-2"
-                     >
-                       {viewMode === 'table' ? <Grid size={16} /> : <List size={16} />}
-                     </Button>
-                   </div>
+                    {/* View Toggle Button */}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleViewModeToggle}
+                      className="h-8 px-2"
+                    >
+                      {viewMode === 'table' ? <Grid size={16} /> : <List size={16} />}
+                    </Button>
+                  </div>
                 </div>
               </div>
 
               <CardContent className="p-0">
-                <TooltipProvider>
-                  {viewMode === 'table' ? (
-                    <div className="divide-y divide-border">
-                      {filteredData.map((sow) => (
-                        <div key={sow.id} className="p-4 lg:p-6 hover:bg-muted/50 transition-colors">
-                          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
-                            <div className="flex-1 min-w-0">
-                              <div className="flex flex-col lg:flex-row lg:items-start gap-3 mb-3">
-                                <div className="min-w-0 flex-1">
-                                  <h3 className="font-medium text-base truncate mb-1">{sow.title}</h3>
-                                  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-sm text-muted-foreground">
-                                    <span className="truncate">{sow.client}</span>
-                                    <span className="hidden sm:inline">•</span>
-                                    <span className="truncate">{sow.clientContact}</span>
-                                    <span className="hidden sm:inline">•</span>
-                                    <a 
-                                      href={`mailto:${sow.email}`}
-                                      className="hover:underline truncate"
-                                    >
-                                      {sow.email}
-                                    </a>
+                {loading ? (
+                  <div className="flex items-center justify-center p-8">
+                    <div className="text-sm text-muted-foreground">Loading scope of works...</div>
+                  </div>
+                ) : scopeOfWorks.length === 0 ? (
+                  <div className="flex items-center justify-center p-8">
+                    <div className="text-sm text-muted-foreground">No scope of works found. Create your first one!</div>
+                  </div>
+                ) : (
+                  <TooltipProvider>
+                    {viewMode === 'table' ? (
+                      <div className="divide-y divide-border">
+                        {filteredData.map((sow) => (
+                          <div key={sow.id} className="p-4 lg:p-6 hover:bg-muted/50 transition-colors">
+                            <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+                              <div className="flex-1 min-w-0">
+                                <div className="flex flex-col lg:flex-row lg:items-start gap-3 mb-3">
+                                  <div className="min-w-0 flex-1">
+                                    <h3 className="font-medium text-base truncate mb-1">{sow.title}</h3>
+                                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-sm text-muted-foreground">
+                                      <span className="truncate">{sow.client}</span>
+                                      <span className="hidden sm:inline">•</span>
+                                      <span className="truncate">{sow.client_contact}</span>
+                                      <span className="hidden sm:inline">•</span>
+                                      <a 
+                                        href={`mailto:${sow.email}`}
+                                        className="hover:underline truncate"
+                                      >
+                                        {sow.email}
+                                      </a>
+                                    </div>
                                   </div>
-                                </div>
-                                <div className="flex items-center gap-2 flex-shrink-0">
-                                  <Badge variant={getBadgeVariant(sow.status)} className="text-xs w-auto">
-                                    {sow.status}
-                                  </Badge>
-                                  <Badge variant="outline" className="text-xs w-auto bg-muted">
-                                    {sow.projectType}
-                                  </Badge>
-                                  <Badge variant="outline" className="text-xs w-auto bg-muted">
-                                    {sow.industry}
-                                  </Badge>
-                                </div>
-                              </div>
-                              
-                              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6 text-sm text-muted-foreground mb-3">
-                                <span>Pages: {sow.pages}</span>
-                                <span>Modified: {formatDate(sow.dateModified)}</span>
-                                {sow.integrations.length > 0 && (
-                                  <div className="flex items-center gap-1">
-                                    <span>Integrations:</span>
-                                    <Badge variant="outline" className="text-xs w-auto bg-muted">
-                                      {sow.integrations[0]}
+                                  <div className="flex items-center gap-2 flex-shrink-0">
+                                    <Badge variant={getBadgeVariant(sow.status)} className="text-xs w-auto">
+                                      {sow.status}
                                     </Badge>
-                                    {sow.integrations.length > 1 && (
-                                      <Tooltip open={showTooltip === sow.id} onOpenChange={(open) => setShowTooltip(open ? sow.id : null)}>
-                                        <TooltipTrigger asChild>
-                                          <div 
-                                            className="cursor-pointer"
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              setShowTooltip(showTooltip === sow.id ? null : sow.id);
-                                            }}
-                                          >
-                                            <Badge variant="outline" className="text-xs w-auto bg-muted hover:bg-muted/80">
-                                              +{sow.integrations.length - 1}
-                                            </Badge>
-                                          </div>
-                                        </TooltipTrigger>
-                                        <TooltipContent className="z-50 bg-popover border border-border">
-                                          <div className="space-y-1">
-                                            <p className="font-medium">All Integrations:</p>
-                                            <div className="flex flex-wrap gap-1">
-                                              {sow.integrations.map((integration: string, index: number) => (
-                                                <Badge key={index} variant="outline" className="text-xs w-auto bg-muted">
-                                                  {integration}
-                                                </Badge>
-                                              ))}
-                                            </div>
-                                          </div>
-                                        </TooltipContent>
-                                      </Tooltip>
-                                    )}
+                                    <Badge variant="outline" className="text-xs w-auto bg-muted">
+                                      {sow.project_type}
+                                    </Badge>
+                                    <Badge variant="outline" className="text-xs w-auto bg-muted">
+                                      {sow.industry}
+                                    </Badge>
                                   </div>
-                                )}
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2 flex-shrink-0">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="h-7 px-2"
-                                onClick={() => handleViewSow(sow)}
-                              >
-                                <Eye className="h-3 w-3" />
-                              </Button>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-7 px-2"
-                                  >
-                                    <MoreHorizontal className="h-3 w-3" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuItem onClick={() => handleEditSow(sow)}>
-                                    <Edit className="mr-2 h-4 w-4" />
-                                    Edit
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handleDownloadPDF(sow)}>
-                                    <Download className="mr-2 h-4 w-4" />
-                                    Download PDF
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handleDownloadDOC(sow)}>
-                                    <Download className="mr-2 h-4 w-4" />
-                                    Download DOC
-                                  </DropdownMenuItem>
-                                  {sow.status !== 'Approved' && (
-                                    <DropdownMenuItem>
-                                      <Send className="mr-2 h-4 w-4" />
-                                      Send to Client
-                                    </DropdownMenuItem>
+                                </div>
+                                
+                                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6 text-sm text-muted-foreground mb-3">
+                                  <span>Pages: {sow.pages}</span>
+                                  <span>Modified: {formatDate(sow.date_modified)}</span>
+                                  {sow.integrations.length > 0 && (
+                                    <div className="flex items-center gap-1">
+                                      <span>Integrations:</span>
+                                      <Badge variant="outline" className="text-xs w-auto bg-muted">
+                                        {sow.integrations[0]}
+                                      </Badge>
+                                      {sow.integrations.length > 1 && (
+                                        <Tooltip open={showTooltip === sow.id} onOpenChange={(open) => setShowTooltip(open ? sow.id : null)}>
+                                          <TooltipTrigger asChild>
+                                            <div 
+                                              className="cursor-pointer"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                setShowTooltip(showTooltip === sow.id ? null : sow.id);
+                                              }}
+                                            >
+                                              <Badge variant="outline" className="text-xs w-auto bg-muted hover:bg-muted/80">
+                                                +{sow.integrations.length - 1}
+                                              </Badge>
+                                            </div>
+                                          </TooltipTrigger>
+                                          <TooltipContent className="z-50 bg-popover border border-border">
+                                            <div className="space-y-1">
+                                              <p className="font-medium">All Integrations:</p>
+                                              <div className="flex flex-wrap gap-1">
+                                                {sow.integrations.map((integration: string, index: number) => (
+                                                  <Badge key={index} variant="outline" className="text-xs w-auto bg-muted">
+                                                    {integration}
+                                                  </Badge>
+                                                ))}
+                                              </div>
+                                            </div>
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      )}
+                                    </div>
                                   )}
-                                </DropdownMenuContent>
-                              </DropdownMenu>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2 flex-shrink-0">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-7 px-2"
+                                  onClick={() => handleViewSow(sow)}
+                                >
+                                  <Eye className="h-3 w-3" />
+                                </Button>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="h-7 px-2"
+                                    >
+                                      <MoreHorizontal className="h-3 w-3" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={() => handleEditSow(sow)}>
+                                      <Edit className="mr-2 h-4 w-4" />
+                                      Edit
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleDownloadPDF(sow)}>
+                                      <Download className="mr-2 h-4 w-4" />
+                                      Download PDF
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleDownloadDOC(sow)}>
+                                      <Download className="mr-2 h-4 w-4" />
+                                      Download DOC
+                                    </DropdownMenuItem>
+                                    {sow.status !== 'Approved' && (
+                                      <DropdownMenuItem>
+                                        <Send className="mr-2 h-4 w-4" />
+                                        Send to Client
+                                      </DropdownMenuItem>
+                                    )}
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
-                      {filteredData.map((sow) => (
-                        <Card 
-                          key={sow.id} 
-                          className="cursor-pointer hover:shadow-md transition-shadow"
-                          onClick={() => handleViewSow(sow)}
-                        >
-                          <CardHeader className="pb-3">
-                            <div className="flex items-start justify-between">
-                              <CardTitle className="text-sm font-medium line-clamp-2">{sow.title}</CardTitle>
-                              <Badge variant={getBadgeVariant(sow.status)} className="text-xs w-auto ml-2">
-                                {sow.status}
-                              </Badge>
-                            </div>
-                            <CardDescription className="text-xs">{sow.client}</CardDescription>
-                          </CardHeader>
-                          <CardContent className="pt-0">
-                            <div className="space-y-2">
-                              <div className="flex items-center justify-between text-xs text-muted-foreground">
-                                <span>{sow.pages} pages</span>
-                                <span>{formatDate(sow.dateModified)}</span>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+                        {filteredData.map((sow) => (
+                          <Card 
+                            key={sow.id} 
+                            className="cursor-pointer hover:shadow-md transition-shadow"
+                            onClick={() => handleViewSow(sow)}
+                          >
+                            <CardHeader className="pb-3">
+                              <div className="flex items-start justify-between">
+                                <CardTitle className="text-sm font-medium line-clamp-2">{sow.title}</CardTitle>
+                                <Badge variant={getBadgeVariant(sow.status)} className="text-xs w-auto ml-2">
+                                  {sow.status}
+                                </Badge>
                               </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  )}
-                </TooltipProvider>
+                              <CardDescription className="text-xs">{sow.client}</CardDescription>
+                            </CardHeader>
+                            <CardContent className="pt-0">
+                              <div className="space-y-2">
+                                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                                  <span>{sow.pages} pages</span>
+                                  <span>{formatDate(sow.date_modified)}</span>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    )}
+                  </TooltipProvider>
+                )}
               </CardContent>
             </Card>
           </div>
