@@ -18,9 +18,9 @@ export const MainContent: React.FC<MainContentProps> = ({
   onTabChange 
 }) => {
   return (
-    <main className="flex-1 bg-muted/30 min-h-screen pt-6 pb-8">
+    <main className="flex-1 bg-muted/30 min-h-screen pt-8 pb-12">
       <header className="w-full font-medium">
-        <div className="items-stretch flex w-full flex-col gap-4 px-6 py-0 max-md:px-4">
+        <div className="items-stretch flex w-full flex-col gap-4 px-8 py-0 max-md:px-4">
           <div className="w-full gap-4">
             <div className="content-start flex-wrap flex w-full gap-[16px_12px]">
               <div className="min-w-64 text-xl text-foreground leading-none flex-1 shrink basis-[0%] gap-1">
@@ -52,7 +52,7 @@ export const MainContent: React.FC<MainContentProps> = ({
       </header>
 
       <section className="w-full mt-6">
-        <div className="w-full px-6 py-0 max-md:px-4">
+        <div className="w-full px-8 py-0 max-md:px-4">
           <DataTable activeTab={activeTab} />
         </div>
       </section>

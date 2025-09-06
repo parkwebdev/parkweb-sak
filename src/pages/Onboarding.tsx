@@ -126,8 +126,8 @@ const Onboarding = () => {
         <Sidebar />
       </div>
       <div className="flex-1 ml-[280px] overflow-auto">
-        <main className="flex-1 bg-muted/20 pt-6 pb-8">
-          <div className="max-w-6xl mx-auto px-6">
+        <main className="flex-1 bg-muted/30 pt-8 pb-12">
+          <div className="max-w-7xl mx-auto px-8">
             {/* Compact Header */}
             <header className="mb-6">
               <div className="flex items-center justify-between">
