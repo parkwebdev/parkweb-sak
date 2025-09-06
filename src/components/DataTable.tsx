@@ -7,6 +7,7 @@ import { ProgressBar } from './ProgressBar';
 interface TableRow {
   id: string;
   companyName: string;
+  clientName: string;
   businessType: string;
   submittedDate: string;
   status: 'Complete' | 'Incomplete' | 'In Review';
@@ -14,13 +15,13 @@ interface TableRow {
 }
 
 const tableData: TableRow[] = [
-  { id: '1', companyName: 'Mountain View RV Park', businessType: 'RV Park', submittedDate: '2024-01-15', status: 'Complete', percentage: 100 },
-  { id: '2', companyName: 'Sunset Manufacturing', businessType: 'Manufactured Home Community', submittedDate: '2024-01-12', status: 'Incomplete', percentage: 45 },
-  { id: '3', companyName: 'Elite Capital Partners', businessType: 'Capital & Syndication', submittedDate: '2024-01-10', status: 'In Review', percentage: 85 },
-  { id: '4', companyName: 'Local Plumbing Pro', businessType: 'Local Business', submittedDate: '2024-01-08', status: 'Complete', percentage: 100 },
-  { id: '5', companyName: 'National Tech Solutions', businessType: 'National Business', submittedDate: '2024-01-05', status: 'Incomplete', percentage: 30 },
-  { id: '6', companyName: 'Riverside Communities', businessType: 'Manufactured Home Community', submittedDate: '2024-01-03', status: 'In Review', percentage: 70 },
-  { id: '7', companyName: 'Premier Investment Group', businessType: 'Capital & Syndication', submittedDate: '2024-01-01', status: 'Complete', percentage: 100 },
+  { id: '1', companyName: 'Mountain View RV Park', clientName: 'Sarah Johnson', businessType: 'RV Park', submittedDate: '2024-01-15', status: 'Complete', percentage: 100 },
+  { id: '2', companyName: 'Sunset Manufacturing', clientName: 'Michael Chen', businessType: 'Manufactured Home Community', submittedDate: '2024-01-12', status: 'Incomplete', percentage: 45 },
+  { id: '3', companyName: 'Elite Capital Partners', clientName: 'Jessica Rodriguez', businessType: 'Capital & Syndication', submittedDate: '2024-01-10', status: 'In Review', percentage: 85 },
+  { id: '4', companyName: 'Local Plumbing Pro', clientName: 'David Miller', businessType: 'Local Business', submittedDate: '2024-01-08', status: 'Complete', percentage: 100 },
+  { id: '5', companyName: 'National Tech Solutions', clientName: 'Amanda Foster', businessType: 'National Business', submittedDate: '2024-01-05', status: 'Incomplete', percentage: 30 },
+  { id: '6', companyName: 'Riverside Communities', clientName: 'Robert Thompson', businessType: 'Manufactured Home Community', submittedDate: '2024-01-03', status: 'In Review', percentage: 70 },
+  { id: '7', companyName: 'Premier Investment Group', clientName: 'Lisa Anderson', businessType: 'Capital & Syndication', submittedDate: '2024-01-01', status: 'Complete', percentage: 100 },
 ];
 
 interface DataTableProps {
@@ -137,9 +138,9 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
       </div>
 
       <div className="w-full overflow-x-auto">
-        <div className="border flex min-w-[800px] bg-background border-border">
-        <div className="min-w-[200px] flex-1 shrink basis-[0%]">
-          <div className="items-center flex min-h-11 w-full gap-3 bg-background px-6 py-3 border-b-border border-b border-solid max-md:px-3">
+        <div className="border flex min-w-[1200px] bg-background border-border">
+        <div className="min-w-[250px] flex-1">
+          <div className="items-center flex min-h-11 w-full gap-3 bg-background px-4 py-3 border-b-border border-b border-solid">
             <button
               onClick={toggleAllSelection}
               className="self-stretch flex items-center justify-center w-5 my-auto"
@@ -160,7 +161,7 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
             </div>
           </div>
           {filteredData.map((row) => (
-            <div key={row.id} className="items-center flex min-h-[72px] w-full gap-3 px-6 py-4 border-b-border border-b border-solid max-md:px-3">
+            <div key={row.id} className="items-center flex min-h-[72px] w-full gap-3 px-4 py-4 border-b-border border-b border-solid">
               <button
                 onClick={() => toggleRowSelection(row.id)}
                 className="self-stretch flex items-center justify-center w-5 my-auto"
@@ -173,15 +174,16 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
                   )}
                 </div>
               </button>
-              <div className="text-foreground text-sm font-medium leading-5 self-stretch my-auto">
-                {row.companyName}
+              <div className="text-foreground text-sm font-medium leading-5 flex-1 min-w-0">
+                <div className="truncate">{row.companyName}</div>
+                <div className="text-xs text-muted-foreground truncate">{row.clientName}</div>
               </div>
             </div>
           ))}
         </div>
 
-        <div className="text-sm text-muted-foreground font-normal whitespace-nowrap w-[140px] max-md:w-[120px]">
-          <div className="items-center flex min-h-11 w-full gap-3 text-xs text-muted-foreground font-semibold bg-background px-6 py-3 border-b-border border-b border-solid max-md:px-3">
+        <div className="w-[180px] flex-shrink-0">
+          <div className="items-center flex min-h-11 w-full gap-3 text-xs text-muted-foreground font-semibold bg-background px-4 py-3 border-b-border border-b border-solid">
             <div className="items-center self-stretch flex gap-1 my-auto">
               <div className="text-muted-foreground text-xs leading-[18px] self-stretch my-auto">
                 Business Type
@@ -190,16 +192,16 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
             </div>
           </div>
           {filteredData.map((row) => (
-            <div key={row.id} className="items-center flex min-h-[72px] w-full leading-none px-6 py-4 border-b-border border-b border-solid max-md:px-3">
-              <div className="text-muted-foreground text-sm leading-5 self-stretch my-auto">
+            <div key={row.id} className="items-center flex min-h-[72px] w-full px-4 py-4 border-b-border border-b border-solid">
+              <div className="text-muted-foreground text-sm leading-5 w-full truncate">
                 {row.businessType}
               </div>
             </div>
           ))}
         </div>
 
-        <div className="text-sm text-muted-foreground font-normal w-[115px]">
-          <div className="items-center flex min-h-11 w-full gap-3 text-xs text-muted-foreground font-semibold bg-background px-6 py-3 border-b-border border-b border-solid max-md:px-5">
+        <div className="w-[120px] flex-shrink-0">
+          <div className="items-center flex min-h-11 w-full gap-3 text-xs text-muted-foreground font-semibold bg-background px-4 py-3 border-b-border border-b border-solid">
             <div className="items-center self-stretch flex gap-1 my-auto">
               <div className="text-muted-foreground text-xs leading-[18px] self-stretch my-auto">
                 Submitted
@@ -208,16 +210,16 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
             </div>
           </div>
           {filteredData.map((row) => (
-            <div key={row.id} className="items-center flex min-h-[72px] w-full leading-none px-6 py-4 border-b-border border-b border-solid max-md:px-5">
-              <div className="text-muted-foreground text-sm leading-5 self-stretch my-auto">
+            <div key={row.id} className="items-center flex min-h-[72px] w-full px-4 py-4 border-b-border border-b border-solid">
+              <div className="text-muted-foreground text-sm leading-5 w-full">
                 {new Date(row.submittedDate).toLocaleDateString()}
               </div>
             </div>
           ))}
         </div>
 
-        <div className="min-w-60 flex-1 shrink basis-[0%]">
-          <div className="items-center flex min-h-11 w-full gap-3 text-xs text-muted-foreground font-semibold bg-background px-6 py-3 border-b-border border-b border-solid max-md:px-5">
+        <div className="w-[200px] flex-shrink-0">
+          <div className="items-center flex min-h-11 w-full gap-3 text-xs text-muted-foreground font-semibold bg-background px-4 py-3 border-b-border border-b border-solid">
             <div className="items-center self-stretch flex gap-1 my-auto">
               <div className="text-muted-foreground text-xs leading-[18px] self-stretch my-auto">
                 Completion
@@ -226,14 +228,14 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
             </div>
           </div>
           {filteredData.map((row) => (
-            <div key={row.id} className="items-stretch flex min-h-[72px] w-full gap-3 px-6 py-4 border-b-border border-b border-solid max-md:px-5">
+            <div key={row.id} className="items-stretch flex min-h-[72px] w-full gap-3 px-4 py-4 border-b-border border-b border-solid">
               <ProgressBar percentage={row.percentage} />
             </div>
           ))}
         </div>
 
-        <div className="text-xs text-foreground font-medium whitespace-nowrap w-[117px]">
-          <div className="items-center flex min-h-11 w-full gap-3 text-muted-foreground font-semibold bg-background px-6 py-3 border-b-border border-b border-solid max-md:px-5">
+        <div className="w-[150px] flex-shrink-0">
+          <div className="items-center flex min-h-11 w-full gap-3 text-muted-foreground font-semibold bg-background px-4 py-3 border-b-border border-b border-solid">
             <div className="items-center self-stretch flex gap-1 my-auto">
               <div className="text-muted-foreground text-xs leading-[18px] self-stretch my-auto">
                 Status
@@ -242,12 +244,12 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
             </div>
           </div>
           {filteredData.map((row) => (
-            <div key={row.id} className="items-center flex min-h-[72px] w-full text-center px-6 py-4 border-b-border border-b border-solid max-md:px-5">
+            <div key={row.id} className="items-center flex min-h-[72px] w-full px-4 py-4 border-b-border border-b border-solid">
               <Badge variant={row.status === 'Complete' ? 'default' : row.status === 'In Review' ? 'online' : 'folder'}>
                 {row.status === 'Complete' && <Check size={12} />}
                 {row.status === 'In Review' && <Clock size={12} />}
                 {row.status === 'Incomplete' && <User size={12} />}
-                <div className="text-foreground text-xs leading-[18px] self-stretch my-auto">
+                <div className="text-foreground text-xs leading-[18px] ml-1 truncate">
                   {row.status}
                 </div>
               </Badge>
@@ -255,15 +257,15 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
           ))}
         </div>
 
-        <div className="w-[98px]">
-          <div className="flex min-h-11 w-full gap-3 bg-background px-6 py-3 border-b-border border-b border-solid" />
+        <div className="w-[100px] flex-shrink-0">
+          <div className="flex min-h-11 w-full gap-3 bg-background px-4 py-3 border-b-border border-b border-solid" />
           {filteredData.map((row) => (
-            <div key={row.id} className="items-center flex min-h-[72px] w-full gap-0.5 p-4 border-b-border border-b border-solid">
+            <div key={row.id} className="items-center flex min-h-[72px] w-full gap-1 px-2 py-4 border-b-border border-b border-solid">
               <button className="justify-center items-center flex overflow-hidden w-8 p-2 rounded-md hover:bg-accent">
-                <Eye size={16} />
+                <Eye size={14} />
               </button>
               <button className="justify-center items-center flex overflow-hidden w-8 p-2 rounded-md hover:bg-accent">
-                <Edit size={16} />
+                <Edit size={14} />
               </button>
             </div>
           ))}
@@ -271,11 +273,11 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
       </div>
       </div>
 
-      <footer className="justify-center items-center flex w-full gap-3 text-sm leading-none flex-wrap pt-3 pb-4 px-6 max-md:px-5">
+      <footer className="justify-center items-center flex w-full gap-3 text-sm leading-none flex-wrap pt-3 pb-4 px-6">
         <div className="text-foreground text-sm font-medium leading-5 self-stretch my-auto">
           Page 1 of 10
         </div>
-        <div className="items-center self-stretch flex min-w-60 gap-3 text-foreground font-semibold whitespace-nowrap flex-wrap flex-1 shrink basis-[0%] my-auto max-md:max-w-full">
+        <div className="items-center self-stretch flex gap-3 text-foreground font-semibold whitespace-nowrap flex-wrap flex-1 justify-end my-auto">
           <button className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden bg-background px-3 py-2 rounded-lg border-border hover:bg-accent/50">
             <div className="justify-center items-center self-stretch flex my-auto px-0.5 py-0">
               <div className="text-foreground text-sm leading-5 self-stretch my-auto">
