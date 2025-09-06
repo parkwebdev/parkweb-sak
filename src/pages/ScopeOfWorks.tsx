@@ -26,14 +26,6 @@ import { formatDate, getBadgeVariant } from '@/lib/status-helpers';
 import { useToast } from '@/hooks/use-toast';
 import { generateScopeOfWorkPDF, generateScopeOfWorkDOC } from '@/lib/document-generator';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -676,7 +668,7 @@ const ScopeOfWorks = () => {
                           </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-56">
-                          <DropdownMenuLabel>Table Settings</DropdownMenuLabel>
+                          <DropdownMenuLabel>Board Settings</DropdownMenuLabel>
                           <DropdownMenuSeparator />
                           
                           <DropdownMenuItem onClick={handleExportData}>
@@ -685,26 +677,7 @@ const ScopeOfWorks = () => {
                           </DropdownMenuItem>
                           
                           <DropdownMenuSeparator />
-                          <DropdownMenuLabel>Column Order</DropdownMenuLabel>
-                          
-                          {columnOrder.map((column, index) => (
-                            <div 
-                              key={column} 
-                              className="flex items-center justify-between px-2 py-2 hover:bg-accent/50 cursor-move"
-                              draggable
-                              onDragStart={(e) => handleDragStart(e, index)}
-                              onDragOver={handleDragOver}
-                              onDrop={(e) => handleDrop(e, index)}
-                            >
-                            <div className="flex items-center gap-2">
-                              <GripVertical size={16} className="text-muted-foreground" />
-                              <span className="text-sm capitalize">{column.replace(/([A-Z])/g, ' $1').trim()}</span>
-                            </div>
-                            </div>
-                          ))}
-                          
-                          <DropdownMenuSeparator />
-                          <DropdownMenuLabel>Show Columns</DropdownMenuLabel>
+                          <DropdownMenuLabel>Show Information</DropdownMenuLabel>
                           
                           <DropdownMenuCheckboxItem
                             checked={showColumns.client}
@@ -723,12 +696,6 @@ const ScopeOfWorks = () => {
                             onCheckedChange={() => toggleColumn('industry')}
                           >
                             Industry
-                          </DropdownMenuCheckboxItem>
-                          <DropdownMenuCheckboxItem
-                            checked={showColumns.status}
-                            onCheckedChange={() => toggleColumn('status')}
-                          >
-                            Status
                           </DropdownMenuCheckboxItem>
                           <DropdownMenuCheckboxItem
                             checked={showColumns.pages}
@@ -754,215 +721,61 @@ const ScopeOfWorks = () => {
                   </div>
                 </header>
 
-                <div className="w-full overflow-x-auto">
-                  <Table className="table-auto">
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-12">
-                          <button
-                            onClick={toggleAllSelection}
-                            className="flex items-center justify-center w-5"
-                          >
-                            <div className={`border flex min-h-5 w-5 h-5 rounded-md border-solid border-border items-center justify-center ${
-                              selectedRows.length === filteredData.length ? 'bg-primary border-primary' : 'bg-background'
-                            }`}>
-                              {selectedRows.length === filteredData.length && (
-                                <Check size={12} className="text-primary-foreground" />
-                              )}
-                            </div>
-                          </button>
-                        </TableHead>
-                        <TableHead className="min-w-0">
-                          <div className="flex items-center gap-1">
-                            <span>Project Title</span>
-                            <ArrowUpDown size={12} />
-                          </div>
-                        </TableHead>
-                        {columnOrder.map(column => {
-                          if (!showColumns[column as keyof typeof showColumns]) return null;
-                          
-                          switch(column) {
-                            case 'client':
-                              return (
-                                <TableHead key="client" className="min-w-0">
-                                  <div className="flex items-center gap-1">
-                                    <span>Client</span>
-                                    <ArrowUpDown size={12} />
-                                  </div>
-                                </TableHead>
-                              );
-                            case 'projectType':
-                              return (
-                                <TableHead key="projectType" className="min-w-0">
-                                  <div className="flex items-center gap-1">
-                                    <span>Project Type</span>
-                                    <ArrowUpDown size={12} />
-                                  </div>
-                                </TableHead>
-                              );
-                            case 'industry':
-                              return (
-                                <TableHead key="industry" className="min-w-0">
-                                  <div className="flex items-center gap-1">
-                                    <span>Industry</span>
-                                    <ArrowUpDown size={12} />
-                                  </div>
-                                </TableHead>
-                              );
-                            case 'status':
-                              return (
-                                <TableHead key="status" className="min-w-0">
-                                  <div className="flex items-center gap-1">
-                                    <span>Status</span>
-                                    <ArrowUpDown size={12} />
-                                  </div>
-                                </TableHead>
-                              );
-                            case 'pages':
-                              return (
-                                <TableHead key="pages" className="min-w-0">
-                                  <div className="flex items-center gap-1">
-                                    <span>Pages</span>
-                                    <ArrowUpDown size={12} />
-                                  </div>
-                                </TableHead>
-                              );
-                            case 'integrations':
-                              return (
-                                <TableHead key="integrations" className="min-w-0">
-                                  <div className="flex items-center gap-1">
-                                    <span>Integrations</span>
-                                    <ArrowUpDown size={12} />
-                                  </div>
-                                </TableHead>
-                              );
-                            case 'dateModified':
-                              return (
-                                <TableHead key="dateModified" className="min-w-0">
-                                  <div className="flex items-center gap-1">
-                                    <span>Date Modified</span>
-                                    <ArrowUpDown size={12} />
-                                  </div>
-                                </TableHead>
-                              );
-                            default:
-                              return null;
-                          }
-                        })}
-                        {showColumns.actions && (
-                          <TableHead className="w-24">Actions</TableHead>
-                        )}
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredData.map((sow) => (
-                        <TableRow key={sow.id}>
-                          <TableCell>
-                            <button
-                              onClick={() => toggleRowSelection(sow.id)}
-                              className="flex items-center justify-center w-5"
-                            >
-                              <div className={`border flex min-h-5 w-5 h-5 rounded-md border-solid border-border items-center justify-center ${
-                                selectedRows.includes(sow.id) ? 'bg-primary border-primary' : 'bg-background'
-                              }`}>
-                                {selectedRows.includes(sow.id) && (
-                                  <Check size={12} className="text-primary-foreground" />
-                                )}
-                              </div>
-                            </button>
-                          </TableCell>
-                          <TableCell>
-                            <div className="min-w-0">
-                              <div className="font-medium whitespace-nowrap">{sow.title}</div>
-                              <div className="text-xs text-muted-foreground mt-1 whitespace-nowrap">
-                                <a 
-                                  href={`mailto:${sow.email}`}
-                                  className="hover:underline"
-                                >
-                                  {sow.clientContact}
-                                </a>
-                              </div>
-                            </div>
-                          </TableCell>
-                          {columnOrder.map(column => {
-                            if (!showColumns[column as keyof typeof showColumns]) return null;
-                            
-                            switch(column) {
-                              case 'client':
-                                return (
-                                  <TableCell key="client" className="text-muted-foreground whitespace-nowrap">
-                                    {sow.client}
-                                  </TableCell>
-                                );
-                              case 'projectType':
-                                return (
-                                  <TableCell key="projectType" className="text-muted-foreground whitespace-nowrap">
-                                    {sow.projectType}
-                                  </TableCell>
-                                );
-                              case 'industry':
-                                return (
-                                  <TableCell key="industry" className="text-muted-foreground whitespace-nowrap">
-                                    {sow.industry}
-                                  </TableCell>
-                                );
-                              case 'status':
-                                return (
-                                  <TableCell key="status">
-                                    <Badge variant={getBadgeVariant(sow.status)}>
-                                      {sow.status}
-                                    </Badge>
-                                  </TableCell>
-                                );
-                              case 'pages':
-                                return (
-                                  <TableCell key="pages" className="text-muted-foreground whitespace-nowrap">
-                                    {sow.pages}
-                                  </TableCell>
-                                );
-                              case 'integrations':
-                                return (
-                                  <TableCell key="integrations">
-                                    <div className="flex items-center gap-1 whitespace-nowrap">
-                                      {sow.integrations.length > 0 && (
-                                        <Badge variant="outline" className="text-xs">
-                                          {sow.integrations[0]}
-                                        </Badge>
-                                      )}
-                                      {sow.integrations.length > 1 && (
-                                        <DropdownMenu>
-                                          <DropdownMenuTrigger asChild>
-                                            <Badge variant="outline" className="text-xs cursor-pointer hover:bg-accent">
-                                              +{sow.integrations.length - 1}
-                                            </Badge>
-                                          </DropdownMenuTrigger>
-                                          <DropdownMenuContent align="start" className="w-48 z-50">
-                                            <DropdownMenuLabel>All Integrations</DropdownMenuLabel>
-                                            <DropdownMenuSeparator />
-                                            {sow.integrations.map((integration, index) => (
-                                              <DropdownMenuItem key={integration} className="text-xs">
-                                                {integration}
-                                              </DropdownMenuItem>
-                                            ))}
-                                          </DropdownMenuContent>
-                                        </DropdownMenu>
-                                      )}
-                                    </div>
-                                  </TableCell>
-                                );
-                              case 'dateModified':
-                                return (
-                                  <TableCell key="dateModified" className="text-muted-foreground whitespace-nowrap">
-                                    {formatDate(sow.dateModified)}
-                                  </TableCell>
-                                );
-                              default:
-                                return null;
-                            }
-                          })}
-                          {showColumns.actions && (
-                            <TableCell>
-                              <div className="flex gap-1">
+                {/* Kanban Board */}
+                <div className="p-4">
+                  {/* Board Header */}
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={toggleAllSelection}
+                        className="flex items-center justify-center w-5"
+                      >
+                        <div className={`border flex min-h-5 w-5 h-5 rounded-md border-solid border-border items-center justify-center ${
+                          selectedRows.length === filteredData.length ? 'bg-primary border-primary' : 'bg-background'
+                        }`}>
+                          {selectedRows.length === filteredData.length && (
+                            <Check size={12} className="text-primary-foreground" />
+                          )}
+                        </div>
+                      </button>
+                      <span className="text-sm text-muted-foreground">
+                        {selectedRows.length > 0 ? `${selectedRows.length} selected` : `${filteredData.length} projects`}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Kanban Columns */}
+                  <div className="flex gap-6 overflow-x-auto pb-4 min-h-[600px]">
+                    {/* Draft Column */}
+                    <div className="flex-shrink-0 w-80 bg-card/50 rounded-lg border border-border">
+                      <div className="p-4 border-b border-border">
+                        <div className="flex items-center justify-between">
+                          <h3 className="font-semibold flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                            Draft
+                          </h3>
+                          <Badge variant="outline" className="text-xs">
+                            {filteredData.filter(sow => sow.status === 'Draft').length}
+                          </Badge>
+                        </div>
+                      </div>
+                      <div className="p-4 space-y-3 max-h-[500px] overflow-y-auto">
+                        {filteredData.filter(sow => sow.status === 'Draft').map((sow) => (
+                          <div key={sow.id} className="bg-card border border-border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer">
+                            <div className="flex items-start justify-between mb-3">
+                              <button
+                                onClick={() => toggleRowSelection(sow.id)}
+                                className="flex items-center justify-center w-5 mt-1"
+                              >
+                                <div className={`border flex min-h-5 w-5 h-5 rounded-md border-solid border-border items-center justify-center ${
+                                  selectedRows.includes(sow.id) ? 'bg-primary border-primary' : 'bg-background'
+                                }`}>
+                                  {selectedRows.includes(sow.id) && (
+                                    <Check size={12} className="text-primary-foreground" />
+                                  )}
+                                </div>
+                              </button>
+                              <div className="flex gap-1 ml-2">
                                 <button 
                                   className="p-1 hover:bg-accent rounded"
                                   onClick={() => handleViewSow(sow)}
@@ -973,36 +786,228 @@ const ScopeOfWorks = () => {
                                   className="p-1 hover:bg-accent rounded"
                                   onClick={() => handleEditSow(sow)}
                                 >
-                                  <Send size={14} />
+                                  <Edit size={14} />
                                 </button>
-                                {sow.status === 'Approved' && (
-                                  <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                      <button className="p-1 hover:bg-accent rounded">
-                                        <Download size={14} />
-                                      </button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end">
-                                      <DropdownMenuLabel>Download Options</DropdownMenuLabel>
-                                      <DropdownMenuSeparator />
-                                      <DropdownMenuItem onClick={() => handleDownloadPDF(sow)}>
-                                        <Download className="mr-2 h-4 w-4" />
-                                        Download PDF
-                                      </DropdownMenuItem>
-                                      <DropdownMenuItem onClick={() => handleDownloadDOC(sow)}>
-                                        <Download className="mr-2 h-4 w-4" />
-                                        Download DOC
-                                      </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                  </DropdownMenu>
+                              </div>
+                            </div>
+                            <div className="mb-3">
+                              <h4 className="font-medium text-sm line-clamp-2 mb-1">{sow.title}</h4>
+                              <p className="text-xs text-muted-foreground">{sow.client}</p>
+                              <a 
+                                href={`mailto:${sow.email}`}
+                                className="text-xs text-muted-foreground hover:underline"
+                              >
+                                {sow.clientContact}
+                              </a>
+                            </div>
+                            {showColumns.projectType && showColumns.industry && (
+                              <div className="flex flex-wrap gap-1 mb-3">
+                                {showColumns.projectType && <Badge variant="outline" className="text-xs">{sow.projectType}</Badge>}
+                                {showColumns.industry && <Badge variant="outline" className="text-xs">{sow.industry}</Badge>}
+                              </div>
+                            )}
+                            <div className="flex items-center justify-between text-xs text-muted-foreground">
+                              {showColumns.pages && <span>{sow.pages} pages</span>}
+                              {showColumns.dateModified && <span>{formatDate(sow.dateModified)}</span>}
+                            </div>
+                            {showColumns.integrations && sow.integrations.length > 0 && (
+                              <div className="flex items-center gap-1 mt-2">
+                                <Badge variant="outline" className="text-xs">
+                                  {sow.integrations[0]}
+                                </Badge>
+                                {sow.integrations.length > 1 && (
+                                  <Badge variant="outline" className="text-xs">
+                                    +{sow.integrations.length - 1}
+                                  </Badge>
                                 )}
                               </div>
-                            </TableCell>
-                          )}
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* In Review Column */}
+                    <div className="flex-shrink-0 w-80 bg-card/50 rounded-lg border border-border">
+                      <div className="p-4 border-b border-border">
+                        <div className="flex items-center justify-between">
+                          <h3 className="font-semibold flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                            In Review
+                          </h3>
+                          <Badge variant="outline" className="text-xs">
+                            {filteredData.filter(sow => sow.status === 'In Review').length}
+                          </Badge>
+                        </div>
+                      </div>
+                      <div className="p-4 space-y-3 max-h-[500px] overflow-y-auto">
+                        {filteredData.filter(sow => sow.status === 'In Review').map((sow) => (
+                          <div key={sow.id} className="bg-card border border-border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer">
+                            <div className="flex items-start justify-between mb-3">
+                              <button
+                                onClick={() => toggleRowSelection(sow.id)}
+                                className="flex items-center justify-center w-5 mt-1"
+                              >
+                                <div className={`border flex min-h-5 w-5 h-5 rounded-md border-solid border-border items-center justify-center ${
+                                  selectedRows.includes(sow.id) ? 'bg-primary border-primary' : 'bg-background'
+                                }`}>
+                                  {selectedRows.includes(sow.id) && (
+                                    <Check size={12} className="text-primary-foreground" />
+                                  )}
+                                </div>
+                              </button>
+                              <div className="flex gap-1 ml-2">
+                                <button 
+                                  className="p-1 hover:bg-accent rounded"
+                                  onClick={() => handleViewSow(sow)}
+                                >
+                                  <Eye size={14} />
+                                </button>
+                                <button 
+                                  className="p-1 hover:bg-accent rounded"
+                                  onClick={() => handleEditSow(sow)}
+                                >
+                                  <Edit size={14} />
+                                </button>
+                              </div>
+                            </div>
+                            <div className="mb-3">
+                              <h4 className="font-medium text-sm line-clamp-2 mb-1">{sow.title}</h4>
+                              <p className="text-xs text-muted-foreground">{sow.client}</p>
+                              <a 
+                                href={`mailto:${sow.email}`}
+                                className="text-xs text-muted-foreground hover:underline"
+                              >
+                                {sow.clientContact}
+                              </a>
+                            </div>
+                            {showColumns.projectType && showColumns.industry && (
+                              <div className="flex flex-wrap gap-1 mb-3">
+                                {showColumns.projectType && <Badge variant="outline" className="text-xs">{sow.projectType}</Badge>}
+                                {showColumns.industry && <Badge variant="outline" className="text-xs">{sow.industry}</Badge>}
+                              </div>
+                            )}
+                            <div className="flex items-center justify-between text-xs text-muted-foreground">
+                              {showColumns.pages && <span>{sow.pages} pages</span>}
+                              {showColumns.dateModified && <span>{formatDate(sow.dateModified)}</span>}
+                            </div>
+                            {showColumns.integrations && sow.integrations.length > 0 && (
+                              <div className="flex items-center gap-1 mt-2">
+                                <Badge variant="outline" className="text-xs">
+                                  {sow.integrations[0]}
+                                </Badge>
+                                {sow.integrations.length > 1 && (
+                                  <Badge variant="outline" className="text-xs">
+                                    +{sow.integrations.length - 1}
+                                  </Badge>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Approved Column */}
+                    <div className="flex-shrink-0 w-80 bg-card/50 rounded-lg border border-border">
+                      <div className="p-4 border-b border-border">
+                        <div className="flex items-center justify-between">
+                          <h3 className="font-semibold flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                            Approved
+                          </h3>
+                          <Badge variant="outline" className="text-xs">
+                            {filteredData.filter(sow => sow.status === 'Approved').length}
+                          </Badge>
+                        </div>
+                      </div>
+                      <div className="p-4 space-y-3 max-h-[500px] overflow-y-auto">
+                        {filteredData.filter(sow => sow.status === 'Approved').map((sow) => (
+                          <div key={sow.id} className="bg-card border border-border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer">
+                            <div className="flex items-start justify-between mb-3">
+                              <button
+                                onClick={() => toggleRowSelection(sow.id)}
+                                className="flex items-center justify-center w-5 mt-1"
+                              >
+                                <div className={`border flex min-h-5 w-5 h-5 rounded-md border-solid border-border items-center justify-center ${
+                                  selectedRows.includes(sow.id) ? 'bg-primary border-primary' : 'bg-background'
+                                }`}>
+                                  {selectedRows.includes(sow.id) && (
+                                    <Check size={12} className="text-primary-foreground" />
+                                  )}
+                                </div>
+                              </button>
+                              <div className="flex gap-1 ml-2">
+                                <button 
+                                  className="p-1 hover:bg-accent rounded"
+                                  onClick={() => handleViewSow(sow)}
+                                >
+                                  <Eye size={14} />
+                                </button>
+                                <button 
+                                  className="p-1 hover:bg-accent rounded"
+                                  onClick={() => handleEditSow(sow)}
+                                >
+                                  <Edit size={14} />
+                                </button>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <button className="p-1 hover:bg-accent rounded">
+                                      <Download size={14} />
+                                    </button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuLabel>Download Options</DropdownMenuLabel>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem onClick={() => handleDownloadPDF(sow)}>
+                                      <Download className="mr-2 h-4 w-4" />
+                                      Download PDF
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleDownloadDOC(sow)}>
+                                      <Download className="mr-2 h-4 w-4" />
+                                      Download DOC
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </div>
+                            </div>
+                            <div className="mb-3">
+                              <h4 className="font-medium text-sm line-clamp-2 mb-1">{sow.title}</h4>
+                              <p className="text-xs text-muted-foreground">{sow.client}</p>
+                              <a 
+                                href={`mailto:${sow.email}`}
+                                className="text-xs text-muted-foreground hover:underline"
+                              >
+                                {sow.clientContact}
+                              </a>
+                            </div>
+                            {showColumns.projectType && showColumns.industry && (
+                              <div className="flex flex-wrap gap-1 mb-3">
+                                {showColumns.projectType && <Badge variant="outline" className="text-xs">{sow.projectType}</Badge>}
+                                {showColumns.industry && <Badge variant="outline" className="text-xs">{sow.industry}</Badge>}
+                              </div>
+                            )}
+                            <div className="flex items-center justify-between text-xs text-muted-foreground">
+                              {showColumns.pages && <span>{sow.pages} pages</span>}
+                              {showColumns.dateModified && <span>{formatDate(sow.dateModified)}</span>}
+                            </div>
+                            {showColumns.integrations && sow.integrations.length > 0 && (
+                              <div className="flex items-center gap-1 mt-2">
+                                <Badge variant="outline" className="text-xs">
+                                  {sow.integrations[0]}
+                                </Badge>
+                                {sow.integrations.length > 1 && (
+                                  <Badge variant="outline" className="text-xs">
+                                    +{sow.integrations.length - 1}
+                                  </Badge>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
