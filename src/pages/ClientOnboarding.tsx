@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -405,10 +406,35 @@ const ClientOnboarding = () => {
     setShowSOW(true);
   };
 
-  const handleFinalSubmit = () => {
-    setIsSubmitted(true);
-    setShowSOW(false);
-    // Here you would typically send the data to your backend
+  const handleFinalSubmit = async () => {
+    try {
+      const { error } = await supabase
+        .from('onboarding_submissions')
+        .insert({
+          user_id: '00000000-0000-0000-0000-000000000000', // Public submissions
+          client_name: onboardingData.contactName,
+          client_email: onboardingData.email,
+          project_type: onboardingData.industry,
+          industry: onboardingData.industry,
+          budget_range: 'Not specified',
+          timeline: 'Not specified',
+          description: JSON.stringify(onboardingData),
+          status: 'pending'
+        });
+
+      if (error) {
+        console.error('Error submitting onboarding:', error);
+        return;
+      }
+
+      // Clear saved draft
+      localStorage.removeItem('onboardingDraft');
+      
+      setIsSubmitted(true);
+      setShowSOW(false);
+    } catch (error) {
+      console.error('Error in handleFinalSubmit:', error);
+    }
   };
 
   if (isSubmitted) {

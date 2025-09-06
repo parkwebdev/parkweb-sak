@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Camera01 as Camera, User01 as User } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,21 +7,95 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 export const ProfileSettings: React.FC = () => {
   const [profile, setProfile] = useState({
-    name: 'Aaron Chachamovits',
-    email: 'aaron@parkweb.app',
-    phone: '(555) 123-4567',
+    display_name: '',
+    email: '',
+    avatar_url: '',
   });
-
+  const [loading, setLoading] = useState(true);
+  const [updating, setUpdating] = useState(false);
+  const { user } = useAuth();
   const { toast } = useToast();
 
-  const handleSave = () => {
-    toast({
-      title: "Profile updated",
-      description: "Your profile has been updated successfully.",
-    });
+  useEffect(() => {
+    if (user) {
+      fetchProfile();
+    }
+  }, [user]);
+
+  const fetchProfile = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error fetching profile:', error);
+        return;
+      }
+
+      if (data) {
+        setProfile({
+          display_name: data.display_name || '',
+          email: data.email || user.email || '',
+          avatar_url: data.avatar_url || '',
+        });
+      } else {
+        // Create profile if it doesn't exist
+        setProfile({
+          display_name: '',
+          email: user.email || '',
+          avatar_url: '',
+        });
+      }
+    } catch (error) {
+      console.error('Error in fetchProfile:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!user) return;
+    
+    setUpdating(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .upsert({
+          user_id: user.id,
+          display_name: profile.display_name,
+          email: profile.email,
+          avatar_url: profile.avatar_url,
+        });
+
+      if (error) {
+        console.error('Error updating profile:', error);
+        toast({
+          title: "Update failed",
+          description: "Failed to update your profile.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Profile updated",
+        description: "Your profile has been updated successfully.",
+      });
+    } catch (error) {
+      console.error('Error in handleSave:', error);
+    } finally {
+      setUpdating(false);
+    }
   };
 
   const handleInputChange = (field: string, value: string) => {
@@ -31,26 +105,15 @@ export const ProfileSettings: React.FC = () => {
     }));
   };
 
-  const formatPhoneNumber = (value: string) => {
-    // Remove all non-digits
-    const digits = value.replace(/\D/g, '');
-    
-    // Format as (XXX) XXX-XXXX
-    if (digits.length >= 10) {
-      return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
-    } else if (digits.length >= 6) {
-      return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
-    } else if (digits.length >= 3) {
-      return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
-    } else {
-      return digits;
-    }
-  };
-
-  const handlePhoneChange = (value: string) => {
-    const formatted = formatPhoneNumber(value);
-    handleInputChange('phone', formatted);
-  };
+  if (loading) {
+    return (
+      <div className="space-y-6 lg:space-y-8">
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 lg:space-y-8">
@@ -71,9 +134,12 @@ export const ProfileSettings: React.FC = () => {
         <CardContent className="space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-6">
             <Avatar className="h-20 w-20 mx-auto sm:mx-0">
-              <AvatarImage src="" />
+              <AvatarImage src={profile.avatar_url} />
               <AvatarFallback className="text-lg">
-                <User size={32} />
+                {profile.display_name 
+                  ? profile.display_name.split(' ').map(n => n[0]).join('').toUpperCase()
+                  : <User size={32} />
+                }
               </AvatarFallback>
             </Avatar>
             <div className="text-center sm:text-left">
@@ -89,11 +155,12 @@ export const ProfileSettings: React.FC = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5 sm:col-span-2 md:col-span-1">
-              <Label htmlFor="name">Full Name</Label>
+              <Label htmlFor="display_name">Display Name</Label>
               <Input
-                id="name"
-                value={profile.name}
-                onChange={(e) => handleInputChange('name', e.target.value)}
+                id="display_name"
+                value={profile.display_name}
+                onChange={(e) => handleInputChange('display_name', e.target.value)}
+                disabled={updating}
               />
             </div>
             <div className="space-y-1.5 sm:col-span-2 md:col-span-1">
@@ -103,23 +170,14 @@ export const ProfileSettings: React.FC = () => {
                 type="email"
                 value={profile.email}
                 onChange={(e) => handleInputChange('email', e.target.value)}
-              />
-            </div>
-            <div className="space-y-1.5 sm:col-span-2 md:col-span-1">
-              <Label htmlFor="phone">Phone Number</Label>
-              <Input
-                id="phone"
-                type="tel"
-                placeholder="(555) 123-4567"
-                value={profile.phone}
-                onChange={(e) => handlePhoneChange(e.target.value)}
+                disabled={updating}
               />
             </div>
           </div>
 
           <div className="flex justify-end">
-            <Button onClick={handleSave} className="w-full sm:w-auto">
-              Save Changes
+            <Button onClick={handleSave} className="w-full sm:w-auto" disabled={updating}>
+              {updating ? "Saving..." : "Save Changes"}
             </Button>
           </div>
         </CardContent>

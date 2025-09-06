@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, Mail01 as Mail, X } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,48 +9,55 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface TeamMember {
   id: string;
-  name: string;
-  email: string;
-  role: 'admin' | 'manager' | 'member';
-  status: 'active' | 'pending' | 'inactive';
-  avatar?: string;
+  display_name: string | null;
+  email: string | null;
+  avatar_url: string | null;
+  created_at: string;
 }
 
-const mockTeamMembers: TeamMember[] = [
-  {
-    id: '1',
-    name: 'Aaron Chachamovits',
-    email: 'aaron@parkweb.app',
-    role: 'admin',
-    status: 'active',
-  },
-  {
-    id: '2',
-    name: 'John Smith',
-    email: 'john@parkweb.app',
-    role: 'manager',
-    status: 'active',
-  },
-  {
-    id: '3',
-    name: 'Sarah Johnson',
-    email: 'sarah@parkweb.app',
-    role: 'member',
-    status: 'pending',
-  },
-];
-
 export const TeamSettings: React.FC = () => {
-  const [teamMembers, setTeamMembers] = useState<TeamMember[]>(mockTeamMembers);
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
-  const [inviteRole, setInviteRole] = useState<'admin' | 'manager' | 'member'>('member');
   const { toast } = useToast();
+  const { user } = useAuth();
 
-  const handleInviteMember = () => {
+  useEffect(() => {
+    fetchTeamMembers();
+  }, []);
+
+  const fetchTeamMembers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching team members:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load team members.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setTeamMembers(data || []);
+    } catch (error) {
+      console.error('Error in fetchTeamMembers:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleInviteMember = async () => {
     if (!inviteEmail) {
       toast({
         title: "Error",
@@ -60,60 +67,33 @@ export const TeamSettings: React.FC = () => {
       return;
     }
 
-    const newMember: TeamMember = {
-      id: Date.now().toString(),
-      name: inviteEmail.split('@')[0],
-      email: inviteEmail,
-      role: inviteRole,
-      status: 'pending',
-    };
-
-    setTeamMembers([...teamMembers, newMember]);
+    // In a real app, this would send an actual invitation
+    toast({
+      title: "Feature coming soon",
+      description: "Team member invitations will be available in a future update.",
+    });
+    
     setInviteEmail('');
-    setInviteRole('member');
     setIsInviteOpen(false);
+  };
 
-    toast({
-      title: "Invitation sent",
-      description: `Invitation sent to ${inviteEmail}`,
+  const formatJoinDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
     });
   };
 
-  const handleRemoveMember = (memberId: string) => {
-    setTeamMembers(teamMembers.filter(member => member.id !== memberId));
-    toast({
-      title: "Member removed",
-      description: "Team member has been removed successfully.",
-    });
-  };
-
-  const handleRoleChange = (memberId: string, newRole: 'admin' | 'manager' | 'member') => {
-    setTeamMembers(teamMembers.map(member => 
-      member.id === memberId ? { ...member, role: newRole } : member
-    ));
-    toast({
-      title: "Role updated",
-      description: "Team member role has been updated successfully.",
-    });
-  };
-
-  const getRoleColor = (role: string) => {
-    switch (role) {
-      case 'admin': return 'bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20';
-      case 'manager': return 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20';
-      case 'member': return 'bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20';
-      default: return 'bg-gray-500/10 text-gray-700 dark:text-gray-400 border-gray-500/20';
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active': return 'bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20';
-      case 'pending': return 'bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border-yellow-500/20';
-      case 'inactive': return 'bg-gray-500/10 text-gray-700 dark:text-gray-400 border-gray-500/20';
-      default: return 'bg-gray-500/10 text-gray-700 dark:text-gray-400 border-gray-500/20';
-    }
-  };
+  if (loading) {
+    return (
+      <div className="space-y-6 lg:space-y-8">
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 lg:space-y-8">
@@ -150,19 +130,6 @@ export const TeamSettings: React.FC = () => {
                   onChange={(e) => setInviteEmail(e.target.value)}
                 />
               </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="role">Role <span className="text-destructive">*</span></Label>
-                <Select value={inviteRole} onValueChange={(value: 'admin' | 'manager' | 'member') => setInviteRole(value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a role" />
-                  </SelectTrigger>
-                  <SelectContent className="z-50 bg-popover">
-                    <SelectItem value="member">Member</SelectItem>
-                    <SelectItem value="manager">Manager</SelectItem>
-                    <SelectItem value="admin">Admin</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
               <div className="flex justify-end space-x-2">
                 <Button variant="outline" onClick={() => setIsInviteOpen(false)}>
                   Cancel
@@ -190,54 +157,38 @@ export const TeamSettings: React.FC = () => {
               <div key={member.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 border border-border rounded-lg gap-4">
                 <div className="flex items-center space-x-4">
                   <Avatar>
-                    <AvatarImage src={member.avatar} />
+                    <AvatarImage src={member.avatar_url || undefined} />
                     <AvatarFallback>
-                      {member.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                      {member.display_name 
+                        ? member.display_name.split(' ').map(n => n[0]).join('').toUpperCase()
+                        : member.email?.substring(0, 2).toUpperCase() || 'U'
+                      }
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <h3 className="font-medium text-foreground">{member.name}</h3>
+                    <h3 className="font-medium text-foreground">
+                      {member.display_name || member.email?.split('@')[0] || 'Unknown User'}
+                    </h3>
                     <p className="text-sm text-muted-foreground">{member.email}</p>
+                    <p className="text-xs text-muted-foreground">
+                      Joined {formatJoinDate(member.created_at)}
+                    </p>
                   </div>
                 </div>
                 
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:space-x-4">
-                  <div className="flex gap-2">
-                    <Badge className={getRoleColor(member.role)}>
-                      {member.role.charAt(0).toUpperCase() + member.role.slice(1)}
-                    </Badge>
-                    <Badge className={getStatusColor(member.status)}>
-                      {member.status.charAt(0).toUpperCase() + member.status.slice(1)}
-                    </Badge>
-                  </div>
-                  
-                  <div className="flex gap-2 w-full sm:w-auto">
-                    <Select 
-                      value={member.role} 
-                      onValueChange={(value: 'admin' | 'manager' | 'member') => handleRoleChange(member.id, value)}
-                    >
-                      <SelectTrigger className="flex-1 sm:w-32">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="z-50 bg-popover">
-                        <SelectItem value="member">Member</SelectItem>
-                        <SelectItem value="manager">Manager</SelectItem>
-                        <SelectItem value="admin">Admin</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleRemoveMember(member.id)}
-                      className="text-destructive hover:text-destructive"
-                    >
-                      <X size={16} />
-                    </Button>
-                  </div>
+                  <Badge className="bg-primary/10 text-primary border-primary/20">
+                    {member.id === user?.id ? 'You' : 'Member'}
+                  </Badge>
                 </div>
               </div>
             ))}
+            
+            {teamMembers.length === 0 && (
+              <div className="text-center py-8 text-muted-foreground">
+                No team members found.
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
