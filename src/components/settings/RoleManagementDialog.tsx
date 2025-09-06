@@ -1,0 +1,227 @@
+import React, { useState, useEffect } from 'react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+
+interface TeamMember {
+  id: string;
+  user_id: string;
+  display_name: string | null;
+  email: string | null;
+  avatar_url: string | null;
+  created_at: string;
+  role?: string;
+  permissions?: string[];
+}
+
+interface RoleManagementDialogProps {
+  member: TeamMember | null;
+  isOpen: boolean;
+  onClose: () => void;
+  onUpdate: () => void;
+}
+
+const PERMISSION_GROUPS = {
+  'Team Management': ['manage_team', 'view_team'],
+  'Projects': ['manage_projects', 'view_projects'],
+  'Onboarding': ['manage_onboarding', 'view_onboarding'],
+  'Scope of Works': ['manage_scope_works', 'view_scope_works'],
+  'Settings': ['manage_settings', 'view_settings'],
+};
+
+const PERMISSION_LABELS = {
+  'manage_team': 'Manage Team Members',
+  'view_team': 'View Team Members',
+  'manage_projects': 'Manage Projects',
+  'view_projects': 'View Projects',
+  'manage_onboarding': 'Manage Client Onboarding',
+  'view_onboarding': 'View Client Onboarding',
+  'manage_scope_works': 'Manage Scope of Works',
+  'view_scope_works': 'View Scope of Works',
+  'manage_settings': 'Manage Settings',
+  'view_settings': 'View Settings',
+};
+
+export const RoleManagementDialog: React.FC<RoleManagementDialogProps> = ({
+  member,
+  isOpen,
+  onClose,
+  onUpdate,
+}) => {
+  const [role, setRole] = useState<string>('member');
+  const [permissions, setPermissions] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if (member) {
+      fetchMemberRole();
+    }
+  }, [member]);
+
+  const fetchMemberRole = async () => {
+    if (!member) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('role, permissions')
+        .eq('user_id', member.user_id)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error fetching member role:', error);
+        return;
+      }
+
+      if (data) {
+        setRole(data.role || 'member');
+        setPermissions(data.permissions || []);
+      } else {
+        setRole('member');
+        setPermissions([]);
+      }
+    } catch (error) {
+      console.error('Error in fetchMemberRole:', error);
+    }
+  };
+
+  const handleRoleChange = (newRole: string) => {
+    setRole(newRole);
+    
+    // Auto-assign permissions based on role
+    if (newRole === 'admin') {
+      setPermissions(Object.keys(PERMISSION_LABELS));
+    } else if (newRole === 'manager') {
+      setPermissions([
+        'view_team', 'manage_projects', 'view_projects', 
+        'manage_onboarding', 'view_onboarding',
+        'manage_scope_works', 'view_scope_works',
+        'view_settings'
+      ]);
+    } else {
+      setPermissions(['view_team', 'view_projects', 'view_onboarding', 'view_scope_works']);
+    }
+  };
+
+  const handlePermissionChange = (permission: string, checked: boolean) => {
+    if (checked) {
+      setPermissions(prev => [...prev, permission]);
+    } else {
+      setPermissions(prev => prev.filter(p => p !== permission));
+    }
+  };
+
+  const handleSave = async () => {
+    if (!member) return;
+
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from('user_roles')
+        .upsert({
+          user_id: member.user_id,
+          role: role as 'admin' | 'manager' | 'member',
+          permissions: permissions as any,
+        } as any);
+
+      if (error) {
+        console.error('Error updating member role:', error);
+        toast({
+          title: "Update failed",
+          description: "Failed to update member role and permissions.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Role updated",
+        description: `${member.display_name || member.email}'s role has been updated.`,
+      });
+
+      onUpdate();
+      onClose();
+    } catch (error) {
+      console.error('Error in handleSave:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!member) return null;
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Manage Role & Permissions</DialogTitle>
+          <DialogDescription>
+            Update role and permissions for {member.display_name || member.email}
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Role</Label>
+            <Select value={role} onValueChange={handleRoleChange}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="admin">Admin</SelectItem>
+                <SelectItem value="manager">Manager</SelectItem>
+                <SelectItem value="member">Member</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-3">
+            <Label className="text-sm font-medium">Permissions</Label>
+            <div className="space-y-3 max-h-64 overflow-y-auto">
+              {Object.entries(PERMISSION_GROUPS).map(([group, groupPermissions]) => (
+                <div key={group} className="space-y-2">
+                  <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                    {group}
+                  </h4>
+                  <div className="space-y-2 pl-2">
+                    {groupPermissions.map((permission) => (
+                      <div key={permission} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={permission}
+                          checked={permissions.includes(permission)}
+                          onCheckedChange={(checked) => 
+                            handlePermissionChange(permission, checked as boolean)
+                          }
+                        />
+                        <Label 
+                          htmlFor={permission}
+                          className="text-sm cursor-pointer"
+                        >
+                          {PERMISSION_LABELS[permission as keyof typeof PERMISSION_LABELS]}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex justify-end space-x-2 pt-4">
+            <Button variant="outline" onClick={onClose} disabled={loading}>
+              Cancel
+            </Button>
+            <Button onClick={handleSave} disabled={loading}>
+              {loading ? "Saving..." : "Save Changes"}
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};

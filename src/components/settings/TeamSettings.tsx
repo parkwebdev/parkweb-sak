@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Mail01 as Mail, X } from '@untitledui/icons';
+import { Plus, Mail01 as Mail, X, Settings01 as Settings } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { RoleManagementDialog } from './RoleManagementDialog';
 
 interface TeamMember {
   id: string;
@@ -19,6 +20,8 @@ interface TeamMember {
   email: string | null;
   avatar_url: string | null;
   created_at: string;
+  role?: string;
+  permissions?: string[];
 }
 
 export const TeamSettings: React.FC = () => {
@@ -26,22 +29,47 @@ export const TeamSettings: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
+  const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
+  const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
+  const [currentUserRole, setCurrentUserRole] = useState<string>('member');
   const { toast } = useToast();
   const { user } = useAuth();
 
   useEffect(() => {
     fetchTeamMembers();
+    fetchCurrentUserRole();
   }, []);
+
+  const fetchCurrentUserRole = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error fetching user role:', error);
+        return;
+      }
+
+      setCurrentUserRole(data?.role || 'member');
+    } catch (error) {
+      console.error('Error in fetchCurrentUserRole:', error);
+    }
+  };
 
   const fetchTeamMembers = async () => {
     try {
-      const { data, error } = await supabase
+      const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Error fetching team members:', error);
+      if (profilesError) {
+        console.error('Error fetching team members:', profilesError);
         toast({
           title: "Error",
           description: "Failed to load team members.",
@@ -50,7 +78,26 @@ export const TeamSettings: React.FC = () => {
         return;
       }
 
-      setTeamMembers(data || []);
+      // Fetch roles for all members
+      const { data: rolesData, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('user_id, role, permissions');
+
+      if (rolesError) {
+        console.error('Error fetching roles:', rolesError);
+      }
+
+      // Combine profile and role data
+      const membersWithRoles = (profilesData || []).map(profile => {
+        const roleData = rolesData?.find(r => r.user_id === profile.user_id);
+        return {
+          ...profile,
+          role: roleData?.role || 'member',
+          permissions: roleData?.permissions || [],
+        };
+      });
+
+      setTeamMembers(membersWithRoles);
     } catch (error) {
       console.error('Error in fetchTeamMembers:', error);
     } finally {
@@ -108,6 +155,11 @@ export const TeamSettings: React.FC = () => {
     }
   };
 
+  const handleEditRole = (member: TeamMember) => {
+    setSelectedMember(member);
+    setIsRoleDialogOpen(true);
+  };
+
   const formatJoinDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -115,6 +167,19 @@ export const TeamSettings: React.FC = () => {
       day: 'numeric'
     });
   };
+
+  const getRoleColor = (role: string) => {
+    switch (role) {
+      case 'admin':
+        return 'bg-red-100 text-red-800 border-red-200';
+      case 'manager':
+        return 'bg-blue-100 text-blue-800 border-blue-200';
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
+  const canManageRoles = currentUserRole === 'admin';
 
   if (loading) {
     return (
@@ -206,9 +271,23 @@ export const TeamSettings: React.FC = () => {
             </div>
             
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:space-x-4">
-                <Badge className="bg-primary/10 text-primary border-primary/20 text-xs">
-                  {member.user_id === user?.id ? 'You' : 'Member'}
+                <Badge className={`text-xs capitalize ${getRoleColor(member.role || 'member')}`}>
+                  {member.user_id === user?.id 
+                    ? (member.role === 'admin' ? 'Admin (You)' : `${member.role || 'Member'} (You)`)
+                    : member.role || 'Member'
+                  }
                 </Badge>
+                {canManageRoles && member.user_id !== user?.id && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => handleEditRole(member)}
+                    className="h-6 px-2"
+                  >
+                    <Settings size={12} className="mr-1" />
+                    Edit
+                  </Button>
+                )}
               </div>
           </div>
         ))}
@@ -219,6 +298,19 @@ export const TeamSettings: React.FC = () => {
           </div>
         )}
       </div>
+
+      <RoleManagementDialog
+        member={selectedMember}
+        isOpen={isRoleDialogOpen}
+        onClose={() => {
+          setIsRoleDialogOpen(false);
+          setSelectedMember(null);
+        }}
+        onUpdate={() => {
+          fetchTeamMembers();
+          fetchCurrentUserRole();
+        }}
+      />
     </div>
   );
 };

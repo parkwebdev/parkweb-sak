@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -6,23 +6,159 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 export const GeneralSettings: React.FC = () => {
   const { toast } = useToast();
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
-  const [autoSave, setAutoSave] = useState(true);
-  const [compactMode, setCompactMode] = useState(false);
-  const [defaultProjectView, setDefaultProjectView] = useState('dashboard');
+  const [preferences, setPreferences] = useState({
+    auto_save: true,
+    compact_mode: false,
+    default_project_view: 'dashboard',
+  });
+
+  useEffect(() => {
+    if (user) {
+      fetchPreferences();
+    }
+  }, [user]);
+
+  const fetchPreferences = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('user_preferences')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error fetching preferences:', error);
+        return;
+      }
+
+      if (data) {
+        setPreferences({
+          auto_save: data.auto_save ?? true,
+          compact_mode: data.compact_mode ?? false,
+          default_project_view: data.default_project_view ?? 'dashboard',
+        });
+      }
+    } catch (error) {
+      console.error('Error in fetchPreferences:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updatePreference = async (key: keyof typeof preferences, value: any) => {
+    if (!user) return;
+
+    setUpdating(true);
+    try {
+      const { error } = await supabase
+        .from('user_preferences')
+        .upsert({
+          user_id: user.id,
+          [key]: value,
+          ...preferences,
+        } as any);
+
+      if (error) {
+        console.error('Error updating preference:', error);
+        toast({
+          title: "Update failed",
+          description: "Failed to update preference.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setPreferences(prev => ({ ...prev, [key]: value }));
+
+      // Apply compact mode immediately to body
+      if (key === 'compact_mode') {
+        document.body.classList.toggle('compact-mode', value);
+      }
+
+      toast({
+        title: "Settings updated",
+        description: "Your preferences have been saved.",
+      });
+    } catch (error) {
+      console.error('Error in updatePreference:', error);
+    } finally {
+      setUpdating(false);
+    }
+  };
 
   const handleSave = async () => {
+    if (!user) return;
+    
     setUpdating(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    toast({
-      title: "Settings saved",
-      description: "Your general settings have been updated.",
-    });
-    setUpdating(false);
+    try {
+      const { error } = await supabase
+        .from('user_preferences')
+        .upsert({
+          user_id: user.id,
+          ...preferences,
+        } as any);
+
+      if (error) {
+        console.error('Error saving preferences:', error);
+        toast({
+          title: "Save failed",
+          description: "Failed to save your preferences.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Settings saved",
+        description: "Your general settings have been updated.",
+      });
+    } catch (error) {
+      console.error('Error in handleSave:', error);
+    } finally {
+      setUpdating(false);
+    }
   };
+
+  // Apply compact mode on load
+  useEffect(() => {
+    if (preferences.compact_mode) {
+      document.body.classList.add('compact-mode');
+    } else {
+      document.body.classList.remove('compact-mode');
+    }
+  }, [preferences.compact_mode]);
+
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        <Card>
+          <CardContent className="space-y-4 py-8">
+            <div className="space-y-6">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex items-center justify-between">
+                  <div className="space-y-2">
+                    <div className="h-4 w-32 bg-muted rounded animate-pulse" />
+                    <div className="h-3 w-48 bg-muted rounded animate-pulse" />
+                  </div>
+                  <div className="h-6 w-12 bg-muted rounded animate-pulse" />
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -45,22 +181,24 @@ export const GeneralSettings: React.FC = () => {
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <label className="text-sm font-medium">Auto-save</label>
-              <p className="text-xs text-muted-foreground">Automatically save changes as you work</p>
+              <p className="text-xs text-muted-foreground">Automatically save changes as you work (saves every 30 seconds)</p>
             </div>
             <Switch
-              checked={autoSave}
-              onCheckedChange={setAutoSave}
+              checked={preferences.auto_save}
+              onCheckedChange={(checked) => updatePreference('auto_save', checked)}
+              disabled={updating}
             />
           </div>
 
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <label className="text-sm font-medium">Compact Mode</label>
-              <p className="text-xs text-muted-foreground">Reduce spacing for more content on screen</p>
+              <p className="text-xs text-muted-foreground">Reduce spacing and padding for more content on screen</p>
             </div>
             <Switch
-              checked={compactMode}
-              onCheckedChange={setCompactMode}
+              checked={preferences.compact_mode}
+              onCheckedChange={(checked) => updatePreference('compact_mode', checked)}
+              disabled={updating}
             />
           </div>
         </CardContent>
@@ -75,17 +213,22 @@ export const GeneralSettings: React.FC = () => {
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <Label className="text-sm font-medium">Default Project View</Label>
-              <p className="text-xs text-muted-foreground">Choose which page loads first when opening a project</p>
+              <p className="text-xs text-muted-foreground">Choose which page loads first when opening the application</p>
             </div>
-            <Select value={defaultProjectView} onValueChange={setDefaultProjectView}>
+            <Select 
+              value={preferences.default_project_view} 
+              onValueChange={(value) => updatePreference('default_project_view', value)}
+              disabled={updating}
+            >
               <SelectTrigger className="w-40">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="dashboard">Dashboard</SelectItem>
-                <SelectItem value="onboarding">Onboarding</SelectItem>
+                <SelectItem value="onboarding">Client Onboarding</SelectItem>
                 <SelectItem value="scope-works">Scope of Works</SelectItem>
                 <SelectItem value="team">Team</SelectItem>
+                <SelectItem value="settings">Settings</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -93,8 +236,8 @@ export const GeneralSettings: React.FC = () => {
       </Card>
 
       <div className="flex justify-end">
-        <Button onClick={handleSave} disabled={updating} size="sm">
-          {updating ? "Saving..." : "Save Changes"}
+        <Button onClick={handleSave} disabled={updating || loading} size="sm">
+          {updating ? "Saving..." : "Save All Changes"}
         </Button>
       </div>
     </div>
