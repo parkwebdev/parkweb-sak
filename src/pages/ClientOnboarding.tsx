@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ProgressBar } from '@/components/ProgressBar';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 interface OnboardingData {
   // Company Information
@@ -269,6 +270,9 @@ const ClientOnboarding = () => {
   if (isSubmitted) {
     return (
       <div className="min-h-screen bg-muted/30 flex items-center justify-center">
+        <div className="absolute top-6 right-6">
+          <ThemeToggle />
+        </div>
         <Card className="max-w-2xl mx-auto">
           <CardContent className="text-center p-12">
             <div className="h-16 w-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -686,6 +690,12 @@ const ClientOnboarding = () => {
     <>
       <div className="min-h-screen bg-muted/30">
         <div className="max-w-3xl mx-auto px-6 py-12">
+          {/* Header with theme toggle */}
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-2xl font-bold text-foreground">Website Project Onboarding</h1>
+            <ThemeToggle />
+          </div>
+          
           {/* Progress Bar */}
           <div className="mb-8">
             <div className="text-center mb-4">
