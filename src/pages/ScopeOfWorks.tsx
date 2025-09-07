@@ -188,10 +188,55 @@ const ScopeOfWorks = () => {
   if (loading) {
     return (
       <div className="flex h-screen bg-muted/30">
-        <div className={`flex-1 flex items-center justify-center transition-all duration-300 ${
+        <div className={`flex-1 overflow-auto transition-all duration-300 ${
           isCollapsed ? 'lg:ml-[72px]' : 'lg:ml-[280px]'
         }`}>
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <main className="flex-1 bg-muted/30 pt-4 lg:pt-8 pb-12">
+            <div className="max-w-7xl mx-auto px-4 lg:px-8">
+              {/* Skeleton Header */}
+              <div className="mb-6">
+                <div className="h-8 bg-muted rounded animate-pulse w-64 mb-2"></div>
+                <div className="h-4 bg-muted rounded animate-pulse w-96"></div>
+              </div>
+              
+              {/* Skeleton Table */}
+              <div className="bg-card rounded-lg border">
+                <div className="border-b border-border p-4">
+                  <div className="flex items-center gap-4">
+                    <div className="h-8 bg-muted rounded animate-pulse w-80"></div>
+                    <div className="h-8 bg-muted rounded animate-pulse w-20 ml-auto"></div>
+                  </div>
+                </div>
+                <div className="p-0">
+                  <div className="overflow-x-auto">
+                    <div className="w-full">
+                      <div className="border-b p-3 flex items-center gap-3">
+                        <div className="w-4 h-4 bg-muted rounded animate-pulse"></div>
+                        <div className="h-4 bg-muted rounded animate-pulse w-20"></div>
+                        <div className="h-4 bg-muted rounded animate-pulse w-24"></div>
+                        <div className="h-4 bg-muted rounded animate-pulse w-16"></div>
+                        <div className="h-4 bg-muted rounded animate-pulse w-28"></div>
+                        <div className="h-4 bg-muted rounded animate-pulse w-20"></div>
+                      </div>
+                      {[1, 2, 3, 4, 5].map((i) => (
+                        <div key={i} className="border-b p-3 flex items-center gap-3">
+                          <div className="w-4 h-4 bg-muted rounded animate-pulse"></div>
+                          <div className="h-4 bg-muted rounded animate-pulse w-32"></div>
+                          <div className="h-4 bg-muted rounded animate-pulse w-24"></div>
+                          <div className="h-6 bg-muted rounded animate-pulse w-16"></div>
+                          <div className="h-4 bg-muted rounded animate-pulse w-20"></div>
+                          <div className="flex gap-2">
+                            <div className="h-8 w-8 bg-muted rounded animate-pulse"></div>
+                            <div className="h-8 w-8 bg-muted rounded animate-pulse"></div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </main>
         </div>
       </div>
     );
@@ -255,48 +300,47 @@ const ScopeOfWorks = () => {
               {/* Table Header with Filters */}
               <div className="border-b border-border">
                 <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-3 px-4 py-3">
-                  <div className="flex items-center gap-2">
-                    {/* Filter buttons */}
-                    <div className="overflow-x-auto">
-                      <div className="border shadow-sm flex overflow-hidden text-xs text-foreground font-medium leading-none rounded-md border-border min-w-max">
-                        {['View all', 'Approved', 'In Review', 'Draft'].map((filter, index) => {
-                          const filterKey = filter.toLowerCase().replace(' ', '-');
-                          const isActive = activeFilter === filterKey;
-                          return (
-                            <button
-                              key={filter}
-                              onClick={() => setActiveFilter(filterKey)}
-                              className={`px-3 py-2 ${
-                                isActive
-                                  ? 'bg-primary text-primary-foreground'
-                                  : 'bg-card hover:bg-accent'
-                              } ${
-                                index === 0 ? 'rounded-l-md' : ''
-                              } ${
-                                index === 3 ? 'rounded-r-md' : ''
-                              } ${
-                                index !== 3 ? 'border-r border-border' : ''
-                              } transition-colors`}
-                            >
-                              {filter}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                    
-                    {selectedRows.length > 0 && (
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => setShowDeleteDialog(true)}
-                        className="h-8 px-3"
-                      >
-                        <Trash className="h-4 w-4 mr-1" />
-                        Delete ({selectedRows.length})
-                      </Button>
-                    )}
-                  </div>
+                   <div className="flex items-center gap-2">
+                     {/* Filter buttons */}
+                     <div className="overflow-x-auto">
+                       <div className="border shadow-sm flex overflow-hidden text-xs text-foreground font-medium leading-none rounded-md border-border min-w-max">
+                         {['View all', 'Approved', 'In Review', 'Draft'].map((filter, index) => {
+                           const filterKey = filter.toLowerCase().replace(' ', '-');
+                           const isActive = activeFilter === filterKey;
+                           return (
+                             <button
+                               key={filter}
+                               onClick={() => setActiveFilter(filterKey)}
+                               className={`px-3 py-2 ${
+                                 isActive
+                                   ? 'bg-primary text-primary-foreground'
+                                   : 'bg-card hover:bg-accent'
+                               } ${
+                                 index === 0 ? 'rounded-l-md' : ''
+                               } ${
+                                 index === 3 ? 'rounded-r-md' : ''
+                               } ${
+                                 index !== 3 ? 'border-r border-border' : ''
+                               } transition-colors`}
+                             >
+                               {filter}
+                             </button>
+                           );
+                         })}
+                       </div>
+                     </div>
+                   </div>
+                   
+                   <div className="ml-auto">
+                     {selectedRows.length > 0 && (
+                       <button
+                         onClick={() => setShowDeleteDialog(true)}
+                         className="px-3 py-2 bg-card hover:bg-accent border shadow-sm text-xs text-foreground font-medium leading-none rounded-md border-border transition-colors flex items-center gap-1.5"
+                       >
+                         <Trash className="h-3 w-3" />
+                       </button>
+                     )}
+                   </div>
                 </div>
               </div>
 
@@ -377,6 +421,110 @@ const ScopeOfWorks = () => {
           </div>
         </main>
       </div>
+
+      {/* View/Edit Dialog */}
+      <Dialog open={!!selectedSow} onOpenChange={() => setSelectedSow(null)}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-between">
+              {isEditing ? 'Edit Scope of Work' : 'View Scope of Work'}
+              <div className="flex items-center gap-2">
+                {!isEditing && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsEditing(true)}
+                  >
+                    <Edit className="h-4 w-4 mr-1" />
+                    Edit
+                  </Button>
+                )}
+                {isEditing && (
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsEditing(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={async () => {
+                        // Handle save logic here
+                        if (selectedSow) {
+                          const { error } = await supabase
+                            .from('scope_of_works')
+                            .update({
+                              title: editedTitle,
+                              content: editedContent,
+                              date_modified: new Date().toISOString()
+                            })
+                            .eq('id', selectedSow.id);
+                          
+                          if (error) {
+                            toast({
+                              title: "Error",
+                              description: "Failed to save changes.",
+                              variant: "destructive",
+                            });
+                          } else {
+                            toast({
+                              title: "Saved",
+                              description: "Scope of work updated successfully.",
+                            });
+                            setIsEditing(false);
+                            fetchScopeOfWorks();
+                          }
+                        }
+                      }}
+                    >
+                      Save Changes
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </DialogTitle>
+            <DialogDescription>
+              {selectedSow && `${selectedSow.client} - ${selectedSow.project_type}`}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            {isEditing ? (
+              <>
+                <div>
+                  <Label htmlFor="title">Title</Label>
+                  <Input
+                    id="title"
+                    value={editedTitle}
+                    onChange={(e) => setEditedTitle(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="content">Content</Label>
+                  <Textarea
+                    id="content"
+                    value={editedContent}
+                    onChange={(e) => setEditedContent(e.target.value)}
+                    rows={20}
+                    className="font-mono text-sm"
+                  />
+                </div>
+              </>
+            ) : (
+              selectedSow && (
+                <div className="prose max-w-none">
+                  <h2 className="text-xl font-semibold mb-4">{selectedSow.title}</h2>
+                  <div className="whitespace-pre-wrap bg-muted p-4 rounded-md">
+                    {selectedSow.content}
+                  </div>
+                </div>
+              )
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <DeleteConfirmationDialog
         open={showDeleteDialog}

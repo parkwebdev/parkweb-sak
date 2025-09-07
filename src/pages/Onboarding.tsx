@@ -282,10 +282,46 @@ const Onboarding = () => {
         }`}>
           <main className="flex-1 bg-muted/30 pt-4 lg:pt-8 pb-12">
             <div className="max-w-7xl mx-auto px-4 lg:px-8">
-              <div className="flex items-center justify-center h-64">
-                <div className="text-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-                  <p className="text-muted-foreground">Loading client links...</p>
+              {/* Skeleton Header */}
+              <div className="mb-6">
+                <div className="h-8 bg-muted rounded animate-pulse w-64 mb-2"></div>
+                <div className="h-4 bg-muted rounded animate-pulse w-96"></div>
+              </div>
+              
+              {/* Skeleton Stats Cards */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <div className="h-20 bg-muted rounded animate-pulse"></div>
+                <div className="h-20 bg-muted rounded animate-pulse"></div>
+                <div className="h-20 bg-muted rounded animate-pulse"></div>
+                <div className="h-20 bg-muted rounded animate-pulse"></div>
+              </div>
+              
+              {/* Skeleton Client Links Card */}
+              <div className="bg-card rounded-lg border">
+                <div className="p-6 border-b">
+                  <div className="h-6 bg-muted rounded animate-pulse w-48 mb-2"></div>
+                  <div className="h-4 bg-muted rounded animate-pulse w-80"></div>
+                </div>
+                <div className="p-0">
+                  <div className="divide-y divide-border">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="p-6">
+                        <div className="flex items-start gap-3">
+                          <div className="w-4 h-4 bg-muted rounded animate-pulse flex-shrink-0 mt-1"></div>
+                          <div className="flex-1 space-y-3">
+                            <div className="h-5 bg-muted rounded animate-pulse w-48"></div>
+                            <div className="h-4 bg-muted rounded animate-pulse w-64"></div>
+                            <div className="h-2 bg-muted rounded animate-pulse w-32"></div>
+                            <div className="h-4 bg-muted rounded animate-pulse w-80"></div>
+                          </div>
+                          <div className="flex gap-2">
+                            <div className="h-7 w-16 bg-muted rounded animate-pulse"></div>
+                            <div className="h-7 w-16 bg-muted rounded animate-pulse"></div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
@@ -494,7 +530,18 @@ const Onboarding = () => {
                   Manage all your client onboarding links and track their progress
                 </CardDescription>
               </CardHeader>
-              <CardContent className="p-0">
+               <CardContent className="p-0">
+                 <div className="border-b border-border px-4 py-3 flex items-center gap-3">
+                   <input
+                     type="checkbox"
+                     checked={selectedForDelete.length === clientLinks.length && clientLinks.length > 0}
+                     onChange={toggleAllSelection}
+                     className="rounded"
+                   />
+                   <span className="text-sm text-muted-foreground">
+                     {selectedForDelete.length > 0 ? `${selectedForDelete.length} selected` : 'Select all'}
+                   </span>
+                 </div>
                 {clientLinks.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
                     <Link2 className="h-12 w-12 text-muted-foreground/50 mb-4" />
@@ -509,80 +556,88 @@ const Onboarding = () => {
                   </div>
                 ) : (
                   <div className="divide-y divide-border">
-                    {clientLinks.map((client) => (
-                      <div key={client.id} className="p-4 lg:p-6 hover:bg-muted/50 transition-colors">
-                        <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex flex-col lg:flex-row lg:items-start gap-3 mb-3">
-                              <div className="min-w-0 flex-1">
-                                <h3 className="font-medium text-base truncate mb-1">{client.company_name}</h3>
-                                <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-sm text-muted-foreground">
-                                  <span className="truncate">{client.client_name}</span>
-                                  <span className="hidden sm:inline">•</span>
-                                  <a 
-                                    href={`mailto:${client.email}`}
-                                    className="hover:underline truncate"
-                                  >
-                                    {client.email}
-                                  </a>
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-2 flex-shrink-0">
-                                <Badge className={`${getStatusColor(client.status)} text-xs px-2.5 py-1 w-auto`}>
-                                  {client.status}
-                                </Badge>
-                                {client.sow_status && (
-                                  <Badge variant={client.sow_status === 'Approved' ? 'complete' : 'outline'} className="text-xs px-2.5 py-1 w-auto">
-                                    SOW: {client.sow_status}
-                                  </Badge>
-                                )}
-                              </div>
-                            </div>
-                            
-                            {/* Progress Bar */}
-                            <div className="mb-3">
-                              <ProgressBar 
-                                percentage={getProgressPercentage(client.status)} 
-                                className="max-w-full lg:max-w-xs"
-                              />
-                            </div>
-                            
-                            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6 text-sm text-muted-foreground">
-                              <span>Industry: {client.industry}</span>
-                              <span>Sent: {formatDate(client.date_sent)}</span>
-                              <span>Last: {formatDate(client.last_activity)}</span>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2 flex-shrink-0">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="h-7 px-2 flex-1 sm:flex-initial"
-                              onClick={() => handleCopyToClipboard(client.onboarding_url)}
-                            >
-                              <Copy className="h-3 w-3" />
-                              <span className="ml-1 sm:hidden">Copy</span>
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="h-7 px-2 flex-1 sm:flex-initial"
-                              onClick={() => handleSendEmail(client)}
-                              disabled={sendingEmail === client.id}
-                            >
-                              {sendingEmail === client.id ? (
-                                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-current" />
-                              ) : (
-                                <Send className="h-3 w-3" />
-                              )}
-                              <span className="ml-1 sm:hidden">
-                                {sendingEmail === client.id ? 'Sending...' : 'Send'}
-                              </span>
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+                     {clientLinks.map((client) => (
+                       <div key={client.id} className="p-4 lg:p-6 hover:bg-muted/50 transition-colors">
+                         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+                           <div className="flex items-start gap-3 flex-1 min-w-0">
+                             <input
+                               type="checkbox"
+                               checked={selectedForDelete.includes(client.id)}
+                               onChange={() => toggleSelection(client.id)}
+                               className="rounded mt-1 flex-shrink-0"
+                             />
+                             <div className="min-w-0 flex-1">
+                               <div className="flex flex-col lg:flex-row lg:items-start gap-3 mb-3">
+                                 <div className="min-w-0 flex-1">
+                                   <h3 className="font-medium text-base truncate mb-1">{client.company_name}</h3>
+                                   <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-sm text-muted-foreground">
+                                     <span className="truncate">{client.client_name}</span>
+                                     <span className="hidden sm:inline">•</span>
+                                     <a 
+                                       href={`mailto:${client.email}`}
+                                       className="hover:underline truncate"
+                                     >
+                                       {client.email}
+                                     </a>
+                                   </div>
+                                 </div>
+                                 <div className="flex items-center gap-2 flex-shrink-0">
+                                   <Badge className={`${getStatusColor(client.status)} text-xs px-2.5 py-1 w-auto`}>
+                                     {client.status}
+                                   </Badge>
+                                   {client.sow_status && (
+                                     <Badge variant={client.sow_status === 'Approved' ? 'complete' : 'outline'} className="text-xs px-2.5 py-1 w-auto">
+                                       SOW: {client.sow_status}
+                                     </Badge>
+                                   )}
+                                 </div>
+                               </div>
+                               
+                               {/* Progress Bar */}
+                               <div className="mb-3">
+                                 <ProgressBar 
+                                   percentage={getProgressPercentage(client.status)} 
+                                   className="max-w-full lg:max-w-xs"
+                                 />
+                               </div>
+                               
+                               <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6 text-sm text-muted-foreground">
+                                 <span>Industry: {client.industry}</span>
+                                 <span>Sent: {formatDate(client.date_sent)}</span>
+                                 <span>Last: {formatDate(client.last_activity)}</span>
+                               </div>
+                             </div>
+                           </div>
+                           <div className="flex items-center gap-2 flex-shrink-0">
+                             <Button
+                               variant="outline"
+                               size="sm"
+                               className="h-7 px-2 flex-1 sm:flex-initial"
+                               onClick={() => handleCopyToClipboard(client.onboarding_url)}
+                             >
+                               <Copy className="h-3 w-3" />
+                               <span className="ml-1 sm:hidden">Copy</span>
+                             </Button>
+                             <Button
+                               variant="outline"
+                               size="sm"
+                               className="h-7 px-2 flex-1 sm:flex-initial"
+                               onClick={() => handleSendEmail(client)}
+                               disabled={sendingEmail === client.id}
+                             >
+                               {sendingEmail === client.id ? (
+                                 <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-current" />
+                               ) : (
+                                 <Send className="h-3 w-3" />
+                               )}
+                               <span className="ml-1 sm:hidden">
+                                 {sendingEmail === client.id ? 'Sending...' : 'Send'}
+                               </span>
+                             </Button>
+                           </div>
+                         </div>
+                       </div>
+                     ))}
                   </div>
                 )}
               </CardContent>
@@ -590,6 +645,18 @@ const Onboarding = () => {
           </div>
         </main>
       </div>
+      
+      <DeleteConfirmationDialog
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        title="Delete Client Links"
+        description={`Are you sure you want to delete ${selectedForDelete.length} client link(s)? This action cannot be undone.`}
+        confirmationText="delete"
+        confirmationValue={deleteConfirmation}
+        onConfirmationValueChange={setDeleteConfirmation}
+        onConfirm={handleDeleteSelected}
+        isDeleting={isDeleting}
+      />
     </div>
   );
 };
