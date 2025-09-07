@@ -103,6 +103,7 @@ const ScopeOfWorks = () => {
   const fetchScopeOfWorks = async () => {
     try {
       setLoading(true);
+      console.log('Fetching scope of works...');
       const { data, error } = await supabase
         .from('scope_of_works')
         .select('*')
@@ -118,6 +119,7 @@ const ScopeOfWorks = () => {
         return;
       }
 
+      console.log('Fetched scope of works data:', data);
       setScopeOfWorks(data || []);
     } catch (error) {
       console.error('Error fetching scope of works:', error);
@@ -193,14 +195,18 @@ const ScopeOfWorks = () => {
     console.log('Client email address:', sow.email);
     try {
       // Update the SOW status to Approved
-      const { error: updateError } = await supabase
+      console.log('Updating SOW status to Approved for ID:', sow.id);
+      const { data: updateData, error: updateError } = await supabase
         .from('scope_of_works')
         .update({
           status: 'Approved',
           date_modified: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
-        .eq('id', sow.id);
+        .eq('id', sow.id)
+        .select(); // Add select() to see what was updated
+
+      console.log('Update result:', { updateData, updateError });
 
       if (updateError) {
         console.error('Error updating SOW status:', updateError);
@@ -212,7 +218,17 @@ const ScopeOfWorks = () => {
         return;
       }
 
-      console.log('SOW status updated to Approved');
+      if (!updateData || updateData.length === 0) {
+        console.error('No rows were updated - possible permission issue');
+        toast({
+          title: "Error", 
+          description: "Failed to update SOW status. Check permissions.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log('SOW status updated to Approved successfully:', updateData[0]);
 
       // Update the corresponding onboarding link to show 100% completion
       const { error: onboardingUpdateError } = await supabase
@@ -280,7 +296,9 @@ const ScopeOfWorks = () => {
       }
 
       // Refresh the data to show updated status and hide approve button
+      console.log('Calling fetchScopeOfWorks to refresh data...');
       await fetchScopeOfWorks();
+      console.log('Data refreshed, scopeOfWorks state updated');
       
       toast({
         title: "SOW Approved",
