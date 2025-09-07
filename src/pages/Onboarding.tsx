@@ -16,10 +16,14 @@ import { createOnboardingUrl, createEmailTemplate, openEmailClient, copyToClipbo
 import { useEmailTemplates } from '@/hooks/useEmailTemplates';
 import { useRealtimeNotifications } from '@/hooks/useRealtimeNotifications';
 import { ProgressBar } from '@/components/ProgressBar';
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
+import { KeyboardShortcutsModal } from '@/components/KeyboardShortcutsModal';
+import { BulkActionDropdown } from '@/components/BulkActionDropdown';
 import { useSidebar } from '@/hooks/use-sidebar';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog';
+import { UserAccountCard } from '@/components/UserAccountCard';
 
 interface ClientLink {
   id: string;
@@ -39,11 +43,11 @@ interface ClientLink {
 }
 
 const Onboarding = () => {
-  const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const { isCollapsed } = useSidebar();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [clientLinks, setClientLinks] = useState<ClientLink[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [sendingEmail, setSendingEmail] = useState<string | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [selectedForDelete, setSelectedForDelete] = useState<string[]>([]);
@@ -59,6 +63,26 @@ const Onboarding = () => {
   const { user } = useAuth();
   const { sendWelcomeEmail } = useEmailTemplates();
   const { triggerOnboardingCompletion } = useRealtimeNotifications();
+  
+  // Keyboard shortcuts
+  const pageShortcuts = [
+    {
+      key: 'n',
+      ctrlKey: true,
+      shiftKey: true,
+      description: 'Create new onboarding link',
+      action: () => setShowCreateDialog(true)
+    },
+    {
+      key: 'e',
+      ctrlKey: true,
+      description: 'Export selected items',
+      action: () => selectedForDelete.length > 0 && handleBulkExport()
+    }
+  ];
+  
+  const { shortcuts } = useKeyboardShortcuts(pageShortcuts);
+  const [showShortcutsModal, setShowShortcutsModal] = useState(false);
 
   // Fetch client links from database
   useEffect(() => {
@@ -187,49 +211,27 @@ const Onboarding = () => {
     }
   };
 
-  const handleSendEmail = async (client: ClientLink) => {
+  const handleSendEmail = async (clientLink: ClientLink) => {
+    setSendingEmail(clientLink.id);
+    
     try {
-      setSendingEmail(client.id);
-      const fullUrl = window.location.origin + createOnboardingUrl(client.client_name, client.company_name);
+      const { subject, body } = createEmailTemplate(
+        clientLink.client_name,
+        clientLink.company_name,
+        window.location.origin + clientLink.onboarding_url
+      );
       
-      console.log('Sending onboarding email to:', client.email, 'with URL:', fullUrl);
+      openEmailClient(clientLink.email, subject, body);
       
-      const response = await supabase.functions.invoke('send-notification-email', {
-        body: {
-          to: client.email,
-          type: 'onboarding',
-          title: 'Your Personalized Onboarding Portal',
-          message: `Hi ${client.client_name},\n\nWe're excited to work with ${client.company_name} on your new website project!\n\nWe've created a personalized onboarding portal just for you. Please click the link below to get started:\n\n${fullUrl}\n\nThis will only take 10-15 minutes to complete and will help us create the perfect website for your business.\n\nIf you have any questions, feel free to reach out to us anytime.\n\nBest regards,\nThe Team`,
-            data: {
-              client_name: client.client_name,
-              company_name: client.company_name,
-              onboarding_url: fullUrl
-            }
-        }
-      });
-
-      console.log('Email API response:', response);
-
-      if (response.error) {
-        console.error('Email sending failed:', response.error);
-        toast({
-          title: "Failed to send email",
-          description: "There was an error sending the onboarding email. Please try again.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      console.log('Email sent successfully to:', client.email);
       toast({
-        title: "Email sent successfully!",
-        description: `Onboarding email sent to ${client.email}`,
+        title: "Email opened",
+        description: "Your default email client should now be open with a pre-filled message.",
       });
     } catch (error) {
-      console.error('Error sending onboarding email:', error);
+      console.error('Error opening email client:', error);
       toast({
-        title: "Failed to send email",
-        description: "There was an error sending the onboarding email. Please try again.",
+        title: "Error",
+        description: "Failed to open email client. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -237,11 +239,17 @@ const Onboarding = () => {
     }
   };
 
+  const handleViewOnboarding = (url: string) => {
+    const fullUrl = window.location.origin + url;
+    window.open(fullUrl, '_blank');
+  };
+
   const handleDeleteSelected = async () => {
-    if (!user || selectedForDelete.length === 0) return;
+    if (selectedForDelete.length === 0) return;
     
-    setIsDeleting(true);
     try {
+      setIsDeleting(true);
+      
       const { error } = await supabase
         .from('client_onboarding_links')
         .delete()
@@ -294,6 +302,90 @@ const Onboarding = () => {
     );
   };
 
+  // Bulk export function
+  const handleBulkExport = () => {
+    const selectedLinks = clientLinks.filter(link => 
+      selectedForDelete.includes(link.id)
+    );
+    
+    if (selectedLinks.length === 0) {
+      toast({
+        title: "No items selected",
+        description: "Please select items to export",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Create CSV content
+    const headers = ['Client Name', 'Company', 'Email', 'Industry', 'Status', 'Date Sent'];
+    const csvContent = [
+      headers.join(','),
+      ...selectedLinks.map(link => [
+        link.client_name,
+        link.company_name,
+        link.email,
+        link.industry,
+        link.status,
+        formatDate(link.date_sent)
+      ].map(field => `"${field}"`).join(','))
+    ].join('\n');
+
+    // Download CSV
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `onboarding-export-${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+
+    toast({
+      title: "Export Complete",
+      description: `Exported ${selectedLinks.length} items to CSV`,
+    });
+  };
+
+  // Bulk status update function
+  const handleBulkStatusUpdate = async (newStatus: string) => {
+    if (selectedForDelete.length === 0) return;
+
+    try {
+      const { error } = await supabase
+        .from('client_onboarding_links')
+        .update({ status: newStatus })
+        .in('id', selectedForDelete);
+
+      if (error) {
+        console.error('Error updating statuses:', error);
+        toast({
+          title: "Error",
+          description: "Failed to update statuses. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Refresh data
+      fetchClientLinks();
+      setSelectedForDelete([]);
+
+      toast({
+        title: "Success",
+        description: `Updated ${selectedForDelete.length} items to "${newStatus}"`,
+      });
+    } catch (error) {
+      console.error('Error in bulk status update:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update statuses. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex h-screen bg-muted/30">
@@ -329,14 +421,19 @@ const Onboarding = () => {
                         <div className="flex items-start gap-3">
                           <div className="w-4 h-4 bg-muted rounded animate-pulse flex-shrink-0 mt-1"></div>
                           <div className="flex-1 space-y-3">
-                            <div className="h-5 bg-muted rounded animate-pulse w-48"></div>
-                            <div className="h-4 bg-muted rounded animate-pulse w-64"></div>
-                            <div className="h-2 bg-muted rounded animate-pulse w-32"></div>
-                            <div className="h-4 bg-muted rounded animate-pulse w-80"></div>
-                          </div>
-                          <div className="flex gap-2">
-                            <div className="h-7 w-16 bg-muted rounded animate-pulse"></div>
-                            <div className="h-7 w-16 bg-muted rounded animate-pulse"></div>
+                            <div className="flex items-start justify-between">
+                              <div className="space-y-2">
+                                <div className="h-5 bg-muted rounded animate-pulse w-48"></div>
+                                <div className="h-4 bg-muted rounded animate-pulse w-36"></div>
+                                <div className="h-4 bg-muted rounded animate-pulse w-24"></div>
+                              </div>
+                              <div className="flex gap-2">
+                                <div className="h-8 w-16 bg-muted rounded animate-pulse"></div>
+                                <div className="h-8 w-8 bg-muted rounded animate-pulse"></div>
+                                <div className="h-8 w-8 bg-muted rounded animate-pulse"></div>
+                              </div>
+                            </div>
+                            <div className="h-2 bg-muted rounded animate-pulse w-full"></div>
                           </div>
                         </div>
                       </div>
@@ -400,84 +497,101 @@ const Onboarding = () => {
                   </p>
                 </div>
                 
-                <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-                  <DialogTrigger asChild>
-                    <Button size="sm" className="h-8 w-full lg:w-auto text-xs">
-                      <Plus className="h-3 w-3 mr-1.5" />
-                      Create Link
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-[480px] mx-4">
-                    <DialogHeader>
-                      <DialogTitle className="text-lg">Create Onboarding Link</DialogTitle>
-                      <DialogDescription className="text-sm">
-                        Generate a custom onboarding link for your client with their information pre-filled.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-3 py-4">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="flex items-center gap-2">
+                  <BulkActionDropdown
+                    selectedCount={selectedForDelete.length}
+                    onStatusUpdate={handleBulkStatusUpdate}
+                    onExportSelected={handleBulkExport}
+                    onDelete={() => setShowDeleteDialog(true)}
+                  />
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowShortcutsModal(true)}
+                    className="flex items-center gap-2"
+                  >
+                    <span className="text-xs">⌘</span>
+                    Shortcuts
+                  </Button>
+                  
+                  <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+                    <DialogTrigger asChild>
+                      <Button size="sm" className="h-8 w-full lg:w-auto text-xs">
+                        <Plus className="h-3 w-3 mr-1.5" />
+                        Create Link
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[480px] mx-4">
+                      <DialogHeader>
+                        <DialogTitle className="text-lg">Create Onboarding Link</DialogTitle>
+                        <DialogDescription className="text-sm">
+                          Generate a personalized onboarding link for your client. They'll receive an email with the link automatically.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="grid grid-cols-1 gap-4 py-4">
                         <div className="space-y-1.5">
-                          <Label htmlFor="clientName" className="text-xs font-medium">Client Name *</Label>
+                          <Label htmlFor="client_name" className="text-xs font-medium">Client Name *</Label>
                           <Input
-                            id="clientName"
-                            placeholder="John Smith"
+                            id="client_name"
+                            placeholder="John Doe"
                             className="h-8 text-sm"
                             value={newClient.client_name}
                             onChange={(e) => setNewClient(prev => ({ ...prev, client_name: e.target.value }))}
                           />
                         </div>
                         <div className="space-y-1.5">
-                          <Label htmlFor="companyName" className="text-xs font-medium">Company Name *</Label>
+                          <Label htmlFor="company_name" className="text-xs font-medium">Company Name *</Label>
                           <Input
-                            id="companyName"
+                            id="company_name"
                             placeholder="ABC Company"
                             className="h-8 text-sm"
                             value={newClient.company_name}
                             onChange={(e) => setNewClient(prev => ({ ...prev, company_name: e.target.value }))}
                           />
                         </div>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="email" className="text-xs font-medium">Email Address *</Label>
+                          <Input
+                            id="email"
+                            type="email"
+                            placeholder="john@abccompany.com"
+                            className="h-8 text-sm"
+                            value={newClient.email}
+                            onChange={(e) => setNewClient(prev => ({ ...prev, email: e.target.value }))}
+                          />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label htmlFor="industry" className="text-xs font-medium">Industry</Label>
+                          <Select value={newClient.industry} onValueChange={(value) => setNewClient(prev => ({ ...prev, industry: value }))}>
+                            <SelectTrigger className="h-8 text-sm">
+                              <SelectValue placeholder="Select industry" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {INDUSTRY_OPTIONS.map((option) => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </div>
-                      <div className="space-y-1.5">
-                        <Label htmlFor="email" className="text-xs font-medium">Email Address *</Label>
-                        <Input
-                          id="email"
-                          type="email"
-                          placeholder="john@abccompany.com"
-                          className="h-8 text-sm"
-                          value={newClient.email}
-                          onChange={(e) => setNewClient(prev => ({ ...prev, email: e.target.value }))}
-                        />
+                      <div className="flex justify-end gap-2">
+                        <Button variant="outline" size="sm" onClick={() => setShowCreateDialog(false)}>
+                          Cancel
+                        </Button>
+                        <Button 
+                          size="sm"
+                          onClick={handleCreateLink}
+                          disabled={!newClient.client_name || !newClient.company_name || !newClient.email}
+                        >
+                          Create Link
+                        </Button>
                       </div>
-                      <div className="space-y-1.5">
-                        <Label htmlFor="industry" className="text-xs font-medium">Industry</Label>
-                        <Select value={newClient.industry} onValueChange={(value) => setNewClient(prev => ({ ...prev, industry: value }))}>
-                          <SelectTrigger className="h-8 text-sm">
-                            <SelectValue placeholder="Select industry" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {INDUSTRY_OPTIONS.map((option) => (
-                              <SelectItem key={option.value} value={option.value}>
-                                {option.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                    <div className="flex justify-end gap-2">
-                      <Button variant="outline" size="sm" onClick={() => setShowCreateDialog(false)}>
-                        Cancel
-                      </Button>
-                      <Button 
-                        size="sm"
-                        onClick={handleCreateLink}
-                        disabled={!newClient.client_name || !newClient.company_name || !newClient.email}
-                      >
-                        Create Link
-                      </Button>
-                    </div>
-                  </DialogContent>
-                </Dialog>
+                    </DialogContent>
+                  </Dialog>
+                </div>
               </div>
             </header>
 
@@ -571,93 +685,78 @@ const Onboarding = () => {
                     </p>
                     <Button onClick={() => setShowCreateDialog(true)} size="sm">
                       <Plus className="h-4 w-4 mr-2" />
-                      Create Your First Link
+                      Create Onboarding Link
                     </Button>
                   </div>
                 ) : (
                   <div className="divide-y divide-border">
-                     {clientLinks.map((client) => (
-                       <div key={client.id} className="p-4 lg:p-6 hover:bg-muted/50 transition-colors">
-                         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
-                           <div className="flex items-start gap-3 flex-1 min-w-0">
-                             <input
-                               type="checkbox"
-                               checked={selectedForDelete.includes(client.id)}
-                               onChange={() => toggleSelection(client.id)}
-                               className="rounded mt-1 flex-shrink-0"
-                             />
-                             <div className="min-w-0 flex-1">
-                               <div className="flex flex-col lg:flex-row lg:items-start gap-3 mb-3">
-                                 <div className="min-w-0 flex-1">
-                                   <h3 className="font-medium text-base truncate mb-1">{client.company_name}</h3>
-                                   <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-sm text-muted-foreground">
-                                     <span className="truncate">{client.client_name}</span>
-                                     <span className="hidden sm:inline">•</span>
-                                     <a 
-                                       href={`mailto:${client.email}`}
-                                       className="hover:underline truncate"
-                                     >
-                                       {client.email}
-                                     </a>
-                                   </div>
-                                 </div>
-                                 <div className="flex items-center gap-2 flex-shrink-0">
-                                   <Badge className={`${getStatusColor(client.status)} text-xs px-2.5 py-1 w-auto`}>
-                                     {client.status}
-                                   </Badge>
-                                   {client.sow_status && (
-                                     <Badge variant={client.sow_status === 'Approved' ? 'complete' : 'outline'} className="text-xs px-2.5 py-1 w-auto">
-                                       SOW: {client.sow_status}
-                                     </Badge>
-                                   )}
-                                 </div>
-                               </div>
-                               
-                               {/* Progress Bar */}
-                               <div className="mb-3">
-                                 <ProgressBar 
-                                   percentage={getProgressPercentage(client.status)} 
-                                   className="max-w-full lg:max-w-xs"
-                                 />
-                               </div>
-                               
-                               <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6 text-sm text-muted-foreground">
-                                 <span>Industry: {client.industry}</span>
-                                 <span>Sent: {formatDate(client.date_sent)}</span>
-                                 <span>Last: {formatDate(client.last_activity)}</span>
-                               </div>
-                             </div>
-                           </div>
-                           <div className="flex items-center gap-2 flex-shrink-0">
-                             <Button
-                               variant="outline"
-                               size="sm"
-                               className="h-7 px-2 flex-1 sm:flex-initial"
-                               onClick={() => handleCopyToClipboard(client.onboarding_url)}
-                             >
-                               <Copy className="h-3 w-3" />
-                               <span className="ml-1 sm:hidden">Copy</span>
-                             </Button>
-                             <Button
-                               variant="outline"
-                               size="sm"
-                               className="h-7 px-2 flex-1 sm:flex-initial"
-                               onClick={() => handleSendEmail(client)}
-                               disabled={sendingEmail === client.id}
-                             >
-                               {sendingEmail === client.id ? (
-                                 <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-current" />
-                               ) : (
-                                 <Send className="h-3 w-3" />
-                               )}
-                               <span className="ml-1 sm:hidden">
-                                 {sendingEmail === client.id ? 'Sending...' : 'Send'}
-                               </span>
-                             </Button>
-                           </div>
-                         </div>
-                       </div>
-                     ))}
+                    {clientLinks.map((link) => (
+                      <div key={link.id} className="p-4">
+                        <div className="flex items-start gap-3">
+                          <input
+                            type="checkbox"
+                            checked={selectedForDelete.includes(link.id)}
+                            onChange={() => toggleSelection(link.id)}
+                            className="rounded mt-1"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2 lg:gap-4">
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <h3 className="text-sm font-medium text-card-foreground truncate">
+                                    {link.client_name}
+                                  </h3>
+                                  <Badge variant="default" className="text-xs px-1.5 py-0.5">
+                                    {link.status}
+                                  </Badge>
+                                </div>
+                                <p className="text-xs text-muted-foreground mb-1 truncate">
+                                  {link.company_name} • {link.email} • {link.industry}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  Created {formatDate(link.date_sent)}
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-2 flex-shrink-0">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleCopyToClipboard(link.onboarding_url)}
+                                  className="h-6 px-2 text-xs"
+                                >
+                                  <Copy className="h-3 w-3 mr-1" />
+                                  Copy
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleSendEmail(link)}
+                                  disabled={sendingEmail === link.id}
+                                  className="h-6 px-2 text-xs"
+                                >
+                                  <Send className="h-3 w-3 mr-1" />
+                                  {sendingEmail === link.id ? 'Sending...' : 'Email'}
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleViewOnboarding(link.onboarding_url)}
+                                  className="h-6 px-2 text-xs"
+                                >
+                                  <Eye className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            </div>
+                            <div className="mt-3">
+                              <ProgressBar 
+                                percentage={getProgressPercentage(link.status)} 
+                                className="h-1.5"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 )}
               </CardContent>
@@ -669,13 +768,19 @@ const Onboarding = () => {
       <DeleteConfirmationDialog
         open={showDeleteDialog}
         onOpenChange={setShowDeleteDialog}
-        title="Delete Client Links"
+        title="Delete Onboarding Links"
         description={`Are you sure you want to delete ${selectedForDelete.length} client link(s)? This action cannot be undone.`}
         confirmationText="delete"
         confirmationValue={deleteConfirmation}
         onConfirmationValueChange={setDeleteConfirmation}
         onConfirm={handleDeleteSelected}
         isDeleting={isDeleting}
+      />
+      
+      <KeyboardShortcutsModal
+        open={showShortcutsModal}
+        onOpenChange={setShowShortcutsModal}
+        shortcuts={shortcuts}
       />
     </div>
   );
