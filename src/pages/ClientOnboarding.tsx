@@ -457,14 +457,14 @@ const ClientOnboarding = () => {
 
       if (submissionError) {
         console.error('Error submitting onboarding:', submissionError);
-        alert('There was an error submitting your form. Please try again.');
+        alert(`Database Error: ${submissionError.message || 'Failed to save your submission'}`);
         setIsGeneratingSOW(false);
         return;
       }
 
       console.log('Submission saved successfully:', submission);
 
-      // Generate SOW using edge function
+      // Generate SOW using edge function with better error details
       console.log('Generating SOW with data:', {
         client_name: onboardingData.contactName,
         client_email: onboardingData.email,
@@ -486,8 +486,15 @@ const ClientOnboarding = () => {
       });
 
       if (sowError) {
-        console.error('Error generating SOW:', sowError);
-        alert(`SOW Generation Error: ${sowError.message || 'Unknown error occurred'}`);
+        console.error('SOW Generation Error:', sowError);
+        alert(`SOW Generation Failed: ${sowError.message || 'Unable to generate scope of work. Please try again.'}`);
+        setIsGeneratingSOW(false);
+        return;
+      }
+
+      if (!generatedSOW) {
+        console.error('No SOW data returned');
+        alert('SOW Generation Error: No data returned from the generator. Please try again.');
         setIsGeneratingSOW(false);
         return;
       }
