@@ -60,7 +60,6 @@ const Onboarding = () => {
     industry: ''
   });
   const [activeFilter, setActiveFilter] = useState('View all');
-  const [searchTerm, setSearchTerm] = useState('');
   const { toast } = useToast();
   const { user } = useAuth();
   const { sendWelcomeEmail } = useEmailTemplates();
@@ -406,16 +405,6 @@ const Onboarding = () => {
       filtered = filtered.filter(link => link.status === activeFilter);
     }
     
-    // Apply search filter
-    if (searchTerm.trim()) {
-      filtered = filtered.filter(link =>
-        link.client_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        link.company_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        link.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        link.industry.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-    
     return filtered;
   };
 
@@ -703,34 +692,9 @@ const Onboarding = () => {
 
             {/* Compact Client Links */}
             <Card>
-              <CardContent className="p-0">
-                    <div className="border-b border-border px-4 py-3 space-y-3">
-                      {/* Search Bar */}
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1 relative">
-                          <div className="items-center border shadow-sm flex w-full gap-2 overflow-hidden bg-background px-3 py-2 rounded-lg border-border">
-                            <SearchSm size={14} className="text-muted-foreground" />
-                            <input
-                              type="text"
-                              value={searchTerm}
-                              onChange={(e) => setSearchTerm(e.target.value)}
-                              placeholder="Search"
-                              className="text-foreground text-ellipsis text-xs leading-4 flex-1 bg-transparent border-none outline-none placeholder:text-muted-foreground"
-                            />
-                            <div className="rounded border flex items-center justify-center text-xs text-muted-foreground font-medium px-1.5 py-0.5 border-border min-w-[28px]">
-                              <span className="text-muted-foreground text-xs leading-none">⌘K</span>
-                            </div>
-                          </div>
-                        </div>
-                        <Button variant="outline" size="sm" className="h-8 px-2">
-                          <FilterLines className="h-4 w-4" />
-                        </Button>
-                        <Button variant="outline" size="sm" className="h-8 px-2">
-                          <Settings01 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      
-                      {/* Select All and Tabs Row */}
+                <CardContent className="p-0">
+                    <div className="border-b border-border px-4 py-3">
+                      {/* Select All and Tabs Row with Controls */}
                       <div className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-3">
                           <button
@@ -752,33 +716,45 @@ const Onboarding = () => {
                           )}
                         </div>
                         
-                        {/* Tab Navigation */}
-                        <div className="overflow-x-auto">
-                          <div className="border shadow-sm flex overflow-hidden text-xs text-foreground font-medium leading-none rounded-md border-border min-w-max">
-                            {['View all', 'Sent', 'In Progress', 'Completed', 'SOW Generated', 'Approved'].map((tab, index) => {
-                              const isActive = activeFilter === tab;
-                              const isFirst = index === 0;
-                              const isLast = index === 5;
-                              return (
-                                <button
-                                  key={tab}
-                                  onClick={() => setActiveFilter(tab)}
-                                  className={`px-3 py-2 ${
-                                    isActive
-                                      ? 'bg-primary text-primary-foreground'
-                                      : 'bg-card hover:bg-accent'
-                                  } ${
-                                    isFirst ? 'rounded-l-md' : ''
-                                  } ${
-                                    isLast ? 'rounded-r-md' : ''
-                                  } ${
-                                    !isLast ? 'border-r border-border' : ''
-                                  } transition-colors`}
-                                >
-                                  {tab}
-                                </button>
-                              );
-                            })}
+                        <div className="flex items-center gap-3">
+                          {/* Tab Navigation */}
+                          <div className="overflow-x-auto">
+                            <div className="border shadow-sm flex overflow-hidden text-xs text-foreground font-medium leading-none rounded-md border-border min-w-max">
+                              {['View all', 'Sent', 'In Progress', 'Completed', 'SOW Generated', 'Approved'].map((tab, index) => {
+                                const isActive = activeFilter === tab;
+                                const isFirst = index === 0;
+                                const isLast = index === 5;
+                                return (
+                                  <button
+                                    key={tab}
+                                    onClick={() => setActiveFilter(tab)}
+                                    className={`px-3 py-2 ${
+                                      isActive
+                                        ? 'bg-primary text-primary-foreground'
+                                        : 'bg-card hover:bg-accent'
+                                    } ${
+                                      isFirst ? 'rounded-l-md' : ''
+                                    } ${
+                                      isLast ? 'rounded-r-md' : ''
+                                    } ${
+                                      !isLast ? 'border-r border-border' : ''
+                                    } transition-colors`}
+                                  >
+                                    {tab}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                          
+                          {/* Filter and Settings */}
+                          <div className="flex items-center gap-2">
+                            <Button variant="outline" size="sm" className="h-8 px-2">
+                              <FilterLines className="h-4 w-4" />
+                            </Button>
+                            <Button variant="outline" size="sm" className="h-8 px-2">
+                              <Settings01 className="h-4 w-4" />
+                            </Button>
                           </div>
                         </div>
                       </div>

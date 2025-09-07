@@ -17,7 +17,6 @@ import {
   FilterLines as Filter, 
   ChevronSelectorVertical as GripVertical 
 } from '@untitledui/icons';
-import { SearchInput } from './SearchInput';
 import { Badge } from './Badge';
 import { ProgressBar } from './ProgressBar';
 import { getBadgeVariant } from '@/lib/status-helpers';
@@ -59,7 +58,6 @@ interface DataTableProps {
 
 export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }) => {
   const { user } = useAuth();
-  const [searchTerm, setSearchTerm] = useState('');
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
   const [activeFilter, setActiveFilter] = useState<string>('view-all');
   const [currentActiveTab, setCurrentActiveTab] = useState(activeTab);
@@ -226,17 +224,7 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
     return filtered;
   };
 
-  const filteredData = getFilteredDataByTab().filter(row =>
-    row.companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    row.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    row.businessType.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const searchResults = filteredData.map(row => ({
-    title: row.companyName,
-    subtitle: row.clientName,
-    id: row.id
-  }));
+  const filteredData = getFilteredDataByTab();
 
   const toggleRowSelection = (id: string) => {
     setSelectedRows(prev => 
@@ -348,21 +336,7 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
           </div>
           
           {/* Search and controls */}
-          <div className="flex items-center gap-2.5 w-full lg:w-auto">
-            <SearchInput
-              placeholder="Search"
-              value={searchTerm}
-              onChange={setSearchTerm}
-              searchResults={filteredData.map(item => ({
-                id: item.id,
-                title: activeTab === 'onboarding' 
-                  ? `${item.companyName} - ${item.clientName}`
-                  : `${item.companyName} - ${item.clientName}`,
-                description: `${item.businessType} • ${item.status}`,
-                action: () => {}
-              }))}
-              className="flex-1 lg:max-w-[240px] lg:min-w-48 lg:w-[240px]"
-            />
+          <div className="flex items-center gap-2.5 ml-auto">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden text-xs text-foreground font-medium leading-none bg-background px-2 py-1.5 rounded-md border-border hover:bg-accent/50">
