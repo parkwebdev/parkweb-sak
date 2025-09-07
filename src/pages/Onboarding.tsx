@@ -69,7 +69,7 @@ const Onboarding = () => {
   // Initialize keyboard shortcuts
   const { shortcuts } = useKeyboardShortcuts([
     {
-      key: '/',
+      key: '?',
       ctrlKey: true,
       description: 'Show keyboard shortcuts',
       action: () => setShowShortcutsModal(true)

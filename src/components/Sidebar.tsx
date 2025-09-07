@@ -7,6 +7,7 @@ import { UserAccountCard } from './UserAccountCard';
 import { ThemeToggle } from './ThemeToggle';
 import { NotificationCenter } from './notifications/NotificationCenter';
 import { useSidebar } from '@/hooks/use-sidebar';
+import { useSearchData } from '@/hooks/useSearchData';
 
 interface NavigationItem {
   id: string;
@@ -49,18 +50,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose, onShowShortcuts }) =>
   const location = useLocation();
   const navigate = useNavigate();
   const { isCollapsed, toggle } = useSidebar();
-
-  const searchResults = navigationItems.map(item => ({
-    id: item.id,
-    title: item.label,
-    description: `Navigate to ${item.label}`,
-    category: 'Navigation',
-    action: () => {
-      if (item.path !== location.pathname) {
-        navigate(item.path);
-      }
-    }
-  }));
+  const { searchResults } = useSearchData();
 
   const allResults = [
     ...searchResults,
@@ -166,10 +156,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose, onShowShortcuts }) =>
                 <button
                   onClick={onShowShortcuts}
                   className="p-1 rounded-md hover:bg-accent/50 text-muted-foreground hover:text-foreground flex items-center gap-1"
-                  title="View keyboard shortcuts (⌘/)"
+                  title="View keyboard shortcuts (⌘?)"
                 >
                   <div className="text-xs bg-muted border border-border rounded px-1.5 py-0.5 font-medium">
-                    ⌘/
+                    ⌘?
                   </div>
                 </button>
               </div>
@@ -185,10 +175,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose, onShowShortcuts }) =>
                 <button
                   onClick={onShowShortcuts}
                   className="p-2 rounded-md hover:bg-accent/50 text-muted-foreground hover:text-foreground"
-                  title="View keyboard shortcuts (⌘/)"
+                  title="View keyboard shortcuts (⌘?)"
                 >
                   <div className="text-xs bg-muted border border-border rounded px-1.5 py-0.5 font-medium">
-                    ⌘/
+                    ⌘?
                   </div>
                 </button>
               </div>

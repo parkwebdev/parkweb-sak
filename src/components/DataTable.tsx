@@ -353,7 +353,14 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
               placeholder="Search"
               value={searchTerm}
               onChange={setSearchTerm}
-              searchResults={searchResults}
+              searchResults={filteredData.map(item => ({
+                id: item.id,
+                title: activeTab === 'onboarding' 
+                  ? `${item.companyName} - ${item.clientName}`
+                  : `${item.companyName} - ${item.clientName}`,
+                description: `${item.businessType} • ${item.status}`,
+                action: () => {}
+              }))}
               className="flex-1 lg:max-w-[240px] lg:min-w-48 lg:w-[240px]"
             />
             <DropdownMenu>
