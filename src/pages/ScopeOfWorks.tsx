@@ -583,89 +583,100 @@ const ScopeOfWorks = () => {
 
       {/* View/Edit Slideout */}
       <Sheet open={!!selectedSow} onOpenChange={() => setSelectedSow(null)}>
-        <SheetContent className="w-[600px] sm:w-[800px] overflow-y-auto">
-          <SheetHeader className="mb-6">
-            <SheetTitle>
-              {isEditing ? 'Edit Scope of Work' : 'Scope of Work Details'}
+        <SheetContent className="w-[50vw] min-w-[600px] overflow-y-auto">
+          <SheetHeader className="mb-6 pb-4 border-b">
+            <SheetTitle className="text-xl font-semibold">
+              {isEditing ? 'Edit Scope of Work' : 'Scope of Work Review'}
             </SheetTitle>
-            <SheetDescription>
-              {selectedSow && `${selectedSow.client} - ${selectedSow.project_type}`}
+            <SheetDescription className="text-base">
+              {selectedSow && `${selectedSow.client} • ${selectedSow.project_type}`}
             </SheetDescription>
           </SheetHeader>
 
           {selectedSow && (
-            <div className="space-y-8">
+            <div className="space-y-6">
               {/* Client Info Section */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-foreground">Client Information</h3>
-                  <Badge variant={getBadgeVariant(selectedSow.status)}>
+                  <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                    <div className="w-2 h-6 bg-primary rounded-full"></div>
+                    Client Information
+                  </h3>
+                  <Badge variant={getBadgeVariant(selectedSow.status)} className="px-3 py-1">
                     {selectedSow.status}
                   </Badge>
                 </div>
-                <div className="grid grid-cols-2 gap-4 p-4 bg-muted/30 rounded-lg">
-                  <div>
-                    <Label className="text-sm font-medium text-muted-foreground">Client Name</Label>
-                    <p className="text-sm font-medium">{selectedSow.client}</p>
+                <div className="grid grid-cols-2 gap-4 p-6 bg-gradient-to-br from-muted/30 to-muted/50 rounded-xl border">
+                  <div className="space-y-1">
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Client Name</Label>
+                    <p className="text-sm font-semibold text-foreground">{selectedSow.client}</p>
                   </div>
-                  <div>
-                    <Label className="text-sm font-medium text-muted-foreground">Contact Person</Label>
-                    <p className="text-sm font-medium">{selectedSow.client_contact}</p>
+                  <div className="space-y-1">
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Contact Person</Label>
+                    <p className="text-sm font-semibold text-foreground">{selectedSow.client_contact}</p>
                   </div>
-                  <div>
-                    <Label className="text-sm font-medium text-muted-foreground">Email</Label>
-                    <p className="text-sm font-medium">{selectedSow.email}</p>
+                  <div className="space-y-1">
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Email</Label>
+                    <p className="text-sm font-semibold text-foreground">{selectedSow.email}</p>
                   </div>
-                  <div>
-                    <Label className="text-sm font-medium text-muted-foreground">Industry</Label>
-                    <p className="text-sm font-medium">{selectedSow.industry}</p>
+                  <div className="space-y-1">
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Industry</Label>
+                    <p className="text-sm font-semibold text-foreground">{selectedSow.industry}</p>
                   </div>
-                  <div>
-                    <Label className="text-sm font-medium text-muted-foreground">Project Type</Label>
-                    <p className="text-sm font-medium">{selectedSow.project_type}</p>
+                  <div className="space-y-1">
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Project Type</Label>
+                    <p className="text-sm font-semibold text-foreground">{selectedSow.project_type}</p>
                   </div>
-                  <div>
-                    <Label className="text-sm font-medium text-muted-foreground">Pages</Label>
-                    <p className="text-sm font-medium">{selectedSow.pages}</p>
+                  <div className="space-y-1">
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Pages</Label>
+                    <p className="text-sm font-semibold text-foreground">{selectedSow.pages}</p>
                   </div>
-                  <div>
-                    <Label className="text-sm font-medium text-muted-foreground">Date Created</Label>
-                    <p className="text-sm font-medium">{formatDate(selectedSow.date_created)}</p>
+                  <div className="space-y-1">
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Date Created</Label>
+                    <p className="text-sm font-semibold text-foreground">{formatDate(selectedSow.date_created)}</p>
                   </div>
-                  <div>
-                    <Label className="text-sm font-medium text-muted-foreground">Last Modified</Label>
-                    <p className="text-sm font-medium">{formatDate(selectedSow.date_modified)}</p>
+                  <div className="space-y-1">
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Last Modified</Label>
+                    <p className="text-sm font-semibold text-foreground">{formatDate(selectedSow.date_modified)}</p>
                   </div>
                 </div>
               </div>
 
               {/* Client Answers Section */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-foreground">Client Answers</h3>
-                <div className="p-4 bg-muted/30 rounded-lg">
-                  <Label className="text-sm font-medium text-muted-foreground">Onboarding Response</Label>
-                  <p className="text-sm mt-2">
-                    Based on their {selectedSow.industry} business requirements and {selectedSow.project_type} project needs.
-                  </p>
-                  {selectedSow.integrations && selectedSow.integrations.length > 0 && (
-                    <div className="mt-4">
-                      <Label className="text-sm font-medium text-muted-foreground">Required Integrations</Label>
-                      <div className="flex flex-wrap gap-2 mt-2">
-                        {selectedSow.integrations.map((integration, index) => (
-                          <Badge key={index} variant="outline" className="text-xs">
-                            {integration}
-                          </Badge>
-                        ))}
+                <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                  <div className="w-2 h-6 bg-primary rounded-full"></div>
+                  Client Answers
+                </h3>
+                <div className="p-6 bg-gradient-to-br from-blue-50/50 to-blue-100/30 dark:from-blue-950/30 dark:to-blue-900/20 rounded-xl border border-blue-200/50 dark:border-blue-800/30">
+                  <div className="space-y-3">
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Onboarding Response</Label>
+                    <p className="text-sm text-foreground leading-relaxed">
+                      Based on their <span className="font-semibold text-primary">{selectedSow.industry}</span> business requirements and <span className="font-semibold text-primary">{selectedSow.project_type}</span> project needs.
+                    </p>
+                    {selectedSow.integrations && selectedSow.integrations.length > 0 && (
+                      <div className="pt-3 border-t border-blue-200/50 dark:border-blue-800/30">
+                        <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Required Integrations</Label>
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {selectedSow.integrations.map((integration, index) => (
+                            <Badge key={index} variant="outline" className="text-xs px-3 py-1">
+                              {integration}
+                            </Badge>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               </div>
 
               {/* Scope of Work Generated Section */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-foreground">Generated Scope of Work</h3>
+                  <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                    <div className="w-2 h-6 bg-primary rounded-full"></div>
+                    Generated Scope of Work
+                  </h3>
                   <div className="flex gap-2">
                     {!isEditing && (
                       <Button
@@ -676,6 +687,7 @@ const ScopeOfWorks = () => {
                           setEditedTitle(selectedSow.title);
                           setEditedContent(selectedSow.content);
                         }}
+                        className="px-4"
                       >
                         <Edit className="h-4 w-4 mr-2" />
                         Edit
@@ -687,6 +699,7 @@ const ScopeOfWorks = () => {
                           variant="outline"
                           size="sm"
                           onClick={() => setIsEditing(false)}
+                          className="px-4"
                         >
                           Cancel
                         </Button>
@@ -729,6 +742,7 @@ const ScopeOfWorks = () => {
                               });
                             }
                           }}
+                          className="px-4"
                         >
                           Save Changes
                         </Button>
@@ -740,29 +754,30 @@ const ScopeOfWorks = () => {
                 {isEditing ? (
                   <div className="space-y-4">
                     <div>
-                      <Label htmlFor="title">Title</Label>
+                      <Label htmlFor="title" className="text-sm font-medium mb-2 block">Title</Label>
                       <Input
                         id="title"
                         value={editedTitle}
                         onChange={(e) => setEditedTitle(e.target.value)}
+                        className="text-lg font-semibold"
                       />
                     </div>
                     <div>
-                      <Label htmlFor="content">Content</Label>
+                      <Label htmlFor="content" className="text-sm font-medium mb-2 block">Content</Label>
                       <Textarea
                         id="content"
                         value={editedContent}
                         onChange={(e) => setEditedContent(e.target.value)}
                         rows={15}
-                        className="text-sm font-mono"
+                        className="text-sm font-mono leading-relaxed"
                       />
                     </div>
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    <div className="p-4 bg-muted/30 rounded-lg">
-                      <h4 className="font-semibold text-foreground mb-2">{selectedSow.title}</h4>
-                      <div className="whitespace-pre-wrap text-sm bg-background p-4 rounded border">
+                    <div className="p-6 bg-gradient-to-br from-green-50/50 to-green-100/30 dark:from-green-950/30 dark:to-green-900/20 rounded-xl border border-green-200/50 dark:border-green-800/30">
+                      <h4 className="font-semibold text-foreground mb-4 text-lg">{selectedSow.title}</h4>
+                      <div className="whitespace-pre-wrap text-sm bg-background/80 p-4 rounded-lg border leading-relaxed">
                         {selectedSow.content}
                       </div>
                     </div>
@@ -772,38 +787,69 @@ const ScopeOfWorks = () => {
 
               {/* Files Section */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-foreground">Client Files</h3>
+                <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                  <div className="w-2 h-6 bg-primary rounded-full"></div>
+                  Client Files
+                </h3>
                 <div className="space-y-4">
-                  {selectedSow.branding_files && Array.isArray(selectedSow.branding_files) && selectedSow.branding_files.length > 0 ? (
-                    <FileViewer
-                      files={selectedSow.branding_files as FileUploadResult[]}
-                      title="Branding Files"
-                    />
-                  ) : (
-                    <div className="p-4 bg-muted/30 rounded-lg">
-                      <p className="text-sm text-muted-foreground">No branding files uploaded</p>
-                    </div>
-                  )}
-                  
-                  {selectedSow.content_files && Array.isArray(selectedSow.content_files) && selectedSow.content_files.length > 0 ? (
-                    <FileViewer
-                      files={selectedSow.content_files as FileUploadResult[]}
-                      title="Content Files"
-                    />
-                  ) : (
-                    <div className="p-4 bg-muted/30 rounded-lg">
-                      <p className="text-sm text-muted-foreground">No content files uploaded</p>
-                    </div>
-                  )}
+                  {(() => {
+                    const brandingFiles = selectedSow.branding_files 
+                      ? (typeof selectedSow.branding_files === 'string' 
+                          ? JSON.parse(selectedSow.branding_files) 
+                          : selectedSow.branding_files)
+                      : [];
+                    
+                    const contentFiles = selectedSow.content_files 
+                      ? (typeof selectedSow.content_files === 'string' 
+                          ? JSON.parse(selectedSow.content_files) 
+                          : selectedSow.content_files)
+                      : [];
+
+                    return (
+                      <>
+                        {Array.isArray(brandingFiles) && brandingFiles.length > 0 ? (
+                          <div className="p-4 bg-gradient-to-br from-purple-50/50 to-purple-100/30 dark:from-purple-950/30 dark:to-purple-900/20 rounded-xl border border-purple-200/50 dark:border-purple-800/30">
+                            <FileViewer
+                              files={brandingFiles as FileUploadResult[]}
+                              title="Branding Files"
+                            />
+                          </div>
+                        ) : (
+                          <div className="p-6 bg-muted/30 rounded-xl border border-dashed border-muted-foreground/30">
+                            <div className="text-center">
+                              <p className="text-sm text-muted-foreground">No branding files uploaded</p>
+                              <p className="text-xs text-muted-foreground/70 mt-1">Client did not provide branding assets</p>
+                            </div>
+                          </div>
+                        )}
+                        
+                        {Array.isArray(contentFiles) && contentFiles.length > 0 ? (
+                          <div className="p-4 bg-gradient-to-br from-orange-50/50 to-orange-100/30 dark:from-orange-950/30 dark:to-orange-900/20 rounded-xl border border-orange-200/50 dark:border-orange-800/30">
+                            <FileViewer
+                              files={contentFiles as FileUploadResult[]}
+                              title="Content Files"
+                            />
+                          </div>
+                        ) : (
+                          <div className="p-6 bg-muted/30 rounded-xl border border-dashed border-muted-foreground/30">
+                            <div className="text-center">
+                              <p className="text-sm text-muted-foreground">No content files uploaded</p>
+                              <p className="text-xs text-muted-foreground/70 mt-1">Client did not provide content documents</p>
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
 
               {/* Action Buttons */}
-              <div className="flex gap-3 pt-4 border-t">
+              <div className="flex gap-3 pt-6 border-t bg-gradient-to-r from-muted/20 to-muted/30 rounded-t-xl -mx-6 px-6 pb-2">
                 <Button
                   variant="outline"
                   onClick={() => generateScopeOfWorkPDF(selectedSow)}
-                  className="flex-1"
+                  className="flex-1 h-11"
                 >
                   <Download className="h-4 w-4 mr-2" />
                   Download PDF
@@ -811,7 +857,7 @@ const ScopeOfWorks = () => {
                 <Button
                   variant="outline"
                   onClick={() => generateScopeOfWorkDOC(selectedSow)}
-                  className="flex-1"
+                  className="flex-1 h-11"
                 >
                   <Download className="h-4 w-4 mr-2" />
                   Download DOC
@@ -819,7 +865,7 @@ const ScopeOfWorks = () => {
                 {selectedSow.status !== 'Approved' && (
                   <Button
                     onClick={() => handleApproveSow(selectedSow)}
-                    className="flex-1"
+                    className="flex-1 h-11"
                   >
                     <Check className="h-4 w-4 mr-2" />
                     Approve SOW
