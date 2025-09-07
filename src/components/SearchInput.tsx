@@ -8,6 +8,7 @@ import {
   CommandGroup,
   CommandItem,
 } from "@/components/ui/command";
+import { useGlobalSearch } from '@/hooks/useGlobalSearch';
 
 interface SearchResult {
   id: string;
@@ -34,27 +35,12 @@ export const SearchInput: React.FC<SearchInputProps> = ({
   searchResults = [],
   onSelect
 }) => {
-  const [open, setOpen] = useState(false);
+  const { open, setOpen } = useGlobalSearch();
   const [searchValue, setSearchValue] = useState(value);
 
   useEffect(() => {
     setSearchValue(value);
   }, [value]);
-
-  useEffect(() => {
-    const down = (e: KeyboardEvent) => {
-      if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault();
-        setOpen((open) => !open);
-      }
-      if (e.key === "Escape") {
-        setOpen(false);
-      }
-    };
-
-    document.addEventListener("keydown", down);
-    return () => document.removeEventListener("keydown", down);
-  }, []);
 
   const handleValueChange = (newValue: string) => {
     setSearchValue(newValue);

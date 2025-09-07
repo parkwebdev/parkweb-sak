@@ -14,8 +14,7 @@ const Index = () => {
   // Initialize keyboard shortcuts
   const { shortcuts } = useKeyboardShortcuts([
     {
-      key: 'j',
-      ctrlKey: true,
+      key: 'F1',
       description: 'Show keyboard shortcuts',
       action: () => setShowShortcutsModal(true)
     },
