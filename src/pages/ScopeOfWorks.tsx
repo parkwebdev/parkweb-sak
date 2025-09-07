@@ -192,7 +192,7 @@ const ScopeOfWorks = () => {
     console.log('Approving SOW:', sow);
     console.log('Client email address:', sow.email);
     try {
-      // Update the status to Approved
+      // Update the SOW status to Approved
       const { error: updateError } = await supabase
         .from('scope_of_works')
         .update({
@@ -212,7 +212,26 @@ const ScopeOfWorks = () => {
         return;
       }
 
-      console.log('SOW status updated to Approved, sending email to client:', sow.email);
+      console.log('SOW status updated to Approved');
+
+      // Update the corresponding onboarding link to show 100% completion
+      const { error: onboardingUpdateError } = await supabase
+        .from('client_onboarding_links')
+        .update({
+          status: 'Approved',
+          sow_status: 'Approved',
+          last_activity: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('email', sow.email)
+        .eq('client_name', sow.client);
+
+      if (onboardingUpdateError) {
+        console.error('Error updating onboarding link status:', onboardingUpdateError);
+        // Don't fail the whole process if onboarding link update fails
+      } else {
+        console.log('Onboarding link updated to show 100% completion');
+      }
       
       // Send SOW approval email to the CLIENT's email address
       try {
@@ -265,7 +284,7 @@ const ScopeOfWorks = () => {
       
       toast({
         title: "SOW Approved",
-        description: `SOW approved for ${sow.client}. Approval email sent to ${sow.email}`,
+        description: `SOW approved for ${sow.client}. Onboarding progress updated to 100%. Approval email sent to ${sow.email}`,
       });
       
     } catch (error) {
