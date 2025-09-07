@@ -17,7 +17,11 @@ import {
   List,
   ArrowUp as SortAsc,
   ArrowDown as SortDesc,
-  Trash01 as Trash
+  Trash01 as Trash,
+  User01 as User,
+  MessageChatSquare as MessageSquare,
+  File05 as FileText,
+  Folder
 } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/Badge';
@@ -598,8 +602,8 @@ const ScopeOfWorks = () => {
               {/* Client Info Section */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
-                    <div className="w-2 h-6 bg-primary rounded-full"></div>
+                  <h3 className="text-lg font-semibold text-foreground flex items-center gap-3">
+                    <User className="h-5 w-5 text-primary" />
                     Client Information
                   </h3>
                   <Badge variant={getBadgeVariant(selectedSow.status)} className="px-3 py-1">
@@ -644,18 +648,18 @@ const ScopeOfWorks = () => {
 
               {/* Client Answers Section */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
-                  <div className="w-2 h-6 bg-primary rounded-full"></div>
+                <h3 className="text-lg font-semibold text-foreground flex items-center gap-3">
+                  <MessageSquare className="h-5 w-5 text-primary" />
                   Client Answers
                 </h3>
-                <div className="p-6 bg-gradient-to-br from-blue-50/50 to-blue-100/30 dark:from-blue-950/30 dark:to-blue-900/20 rounded-xl border border-blue-200/50 dark:border-blue-800/30">
+                <div className="p-6 bg-gradient-to-br from-muted/30 to-muted/50 rounded-xl border">
                   <div className="space-y-3">
                     <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Onboarding Response</Label>
                     <p className="text-sm text-foreground leading-relaxed">
                       Based on their <span className="font-semibold text-primary">{selectedSow.industry}</span> business requirements and <span className="font-semibold text-primary">{selectedSow.project_type}</span> project needs.
                     </p>
                     {selectedSow.integrations && selectedSow.integrations.length > 0 && (
-                      <div className="pt-3 border-t border-blue-200/50 dark:border-blue-800/30">
+                      <div className="pt-3 border-t border-muted-foreground/20">
                         <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Required Integrations</Label>
                         <div className="flex flex-wrap gap-2 mt-2">
                           {selectedSow.integrations.map((integration, index) => (
@@ -673,8 +677,8 @@ const ScopeOfWorks = () => {
               {/* Scope of Work Generated Section */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
-                    <div className="w-2 h-6 bg-primary rounded-full"></div>
+                  <h3 className="text-lg font-semibold text-foreground flex items-center gap-3">
+                    <FileText className="h-5 w-5 text-primary" />
                     Generated Scope of Work
                   </h3>
                   <div className="flex gap-2">
@@ -775,7 +779,7 @@ const ScopeOfWorks = () => {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    <div className="p-6 bg-gradient-to-br from-green-50/50 to-green-100/30 dark:from-green-950/30 dark:to-green-900/20 rounded-xl border border-green-200/50 dark:border-green-800/30">
+                    <div className="p-6 bg-gradient-to-br from-muted/30 to-muted/50 rounded-xl border">
                       <h4 className="font-semibold text-foreground mb-4 text-lg">{selectedSow.title}</h4>
                       <div className="whitespace-pre-wrap text-sm bg-background/80 p-4 rounded-lg border leading-relaxed">
                         {selectedSow.content}
@@ -787,8 +791,8 @@ const ScopeOfWorks = () => {
 
               {/* Files Section */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
-                  <div className="w-2 h-6 bg-primary rounded-full"></div>
+                <h3 className="text-lg font-semibold text-foreground flex items-center gap-3">
+                  <Folder className="h-5 w-5 text-primary" />
                   Client Files
                 </h3>
                 <div className="space-y-4">
@@ -808,12 +812,10 @@ const ScopeOfWorks = () => {
                     return (
                       <>
                         {Array.isArray(brandingFiles) && brandingFiles.length > 0 ? (
-                          <div className="p-4 bg-gradient-to-br from-purple-50/50 to-purple-100/30 dark:from-purple-950/30 dark:to-purple-900/20 rounded-xl border border-purple-200/50 dark:border-purple-800/30">
-                            <FileViewer
-                              files={brandingFiles as FileUploadResult[]}
-                              title="Branding Files"
-                            />
-                          </div>
+                          <FileViewer
+                            files={brandingFiles as FileUploadResult[]}
+                            title="Branding Files"
+                          />
                         ) : (
                           <div className="p-6 bg-muted/30 rounded-xl border border-dashed border-muted-foreground/30">
                             <div className="text-center">
@@ -824,12 +826,10 @@ const ScopeOfWorks = () => {
                         )}
                         
                         {Array.isArray(contentFiles) && contentFiles.length > 0 ? (
-                          <div className="p-4 bg-gradient-to-br from-orange-50/50 to-orange-100/30 dark:from-orange-950/30 dark:to-orange-900/20 rounded-xl border border-orange-200/50 dark:border-orange-800/30">
-                            <FileViewer
-                              files={contentFiles as FileUploadResult[]}
-                              title="Content Files"
-                            />
-                          </div>
+                          <FileViewer
+                            files={contentFiles as FileUploadResult[]}
+                            title="Content Files"
+                          />
                         ) : (
                           <div className="p-6 bg-muted/30 rounded-xl border border-dashed border-muted-foreground/30">
                             <div className="text-center">
@@ -852,7 +852,7 @@ const ScopeOfWorks = () => {
                   className="flex-1 h-11"
                 >
                   <Download className="h-4 w-4 mr-2" />
-                  Download PDF
+                  PDF
                 </Button>
                 <Button
                   variant="outline"
@@ -860,7 +860,7 @@ const ScopeOfWorks = () => {
                   className="flex-1 h-11"
                 >
                   <Download className="h-4 w-4 mr-2" />
-                  Download DOC
+                  DOC
                 </Button>
                 {selectedSow.status !== 'Approved' && (
                   <Button
@@ -868,7 +868,7 @@ const ScopeOfWorks = () => {
                     className="flex-1 h-11"
                   >
                     <Check className="h-4 w-4 mr-2" />
-                    Approve SOW
+                    SOW
                   </Button>
                 )}
               </div>
