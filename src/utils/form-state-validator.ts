@@ -86,25 +86,5 @@ export const logFormStateChange = (
   newData: any, 
   context?: string
 ): void => {
-  if (process.env.NODE_ENV !== 'development') return;
-
-  console.group(`🔄 Form State Change: ${action}`);
-  
-  if (context) {
-    console.log('Context:', context);
-  }
-  
-  console.log('Previous:', previousData);
-  console.log('New:', newData);
-  
-  const validation = validateFormState(newData);
-  if (!validation.isValid) {
-    console.error('❌ Validation Errors:', validation.errors);
-  }
-  
-  if (validation.warnings.length > 0) {
-    console.warn('⚠️ Warnings:', validation.warnings);
-  }
-  
-  console.groupEnd();
+  // Form state logging disabled in production
 };

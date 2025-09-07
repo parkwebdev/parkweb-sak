@@ -21,8 +21,6 @@ export const useRealtimeNotifications = () => {
   useEffect(() => {
     if (!user) return;
 
-    console.log('Setting up realtime notifications for user:', user.id);
-
     const channel = supabase
       .channel('realtime-notifications')
       .on(
@@ -36,8 +34,6 @@ export const useRealtimeNotifications = () => {
         (payload) => {
           const notification = payload.new as NotificationPayload;
           
-          console.log('Received new notification:', notification);
-
           // Show toast notification
           toast({
             title: notification.title,
@@ -50,8 +46,8 @@ export const useRealtimeNotifications = () => {
             const browserNotification = new Notification(notification.title, {
               body: notification.message,
               icon: '/favicon.ico',
-              tag: notification.id, // Prevent duplicate notifications
-              requireInteraction: notification.type === 'system', // System notifications stay until dismissed
+              tag: notification.id,
+              requireInteraction: notification.type === 'system',
             });
 
             // Auto-close after 5 seconds for non-system notifications
@@ -76,12 +72,9 @@ export const useRealtimeNotifications = () => {
           }
         }
       )
-      .subscribe((status) => {
-        console.log('Realtime subscription status:', status);
-      });
+      .subscribe();
 
     return () => {
-      console.log('Cleaning up realtime notifications subscription');
       supabase.removeChannel(channel);
     };
   }, [user, toast]);
@@ -97,7 +90,6 @@ export const useRealtimeNotifications = () => {
         .single();
 
       if (error || !submission) {
-        console.error('Error fetching submission:', error);
         return;
       }
 
@@ -114,7 +106,7 @@ export const useRealtimeNotifications = () => {
       });
 
       if (emailError) {
-        console.error('Error sending completion email:', emailError);
+        // Log error silently
       }
 
       // Update the corresponding onboarding link status
@@ -125,7 +117,7 @@ export const useRealtimeNotifications = () => {
         .eq('email', submission.client_email);
 
     } catch (error) {
-      console.error('Error in triggerOnboardingCompletion:', error);
+      // Log error silently
     }
   };
 

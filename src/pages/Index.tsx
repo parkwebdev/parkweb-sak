@@ -2,11 +2,23 @@ import React, { useState } from 'react';
 import { MainContent } from '@/components/MainContent';
 import { Sidebar } from '@/components/Sidebar';
 import { useSidebar } from '@/hooks/use-sidebar';
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
+import { KeyboardShortcutsModal } from '@/components/KeyboardShortcutsModal';
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState('onboarding');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { isCollapsed } = useSidebar();
+  const [showShortcutsModal, setShowShortcutsModal] = useState(false);
+  
+  // Initialize keyboard shortcuts
+  const { shortcuts } = useKeyboardShortcuts([
+    {
+      key: '?',
+      description: 'Show keyboard shortcuts',
+      action: () => setShowShortcutsModal(true)
+    }
+  ]);
 
   const handleTabChange = (tabId: string) => {
     setActiveTab(tabId);
@@ -28,7 +40,7 @@ const Index = () => {
       }`}>
         <Sidebar 
           onClose={() => setSidebarOpen(false)} 
-          onShowShortcuts={() => {}}
+          onShowShortcuts={() => setShowShortcutsModal(true)}
         />
       </div>
       
@@ -42,6 +54,12 @@ const Index = () => {
           onMenuClick={() => setSidebarOpen(true)}
         />
       </div>
+      
+      <KeyboardShortcutsModal
+        open={showShortcutsModal}
+        onOpenChange={setShowShortcutsModal}
+        shortcuts={shortcuts}
+      />
     </div>
   );
 };

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Sidebar } from '@/components/Sidebar';
-import { Plus, Link01 as Link2, Copy01 as Copy, Send01 as Send, User01 as User, File02 as FileText, Clock as Clock, Eye as Eye, Trash01 as Trash } from '@untitledui/icons';
+import { Plus, Link01 as Link2, Copy01 as Copy, Send01 as Send, User01 as User, File02 as FileText, Clock as Clock, Eye as Eye, Trash01 as Trash, Check } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -205,7 +205,6 @@ const Onboarding = () => {
       fullUrl = `${currentOrigin}${urlObj.pathname}${urlObj.search}`;
     }
     
-    console.log('Copying URL to clipboard:', fullUrl);
     const success = await copyToClipboard(fullUrl);
     
     if (success) {
@@ -236,8 +235,6 @@ const Onboarding = () => {
         const currentOrigin = window.location.origin;
         fullUrl = `${currentOrigin}${urlObj.pathname}${urlObj.search}`;
       }
-      
-      console.log('Sending email with URL:', fullUrl);
       
       const emailResult = await sendWelcomeEmail(
         clientLink.client_name,
@@ -660,18 +657,15 @@ const Onboarding = () => {
                           </Select>
                         </div>
                       </div>
-                      <div className="flex justify-end gap-2">
-                        <Button variant="outline" size="sm" onClick={() => setShowCreateDialog(false)}>
-                          Cancel
-                        </Button>
-                        <Button 
-                          size="sm"
-                          onClick={handleCreateLink}
-                          disabled={!newClient.client_name || !newClient.company_name || !newClient.email}
-                        >
-                          Create Link
-                        </Button>
-                      </div>
+                       <div className="flex justify-end">
+                         <Button 
+                           size="sm"
+                           onClick={handleCreateLink}
+                           disabled={!newClient.client_name || !newClient.company_name || !newClient.email}
+                         >
+                           Create Link
+                         </Button>
+                       </div>
                     </DialogContent>
                   </Dialog>
                 </div>
@@ -748,17 +742,23 @@ const Onboarding = () => {
                 </CardDescription>
               </CardHeader>
                <CardContent className="p-0">
-                  <div className="border-b border-border px-4 py-3 flex items-center gap-3">
-                    <input
-                      type="checkbox"
-                      checked={selectedForDelete.length === clientLinks.length && clientLinks.length > 0}
-                      onChange={toggleAllSelection}
-                      className="rounded"
-                    />
-                    <span className="text-sm text-muted-foreground">
-                      {selectedForDelete.length > 0 ? `${selectedForDelete.length} selected` : 'Select all'}
-                    </span>
-                  </div>
+                   <div className="border-b border-border px-4 py-3 flex items-center gap-3">
+                     <button
+                       onClick={toggleAllSelection}
+                       className="flex items-center justify-center w-5"
+                     >
+                       <div className={`border flex min-h-5 w-5 h-5 rounded-md border-solid border-border items-center justify-center ${
+                         selectedForDelete.length === clientLinks.length && clientLinks.length > 0 ? 'bg-primary border-primary' : 'bg-background'
+                       }`}>
+                         {selectedForDelete.length === clientLinks.length && clientLinks.length > 0 && (
+                           <Check size={12} className="text-primary-foreground" />
+                         )}
+                       </div>
+                     </button>
+                     <span className="text-sm text-muted-foreground">
+                       {selectedForDelete.length > 0 ? `${selectedForDelete.length} selected` : 'Select all'}
+                     </span>
+                   </div>
                 {clientLinks.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
                     <Link2 className="h-12 w-12 text-muted-foreground/50 mb-4" />
@@ -776,12 +776,18 @@ const Onboarding = () => {
                     {clientLinks.map((link) => (
                       <div key={link.id} className="px-4 py-4">
                         <div className="flex items-start gap-3">
-                          <input
-                            type="checkbox"
-                            checked={selectedForDelete.includes(link.id)}
-                            onChange={() => toggleSelection(link.id)}
-                            className="rounded mt-1"
-                          />
+                           <button
+                             onClick={() => toggleSelection(link.id)}
+                             className="flex items-center justify-center w-5 mt-1"
+                           >
+                             <div className={`border flex min-h-5 w-5 h-5 rounded-md border-solid border-border items-center justify-center ${
+                               selectedForDelete.includes(link.id) ? 'bg-primary border-primary' : 'bg-background'
+                             }`}>
+                               {selectedForDelete.includes(link.id) && (
+                                 <Check size={12} className="text-primary-foreground" />
+                               )}
+                             </div>
+                           </button>
                           <div className="flex-1 min-w-0">
                             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2 lg:gap-4">
                               <div className="flex-1 min-w-0">

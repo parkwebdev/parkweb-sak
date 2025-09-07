@@ -67,7 +67,6 @@ export const GenerateSOWDialog: React.FC<GenerateSOWDialogProps> = ({
         .order('submitted_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching submissions:', error);
         toast({
           title: "Error",
           description: "Failed to load submissions. You can still create manually.",
@@ -82,7 +81,6 @@ export const GenerateSOWDialog: React.FC<GenerateSOWDialogProps> = ({
         }
       }
     } catch (error) {
-      console.error('Error fetching submissions:', error);
       setSubmissions([]);
     } finally {
       setLoadingSubmissions(false);
@@ -113,8 +111,6 @@ export const GenerateSOWDialog: React.FC<GenerateSOWDialogProps> = ({
       if (customPrompt.trim()) {
         requestData.customPrompt = customPrompt;
       }
-
-      console.log('Generating SOW with data:', requestData);
 
       const response = await supabase.functions.invoke('generate-scope-of-work', {
         body: requestData
@@ -151,7 +147,6 @@ export const GenerateSOWDialog: React.FC<GenerateSOWDialogProps> = ({
       });
       
     } catch (error: any) {
-      console.error('Error generating SOW:', error);
       toast({
         title: "Generation Failed",
         description: error.message || "Failed to generate scope of work. Please try again.",

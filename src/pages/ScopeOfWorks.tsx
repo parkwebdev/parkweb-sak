@@ -51,6 +51,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useSidebar } from '@/hooks/use-sidebar';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
+import { KeyboardShortcutsModal } from '@/components/KeyboardShortcutsModal';
 
 interface ScopeOfWork {
   id: string;
@@ -87,11 +89,27 @@ const ScopeOfWorks = () => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showShortcutsModal, setShowShortcutsModal] = useState(false);
   
   const { toast } = useToast();
   const { createScopeWorkNotification } = useNotifications();
   const { sendStageEmail } = useEmailTemplates();
   const { user } = useAuth();
+
+  // Initialize keyboard shortcuts
+  const { shortcuts } = useKeyboardShortcuts([
+    {
+      key: '?',
+      description: 'Show keyboard shortcuts',
+      action: () => setShowShortcutsModal(true)
+    },
+    {
+      key: 'd',
+      ctrlKey: true,
+      description: 'Delete selected items',
+      action: () => selectedRows.length > 0 && setShowDeleteDialog(true)
+    }
+  ]);
 
   // Fetch scope of works from database
   useEffect(() => {
@@ -103,14 +121,12 @@ const ScopeOfWorks = () => {
   const fetchScopeOfWorks = async () => {
     try {
       setLoading(true);
-      console.log('Fetching scope of works...');
       const { data, error } = await supabase
         .from('scope_of_works')
         .select('*')
         .order('date_modified', { ascending: false });
 
       if (error) {
-        console.error('Error fetching scope of works:', error);
         toast({
           title: "Error",
           description: "Failed to fetch scope of works.",
@@ -119,10 +135,8 @@ const ScopeOfWorks = () => {
         return;
       }
 
-      console.log('Fetched scope of works data:', data);
       setScopeOfWorks(data || []);
     } catch (error) {
-      console.error('Error fetching scope of works:', error);
       toast({
         title: "Error",
         description: "Failed to fetch scope of works.",
@@ -134,29 +148,19 @@ const ScopeOfWorks = () => {
   };
 
   const handleDeleteSelected = async () => {
-    console.log('handleDeleteSelected called');
-    console.log('Selected rows:', selectedRows);
-    console.log('User:', user);
-    
     if (!user || selectedRows.length === 0) {
-      console.log('Returning early - no user or no selected rows');
       return;
     }
     
     setIsDeleting(true);
     try {
-      console.log('Attempting to delete SOWs with IDs:', selectedRows);
-      
       const { data, error } = await supabase
         .from('scope_of_works')
         .delete()
         .in('id', selectedRows)
-        .select(); // Add select to see what was deleted
-
-      console.log('Delete result:', { data, error });
+        .select();
 
       if (error) {
-        console.error('Error deleting scope of works:', error);
         toast({
           title: "Error",
           description: "Failed to delete selected items. Please try again.",
@@ -166,7 +170,6 @@ const ScopeOfWorks = () => {
       }
 
       if (!data || data.length === 0) {
-        console.error('No rows were deleted - possible permission issue');
         toast({
           title: "Error",
           description: "Failed to delete items. Check permissions.",
@@ -174,8 +177,6 @@ const ScopeOfWorks = () => {
         });
         return;
       }
-
-      console.log(`Successfully deleted ${data.length} SOW(s)`);
       
       toast({
         title: "Items deleted",
@@ -187,7 +188,6 @@ const ScopeOfWorks = () => {
       setDeleteConfirmation('');
       fetchScopeOfWorks();
     } catch (error) {
-      console.error('Error deleting scope of works:', error);
       toast({
         title: "Error",
         description: "Failed to delete selected items. Please try again.",
@@ -215,11 +215,8 @@ const ScopeOfWorks = () => {
   };
 
   const handleApproveSow = async (sow: ScopeOfWork) => {
-    console.log('Approving SOW:', sow);
-    console.log('Client email address:', sow.email);
     try {
       // Update the SOW status to Approved
-      console.log('Updating SOW status to Approved for ID:', sow.id);
       const { data: updateData, error: updateError } = await supabase
         .from('scope_of_works')
         .update({
@@ -228,12 +225,9 @@ const ScopeOfWorks = () => {
           updated_at: new Date().toISOString()
         })
         .eq('id', sow.id)
-        .select(); // Add select() to see what was updated
-
-      console.log('Update result:', { updateData, updateError });
+        .select();
 
       if (updateError) {
-        console.error('Error updating SOW status:', updateError);
         toast({
           title: "Error",
           description: "Failed to approve SOW. Please try again.",
@@ -243,7 +237,6 @@ const ScopeOfWorks = () => {
       }
 
       if (!updateData || updateData.length === 0) {
-        console.error('No rows were updated - possible permission issue');
         toast({
           title: "Error", 
           description: "Failed to update SOW status. Check permissions.",
@@ -251,8 +244,6 @@ const ScopeOfWorks = () => {
         });
         return;
       }
-
-      console.log('SOW status updated to Approved successfully:', updateData[0]);
 
       // Update the corresponding onboarding link to show 100% completion
       const { error: onboardingUpdateError } = await supabase
@@ -267,29 +258,15 @@ const ScopeOfWorks = () => {
         .eq('client_name', sow.client);
 
       if (onboardingUpdateError) {
-        console.error('Error updating onboarding link status:', onboardingUpdateError);
         // Don't fail the whole process if onboarding link update fails
-      } else {
-        console.log('Onboarding link updated to show 100% completion');
       }
       
       // Send SOW approval email to the CLIENT's email address
       try {
-        console.log('Sending approval email to CLIENT email:', sow.email);
-        console.log('Email data being sent:', {
-          templateName: 'sow_approval',
-          clientEmail: sow.email,
-          variables: {
-            client_name: sow.client,
-            company_name: sow.client,
-            sow_title: sow.title
-          }
-        });
-
         const { data: emailData, error: emailError } = await supabase.functions.invoke('send-stage-email', {
           body: {
             templateName: 'sow_approval',
-            clientEmail: sow.email, // This is the CLIENT's email from the SOW
+            clientEmail: sow.email,
             variables: {
               client_name: sow.client,
               company_name: sow.client,
@@ -298,20 +275,14 @@ const ScopeOfWorks = () => {
           }
         });
 
-        console.log('Email response:', { emailData, emailError });
-
         if (emailError) {
-          console.error('Error sending SOW approval email:', emailError);
           toast({
             title: "Warning",
             description: `SOW approved but failed to send email to ${sow.email}`,
             variant: "destructive",
           });
-        } else {
-          console.log('Approval email sent successfully to CLIENT:', sow.email);
         }
       } catch (emailError) {
-        console.error('Error sending SOW approval email:', emailError);
         toast({
           title: "Warning", 
           description: `SOW approved but failed to send email to ${sow.email}`,
@@ -320,9 +291,7 @@ const ScopeOfWorks = () => {
       }
 
       // Refresh the data to show updated status and hide approve button
-      console.log('Calling fetchScopeOfWorks to refresh data...');
       await fetchScopeOfWorks();
-      console.log('Data refreshed, scopeOfWorks state updated');
       
       toast({
         title: "SOW Approved",
@@ -330,7 +299,6 @@ const ScopeOfWorks = () => {
       });
       
     } catch (error) {
-      console.error('Error approving SOW:', error);
       toast({
         title: "Error",
         description: "Failed to approve SOW. Please try again.",
@@ -412,7 +380,7 @@ const ScopeOfWorks = () => {
       }`}>
         <Sidebar 
           onClose={() => setSidebarOpen(false)} 
-          onShowShortcuts={() => {}}
+          onShowShortcuts={() => setShowShortcutsModal(true)}
         />
       </div>
       
@@ -506,14 +474,20 @@ const ScopeOfWorks = () => {
                   <table className="w-full">
                     <thead>
                       <tr className="border-b">
-                        <th className="text-left p-3">
-                          <input
-                            type="checkbox"
-                            checked={selectedRows.length === scopeOfWorks.length}
-                            onChange={toggleAllSelection}
-                            className="rounded"
-                          />
-                        </th>
+                         <th className="text-left p-3">
+                           <button
+                             onClick={toggleAllSelection}
+                             className="flex items-center justify-center w-5"
+                           >
+                             <div className={`border flex min-h-5 w-5 h-5 rounded-md border-solid border-border items-center justify-center ${
+                               selectedRows.length === scopeOfWorks.length && scopeOfWorks.length > 0 ? 'bg-primary border-primary' : 'bg-background'
+                             }`}>
+                               {selectedRows.length === scopeOfWorks.length && scopeOfWorks.length > 0 && (
+                                 <Check size={12} className="text-primary-foreground" />
+                               )}
+                             </div>
+                           </button>
+                         </th>
                         <th className="text-left p-3">Client</th>
                         <th className="text-left p-3">Project Type</th>
                         <th className="text-left p-3">Status</th>
@@ -524,14 +498,20 @@ const ScopeOfWorks = () => {
                     <tbody>
                       {scopeOfWorks.map((sow) => (
                         <tr key={sow.id} className="border-b hover:bg-muted/50">
-                          <td className="p-3">
-                            <input
-                              type="checkbox"
-                              checked={selectedRows.includes(sow.id)}
-                              onChange={() => toggleRowSelection(sow.id)}
-                              className="rounded"
-                            />
-                          </td>
+                           <td className="p-3">
+                             <button
+                               onClick={() => toggleRowSelection(sow.id)}
+                               className="flex items-center justify-center w-5"
+                             >
+                               <div className={`border flex min-h-5 w-5 h-5 rounded-md border-solid border-border items-center justify-center ${
+                                 selectedRows.includes(sow.id) ? 'bg-primary border-primary' : 'bg-background'
+                               }`}>
+                                 {selectedRows.includes(sow.id) && (
+                                   <Check size={12} className="text-primary-foreground" />
+                                 )}
+                               </div>
+                             </button>
+                           </td>
                           <td className="p-3">{sow.client}</td>
                           <td className="p-3">{sow.project_type}</td>
                           <td className="p-3">
@@ -703,6 +683,12 @@ const ScopeOfWorks = () => {
         onConfirmationValueChange={setDeleteConfirmation}
         onConfirm={handleDeleteSelected}
         isDeleting={isDeleting}
+      />
+      
+      <KeyboardShortcutsModal
+        open={showShortcutsModal}
+        onOpenChange={setShowShortcutsModal}
+        shortcuts={shortcuts}
       />
     </div>
   );

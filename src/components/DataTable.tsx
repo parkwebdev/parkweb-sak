@@ -482,20 +482,7 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
         <Table className="min-w-[800px]">
           <TableHeader>
             <TableRow>
-              <TableHead className="w-12">
-                <button
-                  onClick={toggleAllSelection}
-                  className="flex items-center justify-center w-5"
-                >
-                  <div className={`border flex min-h-5 w-5 h-5 rounded-md border-solid border-border items-center justify-center ${
-                    selectedRows.length === filteredData.length ? 'bg-primary border-primary' : 'bg-background'
-                  }`}>
-                    {selectedRows.length === filteredData.length && (
-                      <Check size={12} className="text-primary-foreground" />
-                    )}
-                  </div>
-                </button>
-              </TableHead>
+              <TableHead className="w-12"></TableHead>
               {columnOrder.map(column => {
                 if (!showColumns[column as keyof typeof showColumns]) return null;
                 
@@ -557,20 +544,7 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
           <TableBody>
             {filteredData.map((row) => (
               <TableRow key={row.id}>
-                <TableCell>
-                  <button
-                    onClick={() => toggleRowSelection(row.id)}
-                    className="flex items-center justify-center w-5"
-                  >
-                    <div className={`border flex min-h-5 w-5 h-5 rounded-md border-solid border-border items-center justify-center ${
-                      selectedRows.includes(row.id) ? 'bg-primary border-primary' : 'bg-background'
-                    }`}>
-                      {selectedRows.includes(row.id) && (
-                        <Check size={12} className="text-primary-foreground" />
-                      )}
-                    </div>
-                  </button>
-                </TableCell>
+                <TableCell></TableCell>
                 {columnOrder.map(column => {
                   if (!showColumns[column as keyof typeof showColumns]) return null;
                   
