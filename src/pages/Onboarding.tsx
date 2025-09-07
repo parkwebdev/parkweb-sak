@@ -276,11 +276,6 @@ const Onboarding = () => {
     window.open(fullUrl, '_blank');
   };
 
-  const handleViewSOW = async (link: ClientLink) => {
-    // Navigate to the scope of works page and filter for this client's SOW
-    window.location.href = `/scope-of-works?client=${encodeURIComponent(link.client_name)}`;
-  };
-
   const handleApproveSOW = async (link: ClientLink) => {
     try {
       // Update the status to Approved
@@ -839,23 +834,14 @@ const Onboarding = () => {
                                 className="h-1.5"
                               />
                               {link.status === 'Completed' && link.sow_status === 'Generated' && (
-                                <div className="flex gap-2">
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => handleViewSOW(link)}
-                                    className="h-7 px-2 text-xs"
-                                  >
-                                    <FileText className="h-3 w-3 mr-1" />
-                                    View SOW
-                                  </Button>
+                                <div className="flex justify-center mt-2">
                                   <Button
                                     variant="default"
                                     size="sm"
                                     onClick={() => handleApproveSOW(link)}
-                                    className="h-7 px-2 text-xs"
+                                    className="h-8 px-4 text-xs font-medium"
                                   >
-                                    ✓ Approve & Send Email
+                                    ✓ Approve SOW & Send Email
                                   </Button>
                                 </div>
                               )}
