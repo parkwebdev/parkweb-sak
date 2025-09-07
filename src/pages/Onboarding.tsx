@@ -835,14 +835,14 @@ const Onboarding = () => {
                               />
                               {link.status === 'Completed' && link.sow_status === 'Generated' && (
                                 <div className="flex justify-center">
-                                  <Button
-                                    variant="default"
-                                    size="sm"
-                                    onClick={() => handleApproveSOW(link)}
-                                    className="h-8 px-4 text-xs font-medium"
-                                  >
-                                    ✓ Approve SOW & Send Email
-                                  </Button>
+                                   <Button
+                                     variant="default"
+                                     size="sm"
+                                     onClick={() => handleApproveSOW(link)}
+                                     className="h-8 px-4 text-xs font-medium"
+                                   >
+                                     ✓ Approve
+                                   </Button>
                                 </div>
                               )}
                             </div>
