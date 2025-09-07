@@ -597,11 +597,11 @@ const ScopeOfWorks = () => {
             </SheetDescription>
           </SheetHeader>
 
-          {selectedSow && (
-            <div className="space-y-6">
+           {selectedSow && (
+            <div className="space-y-8">
               {/* Client Info Section */}
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between pb-2 border-b border-border">
                   <h3 className="text-lg font-semibold text-foreground flex items-center gap-3">
                     <User className="h-5 w-5 text-primary" />
                     Client Information
@@ -610,7 +610,7 @@ const ScopeOfWorks = () => {
                     {selectedSow.status}
                   </Badge>
                 </div>
-                <div className="grid grid-cols-2 gap-4 p-6 bg-gradient-to-br from-muted/30 to-muted/50 rounded-xl border">
+                <div className="grid grid-cols-2 gap-4 p-6 bg-muted/50 rounded-lg border">
                   <div className="space-y-1">
                     <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Client Name</Label>
                     <p className="text-sm font-semibold text-foreground">{selectedSow.client}</p>
@@ -648,18 +648,20 @@ const ScopeOfWorks = () => {
 
               {/* Client Answers Section */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-foreground flex items-center gap-3">
-                  <MessageSquare className="h-5 w-5 text-primary" />
-                  Client Answers
-                </h3>
-                <div className="p-6 bg-gradient-to-br from-muted/30 to-muted/50 rounded-xl border">
+                <div className="pb-2 border-b border-border">
+                  <h3 className="text-lg font-semibold text-foreground flex items-center gap-3">
+                    <MessageSquare className="h-5 w-5 text-primary" />
+                    Client Answers
+                  </h3>
+                </div>
+                <div className="p-6 bg-muted/50 rounded-lg border">
                   <div className="space-y-3">
                     <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Onboarding Response</Label>
                     <p className="text-sm text-foreground leading-relaxed">
                       Based on their <span className="font-semibold text-primary">{selectedSow.industry}</span> business requirements and <span className="font-semibold text-primary">{selectedSow.project_type}</span> project needs.
                     </p>
                     {selectedSow.integrations && selectedSow.integrations.length > 0 && (
-                      <div className="pt-3 border-t border-muted-foreground/20">
+                      <div className="pt-3 border-t border-border">
                         <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Required Integrations</Label>
                         <div className="flex flex-wrap gap-2 mt-2">
                           {selectedSow.integrations.map((integration, index) => (
@@ -676,7 +678,7 @@ const ScopeOfWorks = () => {
 
               {/* Scope of Work Generated Section */}
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between pb-2 border-b border-border">
                   <h3 className="text-lg font-semibold text-foreground flex items-center gap-3">
                     <FileText className="h-5 w-5 text-primary" />
                     Generated Scope of Work
@@ -779,7 +781,7 @@ const ScopeOfWorks = () => {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    <div className="p-6 bg-gradient-to-br from-muted/30 to-muted/50 rounded-xl border">
+                    <div className="p-6 bg-muted/50 rounded-lg border">
                       <h4 className="font-semibold text-foreground mb-4 text-lg">{selectedSow.title}</h4>
                       <div className="whitespace-pre-wrap text-sm bg-background/80 p-4 rounded-lg border leading-relaxed">
                         {selectedSow.content}
@@ -791,10 +793,12 @@ const ScopeOfWorks = () => {
 
               {/* Files Section */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-foreground flex items-center gap-3">
-                  <Folder className="h-5 w-5 text-primary" />
-                  Client Files
-                </h3>
+                <div className="pb-2 border-b border-border">
+                  <h3 className="text-lg font-semibold text-foreground flex items-center gap-3">
+                    <Folder className="h-5 w-5 text-primary" />
+                    Client Files
+                  </h3>
+                </div>
                 <div className="space-y-4">
                   {(() => {
                     const brandingFiles = selectedSow.branding_files 
@@ -817,7 +821,7 @@ const ScopeOfWorks = () => {
                             title="Branding Files"
                           />
                         ) : (
-                          <div className="p-6 bg-muted/30 rounded-xl border border-dashed border-muted-foreground/30">
+                          <div className="p-6 bg-muted/30 rounded-lg border border-dashed border-muted-foreground/30">
                             <div className="text-center">
                               <p className="text-sm text-muted-foreground">No branding files uploaded</p>
                               <p className="text-xs text-muted-foreground/70 mt-1">Client did not provide branding assets</p>
@@ -831,7 +835,7 @@ const ScopeOfWorks = () => {
                             title="Content Files"
                           />
                         ) : (
-                          <div className="p-6 bg-muted/30 rounded-xl border border-dashed border-muted-foreground/30">
+                          <div className="p-6 bg-muted/30 rounded-lg border border-dashed border-muted-foreground/30">
                             <div className="text-center">
                               <p className="text-sm text-muted-foreground">No content files uploaded</p>
                               <p className="text-xs text-muted-foreground/70 mt-1">Client did not provide content documents</p>
@@ -845,7 +849,7 @@ const ScopeOfWorks = () => {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex gap-3 pt-6 border-t bg-gradient-to-r from-muted/20 to-muted/30 rounded-t-xl -mx-6 px-6 pb-2">
+              <div className="flex gap-3 pt-6 border-t border-border -mx-6 px-6 pb-2">
                 <Button
                   variant="outline"
                   onClick={() => {
