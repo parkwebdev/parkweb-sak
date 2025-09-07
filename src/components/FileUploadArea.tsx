@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { UploadCloud01, X, File05 as FileText, ImageX as Image } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
+import { Progress as ProgressBar } from '@/components/ui/progress';
 import { validateFile, FileUploadResult } from '@/lib/file-upload';
 import { toast } from '@/hooks/use-toast';
 
@@ -156,7 +156,7 @@ export const FileUploadArea: React.FC<FileUploadAreaProps> = ({
             <span>Uploading files...</span>
             <span>{uploadProgress}%</span>
           </div>
-          <Progress value={uploadProgress} className="w-full" />
+          <ProgressBar value={uploadProgress} className="w-full" />
         </div>
       )}
 

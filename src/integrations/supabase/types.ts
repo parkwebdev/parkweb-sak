@@ -319,9 +319,11 @@ export type Database = {
       }
       scope_of_works: {
         Row: {
+          branding_files: Json | null
           client: string
           client_contact: string
           content: string
+          content_files: Json | null
           created_at: string
           date_created: string
           date_modified: string
@@ -337,9 +339,11 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          branding_files?: Json | null
           client: string
           client_contact: string
           content: string
+          content_files?: Json | null
           created_at?: string
           date_created?: string
           date_modified?: string
@@ -355,9 +359,11 @@ export type Database = {
           user_id: string
         }
         Update: {
+          branding_files?: Json | null
           client?: string
           client_contact?: string
           content?: string
+          content_files?: Json | null
           created_at?: string
           date_created?: string
           date_modified?: string

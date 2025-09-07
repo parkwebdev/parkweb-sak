@@ -70,8 +70,8 @@ interface ScopeOfWork {
   pages: number;
   integrations: string[];
   content: string;
-  branding_files?: string;
-  content_files?: string;
+  branding_files?: any; // JSON field
+  content_files?: any; // JSON field
 }
 
 const ScopeOfWorks = () => {
@@ -672,16 +672,16 @@ const ScopeOfWorks = () => {
                   
                   {/* File Viewer Section */}
                   <div className="space-y-4">
-                    {selectedSow && selectedSow.branding_files && (
+                    {selectedSow.branding_files && Array.isArray(selectedSow.branding_files) && selectedSow.branding_files.length > 0 && (
                       <FileViewer
-                        files={JSON.parse(selectedSow.branding_files) as FileUploadResult[]}
+                        files={selectedSow.branding_files as FileUploadResult[]}
                         title="Branding Files"
                       />
                     )}
                     
-                    {selectedSow && selectedSow.content_files && (
+                    {selectedSow.content_files && Array.isArray(selectedSow.content_files) && selectedSow.content_files.length > 0 && (
                       <FileViewer
-                        files={JSON.parse(selectedSow.content_files) as FileUploadResult[]}
+                        files={selectedSow.content_files as FileUploadResult[]}
                         title="Content Files"
                       />
                     )}
@@ -699,16 +699,16 @@ const ScopeOfWorks = () => {
                   
                   {/* File Viewer Section for View Mode */}
                   <div className="space-y-4">
-                    {selectedSow.branding_files && (
+                    {selectedSow.branding_files && Array.isArray(selectedSow.branding_files) && selectedSow.branding_files.length > 0 && (
                       <FileViewer
-                        files={JSON.parse(selectedSow.branding_files) as FileUploadResult[]}
+                        files={selectedSow.branding_files as FileUploadResult[]}
                         title="Branding Files"
                       />
                     )}
                     
-                    {selectedSow.content_files && (
+                    {selectedSow.content_files && Array.isArray(selectedSow.content_files) && selectedSow.content_files.length > 0 && (
                       <FileViewer
-                        files={JSON.parse(selectedSow.content_files) as FileUploadResult[]}
+                        files={selectedSow.content_files as FileUploadResult[]}
                         title="Content Files"
                       />
                     )}

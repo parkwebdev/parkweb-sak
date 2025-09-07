@@ -672,7 +672,9 @@ const ClientOnboarding = () => {
           industry: generatedSOW.industry,
           project_type: generatedSOW.project_type,
           status: generatedSOW.status,
-          pages: generatedSOW.pages
+          pages: generatedSOW.pages,
+          branding_files: JSON.stringify(onboardingData.brandingFiles),
+          content_files: JSON.stringify(onboardingData.contentFiles)
         });
 
       if (sowSaveError) {
