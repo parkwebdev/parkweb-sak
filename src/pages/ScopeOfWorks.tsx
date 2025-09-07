@@ -190,6 +190,7 @@ const ScopeOfWorks = () => {
 
   const handleApproveSow = async (sow: ScopeOfWork) => {
     console.log('Approving SOW:', sow);
+    console.log('Client email address:', sow.email);
     try {
       // Update the status to Approved
       const { error: updateError } = await supabase
@@ -211,7 +212,7 @@ const ScopeOfWorks = () => {
         return;
       }
 
-      console.log('SOW status updated, sending email...');
+      console.log('SOW status updated, sending email to client:', sow.email);
       
       // Send SOW approval email
       try {
@@ -247,7 +248,11 @@ const ScopeOfWorks = () => {
             variant: "destructive",
           });
         } else {
-          console.log('Email sent successfully');
+          console.log('Email sent successfully to:', sow.email);
+          toast({
+            title: "SOW Approved",
+            description: `SOW approved for ${sow.client}. Email sent to ${sow.email}`,
+          });
         }
       } catch (emailError) {
         console.error('Error sending SOW approval email:', emailError);
@@ -261,10 +266,6 @@ const ScopeOfWorks = () => {
       // Refresh the data
       await fetchScopeOfWorks();
       
-      toast({
-        title: "SOW Approved",
-        description: `SOW approved for ${sow.client}. Email notification sent.`,
-      });
     } catch (error) {
       console.error('Error approving SOW:', error);
       toast({
