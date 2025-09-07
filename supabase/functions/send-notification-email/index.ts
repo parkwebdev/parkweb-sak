@@ -16,7 +16,7 @@ const RATE_LIMIT_MAX_REQUESTS = 10; // 10 emails per minute per IP
 
 interface EmailRequest {
   to: string;
-  type: 'scope_work' | 'onboarding' | 'system' | 'team';
+  type: 'scope_work' | 'onboarding' | 'system' | 'team' | 'security';
   title: string;
   message: string;
   data?: any;
@@ -62,7 +62,7 @@ const validateText = (text: string, fieldName: string, maxLength = 500): { isVal
 };
 
 const validateType = (type: string): { isValid: boolean; error?: string } => {
-  const allowedTypes = ['scope_work', 'onboarding', 'system', 'team'];
+  const allowedTypes = ['scope_work', 'onboarding', 'system', 'team', 'security'];
   if (!allowedTypes.includes(type)) {
     return { isValid: false, error: 'Invalid notification type' };
   }
@@ -217,7 +217,7 @@ const handler = async (req: Request): Promise<Response> => {
     const emailContent = generateEmailContent(type, sanitizedTitle, sanitizedMessage, sanitizedData);
 
     const emailResponse = await resend.emails.send({
-      from: "Agency <notifications@lovable.app>", // You'll need to configure this domain in Resend
+      from: "Agency <notifications@send.parkweb.app>",
       to: [sanitizedTo],
       subject: emailContent.subject,
       html: emailContent.html,
@@ -269,37 +269,38 @@ function generateEmailContent(
   let subject = `Agency Notification: ${title}`;
   let actionUrl = baseUrl;
   let actionText = "View Dashboard";
-  let backgroundColor = "#3b82f6"; // blue
-  let emoji = "📢";
+  let backgroundColor = "hsl(0 0% 9%)"; // primary
+  let headerColor = "hsl(0 0% 98%)"; // primary-foreground
 
   // Customize based on notification type
   switch (type) {
     case 'scope_work':
-      emoji = "📄";
       actionUrl = `${baseUrl}/scope-of-works`;
       actionText = "View Scope of Works";
-      backgroundColor = "#10b981"; // green
+      backgroundColor = "hsl(120 61% 50%)"; // success
+      headerColor = "hsl(355 100% 97%)"; // success-foreground
       if (data?.sowId) {
         actionUrl += `?id=${data.sowId}`;
       }
       break;
     case 'onboarding':
-      emoji = "👋";
       actionUrl = `${baseUrl}/onboarding`;
       actionText = "View Onboarding";
-      backgroundColor = "#8b5cf6"; // purple
+      backgroundColor = "hsl(221 83% 53%)"; // info
+      headerColor = "hsl(210 40% 98%)"; // info-foreground
       break;
     case 'team':
-      emoji = "👥";
       actionUrl = `${baseUrl}/team`;
       actionText = "View Team";
-      backgroundColor = "#f59e0b"; // amber
+      backgroundColor = "hsl(38 92% 50%)"; // warning
+      headerColor = "hsl(48 96% 5%)"; // warning-foreground
       break;
     case 'system':
-      emoji = "⚙️";
+    case 'security':
       actionUrl = `${baseUrl}/settings`;
       actionText = "View Settings";
-      backgroundColor = "#ef4444"; // red
+      backgroundColor = "hsl(0 84.2% 60.2%)"; // destructive
+      headerColor = "hsl(0 0% 98%)"; // destructive-foreground
       break;
   }
 
@@ -311,25 +312,24 @@ function generateEmailContent(
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>${subject}</title>
     </head>
-    <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f9fafb;">
-      <div style="max-width: 600px; margin: 0 auto; background-color: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+    <body style="margin: 0; padding: 0; font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: hsl(0 0% 96.1%);">
+      <div style="max-width: 600px; margin: 0 auto; background-color: hsl(0 0% 100%); border-radius: 8px; overflow: hidden; border: 1px solid hsl(0 0% 89.8%);">
         
         <!-- Header -->
-        <div style="background: linear-gradient(135deg, ${backgroundColor} 0%, ${adjustColor(backgroundColor, -20)} 100%); padding: 32px 24px; text-align: center;">
-          <div style="font-size: 48px; margin-bottom: 8px;">${emoji}</div>
-          <h1 style="color: white; margin: 0; font-size: 24px; font-weight: 600;">${title}</h1>
+        <div style="background-color: ${backgroundColor}; padding: 32px 24px; text-align: center;">
+          <h1 style="color: ${headerColor}; margin: 0; font-size: 24px; font-weight: 600; font-family: Inter, sans-serif;">${title}</h1>
         </div>
 
         <!-- Content -->
         <div style="padding: 32px 24px;">
-          <p style="color: #374151; font-size: 16px; line-height: 1.6; margin: 0 0 24px 0;">
+          <p style="color: hsl(0 0% 3.9%); font-size: 16px; line-height: 1.6; margin: 0 0 24px 0; font-family: Inter, sans-serif;">
             ${message}
           </p>
 
           ${data?.additionalInfo ? `
-            <div style="background-color: #f3f4f6; border-radius: 8px; padding: 16px; margin-bottom: 24px;">
-              <p style="color: #6b7280; font-size: 14px; margin: 0;">
-                <strong>Additional Details:</strong><br>
+            <div style="background-color: hsl(0 0% 96.1%); border-radius: 8px; padding: 16px; margin-bottom: 24px; border: 1px solid hsl(0 0% 89.8%);">
+              <p style="color: hsl(0 0% 45.1%); font-size: 14px; margin: 0; font-family: Inter, sans-serif;">
+                <strong style="color: hsl(0 0% 9%);">Additional Details:</strong><br>
                 ${data.additionalInfo}
               </p>
             </div>
@@ -338,14 +338,14 @@ function generateEmailContent(
           <!-- Action Button -->
           <div style="text-align: center; margin: 32px 0;">
             <a href="${actionUrl}" 
-               style="display: inline-block; background-color: ${backgroundColor}; color: white; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 600; font-size: 16px;">
+               style="display: inline-block; background-color: ${backgroundColor}; color: ${headerColor}; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 600; font-size: 16px; font-family: Inter, sans-serif;">
               ${actionText}
             </a>
           </div>
 
           <!-- Timestamp -->
-          <div style="border-top: 1px solid #e5e7eb; padding-top: 16px; margin-top: 24px;">
-            <p style="color: #9ca3af; font-size: 12px; margin: 0; text-align: center;">
+          <div style="border-top: 1px solid hsl(0 0% 89.8%); padding-top: 16px; margin-top: 24px;">
+            <p style="color: hsl(0 0% 45.1%); font-size: 12px; margin: 0; text-align: center; font-family: Inter, sans-serif;">
               Sent on ${new Date().toLocaleDateString('en-US', { 
                 weekday: 'long', 
                 year: 'numeric', 
@@ -359,12 +359,12 @@ function generateEmailContent(
         </div>
 
         <!-- Footer -->
-        <div style="background-color: #f9fafb; padding: 24px; text-align: center; border-top: 1px solid #e5e7eb;">
-          <p style="color: #6b7280; font-size: 14px; margin: 0 0 8px 0;">
+        <div style="background-color: hsl(0 0% 96.1%); padding: 24px; text-align: center; border-top: 1px solid hsl(0 0% 89.8%);">
+          <p style="color: hsl(0 0% 45.1%); font-size: 14px; margin: 0 0 8px 0; font-family: Inter, sans-serif;">
             You're receiving this because you have notifications enabled in your Agency account.
           </p>
-          <p style="color: #9ca3af; font-size: 12px; margin: 0;">
-            <a href="${baseUrl}/settings" style="color: #6b7280; text-decoration: none;">Manage notification preferences</a>
+          <p style="color: hsl(0 0% 45.1%); font-size: 12px; margin: 0; font-family: Inter, sans-serif;">
+            <a href="${baseUrl}/settings" style="color: hsl(0 0% 45.1%); text-decoration: underline;">Manage notification preferences</a>
           </p>
         </div>
       </div>
@@ -375,18 +375,5 @@ function generateEmailContent(
   return { subject, html };
 }
 
-// Helper function to adjust color brightness
-function adjustColor(color: string, amount: number): string {
-  // Simple color adjustment - in production you might want a more robust solution
-  const colorMap: { [key: string]: string } = {
-    '#3b82f6': amount > 0 ? '#60a5fa' : '#1d4ed8', // blue
-    '#10b981': amount > 0 ? '#34d399' : '#047857', // green  
-    '#8b5cf6': amount > 0 ? '#a78bfa' : '#6d28d9', // purple
-    '#f59e0b': amount > 0 ? '#fbbf24' : '#d97706', // amber
-    '#ef4444': amount > 0 ? '#f87171' : '#dc2626', // red
-  };
-  
-  return colorMap[color] || color;
-}
 
 serve(handler);
