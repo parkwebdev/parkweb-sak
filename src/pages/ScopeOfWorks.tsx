@@ -189,6 +189,7 @@ const ScopeOfWorks = () => {
   };
 
   const handleApproveSow = async (sow: ScopeOfWork) => {
+    console.log('Approving SOW:', sow);
     try {
       // Update the status to Approved
       const { error: updateError } = await supabase
@@ -210,12 +211,21 @@ const ScopeOfWorks = () => {
         return;
       }
 
-      // Generate SOW PDF for email attachment
-      const sowPDF = generateScopeOfWorkPDF(sow);
+      console.log('SOW status updated, sending email...');
       
       // Send SOW approval email
       try {
-        const { error: emailError } = await supabase.functions.invoke('send-stage-email', {
+        console.log('Calling send-stage-email with data:', {
+          templateName: 'sow_approval',
+          clientEmail: sow.email,
+          variables: {
+            client_name: sow.client,
+            company_name: sow.client,
+            sow_title: sow.title
+          }
+        });
+
+        const { data: emailData, error: emailError } = await supabase.functions.invoke('send-stage-email', {
           body: {
             templateName: 'sow_approval',
             clientEmail: sow.email,
@@ -227,6 +237,8 @@ const ScopeOfWorks = () => {
           }
         });
 
+        console.log('Email response:', { emailData, emailError });
+
         if (emailError) {
           console.error('Error sending SOW approval email:', emailError);
           toast({
@@ -234,9 +246,16 @@ const ScopeOfWorks = () => {
             description: "SOW approved but failed to send email notification.",
             variant: "destructive",
           });
+        } else {
+          console.log('Email sent successfully');
         }
       } catch (emailError) {
         console.error('Error sending SOW approval email:', emailError);
+        toast({
+          title: "Warning", 
+          description: "SOW approved but failed to send email notification.",
+          variant: "destructive",
+        });
       }
 
       // Refresh the data
