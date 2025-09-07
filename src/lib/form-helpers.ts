@@ -13,7 +13,7 @@ export const createOnboardingUrl = (
   baseUrl: string = window.location.origin
 ): string => {
   const token = generateUniqueToken();
-  return `${baseUrl}/client-onboarding?name=${encodeURIComponent(
+  return `/client-onboarding?name=${encodeURIComponent(
     clientName
   )}&company=${encodeURIComponent(companyName)}&token=${token}`;
 };

@@ -451,7 +451,7 @@ const ClientOnboarding = () => {
           status: 'pending'
         })
         .select()
-        .single();
+        .maybeSingle();
 
       if (submissionError) {
         console.error('Error submitting onboarding:', submissionError);

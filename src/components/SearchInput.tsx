@@ -76,10 +76,12 @@ export const SearchInput: React.FC<SearchInputProps> = ({
     setOpen(false);
   };
 
-  const filteredResults = searchResults.filter(result =>
-    result.title.toLowerCase().includes(searchValue.toLowerCase()) ||
-    result.description?.toLowerCase().includes(searchValue.toLowerCase())
-  );
+  const filteredResults = searchValue.length > 0 
+    ? searchResults.filter(result =>
+        result.title.toLowerCase().includes(searchValue.toLowerCase()) ||
+        result.description?.toLowerCase().includes(searchValue.toLowerCase())
+      )
+    : searchResults; // Show all results when no search term
 
   return (
     <>
@@ -116,7 +118,7 @@ export const SearchInput: React.FC<SearchInputProps> = ({
         <CommandList>
           <CommandEmpty>No results found.</CommandEmpty>
           {filteredResults.length > 0 && (
-            <CommandGroup heading="Results">
+            <CommandGroup heading={searchValue.length > 0 ? "Search Results" : "Quick Actions"}>
               {filteredResults.map((result) => (
                 <CommandItem
                   key={result.id}

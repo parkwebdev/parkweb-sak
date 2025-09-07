@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Home01 as Home, Grid01 as Grid, File02 as FileText, Users01 as Users, X, ChevronLeft, ChevronRight, Keyboard01 as Keyboard } from '@untitledui/icons';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { SearchInput } from './SearchInput';
 import { Badge } from './Badge';
 import { UserAccountCard } from './UserAccountCard';
@@ -47,6 +47,7 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({ onClose, onShowShortcuts }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const location = useLocation();
+  const navigate = useNavigate();
   const { isCollapsed, toggle } = useSidebar();
 
   const searchResults = navigationItems.map(item => ({
@@ -54,8 +55,30 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose, onShowShortcuts }) =>
     title: item.label,
     description: `Navigate to ${item.label}`,
     category: 'Navigation',
-    action: () => window.location.href = item.path
+    action: () => {
+      if (item.path !== location.pathname) {
+        navigate(item.path);
+      }
+    }
   }));
+
+  const allResults = [
+    ...searchResults,
+    {
+      id: 'create-link',
+      title: 'Create Onboarding Link',
+      description: 'Generate a new client onboarding link',
+      category: 'Actions',
+      action: () => {} // This would be handled by parent
+    },
+    {
+      id: 'shortcuts',
+      title: 'Keyboard Shortcuts',
+      description: 'View keyboard shortcuts',
+      category: 'Help',
+      action: () => {} // This would be handled by parent
+    }
+  ];
 
   return (
     <aside className={`items-stretch flex ${isCollapsed ? 'w-[72px]' : 'w-[280px]'} h-screen bg-muted/30 p-1 transition-all duration-300`}>
@@ -89,7 +112,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose, onShowShortcuts }) =>
                   placeholder="Search"
                   value={searchTerm}
                   onChange={setSearchTerm}
-                  searchResults={searchResults}
+                  searchResults={allResults}
                 />
               </div>
             )}

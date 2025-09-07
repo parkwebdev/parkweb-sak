@@ -156,7 +156,7 @@ const Onboarding = () => {
         newClient.client_name,
         newClient.company_name,
         newClient.email,
-        onboardingUrl
+        `${window.location.origin}${onboardingUrl}`
       );
 
       // Reset form
@@ -194,7 +194,8 @@ const Onboarding = () => {
   };
 
   const handleCopyToClipboard = async (url: string) => {
-    const success = await copyToClipboard(url);
+    const fullUrl = url.startsWith('http') ? url : `${window.location.origin}${url}`;
+    const success = await copyToClipboard(fullUrl);
     
     if (success) {
       toast({
@@ -218,7 +219,7 @@ const Onboarding = () => {
         clientLink.client_name,
         clientLink.company_name,
         clientLink.email,
-        clientLink.onboarding_url
+        `${window.location.origin}${clientLink.onboarding_url}`
       );
       
       if (!emailResult.success) {
@@ -247,7 +248,8 @@ const Onboarding = () => {
   };
 
   const handleViewOnboarding = (url: string) => {
-    window.open(url, '_blank');
+    const fullUrl = url.startsWith('http') ? url : `${window.location.origin}${url}`;
+    window.open(fullUrl, '_blank');
   };
 
   const handleDeleteSelected = async () => {
@@ -513,16 +515,6 @@ const Onboarding = () => {
                     onExportSelected={handleBulkExport}
                     onDelete={() => setShowDeleteDialog(true)}
                   />
-                  
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowShortcutsModal(true)}
-                    className="flex items-center gap-2"
-                  >
-                    <span className="text-xs">⌘</span>
-                    Shortcuts
-                  </Button>
                   
                   <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
                     <DialogTrigger asChild>
