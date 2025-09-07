@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Sidebar } from '@/components/Sidebar';
-import { Plus, Link01 as Link2, Copy01 as Copy, Send01 as Send, Eye as Eye, Trash01 as Trash, Check } from '@untitledui/icons';
+import { Plus, Link01 as Link2, Copy01 as Copy, Send01 as Send, Eye as Eye, Trash01 as Trash, Check, SearchSm, FilterLines, Settings01 } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -60,6 +60,7 @@ const Onboarding = () => {
     industry: ''
   });
   const [activeFilter, setActiveFilter] = useState('View all');
+  const [searchTerm, setSearchTerm] = useState('');
   const { toast } = useToast();
   const { user } = useAuth();
   const { sendWelcomeEmail } = useEmailTemplates();
@@ -398,10 +399,24 @@ const Onboarding = () => {
 
   // Filter function for client links
   const getFilteredClientLinks = () => {
-    if (activeFilter === 'View all') {
-      return clientLinks;
+    let filtered = clientLinks;
+    
+    // Apply status filter
+    if (activeFilter !== 'View all') {
+      filtered = filtered.filter(link => link.status === activeFilter);
     }
-    return clientLinks.filter(link => link.status === activeFilter);
+    
+    // Apply search filter
+    if (searchTerm.trim()) {
+      filtered = filtered.filter(link =>
+        link.client_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        link.company_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        link.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        link.industry.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    
+    return filtered;
   };
 
   // Bulk export function
@@ -686,6 +701,31 @@ const Onboarding = () => {
               </div>
             </header>
 
+            {/* Search and Filters */}
+            <div className="flex items-center gap-2 mb-6">
+              <div className="flex-1 relative">
+                <div className="items-center border shadow-sm flex w-full gap-2 overflow-hidden bg-background px-3 py-2 rounded-lg border-border">
+                  <SearchSm size={14} className="text-muted-foreground" />
+                  <input
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Search"
+                    className="text-foreground text-ellipsis text-xs leading-4 flex-1 bg-transparent border-none outline-none placeholder:text-muted-foreground"
+                  />
+                  <div className="rounded border flex items-center justify-center text-xs text-muted-foreground font-medium px-1.5 py-0.5 border-border min-w-[28px]">
+                    <span className="text-muted-foreground text-xs leading-none">⌘K</span>
+                  </div>
+                </div>
+              </div>
+              <Button variant="outline" size="sm" className="h-8 px-2">
+                <FilterLines className="h-4 w-4" />
+              </Button>
+              <Button variant="outline" size="sm" className="h-8 px-2">
+                <Settings01 className="h-4 w-4" />
+              </Button>
+            </div>
+
             {/* Compact Client Links */}
             <Card>
               <CardHeader className="compact-header border-b">
@@ -730,22 +770,18 @@ const Onboarding = () => {
                       </div>
                       
                       {/* Tab Navigation */}
-                      <div className="flex items-center gap-0.5 text-xs leading-none bg-muted rounded-md border-border min-w-max">
+                      <div className="flex items-center gap-1 rounded-lg bg-muted/50 p-1">
                         {['View all', 'Sent', 'In Progress', 'Completed', 'SOW Generated', 'Approved'].map((tab) => (
                           <button
                             key={tab}
                             onClick={() => setActiveFilter(tab)}
-                            className={`justify-center items-center flex min-h-7 gap-1.5 overflow-hidden px-2.5 py-1.5 rounded-sm whitespace-nowrap ${
+                            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all whitespace-nowrap ${
                               activeFilter === tab
-                                ? 'border shadow-sm text-foreground bg-background border-border'
-                                : 'text-muted-foreground hover:bg-background/50'
+                                ? 'bg-background text-foreground shadow-sm border border-border'
+                                : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
                             }`}
                           >
-                            <div className={`text-xs leading-4 ${
-                              activeFilter === tab ? 'text-foreground' : 'text-muted-foreground'
-                            }`}>
-                              {tab}
-                            </div>
+                            {tab}
                           </button>
                         ))}
                       </div>
