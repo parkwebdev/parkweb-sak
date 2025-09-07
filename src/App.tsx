@@ -15,6 +15,7 @@ import ScopeOfWorks from "./pages/ScopeOfWorks";
 import Settings from "./pages/Settings";
 import Profile from "./pages/Profile";
 import Team from "./pages/Team";
+import EmailTest from "./pages/EmailTest";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -64,6 +65,11 @@ const App = () => (
               <Route path="/team" element={
                 <ProtectedRoute>
                   <Team />
+                </ProtectedRoute>
+              } />
+              <Route path="/email-test" element={
+                <ProtectedRoute>
+                  <EmailTest />
                 </ProtectedRoute>
               } />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
