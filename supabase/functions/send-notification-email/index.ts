@@ -270,15 +270,15 @@ function generateEmailContent(
   let actionUrl = baseUrl;
   let actionText = "View Dashboard";
   let backgroundColor = "hsl(0 0% 9%)"; // primary
-  let headerColor = "hsl(0 0% 98%)"; // primary-foreground
+  let textColor = "hsl(0 0% 98%)"; // primary-foreground
 
-  // Customize based on notification type
+  // Customize based on notification type - using neutral colors only
   switch (type) {
     case 'scope_work':
       actionUrl = `${baseUrl}/scope-of-works`;
       actionText = "View Scope of Works";
-      backgroundColor = "hsl(120 61% 50%)"; // success
-      headerColor = "hsl(355 100% 97%)"; // success-foreground
+      backgroundColor = "hsl(0 0% 9%)"; // primary
+      textColor = "hsl(0 0% 98%)"; // primary-foreground
       if (data?.sowId) {
         actionUrl += `?id=${data.sowId}`;
       }
@@ -286,21 +286,21 @@ function generateEmailContent(
     case 'onboarding':
       actionUrl = `${baseUrl}/onboarding`;
       actionText = "View Onboarding";
-      backgroundColor = "hsl(221 83% 53%)"; // info
-      headerColor = "hsl(210 40% 98%)"; // info-foreground
+      backgroundColor = "hsl(0 0% 9%)"; // primary
+      textColor = "hsl(0 0% 98%)"; // primary-foreground
       break;
     case 'team':
       actionUrl = `${baseUrl}/team`;
       actionText = "View Team";
-      backgroundColor = "hsl(38 92% 50%)"; // warning
-      headerColor = "hsl(48 96% 5%)"; // warning-foreground
+      backgroundColor = "hsl(0 0% 9%)"; // primary
+      textColor = "hsl(0 0% 98%)"; // primary-foreground
       break;
     case 'system':
     case 'security':
       actionUrl = `${baseUrl}/settings`;
       actionText = "View Settings";
-      backgroundColor = "hsl(0 84.2% 60.2%)"; // destructive
-      headerColor = "hsl(0 0% 98%)"; // destructive-foreground
+      backgroundColor = "hsl(0 0% 9%)"; // primary
+      textColor = "hsl(0 0% 98%)"; // primary-foreground
       break;
   }
 
@@ -316,18 +316,18 @@ function generateEmailContent(
       <div style="max-width: 600px; margin: 0 auto; background-color: hsl(0 0% 100%); border-radius: 8px; overflow: hidden; border: 1px solid hsl(0 0% 89.8%);">
         
         <!-- Header -->
-        <div style="background-color: ${backgroundColor}; padding: 32px 24px; text-align: center;">
-          <h1 style="color: ${headerColor}; margin: 0; font-size: 24px; font-weight: 600; font-family: Inter, sans-serif;">${title}</h1>
+        <div style="background-color: ${backgroundColor}; padding: 24px; text-align: center;">
+          <h1 style="color: ${textColor}; margin: 0; font-size: 20px; font-weight: 600; font-family: Inter, sans-serif;">${title}</h1>
         </div>
 
         <!-- Content -->
-        <div style="padding: 32px 24px;">
+        <div style="padding: 24px;">
           <p style="color: hsl(0 0% 3.9%); font-size: 16px; line-height: 1.6; margin: 0 0 24px 0; font-family: Inter, sans-serif;">
             ${message}
           </p>
 
           ${data?.additionalInfo ? `
-            <div style="background-color: hsl(0 0% 96.1%); border-radius: 8px; padding: 16px; margin-bottom: 24px; border: 1px solid hsl(0 0% 89.8%);">
+            <div style="background-color: hsl(0 0% 96.1%); border-radius: 6px; padding: 16px; margin-bottom: 24px; border: 1px solid hsl(0 0% 89.8%);">
               <p style="color: hsl(0 0% 45.1%); font-size: 14px; margin: 0; font-family: Inter, sans-serif;">
                 <strong style="color: hsl(0 0% 9%);">Additional Details:</strong><br>
                 ${data.additionalInfo}
@@ -336,9 +336,9 @@ function generateEmailContent(
           ` : ''}
 
           <!-- Action Button -->
-          <div style="text-align: center; margin: 32px 0;">
+          <div style="text-align: center; margin: 24px 0;">
             <a href="${actionUrl}" 
-               style="display: inline-block; background-color: ${backgroundColor}; color: ${headerColor}; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 600; font-size: 16px; font-family: Inter, sans-serif;">
+               style="display: inline-block; background-color: ${backgroundColor}; color: ${textColor}; text-decoration: none; padding: 8px 16px; border-radius: 6px; font-weight: 500; font-size: 14px; font-family: Inter, sans-serif;">
               ${actionText}
             </a>
           </div>
@@ -359,7 +359,7 @@ function generateEmailContent(
         </div>
 
         <!-- Footer -->
-        <div style="background-color: hsl(0 0% 96.1%); padding: 24px; text-align: center; border-top: 1px solid hsl(0 0% 89.8%);">
+        <div style="background-color: hsl(0 0% 96.1%); padding: 20px; text-align: center; border-top: 1px solid hsl(0 0% 89.8%);">
           <p style="color: hsl(0 0% 45.1%); font-size: 14px; margin: 0 0 8px 0; font-family: Inter, sans-serif;">
             You're receiving this because you have notifications enabled in your Agency account.
           </p>
