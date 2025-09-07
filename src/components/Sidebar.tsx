@@ -55,9 +55,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose, onShowShortcuts }) =>
   const { theme } = useTheme();
 
   // Supabase storage URLs for logos
-  const SUPABASE_URL = 'https://mvaimvwdukpgvkifkfpa.supabase.co';
-  const logoBlackUrl = `${SUPABASE_URL}/storage/v1/object/public/logos/logo-black.png`;
-  const logoWhiteUrl = `${SUPABASE_URL}/storage/v1/object/public/logos/logo-white.png`;
+  const logoBlackUrl = 'https://mvaimvwdukpgvkifkfpa.supabase.co/storage/v1/object/public/logos/Icon%20Only%20-%20Black%20Square@2x.png';
+  const logoWhiteUrl = 'https://mvaimvwdukpgvkifkfpa.supabase.co/storage/v1/object/public/logos/Icon%20Only%20-%20White%20Square@2x.png';
 
   // Determine which logo to show based on theme
   const isDarkMode = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
