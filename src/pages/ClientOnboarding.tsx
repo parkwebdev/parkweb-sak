@@ -523,6 +523,31 @@ const ClientOnboarding = () => {
         alert('There was an error saving the generated SOW. Your submission was saved but the SOW could not be stored.');
       }
 
+      // Update the client onboarding link status to completed
+      console.log('Updating onboarding status...');
+      const urlParams = new URLSearchParams(window.location.search);
+      const clientName = urlParams.get('name');
+      const companyName = urlParams.get('company');
+      
+      if (clientName && companyName) {
+        const { error: linkUpdateError } = await supabase
+          .from('client_onboarding_links')
+          .update({
+            status: 'Completed',
+            sow_status: 'Generated',
+            last_activity: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+          .eq('client_name', clientName)
+          .eq('company_name', companyName);
+
+        if (linkUpdateError) {
+          console.error('Error updating onboarding link status:', linkUpdateError);
+        } else {
+          console.log('Onboarding link status updated successfully');
+        }
+      }
+
       console.log('Process completed successfully');
 
       // Clear saved draft
