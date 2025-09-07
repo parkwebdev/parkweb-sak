@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Sidebar } from '@/components/Sidebar';
-import { Plus, Link01 as Link2, Copy01 as Copy, Send01 as Send, User01 as User, File02 as FileText, Clock as Clock, Eye as Eye, Trash01 as Trash, Check } from '@untitledui/icons';
+import { Plus, Link01 as Link2, Copy01 as Copy, Send01 as Send, Eye as Eye, Trash01 as Trash, Check } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -64,25 +64,29 @@ const Onboarding = () => {
   const { sendWelcomeEmail } = useEmailTemplates();
   const { triggerOnboardingCompletion } = useRealtimeNotifications();
   
-  // Keyboard shortcuts
-  const pageShortcuts = [
+  const [showShortcutsModal, setShowShortcutsModal] = useState(false);
+  
+  // Initialize keyboard shortcuts
+  const { shortcuts } = useKeyboardShortcuts([
     {
-      key: 'n',
+      key: 's',
       ctrlKey: true,
-      shiftKey: true,
-      description: 'Create new onboarding link',
-      action: () => setShowCreateDialog(true)
+      description: 'Show keyboard shortcuts',
+      action: () => setShowShortcutsModal(true)
     },
     {
-      key: 'e',
+      key: 'k',
       ctrlKey: true,
-      description: 'Export selected items',
-      action: () => selectedForDelete.length > 0 && handleBulkExport()
+      description: 'Open command palette',
+      action: () => {} // Let SearchInput handle this
+    },
+    {
+      key: 'd',
+      ctrlKey: true,
+      description: 'Delete selected items',
+      action: () => selectedForDelete.length > 0 && setShowDeleteDialog(true)
     }
-  ];
-  
-  const { shortcuts } = useKeyboardShortcuts(pageShortcuts);
-  const [showShortcutsModal, setShowShortcutsModal] = useState(false);
+  ]);
 
   // Fetch client links from database
   useEffect(() => {
@@ -671,54 +675,6 @@ const Onboarding = () => {
                 </div>
               </div>
             </header>
-
-            {/* Compact Stats Cards */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-              <Card className="compact-card">
-                <CardContent className="compact-content">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs font-medium text-muted-foreground">Total Links</p>
-                      <p className="text-lg lg:text-xl font-semibold">{clientLinks.length}</p>
-                    </div>
-                    <Link2 className="h-4 w-4 lg:h-5 lg:w-5 text-info" />
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="compact-card">
-                <CardContent className="compact-content">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs font-medium text-muted-foreground">In Progress</p>
-                      <p className="text-lg lg:text-xl font-semibold">{clientLinks.filter(link => link.status === 'In Progress').length}</p>
-                    </div>
-                    <Clock className="h-4 w-4 lg:h-5 lg:w-5 text-warning" />
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="compact-card">
-                <CardContent className="compact-content">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs font-medium text-muted-foreground">SOW Generated</p>
-                      <p className="text-lg lg:text-xl font-semibold">{clientLinks.filter(link => link.status === 'SOW Generated').length}</p>
-                    </div>
-                    <FileText className="h-4 w-4 lg:h-5 lg:w-5 text-primary" />
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="compact-card">
-                <CardContent className="compact-content">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs font-medium text-muted-foreground">Approved</p>
-                      <p className="text-lg lg:text-xl font-semibold">{clientLinks.filter(link => link.status === 'Approved').length}</p>
-                    </div>
-                    <User className="h-4 w-4 lg:h-5 lg:w-5 text-success" />
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
 
             {/* Compact Client Links */}
             <Card>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Home01 as Home, Grid01 as Grid, File02 as FileText, Users01 as Users, X, ChevronLeft, ChevronRight, Keyboard01 as Keyboard } from '@untitledui/icons';
+import { Home01 as Home, Grid01 as Grid, File02 as FileText, Users01 as Users, X, ChevronLeft, ChevronRight } from '@untitledui/icons';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { SearchInput } from './SearchInput';
 import { Badge } from './Badge';
@@ -165,10 +165,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose, onShowShortcuts }) =>
                 <span className="text-sm font-medium text-foreground">Shortcuts</span>
                 <button
                   onClick={onShowShortcuts}
-                  className="p-1 rounded-md hover:bg-accent/50 text-muted-foreground hover:text-foreground"
-                  title="View keyboard shortcuts"
+                  className="p-1 rounded-md hover:bg-accent/50 text-muted-foreground hover:text-foreground flex items-center gap-1"
+                  title="View keyboard shortcuts (⌘S)"
                 >
-                  <Keyboard size={16} />
+                  <div className="text-xs bg-muted border border-border rounded px-1.5 py-0.5 font-medium">
+                    ⌘S
+                  </div>
                 </button>
               </div>
             </>
@@ -183,9 +185,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose, onShowShortcuts }) =>
                 <button
                   onClick={onShowShortcuts}
                   className="p-2 rounded-md hover:bg-accent/50 text-muted-foreground hover:text-foreground"
-                  title="View keyboard shortcuts"
+                  title="View keyboard shortcuts (⌘S)"
                 >
-                  <Keyboard size={16} />
+                  <div className="text-xs bg-muted border border-border rounded px-1.5 py-0.5 font-medium">
+                    ⌘S
+                  </div>
                 </button>
               </div>
             </>

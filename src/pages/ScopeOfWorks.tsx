@@ -99,9 +99,16 @@ const ScopeOfWorks = () => {
   // Initialize keyboard shortcuts
   const { shortcuts } = useKeyboardShortcuts([
     {
-      key: '?',
+      key: 's',
+      ctrlKey: true,
       description: 'Show keyboard shortcuts',
       action: () => setShowShortcutsModal(true)
+    },
+    {
+      key: 'k',
+      ctrlKey: true,
+      description: 'Open command palette',
+      action: () => {} // Let SearchInput handle this
     },
     {
       key: 'd',
