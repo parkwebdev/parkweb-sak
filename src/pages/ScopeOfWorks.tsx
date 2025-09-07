@@ -26,6 +26,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { formatDate, getBadgeVariant } from '@/lib/status-helpers';
 import { useToast } from '@/hooks/use-toast';
 import { useNotifications } from '@/hooks/useNotifications';
@@ -580,145 +581,255 @@ const ScopeOfWorks = () => {
         </main>
       </div>
 
-      {/* View/Edit Dialog */}
-      <Dialog open={!!selectedSow} onOpenChange={() => setSelectedSow(null)}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center justify-between">
-              {isEditing ? 'Edit Scope of Work' : 'View Scope of Work'}
-              <div className="flex items-center gap-2">
-                {!isEditing && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setIsEditing(true)}
-                  >
-                    <Edit className="h-4 w-4 mr-1" />
-                    Edit
-                  </Button>
-                )}
-                {isEditing && (
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setIsEditing(false)}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      size="sm"
-                      onClick={async () => {
-                        // Handle save logic here
-                        if (selectedSow) {
-                          const { error } = await supabase
-                            .from('scope_of_works')
-                            .update({
-                              title: editedTitle,
-                              content: editedContent,
-                              date_modified: new Date().toISOString()
-                            })
-                            .eq('id', selectedSow.id);
-                          
-                          if (error) {
-                            toast({
-                              title: "Error",
-                              description: "Failed to save changes.",
-                              variant: "destructive",
-                            });
-                          } else {
-                            toast({
-                              title: "Saved",
-                              description: "Scope of work updated successfully.",
-                            });
-                            setIsEditing(false);
-                            fetchScopeOfWorks();
-                          }
-                        }
-                      }}
-                    >
-                      Save Changes
-                    </Button>
+      {/* View/Edit Slideout */}
+      <Sheet open={!!selectedSow} onOpenChange={() => setSelectedSow(null)}>
+        <SheetContent className="w-[600px] sm:w-[800px] overflow-y-auto">
+          <SheetHeader className="mb-6">
+            <SheetTitle>
+              {isEditing ? 'Edit Scope of Work' : 'Scope of Work Details'}
+            </SheetTitle>
+            <SheetDescription>
+              {selectedSow && `${selectedSow.client} - ${selectedSow.project_type}`}
+            </SheetDescription>
+          </SheetHeader>
+
+          {selectedSow && (
+            <div className="space-y-8">
+              {/* Client Info Section */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-foreground">Client Information</h3>
+                  <Badge variant={getBadgeVariant(selectedSow.status)}>
+                    {selectedSow.status}
+                  </Badge>
+                </div>
+                <div className="grid grid-cols-2 gap-4 p-4 bg-muted/30 rounded-lg">
+                  <div>
+                    <Label className="text-sm font-medium text-muted-foreground">Client Name</Label>
+                    <p className="text-sm font-medium">{selectedSow.client}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium text-muted-foreground">Contact Person</Label>
+                    <p className="text-sm font-medium">{selectedSow.client_contact}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium text-muted-foreground">Email</Label>
+                    <p className="text-sm font-medium">{selectedSow.email}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium text-muted-foreground">Industry</Label>
+                    <p className="text-sm font-medium">{selectedSow.industry}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium text-muted-foreground">Project Type</Label>
+                    <p className="text-sm font-medium">{selectedSow.project_type}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium text-muted-foreground">Pages</Label>
+                    <p className="text-sm font-medium">{selectedSow.pages}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium text-muted-foreground">Date Created</Label>
+                    <p className="text-sm font-medium">{formatDate(selectedSow.date_created)}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium text-muted-foreground">Last Modified</Label>
+                    <p className="text-sm font-medium">{formatDate(selectedSow.date_modified)}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Client Answers Section */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-foreground">Client Answers</h3>
+                <div className="p-4 bg-muted/30 rounded-lg">
+                  <Label className="text-sm font-medium text-muted-foreground">Onboarding Response</Label>
+                  <p className="text-sm mt-2">
+                    Based on their {selectedSow.industry} business requirements and {selectedSow.project_type} project needs.
+                  </p>
+                  {selectedSow.integrations && selectedSow.integrations.length > 0 && (
+                    <div className="mt-4">
+                      <Label className="text-sm font-medium text-muted-foreground">Required Integrations</Label>
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {selectedSow.integrations.map((integration, index) => (
+                          <Badge key={index} variant="outline" className="text-xs">
+                            {integration}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Scope of Work Generated Section */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-foreground">Generated Scope of Work</h3>
+                  <div className="flex gap-2">
+                    {!isEditing && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setIsEditing(true);
+                          setEditedTitle(selectedSow.title);
+                          setEditedContent(selectedSow.content);
+                        }}
+                      >
+                        <Edit className="h-4 w-4 mr-2" />
+                        Edit
+                      </Button>
+                    )}
+                    {isEditing && (
+                      <>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setIsEditing(false)}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={async () => {
+                            try {
+                              const { error } = await supabase
+                                .from('scope_of_works')
+                                .update({
+                                  title: editedTitle,
+                                  content: editedContent,
+                                  updated_at: new Date().toISOString(),
+                                  date_modified: new Date().toISOString()
+                                })
+                                .eq('id', selectedSow.id);
+
+                              if (error) {
+                                toast({
+                                  title: "Error",
+                                  description: "Failed to update scope of work.",
+                                  variant: "destructive",
+                                });
+                                return;
+                              }
+
+                              setIsEditing(false);
+                              await fetchScopeOfWorks();
+                              setSelectedSow(null);
+                              
+                              toast({
+                                title: "Updated",
+                                description: "Scope of work has been updated successfully.",
+                              });
+                            } catch (error) {
+                              toast({
+                                title: "Error",
+                                description: "Failed to update scope of work.",
+                                variant: "destructive",
+                              });
+                            }
+                          }}
+                        >
+                          Save Changes
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {isEditing ? (
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="title">Title</Label>
+                      <Input
+                        id="title"
+                        value={editedTitle}
+                        onChange={(e) => setEditedTitle(e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="content">Content</Label>
+                      <Textarea
+                        id="content"
+                        value={editedContent}
+                        onChange={(e) => setEditedContent(e.target.value)}
+                        rows={15}
+                        className="text-sm font-mono"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="p-4 bg-muted/30 rounded-lg">
+                      <h4 className="font-semibold text-foreground mb-2">{selectedSow.title}</h4>
+                      <div className="whitespace-pre-wrap text-sm bg-background p-4 rounded border">
+                        {selectedSow.content}
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
-            </DialogTitle>
-            <DialogDescription>
-              {selectedSow && `${selectedSow.client} - ${selectedSow.project_type}`}
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4">
-            {isEditing ? (
-                <div className="space-y-6">
-                  <div>
-                    <Label htmlFor="title">Title</Label>
-                    <Input
-                      id="title"
-                      value={editedTitle}
-                      onChange={(e) => setEditedTitle(e.target.value)}
+
+              {/* Files Section */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold text-foreground">Client Files</h3>
+                <div className="space-y-4">
+                  {selectedSow.branding_files && Array.isArray(selectedSow.branding_files) && selectedSow.branding_files.length > 0 ? (
+                    <FileViewer
+                      files={selectedSow.branding_files as FileUploadResult[]}
+                      title="Branding Files"
                     />
-                  </div>
-                  <div>
-                    <Label htmlFor="content">Content</Label>
-                    <Textarea
-                      id="content"
-                      value={editedContent}
-                      onChange={(e) => setEditedContent(e.target.value)}
-                      rows={20}
-                      className="text-sm font-mono"
-                    />
-                  </div>
-                  
-                  {/* File Viewer Section */}
-                  <div className="space-y-4">
-                    {selectedSow.branding_files && Array.isArray(selectedSow.branding_files) && selectedSow.branding_files.length > 0 && (
-                      <FileViewer
-                        files={selectedSow.branding_files as FileUploadResult[]}
-                        title="Branding Files"
-                      />
-                    )}
-                    
-                    {selectedSow.content_files && Array.isArray(selectedSow.content_files) && selectedSow.content_files.length > 0 && (
-                      <FileViewer
-                        files={selectedSow.content_files as FileUploadResult[]}
-                        title="Content Files"
-                      />
-                    )}
-                  </div>
-                </div>
-            ) : (
-              selectedSow && (
-                <div className="space-y-6">
-                  <div className="prose max-w-none">
-                    <h2 className="text-xl font-semibold mb-4">{selectedSow.title}</h2>
-                    <div className="whitespace-pre-wrap bg-muted p-4 rounded-md">
-                      {selectedSow.content}
+                  ) : (
+                    <div className="p-4 bg-muted/30 rounded-lg">
+                      <p className="text-sm text-muted-foreground">No branding files uploaded</p>
                     </div>
-                  </div>
+                  )}
                   
-                  {/* File Viewer Section for View Mode */}
-                  <div className="space-y-4">
-                    {selectedSow.branding_files && Array.isArray(selectedSow.branding_files) && selectedSow.branding_files.length > 0 && (
-                      <FileViewer
-                        files={selectedSow.branding_files as FileUploadResult[]}
-                        title="Branding Files"
-                      />
-                    )}
-                    
-                    {selectedSow.content_files && Array.isArray(selectedSow.content_files) && selectedSow.content_files.length > 0 && (
-                      <FileViewer
-                        files={selectedSow.content_files as FileUploadResult[]}
-                        title="Content Files"
-                      />
-                    )}
-                  </div>
+                  {selectedSow.content_files && Array.isArray(selectedSow.content_files) && selectedSow.content_files.length > 0 ? (
+                    <FileViewer
+                      files={selectedSow.content_files as FileUploadResult[]}
+                      title="Content Files"
+                    />
+                  ) : (
+                    <div className="p-4 bg-muted/30 rounded-lg">
+                      <p className="text-sm text-muted-foreground">No content files uploaded</p>
+                    </div>
+                  )}
                 </div>
-              )
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-4 border-t">
+                <Button
+                  variant="outline"
+                  onClick={() => generateScopeOfWorkPDF(selectedSow)}
+                  className="flex-1"
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Download PDF
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => generateScopeOfWorkDOC(selectedSow)}
+                  className="flex-1"
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Download DOC
+                </Button>
+                {selectedSow.status !== 'Approved' && (
+                  <Button
+                    onClick={() => handleApproveSow(selectedSow)}
+                    className="flex-1"
+                  >
+                    <Check className="h-4 w-4 mr-2" />
+                    Approve SOW
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
 
       <DeleteConfirmationDialog
         open={showDeleteDialog}
