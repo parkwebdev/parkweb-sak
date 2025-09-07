@@ -463,7 +463,6 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
         <Table className="min-w-[800px]">
           <TableHeader>
             <TableRow>
-              <TableHead className="w-12"></TableHead>
               {columnOrder.map(column => {
                 if (!showColumns[column as keyof typeof showColumns]) return null;
                 
@@ -525,7 +524,6 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
           <TableBody>
             {filteredData.map((row) => (
               <TableRow key={row.id}>
-                <TableCell></TableCell>
                 {columnOrder.map(column => {
                   if (!showColumns[column as keyof typeof showColumns]) return null;
                   
