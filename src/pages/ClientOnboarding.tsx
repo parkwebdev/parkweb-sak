@@ -434,9 +434,11 @@ const ClientOnboarding = () => {
 
   const handleFinalSubmit = async () => {
     try {
+      console.log('Starting form submission...');
       setIsGeneratingSOW(true);
       
       // First, save the submission to the database
+      console.log('Saving submission to database...');
       const { data: submission, error: submissionError } = await supabase
         .from('onboarding_submissions')
         .insert({
@@ -455,11 +457,15 @@ const ClientOnboarding = () => {
 
       if (submissionError) {
         console.error('Error submitting onboarding:', submissionError);
+        alert('There was an error submitting your form. Please try again.');
         setIsGeneratingSOW(false);
         return;
       }
 
+      console.log('Submission saved successfully:', submission);
+
       // Now generate the SOW using OpenAI
+      console.log('Generating SOW...');
       const { data: generatedSOW, error: sowError } = await supabase.functions.invoke('generate-scope-of-work', {
         body: {
           clientData: {
@@ -476,11 +482,15 @@ const ClientOnboarding = () => {
 
       if (sowError) {
         console.error('Error generating SOW:', sowError);
+        alert('There was an error generating your scope of work. Your submission was saved but the SOW could not be generated.');
         setIsGeneratingSOW(false);
         return;
       }
 
+      console.log('SOW generated successfully:', generatedSOW);
+
       // Save the generated SOW to the scope_of_works table
+      console.log('Saving SOW to database...');
       const { error: sowSaveError } = await supabase
         .from('scope_of_works')
         .insert({
@@ -498,7 +508,10 @@ const ClientOnboarding = () => {
 
       if (sowSaveError) {
         console.error('Error saving generated SOW:', sowSaveError);
+        alert('There was an error saving the generated SOW. Your submission was saved but the SOW could not be stored.');
       }
+
+      console.log('Process completed successfully');
 
       // Clear saved draft
       localStorage.removeItem('onboardingDraft');
@@ -508,6 +521,7 @@ const ClientOnboarding = () => {
       setShowSOW(false);
     } catch (error) {
       console.error('Error in handleFinalSubmit:', error);
+      alert('An unexpected error occurred. Please try again.');
       setIsGeneratingSOW(false);
     }
   };
@@ -1167,8 +1181,13 @@ const ClientOnboarding = () => {
       </Dialog>
 
       {/* Loading Dialog for SOW Generation */}
-      <Dialog open={isGeneratingSOW} onOpenChange={() => {}}>
-        <DialogContent className="max-w-md">
+      <Dialog open={isGeneratingSOW} onOpenChange={(open) => {
+        // Prevent closing the dialog while generating
+        if (!open && isGeneratingSOW) {
+          return;
+        }
+      }}>
+        <DialogContent className="max-w-md" onPointerDownOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-3">
               <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div>
