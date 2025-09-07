@@ -208,9 +208,11 @@ export type Database = {
       }
       onboarding_submissions: {
         Row: {
+          branding_files: Json | null
           budget_range: string | null
           client_email: string
           client_name: string
+          content_files: Json | null
           description: string | null
           id: string
           industry: string | null
@@ -221,9 +223,11 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          branding_files?: Json | null
           budget_range?: string | null
           client_email: string
           client_name: string
+          content_files?: Json | null
           description?: string | null
           id?: string
           industry?: string | null
@@ -234,9 +238,11 @@ export type Database = {
           user_id: string
         }
         Update: {
+          branding_files?: Json | null
           budget_range?: string | null
           client_email?: string
           client_name?: string
+          content_files?: Json | null
           description?: string | null
           id?: string
           industry?: string | null

@@ -16,6 +16,8 @@ import { AddressAutocomplete } from '@/components/AddressAutocomplete';
 import { FormDebugIndicator } from '@/components/FormDebugIndicator';
 import { UploadCloud01, Plus, X } from '@untitledui/icons';
 import { validateFormState, sanitizeFormData, logFormStateChange } from '@/utils/form-state-validator';
+import { FileUploadArea } from '@/components/FileUploadArea';
+import { uploadMultipleFiles, FileUploadResult } from '@/lib/file-upload';
 
 interface OnboardingData {
   // Company Information
@@ -41,9 +43,9 @@ interface OnboardingData {
   currentWebsite: string;
   competitorWebsites: string[];
   brandingAssets: boolean;
-  brandingFiles: FileList | null;
+  brandingFiles: FileUploadResult[];
   contentReady: boolean;
-  contentFiles: FileList | null;
+  contentFiles: FileUploadResult[];
   additionalNotes: string;
   
   currentStep: number;
@@ -248,9 +250,9 @@ const ClientOnboarding = () => {
       currentWebsite: '',
       competitorWebsites: [''],
       brandingAssets: false,
-      brandingFiles: null,
+      brandingFiles: [],
       contentReady: false,
-      contentFiles: null,
+      contentFiles: [],
       additionalNotes: '',
       currentStep: 1
     };
@@ -271,6 +273,10 @@ const ClientOnboarding = () => {
   const [sowData, setSowData] = useState(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isGeneratingSOW, setIsGeneratingSOW] = useState(false);
+  const [uploadingBranding, setUploadingBranding] = useState(false);
+  const [uploadingContent, setUploadingContent] = useState(false);
+  const [brandingUploadProgress, setBrandingUploadProgress] = useState(0);
+  const [contentUploadProgress, setContentUploadProgress] = useState(0);
 
   // Email validation function
   const isValidEmail = (email: string): boolean => {
@@ -489,6 +495,58 @@ const ClientOnboarding = () => {
     }));
   };
 
+  const handleBrandingFilesUpload = async (files: FileList) => {
+    setUploadingBranding(true);
+    setBrandingUploadProgress(0);
+    
+    try {
+      const uploadedFiles = await uploadMultipleFiles(
+        files, 
+        '00000000-0000-0000-0000-000000000000', // Public user ID for client uploads
+        'branding',
+        (completed, total) => setBrandingUploadProgress((completed / total) * 100)
+      );
+      
+      updateData('brandingFiles', [...onboardingData.brandingFiles, ...uploadedFiles]);
+    } catch (error) {
+      console.error('Error uploading branding files:', error);
+      alert('Failed to upload branding files. Please try again.');
+    } finally {
+      setUploadingBranding(false);
+      setBrandingUploadProgress(0);
+    }
+  };
+
+  const handleContentFilesUpload = async (files: FileList) => {
+    setUploadingContent(true);
+    setContentUploadProgress(0);
+    
+    try {
+      const uploadedFiles = await uploadMultipleFiles(
+        files,
+        '00000000-0000-0000-0000-000000000000', // Public user ID for client uploads
+        'content',
+        (completed, total) => setContentUploadProgress((completed / total) * 100)
+      );
+      
+      updateData('contentFiles', [...onboardingData.contentFiles, ...uploadedFiles]);
+    } catch (error) {
+      console.error('Error uploading content files:', error);
+      alert('Failed to upload content files. Please try again.');
+    } finally {
+      setUploadingContent(false);
+      setContentUploadProgress(0);
+    }
+  };
+
+  const removeBrandingFile = (index: number) => {
+    updateData('brandingFiles', onboardingData.brandingFiles.filter((_, i) => i !== index));
+  };
+
+  const removeContentFile = (index: number) => {
+    updateData('contentFiles', onboardingData.contentFiles.filter((_, i) => i !== index));
+  };
+
   const nextStep = () => {
     const currentStepValid = validateCurrentStep();
     console.log(`➡️ Next step requested from ${onboardingData.currentStep}. Valid:`, currentStepValid);
@@ -547,7 +605,9 @@ const ClientOnboarding = () => {
           budget_range: 'Not specified',
           timeline: 'Not specified',
           description: JSON.stringify(onboardingData),
-          status: 'pending'
+          status: 'pending',
+          branding_files: JSON.stringify(onboardingData.brandingFiles),
+          content_files: JSON.stringify(onboardingData.contentFiles)
         })
         .select()
         .maybeSingle();
@@ -1068,61 +1128,29 @@ const ClientOnboarding = () => {
               </div>
 
               {onboardingData.brandingAssets && (
-                <div className="w-full">
-                  <Label className="text-sm font-medium mb-2 block">
-                    Upload Branding Assets
-                  </Label>
-                  <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center hover:border-muted-foreground/50 transition-colors">
-                    <UploadCloud01 className="h-8 w-8 text-muted-foreground mx-auto mb-3" />
-                    <div className="mb-2">
-                      <Label htmlFor="brandingFiles" className="cursor-pointer text-sm font-medium text-primary hover:text-primary/80">
-                        Choose files
-                      </Label>
-                      <span className="text-sm text-muted-foreground"> or drag and drop</span>
-                    </div>
-                    <Input
-                      id="brandingFiles"
-                      type="file"
-                      multiple
-                      accept=".svg,.eps,.ai,.pdf,.png,.jpg,.jpeg"
-                      onChange={(e) => updateData('brandingFiles', e.target.files)}
-                      className="hidden"
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      We prefer vector formats like SVG, EPS, AI, or PDF files when possible. 
-                      You can also upload high-resolution PNG or JPG files.
-                    </p>
-                  </div>
-                </div>
+                <FileUploadArea
+                  title="Upload Branding Assets"
+                  description="We prefer vector formats like SVG, EPS, AI, or PDF files when possible. You can also upload high-resolution PNG or JPG files."
+                  onFilesSelected={handleBrandingFilesUpload}
+                  uploadedFiles={onboardingData.brandingFiles}
+                  onRemoveFile={removeBrandingFile}
+                  uploading={uploadingBranding}
+                  uploadProgress={brandingUploadProgress}
+                  accept=".svg,.eps,.ai,.pdf,.png,.jpg,.jpeg"
+                />
               )}
 
               {onboardingData.contentReady && (
-                <div className="w-full">
-                  <Label className="text-sm font-medium mb-2 block">
-                    Upload Content Files
-                  </Label>
-                  <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center hover:border-muted-foreground/50 transition-colors">
-                    <UploadCloud01 className="h-8 w-8 text-muted-foreground mx-auto mb-3" />
-                    <div className="mb-2">
-                      <Label htmlFor="contentFiles" className="cursor-pointer text-sm font-medium text-primary hover:text-primary/80">
-                        Choose files
-                      </Label>
-                      <span className="text-sm text-muted-foreground"> or drag and drop</span>
-                    </div>
-                    <Input
-                      id="contentFiles"
-                      type="file"
-                      multiple
-                      accept=".doc,.docx,.pdf,.docm"
-                      onChange={(e) => updateData('contentFiles', e.target.files)}
-                      className="hidden"
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Upload your content in DOC, DOCX, PDF, or DOCM format.
-                      These will be used to populate your website with your text content.
-                    </p>
-                  </div>
-                </div>
+                <FileUploadArea
+                  title="Upload Content Files"
+                  description="Upload your content in DOC, DOCX, PDF, or DOCM format. These will be used to populate your website with your text content."
+                  onFilesSelected={handleContentFilesUpload}
+                  uploadedFiles={onboardingData.contentFiles}
+                  onRemoveFile={removeContentFile}
+                  uploading={uploadingContent}
+                  uploadProgress={contentUploadProgress}
+                  accept=".doc,.docx,.pdf,.docm"
+                />
               )}
               <div>
                 <Label htmlFor="additionalNotes" className="text-sm font-medium mb-2 block">Additional notes or questions</Label>

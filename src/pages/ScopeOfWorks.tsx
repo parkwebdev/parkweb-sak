@@ -32,6 +32,8 @@ import { useNotifications } from '@/hooks/useNotifications';
 import { useEmailTemplates } from '@/hooks/useEmailTemplates';
 import { generateScopeOfWorkPDF, generateScopeOfWorkDOC } from '@/lib/document-generator';
 import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog';
+import { FileViewer } from '@/components/FileViewer';
+import { FileUploadResult } from '@/lib/file-upload';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -68,6 +70,8 @@ interface ScopeOfWork {
   pages: number;
   integrations: string[];
   content: string;
+  branding_files?: string;
+  content_files?: string;
 }
 
 const ScopeOfWorks = () => {
@@ -130,7 +134,7 @@ const ScopeOfWorks = () => {
       setLoading(true);
       const { data, error } = await supabase
         .from('scope_of_works')
-        .select('*')
+        .select('*, branding_files, content_files')
         .order('date_modified', { ascending: false });
 
       if (error) {
@@ -646,32 +650,68 @@ const ScopeOfWorks = () => {
           
           <div className="space-y-4">
             {isEditing ? (
-              <>
-                <div>
-                  <Label htmlFor="title">Title</Label>
-                  <Input
-                    id="title"
-                    value={editedTitle}
-                    onChange={(e) => setEditedTitle(e.target.value)}
-                  />
+                <div className="space-y-6">
+                  <div>
+                    <Label htmlFor="title">Title</Label>
+                    <Input
+                      id="title"
+                      value={editedTitle}
+                      onChange={(e) => setEditedTitle(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="content">Content</Label>
+                    <Textarea
+                      id="content"
+                      value={editedContent}
+                      onChange={(e) => setEditedContent(e.target.value)}
+                      rows={20}
+                      className="text-sm font-mono"
+                    />
+                  </div>
+                  
+                  {/* File Viewer Section */}
+                  <div className="space-y-4">
+                    {selectedSow && selectedSow.branding_files && (
+                      <FileViewer
+                        files={JSON.parse(selectedSow.branding_files) as FileUploadResult[]}
+                        title="Branding Files"
+                      />
+                    )}
+                    
+                    {selectedSow && selectedSow.content_files && (
+                      <FileViewer
+                        files={JSON.parse(selectedSow.content_files) as FileUploadResult[]}
+                        title="Content Files"
+                      />
+                    )}
+                  </div>
                 </div>
-                <div>
-                  <Label htmlFor="content">Content</Label>
-                  <Textarea
-                    id="content"
-                    value={editedContent}
-                    onChange={(e) => setEditedContent(e.target.value)}
-                    rows={20}
-                    className="font-mono text-sm"
-                  />
-                </div>
-              </>
             ) : (
               selectedSow && (
-                <div className="prose max-w-none">
-                  <h2 className="text-xl font-semibold mb-4">{selectedSow.title}</h2>
-                  <div className="whitespace-pre-wrap bg-muted p-4 rounded-md">
-                    {selectedSow.content}
+                <div className="space-y-6">
+                  <div className="prose max-w-none">
+                    <h2 className="text-xl font-semibold mb-4">{selectedSow.title}</h2>
+                    <div className="whitespace-pre-wrap bg-muted p-4 rounded-md">
+                      {selectedSow.content}
+                    </div>
+                  </div>
+                  
+                  {/* File Viewer Section for View Mode */}
+                  <div className="space-y-4">
+                    {selectedSow.branding_files && (
+                      <FileViewer
+                        files={JSON.parse(selectedSow.branding_files) as FileUploadResult[]}
+                        title="Branding Files"
+                      />
+                    )}
+                    
+                    {selectedSow.content_files && (
+                      <FileViewer
+                        files={JSON.parse(selectedSow.content_files) as FileUploadResult[]}
+                        title="Content Files"
+                      />
+                    )}
                   </div>
                 </div>
               )
