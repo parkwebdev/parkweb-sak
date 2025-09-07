@@ -212,11 +212,12 @@ const ScopeOfWorks = () => {
         return;
       }
 
-      console.log('SOW status updated, sending email to client:', sow.email);
+      console.log('SOW status updated to Approved, sending email to client:', sow.email);
       
-      // Send SOW approval email
+      // Send SOW approval email to the CLIENT's email address
       try {
-        console.log('Calling send-stage-email with data:', {
+        console.log('Sending approval email to CLIENT email:', sow.email);
+        console.log('Email data being sent:', {
           templateName: 'sow_approval',
           clientEmail: sow.email,
           variables: {
@@ -229,7 +230,7 @@ const ScopeOfWorks = () => {
         const { data: emailData, error: emailError } = await supabase.functions.invoke('send-stage-email', {
           body: {
             templateName: 'sow_approval',
-            clientEmail: sow.email,
+            clientEmail: sow.email, // This is the CLIENT's email from the SOW
             variables: {
               client_name: sow.client,
               company_name: sow.client,
@@ -244,27 +245,28 @@ const ScopeOfWorks = () => {
           console.error('Error sending SOW approval email:', emailError);
           toast({
             title: "Warning",
-            description: "SOW approved but failed to send email notification.",
+            description: `SOW approved but failed to send email to ${sow.email}`,
             variant: "destructive",
           });
         } else {
-          console.log('Email sent successfully to:', sow.email);
-          toast({
-            title: "SOW Approved",
-            description: `SOW approved for ${sow.client}. Email sent to ${sow.email}`,
-          });
+          console.log('Approval email sent successfully to CLIENT:', sow.email);
         }
       } catch (emailError) {
         console.error('Error sending SOW approval email:', emailError);
         toast({
           title: "Warning", 
-          description: "SOW approved but failed to send email notification.",
+          description: `SOW approved but failed to send email to ${sow.email}`,
           variant: "destructive",
         });
       }
 
-      // Refresh the data
+      // Refresh the data to show updated status and hide approve button
       await fetchScopeOfWorks();
+      
+      toast({
+        title: "SOW Approved",
+        description: `SOW approved for ${sow.client}. Approval email sent to ${sow.email}`,
+      });
       
     } catch (error) {
       console.error('Error approving SOW:', error);
