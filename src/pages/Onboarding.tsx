@@ -714,9 +714,7 @@ const Onboarding = () => {
                               {selectedForDelete.length} selected
                             </span>
                           )}
-                        </div>
-                        
-                        <div className="flex items-center gap-3">
+                          
                           {/* Tab Navigation */}
                           <div className="overflow-x-auto">
                             <div className="border shadow-sm flex overflow-hidden text-xs text-foreground font-medium leading-none rounded-md border-border min-w-max">
@@ -746,16 +744,16 @@ const Onboarding = () => {
                               })}
                             </div>
                           </div>
-                          
-                          {/* Filter and Settings */}
-                          <div className="flex items-center gap-2">
-                            <Button variant="outline" size="sm" className="h-8 px-2">
-                              <FilterLines className="h-4 w-4" />
-                            </Button>
-                            <Button variant="outline" size="sm" className="h-8 px-2">
-                              <Settings01 className="h-4 w-4" />
-                            </Button>
-                          </div>
+                        </div>
+                        
+                        {/* Filter and Settings */}
+                        <div className="flex items-center gap-2">
+                          <Button variant="outline" size="sm" className="h-8 px-2">
+                            <FilterLines className="h-4 w-4" />
+                          </Button>
+                          <Button variant="outline" size="sm" className="h-8 px-2">
+                            <Settings01 className="h-4 w-4" />
+                          </Button>
                         </div>
                       </div>
                     </div>
