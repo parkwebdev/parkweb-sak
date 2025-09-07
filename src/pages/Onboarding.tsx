@@ -59,6 +59,7 @@ const Onboarding = () => {
     email: '',
     industry: ''
   });
+  const [activeFilter, setActiveFilter] = useState('View all');
   const { toast } = useToast();
   const { user } = useAuth();
   const { sendWelcomeEmail } = useEmailTemplates();
@@ -387,11 +388,20 @@ const Onboarding = () => {
   };
 
   const toggleAllSelection = () => {
+    const filteredLinks = getFilteredClientLinks();
     setSelectedForDelete(
-      selectedForDelete.length === clientLinks.length 
+      selectedForDelete.length === filteredLinks.length 
         ? [] 
-        : clientLinks.map(link => link.id)
+        : filteredLinks.map(link => link.id)
     );
+  };
+
+  // Filter function for client links
+  const getFilteredClientLinks = () => {
+    if (activeFilter === 'View all') {
+      return clientLinks;
+    }
+    return clientLinks.filter(link => link.status === activeFilter);
   };
 
   // Bulk export function
@@ -697,24 +707,49 @@ const Onboarding = () => {
                   Manage all your client onboarding links and track their progress
                 </CardDescription>
               </CardHeader>
-               <CardContent className="p-0">
-                   <div className="border-b border-border px-4 py-3 flex items-center gap-3">
-                     <button
-                       onClick={toggleAllSelection}
-                       className="flex items-center justify-center w-5"
-                     >
-                       <div className={`border flex min-h-5 w-5 h-5 rounded-md border-solid border-border items-center justify-center ${
-                         selectedForDelete.length === clientLinks.length && clientLinks.length > 0 ? 'bg-primary border-primary' : 'bg-background'
-                       }`}>
-                         {selectedForDelete.length === clientLinks.length && clientLinks.length > 0 && (
-                           <Check size={12} className="text-primary-foreground" />
-                         )}
-                       </div>
-                     </button>
-                     <span className="text-sm text-muted-foreground">
-                       {selectedForDelete.length > 0 ? `${selectedForDelete.length} selected` : 'Select all'}
-                     </span>
-                   </div>
+                <CardContent className="p-0">
+                    <div className="border-b border-border px-4 py-3 flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={toggleAllSelection}
+                          className="flex items-center justify-center w-5"
+                        >
+                          <div className={`border flex min-h-5 w-5 h-5 rounded-md border-solid border-border items-center justify-center ${
+                            selectedForDelete.length === getFilteredClientLinks().length && getFilteredClientLinks().length > 0 ? 'bg-primary border-primary' : 'bg-background'
+                          }`}>
+                            {selectedForDelete.length === getFilteredClientLinks().length && getFilteredClientLinks().length > 0 && (
+                              <Check size={12} className="text-primary-foreground" />
+                            )}
+                          </div>
+                        </button>
+                        {selectedForDelete.length > 0 && (
+                          <span className="text-sm text-muted-foreground">
+                            {selectedForDelete.length} selected
+                          </span>
+                        )}
+                      </div>
+                      
+                      {/* Tab Navigation */}
+                      <div className="flex items-center gap-0.5 text-xs leading-none bg-muted rounded-md border-border min-w-max">
+                        {['View all', 'Sent', 'In Progress', 'Completed', 'SOW Generated', 'Approved'].map((tab) => (
+                          <button
+                            key={tab}
+                            onClick={() => setActiveFilter(tab)}
+                            className={`justify-center items-center flex min-h-7 gap-1.5 overflow-hidden px-2.5 py-1.5 rounded-sm whitespace-nowrap ${
+                              activeFilter === tab
+                                ? 'border shadow-sm text-foreground bg-background border-border'
+                                : 'text-muted-foreground hover:bg-background/50'
+                            }`}
+                          >
+                            <div className={`text-xs leading-4 ${
+                              activeFilter === tab ? 'text-foreground' : 'text-muted-foreground'
+                            }`}>
+                              {tab}
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                 {clientLinks.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
                     <Link2 className="h-12 w-12 text-muted-foreground/50 mb-4" />
@@ -727,9 +762,9 @@ const Onboarding = () => {
                       Create Onboarding Link
                     </Button>
                   </div>
-                ) : (
-                  <div className="divide-y divide-border">
-                    {clientLinks.map((link) => (
+                 ) : (
+                   <div className="divide-y divide-border">
+                     {getFilteredClientLinks().map((link) => (
                       <div key={link.id} className="px-4 py-4">
                         <div className="flex items-start gap-3">
                            <button
