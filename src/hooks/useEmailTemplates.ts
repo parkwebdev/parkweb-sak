@@ -8,7 +8,7 @@ interface EmailTemplate {
   subject: string;
   html_content: string;
   text_content?: string;
-  variables: Record<string, any>;
+  variables: any; // Using any to handle Json type from Supabase
   active: boolean;
   created_at: string;
   updated_at: string;
@@ -21,45 +21,19 @@ export const useEmailTemplates = () => {
 
   const fetchTemplates = async () => {
     try {
-      // Skip database query for now - templates will be available once types regenerate
-      // Using fallback templates that match our database setup
-      const fallbackTemplates: EmailTemplate[] = [
-        {
-          id: '1',
-          name: 'welcome',
-          subject: 'Welcome to Our Onboarding Process',
-          html_content: '<h1>Welcome {{client_name}}!</h1><p>Thank you for starting the onboarding process for {{company_name}}. Please click <a href="{{onboarding_url}}">here</a> to continue.</p>',
-          text_content: 'Welcome {{client_name}}! Thank you for starting the onboarding process for {{company_name}}. Please visit: {{onboarding_url}}',
-          variables: { client_name: 'Client Name', company_name: 'Company Name', onboarding_url: 'URL' },
-          active: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        },
-        {
-          id: '2',
-          name: 'reminder',
-          subject: 'Complete Your Onboarding - {{company_name}}',
-          html_content: '<h1>Don\'t forget to complete your onboarding!</h1><p>Hi {{client_name}}, you started the onboarding process for {{company_name}} but haven\'t finished yet. <a href="{{onboarding_url}}">Click here to continue</a> where you left off.</p>',
-          text_content: 'Hi {{client_name}}, you started the onboarding process for {{company_name}} but haven\'t finished yet. Continue at: {{onboarding_url}}',
-          variables: { client_name: 'Client Name', company_name: 'Company Name', onboarding_url: 'URL' },
-          active: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        },
-        {
-          id: '3',
-          name: 'completion',
-          subject: 'Onboarding Complete - {{company_name}}',
-          html_content: '<h1>Thank you for completing your onboarding!</h1><p>Hi {{client_name}}, we\'ve received your completed onboarding for {{company_name}}. Our team will review it and be in touch soon.</p>',
-          text_content: 'Hi {{client_name}}, we\'ve received your completed onboarding for {{company_name}}. Our team will review it and be in touch soon.',
-          variables: { client_name: 'Client Name', company_name: 'Company Name' },
-          active: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }
-      ];
+      const { data, error } = await supabase
+        .from('email_templates')
+        .select('*')
+        .eq('active', true)
+        .order('name');
 
-      setTemplates(fallbackTemplates);
+      if (error) {
+        console.error('Error fetching email templates:', error);
+        setTemplates([]);
+        return;
+      }
+
+      setTemplates(data || []);
     } catch (error) {
       console.error('Error in fetchTemplates:', error);
       setTemplates([]);

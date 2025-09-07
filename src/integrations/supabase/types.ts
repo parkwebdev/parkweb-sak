@@ -65,6 +65,78 @@ export type Database = {
         }
         Relationships: []
       }
+      draft_submissions: {
+        Row: {
+          client_email: string
+          client_name: string
+          created_at: string
+          draft_data: Json
+          expires_at: string
+          id: string
+          resume_token: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          client_email: string
+          client_name: string
+          created_at?: string
+          draft_data?: Json
+          expires_at?: string
+          id?: string
+          resume_token?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          client_email?: string
+          client_name?: string
+          created_at?: string
+          draft_data?: Json
+          expires_at?: string
+          id?: string
+          resume_token?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      email_templates: {
+        Row: {
+          active: boolean | null
+          created_at: string
+          html_content: string
+          id: string
+          name: string
+          subject: string
+          text_content: string | null
+          updated_at: string
+          variables: Json | null
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string
+          html_content: string
+          id?: string
+          name: string
+          subject: string
+          text_content?: string | null
+          updated_at?: string
+          variables?: Json | null
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string
+          html_content?: string
+          id?: string
+          name?: string
+          subject?: string
+          text_content?: string | null
+          updated_at?: string
+          variables?: Json | null
+        }
+        Relationships: []
+      }
       notification_preferences: {
         Row: {
           browser_notifications: boolean | null
@@ -173,6 +245,39 @@ export type Database = {
           submitted_at?: string
           timeline?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      onboarding_templates: {
+        Row: {
+          active: boolean | null
+          created_at: string
+          description: string | null
+          form_fields: Json
+          id: string
+          industry: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string
+          description?: string | null
+          form_fields?: Json
+          id?: string
+          industry: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string
+          description?: string | null
+          form_fields?: Json
+          id?: string
+          industry?: string
+          name?: string
+          updated_at?: string
         }
         Relationships: []
       }
