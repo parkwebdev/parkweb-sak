@@ -13,7 +13,9 @@ import { ProgressBar } from '@/components/ProgressBar';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Badge } from '@/components/ui/badge';
 import { AddressAutocomplete } from '@/components/AddressAutocomplete';
+import { FormDebugIndicator } from '@/components/FormDebugIndicator';
 import { UploadCloud01, Plus, X } from '@untitledui/icons';
+import { validateFormState, sanitizeFormData, logFormStateChange } from '@/utils/form-state-validator';
 
 interface OnboardingData {
   // Company Information
@@ -214,29 +216,56 @@ const ClientOnboarding = () => {
   // Check if this is a fresh start (has URL params) or returning user
   const isFreshStart = !!(clientName && companyName && token);
   
-  const [onboardingData, setOnboardingData] = useState<OnboardingData>({
-    companyName: companyName,
-    industry: '',
-    website: '',
-    companyDescription: '',
-    contactName: clientName,
-    title: '',
-    email: '',
-    phone: '',
-    address: '',
-    projectGoals: '',
-    targetAudience: '',
-    audienceTags: [],
-    keyFeatures: [],
-    currentWebsite: '',
-    competitorWebsites: [''],
-    brandingAssets: false,
-    brandingFiles: null,
-    contentReady: false,
-    contentFiles: null,
-    additionalNotes: '',
-    currentStep: 1
-  });
+  // Enhanced debugging for form state management
+  React.useEffect(() => {
+    console.log('🔄 ClientOnboarding initialized with params:', {
+      clientName,
+      companyName,
+      token,
+      isFreshStart,
+      timestamp: new Date().toISOString()
+    });
+  }, []);
+  
+  // Initialize form data with strict pre-population control
+  const initializeFormData = (): OnboardingData => {
+    console.log('🏁 Initializing form data - Fresh start:', isFreshStart);
+    
+    const baseData: OnboardingData = {
+      companyName: '',
+      industry: '',
+      website: '',
+      companyDescription: '',
+      contactName: '',
+      title: '',
+      email: '',
+      phone: '',
+      address: '',
+      projectGoals: '',
+      targetAudience: '',
+      audienceTags: [],
+      keyFeatures: [],
+      currentWebsite: '',
+      competitorWebsites: [''],
+      brandingAssets: false,
+      brandingFiles: null,
+      contentReady: false,
+      contentFiles: null,
+      additionalNotes: '',
+      currentStep: 1
+    };
+
+    // Only pre-populate these specific fields from URL params
+    if (isFreshStart) {
+      console.log('📝 Pre-populating from URL params:', { clientName, companyName });
+      baseData.companyName = companyName;
+      baseData.contactName = clientName;
+    }
+
+    return baseData;
+  };
+
+  const [onboardingData, setOnboardingData] = useState<OnboardingData>(initializeFormData);
 
   const [showSOW, setShowSOW] = useState(false);
   const [sowData, setSowData] = useState(null);
@@ -284,22 +313,29 @@ const ClientOnboarding = () => {
     }
   };
 
-    // Auto-save functionality
-    React.useEffect(() => {
-      const saveInterval = setInterval(() => {
-        if (onboardingData.currentStep > 1) {
-          localStorage.setItem('onboardingDraft', JSON.stringify(onboardingData));
-        }
-      }, 30000); // Save every 30 seconds
+  // Enhanced auto-save functionality with safeguards
+  React.useEffect(() => {
+    // Don't auto-save for fresh starts during initial render
+    if (isFreshStart && onboardingData.currentStep === 1) {
+      console.log('⏸️ Skipping auto-save for fresh start at step 1');
+      return;
+    }
 
-      return () => clearInterval(saveInterval);
-    }, [onboardingData]);
+    const saveInterval = setInterval(() => {
+      if (onboardingData.currentStep > 1) {
+        console.log('💾 Auto-saving draft at step:', onboardingData.currentStep);
+        localStorage.setItem('onboardingDraft', JSON.stringify(onboardingData));
+      }
+    }, 30000); // Save every 30 seconds
 
-  // Load saved draft on component mount - but only if NOT a fresh start
+    return () => clearInterval(saveInterval);
+  }, [onboardingData, isFreshStart]);
+
+  // Enhanced draft loading with better state management
   React.useEffect(() => {
     // Don't load draft if this is a fresh start with URL parameters
     if (isFreshStart) {
-      // Clear any existing draft since this is a new onboarding session
+      console.log('🧹 Clearing existing draft for fresh start');
       localStorage.removeItem('onboardingDraft');
       return;
     }
@@ -307,11 +343,35 @@ const ClientOnboarding = () => {
     const savedDraft = localStorage.getItem('onboardingDraft');
     if (savedDraft) {
       try {
+        console.log('📖 Loading saved draft from localStorage');
         const parsedDraft = JSON.parse(savedDraft);
-        setOnboardingData(parsedDraft);
+        
+        // Validate draft data structure
+        if (parsedDraft && typeof parsedDraft === 'object' && parsedDraft.currentStep) {
+          // Sanitize and validate the draft data
+          const sanitizedDraft = sanitizeFormData(parsedDraft);
+          const validation = validateFormState(sanitizedDraft);
+          
+          if (validation.isValid) {
+            console.log('✅ Draft loaded successfully, resuming at step:', sanitizedDraft.currentStep);
+            if (validation.warnings.length > 0) {
+              console.warn('⚠️ Draft warnings:', validation.warnings);
+            }
+            setOnboardingData(sanitizedDraft);
+          } else {
+            console.error('❌ Draft validation failed:', validation.errors);
+            localStorage.removeItem('onboardingDraft');
+          }
+        } else {
+          console.warn('⚠️ Invalid draft data structure, ignoring');
+          localStorage.removeItem('onboardingDraft');
+        }
       } catch (error) {
-        console.error('Error loading saved draft:', error);
+        console.error('❌ Error loading saved draft:', error);
+        localStorage.removeItem('onboardingDraft');
       }
+    } else {
+      console.log('🆕 No saved draft found, starting fresh');
     }
   }, [isFreshStart]);
 
@@ -379,7 +439,15 @@ const ClientOnboarding = () => {
   };
 
   const updateData = (field: keyof OnboardingData, value: any) => {
-    setOnboardingData(prev => ({ ...prev, [field]: value }));
+    console.log(`📊 Updating field: ${field}`, { newValue: value, timestamp: new Date().toISOString() });
+    setOnboardingData(prev => {
+      const updated = { ...prev, [field]: value };
+      // Log step changes specifically
+      if (field === 'currentStep') {
+        console.log(`🚶 Step navigation: ${prev.currentStep} → ${value}`);
+      }
+      return updated;
+    });
   };
 
   const handleFeatureToggle = (feature: string) => {
@@ -422,18 +490,30 @@ const ClientOnboarding = () => {
   };
 
   const nextStep = () => {
-    if (!validateCurrentStep()) {
+    const currentStepValid = validateCurrentStep();
+    console.log(`➡️ Next step requested from ${onboardingData.currentStep}. Valid:`, currentStepValid);
+    
+    if (!currentStepValid) {
+      console.warn('⛔ Cannot proceed - current step validation failed');
       return;
     }
     
     if (onboardingData.currentStep < steps.length) {
-      updateData('currentStep', onboardingData.currentStep + 1);
+      const nextStepNum = onboardingData.currentStep + 1;
+      console.log(`✅ Advancing to step ${nextStepNum}`);
+      updateData('currentStep', nextStepNum);
+    } else {
+      console.log('🏁 Already at final step');
     }
   };
 
   const prevStep = () => {
     if (onboardingData.currentStep > 1) {
-      updateData('currentStep', onboardingData.currentStep - 1);
+      const prevStepNum = onboardingData.currentStep - 1;
+      console.log(`⬅️ Going back to step ${prevStepNum}`);
+      updateData('currentStep', prevStepNum);
+    } else {
+      console.log('🏁 Already at first step');
     }
   };
 
@@ -445,7 +525,13 @@ const ClientOnboarding = () => {
 
   const handleFinalSubmit = async () => {
     try {
-      console.log('Starting form submission...');
+      console.log('🚀 Starting final form submission...', {
+        step: onboardingData.currentStep,
+        companyName: onboardingData.companyName,
+        contactName: onboardingData.contactName,
+        email: onboardingData.email,
+        timestamp: new Date().toISOString()
+      });
       setIsGeneratingSOW(true);
       
       // First, save the submission to the database
@@ -1152,6 +1238,12 @@ const ClientOnboarding = () => {
         <div className="fixed bottom-6 left-6">
           <ThemeToggle />
         </div>
+
+        {/* Debug indicator in development */}
+        <FormDebugIndicator 
+          data={onboardingData}
+          isFreshStart={isFreshStart}
+        />
       </div>
 
       {/* Scope of Work Review Dialog */}
