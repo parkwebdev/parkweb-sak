@@ -75,6 +75,7 @@ const handler = async (req: Request): Promise<Response> => {
     const emailResponse = await resend.emails.send({
       from: "ParkWeb <hello@parkweb.app>",
       to: [clientEmail],
+      reply_to: "admin@park-web.com",
       subject: subject,
       html: htmlContent,
       text: textContent || undefined,
