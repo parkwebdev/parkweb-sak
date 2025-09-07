@@ -24,8 +24,8 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
   const progressWidth = Math.min(Math.max(percentage, 0), 100);
   
   return (
-    <div className={`w-full space-y-1 ${className}`}>
-      <div className="flex justify-between items-center">
+    <div className={`w-full ${className}`}>
+      <div className="flex justify-between items-center mb-1">
         <span className="text-xs text-muted-foreground">Progress</span>
         <span className="text-xs font-medium text-foreground">{percentage}%</span>
       </div>

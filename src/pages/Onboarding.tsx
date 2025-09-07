@@ -276,6 +276,70 @@ const Onboarding = () => {
     window.open(fullUrl, '_blank');
   };
 
+  const handleViewSOW = async (link: ClientLink) => {
+    // Navigate to the scope of works page and filter for this client's SOW
+    window.location.href = `/scope-of-works?client=${encodeURIComponent(link.client_name)}`;
+  };
+
+  const handleApproveSOW = async (link: ClientLink) => {
+    try {
+      // Update the status to Approved
+      const { error: updateError } = await supabase
+        .from('client_onboarding_links')
+        .update({
+          status: 'Approved',
+          last_activity: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', link.id);
+
+      if (updateError) {
+        console.error('Error updating link status:', updateError);
+        toast({
+          title: "Error",
+          description: "Failed to approve SOW. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Send completion email
+      try {
+        const { error: emailError } = await supabase.functions.invoke('send-stage-email', {
+          body: {
+            templateName: 'completion',
+            to: link.email,
+            variables: {
+              client_name: link.client_name,
+              company_name: link.company_name
+            }
+          }
+        });
+
+        if (emailError) {
+          console.error('Error sending completion email:', emailError);
+        }
+      } catch (emailError) {
+        console.error('Error sending completion email:', emailError);
+      }
+
+      // Refresh the client links
+      await fetchClientLinks();
+      
+      toast({
+        title: "SOW Approved",
+        description: `SOW approved for ${link.client_name}. Completion email sent.`,
+      });
+    } catch (error) {
+      console.error('Error approving SOW:', error);
+      toast({
+        title: "Error",
+        description: "Failed to approve SOW. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleDeleteSelected = async () => {
     if (selectedForDelete.length === 0) return;
     
@@ -769,11 +833,32 @@ const Onboarding = () => {
                                 </Button>
                               </div>
                             </div>
-                            <div className="mt-3">
+                            <div className="mt-3 space-y-2">
                               <ProgressBar 
                                 percentage={getProgressPercentage(link.status)} 
                                 className="h-1.5"
                               />
+                              {link.status === 'Completed' && link.sow_status === 'Generated' && (
+                                <div className="flex gap-2">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleViewSOW(link)}
+                                    className="h-7 px-2 text-xs"
+                                  >
+                                    <FileText className="h-3 w-3 mr-1" />
+                                    View SOW
+                                  </Button>
+                                  <Button
+                                    variant="default"
+                                    size="sm"
+                                    onClick={() => handleApproveSOW(link)}
+                                    className="h-7 px-2 text-xs"
+                                  >
+                                    ✓ Approve & Send Email
+                                  </Button>
+                                </div>
+                              )}
                             </div>
                           </div>
                         </div>
