@@ -774,7 +774,7 @@ const Onboarding = () => {
                 ) : (
                   <div className="divide-y divide-border">
                     {clientLinks.map((link) => (
-                      <div key={link.id} className="px-4 py-3">
+                      <div key={link.id} className="px-4 py-4">
                         <div className="flex items-start gap-3">
                           <input
                             type="checkbox"
@@ -828,13 +828,13 @@ const Onboarding = () => {
                                 </Button>
                               </div>
                             </div>
-                            <div className="mt-3 space-y-2">
+                            <div className="mt-4 mb-2 space-y-3">
                               <ProgressBar 
                                 percentage={getProgressPercentage(link.status)} 
                                 className="h-1.5"
                               />
                               {link.status === 'Completed' && link.sow_status === 'Generated' && (
-                                <div className="flex justify-center mt-2">
+                                <div className="flex justify-center">
                                   <Button
                                     variant="default"
                                     size="sm"
