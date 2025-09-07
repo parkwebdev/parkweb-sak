@@ -8,6 +8,7 @@ import {
   Eye, 
   Send01 as Send, 
   Check, 
+  CheckCircle,
   Download01 as Download, 
   Plus, 
   Edit01 as Edit, 
@@ -28,6 +29,7 @@ import { Label } from '@/components/ui/label';
 import { formatDate, getBadgeVariant } from '@/lib/status-helpers';
 import { useToast } from '@/hooks/use-toast';
 import { useNotifications } from '@/hooks/useNotifications';
+import { useEmailTemplates } from '@/hooks/useEmailTemplates';
 import { generateScopeOfWorkPDF, generateScopeOfWorkDOC } from '@/lib/document-generator';
 import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog';
 import {
@@ -88,6 +90,7 @@ const ScopeOfWorks = () => {
   
   const { toast } = useToast();
   const { createScopeWorkNotification } = useNotifications();
+  const { sendStageEmail } = useEmailTemplates();
   const { user } = useAuth();
 
   // Fetch scope of works from database
@@ -183,6 +186,72 @@ const ScopeOfWorks = () => {
         ? [] 
         : scopeOfWorks.map(row => row.id)
     );
+  };
+
+  const handleApproveSow = async (sow: ScopeOfWork) => {
+    try {
+      // Update the status to Approved
+      const { error: updateError } = await supabase
+        .from('scope_of_works')
+        .update({
+          status: 'Approved',
+          date_modified: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', sow.id);
+
+      if (updateError) {
+        console.error('Error updating SOW status:', updateError);
+        toast({
+          title: "Error",
+          description: "Failed to approve SOW. Please try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Generate SOW PDF for email attachment
+      const sowPDF = generateScopeOfWorkPDF(sow);
+      
+      // Send SOW approval email with attachment
+      try {
+        const { error: emailError } = await supabase.functions.invoke('send-sow-approval', {
+          body: {
+            clientEmail: sow.email,
+            clientName: sow.client,
+            companyName: sow.client,
+            sowTitle: sow.title,
+            sowPdf: sowPDF
+          }
+        });
+
+        if (emailError) {
+          console.error('Error sending SOW approval email:', emailError);
+          toast({
+            title: "Warning",
+            description: "SOW approved but failed to send email notification.",
+            variant: "destructive",
+          });
+        }
+      } catch (emailError) {
+        console.error('Error sending SOW approval email:', emailError);
+      }
+
+      // Refresh the data
+      await fetchScopeOfWorks();
+      
+      toast({
+        title: "SOW Approved",
+        description: `SOW approved for ${sow.client}. Email notification sent.`,
+      });
+    } catch (error) {
+      console.error('Error approving SOW:', error);
+      toast({
+        title: "Error",
+        description: "Failed to approve SOW. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   if (loading) {
@@ -386,34 +455,44 @@ const ScopeOfWorks = () => {
                             </Badge>
                           </td>
                           <td className="p-3">{formatDate(sow.date_modified)}</td>
-                          <td className="p-3">
-                            <div className="flex items-center gap-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                  setSelectedSow(sow);
-                                  setEditedContent(sow.content);
-                                  setEditedTitle(sow.title);
-                                  setIsEditing(false);
-                                }}
-                              >
-                                <Eye className="h-3 w-3" />
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                  setSelectedSow(sow);
-                                  setEditedContent(sow.content);
-                                  setEditedTitle(sow.title);
-                                  setIsEditing(true);
-                                }}
-                              >
-                                <Edit className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          </td>
+                           <td className="p-3">
+                             <div className="flex items-center gap-2">
+                               <Button
+                                 variant="outline"
+                                 size="sm"
+                                 onClick={() => {
+                                   setSelectedSow(sow);
+                                   setEditedContent(sow.content);
+                                   setEditedTitle(sow.title);
+                                   setIsEditing(false);
+                                 }}
+                               >
+                                 <Eye className="h-3 w-3" />
+                               </Button>
+                               <Button
+                                 variant="outline"
+                                 size="sm"
+                                 onClick={() => {
+                                   setSelectedSow(sow);
+                                   setEditedContent(sow.content);
+                                   setEditedTitle(sow.title);
+                                   setIsEditing(true);
+                                 }}
+                               >
+                                 <Edit className="h-3 w-3" />
+                               </Button>
+                               {sow.status !== 'Approved' && (
+                                 <Button
+                                   variant="outline"
+                                   size="sm"
+                                   onClick={() => handleApproveSow(sow)}
+                                   className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                                 >
+                                   <CheckCircle className="h-3 w-3" />
+                                 </Button>
+                               )}
+                             </div>
+                           </td>
                         </tr>
                       ))}
                     </tbody>
