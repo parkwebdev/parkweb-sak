@@ -828,7 +828,7 @@ const Onboarding = () => {
                                 </Button>
                               </div>
                             </div>
-                            <div className="mt-4 mb-4 space-y-3">
+                            <div className="mt-4 mb-6 space-y-3">
                               <ProgressBar 
                                 percentage={getProgressPercentage(link.status)} 
                                 className="h-1.5"
