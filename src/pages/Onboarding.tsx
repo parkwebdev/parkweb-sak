@@ -833,18 +833,6 @@ const Onboarding = () => {
                                 percentage={getProgressPercentage(link.status)} 
                                 className="h-1.5"
                               />
-                              {link.status === 'Completed' && link.sow_status === 'Generated' && (
-                                <div className="flex justify-center">
-                                   <Button
-                                     variant="default"
-                                     size="sm"
-                                     onClick={() => handleApproveSOW(link)}
-                                     className="h-8 px-4 text-xs font-medium"
-                                   >
-                                     ✓ Approve
-                                   </Button>
-                                </div>
-                              )}
                             </div>
                           </div>
                         </div>

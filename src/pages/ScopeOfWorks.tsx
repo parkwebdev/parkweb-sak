@@ -213,15 +213,17 @@ const ScopeOfWorks = () => {
       // Generate SOW PDF for email attachment
       const sowPDF = generateScopeOfWorkPDF(sow);
       
-      // Send SOW approval email with attachment
+      // Send SOW approval email
       try {
-        const { error: emailError } = await supabase.functions.invoke('send-sow-approval', {
+        const { error: emailError } = await supabase.functions.invoke('send-stage-email', {
           body: {
+            templateName: 'sow_approval',
             clientEmail: sow.email,
-            clientName: sow.client,
-            companyName: sow.client,
-            sowTitle: sow.title,
-            sowPdf: sowPDF
+            variables: {
+              client_name: sow.client,
+              company_name: sow.client,
+              sow_title: sow.title
+            }
           }
         });
 
