@@ -8,6 +8,9 @@ import { ThemeToggle } from './ThemeToggle';
 import { NotificationCenter } from './notifications/NotificationCenter';
 import { useSidebar } from '@/hooks/use-sidebar';
 import { useSearchData } from '@/hooks/useSearchData';
+import { useTheme } from '@/components/ThemeProvider';
+import logoBlack from '@/assets/logo-black.png';
+import logoWhite from '@/assets/logo-white.png';
 
 interface NavigationItem {
   id: string;
@@ -51,6 +54,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose, onShowShortcuts }) =>
   const navigate = useNavigate();
   const { isCollapsed, toggle } = useSidebar();
   const { searchResults } = useSearchData();
+  const { theme } = useTheme();
+
+  // Determine which logo to show based on theme
+  const isDarkMode = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  const logoSrc = isDarkMode ? logoWhite : logoBlack;
 
   const allResults = [
     ...searchResults,
@@ -76,7 +84,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose, onShowShortcuts }) =>
         <nav className="w-full gap-4 pt-4">
           <header className="w-full whitespace-nowrap gap-4 px-4 py-0">
             <div className="flex min-h-[24px] w-full max-w-full items-center justify-between">
-              {!isCollapsed && <div className="text-base font-semibold text-foreground">Agency</div>}
+              {!isCollapsed && (
+                <img 
+                  src={logoSrc} 
+                  alt="KW Logo" 
+                  className="h-6 w-6 object-contain"
+                />
+              )}
               <div className="flex items-center gap-2">
                 {!isCollapsed && <NotificationCenter />}
                 <button
