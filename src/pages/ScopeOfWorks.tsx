@@ -256,7 +256,10 @@ const ScopeOfWorks = () => {
       <div className={`fixed left-0 top-0 h-full z-30 transition-transform duration-300 lg:translate-x-0 ${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
-        <Sidebar onClose={() => setSidebarOpen(false)} />
+        <Sidebar 
+          onClose={() => setSidebarOpen(false)} 
+          onShowShortcuts={() => {}}
+        />
       </div>
       
       {/* Main content */}

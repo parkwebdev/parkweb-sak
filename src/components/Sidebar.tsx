@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Home01 as Home, Grid01 as Grid, File02 as FileText, Users01 as Users, X, ChevronLeft, ChevronRight } from '@untitledui/icons';
+import { Home01 as Home, Grid01 as Grid, File02 as FileText, Users01 as Users, X, ChevronLeft, ChevronRight, Keyboard01 as Keyboard } from '@untitledui/icons';
 import { Link, useLocation } from 'react-router-dom';
 import { SearchInput } from './SearchInput';
 import { Badge } from './Badge';
@@ -41,9 +41,10 @@ const bottomItems: NavigationItem[] = [];
 
 interface SidebarProps {
   onClose?: () => void;
+  onShowShortcuts?: () => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ onClose, onShowShortcuts }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const location = useLocation();
   const { isCollapsed, toggle } = useSidebar();
@@ -131,15 +132,40 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
 
         <footer className="absolute bottom-0 left-0 right-0 gap-3 pt-0 pb-3 px-3">
           {!isCollapsed && (
-            <div className="mb-3 px-2.5 flex items-center justify-between">
-              <span className="text-sm font-medium text-foreground">Theme</span>
-              <ThemeToggle isCollapsed={isCollapsed} />
-            </div>
+            <>
+              <div className="mb-3 px-2.5 flex items-center justify-between">
+                <span className="text-sm font-medium text-foreground">Theme</span>
+                <ThemeToggle isCollapsed={isCollapsed} />
+              </div>
+              <div className="border-t border-border mb-3"></div>
+              <div className="mb-3 px-2.5 flex items-center justify-between">
+                <span className="text-sm font-medium text-foreground">Shortcuts</span>
+                <button
+                  onClick={onShowShortcuts}
+                  className="p-1 rounded-md hover:bg-accent/50 text-muted-foreground hover:text-foreground"
+                  title="View keyboard shortcuts"
+                >
+                  <Keyboard size={16} />
+                </button>
+              </div>
+            </>
           )}
           {isCollapsed && (
-            <div className="mb-3 flex justify-center">
-              <ThemeToggle isCollapsed={isCollapsed} />
-            </div>
+            <>
+              <div className="mb-3 flex justify-center">
+                <ThemeToggle isCollapsed={isCollapsed} />
+              </div>
+              <div className="border-t border-border mb-3 mx-2"></div>
+              <div className="mb-3 flex justify-center">
+                <button
+                  onClick={onShowShortcuts}
+                  className="p-2 rounded-md hover:bg-accent/50 text-muted-foreground hover:text-foreground"
+                  title="View keyboard shortcuts"
+                >
+                  <Keyboard size={16} />
+                </button>
+              </div>
+            </>
           )}
           <UserAccountCard isCollapsed={isCollapsed} />
         </footer>

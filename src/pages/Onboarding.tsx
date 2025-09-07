@@ -468,7 +468,10 @@ const Onboarding = () => {
       <div className={`fixed left-0 top-0 h-full z-30 transition-transform duration-300 lg:translate-x-0 ${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
-        <Sidebar onClose={() => setSidebarOpen(false)} />
+        <Sidebar 
+          onClose={() => setSidebarOpen(false)} 
+          onShowShortcuts={() => setShowShortcutsModal(true)}
+        />
       </div>
       
       {/* Main content */}
@@ -524,7 +527,6 @@ const Onboarding = () => {
                   <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
                     <DialogTrigger asChild>
                       <Button size="sm" className="h-8 w-full lg:w-auto text-xs">
-                        <Plus className="h-3 w-3 mr-1.5" />
                         Create Link
                       </Button>
                     </DialogTrigger>
