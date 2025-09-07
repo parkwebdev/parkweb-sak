@@ -772,20 +772,33 @@ const Onboarding = () => {
                         </div>
                         
                         {/* Tab Navigation */}
-                        <div className="flex items-center gap-1 rounded-lg bg-muted/50 p-1">
-                          {['View all', 'Sent', 'In Progress', 'Completed', 'SOW Generated', 'Approved'].map((tab) => (
-                            <button
-                              key={tab}
-                              onClick={() => setActiveFilter(tab)}
-                              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all whitespace-nowrap ${
-                                activeFilter === tab
-                                  ? 'bg-background text-foreground shadow-sm border border-border'
-                                  : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
-                              }`}
-                            >
-                              {tab}
-                            </button>
-                          ))}
+                        <div className="overflow-x-auto">
+                          <div className="border shadow-sm flex overflow-hidden text-xs text-foreground font-medium leading-none rounded-md border-border min-w-max">
+                            {['View all', 'Sent', 'In Progress', 'Completed', 'SOW Generated', 'Approved'].map((tab, index) => {
+                              const isActive = activeFilter === tab;
+                              const isFirst = index === 0;
+                              const isLast = index === 5;
+                              return (
+                                <button
+                                  key={tab}
+                                  onClick={() => setActiveFilter(tab)}
+                                  className={`px-3 py-2 ${
+                                    isActive
+                                      ? 'bg-primary text-primary-foreground'
+                                      : 'bg-card hover:bg-accent'
+                                  } ${
+                                    isFirst ? 'rounded-l-md' : ''
+                                  } ${
+                                    isLast ? 'rounded-r-md' : ''
+                                  } ${
+                                    !isLast ? 'border-r border-border' : ''
+                                  } transition-colors`}
+                                >
+                                  {tab}
+                                </button>
+                              );
+                            })}
+                          </div>
                         </div>
                       </div>
                     </div>
