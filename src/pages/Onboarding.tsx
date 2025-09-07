@@ -703,26 +703,7 @@ const Onboarding = () => {
 
             {/* Compact Client Links */}
             <Card>
-              <CardHeader className="compact-header border-b">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-base">Client Onboarding Links</CardTitle>
-                  {selectedForDelete.length > 0 && (
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => setShowDeleteDialog(true)}
-                      className="h-7 px-2"
-                    >
-                      <Trash className="h-3 w-3 mr-1" />
-                      Delete ({selectedForDelete.length})
-                    </Button>
-                  )}
-                </div>
-                <CardDescription className="text-xs">
-                  Manage all your client onboarding links and track their progress
-                </CardDescription>
-              </CardHeader>
-                <CardContent className="p-0">
+              <CardContent className="p-0">
                     <div className="border-b border-border px-4 py-3 space-y-3">
                       {/* Search Bar */}
                       <div className="flex items-center gap-2">
