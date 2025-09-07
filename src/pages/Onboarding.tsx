@@ -13,6 +13,8 @@ import { useToast } from '@/hooks/use-toast';
 import { INDUSTRY_OPTIONS } from '@/lib/constants';
 import { getStatusColor, formatDate } from '@/lib/status-helpers';
 import { createOnboardingUrl, createEmailTemplate, openEmailClient, copyToClipboard } from '@/lib/form-helpers';
+import { useEmailTemplates } from '@/hooks/useEmailTemplates';
+import { useRealtimeNotifications } from '@/hooks/useRealtimeNotifications';
 import { ProgressBar } from '@/components/ProgressBar';
 import { useSidebar } from '@/hooks/use-sidebar';
 import { supabase } from '@/integrations/supabase/client';
@@ -55,6 +57,8 @@ const Onboarding = () => {
   });
   const { toast } = useToast();
   const { user } = useAuth();
+  const { sendWelcomeEmail } = useEmailTemplates();
+  const { triggerOnboardingCompletion } = useRealtimeNotifications();
 
   // Fetch client links from database
   useEffect(() => {
@@ -123,6 +127,14 @@ const Onboarding = () => {
         return;
       }
 
+      // Send welcome email automatically
+      const emailResult = await sendWelcomeEmail(
+        newClient.client_name,
+        newClient.company_name,
+        newClient.email,
+        onboardingUrl
+      );
+
       // Reset form
       setNewClient({
         client_name: '',
@@ -135,10 +147,18 @@ const Onboarding = () => {
       // Refresh the list
       fetchClientLinks();
       
-      toast({
-        title: "Onboarding link created!",
-        description: "The personalized onboarding link has been generated.",
-      });
+      if (!emailResult.success) {
+        console.error("Failed to send welcome email:", emailResult.error);
+        toast({
+          title: "Link Created",
+          description: "Onboarding link created but welcome email failed to send. You can resend it manually.",
+        });
+      } else {
+        toast({
+          title: "Success!",
+          description: `Onboarding link created and welcome email sent to ${newClient.email}`,
+        });
+      }
     } catch (error) {
       console.error('Error creating client link:', error);
       toast({

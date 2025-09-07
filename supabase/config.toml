@@ -1,1 +1,20 @@
 project_id = "mvaimvwdukpgvkifkfpa"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[functions.generate-scope-of-work]
+verify_jwt = true
+
+[functions.send-notification-email]
+verify_jwt = false
+
+[functions.send-stage-email]
+verify_jwt = true
+
+[functions.send-reminders]
+verify_jwt = false
