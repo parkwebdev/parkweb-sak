@@ -194,8 +194,7 @@ const Onboarding = () => {
   };
 
   const handleCopyToClipboard = async (url: string) => {
-    const fullUrl = window.location.origin + url;
-    const success = await copyToClipboard(fullUrl);
+    const success = await copyToClipboard(url);
     
     if (success) {
       toast({
@@ -215,23 +214,31 @@ const Onboarding = () => {
     setSendingEmail(clientLink.id);
     
     try {
-      const { subject, body } = createEmailTemplate(
+      const emailResult = await sendWelcomeEmail(
         clientLink.client_name,
         clientLink.company_name,
-        window.location.origin + clientLink.onboarding_url
+        clientLink.email,
+        clientLink.onboarding_url
       );
       
-      openEmailClient(clientLink.email, subject, body);
-      
-      toast({
-        title: "Email opened",
-        description: "Your default email client should now be open with a pre-filled message.",
-      });
+      if (!emailResult.success) {
+        console.error("Failed to send welcome email:", emailResult.error);
+        toast({
+          title: "Email Error",
+          description: "Failed to send email. Please try again.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Email Sent",
+          description: `Welcome email sent to ${clientLink.email}`,
+        });
+      }
     } catch (error) {
-      console.error('Error opening email client:', error);
+      console.error('Error sending email:', error);
       toast({
         title: "Error",
-        description: "Failed to open email client. Please try again.",
+        description: "Failed to send email. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -240,8 +247,7 @@ const Onboarding = () => {
   };
 
   const handleViewOnboarding = (url: string) => {
-    const fullUrl = window.location.origin + url;
-    window.open(fullUrl, '_blank');
+    window.open(url, '_blank');
   };
 
   const handleDeleteSelected = async () => {
@@ -665,17 +671,17 @@ const Onboarding = () => {
                 </CardDescription>
               </CardHeader>
                <CardContent className="p-0">
-                 <div className="border-b border-border px-4 py-3 flex items-center gap-3">
-                   <input
-                     type="checkbox"
-                     checked={selectedForDelete.length === clientLinks.length && clientLinks.length > 0}
-                     onChange={toggleAllSelection}
-                     className="rounded"
-                   />
-                   <span className="text-sm text-muted-foreground">
-                     {selectedForDelete.length > 0 ? `${selectedForDelete.length} selected` : 'Select all'}
-                   </span>
-                 </div>
+                  <div className="border-b border-border px-4 py-3 flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      checked={selectedForDelete.length === clientLinks.length && clientLinks.length > 0}
+                      onChange={toggleAllSelection}
+                      className="rounded"
+                    />
+                    <span className="text-sm text-muted-foreground">
+                      {selectedForDelete.length > 0 ? `${selectedForDelete.length} selected` : 'Select all'}
+                    </span>
+                  </div>
                 {clientLinks.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
                     <Link2 className="h-12 w-12 text-muted-foreground/50 mb-4" />
@@ -691,7 +697,7 @@ const Onboarding = () => {
                 ) : (
                   <div className="divide-y divide-border">
                     {clientLinks.map((link) => (
-                      <div key={link.id} className="p-4">
+                      <div key={link.id} className="px-4 py-3">
                         <div className="flex items-start gap-3">
                           <input
                             type="checkbox"
@@ -717,31 +723,29 @@ const Onboarding = () => {
                                   Created {formatDate(link.date_sent)}
                                 </p>
                               </div>
-                              <div className="flex items-center gap-2 flex-shrink-0">
+                              <div className="flex items-center gap-1 flex-shrink-0">
                                 <Button
                                   variant="outline"
                                   size="sm"
                                   onClick={() => handleCopyToClipboard(link.onboarding_url)}
-                                  className="h-6 px-2 text-xs"
+                                  className="h-8 px-2 text-xs"
                                 >
-                                  <Copy className="h-3 w-3 mr-1" />
-                                  Copy
+                                  <Copy className="h-3 w-3" />
                                 </Button>
                                 <Button
                                   variant="outline"
                                   size="sm"
                                   onClick={() => handleSendEmail(link)}
                                   disabled={sendingEmail === link.id}
-                                  className="h-6 px-2 text-xs"
+                                  className="h-8 px-2 text-xs"
                                 >
-                                  <Send className="h-3 w-3 mr-1" />
-                                  {sendingEmail === link.id ? 'Sending...' : 'Email'}
+                                  <Send className="h-3 w-3" />
                                 </Button>
                                 <Button
                                   variant="outline"
                                   size="sm"
                                   onClick={() => handleViewOnboarding(link.onboarding_url)}
-                                  className="h-6 px-2 text-xs"
+                                  className="h-8 px-2 text-xs"
                                 >
                                   <Eye className="h-3 w-3" />
                                 </Button>
