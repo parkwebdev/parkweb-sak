@@ -10,7 +10,7 @@ export const generateUniqueToken = (length: number = 12): string => {
 export const createOnboardingUrl = (
   clientName: string,
   companyName: string,
-  baseUrl: string = window.location.origin
+  baseUrl?: string
 ): string => {
   const token = generateUniqueToken();
   return `/client-onboarding?name=${encodeURIComponent(

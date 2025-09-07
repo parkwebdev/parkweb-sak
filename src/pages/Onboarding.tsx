@@ -194,7 +194,18 @@ const Onboarding = () => {
   };
 
   const handleCopyToClipboard = async (url: string) => {
-    const fullUrl = url.startsWith('http') ? url : `${window.location.origin}${url}`;
+    // Ensure URL is properly formatted - handle both relative and absolute URLs
+    let fullUrl = url;
+    if (!fullUrl.startsWith('http')) {
+      fullUrl = `${window.location.origin}${url}`;
+    } else {
+      // If it's an absolute URL, replace the domain with current one
+      const urlObj = new URL(fullUrl);
+      const currentOrigin = window.location.origin;
+      fullUrl = `${currentOrigin}${urlObj.pathname}${urlObj.search}`;
+    }
+    
+    console.log('Copying URL to clipboard:', fullUrl);
     const success = await copyToClipboard(fullUrl);
     
     if (success) {
@@ -215,11 +226,24 @@ const Onboarding = () => {
     setSendingEmail(clientLink.id);
     
     try {
+      // Ensure URL is properly formatted - handle both relative and absolute URLs
+      let fullUrl = clientLink.onboarding_url;
+      if (!fullUrl.startsWith('http')) {
+        fullUrl = `${window.location.origin}${fullUrl}`;
+      } else {
+        // If it's an absolute URL, replace the domain with current one
+        const urlObj = new URL(fullUrl);
+        const currentOrigin = window.location.origin;
+        fullUrl = `${currentOrigin}${urlObj.pathname}${urlObj.search}`;
+      }
+      
+      console.log('Sending email with URL:', fullUrl);
+      
       const emailResult = await sendWelcomeEmail(
         clientLink.client_name,
         clientLink.company_name,
         clientLink.email,
-        `${window.location.origin}${clientLink.onboarding_url}`
+        fullUrl
       );
       
       if (!emailResult.success) {
