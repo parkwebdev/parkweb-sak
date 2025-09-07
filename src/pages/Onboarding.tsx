@@ -701,31 +701,6 @@ const Onboarding = () => {
               </div>
             </header>
 
-            {/* Search and Filters */}
-            <div className="flex items-center gap-2 mb-6">
-              <div className="flex-1 relative">
-                <div className="items-center border shadow-sm flex w-full gap-2 overflow-hidden bg-background px-3 py-2 rounded-lg border-border">
-                  <SearchSm size={14} className="text-muted-foreground" />
-                  <input
-                    type="text"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="Search"
-                    className="text-foreground text-ellipsis text-xs leading-4 flex-1 bg-transparent border-none outline-none placeholder:text-muted-foreground"
-                  />
-                  <div className="rounded border flex items-center justify-center text-xs text-muted-foreground font-medium px-1.5 py-0.5 border-border min-w-[28px]">
-                    <span className="text-muted-foreground text-xs leading-none">⌘K</span>
-                  </div>
-                </div>
-              </div>
-              <Button variant="outline" size="sm" className="h-8 px-2">
-                <FilterLines className="h-4 w-4" />
-              </Button>
-              <Button variant="outline" size="sm" className="h-8 px-2">
-                <Settings01 className="h-4 w-4" />
-              </Button>
-            </div>
-
             {/* Compact Client Links */}
             <Card>
               <CardHeader className="compact-header border-b">
@@ -748,42 +723,70 @@ const Onboarding = () => {
                 </CardDescription>
               </CardHeader>
                 <CardContent className="p-0">
-                    <div className="border-b border-border px-4 py-3 flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-3">
-                        <button
-                          onClick={toggleAllSelection}
-                          className="flex items-center justify-center w-5"
-                        >
-                          <div className={`border flex min-h-5 w-5 h-5 rounded-md border-solid border-border items-center justify-center ${
-                            selectedForDelete.length === getFilteredClientLinks().length && getFilteredClientLinks().length > 0 ? 'bg-primary border-primary' : 'bg-background'
-                          }`}>
-                            {selectedForDelete.length === getFilteredClientLinks().length && getFilteredClientLinks().length > 0 && (
-                              <Check size={12} className="text-primary-foreground" />
-                            )}
+                    <div className="border-b border-border px-4 py-3 space-y-3">
+                      {/* Search Bar */}
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 relative">
+                          <div className="items-center border shadow-sm flex w-full gap-2 overflow-hidden bg-background px-3 py-2 rounded-lg border-border">
+                            <SearchSm size={14} className="text-muted-foreground" />
+                            <input
+                              type="text"
+                              value={searchTerm}
+                              onChange={(e) => setSearchTerm(e.target.value)}
+                              placeholder="Search"
+                              className="text-foreground text-ellipsis text-xs leading-4 flex-1 bg-transparent border-none outline-none placeholder:text-muted-foreground"
+                            />
+                            <div className="rounded border flex items-center justify-center text-xs text-muted-foreground font-medium px-1.5 py-0.5 border-border min-w-[28px]">
+                              <span className="text-muted-foreground text-xs leading-none">⌘K</span>
+                            </div>
                           </div>
-                        </button>
-                        {selectedForDelete.length > 0 && (
-                          <span className="text-sm text-muted-foreground">
-                            {selectedForDelete.length} selected
-                          </span>
-                        )}
+                        </div>
+                        <Button variant="outline" size="sm" className="h-8 px-2">
+                          <FilterLines className="h-4 w-4" />
+                        </Button>
+                        <Button variant="outline" size="sm" className="h-8 px-2">
+                          <Settings01 className="h-4 w-4" />
+                        </Button>
                       </div>
                       
-                      {/* Tab Navigation */}
-                      <div className="flex items-center gap-1 rounded-lg bg-muted/50 p-1">
-                        {['View all', 'Sent', 'In Progress', 'Completed', 'SOW Generated', 'Approved'].map((tab) => (
+                      {/* Select All and Tabs Row */}
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3">
                           <button
-                            key={tab}
-                            onClick={() => setActiveFilter(tab)}
-                            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all whitespace-nowrap ${
-                              activeFilter === tab
-                                ? 'bg-background text-foreground shadow-sm border border-border'
-                                : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
-                            }`}
+                            onClick={toggleAllSelection}
+                            className="flex items-center justify-center w-5"
                           >
-                            {tab}
+                            <div className={`border flex min-h-5 w-5 h-5 rounded-md border-solid border-border items-center justify-center ${
+                              selectedForDelete.length === getFilteredClientLinks().length && getFilteredClientLinks().length > 0 ? 'bg-primary border-primary' : 'bg-background'
+                            }`}>
+                              {selectedForDelete.length === getFilteredClientLinks().length && getFilteredClientLinks().length > 0 && (
+                                <Check size={12} className="text-primary-foreground" />
+                              )}
+                            </div>
                           </button>
-                        ))}
+                          {selectedForDelete.length > 0 && (
+                            <span className="text-sm text-muted-foreground">
+                              {selectedForDelete.length} selected
+                            </span>
+                          )}
+                        </div>
+                        
+                        {/* Tab Navigation */}
+                        <div className="flex items-center gap-1 rounded-lg bg-muted/50 p-1">
+                          {['View all', 'Sent', 'In Progress', 'Completed', 'SOW Generated', 'Approved'].map((tab) => (
+                            <button
+                              key={tab}
+                              onClick={() => setActiveFilter(tab)}
+                              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all whitespace-nowrap ${
+                                activeFilter === tab
+                                  ? 'bg-background text-foreground shadow-sm border border-border'
+                                  : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
+                              }`}
+                            >
+                              {tab}
+                            </button>
+                          ))}
+                        </div>
                       </div>
                     </div>
                 {clientLinks.length === 0 ? (
