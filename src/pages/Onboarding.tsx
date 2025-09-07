@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Sidebar } from '@/components/Sidebar';
-import { Plus, Link01 as Link2, Copy01 as Copy, Send01 as Send, Eye as Eye, Trash01 as Trash, Check, SearchSm, FilterLines, Settings01 } from '@untitledui/icons';
+import { Plus, Link01 as Link2, Copy01 as Copy, Send01 as Send, Eye as Eye, Trash01 as Trash, Check, SearchSm, FilterLines, Settings01, Download01 as Download, ArrowUp as SortAsc, ArrowDown as SortDesc, ArrowsDown as ArrowUpDown } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -24,6 +24,15 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog';
 import { UserAccountCard } from '@/components/UserAccountCard';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+  DropdownMenuCheckboxItem,
+} from "@/components/ui/dropdown-menu";
 
 interface ClientLink {
   id: string;
@@ -60,6 +69,8 @@ const Onboarding = () => {
     industry: ''
   });
   const [activeFilter, setActiveFilter] = useState('View all');
+  const [sortBy, setSortBy] = useState<'client_name' | 'company_name' | 'email' | 'industry' | 'status' | 'date_sent'>('date_sent');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const { toast } = useToast();
   const { user } = useAuth();
   const { sendWelcomeEmail } = useEmailTemplates();
@@ -405,7 +416,76 @@ const Onboarding = () => {
       filtered = filtered.filter(link => link.status === activeFilter);
     }
     
+    // Apply sorting
+    filtered.sort((a, b) => {
+      // Handle date sorting
+      if (sortBy === 'date_sent') {
+        const aValue = new Date(a[sortBy]).getTime();
+        const bValue = new Date(b[sortBy]).getTime();
+        
+        if (sortOrder === 'asc') {
+          return aValue - bValue;
+        } else {
+          return bValue - aValue;
+        }
+      } else {
+        // Convert to string for text sorting
+        const aValue = String(a[sortBy]).toLowerCase();
+        const bValue = String(b[sortBy]).toLowerCase();
+        
+        if (sortOrder === 'asc') {
+          return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+        } else {
+          return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
+        }
+      }
+    });
+    
     return filtered;
+  };
+
+  // Export function
+  const handleExportData = () => {
+    const filteredLinks = getFilteredClientLinks();
+    
+    if (filteredLinks.length === 0) {
+      toast({
+        title: "No data to export",
+        description: "Please select items to export or adjust your filters",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Create CSV content
+    const headers = ['Client Name', 'Company', 'Email', 'Industry', 'Status', 'Date Sent'];
+    const csvContent = [
+      headers.join(','),
+      ...filteredLinks.map(link => [
+        link.client_name,
+        link.company_name,
+        link.email,
+        link.industry,
+        link.status,
+        formatDate(link.date_sent)
+      ].map(field => `"${field}"`).join(','))
+    ].join('\n');
+
+    // Download CSV
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `onboarding-links-${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+
+    toast({
+      title: "Export Complete",
+      description: `Exported ${filteredLinks.length} items to CSV`,
+    });
   };
 
   // Bulk export function
@@ -746,15 +826,105 @@ const Onboarding = () => {
                           </div>
                         </div>
                         
-                        {/* Filter and Settings */}
-                        <div className="flex items-center gap-2">
-                          <Button variant="outline" size="sm" className="h-8 px-2">
-                            <FilterLines className="h-4 w-4" />
-                          </Button>
-                          <Button variant="outline" size="sm" className="h-8 px-2">
-                            <Settings01 className="h-4 w-4" />
-                          </Button>
-                        </div>
+                          {/* Filter and Settings */}
+                          <div className="flex items-center gap-2">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="outline" size="sm" className="h-8 px-2">
+                                  <FilterLines className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-56">
+                                <DropdownMenuLabel>Sort & Filter</DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                
+                                <DropdownMenuLabel className="text-xs text-muted-foreground">Sort By</DropdownMenuLabel>
+                                <DropdownMenuItem onClick={() => setSortBy('client_name')}>
+                                  <div className="flex items-center justify-between w-full">
+                                    <span>Client Name</span>
+                                    {sortBy === 'client_name' && (
+                                      sortOrder === 'asc' ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />
+                                    )}
+                                  </div>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => setSortBy('company_name')}>
+                                  <div className="flex items-center justify-between w-full">
+                                    <span>Company Name</span>
+                                    {sortBy === 'company_name' && (
+                                      sortOrder === 'asc' ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />
+                                    )}
+                                  </div>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => setSortBy('email')}>
+                                  <div className="flex items-center justify-between w-full">
+                                    <span>Email</span>
+                                    {sortBy === 'email' && (
+                                      sortOrder === 'asc' ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />
+                                    )}
+                                  </div>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => setSortBy('industry')}>
+                                  <div className="flex items-center justify-between w-full">
+                                    <span>Industry</span>
+                                    {sortBy === 'industry' && (
+                                      sortOrder === 'asc' ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />
+                                    )}
+                                  </div>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => setSortBy('status')}>
+                                  <div className="flex items-center justify-between w-full">
+                                    <span>Status</span>
+                                    {sortBy === 'status' && (
+                                      sortOrder === 'asc' ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />
+                                    )}
+                                  </div>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => setSortBy('date_sent')}>
+                                  <div className="flex items-center justify-between w-full">
+                                    <span>Date Sent</span>
+                                    {sortBy === 'date_sent' && (
+                                      sortOrder === 'asc' ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />
+                                    )}
+                                  </div>
+                                </DropdownMenuItem>
+                                
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}>
+                                  <ArrowUpDown className="mr-2 h-4 w-4" />
+                                  {sortOrder === 'asc' ? 'Sort Descending' : 'Sort Ascending'}
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                            
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="outline" size="sm" className="h-8 px-2">
+                                  <Settings01 className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-56">
+                                <DropdownMenuLabel>Table Settings</DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+                                
+                                <DropdownMenuItem onClick={handleExportData}>
+                                  <Download className="mr-2 h-4 w-4" />
+                                  Export to CSV
+                                </DropdownMenuItem>
+                                
+                                <DropdownMenuSeparator />
+                                <DropdownMenuLabel className="text-xs text-muted-foreground">Quick Actions</DropdownMenuLabel>
+                                <DropdownMenuItem onClick={() => setActiveFilter('View all')}>
+                                  <span>Reset Filters</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => {
+                                  setSortBy('date_sent');
+                                  setSortOrder('desc');
+                                }}>
+                                  <span>Reset Sort</span>
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
                       </div>
                     </div>
                 {clientLinks.length === 0 ? (
