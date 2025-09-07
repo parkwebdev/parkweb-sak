@@ -848,7 +848,10 @@ const ScopeOfWorks = () => {
               <div className="flex gap-3 pt-6 border-t bg-gradient-to-r from-muted/20 to-muted/30 rounded-t-xl -mx-6 px-6 pb-2">
                 <Button
                   variant="outline"
-                  onClick={() => generateScopeOfWorkPDF(selectedSow)}
+                  onClick={() => {
+                    const doc = generateScopeOfWorkPDF(selectedSow);
+                    doc.save(`${selectedSow.title.replace(/[^a-zA-Z0-9]/g, '_')}_ScopeOfWork.pdf`);
+                  }}
                   className="flex-1 h-11"
                 >
                   <Download className="h-4 w-4 mr-2" />
