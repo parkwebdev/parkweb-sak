@@ -464,8 +464,13 @@ const ClientOnboarding = () => {
 
       console.log('Submission saved successfully:', submission);
 
-      // Now generate the SOW using OpenAI
-      console.log('Generating SOW...');
+      // Generate SOW using edge function
+      console.log('Generating SOW with data:', {
+        client_name: onboardingData.contactName,
+        client_email: onboardingData.email,
+        project_type: onboardingData.industry
+      });
+      
       const { data: generatedSOW, error: sowError } = await supabase.functions.invoke('generate-scope-of-work', {
         body: {
           clientData: {
@@ -482,7 +487,7 @@ const ClientOnboarding = () => {
 
       if (sowError) {
         console.error('Error generating SOW:', sowError);
-        alert('There was an error generating your scope of work. Your submission was saved but the SOW could not be generated.');
+        alert(`SOW Generation Error: ${sowError.message || 'Unknown error occurred'}`);
         setIsGeneratingSOW(false);
         return;
       }
@@ -521,7 +526,7 @@ const ClientOnboarding = () => {
       setShowSOW(false);
     } catch (error) {
       console.error('Error in handleFinalSubmit:', error);
-      alert('An unexpected error occurred. Please try again.');
+      alert(`Submission Error: ${error.message || 'An unexpected error occurred. Please try again.'}`);
       setIsGeneratingSOW(false);
     }
   };
