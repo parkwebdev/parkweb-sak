@@ -134,14 +134,26 @@ const ScopeOfWorks = () => {
   };
 
   const handleDeleteSelected = async () => {
-    if (!user || selectedRows.length === 0) return;
+    console.log('handleDeleteSelected called');
+    console.log('Selected rows:', selectedRows);
+    console.log('User:', user);
+    
+    if (!user || selectedRows.length === 0) {
+      console.log('Returning early - no user or no selected rows');
+      return;
+    }
     
     setIsDeleting(true);
     try {
-      const { error } = await supabase
+      console.log('Attempting to delete SOWs with IDs:', selectedRows);
+      
+      const { data, error } = await supabase
         .from('scope_of_works')
         .delete()
-        .in('id', selectedRows);
+        .in('id', selectedRows)
+        .select(); // Add select to see what was deleted
+
+      console.log('Delete result:', { data, error });
 
       if (error) {
         console.error('Error deleting scope of works:', error);
@@ -153,6 +165,18 @@ const ScopeOfWorks = () => {
         return;
       }
 
+      if (!data || data.length === 0) {
+        console.error('No rows were deleted - possible permission issue');
+        toast({
+          title: "Error",
+          description: "Failed to delete items. Check permissions.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log(`Successfully deleted ${data.length} SOW(s)`);
+      
       toast({
         title: "Items deleted",
         description: `Successfully deleted ${selectedRows.length} scope of work(s).`,
