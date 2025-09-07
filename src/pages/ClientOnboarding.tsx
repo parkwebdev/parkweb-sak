@@ -207,8 +207,12 @@ const generateScopeOfWork = (data: OnboardingData) => {
 const ClientOnboarding = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const clientName = searchParams.get('name') || 'Valued Client';
-  const companyName = searchParams.get('company') || 'Your Company';
+  const clientName = searchParams.get('name') || '';
+  const companyName = searchParams.get('company') || '';
+  const token = searchParams.get('token') || '';
+  
+  // Check if this is a fresh start (has URL params) or returning user
+  const isFreshStart = !!(clientName && companyName && token);
   
   const [onboardingData, setOnboardingData] = useState<OnboardingData>({
     companyName: companyName,
@@ -291,8 +295,15 @@ const ClientOnboarding = () => {
       return () => clearInterval(saveInterval);
     }, [onboardingData]);
 
-  // Load saved draft on component mount
+  // Load saved draft on component mount - but only if NOT a fresh start
   React.useEffect(() => {
+    // Don't load draft if this is a fresh start with URL parameters
+    if (isFreshStart) {
+      // Clear any existing draft since this is a new onboarding session
+      localStorage.removeItem('onboardingDraft');
+      return;
+    }
+    
     const savedDraft = localStorage.getItem('onboardingDraft');
     if (savedDraft) {
       try {
@@ -302,7 +313,7 @@ const ClientOnboarding = () => {
         console.error('Error loading saved draft:', error);
       }
     }
-  }, []);
+  }, [isFreshStart]);
 
   // Inactivity tracker for draft email
   React.useEffect(() => {
@@ -607,11 +618,13 @@ const ClientOnboarding = () => {
               <div className="mx-auto mb-4 w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
                 <span className="text-primary text-2xl font-bold">★</span>
               </div>
-              <CardTitle className="text-2xl">Welcome, {clientName}!</CardTitle>
-              <CardDescription className="text-lg">
-                We're excited to work with {companyName} on your new website project. 
-                This onboarding process will help us understand your needs and create the perfect website for your business.
-              </CardDescription>
+               <CardTitle className="text-2xl">
+                 Welcome{clientName ? `, ${clientName}` : ''}!
+               </CardTitle>
+               <CardDescription className="text-lg">
+                 We're excited to work with {companyName || 'you'} on your new website project. 
+                 This onboarding process will help us understand your needs and create the perfect website for your business.
+               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="bg-primary/5 p-6 rounded-lg">
