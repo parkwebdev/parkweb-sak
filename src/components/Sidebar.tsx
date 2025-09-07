@@ -9,8 +9,6 @@ import { NotificationCenter } from './notifications/NotificationCenter';
 import { useSidebar } from '@/hooks/use-sidebar';
 import { useSearchData } from '@/hooks/useSearchData';
 import { useTheme } from '@/components/ThemeProvider';
-import logoBlack from '@/assets/logo-black.png';
-import logoWhite from '@/assets/logo-white.png';
 
 interface NavigationItem {
   id: string;
@@ -56,9 +54,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose, onShowShortcuts }) =>
   const { searchResults } = useSearchData();
   const { theme } = useTheme();
 
+  // Supabase storage URLs for logos
+  const SUPABASE_URL = 'https://mvaimvwdukpgvkifkfpa.supabase.co';
+  const logoBlackUrl = `${SUPABASE_URL}/storage/v1/object/public/logos/logo-black.png`;
+  const logoWhiteUrl = `${SUPABASE_URL}/storage/v1/object/public/logos/logo-white.png`;
+
   // Determine which logo to show based on theme
   const isDarkMode = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-  const logoSrc = isDarkMode ? logoWhite : logoBlack;
+  const logoSrc = isDarkMode ? logoWhiteUrl : logoBlackUrl;
 
   const allResults = [
     ...searchResults,
