@@ -39,10 +39,23 @@ export const ProfileEditDialog: React.FC<ProfileEditDialogProps> = ({
     const file = event.target.files?.[0];
     if (!file || !member) return;
 
-    if (file.size > 2 * 1024 * 1024) {
+    // Reset the input to allow re-uploading the same file
+    event.target.value = '';
+
+    if (file.size > 5 * 1024 * 1024) {
       toast({
         title: "File too large",
-        description: "Please select a file smaller than 2MB.",
+        description: "Please select a file smaller than 5MB.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Invalid file type",
+        description: "Please select an image file.",
         variant: "destructive",
       });
       return;
@@ -51,43 +64,47 @@ export const ProfileEditDialog: React.FC<ProfileEditDialogProps> = ({
     setUploading(true);
     try {
       const fileExt = file.name.split('.').pop();
-      const fileName = `${member.user_id}-${Date.now()}.${fileExt}`;
-      const filePath = fileName;
+      const fileName = `avatar-${member.user_id}-${Date.now()}.${fileExt}`;
 
-      console.log('Uploading avatar:', { fileName, fileSize: file.size, fileType: file.type });
+      console.log('Starting avatar upload:', { 
+        fileName, 
+        fileSize: file.size, 
+        fileType: file.type,
+        memberId: member.user_id 
+      });
 
-      // First, try to remove the old file if it exists
-      if (member.avatar_url) {
-        const oldFileName = member.avatar_url.split('/').pop();
-        if (oldFileName) {
-          await supabase.storage.from('avatars').remove([oldFileName]);
-        }
-      }
-
-      const { data, error: uploadError } = await supabase.storage
+      // Upload the new file
+      const { data: uploadData, error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(filePath, file, { 
+        .upload(fileName, file, { 
           cacheControl: '3600',
-          upsert: true 
+          upsert: false  // Don't overwrite, create new file
         });
 
       if (uploadError) {
-        console.error('Upload error:', uploadError);
-        throw uploadError;
+        console.error('Upload error details:', uploadError);
+        throw new Error(`Upload failed: ${uploadError.message}`);
       }
 
-      const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(filePath);
+      console.log('Upload successful:', uploadData);
+
+      // Get the public URL
+      const { data: urlData } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(fileName);
+
       const newAvatarUrl = urlData.publicUrl;
+      console.log('New avatar URL:', newAvatarUrl);
       
-      console.log('Avatar uploaded successfully:', newAvatarUrl);
       setAvatarUrl(newAvatarUrl);
 
       toast({
         title: "Avatar uploaded",
-        description: "Avatar has been updated successfully.",
+        description: "Avatar has been uploaded successfully. Click 'Save Changes' to apply.",
       });
+
     } catch (error: any) {
-      console.error('Error uploading avatar:', error);
+      console.error('Avatar upload error:', error);
       toast({
         title: "Upload failed",
         description: error.message || "Failed to upload avatar. Please try again.",
@@ -103,19 +120,30 @@ export const ProfileEditDialog: React.FC<ProfileEditDialogProps> = ({
 
     setLoading(true);
     try {
-      console.log('Updating profile:', {
+      console.log('Updating profile for member:', {
         user_id: member.user_id,
-        display_name: displayName.trim() || null,
-        avatar_url: avatarUrl || null,
+        old_display_name: member.display_name,
+        new_display_name: displayName.trim() || null,
+        old_avatar_url: member.avatar_url,
+        new_avatar_url: avatarUrl || null,
       });
+
+      const updateData: any = {
+        updated_at: new Date().toISOString(),
+      };
+
+      // Only update fields that have actually changed
+      if (displayName.trim() !== (member.display_name || '')) {
+        updateData.display_name = displayName.trim() || null;
+      }
+
+      if (avatarUrl !== (member.avatar_url || '')) {
+        updateData.avatar_url = avatarUrl || null;
+      }
 
       const { data, error } = await supabase
         .from('profiles')
-        .update({
-          display_name: displayName.trim() || null,
-          avatar_url: avatarUrl || null,
-          updated_at: new Date().toISOString(),
-        })
+        .update(updateData)
         .eq('user_id', member.user_id)
         .select();
 
@@ -131,9 +159,15 @@ export const ProfileEditDialog: React.FC<ProfileEditDialogProps> = ({
         description: `${displayName || member.email}'s profile has been updated successfully.`,
       });
 
-      // Call onUpdate to refresh the team list
+      // Force refresh the parent component
       onUpdate();
       onClose();
+      
+      // Small delay to ensure the update propagates
+      setTimeout(() => {
+        onUpdate();
+      }, 100);
+
     } catch (error: any) {
       console.error('Error updating profile:', error);
       toast({
@@ -177,6 +211,7 @@ export const ProfileEditDialog: React.FC<ProfileEditDialogProps> = ({
                 accept="image/*"
                 onChange={handleAvatarUpload}
                 className="hidden"
+                disabled={uploading}
               />
               <Label htmlFor="avatar-upload" className="cursor-pointer">
                 <Button
@@ -192,6 +227,11 @@ export const ProfileEditDialog: React.FC<ProfileEditDialogProps> = ({
                   </span>
                 </Button>
               </Label>
+              {avatarUrl && avatarUrl !== member?.avatar_url && (
+                <span className="text-xs text-green-600 dark:text-green-400">
+                  ✓ New avatar ready
+                </span>
+              )}
             </div>
           </div>
 

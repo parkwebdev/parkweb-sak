@@ -43,6 +43,9 @@ const Team = () => {
 
   const fetchTeamMembers = async () => {
     try {
+      console.log('Fetching team members...');
+      setLoading(true);
+      
       // Fetch profiles with their roles
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
@@ -58,6 +61,8 @@ const Team = () => {
         });
         return;
       }
+
+      console.log('Profiles data:', profilesData);
 
       // Fetch roles for all members
       const { data: rolesData, error: rolesError } = await supabase
@@ -78,6 +83,7 @@ const Team = () => {
       if (pendingError) {
         console.error('Error fetching pending invitations:', pendingError);
       } else {
+        console.log('Pending invitations:', pendingData);
         setPendingInvites(pendingData || []);
       }
 
@@ -90,6 +96,7 @@ const Team = () => {
         };
       });
 
+      console.log('Team members with roles:', membersWithRoles);
       setTeamMembers(membersWithRoles);
     } catch (error) {
       console.error('Error in fetchTeamMembers:', error);
@@ -472,7 +479,10 @@ const Team = () => {
             setIsProfileDialogOpen(false);
             setSelectedMember(null);
           }}
-          onUpdate={fetchTeamMembers}
+          onUpdate={() => {
+            console.log('Profile updated, refreshing team list...');
+            fetchTeamMembers();
+          }}
         />
       </div>
     );
