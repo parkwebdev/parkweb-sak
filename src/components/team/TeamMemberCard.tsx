@@ -11,6 +11,7 @@ interface TeamMemberCardProps {
   currentUserId?: string;
   canManageRoles: boolean;
   onEditRole: (member: TeamMember) => void;
+  onEditProfile?: (member: TeamMember) => void;
   onRemove: (member: TeamMember) => void;
 }
 
@@ -19,6 +20,7 @@ export const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
   currentUserId,
   canManageRoles,
   onEditRole,
+  onEditProfile,
   onRemove,
 }) => {
   const isCurrentUser = member.user_id === currentUserId;
@@ -72,13 +74,24 @@ export const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
             >
               <Settings size={16} />
             </Button>
+            {onEditProfile && !isCurrentUser && (
+              <Button 
+                variant="ghost"
+                size="sm"
+                onClick={() => onEditProfile(member)}
+                className="h-8 w-8 p-0 text-primary hover:text-primary/80"
+                title="Edit Profile"
+              >
+                <Settings size={16} />
+              </Button>
+            )}
             {/* Only show remove for admins managing others, not for self-management */}
             {canManageRoles && !isCurrentUser && (
               <Button 
                 variant="ghost"
                 size="sm"
                 onClick={() => onRemove(member)}
-                className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10 dark:text-red-400 dark:hover:text-red-300"
               >
                 <X size={16} />
               </Button>

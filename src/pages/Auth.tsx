@@ -12,7 +12,6 @@ import { PasswordStrengthIndicator } from '@/components/PasswordStrengthIndicato
 import { Eye, EyeOff } from '@untitledui/icons';
 
 const Auth = () => {
-  console.log('Auth component rendering...');
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
@@ -23,8 +22,6 @@ const Auth = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { logAuthEvent } = useSecurityLog();
-
-  console.log('Auth component state initialized, activeTab:', activeTab);
 
   useEffect(() => {
     // Check if user is already logged in
@@ -186,7 +183,6 @@ const Auth = () => {
   const logoBlackUrl = 'https://mvaimvwdukpgvkifkfpa.supabase.co/storage/v1/object/public/logos/Icon%20Only%20-%20Black%20Square@2x.png';
   const logoWhiteUrl = 'https://mvaimvwdukpgvkifkfpa.supabase.co/storage/v1/object/public/logos/Icon%20Only%20-%20White%20Square@2x.png';
 
-  console.log('Auth component about to render, activeTab:', activeTab);
   return (
     <div className="min-h-screen bg-background flex">
       {/* Left Panel - Auth Form */}

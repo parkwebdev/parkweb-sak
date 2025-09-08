@@ -238,9 +238,9 @@ const Team = () => {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
-                                <DropdownMenuItem>View Profile</DropdownMenuItem>
+                                <DropdownMenuItem>Edit Profile</DropdownMenuItem>
                                 <DropdownMenuItem>Send Message</DropdownMenuItem>
-                                <DropdownMenuItem className="text-destructive">
+                                <DropdownMenuItem className="text-destructive dark:text-red-400">
                                   Remove Member
                                 </DropdownMenuItem>
                               </DropdownMenuContent>

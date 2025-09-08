@@ -15,7 +15,7 @@ export interface InviteMemberData {
   role?: string;
 }
 
-export type UserRole = 'super_admin' | 'admin' | 'manager' | 'member';
+export type UserRole = 'super_admin' | 'admin' | 'manager' | 'member' | 'client';
 
 export interface RolePermissions {
   [key: string]: string[];

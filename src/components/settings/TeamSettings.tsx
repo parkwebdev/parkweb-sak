@@ -1,27 +1,39 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { RoleManagementDialog } from './RoleManagementDialog';
+import { ProfileEditDialog } from '@/components/team/ProfileEditDialog';
 import { TeamMemberCard } from '@/components/team/TeamMemberCard';
 import { InviteMemberDialog } from '@/components/team/InviteMemberDialog';
 import { useTeam } from '@/hooks/useTeam';
+import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
 import { TeamMember } from '@/types/team';
 
 export const TeamSettings: React.FC = () => {
   const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
   const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
+  const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
   const { user } = useAuth();
+  const { role: currentUserRole } = useRoleAuthorization();
   const { 
     teamMembers, 
     loading, 
     canManageRoles, 
     inviteMember, 
     removeMember, 
-    updateMemberRole 
+    updateMemberRole,
+    fetchTeamMembers
   } = useTeam();
+
+  const isSuperAdmin = currentUserRole === 'super_admin';
 
   const handleEditRole = (member: TeamMember) => {
     setSelectedMember(member);
     setIsRoleDialogOpen(true);
+  };
+
+  const handleEditProfile = (member: TeamMember) => {
+    setSelectedMember(member);
+    setIsProfileDialogOpen(true);
   };
 
   const handleRemoveMember = async (member: TeamMember) => {
@@ -73,6 +85,7 @@ export const TeamSettings: React.FC = () => {
             currentUserId={user?.id}
             canManageRoles={canManageRoles}
             onEditRole={handleEditRole}
+            onEditProfile={isSuperAdmin ? handleEditProfile : undefined}
             onRemove={handleRemoveMember}
           />
         ))}
@@ -94,6 +107,16 @@ export const TeamSettings: React.FC = () => {
         onUpdate={async (member: TeamMember, role: string, permissions: string[]) => {
           await updateMemberRole(member, role as any, permissions);
         }}
+      />
+
+      <ProfileEditDialog
+        member={selectedMember}
+        isOpen={isProfileDialogOpen}
+        onClose={() => {
+          setIsProfileDialogOpen(false);
+          setSelectedMember(null);
+        }}
+        onUpdate={fetchTeamMembers}
       />
     </div>
   );
