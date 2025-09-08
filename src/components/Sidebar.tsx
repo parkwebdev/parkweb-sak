@@ -172,7 +172,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose, onShowShortcuts }) =>
                 <button
                   onClick={onShowShortcuts}
                   className="p-1 rounded-md hover:bg-accent/50 text-muted-foreground hover:text-foreground flex items-center gap-1"
-                  title="View keyboard shortcuts (⌘.)"
+                  title="View keyboard shortcuts (Ctrl+/)"
                 >
                   <div className="text-xs bg-muted border border-border rounded px-1.5 py-0.5 font-medium">
                     ⌘.
@@ -191,7 +191,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose, onShowShortcuts }) =>
                 <button
                   onClick={onShowShortcuts}
                   className="p-2 rounded-md hover:bg-accent/50 text-muted-foreground hover:text-foreground"
-                  title="View keyboard shortcuts (⌘.)"
+                  title="View keyboard shortcuts (Ctrl+/)"
                 >
                   <div className="text-xs bg-muted border border-border rounded px-1.5 py-0.5 font-medium">
                     ⌘.
