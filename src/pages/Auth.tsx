@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsTrigger } from '@/components/ui/tabs';
+
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { validatePasswordStrength } from '@/utils/input-validation';
@@ -18,6 +18,7 @@ const Auth = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
+  const [activeTab, setActiveTab] = useState<'signin' | 'signup'>('signin');
   const navigate = useNavigate();
   const { toast } = useToast();
   const { logAuthEvent } = useSecurityLog();
@@ -201,8 +202,9 @@ const Auth = () => {
             />
           </div>
 
-          <Tabs defaultValue="signin" className="w-full">
-            <TabsContent value="signin" className="space-y-6">
+          <div className="w-full">
+            {activeTab === 'signin' && (
+              <div className="space-y-6">
               {/* Header */}
               <div className="space-y-2">
                 <h1 className="text-3xl font-semibold text-foreground">Welcome back</h1>
@@ -296,16 +298,18 @@ const Auth = () => {
               {/* Sign Up Link */}
               <div className="text-center">
                 <span className="text-sm text-muted-foreground">Don't have an account? </span>
-                <TabsTrigger 
-                  value="signup" 
-                  className="text-sm text-primary hover:text-primary/80 p-0 h-auto font-medium underline-offset-4 hover:underline"
+                <button 
+                  onClick={() => setActiveTab('signup')}
+                  className="text-sm text-primary hover:text-primary/80 font-medium underline-offset-4 hover:underline"
                 >
                   Sign up
-                </TabsTrigger>
+                </button>
               </div>
-            </TabsContent>
+              </div>
+            )}
 
-            <TabsContent value="signup" className="space-y-6">
+            {activeTab === 'signup' && (
+              <div className="space-y-6">
               {/* Header */}
               <div className="space-y-2">
                 <h1 className="text-3xl font-semibold text-foreground">Create account</h1>
@@ -389,15 +393,16 @@ const Auth = () => {
               {/* Sign In Link */}
               <div className="text-center">
                 <span className="text-sm text-muted-foreground">Already have an account? </span>
-                <TabsTrigger 
-                  value="signin" 
-                  className="text-sm text-primary hover:text-primary/80 p-0 h-auto font-medium underline-offset-4 hover:underline"
+                <button 
+                  onClick={() => setActiveTab('signin')}
+                  className="text-sm text-primary hover:text-primary/80 font-medium underline-offset-4 hover:underline"
                 >
                   Sign in
-                </TabsTrigger>
+                </button>
               </div>
-            </TabsContent>
-          </Tabs>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
