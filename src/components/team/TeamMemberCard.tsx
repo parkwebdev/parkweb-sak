@@ -27,83 +27,87 @@ export const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
   const showManagementButtons = (canManageRoles && !isCurrentUser) || isCurrentUser;
 
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 border border-border rounded-lg bg-background gap-4">
-      <div className="flex items-center space-x-4">
-        <Avatar>
-          <AvatarImage src={member.avatar_url || undefined} />
-          <AvatarFallback>
-            {member.display_name 
-              ? member.display_name.split(' ').map(n => n[0]).join('').toUpperCase()
-              : member.email?.substring(0, 2).toUpperCase() || 'U'
-            }
-          </AvatarFallback>
-        </Avatar>
-        <div>
-          <h3 className="text-xs font-medium text-foreground">
-            {member.display_name || member.email?.split('@')[0] || 'Unknown User'}
-          </h3>
-          <p className="text-xs text-muted-foreground">{member.email}</p>
-          <p className="text-xs text-muted-foreground">
-            Joined {formatJoinDate(member.created_at)}
-          </p>
-        </div>
-      </div>
-      
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:space-x-4">
-        <div 
-          className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${getRoleColor(member.role || 'member')}`}
-        >
-          {isCurrentUser 
-            ? (
-                member.role === 'super_admin' ? 'Super Admin (You)' :
-                member.role === 'admin' ? 'Admin (You)' : 
-                `${member.role || 'Member'} (You)`
-              )
-            : (
-                member.role === 'super_admin' ? 'Super Admin' :
-                member.role || 'Member'
-              )
-          }
+    <div className="p-6 border border-border rounded-xl bg-card shadow-sm hover:shadow-md transition-shadow">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+        <div className="flex items-start space-x-4">
+          <Avatar className="h-12 w-12">
+            <AvatarImage src={member.avatar_url || undefined} />
+            <AvatarFallback className="text-sm font-medium">
+              {member.display_name 
+                ? member.display_name.split(' ').map(n => n[0]).join('').toUpperCase()
+                : member.email?.substring(0, 2).toUpperCase() || 'U'
+              }
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex-1 min-w-0">
+            <h3 className="text-sm font-semibold text-foreground mb-1">
+              {member.display_name || member.email?.split('@')[0] || 'Unknown User'}
+            </h3>
+            <p className="text-sm text-muted-foreground mb-2">{member.email}</p>
+            <p className="text-xs text-muted-foreground">
+              Joined {formatJoinDate(member.created_at)}
+            </p>
+          </div>
         </div>
         
-        {showManagementButtons && (
-          <div className="flex items-center gap-1 mt-2">
-            {/* Only show role management for non-super-admin users */}
-            {!isCurrentUser && (
-              <Button 
-                variant="ghost"
-                size="sm"
-                onClick={() => onEditRole(member)}
-                className="h-8 w-8 p-0"
-                title="Manage Roles & Permissions"
-              >
-                <Shield size={16} />
-              </Button>
-            )}
-            {onEditProfile && !isCurrentUser && (
-              <Button 
-                variant="ghost"
-                size="sm"
-                onClick={() => onEditProfile(member)}
-                className="h-8 w-8 p-0 text-primary hover:text-primary/80"
-                title="Edit Profile"
-              >
-                <Edit size={16} />
-              </Button>
-            )}
-            {/* Only show remove for admins managing others, not for self-management */}
-            {canManageRoles && !isCurrentUser && (
-              <Button 
-                variant="ghost"
-                size="sm"
-                onClick={() => onRemove(member)}
-                className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10 dark:text-red-400 dark:hover:text-red-300 border border-destructive/20 hover:border-destructive/40"
-              >
-                <X size={16} />
-              </Button>
-            )}
+        <div className="flex flex-col items-start sm:items-end gap-3">
+          <div 
+            className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold ${getRoleColor(member.role || 'member')}`}
+          >
+            {isCurrentUser 
+              ? (
+                  member.role === 'super_admin' ? 'Super Admin (You)' :
+                  member.role === 'admin' ? 'Admin (You)' : 
+                  `${(member.role || 'member').split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')} (You)`
+                )
+              : (
+                  member.role === 'super_admin' ? 'Super Admin' :
+                  (member.role || 'member').split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
+                )
+            }
           </div>
-        )}
+          
+          {showManagementButtons && (
+            <div className="flex items-center gap-2">
+              {/* Only show role management for non-super-admin users */}
+              {!isCurrentUser && (
+                <Button 
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onEditRole(member)}
+                  className="h-8 px-3 text-xs"
+                  title="Manage Roles & Permissions"
+                >
+                  <Shield size={14} className="mr-1" />
+                  Roles
+                </Button>
+              )}
+              {onEditProfile && !isCurrentUser && (
+                <Button 
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onEditProfile(member)}
+                  className="h-8 px-3 text-xs"
+                  title="Edit Profile"
+                >
+                  <Edit size={14} className="mr-1" />
+                  Edit
+                </Button>
+              )}
+              {/* Only show remove for admins managing others, not for self-management */}
+              {canManageRoles && !isCurrentUser && (
+                <Button 
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onRemove(member)}
+                  className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10 dark:text-red-400 dark:hover:text-red-300 border-destructive/20 hover:border-destructive/40"
+                >
+                  <X size={14} />
+                </Button>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
