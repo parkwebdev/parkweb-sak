@@ -12,7 +12,7 @@ import {
   ArrowsDown as ArrowUpDown,
   DotsGrid as Columns,
   FilterLines as Filter,
-  SearchLg as Search
+  SearchSm as Search
 } from "@untitledui/icons";
 import { REQUEST_STATUSES, REQUEST_PRIORITIES } from "@/lib/constants";
 import {
