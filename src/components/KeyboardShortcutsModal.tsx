@@ -20,6 +20,7 @@ interface KeyboardShortcutsModalProps {
   shortcuts: KeyboardShortcut[];
 }
 
+// DEPRECATED: Use KeyboardShortcutsDropdown in UserAccountCard instead
 export const KeyboardShortcutsModal: React.FC<KeyboardShortcutsModalProps> = ({
   open,
   onOpenChange,

@@ -7,6 +7,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
+import { KeyboardShortcutsDropdown } from '@/components/KeyboardShortcutsDropdown';
 
 interface UserProfile {
   display_name: string | null;
@@ -24,6 +26,9 @@ export const UserAccountCard: React.FC<UserAccountCardProps> = ({ isCollapsed = 
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
+  
+  // Initialize keyboard shortcuts
+  const { shortcuts } = useKeyboardShortcuts();
 
   useEffect(() => {
     if (user) {
@@ -120,13 +125,13 @@ export const UserAccountCard: React.FC<UserAccountCardProps> = ({ isCollapsed = 
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48">
-            {/* Remove duplicate profile and team links since we removed those pages */}
             <DropdownMenuItem asChild>
               <Link to="/settings" className="w-full flex items-center gap-2">
                 <Settings size={16} />
                 Settings
               </Link>
             </DropdownMenuItem>
+            <KeyboardShortcutsDropdown shortcuts={shortcuts} />
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
             <LogOut size={16} className="mr-2" />

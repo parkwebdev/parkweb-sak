@@ -77,7 +77,6 @@ export const TeamMembersTable: React.FC<TeamMembersTableProps> = ({
               <TableRow>
                 <TableHead>Team Member</TableHead>
                 <TableHead>Role</TableHead>
-                <TableHead>Permissions</TableHead>
                 <TableHead className="w-24">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -95,9 +94,6 @@ export const TeamMembersTable: React.FC<TeamMembersTableProps> = ({
                   </TableCell>
                   <TableCell>
                     <div className="h-6 w-20 bg-muted rounded animate-pulse" />
-                  </TableCell>
-                  <TableCell>
-                    <div className="h-3 w-64 bg-muted rounded animate-pulse" />
                   </TableCell>
                   <TableCell>
                     <div className="h-8 w-8 bg-muted rounded animate-pulse" />
@@ -126,26 +122,25 @@ export const TeamMembersTable: React.FC<TeamMembersTableProps> = ({
     <div className="w-full bg-card border border-border rounded-xl overflow-hidden">
       <div className="w-full overflow-x-auto">
         <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Team Member</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Permissions</TableHead>
-              <TableHead className="w-24">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Team Member</TableHead>
+                <TableHead>Role</TableHead>
+                <TableHead className="w-24">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
           <TableBody>
             {teamMembers.map((member) => (
               <TableRow key={member.id}>
-                <TableCell>
-                  <div className="flex items-center space-x-3">
-                    <Avatar className="h-8 w-8">
+                <TableCell className="py-3">
+                  <div className="flex items-center space-x-3 min-w-0">
+                    <Avatar className="h-8 w-8 flex-shrink-0">
                       <AvatarImage src={member.avatar_url || ''} />
                       <AvatarFallback className="text-xs">
                         {getInitials(member.display_name, member.email)}
                       </AvatarFallback>
                     </Avatar>
-                    <div className="flex flex-col min-w-0">
+                    <div className="flex flex-col min-w-0 max-w-xs">
                       <div className="font-medium text-sm truncate">
                         {member.display_name || 'No name provided'}
                       </div>
@@ -155,20 +150,12 @@ export const TeamMembersTable: React.FC<TeamMembersTableProps> = ({
                     </div>
                   </div>
                 </TableCell>
-                <TableCell>
-                  <Badge variant={getBadgeVariant(member.role || 'member')}>
+                <TableCell className="py-3">
+                  <Badge variant={getBadgeVariant(member.role || 'member')} className="whitespace-nowrap">
                     {formatRole(member.role || 'member')}
                   </Badge>
                 </TableCell>
-                <TableCell>
-                  <div className="text-xs text-muted-foreground max-w-xs truncate">
-                    {member.permissions && member.permissions.length > 0 
-                      ? member.permissions.slice(0, 3).join(', ') + (member.permissions.length > 3 ? '...' : '')
-                      : 'No permissions assigned'
-                    }
-                  </div>
-                </TableCell>
-                <TableCell>
+                <TableCell className="py-3">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="sm" className="h-8 w-8 p-0">

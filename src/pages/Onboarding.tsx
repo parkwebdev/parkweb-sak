@@ -16,8 +16,6 @@ import { createOnboardingUrl, createEmailTemplate, openEmailClient, copyToClipbo
 import { useEmailTemplates } from '@/hooks/useEmailTemplates';
 import { useRealtimeNotifications } from '@/hooks/useRealtimeNotifications';
 import { ProgressBar } from '@/components/ProgressBar';
-import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
-import { KeyboardShortcutsModal } from '@/components/KeyboardShortcutsModal';
 import { BulkActionDropdown } from '@/components/BulkActionDropdown';
 import { useSidebar } from '@/hooks/use-sidebar';
 import { supabase } from '@/integrations/supabase/client';
@@ -75,30 +73,6 @@ const Onboarding = () => {
   const { user } = useAuth();
   const { sendWelcomeEmail } = useEmailTemplates();
   const { triggerOnboardingCompletion } = useRealtimeNotifications();
-  
-  const [showShortcutsModal, setShowShortcutsModal] = useState(false);
-  
-  // Initialize keyboard shortcuts
-  const { shortcuts } = useKeyboardShortcuts([
-    {
-      key: '/',
-      ctrlKey: true,
-      description: 'Show keyboard shortcuts',
-      action: () => setShowShortcutsModal(true)
-    },
-    {
-      key: 'k',
-      ctrlKey: true,
-      description: 'Open command palette',
-      action: () => {} // Let SearchInput handle this
-    },
-    {
-      key: 'd',
-      ctrlKey: true,
-      description: 'Delete selected items',
-      action: () => selectedForDelete.length > 0 && setShowDeleteDialog(true)
-    }
-  ]);
 
   // Fetch client links from database
   useEffect(() => {
@@ -649,8 +623,7 @@ const Onboarding = () => {
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       }`}>
         <Sidebar 
-          onClose={() => setSidebarOpen(false)} 
-          onShowShortcuts={() => setShowShortcutsModal(true)}
+          onClose={() => setSidebarOpen(false)}
         />
       </div>
       
@@ -1030,12 +1003,6 @@ const Onboarding = () => {
         onConfirmationValueChange={setDeleteConfirmation}
         onConfirm={handleDeleteSelected}
         isDeleting={isDeleting}
-      />
-      
-      <KeyboardShortcutsModal
-        open={showShortcutsModal}
-        onOpenChange={setShowShortcutsModal}
-        shortcuts={shortcuts}
       />
     </div>
   );
