@@ -31,7 +31,21 @@ const Auth = () => {
         navigate('/');
       }
     };
+    
     checkUser();
+
+    // Check for URL parameters (for team invitations)
+    const urlParams = new URLSearchParams(window.location.search);
+    const emailParam = urlParams.get('email');
+    const tabParam = urlParams.get('tab');
+    
+    if (emailParam) {
+      setEmail(emailParam);
+    }
+    
+    if (tabParam === 'signup') {
+      setActiveTab('signup');
+    }
   }, [navigate]);
 
   const handleSignIn = async (e: React.FormEvent) => {

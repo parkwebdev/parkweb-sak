@@ -88,15 +88,11 @@ export const useTeam = () => {
 
   const inviteMember = async (inviteData: InviteMemberData): Promise<boolean> => {
     try {
-      const { error } = await supabase.functions.invoke('send-notification-email', {
+      const { error } = await supabase.functions.invoke('send-team-invitation', {
         body: {
-          to: inviteData.email,
-          type: 'team_invitation',
-          title: 'Team Invitation',
-          message: `You've been invited to join our team! Click the link below to get started.`,
-          data: {
-            invited_by: user?.email || 'Team Admin',
-          }
+          email: inviteData.email,
+          invitedBy: user?.email || 'Team Admin',
+          companyName: 'our team'
         }
       });
 

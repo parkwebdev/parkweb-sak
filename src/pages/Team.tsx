@@ -10,29 +10,29 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { ProfileEditDialog } from '@/components/team/ProfileEditDialog';
 import { useSidebar } from '@/hooks/use-sidebar';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
 import { supabase } from '@/integrations/supabase/client';
-
-interface TeamMember {
-  id: string;
-  user_id: string;
-  display_name: string | null;
-  email: string | null;
-  avatar_url: string | null;
-  created_at: string;
-  updated_at: string;
-}
+import { TeamMember } from '@/types/team';
 
 const Team = () => {
   const { isCollapsed } = useSidebar();
   const { toast } = useToast();
   const { user } = useAuth();
+  const { role: currentUserRole } = useRoleAuthorization();
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
+  const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
+  const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
+  const [inviting, setInviting] = useState(false);
+
+  const isSuperAdmin = currentUserRole === 'super_admin';
+  const canManageTeam = ['super_admin', 'admin'].includes(currentUserRole || '');
 
   useEffect(() => {
     if (user) {
@@ -42,13 +42,14 @@ const Team = () => {
 
   const fetchTeamMembers = async () => {
     try {
-      const { data, error } = await supabase
+      // Fetch profiles with their roles
+      const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Error fetching team members:', error);
+      if (profilesError) {
+        console.error('Error fetching team members:', profilesError);
         toast({
           title: "Error",
           description: "Failed to load team members.",
@@ -57,7 +58,25 @@ const Team = () => {
         return;
       }
 
-      setTeamMembers(data || []);
+      // Fetch roles for all members
+      const { data: rolesData, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('user_id, role, permissions');
+
+      if (rolesError) {
+        console.error('Error fetching roles:', rolesError);
+      }
+
+      // Combine profile and role data
+      const membersWithRoles = (profilesData || []).map(profile => {
+        const roleData = rolesData?.find(r => r.user_id === profile.user_id);
+        return {
+          ...profile,
+          role: roleData?.role || 'member',
+        };
+      });
+
+      setTeamMembers(membersWithRoles);
     } catch (error) {
       console.error('Error in fetchTeamMembers:', error);
     } finally {
@@ -65,17 +84,98 @@ const Team = () => {
     }
   };
 
-  const handleInvite = () => {
-    if (!inviteEmail) return;
+  const handleInvite = async () => {
+    if (!inviteEmail || !user) return;
     
-    // TODO: Implement actual team invitation system with database
-    toast({
-      title: "Invitation sent",
-      description: `Invitation sent to ${inviteEmail}`,
-    });
-    
-    setInviteEmail('');
-    setIsInviteOpen(false);
+    setInviting(true);
+    try {
+      const { error } = await supabase.functions.invoke('send-team-invitation', {
+        body: {
+          email: inviteEmail,
+          invitedBy: user.email || 'Team Admin',
+          companyName: 'our team'
+        }
+      });
+
+      if (error) {
+        console.error('Error sending invitation:', error);
+        toast({
+          title: "Failed to send invitation",
+          description: "There was an error sending the invitation email.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Invitation sent",
+        description: `Team invitation sent to ${inviteEmail}`,
+      });
+      
+      setInviteEmail('');
+      setIsInviteOpen(false);
+    } catch (error) {
+      console.error('Error in handleInvite:', error);
+      toast({
+        title: "Error",
+        description: "Failed to send invitation.",
+        variant: "destructive",
+      });
+    } finally {
+      setInviting(false);
+    }
+  };
+
+  const handleEditProfile = (member: TeamMember) => {
+    setSelectedMember(member);
+    setIsProfileDialogOpen(true);
+  };
+
+  const handleRemoveMember = async (member: TeamMember) => {
+    if (!confirm(`Are you sure you want to remove ${member.display_name || member.email} from the team?`)) {
+      return;
+    }
+
+    try {
+      // Remove from user_roles table
+      const { error: roleError } = await supabase
+        .from('user_roles')
+        .delete()
+        .eq('user_id', member.user_id);
+
+      if (roleError) {
+        console.error('Error removing user role:', roleError);
+      }
+
+      // Remove from profiles table
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('user_id', member.user_id);
+
+      if (profileError) {
+        toast({
+          title: "Remove failed",
+          description: "Failed to remove team member.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Member removed",
+        description: `${member.display_name || member.email} has been removed from the team.`,
+      });
+
+      // Refresh the team members list
+      await fetchTeamMembers();
+    } catch (error) {
+      toast({
+        title: "Remove failed", 
+        description: "An error occurred while removing the team member.",
+        variant: "destructive",
+      });
+    }
   };
 
   if (loading) {
@@ -176,9 +276,9 @@ const Team = () => {
                         <Button variant="outline" onClick={() => setIsInviteOpen(false)}>
                           Cancel
                         </Button>
-                        <Button onClick={handleInvite}>
+                        <Button onClick={handleInvite} disabled={inviting}>
                           <Send className="h-4 w-4 mr-2" />
-                          Send Invitation
+                          {inviting ? 'Sending...' : 'Send Invitation'}
                         </Button>
                       </div>
                     </div>
@@ -228,19 +328,30 @@ const Team = () => {
                         </div>
                         <div className="flex items-center gap-3">
                           <Badge variant="complete" className="capitalize">
-                            {member.user_id === user?.id ? 'You' : 'Member'}
+                            {member.user_id === user?.id 
+                              ? (member.role === 'super_admin' ? 'Super Admin (You)' :
+                                 member.role === 'admin' ? 'Admin (You)' : 
+                                 `${member.role || 'Member'} (You)`)
+                              : (member.role === 'super_admin' ? 'Super Admin' :
+                                 member.role || 'Member')}
                           </Badge>
-                          {member.user_id !== user?.id && (
+                          {member.user_id !== user?.id && canManageTeam && (
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" size="sm">
                                   <MoreHorizontal className="h-4 w-4" />
                                 </Button>
                               </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem>Edit Profile</DropdownMenuItem>
-                                <DropdownMenuItem>Send Message</DropdownMenuItem>
-                                <DropdownMenuItem className="text-destructive dark:text-red-400">
+                              <DropdownMenuContent align="end" className="bg-background border shadow-md z-50">
+                                {isSuperAdmin && (
+                                  <DropdownMenuItem onClick={() => handleEditProfile(member)}>
+                                    Edit Profile
+                                  </DropdownMenuItem>
+                                )}
+                                <DropdownMenuItem 
+                                  className="text-destructive dark:text-red-400"
+                                  onClick={() => handleRemoveMember(member)}
+                                >
                                   Remove Member
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
@@ -253,11 +364,21 @@ const Team = () => {
                 })
               )}
             </div>
-          </div>
-        </main>
-      </div>
-    </div>
-  );
-};
+            </div>
+          </main>
+        </div>
 
-export default Team;
+        <ProfileEditDialog
+          member={selectedMember}
+          isOpen={isProfileDialogOpen}
+          onClose={() => {
+            setIsProfileDialogOpen(false);
+            setSelectedMember(null);
+          }}
+          onUpdate={fetchTeamMembers}
+        />
+      </div>
+    );
+  };
+
+  export default Team;
