@@ -630,15 +630,10 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'links-invitat
                            {row.submittedDate}
                          </TableCell>
                       );
-                    case 'completion':
-                      return (
-                         <TableCell key="completion">
-                           <div className="flex items-center gap-2">
-                             <ProgressBar percentage={row.percentage} />
-                             <span className="text-xs text-muted-foreground min-w-[3rem]">
-                               {row.percentage}%
-                             </span>
-                           </div>
+                     case 'completion':
+                       return (
+                          <TableCell key="completion">
+                            <ProgressBar percentage={row.percentage} />
                          </TableCell>
                       );
                     case 'status':

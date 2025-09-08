@@ -15,6 +15,9 @@ import ScopeOfWorks from "./pages/ScopeOfWorks";
 import Settings from "./pages/Settings";
 import EmailTest from "./pages/EmailTest";
 import NotFound from "./pages/NotFound";
+import { Dashboard } from "./pages/Dashboard";
+import OnboardingPage from "./pages/OnboardingPage";
+import DashboardWrapper from "./pages/DashboardWrapper";
 
 const queryClient = new QueryClient();
 
@@ -36,18 +39,18 @@ const App = () => (
               <Route path="/login" element={<Auth />} />
               <Route path="/" element={
                 <ProtectedRoute>
-                  <Index />
+                  <DashboardWrapper />
                 </ProtectedRoute>
               } />
-              {/* Redirect old routes to main dashboard */}
               <Route path="/onboarding" element={
                 <ProtectedRoute>
-                  <Index />
+                  <OnboardingPage />
                 </ProtectedRoute>
               } />
+              {/* Redirect old scope-of-works route to onboarding */}
               <Route path="/scope-of-works" element={
                 <ProtectedRoute>
-                  <Index />
+                  <OnboardingPage />
                 </ProtectedRoute>
               } />
               <Route path="/client-onboarding" element={<ClientOnboarding />} />

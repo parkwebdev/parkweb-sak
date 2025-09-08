@@ -21,9 +21,15 @@ interface NavigationItem {
 const navigationItems: NavigationItem[] = [
   {
     id: 'dashboard',
-    label: 'Client Management',
+    label: 'Dashboard',
     icon: Grid,
     path: '/'
+  },
+  {
+    id: 'onboarding',
+    label: 'Onboarding',
+    icon: Home,
+    path: '/onboarding'
   }
 ];
 

@@ -18,12 +18,16 @@ interface MainContentProps {
   activeTab?: string;
   onTabChange?: (tabId: string) => void;
   onMenuClick?: () => void;
+  pageTitle?: string;
+  pageDescription?: string;
 }
 
 export const MainContent: React.FC<MainContentProps> = ({ 
   activeTab = 'links-invitations', 
   onTabChange,
-  onMenuClick
+  onMenuClick,
+  pageTitle = "Onboarding",
+  pageDescription = "Manage client onboarding links, submissions, and scope of work documents"
 }) => {
   const { user } = useAuth();
   const [userDisplayName, setUserDisplayName] = useState<string>('');
@@ -126,16 +130,16 @@ export const MainContent: React.FC<MainContentProps> = ({
                   <Menu size={20} />
                 </button>
                 <h1 className="text-foreground text-xl font-semibold leading-tight">
-                  Client Management
+                  {pageTitle}
                 </h1>
               </div>
               
               <div className="min-w-0 lg:min-w-64 text-xl text-foreground leading-none flex-1 shrink basis-[0%] gap-1">
                 <h1 className="hidden lg:block text-foreground text-2xl font-semibold leading-tight mb-1">
-                  Client Management - Welcome {userDisplayName}
+                  {pageTitle}
                 </h1>
                 <p className="text-sm text-muted-foreground">
-                  Unified client pipeline from links to project completion
+                  {pageDescription}
                 </p>
               </div>
             </div>
