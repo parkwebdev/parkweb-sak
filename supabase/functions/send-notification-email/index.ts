@@ -217,9 +217,9 @@ const handler = async (req: Request): Promise<Response> => {
     const emailContent = generateEmailContent(type, sanitizedTitle, sanitizedMessage, sanitizedData);
 
     const emailResponse = await resend.emails.send({
-      from: "ParkWeb <notifications@parkweb.app>",
+      from: "ParkWeb Team <team@parkweb.app>",
       to: [sanitizedTo],
-      reply_to: "admin@park-web.com",
+      reply_to: "team@parkweb.app",
       subject: emailContent.subject,
       html: emailContent.html,
     });
