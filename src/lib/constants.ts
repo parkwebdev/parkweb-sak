@@ -34,3 +34,17 @@ export const PAGINATION = {
   defaultPageSize: 10,
   maxPageSize: 100,
 } as const;
+
+export const REQUEST_STATUSES = {
+  todo: 'To Do',
+  in_progress: 'In Progress',
+  on_hold: 'On Hold',
+  completed: 'Completed'
+} as const;
+
+export const REQUEST_PRIORITIES = {
+  low: 'Low',
+  medium: 'Medium', 
+  high: 'High',
+  urgent: 'Urgent'
+} as const;
