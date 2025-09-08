@@ -1,5 +1,5 @@
 import React from 'react';
-import { Settings01 as Settings, X } from '@untitledui/icons';
+import { Settings01 as Settings, Edit01 as Edit, Shield01 as Shield, X } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -73,8 +73,9 @@ export const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
               size="sm"
               onClick={() => onEditRole(member)}
               className="h-8 w-8 p-0"
+              title="Manage Roles & Permissions"
             >
-              <Settings size={16} />
+              <Shield size={16} />
             </Button>
             {onEditProfile && !isCurrentUser && (
               <Button 
@@ -84,7 +85,7 @@ export const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
                 className="h-8 w-8 p-0 text-primary hover:text-primary/80"
                 title="Edit Profile"
               >
-                <Settings size={16} />
+                <Edit size={16} />
               </Button>
             )}
             {/* Only show remove for admins managing others, not for self-management */}
