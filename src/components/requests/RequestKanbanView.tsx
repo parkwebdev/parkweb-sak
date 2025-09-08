@@ -274,7 +274,7 @@ export const RequestKanbanView = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background/95">
+    <div className="min-h-screen">
       <DndContext
         sensors={sensors}
         onDragStart={handleDragStart}
