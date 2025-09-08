@@ -20,8 +20,6 @@ import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
-
-
 interface SortableCardProps {
   request: Request;
   onStatusChange: (id: string, status: Request['status']) => void;
