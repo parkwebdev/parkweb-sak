@@ -61,15 +61,15 @@ export const RequestsContent = () => {
 
       <section className="w-full mt-6">
         <div className="w-full px-4 lg:px-8 py-0">
-          <Card className="border-0 shadow-sm">
-            <CardContent className="p-0">
-              {viewMode === "table" ? (
+          {viewMode === "table" ? (
+            <Card className="border-0 shadow-sm">
+              <CardContent className="p-0">
                 <RequestsTable />
-              ) : (
-                <RequestKanbanView />
-              )}
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          ) : (
+            <RequestKanbanView />
+          )}
         </div>
       </section>
 

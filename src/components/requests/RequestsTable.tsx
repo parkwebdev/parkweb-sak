@@ -74,7 +74,7 @@ const mockRequests = [
 ];
 
 export const RequestsTable = () => {
-  const [searchTerm, setSearchTerm] = useState("");
+  const [activeStatus, setActiveStatus] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [showColumns, setShowColumns] = useState({
@@ -86,6 +86,14 @@ export const RequestsTable = () => {
     created: true,
     actions: true,
   });
+
+  const statusTabs = [
+    { key: 'all', label: 'All', count: mockRequests.length },
+    { key: 'todo', label: 'To Do', count: mockRequests.filter(r => r.status === 'todo').length },
+    { key: 'in_progress', label: 'In Progress', count: mockRequests.filter(r => r.status === 'in_progress').length },
+    { key: 'on_hold', label: 'On Hold', count: mockRequests.filter(r => r.status === 'on_hold').length },
+    { key: 'completed', label: 'Completed', count: mockRequests.filter(r => r.status === 'completed').length },
+  ];
 
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
@@ -111,101 +119,103 @@ export const RequestsTable = () => {
     return REQUEST_PRIORITIES[priority as keyof typeof REQUEST_PRIORITIES] || priority;
   };
 
-  const filteredRequests = mockRequests.filter(request =>
-    request.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    request.client_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    request.description.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredRequests = activeStatus === 'all' 
+    ? mockRequests 
+    : mockRequests.filter(request => request.status === activeStatus);
 
   return (
     <div className="space-y-4 p-6">
+      {/* Status Tabs */}
+      <div className="border-b">
+        <nav className="flex space-x-8 -mb-px">
+          {statusTabs.map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveStatus(tab.key)}
+              className={`whitespace-nowrap pb-2 px-1 border-b-2 font-medium text-sm transition-colors ${
+                activeStatus === tab.key
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground'
+              }`}
+            >
+              {tab.label}
+              <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs bg-muted text-muted-foreground">
+                {tab.count}
+              </span>
+            </button>
+          ))}
+        </nav>
+      </div>
+
       {/* Toolbar */}
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        <div className="flex items-center gap-2 flex-1 max-w-sm">
-          <div className="relative w-full">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-            <Input
-              placeholder="Search requests..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9"
-            />
-          </div>
-        </div>
-        
-        <div className="flex items-center gap-2">
-          {/* Filter Dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
-                <Filter className="h-4 w-4 mr-2" />
-                Filter
-                <ChevronDown className="h-4 w-4 ml-2" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuLabel>Filter by Status</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem>All Statuses</DropdownMenuItem>
-              <DropdownMenuItem>To Do</DropdownMenuItem>
-              <DropdownMenuItem>In Progress</DropdownMenuItem>
-              <DropdownMenuItem>On Hold</DropdownMenuItem>
-              <DropdownMenuItem>Completed</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+      <div className="flex items-center justify-end gap-2">
+        {/* Filter Dropdown - Icon Only */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm">
+              <Filter className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48 bg-background">
+            <DropdownMenuLabel>Filter by Priority</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem>All Priorities</DropdownMenuItem>
+            <DropdownMenuItem>Urgent</DropdownMenuItem>
+            <DropdownMenuItem>High</DropdownMenuItem>
+            <DropdownMenuItem>Medium</DropdownMenuItem>
+            <DropdownMenuItem>Low</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
-          {/* Columns Dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
-                <Columns className="h-4 w-4 mr-2" />
-                Columns
-                <ChevronDown className="h-4 w-4 ml-2" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuLabel>Toggle columns</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuCheckboxItem
-                checked={showColumns.request}
-                onCheckedChange={(checked) =>
-                  setShowColumns(prev => ({ ...prev, request: !!checked }))
-                }
-              >
-                Request
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem
-                checked={showColumns.client}
-                onCheckedChange={(checked) =>
-                  setShowColumns(prev => ({ ...prev, client: !!checked }))
-                }
-              >
-                Client
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem
-                checked={showColumns.status}
-                onCheckedChange={(checked) =>
-                  setShowColumns(prev => ({ ...prev, status: !!checked }))
-                }
-              >
-                Status
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem
-                checked={showColumns.priority}
-                onCheckedChange={(checked) =>
-                  setShowColumns(prev => ({ ...prev, priority: !!checked }))
-                }
-              >
-                Priority
-              </DropdownMenuCheckboxItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+        {/* Columns Dropdown - Icon Only */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm">
+              <Columns className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48 bg-background">
+            <DropdownMenuLabel>Toggle columns</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuCheckboxItem
+              checked={showColumns.request}
+              onCheckedChange={(checked) =>
+                setShowColumns(prev => ({ ...prev, request: !!checked }))
+              }
+            >
+              Request
+            </DropdownMenuCheckboxItem>
+            <DropdownMenuCheckboxItem
+              checked={showColumns.client}
+              onCheckedChange={(checked) =>
+                setShowColumns(prev => ({ ...prev, client: !!checked }))
+              }
+            >
+              Client
+            </DropdownMenuCheckboxItem>
+            <DropdownMenuCheckboxItem
+              checked={showColumns.status}
+              onCheckedChange={(checked) =>
+                setShowColumns(prev => ({ ...prev, status: !!checked }))
+              }
+            >
+              Status
+            </DropdownMenuCheckboxItem>
+            <DropdownMenuCheckboxItem
+              checked={showColumns.priority}
+              onCheckedChange={(checked) =>
+                setShowColumns(prev => ({ ...prev, priority: !!checked }))
+              }
+            >
+              Priority
+            </DropdownMenuCheckboxItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
-          {/* Settings */}
-          <Button variant="outline" size="sm">
-            <Settings className="h-4 w-4" />
-          </Button>
-        </div>
+        {/* Settings - Icon Only */}
+        <Button variant="outline" size="sm">
+          <Settings className="h-4 w-4" />
+        </Button>
       </div>
 
       {/* Table */}
