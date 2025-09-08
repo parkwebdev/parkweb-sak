@@ -105,13 +105,18 @@ export const RequestsTable = () => {
     }
   };
 
-  const getPriorityBadgeVariant = (priority: string) => {
+  const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'urgent': return 'destructive';
-      case 'high': return 'outline';
-      case 'medium': return 'default';
-      case 'low': return 'secondary';
-      default: return 'secondary';
+      case 'urgent':
+        return 'bg-red-500 text-white border-red-500';
+      case 'high':
+        return 'bg-orange-500 text-white border-orange-500';
+      case 'medium':
+        return 'bg-yellow-500 text-black border-yellow-500';
+      case 'low':
+        return 'bg-blue-500 text-white border-blue-500';
+      default:
+        return 'bg-muted text-muted-foreground border-border';
     }
   };
 
@@ -265,7 +270,10 @@ export const RequestsTable = () => {
                 )}
                 {showColumns.priority && (
                   <TableCell>
-                    <Badge variant={getPriorityBadgeVariant(request.priority)}>
+                    <Badge 
+                      variant="outline" 
+                      className={getPriorityColor(request.priority)}
+                    >
                       {formatPriority(request.priority)}
                     </Badge>
                   </TableCell>

@@ -102,6 +102,21 @@ const SortableCard = ({ request }: SortableCardProps) => {
     return REQUEST_PRIORITIES[priority as keyof typeof REQUEST_PRIORITIES] || priority;
   };
 
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'urgent':
+        return 'bg-red-500 text-white border-red-500';
+      case 'high':
+        return 'bg-orange-500 text-white border-orange-500';
+      case 'medium':
+        return 'bg-yellow-500 text-black border-yellow-500';
+      case 'low':
+        return 'bg-blue-500 text-white border-blue-500';
+      default:
+        return 'bg-muted text-muted-foreground border-border';
+    }
+  };
+
   return (
     <Card
       ref={setNodeRef}
@@ -127,7 +142,10 @@ const SortableCard = ({ request }: SortableCardProps) => {
             {request.created_at}
           </div>
           <div className="flex items-center justify-between">
-            <Badge variant="outline" className="text-xs capitalize">
+            <Badge 
+              variant="outline" 
+              className={`text-xs capitalize ${getPriorityColor(request.priority)}`}
+            >
               {formatPriority(request.priority)}
             </Badge>
             <div className="flex gap-1">
