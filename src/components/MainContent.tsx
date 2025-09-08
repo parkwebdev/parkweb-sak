@@ -25,6 +25,7 @@ export const MainContent: React.FC<MainContentProps> = ({
   onMenuClick
 }) => {
   const { user } = useAuth();
+  const [userDisplayName, setUserDisplayName] = useState<string>('');
   const [stats, setStats] = useState({
     onboarding: {
       total: 0,
@@ -44,8 +45,35 @@ export const MainContent: React.FC<MainContentProps> = ({
   useEffect(() => {
     if (user) {
       fetchStats();
+      fetchUserProfile();
     }
   }, [user]);
+
+  const fetchUserProfile = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('display_name')
+        .eq('user_id', user.id)
+        .single();
+
+      if (error) {
+        console.error('Error fetching user profile:', error);
+        // Fallback to user email or default
+        const fallbackName = user.user_metadata?.display_name || user.email?.split('@')[0] || 'User';
+        setUserDisplayName(fallbackName);
+      } else {
+        const displayName = data?.display_name || user.user_metadata?.display_name || user.email?.split('@')[0] || 'User';
+        setUserDisplayName(displayName);
+      }
+    } catch (error) {
+      console.error('Error in fetchUserProfile:', error);
+      const fallbackName = user.user_metadata?.display_name || user.email?.split('@')[0] || 'User';
+      setUserDisplayName(fallbackName);
+    }
+  };
 
   const fetchStats = async () => {
     try {
@@ -105,13 +133,13 @@ export const MainContent: React.FC<MainContentProps> = ({
                   <Menu size={20} />
                 </button>
                 <h1 className="text-foreground text-xl font-semibold leading-tight">
-                  Dashboard
+                  Welcome {userDisplayName}
                 </h1>
               </div>
               
               <div className="min-w-0 lg:min-w-64 text-xl text-foreground leading-none flex-1 shrink basis-[0%] gap-1">
                 <h1 className="hidden lg:block text-foreground text-2xl font-semibold leading-tight mb-1">
-                  Dashboard
+                  Welcome {userDisplayName}
                 </h1>
                 <p className="text-sm text-muted-foreground">
                   Overview of client onboarding and project metrics

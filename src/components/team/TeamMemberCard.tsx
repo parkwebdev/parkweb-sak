@@ -68,15 +68,18 @@ export const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
         
         {showManagementButtons && (
           <div className="flex items-center gap-1 mt-2">
-            <Button 
-              variant="ghost"
-              size="sm"
-              onClick={() => onEditRole(member)}
-              className="h-8 w-8 p-0"
-              title="Manage Roles & Permissions"
-            >
-              <Shield size={16} />
-            </Button>
+            {/* Only show role management for non-super-admin users */}
+            {!isCurrentUser && (
+              <Button 
+                variant="ghost"
+                size="sm"
+                onClick={() => onEditRole(member)}
+                className="h-8 w-8 p-0"
+                title="Manage Roles & Permissions"
+              >
+                <Shield size={16} />
+              </Button>
+            )}
             {onEditProfile && !isCurrentUser && (
               <Button 
                 variant="ghost"
@@ -94,7 +97,7 @@ export const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
                 variant="ghost"
                 size="sm"
                 onClick={() => onRemove(member)}
-                className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10 dark:text-red-400 dark:hover:text-red-300"
+                className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10 dark:text-red-400 dark:hover:text-red-300 border border-destructive/20 hover:border-destructive/40"
               >
                 <X size={16} />
               </Button>

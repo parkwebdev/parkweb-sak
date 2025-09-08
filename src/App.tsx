@@ -33,7 +33,7 @@ const App = () => (
           <AuthProvider>
             <AppWithNotifications />
             <Routes>
-              <Route path="/auth" element={<Auth />} />
+              <Route path="/login" element={<Auth />} />
               <Route path="/" element={
                 <ProtectedRoute>
                   <Index />

@@ -60,7 +60,7 @@ export const UserAccountCard: React.FC<UserAccountCardProps> = ({ isCollapsed = 
         title: "Signed out",
         description: "You have been signed out successfully.",
       });
-      navigate('/auth');
+      navigate('/login');
     } catch (error) {
       toast({
         title: "Error",
@@ -120,25 +120,13 @@ export const UserAccountCard: React.FC<UserAccountCardProps> = ({ isCollapsed = 
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48">
-          <DropdownMenuItem asChild>
-            <Link to="/profile" className="w-full flex items-center gap-2">
-              <User size={16} />
-              Profile
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link to="/team" className="w-full flex items-center gap-2">
-              <User size={16} />
-              Team
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem asChild>
-            <Link to="/settings" className="w-full flex items-center gap-2">
-              <Settings size={16} />
-              Settings
-            </Link>
-          </DropdownMenuItem>
+            {/* Remove duplicate profile and team links since we removed those pages */}
+            <DropdownMenuItem asChild>
+              <Link to="/settings" className="w-full flex items-center gap-2">
+                <Settings size={16} />
+                Settings
+              </Link>
+            </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
             <LogOut size={16} className="mr-2" />
