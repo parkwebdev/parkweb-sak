@@ -20,6 +20,7 @@ interface MainContentProps {
   onMenuClick?: () => void;
   pageTitle?: string;
   pageDescription?: string;
+  showStats?: boolean; // Add optional prop to control stats display
 }
 
 export const MainContent: React.FC<MainContentProps> = ({ 
@@ -27,7 +28,8 @@ export const MainContent: React.FC<MainContentProps> = ({
   onTabChange,
   onMenuClick,
   pageTitle = "Onboarding",
-  pageDescription = "Manage client onboarding links, submissions, and scope of work documents"
+  pageDescription = "Manage client onboarding links, submissions, and scope of work documents",
+  showStats = false // Default to false for onboarding page
 }) => {
   const { user } = useAuth();
   const [userDisplayName, setUserDisplayName] = useState<string>('');
@@ -145,77 +147,79 @@ export const MainContent: React.FC<MainContentProps> = ({
             </div>
           </div>
 
-          {/* Enhanced Stats Overview */}
-          <div className="w-full">
-          <div className="grid grid-cols-2 lg:grid-cols-6 gap-4 mb-6">
-            <Card className="compact-card">
-              <CardContent className="compact-content">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs font-medium text-muted-foreground">Total Clients</p>
-                    <p className="text-lg lg:text-xl font-semibold">{stats.totalClients}</p>
-                  </div>
-                  <User className="h-4 w-4 lg:h-5 lg:w-5 text-primary" />
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="compact-card">
-              <CardContent className="compact-content">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs font-medium text-muted-foreground">Links Created</p>
-                    <p className="text-lg lg:text-xl font-semibold">{stats.linksCreated}</p>
-                  </div>
-                  <Link2 className="h-4 w-4 lg:h-5 lg:w-5 text-info" />
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="compact-card">
-              <CardContent className="compact-content">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs font-medium text-muted-foreground">Submissions</p>
-                    <p className="text-lg lg:text-xl font-semibold">{stats.submissionsReceived}</p>
-                  </div>
-                  <Clock className="h-4 w-4 lg:h-5 lg:w-5 text-warning" />
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="compact-card">
-              <CardContent className="compact-content">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs font-medium text-muted-foreground">SOWs Generated</p>
-                    <p className="text-lg lg:text-xl font-semibold">{stats.sowsGenerated}</p>
-                  </div>
-                  <FileText className="h-4 w-4 lg:h-5 lg:w-5 text-primary" />
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="compact-card">
-              <CardContent className="compact-content">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs font-medium text-muted-foreground">Completed</p>
-                    <p className="text-lg lg:text-xl font-semibold">{stats.projectsCompleted}</p>
-                  </div>
-                  <ClockCheck className="h-4 w-4 lg:h-5 lg:w-5 text-success" />
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="compact-card">
-              <CardContent className="compact-content">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs font-medium text-muted-foreground">Conversion</p>
-                    <p className="text-lg lg:text-xl font-semibold">{stats.conversionRate}%</p>
-                  </div>
-                  <AlertTriangle className="h-4 w-4 lg:h-5 lg:w-5 text-accent" />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-          </div>
+          {/* Enhanced Stats Overview - Only show if showStats is true */}
+          {showStats && (
+            <div className="w-full">
+              <div className="grid grid-cols-2 lg:grid-cols-6 gap-4 mb-6">
+                <Card className="compact-card">
+                  <CardContent className="compact-content">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs font-medium text-muted-foreground">Total Clients</p>
+                        <p className="text-lg lg:text-xl font-semibold">{stats.totalClients}</p>
+                      </div>
+                      <User className="h-4 w-4 lg:h-5 lg:w-5 text-primary" />
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card className="compact-card">
+                  <CardContent className="compact-content">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs font-medium text-muted-foreground">Links Created</p>
+                        <p className="text-lg lg:text-xl font-semibold">{stats.linksCreated}</p>
+                      </div>
+                      <Link2 className="h-4 w-4 lg:h-5 lg:w-5 text-info" />
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card className="compact-card">
+                  <CardContent className="compact-content">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs font-medium text-muted-foreground">Submissions</p>
+                        <p className="text-lg lg:text-xl font-semibold">{stats.submissionsReceived}</p>
+                      </div>
+                      <Clock className="h-4 w-4 lg:h-5 lg:w-5 text-warning" />
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card className="compact-card">
+                  <CardContent className="compact-content">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs font-medium text-muted-foreground">SOWs Generated</p>
+                        <p className="text-lg lg:text-xl font-semibold">{stats.sowsGenerated}</p>
+                      </div>
+                      <FileText className="h-4 w-4 lg:h-5 lg:w-5 text-primary" />
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card className="compact-card">
+                  <CardContent className="compact-content">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs font-medium text-muted-foreground">Completed</p>
+                        <p className="text-lg lg:text-xl font-semibold">{stats.projectsCompleted}</p>
+                      </div>
+                      <ClockCheck className="h-4 w-4 lg:h-5 lg:w-5 text-success" />
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card className="compact-card">
+                  <CardContent className="compact-content">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs font-medium text-muted-foreground">Conversion</p>
+                        <p className="text-lg lg:text-xl font-semibold">{stats.conversionRate}%</p>
+                      </div>
+                      <AlertTriangle className="h-4 w-4 lg:h-5 lg:w-5 text-accent" />
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          )}
 
           <TabNavigation
             tabs={tabs}

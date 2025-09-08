@@ -28,7 +28,7 @@ const navigationItems: NavigationItem[] = [
   {
     id: 'onboarding',
     label: 'Onboarding',
-    icon: Home,
+    icon: FileText,
     path: '/onboarding'
   }
 ];
