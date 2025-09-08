@@ -25,10 +25,6 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({
   
   return (
     <div className={`w-full ${className}`}>
-      <div className="flex justify-between items-center mb-1">
-        <span className="text-xs text-muted-foreground">Progress</span>
-        <span className="text-xs font-medium text-foreground">{percentage}%</span>
-      </div>
       <div className="w-full bg-muted rounded-full h-1.5">
         <div 
           className={`h-1.5 rounded-full transition-all duration-300 ${getProgressColor(percentage)}`}

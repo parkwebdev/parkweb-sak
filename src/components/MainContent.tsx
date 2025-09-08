@@ -10,7 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 const tabs = [
   { id: 'links-invitations', label: 'Links & Invitations' },
   { id: 'submissions-sows', label: 'Submissions & SOWs' },
-  { id: 'completed', label: 'Completed Projects' },
+  { id: 'completed', label: 'Completed' },
   { id: 'all-clients', label: 'All Clients' }
 ];
 

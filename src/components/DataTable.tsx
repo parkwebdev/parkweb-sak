@@ -22,6 +22,7 @@ import { ProgressBar } from './ProgressBar';
 import { getBadgeVariant } from '@/lib/status-helpers';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { formatBusinessType, formatDate, formatPercentage } from '@/lib/formatting';
 import { ClientActionButtons, RowActionButtons } from './ClientActionButtons';
 import {
   Table,
@@ -117,8 +118,8 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'links-invitat
           id: item.id,
           companyName: item.company_name,
           clientName: item.client_name,
-          businessType: item.industry,
-          submittedDate: new Date(item.date_sent).toISOString().split('T')[0],
+          businessType: formatBusinessType(item.industry),
+          submittedDate: formatDate(item.date_sent),
           status: item.status === 'Completed' || item.status === 'Approved' ? 'Complete' as const : 
                  item.status === 'In Progress' || item.status === 'SOW Generated' ? 'In Review' as const : 
                  'Incomplete' as const,
@@ -142,8 +143,8 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'links-invitat
           id: item.id,
           companyName: item.client,
           clientName: item.client_contact,
-          businessType: item.industry,
-          submittedDate: new Date(item.date_created).toISOString().split('T')[0],
+          businessType: formatBusinessType(item.industry),
+          submittedDate: formatDate(item.date_created),
           status: item.status === 'Approved' ? 'Complete' as const : 
                  item.status === 'Client Review' || item.status === 'Agency Review' ? 'In Review' as const : 
                  'Incomplete' as const,
@@ -162,8 +163,8 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'links-invitat
           id: `link-${item.id}`,
           companyName: item.company_name,
           clientName: item.client_name,
-          businessType: item.industry,
-          submittedDate: new Date(item.date_sent).toISOString().split('T')[0],
+          businessType: formatBusinessType(item.industry),
+          submittedDate: formatDate(item.date_sent),
           status: 'Complete' as const,
           percentage: 100
         })) || [];
@@ -172,8 +173,8 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'links-invitat
           id: `sow-${item.id}`,
           companyName: item.client,
           clientName: item.client_contact,
-          businessType: item.industry,
-          submittedDate: new Date(item.date_created).toISOString().split('T')[0],
+          businessType: formatBusinessType(item.industry),
+          submittedDate: formatDate(item.date_created),
           status: 'Complete' as const,
           percentage: 100
         })) || [];
@@ -199,8 +200,8 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'links-invitat
             id: `unified-${item.id}`,
             companyName: item.company_name,
             clientName: item.client_name,
-            businessType: item.industry,
-            submittedDate: new Date(item.date_sent).toISOString().split('T')[0],
+            businessType: formatBusinessType(item.industry),
+            submittedDate: formatDate(item.date_sent),
             status: item.status === 'Approved' ? 'Complete' as const : 
                    item.status === 'SOW Generated' || item.status === 'In Progress' ? 'In Review' as const : 
                    'Incomplete' as const,
@@ -229,8 +230,8 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'links-invitat
               id: `unified-sub-${submission.id}`,
               companyName: submission.client_name, // Use client_name as company if no separate company field
               clientName: submission.client_name,
-              businessType: submission.industry || 'Unknown',
-              submittedDate: new Date(submission.submitted_at).toISOString().split('T')[0],
+              businessType: formatBusinessType(submission.industry || 'Unknown'),
+              submittedDate: formatDate(submission.submitted_at),
               status: 'In Review' as const,
               percentage: 70,
               journey: {
