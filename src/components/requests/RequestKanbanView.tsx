@@ -12,6 +12,7 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
+  useDroppable,
 } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { useSortable } from "@dnd-kit/sortable";
@@ -140,6 +141,51 @@ const SortableCard = ({ request }: SortableCardProps) => {
   );
 };
 
+interface DroppableColumnProps {
+  column: {
+    key: 'todo' | 'in_progress' | 'on_hold' | 'completed';
+    title: string;
+    color: string;
+  };
+  requests: Request[];
+}
+
+const DroppableColumn = ({ column, requests }: DroppableColumnProps) => {
+  const { setNodeRef, isOver } = useDroppable({
+    id: column.key,
+  });
+
+  return (
+    <div 
+      ref={setNodeRef}
+      className={`space-y-4 min-h-[400px] p-4 rounded-lg border-2 border-dashed transition-colors ${
+        isOver 
+          ? 'border-primary bg-primary/5' 
+          : 'border-muted hover:border-muted-foreground/50'
+      }`}
+    >
+      <div className="flex items-center gap-2">
+        <div className={`w-3 h-3 rounded-full ${column.color}`} />
+        <h3 className="font-semibold">{column.title}</h3>
+        <Badge variant="secondary" className="ml-auto">
+          {requests.length}
+        </Badge>
+      </div>
+      
+      <SortableContext 
+        items={requests.map(request => request.id)}
+        strategy={verticalListSortingStrategy}
+      >
+        <div className="space-y-3">
+          {requests.map((request) => (
+            <SortableCard key={request.id} request={request} />
+          ))}
+        </div>
+      </SortableContext>
+    </div>
+  );
+};
+
 export const RequestKanbanView = () => {
   const [requests, setRequests] = useState<Request[]>(initialRequests);
   const [activeRequest, setActiveRequest] = useState<Request | null>(null);
@@ -169,6 +215,31 @@ export const RequestKanbanView = () => {
     setActiveRequest(activeRequest || null);
   };
 
+  const handleDragOver = (event: DragOverEvent) => {
+    const { active, over } = event;
+    
+    if (!over) return;
+    
+    const activeId = active.id as string;
+    const overId = over.id as string;
+    
+    // Find the active request
+    const activeRequest = requests.find(request => request.id === activeId);
+    if (!activeRequest) return;
+    
+    // Check if we're hovering over a column
+    const targetColumn = columns.find(col => col.key === overId);
+    if (targetColumn && activeRequest.status !== targetColumn.key) {
+      setRequests(prev => 
+        prev.map(request => 
+          request.id === activeId 
+            ? { ...request, status: targetColumn.key }
+            : request
+        )
+      );
+    }
+  };
+
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     
@@ -177,16 +248,23 @@ export const RequestKanbanView = () => {
       return;
     }
 
-    const activeId = active.id;
-    const overId = over.id;
+    const activeId = active.id as string;
+    const overId = over.id as string;
+
+    // Find the active request
+    const activeRequest = requests.find(request => request.id === activeId);
+    if (!activeRequest) {
+      setActiveRequest(null);
+      return;
+    }
 
     // Check if we're dropping over a column
-    const column = columns.find(col => col.key === overId);
-    if (column) {
+    const targetColumn = columns.find(col => col.key === overId);
+    if (targetColumn && activeRequest.status !== targetColumn.key) {
       setRequests(prev => 
         prev.map(request => 
           request.id === activeId 
-            ? { ...request, status: column.key }
+            ? { ...request, status: targetColumn.key }
             : request
         )
       );
@@ -200,34 +278,16 @@ export const RequestKanbanView = () => {
       <DndContext
         sensors={sensors}
         onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
       >
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {columns.map((column) => (
-            <div 
-              key={column.key} 
-              id={column.key}
-              className="space-y-4 min-h-[400px] p-4 rounded-lg border-2 border-dashed border-muted hover:border-muted-foreground/50 transition-colors"
-            >
-              <div className="flex items-center gap-2">
-                <div className={`w-3 h-3 rounded-full ${column.color}`} />
-                <h3 className="font-semibold">{column.title}</h3>
-                <Badge variant="secondary" className="ml-auto">
-                  {getRequestsByStatus(column.key).length}
-                </Badge>
-              </div>
-              
-              <SortableContext 
-                items={getRequestsByStatus(column.key)}
-                strategy={verticalListSortingStrategy}
-              >
-                <div className="space-y-3">
-                  {getRequestsByStatus(column.key).map((request) => (
-                    <SortableCard key={request.id} request={request} />
-                  ))}
-                </div>
-              </SortableContext>
-            </div>
+            <DroppableColumn
+              key={column.key}
+              column={column}
+              requests={getRequestsByStatus(column.key)}
+            />
           ))}
         </div>
 
