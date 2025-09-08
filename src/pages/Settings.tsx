@@ -13,6 +13,16 @@ const Settings = () => {
   const { isCollapsed } = useSidebar();
   const [activeTab, setActiveTab] = useState<SettingsTab>('general');
 
+  // Listen for custom events from keyboard shortcuts
+  React.useEffect(() => {
+    const handleSetActiveTab = (event: CustomEvent<string>) => {
+      setActiveTab(event.detail as SettingsTab);
+    };
+
+    window.addEventListener('setActiveTab', handleSetActiveTab as EventListener);
+    return () => window.removeEventListener('setActiveTab', handleSetActiveTab as EventListener);
+  }, []);
+
   const renderTabContent = () => {
     switch (activeTab) {
       case 'general':

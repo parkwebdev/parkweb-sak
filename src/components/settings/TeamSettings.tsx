@@ -4,9 +4,7 @@ import { RoleManagementDialog } from './RoleManagementDialog';
 import { ProfileEditDialog } from '@/components/team/ProfileEditDialog';
 import { TeamMembersTable } from '@/components/team/TeamMembersTable';
 import { InviteMemberDialog } from '@/components/team/InviteMemberDialog';
-import { SearchInput } from '@/components/SearchInput';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Users01 as Users } from '@untitledui/icons';
 import { useTeam } from '@/hooks/useTeam';
 import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
@@ -16,8 +14,6 @@ export const TeamSettings: React.FC = () => {
   const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
   const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [roleFilter, setRoleFilter] = useState<string>('all');
   const { user } = useAuth();
   const { role: currentUserRole } = useRoleAuthorization();
   const { 
@@ -32,28 +28,6 @@ export const TeamSettings: React.FC = () => {
 
   const isSuperAdmin = currentUserRole === 'super_admin';
 
-  // Filter and search team members
-  const filteredMembers = useMemo(() => {
-    return teamMembers.filter(member => {
-      const matchesSearch = !searchTerm || 
-        member.display_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        member.email?.toLowerCase().includes(searchTerm.toLowerCase());
-      
-      const matchesRole = roleFilter === 'all' || member.role === roleFilter;
-      
-      return matchesSearch && matchesRole;
-    });
-  }, [teamMembers, searchTerm, roleFilter]);
-
-  const roleOptions = useMemo(() => {
-    const roles = ['all', ...new Set(teamMembers.map(member => member.role || 'member'))];
-    return roles.map(role => ({
-      value: role,
-      label: role === 'all' ? 'All Roles' : 
-             role === 'super_admin' ? 'Super Admin' :
-             role.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
-    }));
-  }, [teamMembers]);
 
   const handleEditRole = (member: TeamMember) => {
     setSelectedMember(member);
@@ -79,12 +53,8 @@ export const TeamSettings: React.FC = () => {
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="flex flex-col space-y-3 sm:space-y-0 sm:flex-row sm:items-center sm:gap-4 mb-6">
-          <div className="h-10 bg-muted rounded animate-pulse flex-1 min-w-0" />
-          <div className="flex flex-col xs:flex-row gap-3 sm:gap-2">
-            <div className="h-10 w-full xs:w-40 sm:w-48 bg-muted rounded animate-pulse" />
-            <div className="h-10 w-full xs:w-32 bg-muted rounded animate-pulse" />
-          </div>
+        <div className="flex justify-end mb-6">
+          <InviteMemberDialog onInvite={handleInviteMember} />
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (
@@ -115,48 +85,13 @@ export const TeamSettings: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Search and Filter Controls */}
-      <div className="flex flex-col space-y-3 sm:space-y-0 sm:flex-row sm:items-center sm:gap-4 mb-6">
-        <div className="flex-1 min-w-0">
-          <SearchInput
-            value={searchTerm}
-            onChange={setSearchTerm}
-            placeholder="Search team members..."
-            className="w-full"
-          />
-        </div>
-        <div className="flex flex-col xs:flex-row gap-3 sm:gap-2">
-          <Select value={roleFilter} onValueChange={setRoleFilter}>
-            <SelectTrigger className="w-full xs:w-40 sm:w-48">
-              <SelectValue placeholder="Filter by role" />
-            </SelectTrigger>
-            <SelectContent>
-              {roleOptions.map(option => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <div className="flex-shrink-0">
-            <InviteMemberDialog onInvite={handleInviteMember} />
-          </div>
-        </div>
-      </div>
-
-      {/* Results Summary */}
-      <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
-        <Users size={16} />
-        <span>
-          {filteredMembers.length} of {teamMembers.length} team member{teamMembers.length !== 1 ? 's' : ''}
-          {searchTerm && ` matching "${searchTerm}"`}
-          {roleFilter !== 'all' && ` with role "${roleOptions.find(r => r.value === roleFilter)?.label}"`}
-        </span>
+      <div className="flex justify-end mb-6">
+        <InviteMemberDialog onInvite={handleInviteMember} />
       </div>
 
       {/* Team Members Table */}
       <TeamMembersTable
-        teamMembers={filteredMembers}
+        teamMembers={teamMembers}
         currentUserId={user?.id}
         canManageRoles={canManageRoles}
         onEditRole={handleEditRole}

@@ -37,13 +37,27 @@ export const useKeyboardShortcuts = (shortcuts: KeyboardShortcut[] = []) => {
       key: 't',
       ctrlKey: true,
       description: 'Go to Team Settings',
-      action: () => navigate('/settings?tab=team')
+      action: () => {
+        navigate('/settings');
+        // Use a small timeout to ensure navigation completes before setting tab
+        setTimeout(() => {
+          const event = new CustomEvent('setActiveTab', { detail: 'team' });
+          window.dispatchEvent(event);
+        }, 100);
+      }
     },
     {
       key: 'p',
       ctrlKey: true,
       description: 'Go to Profile Settings',
-      action: () => navigate('/settings?tab=profile')
+      action: () => {
+        navigate('/settings');
+        // Use a small timeout to ensure navigation completes before setting tab
+        setTimeout(() => {
+          const event = new CustomEvent('setActiveTab', { detail: 'profile' });
+          window.dispatchEvent(event);
+        }, 100);
+      }
     },
     {
       key: ',',

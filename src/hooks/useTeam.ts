@@ -182,7 +182,9 @@ export const useTeam = () => {
           user_id: member.user_id,
           role: role as 'admin' | 'manager' | 'member',
           permissions: permissions as any,
-        } as any);
+        }, {
+          onConflict: 'user_id'
+        });
 
       if (error) {
         console.error('❌ Database error updating role:', error);
