@@ -105,13 +105,13 @@ const SortableCard = ({ request }: SortableCardProps) => {
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'urgent':
-        return 'bg-red-500 text-white border-red-500';
+        return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 border-red-200 dark:border-red-800';
       case 'high':
-        return 'bg-orange-500 text-white border-orange-500';
+        return 'bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-200 border-orange-200 dark:border-orange-800';
       case 'medium':
-        return 'bg-yellow-500 text-black border-yellow-500';
+        return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 border-yellow-200 dark:border-yellow-800';
       case 'low':
-        return 'bg-blue-500 text-white border-blue-500';
+        return 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-800';
       default:
         return 'bg-muted text-muted-foreground border-border';
     }
