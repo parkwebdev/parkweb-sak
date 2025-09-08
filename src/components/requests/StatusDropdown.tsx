@@ -51,13 +51,12 @@ export const StatusDropdown = ({ status, onStatusChange, variant = 'badge' }: St
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Badge 
-          variant="outline" 
-          className={`cursor-pointer hover:opacity-80 transition-opacity ${getStatusColor(REQUEST_STATUSES[status], 'request')}`}
+        <button 
+          className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 cursor-pointer hover:opacity-80 ${getStatusColor(REQUEST_STATUSES[status], 'request')}`}
         >
           {REQUEST_STATUSES[status]}
           <ChevronDown size={12} className="ml-1" />
-        </Badge>
+        </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="z-50 bg-background border border-border shadow-md">
         {statusOptions.map(([key, label]) => (
