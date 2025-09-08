@@ -270,16 +270,12 @@ function generateEmailContent(
   let subject = `Agency Notification: ${title}`;
   let actionUrl = baseUrl;
   let actionText = "View Dashboard";
-  let backgroundColor = "hsl(0 0% 9%)"; // primary
-  let textColor = "hsl(0 0% 98%)"; // primary-foreground
 
-  // Customize based on notification type - using neutral colors only
+  // Customize based on notification type
   switch (type) {
     case 'scope_work':
       actionUrl = `${baseUrl}/scope-of-works`;
       actionText = "View Scope of Works";
-      backgroundColor = "hsl(0 0% 9%)"; // primary
-      textColor = "hsl(0 0% 98%)"; // primary-foreground
       if (data?.sowId) {
         actionUrl += `?id=${data.sowId}`;
       }
@@ -287,66 +283,58 @@ function generateEmailContent(
     case 'onboarding':
       actionUrl = `${baseUrl}/onboarding`;
       actionText = "View Onboarding";
-      backgroundColor = "hsl(0 0% 9%)"; // primary
-      textColor = "hsl(0 0% 98%)"; // primary-foreground
       break;
     case 'team':
       actionUrl = `${baseUrl}/team`;
       actionText = "View Team";
-      backgroundColor = "hsl(0 0% 9%)"; // primary
-      textColor = "hsl(0 0% 98%)"; // primary-foreground
       break;
     case 'system':
     case 'security':
       actionUrl = `${baseUrl}/settings`;
       actionText = "View Settings";
-      backgroundColor = "hsl(0 0% 9%)"; // primary
-      textColor = "hsl(0 0% 98%)"; // primary-foreground
       break;
   }
 
   const html = `
     <!DOCTYPE html>
-    <html lang="en">
+    <html>
     <head>
-      <meta charset="UTF-8">
+      <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>${subject}</title>
     </head>
-    <body style="margin: 0; padding: 0; font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: hsl(0 0% 96.1%);">
-      <div style="max-width: 600px; margin: 0 auto; background-color: hsl(0 0% 100%); border-radius: 8px; overflow: hidden; border: 1px solid hsl(0 0% 89.8%);">
+    <body style="font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.6; color: #333333; margin: 0; padding: 40px 20px; background-color: #f5f5f5;">
+      <div style="background-color: #ffffff; max-width: 600px; margin: 0 auto; border-radius: 8px; overflow: hidden;">
         
-        <!-- Header -->
-        <div style="background-color: ${backgroundColor}; padding: 24px; text-align: center;">
-          <h1 style="color: ${textColor}; margin: 0; font-size: 20px; font-weight: 600; font-family: Inter, sans-serif;">${title}</h1>
+        <!-- Header with Logo -->
+        <div style="background-color: #ffffff; padding: 40px 20px; text-align: center; border-bottom: 1px solid #e0e0e0;">
+          <div style="text-align: center;">
+            <img src="https://mvaimvwdukpgvkifkfpa.supabase.co/storage/v1/object/public/email-assets/Icon%20Only%20-%20White%20Square%402x.png" alt="ParkWeb Logo" style="width: 60px; height: 60px; border-radius: 8px;" />
+          </div>
         </div>
-
+        
         <!-- Content -->
-        <div style="padding: 24px;">
-          <p style="color: hsl(0 0% 3.9%); font-size: 16px; line-height: 1.6; margin: 0 0 24px 0; font-family: Inter, sans-serif;">
-            ${message}
-          </p>
-
+        <div style="padding: 40px 30px;">
+          <p style="font-size: 14px; margin-bottom: 20px; color: #333333;"><strong>${title}</strong></p>
+          
+          <p style="font-size: 14px; margin-bottom: 24px; color: #333333; line-height: 1.6;">${message}</p>
+          
           ${data?.additionalInfo ? `
-            <div style="background-color: hsl(0 0% 96.1%); border-radius: 6px; padding: 16px; margin-bottom: 24px; border: 1px solid hsl(0 0% 89.8%);">
-              <p style="color: hsl(0 0% 45.1%); font-size: 14px; margin: 0; font-family: Inter, sans-serif;">
-                <strong style="color: hsl(0 0% 9%);">Additional Details:</strong><br>
-                ${data.additionalInfo}
-              </p>
-            </div>
+            <p style="font-size: 14px; margin-bottom: 24px; color: #333333; line-height: 1.6;"><strong>Additional Details:</strong><br>${data.additionalInfo}</p>
           ` : ''}
 
-          <!-- Action Button -->
-          <div style="text-align: center; margin: 24px 0;">
-            <a href="${actionUrl}" 
-               style="display: inline-block; background-color: ${backgroundColor}; color: ${textColor}; text-decoration: none; padding: 8px 16px; border-radius: 6px; font-weight: 500; font-size: 14px; font-family: Inter, sans-serif;">
-              ${actionText}
-            </a>
+          <p style="font-size: 14px; margin-bottom: 30px; color: #333333; line-height: 1.6;">Click the button below to view more details or take action on this notification.</p>
+          
+          <!-- Action Button - Left Aligned -->
+          <div style="text-align: left; margin: 30px 0;">
+            <a href="${actionUrl}" style="background-color: #000000; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 500; font-size: 14px; display: inline-block;">${actionText}</a>
           </div>
-
+          
+          <p style="font-size: 14px; color: #333333; line-height: 1.6;">If you have any questions, feel free to reach out to us directly.</p>
+          
           <!-- Timestamp -->
-          <div style="border-top: 1px solid hsl(0 0% 89.8%); padding-top: 16px; margin-top: 24px;">
-            <p style="color: hsl(0 0% 45.1%); font-size: 12px; margin: 0; text-align: center; font-family: Inter, sans-serif;">
+          <div style="border-top: 1px solid #e0e0e0; padding-top: 20px; margin-top: 30px;">
+            <p style="color: #666666; font-size: 12px; margin: 0;">
               Sent on ${new Date().toLocaleDateString('en-US', { 
                 weekday: 'long', 
                 year: 'numeric', 
@@ -358,16 +346,7 @@ function generateEmailContent(
             </p>
           </div>
         </div>
-
-        <!-- Footer -->
-        <div style="background-color: hsl(0 0% 96.1%); padding: 20px; text-align: center; border-top: 1px solid hsl(0 0% 89.8%);">
-          <p style="color: hsl(0 0% 45.1%); font-size: 14px; margin: 0 0 8px 0; font-family: Inter, sans-serif;">
-            You're receiving this because you have notifications enabled in your Agency account.
-          </p>
-          <p style="color: hsl(0 0% 45.1%); font-size: 12px; margin: 0; font-family: Inter, sans-serif;">
-            <a href="${baseUrl}/settings" style="color: hsl(0 0% 45.1%); text-decoration: underline;">Manage notification preferences</a>
-          </p>
-        </div>
+        
       </div>
     </body>
     </html>
