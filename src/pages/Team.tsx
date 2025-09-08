@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { ProfileEditDialog } from '@/components/team/ProfileEditDialog';
+import { InviteMemberDialog } from '@/components/team/InviteMemberDialog';
 import { useSidebar } from '@/hooks/use-sidebar';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -26,11 +27,8 @@ const Team = () => {
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [pendingInvites, setPendingInvites] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isInviteOpen, setIsInviteOpen] = useState(false);
-  const [inviteEmail, setInviteEmail] = useState('');
   const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
-  const [inviting, setInviting] = useState(false);
 
   const isSuperAdmin = currentUserRole === 'super_admin';
   const canManageTeam = ['super_admin', 'admin'].includes(currentUserRole || '');
@@ -105,14 +103,13 @@ const Team = () => {
     }
   };
 
-  const handleInvite = async () => {
-    if (!inviteEmail || !user) return;
+  const handleInvite = async (email: string): Promise<boolean> => {
+    if (!email || !user) return false;
     
-    setInviting(true);
     try {
       const { error } = await supabase.functions.invoke('send-team-invitation', {
         body: {
-          email: inviteEmail,
+          email,
           invitedBy: user.email || 'Team Admin',
           companyName: 'our team'
         }
@@ -125,16 +122,16 @@ const Team = () => {
           description: "There was an error sending the invitation email.",
           variant: "destructive",
         });
-        return;
+        return false;
       }
 
       toast({
         title: "Invitation sent",
-        description: `Team invitation sent to ${inviteEmail}`,
+        description: `Team invitation sent to ${email}`,
       });
-      
-      setInviteEmail('');
-      setIsInviteOpen(false);
+
+      await fetchTeamMembers();
+      return true;
     } catch (error) {
       console.error('Error in handleInvite:', error);
       toast({
@@ -142,8 +139,7 @@ const Team = () => {
         description: "Failed to send invitation.",
         variant: "destructive",
       });
-    } finally {
-      setInviting(false);
+      return false;
     }
   };
 
@@ -305,42 +301,14 @@ const Team = () => {
                     Manage your team members and their access levels
                   </p>
                 </div>
-                <Dialog open={isInviteOpen} onOpenChange={setIsInviteOpen}>
-                  <DialogTrigger asChild>
+                <InviteMemberDialog 
+                  onInvite={handleInvite}
+                  trigger={
                     <Button size="sm" className="text-xs">
                       Invite Member
                     </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Invite Team Member</DialogTitle>
-                      <DialogDescription>
-                        Send an invitation to a new team member
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="email">Email Address</Label>
-                        <Input
-                          id="email"
-                          type="email"
-                          placeholder="coworker@park-web.com"
-                          value={inviteEmail}
-                          onChange={(e) => setInviteEmail(e.target.value)}
-                        />
-                      </div>
-                      <div className="flex justify-end gap-2">
-                        <Button variant="outline" onClick={() => setIsInviteOpen(false)}>
-                          Cancel
-                        </Button>
-                        <Button onClick={handleInvite} disabled={inviting}>
-                          <Send className="h-4 w-4 mr-2" />
-                          {inviting ? 'Sending...' : 'Send Invitation'}
-                        </Button>
-                      </div>
-                    </div>
-                  </DialogContent>
-                </Dialog>
+                  }
+                />
               </div>
             </header>
 
@@ -400,10 +368,15 @@ const Team = () => {
                       <p className="text-muted-foreground mb-4">
                         Start by inviting team members to collaborate.
                       </p>
-                      <Button onClick={() => setIsInviteOpen(true)}>
-                        <Plus className="h-4 w-4 mr-2" />
-                        Invite First Member
-                      </Button>
+                      <InviteMemberDialog 
+                        onInvite={handleInvite}
+                        trigger={
+                          <Button>
+                            <Plus className="h-4 w-4 mr-2" />
+                            Invite First Member
+                          </Button>
+                        }
+                      />
                     </div>
                   </CardContent>
                 </Card>

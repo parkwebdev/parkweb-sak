@@ -50,7 +50,9 @@ export const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
       </div>
       
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:space-x-4">
-        <Badge variant="outline" className={`text-xs capitalize ${getRoleColor(member.role || 'member')}`}>
+        <div 
+          className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${getRoleColor(member.role || 'member')}`}
+        >
           {isCurrentUser 
             ? (
                 member.role === 'super_admin' ? 'Super Admin (You)' :
@@ -62,7 +64,7 @@ export const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
                 member.role || 'Member'
               )
           }
-        </Badge>
+        </div>
         
         {showManagementButtons && (
           <div className="flex items-center gap-1 mt-2">
