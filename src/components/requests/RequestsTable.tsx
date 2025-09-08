@@ -124,102 +124,107 @@ export const RequestsTable = () => {
     : mockRequests.filter(request => request.status === activeStatus);
 
   return (
-    <div className="space-y-4 p-6">
-      {/* Status Tabs */}
-      <div className="border-b">
-        <nav className="flex space-x-8 -mb-px">
-          {statusTabs.map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveStatus(tab.key)}
-              className={`whitespace-nowrap pb-2 px-1 border-b-2 font-medium text-sm transition-colors ${
-                activeStatus === tab.key
-                  ? 'border-primary text-primary'
-                  : 'border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground'
-              }`}
-            >
-              {tab.label}
-              <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs bg-muted text-muted-foreground">
-                {tab.count}
-              </span>
+    <div className="w-full bg-card border border-border rounded-xl overflow-hidden">
+      {/* Header with Filters and Controls */}
+      <header className="w-full border-b border-border">
+        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-3 px-4 py-3">
+          {/* Filter buttons - scrollable on mobile */}
+          <div className="overflow-x-auto">
+            <div className="border shadow-sm flex overflow-hidden text-xs text-foreground font-medium leading-none rounded-md border-border min-w-max">
+              {statusTabs.map((tab, index) => {
+                const isActive = activeStatus === tab.key;
+                return (
+                  <button
+                    key={tab.key}
+                    onClick={() => setActiveStatus(tab.key)}
+                    className={`justify-center items-center flex min-h-8 gap-1.5 px-2.5 py-1.5 transition-colors whitespace-nowrap ${
+                      isActive ? 'bg-primary text-primary-foreground' : 'bg-background hover:bg-accent/50'
+                    } ${index < statusTabs.length - 1 ? 'border-r-border border-r border-solid' : ''}`}
+                  >
+                    <div className="text-xs leading-4 self-stretch my-auto">
+                      {tab.label}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          
+          {/* Controls */}
+          <div className="flex items-center gap-2.5 ml-auto">
+            {/* Filter Dropdown - Icon Only */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden text-xs text-foreground font-medium leading-none bg-background px-2 py-1.5 rounded-md border-border hover:bg-accent/50">
+                  <Filter size={16} className="text-muted-foreground" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48 bg-background">
+                <DropdownMenuLabel>Filter by Priority</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>All Priorities</DropdownMenuItem>
+                <DropdownMenuItem>Urgent</DropdownMenuItem>
+                <DropdownMenuItem>High</DropdownMenuItem>
+                <DropdownMenuItem>Medium</DropdownMenuItem>
+                <DropdownMenuItem>Low</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Columns Dropdown - Icon Only */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden text-xs text-foreground font-medium leading-none bg-background px-2 py-1.5 rounded-md border-border hover:bg-accent/50">
+                  <Columns size={16} className="text-muted-foreground" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48 bg-background">
+                <DropdownMenuLabel>Toggle columns</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuCheckboxItem
+                  checked={showColumns.request}
+                  onCheckedChange={(checked) =>
+                    setShowColumns(prev => ({ ...prev, request: !!checked }))
+                  }
+                >
+                  Request
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={showColumns.client}
+                  onCheckedChange={(checked) =>
+                    setShowColumns(prev => ({ ...prev, client: !!checked }))
+                  }
+                >
+                  Client
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={showColumns.status}
+                  onCheckedChange={(checked) =>
+                    setShowColumns(prev => ({ ...prev, status: !!checked }))
+                  }
+                >
+                  Status
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={showColumns.priority}
+                  onCheckedChange={(checked) =>
+                    setShowColumns(prev => ({ ...prev, priority: !!checked }))
+                  }
+                >
+                  Priority
+                </DropdownMenuCheckboxItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Settings - Icon Only */}
+            <button className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden text-xs text-foreground font-medium leading-none bg-background px-2 py-1.5 rounded-md border-border hover:bg-accent/50">
+              <Settings size={16} className="text-muted-foreground" />
             </button>
-          ))}
-        </nav>
-      </div>
-
-      {/* Toolbar */}
-      <div className="flex items-center justify-end gap-2">
-        {/* Filter Dropdown - Icon Only */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm">
-              <Filter className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48 bg-background">
-            <DropdownMenuLabel>Filter by Priority</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>All Priorities</DropdownMenuItem>
-            <DropdownMenuItem>Urgent</DropdownMenuItem>
-            <DropdownMenuItem>High</DropdownMenuItem>
-            <DropdownMenuItem>Medium</DropdownMenuItem>
-            <DropdownMenuItem>Low</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        {/* Columns Dropdown - Icon Only */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm">
-              <Columns className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48 bg-background">
-            <DropdownMenuLabel>Toggle columns</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuCheckboxItem
-              checked={showColumns.request}
-              onCheckedChange={(checked) =>
-                setShowColumns(prev => ({ ...prev, request: !!checked }))
-              }
-            >
-              Request
-            </DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem
-              checked={showColumns.client}
-              onCheckedChange={(checked) =>
-                setShowColumns(prev => ({ ...prev, client: !!checked }))
-              }
-            >
-              Client
-            </DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem
-              checked={showColumns.status}
-              onCheckedChange={(checked) =>
-                setShowColumns(prev => ({ ...prev, status: !!checked }))
-              }
-            >
-              Status
-            </DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem
-              checked={showColumns.priority}
-              onCheckedChange={(checked) =>
-                setShowColumns(prev => ({ ...prev, priority: !!checked }))
-              }
-            >
-              Priority
-            </DropdownMenuCheckboxItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        {/* Settings - Icon Only */}
-        <Button variant="outline" size="sm">
-          <Settings className="h-4 w-4" />
-        </Button>
-      </div>
+          </div>
+        </div>
+      </header>
 
       {/* Table */}
-      <div className="border rounded-lg">
+      <div className="overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>
@@ -296,7 +301,7 @@ export const RequestsTable = () => {
       
       {filteredRequests.length === 0 && (
         <div className="text-center py-8 text-muted-foreground">
-          No requests found matching your search criteria.
+          No requests found matching your criteria.
         </div>
       )}
     </div>
