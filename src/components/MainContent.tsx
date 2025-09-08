@@ -8,9 +8,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
 const tabs = [
-  { id: 'onboarding', label: 'Onboarding' },
-  { id: 'scope-of-work', label: 'Scope Of Work' },
-  { id: 'completed', label: 'Completed' }
+  { id: 'links-invitations', label: 'Links & Invitations' },
+  { id: 'submissions-sows', label: 'Submissions & SOWs' },
+  { id: 'completed', label: 'Completed Projects' },
+  { id: 'all-clients', label: 'All Clients' }
 ];
 
 interface MainContentProps {
@@ -20,26 +21,19 @@ interface MainContentProps {
 }
 
 export const MainContent: React.FC<MainContentProps> = ({ 
-  activeTab = 'onboarding', 
+  activeTab = 'links-invitations', 
   onTabChange,
   onMenuClick
 }) => {
   const { user } = useAuth();
   const [userDisplayName, setUserDisplayName] = useState<string>('');
   const [stats, setStats] = useState({
-    onboarding: {
-      total: 0,
-      inProgress: 0,
-      completed: 0,
-      sowGenerated: 0,
-      approved: 0
-    },
-    scopeOfWorks: {
-      total: 0,
-      draft: 0,
-      inReview: 0,
-      approved: 0
-    }
+    totalClients: 0,
+    linksCreated: 0,
+    submissionsReceived: 0,
+    sowsGenerated: 0,
+    projectsCompleted: 0,
+    conversionRate: 0
   });
 
   useEffect(() => {
@@ -77,43 +71,42 @@ export const MainContent: React.FC<MainContentProps> = ({
 
   const fetchStats = async () => {
     try {
-      // Fetch onboarding stats
-      const { data: onboardingData, error: onboardingError } = await supabase
-        .from('client_onboarding_links')
-        .select('status, sow_status');
+      // Fetch all client onboarding links and submissions
+      const [linksResult, submissionsResult, sowsResult] = await Promise.all([
+        supabase.from('client_onboarding_links').select('status, email'),
+        supabase.from('onboarding_submissions').select('id, client_email'),
+        supabase.from('scope_of_works').select('status, email')
+      ]);
 
-      if (onboardingError) {
-        console.error('Error fetching onboarding stats:', onboardingError);
-      } else {
-        const onboardingStats = {
-          total: onboardingData?.length || 0,
-          inProgress: onboardingData?.filter(item => item.status === 'In Progress').length || 0,
-          completed: onboardingData?.filter(item => item.status === 'Completed').length || 0,
-          sowGenerated: onboardingData?.filter(item => item.status === 'SOW Generated').length || 0,
-          approved: onboardingData?.filter(item => item.status === 'Approved').length || 0
-        };
+      const linksData = linksResult.data || [];
+      const submissionsData = submissionsResult.data || [];
+      const sowsData = sowsResult.data || [];
 
-        // Fetch scope of works stats
-        const { data: sowData, error: sowError } = await supabase
-          .from('scope_of_works')
-          .select('status');
+      // Calculate unified stats
+      const linksCreated = linksData.length;
+      const submissionsReceived = submissionsData.length;
+      const sowsGenerated = sowsData.length;
+      const projectsCompleted = linksData.filter(item => item.status === 'Approved').length;
+      
+      // Calculate unique clients across all systems
+      const uniqueEmails = new Set([
+        ...linksData.map(item => item.email),
+        ...submissionsData.map(item => item.client_email),
+        ...sowsData.map(item => item.email)
+      ]);
+      const totalClients = uniqueEmails.size;
+      
+      // Calculate conversion rate (completed projects / total links created)
+      const conversionRate = linksCreated > 0 ? Math.round((projectsCompleted / linksCreated) * 100) : 0;
 
-        if (sowError) {
-          console.error('Error fetching scope of works stats:', sowError);
-        } else {
-          const scopeOfWorksStats = {
-            total: sowData?.length || 0,
-            draft: sowData?.filter(item => item.status === 'Draft').length || 0,
-            inReview: sowData?.filter(item => item.status === 'Client Review' || item.status === 'Agency Review').length || 0,
-            approved: sowData?.filter(item => item.status === 'Approved').length || 0
-          };
-
-          setStats({
-            onboarding: onboardingStats,
-            scopeOfWorks: scopeOfWorksStats
-          });
-        }
-      }
+      setStats({
+        totalClients,
+        linksCreated,
+        submissionsReceived,
+        sowsGenerated,
+        projectsCompleted,
+        conversionRate
+      });
     } catch (error) {
       console.error('Error fetching stats:', error);
     }
@@ -133,30 +126,41 @@ export const MainContent: React.FC<MainContentProps> = ({
                   <Menu size={20} />
                 </button>
                 <h1 className="text-foreground text-xl font-semibold leading-tight">
-                  Welcome {userDisplayName}
+                  Client Management
                 </h1>
               </div>
               
               <div className="min-w-0 lg:min-w-64 text-xl text-foreground leading-none flex-1 shrink basis-[0%] gap-1">
                 <h1 className="hidden lg:block text-foreground text-2xl font-semibold leading-tight mb-1">
-                  Welcome {userDisplayName}
+                  Client Management - Welcome {userDisplayName}
                 </h1>
                 <p className="text-sm text-muted-foreground">
-                  Overview of client onboarding and project metrics
+                  Unified client pipeline from links to project completion
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Stats Overview */}
+          {/* Enhanced Stats Overview */}
           <div className="w-full">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-2 lg:grid-cols-6 gap-4 mb-6">
             <Card className="compact-card">
               <CardContent className="compact-content">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs font-medium text-muted-foreground">Total Links</p>
-                    <p className="text-lg lg:text-xl font-semibold">{stats.onboarding.total}</p>
+                    <p className="text-xs font-medium text-muted-foreground">Total Clients</p>
+                    <p className="text-lg lg:text-xl font-semibold">{stats.totalClients}</p>
+                  </div>
+                  <User className="h-4 w-4 lg:h-5 lg:w-5 text-primary" />
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="compact-card">
+              <CardContent className="compact-content">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground">Links Created</p>
+                    <p className="text-lg lg:text-xl font-semibold">{stats.linksCreated}</p>
                   </div>
                   <Link2 className="h-4 w-4 lg:h-5 lg:w-5 text-info" />
                 </div>
@@ -166,8 +170,8 @@ export const MainContent: React.FC<MainContentProps> = ({
               <CardContent className="compact-content">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs font-medium text-muted-foreground">In Progress</p>
-                    <p className="text-lg lg:text-xl font-semibold">{stats.onboarding.inProgress}</p>
+                    <p className="text-xs font-medium text-muted-foreground">Submissions</p>
+                    <p className="text-lg lg:text-xl font-semibold">{stats.submissionsReceived}</p>
                   </div>
                   <Clock className="h-4 w-4 lg:h-5 lg:w-5 text-warning" />
                 </div>
@@ -177,8 +181,8 @@ export const MainContent: React.FC<MainContentProps> = ({
               <CardContent className="compact-content">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs font-medium text-muted-foreground">SOW Generated</p>
-                    <p className="text-lg lg:text-xl font-semibold">{stats.onboarding.sowGenerated}</p>
+                    <p className="text-xs font-medium text-muted-foreground">SOWs Generated</p>
+                    <p className="text-lg lg:text-xl font-semibold">{stats.sowsGenerated}</p>
                   </div>
                   <FileText className="h-4 w-4 lg:h-5 lg:w-5 text-primary" />
                 </div>
@@ -188,10 +192,21 @@ export const MainContent: React.FC<MainContentProps> = ({
               <CardContent className="compact-content">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs font-medium text-muted-foreground">Approved</p>
-                    <p className="text-lg lg:text-xl font-semibold">{stats.onboarding.approved}</p>
+                    <p className="text-xs font-medium text-muted-foreground">Completed</p>
+                    <p className="text-lg lg:text-xl font-semibold">{stats.projectsCompleted}</p>
                   </div>
-                  <User className="h-4 w-4 lg:h-5 lg:w-5 text-success" />
+                  <ClockCheck className="h-4 w-4 lg:h-5 lg:w-5 text-success" />
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="compact-card">
+              <CardContent className="compact-content">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground">Conversion</p>
+                    <p className="text-lg lg:text-xl font-semibold">{stats.conversionRate}%</p>
+                  </div>
+                  <AlertTriangle className="h-4 w-4 lg:h-5 lg:w-5 text-accent" />
                 </div>
               </CardContent>
             </Card>

@@ -22,6 +22,7 @@ import { ProgressBar } from './ProgressBar';
 import { getBadgeVariant } from '@/lib/status-helpers';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { ClientActionButtons, RowActionButtons } from './ClientActionButtons';
 import {
   Table,
   TableBody,
@@ -56,7 +57,7 @@ interface DataTableProps {
   activeTab?: string;
 }
 
-export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }) => {
+export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'links-invitations' }) => {
   const { user } = useAuth();
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
   const [activeFilter, setActiveFilter] = useState<string>('view-all');
@@ -100,7 +101,7 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
       setLoading(true);
       let data: TableRow[] = [];
       
-      if (currentActiveTab === 'onboarding') {
+      if (currentActiveTab === 'links-invitations') {
         // Fetch client onboarding links
         const { data: onboardingData, error } = await supabase
           .from('client_onboarding_links')
@@ -125,7 +126,7 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
                      item.status === 'SOW Generated' ? 85 :
                      item.status === 'In Progress' ? 60 : 25
         })) || [];
-      } else if (currentActiveTab === 'scope-of-work') {
+      } else if (currentActiveTab === 'submissions-sows') {
         // Fetch scope of works
         const { data: sowData, error } = await supabase
           .from('scope_of_works')
@@ -158,7 +159,7 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
         ]);
 
         const completedOnboarding = onboardingResult.data?.map(item => ({
-          id: item.id,
+          id: `link-${item.id}`,
           companyName: item.company_name,
           clientName: item.client_name,
           businessType: item.industry,
@@ -168,7 +169,7 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
         })) || [];
 
         const completedSOW = sowResult.data?.map(item => ({
-          id: item.id,
+          id: `sow-${item.id}`,
           companyName: item.client,
           clientName: item.client_contact,
           businessType: item.industry,
@@ -178,6 +179,83 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
         })) || [];
 
         data = [...completedOnboarding, ...completedSOW].sort((a, b) => 
+          new Date(b.submittedDate).getTime() - new Date(a.submittedDate).getTime()
+        );
+      } else if (currentActiveTab === 'all-clients') {
+        // Fetch unified client journey data
+        const [onboardingResult, submissionsResult, sowResult] = await Promise.all([
+          supabase.from('client_onboarding_links').select('*'),
+          supabase.from('onboarding_submissions').select('*'),
+          supabase.from('scope_of_works').select('*')
+        ]);
+
+        // Create unified client view showing the complete journey
+        const clientMap = new Map();
+        
+        // Process onboarding links
+        onboardingResult.data?.forEach(item => {
+          const key = `${item.client_name}-${item.email}`;
+          clientMap.set(key, {
+            id: `unified-${item.id}`,
+            companyName: item.company_name,
+            clientName: item.client_name,
+            businessType: item.industry,
+            submittedDate: new Date(item.date_sent).toISOString().split('T')[0],
+            status: item.status === 'Approved' ? 'Complete' as const : 
+                   item.status === 'SOW Generated' || item.status === 'In Progress' ? 'In Review' as const : 
+                   'Incomplete' as const,
+            percentage: item.status === 'Approved' ? 100 : 
+                       item.status === 'SOW Generated' ? 85 :
+                       item.status === 'In Progress' ? 60 : 25,
+            journey: {
+              linkCreated: true,
+              submissionReceived: false,
+              sowGenerated: item.status === 'SOW Generated' || item.status === 'Approved',
+              approved: item.status === 'Approved'
+            }
+          });
+        });
+
+        // Enhance with submission data
+        submissionsResult.data?.forEach(submission => {
+          const key = `${submission.client_name}-${submission.client_email}`;
+          if (clientMap.has(key)) {
+            const client = clientMap.get(key);
+            client.journey.submissionReceived = true;
+            client.percentage = Math.max(client.percentage, 70);
+          } else {
+            // Standalone submission without link
+            clientMap.set(key, {
+              id: `unified-sub-${submission.id}`,
+              companyName: submission.client_name, // Use client_name as company if no separate company field
+              clientName: submission.client_name,
+              businessType: submission.industry || 'Unknown',
+              submittedDate: new Date(submission.submitted_at).toISOString().split('T')[0],
+              status: 'In Review' as const,
+              percentage: 70,
+              journey: {
+                linkCreated: false,
+                submissionReceived: true,
+                sowGenerated: false,
+                approved: false
+              }
+            });
+          }
+        });
+
+        // Enhance with SOW data
+        sowResult.data?.forEach(sow => {
+          const key = `${sow.client}-${sow.email}`;
+          if (clientMap.has(key)) {
+            const client = clientMap.get(key);
+            client.journey.sowGenerated = true;
+            client.journey.approved = sow.status === 'Approved';
+            client.percentage = sow.status === 'Approved' ? 100 : Math.max(client.percentage, 85);
+            client.status = sow.status === 'Approved' ? 'Complete' as const : 'In Review' as const;
+          }
+        });
+
+        data = Array.from(clientMap.values()).sort((a, b) => 
           new Date(b.submittedDate).getTime() - new Date(a.submittedDate).getTime()
         );
       }
@@ -337,6 +415,7 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
           
           {/* Search and controls */}
           <div className="flex items-center gap-2.5 ml-auto">
+            <ClientActionButtons activeTab={currentActiveTab} onRefresh={fetchTableData} />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden text-xs text-foreground font-medium leading-none bg-background px-2 py-1.5 rounded-md border-border hover:bg-accent/50">
@@ -516,9 +595,9 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
                     return null;
                 }
               })}
-              {showColumns.actions && (
-                <TableHead className="w-24">Actions</TableHead>
-              )}
+               {showColumns.actions && (
+                 <TableHead className="w-32 text-right">Actions</TableHead>
+               )}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -533,14 +612,9 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
                         <TableCell key="companyName">
                           <div>
                             <div className="font-medium">{row.companyName}</div>
-                            <div className="text-xs text-muted-foreground mt-1">
-                              <a 
-                                href={`mailto:${row.clientName.toLowerCase().replace(' ', '')}@example.com`}
-                                className="hover:underline"
-                              >
-                                {row.clientName}
-                              </a>
-                            </div>
+                             <div className="text-xs text-muted-foreground mt-1">
+                               {row.clientName}
+                             </div>
                           </div>
                         </TableCell>
                       );
@@ -552,42 +626,45 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'onboarding' }
                       );
                     case 'submitted':
                       return (
-                        <TableCell key="submitted" className="text-muted-foreground">
-                          {new Date(row.submittedDate).toLocaleDateString()}
-                        </TableCell>
+                         <TableCell key="submitted" className="text-muted-foreground">
+                           {row.submittedDate}
+                         </TableCell>
                       );
                     case 'completion':
                       return (
-                        <TableCell key="completion">
-                          <ProgressBar percentage={row.percentage} />
-                        </TableCell>
+                         <TableCell key="completion">
+                           <div className="flex items-center gap-2">
+                             <ProgressBar percentage={row.percentage} />
+                             <span className="text-xs text-muted-foreground min-w-[3rem]">
+                               {row.percentage}%
+                             </span>
+                           </div>
+                         </TableCell>
                       );
                     case 'status':
                       return (
-                        <TableCell key="status">
-                          <Badge variant={getBadgeVariant(row.status)}>
-                            {row.status}
-                          </Badge>
-                        </TableCell>
+                         <TableCell key="status">
+                           <Badge 
+                             variant={getBadgeVariant(row.status)} 
+                             className="whitespace-nowrap"
+                           >
+                             {row.status}
+                           </Badge>
+                         </TableCell>
                       );
                     default:
                       return null;
                   }
                 })}
-                {showColumns.actions && (
-                  <TableCell>
-                    <div className="flex gap-1">
-                      <button className="p-1 hover:bg-accent rounded">
-                        <Eye size={14} />
-                      </button>
-                      {row.status !== 'Complete' && (
-                        <button className="p-1 hover:bg-accent rounded">
-                          <Send size={14} />
-                        </button>
-                      )}
-                    </div>
-                  </TableCell>
-                )}
+                 {showColumns.actions && (
+                   <TableCell>
+                     <RowActionButtons 
+                       item={row} 
+                       activeTab={currentActiveTab} 
+                       onRefresh={fetchTableData}
+                     />
+                   </TableCell>
+                 )}
               </TableRow>
             ))}
           </TableBody>

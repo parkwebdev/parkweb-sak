@@ -4,7 +4,7 @@ import { Sidebar } from '@/components/Sidebar';
 import { useSidebar } from '@/hooks/use-sidebar';
 
 const Index = () => {
-  const [activeTab, setActiveTab] = useState('onboarding');
+  const [activeTab, setActiveTab] = useState('links-invitations');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { isCollapsed } = useSidebar();
 

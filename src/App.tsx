@@ -39,17 +39,18 @@ const App = () => (
                   <Index />
                 </ProtectedRoute>
               } />
+              {/* Redirect old routes to main dashboard */}
               <Route path="/onboarding" element={
                 <ProtectedRoute>
-                  <Onboarding />
+                  <Index />
+                </ProtectedRoute>
+              } />
+              <Route path="/scope-of-works" element={
+                <ProtectedRoute>
+                  <Index />
                 </ProtectedRoute>
               } />
               <Route path="/client-onboarding" element={<ClientOnboarding />} />
-              <Route path="/scope-of-works" element={
-                <ProtectedRoute>
-                  <ScopeOfWorks />
-                </ProtectedRoute>
-              } />
               <Route path="/settings" element={
                 <ProtectedRoute>
                   <Settings />
