@@ -15,6 +15,9 @@ import {
   SearchSm as Search
 } from "@untitledui/icons";
 import { REQUEST_STATUSES, REQUEST_PRIORITIES } from "@/lib/constants";
+import { useRequests } from "@/hooks/useRequests";
+import { StatusDropdown } from "./StatusDropdown";
+import { PriorityDropdown } from "./PriorityDropdown";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,55 +28,9 @@ import {
   DropdownMenuCheckboxItem,
 } from "@/components/ui/dropdown-menu";
 
-// Mock data for now
-const mockRequests = [
-  {
-    id: "1",
-    title: "Update homepage banner",
-    description: "Change the main banner image and text",
-    status: "todo" as const,
-    priority: "high" as const,
-    client_name: "Acme Corp",
-    website: "acmecorp.com",
-    created_at: "2024-01-15",
-    assigned_to: null
-  },
-  {
-    id: "2", 
-    title: "Fix contact form",
-    description: "Contact form not sending emails properly",
-    status: "in_progress" as const,
-    priority: "urgent" as const,
-    client_name: "Tech Solutions",
-    website: "techsolutions.com",
-    created_at: "2024-01-14",
-    assigned_to: "John Doe"
-  },
-  {
-    id: "3",
-    title: "Add new product page",
-    description: "Create a dedicated page for the new product line",
-    status: "on_hold" as const,
-    priority: "medium" as const,
-    client_name: "StartupXYZ",
-    website: "startupxyz.com",
-    created_at: "2024-01-13",
-    assigned_to: "Jane Smith"
-  },
-  {
-    id: "4",
-    title: "Update company logo",
-    description: "Replace old logo across all pages",
-    status: "completed" as const,
-    priority: "low" as const,
-    client_name: "Global Inc",
-    website: "globalinc.com",
-    created_at: "2024-01-12",
-    assigned_to: "Mike Johnson"
-  }
-];
 
 export const RequestsTable = () => {
+  const { requests, loading, updateRequestStatus, updateRequestPriority } = useRequests();
   const [activeStatus, setActiveStatus] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
@@ -88,27 +45,13 @@ export const RequestsTable = () => {
   });
 
   const statusTabs = [
-    { key: 'all', label: 'All', count: mockRequests.length },
-    { key: 'todo', label: 'To Do', count: mockRequests.filter(r => r.status === 'todo').length },
-    { key: 'in_progress', label: 'In Progress', count: mockRequests.filter(r => r.status === 'in_progress').length },
-    { key: 'on_hold', label: 'On Hold', count: mockRequests.filter(r => r.status === 'on_hold').length },
-    { key: 'completed', label: 'Completed', count: mockRequests.filter(r => r.status === 'completed').length },
+    { key: 'all', label: 'All', count: requests.length },
+    { key: 'to_do', label: 'To Do', count: requests.filter(r => r.status === 'to_do').length },
+    { key: 'in_progress', label: 'In Progress', count: requests.filter(r => r.status === 'in_progress').length },
+    { key: 'on_hold', label: 'On Hold', count: requests.filter(r => r.status === 'on_hold').length },
+    { key: 'completed', label: 'Completed', count: requests.filter(r => r.status === 'completed').length },
   ];
 
-  const getStatusBadgeVariant = (status: string) => {
-    switch (status) {
-      case 'todo':
-        return 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-800';
-      case 'in_progress':
-        return 'bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-200 border-orange-200 dark:border-orange-800';
-      case 'on_hold':
-        return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 border-red-200 dark:border-red-800';  
-      case 'completed':
-        return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 border-green-200 dark:border-green-800';
-      default:
-        return 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-700';
-    }
-  };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -130,8 +73,12 @@ export const RequestsTable = () => {
   };
 
   const filteredRequests = activeStatus === 'all' 
-    ? mockRequests 
-    : mockRequests.filter(request => request.status === activeStatus);
+    ? requests 
+    : requests.filter(request => request.status === activeStatus);
+
+  if (loading) {
+    return <div className="flex items-center justify-center p-8 text-muted-foreground">Loading requests...</div>;
+  }
 
   return (
     <div className="w-full bg-card border border-border rounded-xl overflow-hidden">
@@ -262,28 +209,24 @@ export const RequestsTable = () => {
                   <TableCell>
                     <div>
                       <p className="font-medium">{request.client_name}</p>
-                      <p className="text-sm text-muted-foreground">{request.website}</p>
+                      <p className="text-sm text-muted-foreground">{request.website_name || request.website_url}</p>
                     </div>
                   </TableCell>
                 )}
                 {showColumns.status && (
                   <TableCell>
-                    <Badge 
-                      variant="outline" 
-                      className={getStatusBadgeVariant(request.status)}
-                    >
-                      {REQUEST_STATUSES[request.status]}
-                    </Badge>
+                    <StatusDropdown 
+                      status={request.status}
+                      onStatusChange={(status) => updateRequestStatus(request.id, status)}
+                    />
                   </TableCell>
                 )}
                 {showColumns.priority && (
                   <TableCell>
-                    <Badge 
-                      variant="outline" 
-                      className={getPriorityColor(request.priority)}
-                    >
-                      {formatPriority(request.priority)}
-                    </Badge>
+                    <PriorityDropdown 
+                      priority={request.priority}
+                      onPriorityChange={(priority) => updateRequestPriority(request.id, priority)}
+                    />
                   </TableCell>
                 )}
                 {showColumns.assigned && (
@@ -292,7 +235,7 @@ export const RequestsTable = () => {
                   </TableCell>
                 )}
                 {showColumns.created && (
-                  <TableCell className="text-sm">{request.created_at}</TableCell>
+                  <TableCell className="text-sm">{new Date(request.created_at).toLocaleDateString()}</TableCell>
                 )}
                 {showColumns.actions && (
                   <TableCell>

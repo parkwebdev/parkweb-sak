@@ -36,7 +36,7 @@ export const PAGINATION = {
 } as const;
 
 export const REQUEST_STATUSES = {
-  todo: 'To Do',
+  to_do: 'To Do',
   in_progress: 'In Progress',
   on_hold: 'On Hold',
   completed: 'Completed'

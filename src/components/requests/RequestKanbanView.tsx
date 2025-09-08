@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { REQUEST_STATUSES, REQUEST_PRIORITIES } from "@/lib/constants";
+import { REQUEST_PRIORITIES } from "@/lib/constants";
 import { Eye, Edit01 as Edit, Calendar, User01 as User } from "@untitledui/icons";
+import { useRequests, Request } from "@/hooks/useRequests";
+import { StatusDropdown } from "./StatusDropdown";
 import {
   DndContext,
   DragEndEvent,
@@ -18,71 +20,14 @@ import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
-interface Request {
-  id: string;
-  title: string;
-  description: string;
-  status: 'todo' | 'in_progress' | 'on_hold' | 'completed';
-  priority: 'low' | 'medium' | 'high' | 'urgent';
-  client_name: string;
-  website: string;
-  created_at: string;
-  assigned_to: string | null;
-}
 
-// Mock data with all statuses
-const initialRequests: Request[] = [
-  {
-    id: "1",
-    title: "Update homepage banner",
-    description: "Change the main banner image and text",
-    status: "todo",
-    priority: "high",
-    client_name: "Acme Corp",
-    website: "acmecorp.com",
-    created_at: "2024-01-15",
-    assigned_to: null
-  },
-  {
-    id: "2", 
-    title: "Fix contact form",
-    description: "Contact form not sending emails properly",
-    status: "in_progress",
-    priority: "urgent",
-    client_name: "Tech Solutions",
-    website: "techsolutions.com",
-    created_at: "2024-01-14",
-    assigned_to: "John Doe"
-  },
-  {
-    id: "3",
-    title: "Add new product page",
-    description: "Create a dedicated page for the new product line",
-    status: "on_hold",
-    priority: "medium",
-    client_name: "StartupXYZ",
-    website: "startupxyz.com",
-    created_at: "2024-01-13",
-    assigned_to: "Jane Smith"
-  },
-  {
-    id: "4",
-    title: "Update company logo",
-    description: "Replace old logo across all pages",
-    status: "completed",
-    priority: "low",
-    client_name: "Global Inc",
-    website: "globalinc.com",
-    created_at: "2024-01-12",
-    assigned_to: "Mike Johnson"
-  }
-];
 
 interface SortableCardProps {
   request: Request;
+  onStatusChange: (id: string, status: Request['status']) => void;
 }
 
-const SortableCard = ({ request }: SortableCardProps) => {
+const SortableCard = ({ request, onStatusChange }: SortableCardProps) => {
   const {
     attributes,
     listeners,
@@ -139,7 +84,7 @@ const SortableCard = ({ request }: SortableCardProps) => {
           </div>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <Calendar size={12} />
-            {request.created_at}
+            {new Date(request.created_at).toLocaleDateString()}
           </div>
           <div className="flex items-center justify-between">
             <Badge 
@@ -153,6 +98,13 @@ const SortableCard = ({ request }: SortableCardProps) => {
               <Edit size={14} className="text-muted-foreground hover:text-foreground cursor-pointer transition-colors" />
             </div>
           </div>
+          <div className="mt-2">
+            <StatusDropdown 
+              status={request.status}
+              onStatusChange={(status) => onStatusChange(request.id, status)}
+              variant="kanban"
+            />
+          </div>
         </div>
       </CardContent>
     </Card>
@@ -161,14 +113,15 @@ const SortableCard = ({ request }: SortableCardProps) => {
 
 interface DroppableColumnProps {
   column: {
-    key: 'todo' | 'in_progress' | 'on_hold' | 'completed';
+    key: 'to_do' | 'in_progress' | 'on_hold' | 'completed';
     title: string;
     color: string;
   };
   requests: Request[];
+  onStatusChange: (id: string, status: Request['status']) => void;
 }
 
-const DroppableColumn = ({ column, requests }: DroppableColumnProps) => {
+const DroppableColumn = ({ column, requests, onStatusChange }: DroppableColumnProps) => {
   const { setNodeRef, isOver } = useDroppable({
     id: column.key,
   });
@@ -196,7 +149,11 @@ const DroppableColumn = ({ column, requests }: DroppableColumnProps) => {
       >
         <div className="space-y-3">
           {requests.map((request) => (
-            <SortableCard key={request.id} request={request} />
+            <SortableCard 
+              key={request.id} 
+              request={request} 
+              onStatusChange={onStatusChange}
+            />
           ))}
         </div>
       </SortableContext>
@@ -205,7 +162,7 @@ const DroppableColumn = ({ column, requests }: DroppableColumnProps) => {
 };
 
 export const RequestKanbanView = () => {
-  const [requests, setRequests] = useState<Request[]>(initialRequests);
+  const { requests, loading, updateRequestStatus } = useRequests();
   const [activeRequest, setActiveRequest] = useState<Request | null>(null);
 
   const sensors = useSensors(
@@ -217,7 +174,7 @@ export const RequestKanbanView = () => {
   );
 
   const columns = [
-    { key: 'todo' as const, title: 'To Do', color: 'bg-blue-500' },
+    { key: 'to_do' as const, title: 'To Do', color: 'bg-blue-500' },
     { key: 'in_progress' as const, title: 'In Progress', color: 'bg-orange-500' },
     { key: 'on_hold' as const, title: 'On Hold', color: 'bg-red-500' },
     { key: 'completed' as const, title: 'Completed', color: 'bg-green-500' }
@@ -248,13 +205,7 @@ export const RequestKanbanView = () => {
     // Check if we're hovering over a column
     const targetColumn = columns.find(col => col.key === overId);
     if (targetColumn && activeRequest.status !== targetColumn.key) {
-      setRequests(prev => 
-        prev.map(request => 
-          request.id === activeId 
-            ? { ...request, status: targetColumn.key }
-            : request
-        )
-      );
+      updateRequestStatus(activeId, targetColumn.key);
     }
   };
 
@@ -279,17 +230,15 @@ export const RequestKanbanView = () => {
     // Check if we're dropping over a column
     const targetColumn = columns.find(col => col.key === overId);
     if (targetColumn && activeRequest.status !== targetColumn.key) {
-      setRequests(prev => 
-        prev.map(request => 
-          request.id === activeId 
-            ? { ...request, status: targetColumn.key }
-            : request
-        )
-      );
+      updateRequestStatus(activeId, targetColumn.key);
     }
 
     setActiveRequest(null);
   };
+
+  if (loading) {
+    return <div className="flex items-center justify-center min-h-screen text-muted-foreground">Loading requests...</div>;
+  }
 
   return (
     <div className="min-h-screen">
@@ -305,12 +254,18 @@ export const RequestKanbanView = () => {
               key={column.key}
               column={column}
               requests={getRequestsByStatus(column.key)}
+              onStatusChange={updateRequestStatus}
             />
           ))}
         </div>
 
         <DragOverlay>
-          {activeRequest ? <SortableCard request={activeRequest} /> : null}
+          {activeRequest ? (
+            <SortableCard 
+              request={activeRequest} 
+              onStatusChange={updateRequestStatus}
+            />
+          ) : null}
         </DragOverlay>
       </DndContext>
     </div>
