@@ -480,7 +480,7 @@ const Team = () => {
             setSelectedMember(null);
           }}
           onUpdate={() => {
-            console.log('Profile updated, refreshing team list...');
+            console.log('🔄 Profile updated, refreshing team list...');
             fetchTeamMembers();
           }}
         />
