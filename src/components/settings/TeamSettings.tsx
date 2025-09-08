@@ -79,27 +79,31 @@ export const TeamSettings: React.FC = () => {
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row gap-4 mb-6">
-          <div className="h-10 bg-muted rounded animate-pulse flex-1" />
-          <div className="h-10 w-32 bg-muted rounded animate-pulse" />
-          <div className="h-10 w-32 bg-muted rounded animate-pulse" />
+        <div className="flex flex-col space-y-3 sm:space-y-0 sm:flex-row sm:items-center sm:gap-4 mb-6">
+          <div className="h-10 bg-muted rounded animate-pulse flex-1 min-w-0" />
+          <div className="flex flex-col xs:flex-row gap-3 sm:gap-2">
+            <div className="h-10 w-full xs:w-40 sm:w-48 bg-muted rounded animate-pulse" />
+            <div className="h-10 w-full xs:w-32 bg-muted rounded animate-pulse" />
+          </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="p-6 border border-border rounded-xl bg-card shadow-sm">
-              <div className="flex items-start space-x-4 mb-4">
-                <div className="h-12 w-12 rounded-full bg-muted animate-pulse" />
-                <div className="flex-1">
-                  <div className="h-4 w-32 bg-muted rounded animate-pulse mb-2" />
-                  <div className="h-3 w-48 bg-muted rounded animate-pulse mb-1" />
-                  <div className="h-3 w-24 bg-muted rounded animate-pulse" />
+            <div key={i} className="p-4 sm:p-6 border border-border rounded-xl bg-card shadow-sm">
+              <div className="flex flex-col space-y-4">
+                <div className="flex items-start space-x-3">
+                  <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-muted animate-pulse flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <div className="h-4 w-32 bg-muted rounded animate-pulse mb-2" />
+                    <div className="h-3 w-48 bg-muted rounded animate-pulse mb-1" />
+                    <div className="h-3 w-24 bg-muted rounded animate-pulse" />
+                  </div>
                 </div>
-              </div>
-              <div className="flex justify-between items-center">
-                <div className="h-6 w-16 bg-muted rounded animate-pulse" />
-                <div className="flex gap-2">
-                  <div className="h-8 w-16 bg-muted rounded animate-pulse" />
-                  <div className="h-8 w-16 bg-muted rounded animate-pulse" />
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div className="h-6 w-20 bg-muted rounded animate-pulse" />
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <div className="h-7 w-16 bg-muted rounded animate-pulse" />
+                    <div className="h-7 w-16 bg-muted rounded animate-pulse" />
+                  </div>
                 </div>
               </div>
             </div>
@@ -112,8 +116,8 @@ export const TeamSettings: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Search and Filter Controls */}
-      <div className="flex flex-col sm:flex-row gap-4 mb-6">
-        <div className="flex-1">
+      <div className="flex flex-col space-y-3 sm:space-y-0 sm:flex-row sm:items-center sm:gap-4 mb-6">
+        <div className="flex-1 min-w-0">
           <SearchInput
             value={searchTerm}
             onChange={setSearchTerm}
@@ -121,19 +125,23 @@ export const TeamSettings: React.FC = () => {
             className="w-full"
           />
         </div>
-        <Select value={roleFilter} onValueChange={setRoleFilter}>
-          <SelectTrigger className="w-full sm:w-48">
-            <SelectValue placeholder="Filter by role" />
-          </SelectTrigger>
-          <SelectContent>
-            {roleOptions.map(option => (
-              <SelectItem key={option.value} value={option.value}>
-                {option.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <InviteMemberDialog onInvite={handleInviteMember} />
+        <div className="flex flex-col xs:flex-row gap-3 sm:gap-2">
+          <Select value={roleFilter} onValueChange={setRoleFilter}>
+            <SelectTrigger className="w-full xs:w-40 sm:w-48">
+              <SelectValue placeholder="Filter by role" />
+            </SelectTrigger>
+            <SelectContent>
+              {roleOptions.map(option => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <div className="flex-shrink-0">
+            <InviteMemberDialog onInvite={handleInviteMember} />
+          </div>
+        </div>
       </div>
 
       {/* Results Summary */}
@@ -148,7 +156,7 @@ export const TeamSettings: React.FC = () => {
 
       {/* Team Members Grid */}
       {filteredMembers.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
           {filteredMembers.map((member) => (
             <TeamMemberCard
               key={member.id}
