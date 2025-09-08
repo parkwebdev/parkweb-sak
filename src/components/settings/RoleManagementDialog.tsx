@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { useSecurityLog } from '@/hooks/useSecurityLog';
 import { TeamMember, PERMISSION_GROUPS, PERMISSION_LABELS } from '@/types/team';
 
 interface RoleManagementDialogProps {
@@ -26,6 +27,7 @@ export const RoleManagementDialog: React.FC<RoleManagementDialogProps> = ({
   const [permissions, setPermissions] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
+  const { logRoleChange } = useSecurityLog();
 
   // Check if user is editing their own settings vs admin managing others
   const isEditingSelf = member?.user_id === user?.id;
@@ -125,12 +127,24 @@ export const RoleManagementDialog: React.FC<RoleManagementDialogProps> = ({
   const handleSave = async () => {
     if (!member) return;
 
+    const oldRole = member.role || 'member';
     setLoading(true);
     try {
       await onUpdate(member, role, permissions);
+      
+      // Log the role change for security monitoring
+      if (oldRole !== role) {
+        logRoleChange(member.user_id, oldRole, role, true);
+      }
+      
       onClose();
     } catch (error) {
       console.error('Error in handleSave:', error);
+      
+      // Log failed role change attempt
+      if (oldRole !== role) {
+        logRoleChange(member.user_id, oldRole, role, false);
+      }
     } finally {
       setLoading(false);
     }

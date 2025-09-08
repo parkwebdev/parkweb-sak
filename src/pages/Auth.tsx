@@ -7,6 +7,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { validatePasswordStrength } from '@/utils/input-validation';
+import { useSecurityLog } from '@/hooks/useSecurityLog';
+import { PasswordStrengthIndicator } from '@/components/PasswordStrengthIndicator';
 import { User01 as User, Mail01 as Mail, Lock01 as Lock, Eye, EyeOff } from '@untitledui/icons';
 
 const Auth = () => {
@@ -18,6 +21,7 @@ const Auth = () => {
   const [displayName, setDisplayName] = useState('');
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { logAuthEvent } = useSecurityLog();
 
   useEffect(() => {
     // Check if user is already logged in
@@ -49,6 +53,7 @@ const Auth = () => {
       });
 
       if (error) {
+        logAuthEvent('login', false, { error: error.message });
         if (error.message.includes('Invalid login credentials')) {
           toast({
             title: "Invalid credentials",
@@ -71,6 +76,7 @@ const Auth = () => {
         return;
       }
 
+      logAuthEvent('login', true);
       toast({
         title: "Welcome back!",
         description: "You have been signed in successfully.",
@@ -107,10 +113,12 @@ const Auth = () => {
       return;
     }
 
-    if (password.length < 6) {
+    // Validate password strength
+    const passwordValidation = validatePasswordStrength(password);
+    if (!passwordValidation.isValid) {
       toast({
-        title: "Error",
-        description: "Password must be at least 6 characters long",
+        title: "Password too weak",
+        description: passwordValidation.errors[0],
         variant: "destructive",
       });
       return;
@@ -132,6 +140,7 @@ const Auth = () => {
       });
 
       if (error) {
+        logAuthEvent('signup', false, { error: error.message });
         if (error.message.includes('User already registered')) {
           toast({
             title: "Account exists",
@@ -148,6 +157,7 @@ const Auth = () => {
         return;
       }
 
+      logAuthEvent('signup', true);
       toast({
         title: "Account created!",
         description: "Please check your email to confirm your account, then you can sign in.",
@@ -305,6 +315,7 @@ const Auth = () => {
                       </button>
                     </div>
                   </div>
+                  {password && <PasswordStrengthIndicator password={password} className="mt-2" />}
                   <div className="space-y-2">
                     <Label htmlFor="signup-confirm">Confirm Password</Label>
                     <div className="relative">
