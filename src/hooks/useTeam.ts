@@ -168,6 +168,14 @@ export const useTeam = () => {
 
   const updateMemberRole = async (member: TeamMember, role: UserRole, permissions: string[]): Promise<boolean> => {
     try {
+      console.log('🔄 Attempting to update role for user:', {
+        userId: member.user_id,
+        currentRole: member.role,
+        newRole: role,
+        newPermissions: permissions,
+        currentUser: user?.id
+      });
+
       const { error } = await supabase
         .from('user_roles')
         .upsert({
@@ -177,14 +185,16 @@ export const useTeam = () => {
         } as any);
 
       if (error) {
+        console.error('❌ Database error updating role:', error);
         toast({
           title: "Update failed",
-          description: "Failed to update member role and permissions.",
+          description: `Database error: ${error.message}`,
           variant: "destructive",
         });
         return false;
       }
 
+      console.log('✅ Role update successful');
       toast({
         title: "Role updated",
         description: `${member.display_name || member.email}'s role has been updated.`,
@@ -194,7 +204,12 @@ export const useTeam = () => {
       await fetchCurrentUserRole();
       return true;
     } catch (error) {
-      console.error('Error updating role:', error);
+      console.error('❌ Unexpected error updating role:', error);
+      toast({
+        title: "Update failed",
+        description: "An unexpected error occurred while updating the role.",
+        variant: "destructive",
+      });
       return false;
     }
   };

@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { RoleManagementDialog } from './RoleManagementDialog';
 import { ProfileEditDialog } from '@/components/team/ProfileEditDialog';
-import { TeamMemberCard } from '@/components/team/TeamMemberCard';
+import { TeamMembersTable } from '@/components/team/TeamMembersTable';
 import { InviteMemberDialog } from '@/components/team/InviteMemberDialog';
 import { SearchInput } from '@/components/SearchInput';
 import { Button } from '@/components/ui/button';
@@ -154,38 +154,16 @@ export const TeamSettings: React.FC = () => {
         </span>
       </div>
 
-      {/* Team Members Grid */}
-      {filteredMembers.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-          {filteredMembers.map((member) => (
-            <TeamMemberCard
-              key={member.id}
-              member={member}
-              currentUserId={user?.id}
-              canManageRoles={canManageRoles}
-              onEditRole={handleEditRole}
-              onEditProfile={isSuperAdmin ? handleEditProfile : undefined}
-              onRemove={handleRemoveMember}
-            />
-          ))}
-        </div>
-      ) : (
-        <div className="text-center py-12">
-          <Users size={48} className="mx-auto text-muted-foreground mb-4" />
-          <h3 className="text-lg font-medium text-foreground mb-2">
-            {searchTerm || roleFilter !== 'all' ? 'No matching team members' : 'No team members found'}
-          </h3>
-          <p className="text-muted-foreground mb-4">
-            {searchTerm || roleFilter !== 'all' 
-              ? 'Try adjusting your search criteria or filters.'
-              : 'Start by inviting team members to collaborate.'
-            }
-          </p>
-          {(!searchTerm && roleFilter === 'all') && (
-            <InviteMemberDialog onInvite={handleInviteMember} />
-          )}
-        </div>
-      )}
+      {/* Team Members Table */}
+      <TeamMembersTable
+        teamMembers={filteredMembers}
+        currentUserId={user?.id}
+        canManageRoles={canManageRoles}
+        onEditRole={handleEditRole}
+        onEditProfile={isSuperAdmin ? handleEditProfile : undefined}
+        onRemove={handleRemoveMember}
+        loading={loading}
+      />
 
       <RoleManagementDialog
         member={selectedMember}

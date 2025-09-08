@@ -36,14 +36,14 @@ export const useKeyboardShortcuts = (shortcuts: KeyboardShortcut[] = []) => {
     {
       key: 't',
       ctrlKey: true,
-      description: 'Go to Team',
-      action: () => navigate('/team')
+      description: 'Go to Team Settings',
+      action: () => navigate('/settings?tab=team')
     },
     {
       key: 'p',
       ctrlKey: true,
-      description: 'Go to Profile',
-      action: () => navigate('/profile')
+      description: 'Go to Profile Settings',
+      action: () => navigate('/settings?tab=profile')
     },
     {
       key: ',',
