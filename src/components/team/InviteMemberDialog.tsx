@@ -58,7 +58,7 @@ export const InviteMemberDialog: React.FC<InviteMemberDialogProps> = ({
             <Input
               id="email"
               type="email"
-              placeholder="Enter email address"
+              placeholder="coworker@park-web.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={loading}

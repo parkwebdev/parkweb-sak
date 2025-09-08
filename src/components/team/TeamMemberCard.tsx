@@ -39,7 +39,7 @@ export const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
           </AvatarFallback>
         </Avatar>
         <div>
-          <h3 className="text-sm font-medium text-foreground">
+          <h3 className="text-xs font-medium text-foreground">
             {member.display_name || member.email?.split('@')[0] || 'Unknown User'}
           </h3>
           <p className="text-xs text-muted-foreground">{member.email}</p>
