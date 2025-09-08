@@ -35,7 +35,7 @@ export const PriorityDropdown = ({ priority, onPriorityChange }: PriorityDropdow
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button 
-          className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 cursor-pointer hover:opacity-80 ${getPriorityColor(priority)}`}
+          className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors cursor-pointer hover:opacity-80 ${getPriorityColor(priority)}`}
         >
           {REQUEST_PRIORITIES[priority]}
           <ChevronDown size={12} className="ml-1" />
