@@ -108,16 +108,16 @@ const SortableCard = ({ request }: SortableCardProps) => {
       style={style}
       {...attributes}
       {...listeners}
-      className="hover:shadow-md transition-shadow cursor-grab active:cursor-grabbing"
+      className="hover:shadow-md transition-all duration-200 cursor-grab active:cursor-grabbing bg-card/90 border-border/50"
     >
       <CardHeader className="pb-3">
-        <CardTitle className="text-sm">{request.title}</CardTitle>
-        <CardDescription className="text-xs line-clamp-2">
+        <CardTitle className="text-sm font-medium">{request.title}</CardTitle>
+        <CardDescription className="text-xs line-clamp-2 text-muted-foreground">
           {request.description}
         </CardDescription>
       </CardHeader>
       <CardContent className="pt-0">
-        <div className="space-y-2">
+        <div className="space-y-3">
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <User size={12} />
             {request.client_name}
@@ -127,12 +127,12 @@ const SortableCard = ({ request }: SortableCardProps) => {
             {request.created_at}
           </div>
           <div className="flex items-center justify-between">
-            <Badge variant="outline" className="text-xs">
+            <Badge variant="outline" className="text-xs capitalize">
               {formatPriority(request.priority)}
             </Badge>
             <div className="flex gap-1">
-              <Eye size={14} className="text-muted-foreground hover:text-foreground cursor-pointer" />
-              <Edit size={14} className="text-muted-foreground hover:text-foreground cursor-pointer" />
+              <Eye size={14} className="text-muted-foreground hover:text-foreground cursor-pointer transition-colors" />
+              <Edit size={14} className="text-muted-foreground hover:text-foreground cursor-pointer transition-colors" />
             </div>
           </div>
         </div>
@@ -158,16 +158,16 @@ const DroppableColumn = ({ column, requests }: DroppableColumnProps) => {
   return (
     <div 
       ref={setNodeRef}
-      className={`space-y-4 min-h-[400px] p-4 rounded-lg border bg-card shadow-sm transition-all duration-200 ${
+      className={`space-y-4 min-h-[500px] p-4 rounded-lg bg-muted/50 border border-border/50 transition-all duration-200 ${
         isOver 
-          ? 'border-primary bg-primary/5 shadow-md' 
-          : 'border-border hover:shadow-md'
+          ? 'border-primary bg-primary/5' 
+          : 'hover:bg-muted/60'
       }`}
     >
-      <div className="flex items-center gap-2">
-        <div className={`w-3 h-3 rounded-full ${column.color}`} />
-        <h3 className="font-semibold">{column.title}</h3>
-        <Badge variant="secondary" className="ml-auto">
+      <div className="flex items-center gap-3">
+        <div className={`w-2 h-2 rounded-full ${column.color}`} />
+        <h3 className="font-medium text-sm">{column.title}</h3>
+        <Badge variant="secondary" className="ml-auto text-xs px-2 py-0.5">
           {requests.length}
         </Badge>
       </div>
@@ -199,7 +199,7 @@ export const RequestKanbanView = () => {
   );
 
   const columns = [
-    { key: 'todo' as const, title: 'To Do', color: 'bg-gray-500' },
+    { key: 'todo' as const, title: 'To Do', color: 'bg-slate-400' },
     { key: 'in_progress' as const, title: 'In Progress', color: 'bg-blue-500' },
     { key: 'on_hold' as const, title: 'On Hold', color: 'bg-yellow-500' },
     { key: 'completed' as const, title: 'Completed', color: 'bg-green-500' }
@@ -274,14 +274,14 @@ export const RequestKanbanView = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background/95">
       <DndContext
         sensors={sensors}
         onDragStart={handleDragStart}
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 p-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-6">
           {columns.map((column) => (
             <DroppableColumn
               key={column.key}
