@@ -50,7 +50,7 @@ export const TeamMemberCard: React.FC<TeamMemberCardProps> = ({
       </div>
       
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:space-x-4">
-        <Badge className={`text-xs capitalize ${getRoleColor(member.role || 'member')}`}>
+        <Badge variant="outline" className={`text-xs capitalize ${getRoleColor(member.role || 'member')}`}>
           {isCurrentUser 
             ? (
                 member.role === 'super_admin' ? 'Super Admin (You)' :

@@ -324,7 +324,7 @@ const Team = () => {
                         <Input
                           id="email"
                           type="email"
-                          placeholder="colleague@example.com"
+                          placeholder="coworker@park-web.com"
                           value={inviteEmail}
                           onChange={(e) => setInviteEmail(e.target.value)}
                         />
