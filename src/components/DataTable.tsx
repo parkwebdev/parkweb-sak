@@ -705,27 +705,29 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'links-invitat
       </div>
 
       <footer className="bg-muted/30 w-full">
-        <div className="justify-between items-center flex w-full gap-5 px-4 py-3 max-md:flex-wrap max-md:px-3">
-          <div className="text-muted-foreground text-sm leading-5">
-            Page 1 of 10
-          </div>
-          <div className="items-center flex gap-1">
-            <button className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden bg-background px-3 py-2 rounded-lg border-border hover:bg-accent/50">
-              <div className="justify-center items-center self-stretch flex my-auto px-0.5 py-0">
-                <div className="text-foreground text-sm leading-5 self-stretch my-auto">
-                  Previous
+        {tableData.length > 10 && (
+          <div className="justify-between items-center flex w-full gap-5 px-4 py-3 max-md:flex-wrap max-md:px-3">
+            <div className="text-muted-foreground text-sm leading-5">
+              Page 1 of {Math.ceil(tableData.length / 10)}
+            </div>
+            <div className="items-center flex gap-1">
+              <button className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden bg-background px-3 py-2 rounded-lg border-border hover:bg-accent/50">
+                <div className="justify-center items-center self-stretch flex my-auto px-0.5 py-0">
+                  <div className="text-foreground text-sm leading-5 self-stretch my-auto">
+                    Previous
+                  </div>
                 </div>
-              </div>
-            </button>
-            <button className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden bg-background px-3 py-2 rounded-lg border-border hover:bg-accent/50">
-              <div className="justify-center items-center self-stretch flex my-auto px-0.5 py-0">
-                <div className="text-foreground text-sm leading-5 self-stretch my-auto">
-                  Next
+              </button>
+              <button className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden bg-background px-3 py-2 rounded-lg border-border hover:bg-accent/50">
+                <div className="justify-center items-center self-stretch flex my-auto px-0.5 py-0">
+                  <div className="text-foreground text-sm leading-5 self-stretch my-auto">
+                    Next
+                  </div>
                 </div>
-              </div>
-            </button>
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </footer>
     </div>
   );
