@@ -74,7 +74,12 @@ export const ProfileEditDialog: React.FC<ProfileEditDialogProps> = ({
         throw error;
       }
 
-      console.log('✅ Profile updated successfully:', data);
+      console.log('✅ Profile updated successfully. Rows affected:', data?.length || 0);
+      console.log('📝 Updated data:', data);
+
+      if (!data || data.length === 0) {
+        throw new Error('No rows were updated. This might be a permissions issue.');
+      }
 
       toast({
         title: "Profile updated",
