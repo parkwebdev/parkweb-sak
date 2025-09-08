@@ -52,6 +52,15 @@ interface TableRow {
   submittedDate: string;
   status: 'Complete' | 'Incomplete' | 'In Review';
   percentage: number;
+  // Optional original data properties for actions
+  onboarding_url?: string;
+  email?: string;
+  client_name?: string;
+  company_name?: string;
+  client?: string;
+  client_contact?: string;
+  title?: string;
+  [key: string]: any; // Allow additional properties
 }
 
 interface DataTableProps {
@@ -120,12 +129,17 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'links-invitat
           clientName: item.client_name,
           businessType: formatBusinessType(item.industry),
           submittedDate: formatDate(item.date_sent),
-          status: item.status === 'Completed' || item.status === 'Approved' ? 'Complete' as const : 
-                 item.status === 'In Progress' || item.status === 'SOW Generated' ? 'In Review' as const : 
-                 'Incomplete' as const,
+          status: (item.status === 'Completed' || item.status === 'Approved' ? 'Complete' : 
+                 item.status === 'In Progress' || item.status === 'SOW Generated' ? 'In Review' : 
+                 'Incomplete') as 'Complete' | 'Incomplete' | 'In Review',
           percentage: item.status === 'Completed' || item.status === 'Approved' ? 100 : 
                      item.status === 'SOW Generated' ? 85 :
-                     item.status === 'In Progress' ? 60 : 25
+                     item.status === 'In Progress' ? 60 : 25,
+          // Preserve original data for actions
+          onboarding_url: item.onboarding_url,
+          email: item.email,
+          client_name: item.client_name,
+          company_name: item.company_name,
         })) || [];
       } else if (currentActiveTab === 'submissions-sows') {
         // Fetch scope of works
@@ -145,12 +159,17 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'links-invitat
           clientName: item.client_contact,
           businessType: formatBusinessType(item.industry),
           submittedDate: formatDate(item.date_created),
-          status: item.status === 'Approved' ? 'Complete' as const : 
-                 item.status === 'Client Review' || item.status === 'Agency Review' ? 'In Review' as const : 
-                 'Incomplete' as const,
+          status: (item.status === 'Approved' ? 'Complete' : 
+                 item.status === 'Client Review' || item.status === 'Agency Review' ? 'In Review' : 
+                 'Incomplete') as 'Complete' | 'Incomplete' | 'In Review',
           percentage: item.status === 'Approved' ? 100 : 
                      item.status === 'Client Review' || item.status === 'Agency Review' ? 75 : 
-                     25
+                     25,
+          // Preserve original data for actions
+          email: item.email,
+          client: item.client,
+          client_contact: item.client_contact,
+          title: item.title,
         })) || [];
       } else if (currentActiveTab === 'completed') {
         // Fetch completed items from both tables
@@ -166,7 +185,12 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'links-invitat
           businessType: formatBusinessType(item.industry),
           submittedDate: formatDate(item.date_sent),
           status: 'Complete' as const,
-          percentage: 100
+          percentage: 100,
+          // Preserve original data for actions
+          onboarding_url: item.onboarding_url,
+          email: item.email,
+          client_name: item.client_name,
+          company_name: item.company_name,
         })) || [];
 
         const completedSOW = sowResult.data?.map(item => ({
@@ -176,7 +200,12 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'links-invitat
           businessType: formatBusinessType(item.industry),
           submittedDate: formatDate(item.date_created),
           status: 'Complete' as const,
-          percentage: 100
+          percentage: 100,
+          // Preserve original data for actions
+          email: item.email,
+          client: item.client,
+          client_contact: item.client_contact,
+          title: item.title,
         })) || [];
 
         data = [...completedOnboarding, ...completedSOW].sort((a, b) => 
@@ -202,12 +231,17 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'links-invitat
             clientName: item.client_name,
             businessType: formatBusinessType(item.industry),
             submittedDate: formatDate(item.date_sent),
-            status: item.status === 'Approved' ? 'Complete' as const : 
-                   item.status === 'SOW Generated' || item.status === 'In Progress' ? 'In Review' as const : 
-                   'Incomplete' as const,
+            status: (item.status === 'Approved' ? 'Complete' : 
+                   item.status === 'SOW Generated' || item.status === 'In Progress' ? 'In Review' : 
+                   'Incomplete') as 'Complete' | 'Incomplete' | 'In Review',
             percentage: item.status === 'Approved' ? 100 : 
                        item.status === 'SOW Generated' ? 85 :
                        item.status === 'In Progress' ? 60 : 25,
+            // Preserve original data for actions
+            onboarding_url: item.onboarding_url,
+            email: item.email,
+            client_name: item.client_name,
+            company_name: item.company_name,
             journey: {
               linkCreated: true,
               submissionReceived: false,
@@ -234,6 +268,9 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'links-invitat
               submittedDate: formatDate(submission.submitted_at),
               status: 'In Review' as const,
               percentage: 70,
+              // Preserve original data for actions
+              client_name: submission.client_name,
+              email: submission.client_email,
               journey: {
                 linkCreated: false,
                 submissionReceived: true,

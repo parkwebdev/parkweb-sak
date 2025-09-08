@@ -48,14 +48,16 @@ const Settings = () => {
         isCollapsed ? 'lg:ml-[72px]' : 'lg:ml-[280px]'
       }`}>
         <main className="flex-1 bg-muted/30 min-h-screen pt-4 lg:pt-8 pb-12">
-          <div className="items-stretch flex w-full flex-col gap-6 px-4 lg:px-8 py-0">
-            <SettingsLayout 
-              activeTab={activeTab} 
-              onTabChange={setActiveTab}
-            >
-              {renderTabContent()}
-            </SettingsLayout>
-          </div>
+          <header className="w-full font-medium">
+            <div className="items-stretch flex w-full flex-col gap-6 px-4 lg:px-8 py-0">
+              <SettingsLayout 
+                activeTab={activeTab} 
+                onTabChange={setActiveTab}
+              >
+                {renderTabContent()}
+              </SettingsLayout>
+            </div>
+          </header>
         </main>
       </div>
     </div>
