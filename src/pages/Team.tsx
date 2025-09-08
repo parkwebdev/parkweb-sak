@@ -24,6 +24,7 @@ const Team = () => {
   const { user } = useAuth();
   const { role: currentUserRole } = useRoleAuthorization();
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+  const [pendingInvites, setPendingInvites] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
@@ -65,6 +66,19 @@ const Team = () => {
 
       if (rolesError) {
         console.error('Error fetching roles:', rolesError);
+      }
+
+      // Fetch pending invitations
+      const { data: pendingData, error: pendingError } = await supabase
+        .from('pending_invitations')
+        .select('*')
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false });
+
+      if (pendingError) {
+        console.error('Error fetching pending invitations:', pendingError);
+      } else {
+        setPendingInvites(pendingData || []);
       }
 
       // Combine profile and role data
@@ -173,6 +187,42 @@ const Team = () => {
       toast({
         title: "Remove failed", 
         description: "An error occurred while removing the team member.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleRemovePendingInvite = async (inviteId: string, email: string) => {
+    if (!confirm(`Are you sure you want to cancel the invitation for ${email}?`)) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('pending_invitations')
+        .delete()
+        .eq('id', inviteId);
+
+      if (error) {
+        toast({
+          title: "Cancel failed",
+          description: "Failed to cancel invitation.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Invitation cancelled",
+        description: `Invitation for ${email} has been cancelled.`,
+      });
+
+      // Refresh the team members list
+      await fetchTeamMembers();
+    } catch (error) {
+      toast({
+        title: "Cancel failed", 
+        description: "An error occurred while cancelling the invitation.",
         variant: "destructive",
       });
     }
@@ -288,11 +338,58 @@ const Team = () => {
             </header>
 
             <div className="space-y-4">
-              {teamMembers.length === 0 ? (
+              {/* Pending Invitations */}
+              {pendingInvites.map((invite) => (
+                <Card key={invite.id} className="p-6 bg-background border-dashed">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <Avatar className="h-12 w-12">
+                        <AvatarFallback className="text-lg bg-muted">
+                          {invite.email.substring(0, 2).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <div className="font-medium text-lg">{invite.email}</div>
+                        <div className="text-sm text-muted-foreground">
+                          Invited by {invite.invited_by_name}
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-1">
+                          Sent {new Date(invite.created_at).toLocaleDateString()}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Badge variant="pending">
+                        Pending
+                      </Badge>
+                      {canManageTeam && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="bg-background border shadow-md z-50">
+                            <DropdownMenuItem 
+                              className="text-destructive dark:text-red-400"
+                              onClick={() => handleRemovePendingInvite(invite.id, invite.email)}
+                            >
+                              Cancel Invitation
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
+                    </div>
+                  </div>
+                </Card>
+              ))}
+
+              {/* Team Members */}
+              {teamMembers.length === 0 && pendingInvites.length === 0 ? (
                 <Card>
                   <CardContent className="flex flex-col items-center justify-center py-12">
                     <div className="text-center">
-                      <h3 className="text-lg font-medium mb-2">No team members yet</h3>
+                      <h3 className="text-lg font-medium mb-2">No team members or invitations yet</h3>
                       <p className="text-muted-foreground mb-4">
                         Start by inviting team members to collaborate.
                       </p>

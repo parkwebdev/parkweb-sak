@@ -73,13 +73,29 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Team invitation email sent successfully:", emailResponse);
 
-    // Log the invitation for security/audit purposes
+    // Store the pending invitation in the database
     const authHeader = req.headers.get('authorization');
     if (authHeader) {
       const token = authHeader.replace('Bearer ', '');
       const { data: { user } } = await supabase.auth.getUser(token);
       
       if (user) {
+        // Create pending invitation record
+        const { error: pendingError } = await supabase
+          .from('pending_invitations')
+          .insert({
+            email: email,
+            invited_by: user.id,
+            invited_by_name: invitedBy,
+            company_name: companyName,
+            status: 'pending'
+          });
+
+        if (pendingError) {
+          console.error('Error creating pending invitation:', pendingError);
+        }
+
+        // Log the invitation for security/audit purposes
         await supabase.rpc('log_security_event', {
           p_user_id: user.id,
           p_action: 'team_invitation_sent',

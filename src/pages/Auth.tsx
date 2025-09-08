@@ -172,6 +172,19 @@ const Auth = () => {
       }
 
       logAuthEvent('signup', true);
+      
+      // Handle successful signup to process pending invitations
+      try {
+        await supabase.functions.invoke('handle-signup', {
+          body: { 
+            email: email, 
+            user_id: 'pending' // Will be updated when user confirms account
+          }
+        });
+      } catch (error) {
+        console.error('Error processing signup completion:', error);
+      }
+
       toast({
         title: "Account created!",
         description: "Please check your email to confirm your account, then you can sign in.",
