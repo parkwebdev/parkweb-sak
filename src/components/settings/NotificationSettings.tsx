@@ -106,15 +106,45 @@ export const NotificationSettings: React.FC = () => {
           return;
         }
         
-        const permission = await Notification.requestPermission();
-        if (permission !== 'granted') {
+        // Check current permission state
+        const currentPermission = Notification.permission;
+        
+        if (currentPermission === 'denied') {
           toast({
-            title: "Permission denied",
-            description: "Browser notifications require permission to be enabled.",
+            title: "Permission blocked",
+            description: "Browser notifications are blocked. Please enable them in your browser settings and refresh the page.",
             variant: "destructive",
           });
           setUpdating(false);
           return;
+        }
+        
+        if (currentPermission === 'default') {
+          try {
+            const permission = await Notification.requestPermission();
+            if (permission !== 'granted') {
+              let description = "Browser notifications require permission to be enabled.";
+              if (permission === 'denied') {
+                description = "Notifications were denied. Please enable them in your browser settings and refresh the page.";
+              }
+              toast({
+                title: "Permission not granted",
+                description,
+                variant: "destructive",
+              });
+              setUpdating(false);
+              return;
+            }
+          } catch (error) {
+            console.error('Error requesting notification permission:', error);
+            toast({
+              title: "Permission request failed",
+              description: "Unable to request notification permission. Please enable notifications manually in your browser settings.",
+              variant: "destructive",
+            });
+            setUpdating(false);
+            return;
+          }
         }
       }
 
