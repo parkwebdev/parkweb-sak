@@ -158,10 +158,10 @@ const DroppableColumn = ({ column, requests }: DroppableColumnProps) => {
   return (
     <div 
       ref={setNodeRef}
-      className={`space-y-4 min-h-[400px] p-4 rounded-lg border-2 border-dashed transition-colors ${
+      className={`space-y-4 min-h-[400px] p-4 rounded-lg border bg-card shadow-sm transition-all duration-200 ${
         isOver 
-          ? 'border-primary bg-primary/5' 
-          : 'border-muted hover:border-muted-foreground/50'
+          ? 'border-primary bg-primary/5 shadow-md' 
+          : 'border-border hover:shadow-md'
       }`}
     >
       <div className="flex items-center gap-2">
