@@ -1,16 +1,42 @@
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { REQUEST_STATUSES } from "@/lib/constants";
+import { REQUEST_STATUSES, REQUEST_PRIORITIES } from "@/lib/constants";
 import { Eye, Edit01 as Edit, Calendar, User01 as User } from "@untitledui/icons";
+import {
+  DndContext,
+  DragEndEvent,
+  DragOverEvent,
+  DragOverlay,
+  DragStartEvent,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
-// Mock data for now
-const mockRequests = [
+interface Request {
+  id: string;
+  title: string;
+  description: string;
+  status: 'todo' | 'in_progress' | 'on_hold' | 'completed';
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  client_name: string;
+  website: string;
+  created_at: string;
+  assigned_to: string | null;
+}
+
+// Mock data with all statuses
+const initialRequests: Request[] = [
   {
     id: "1",
     title: "Update homepage banner",
     description: "Change the main banner image and text",
-    status: "todo" as const,
-    priority: "high" as const,
+    status: "todo",
+    priority: "high",
     client_name: "Acme Corp",
     website: "acmecorp.com",
     created_at: "2024-01-15",
@@ -20,84 +46,195 @@ const mockRequests = [
     id: "2", 
     title: "Fix contact form",
     description: "Contact form not sending emails properly",
-    status: "in_progress" as const,
-    priority: "urgent" as const,
+    status: "in_progress",
+    priority: "urgent",
     client_name: "Tech Solutions",
     website: "techsolutions.com",
     created_at: "2024-01-14",
     assigned_to: "John Doe"
+  },
+  {
+    id: "3",
+    title: "Add new product page",
+    description: "Create a dedicated page for the new product line",
+    status: "on_hold",
+    priority: "medium",
+    client_name: "StartupXYZ",
+    website: "startupxyz.com",
+    created_at: "2024-01-13",
+    assigned_to: "Jane Smith"
+  },
+  {
+    id: "4",
+    title: "Update company logo",
+    description: "Replace old logo across all pages",
+    status: "completed",
+    priority: "low",
+    client_name: "Global Inc",
+    website: "globalinc.com",
+    created_at: "2024-01-12",
+    assigned_to: "Mike Johnson"
   }
 ];
 
-export const RequestKanbanView = () => {
-  const columns = [
-    { key: 'todo', title: 'To Do', color: 'bg-secondary' },
-    { key: 'in_progress', title: 'In Progress', color: 'bg-blue-500' },
-    { key: 'on_hold', title: 'On Hold', color: 'bg-yellow-500' },
-    { key: 'completed', title: 'Completed', color: 'bg-green-500' }
-  ];
+interface SortableCardProps {
+  request: Request;
+}
 
-  const getRequestsByStatus = (status: string) => {
-    return mockRequests.filter(request => request.status === status);
+const SortableCard = ({ request }: SortableCardProps) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: request.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
   };
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'urgent': return 'border-l-red-500';
-      case 'high': return 'border-l-orange-500';
-      case 'medium': return 'border-l-blue-500';
-      case 'low': return 'border-l-gray-500';
-      default: return 'border-l-gray-500';
-    }
+  const formatPriority = (priority: string) => {
+    return REQUEST_PRIORITIES[priority as keyof typeof REQUEST_PRIORITIES] || priority;
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      {columns.map((column) => (
-        <div key={column.key} className="space-y-4">
-          <div className="flex items-center gap-2">
-            <div className={`w-3 h-3 rounded-full ${column.color}`} />
-            <h3 className="font-semibold">{column.title}</h3>
-            <Badge variant="secondary" className="ml-auto">
-              {getRequestsByStatus(column.key).length}
-            </Badge>
+    <Card
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      className="hover:shadow-md transition-shadow cursor-grab active:cursor-grabbing"
+    >
+      <CardHeader className="pb-3">
+        <CardTitle className="text-sm">{request.title}</CardTitle>
+        <CardDescription className="text-xs line-clamp-2">
+          {request.description}
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="pt-0">
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <User size={12} />
+            {request.client_name}
           </div>
-          
-          <div className="space-y-3">
-            {getRequestsByStatus(column.key).map((request) => (
-              <Card key={request.id} className={`border-l-4 ${getPriorityColor(request.priority)} hover:shadow-md transition-shadow cursor-pointer`}>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm">{request.title}</CardTitle>
-                  <CardDescription className="text-xs line-clamp-2">
-                    {request.description}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <User size={12} />
-                      {request.client_name}
-                    </div>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Calendar size={12} />
-                      {request.created_at}
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <Badge variant="outline" className="text-xs">
-                        {request.priority}
-                      </Badge>
-                      <div className="flex gap-1">
-                        <Eye size={14} className="text-muted-foreground hover:text-foreground cursor-pointer" />
-                        <Edit size={14} className="text-muted-foreground hover:text-foreground cursor-pointer" />
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <Calendar size={12} />
+            {request.created_at}
+          </div>
+          <div className="flex items-center justify-between">
+            <Badge variant="outline" className="text-xs">
+              {formatPriority(request.priority)}
+            </Badge>
+            <div className="flex gap-1">
+              <Eye size={14} className="text-muted-foreground hover:text-foreground cursor-pointer" />
+              <Edit size={14} className="text-muted-foreground hover:text-foreground cursor-pointer" />
+            </div>
           </div>
         </div>
-      ))}
+      </CardContent>
+    </Card>
+  );
+};
+
+export const RequestKanbanView = () => {
+  const [requests, setRequests] = useState<Request[]>(initialRequests);
+  const [activeRequest, setActiveRequest] = useState<Request | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    })
+  );
+
+  const columns = [
+    { key: 'todo' as const, title: 'To Do', color: 'bg-gray-500' },
+    { key: 'in_progress' as const, title: 'In Progress', color: 'bg-blue-500' },
+    { key: 'on_hold' as const, title: 'On Hold', color: 'bg-yellow-500' },
+    { key: 'completed' as const, title: 'Completed', color: 'bg-green-500' }
+  ];
+
+  const getRequestsByStatus = (status: string) => {
+    return requests.filter(request => request.status === status);
+  };
+
+  const handleDragStart = (event: DragStartEvent) => {
+    const { active } = event;
+    const activeRequest = requests.find(request => request.id === active.id);
+    setActiveRequest(activeRequest || null);
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    
+    if (!over) {
+      setActiveRequest(null);
+      return;
+    }
+
+    const activeId = active.id;
+    const overId = over.id;
+
+    // Check if we're dropping over a column
+    const column = columns.find(col => col.key === overId);
+    if (column) {
+      setRequests(prev => 
+        prev.map(request => 
+          request.id === activeId 
+            ? { ...request, status: column.key }
+            : request
+        )
+      );
+    }
+
+    setActiveRequest(null);
+  };
+
+  return (
+    <div className="p-6">
+      <DndContext
+        sensors={sensors}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+      >
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {columns.map((column) => (
+            <div 
+              key={column.key} 
+              id={column.key}
+              className="space-y-4 min-h-[400px] p-4 rounded-lg border-2 border-dashed border-muted hover:border-muted-foreground/50 transition-colors"
+            >
+              <div className="flex items-center gap-2">
+                <div className={`w-3 h-3 rounded-full ${column.color}`} />
+                <h3 className="font-semibold">{column.title}</h3>
+                <Badge variant="secondary" className="ml-auto">
+                  {getRequestsByStatus(column.key).length}
+                </Badge>
+              </div>
+              
+              <SortableContext 
+                items={getRequestsByStatus(column.key)}
+                strategy={verticalListSortingStrategy}
+              >
+                <div className="space-y-3">
+                  {getRequestsByStatus(column.key).map((request) => (
+                    <SortableCard key={request.id} request={request} />
+                  ))}
+                </div>
+              </SortableContext>
+            </div>
+          ))}
+        </div>
+
+        <DragOverlay>
+          {activeRequest ? <SortableCard request={activeRequest} /> : null}
+        </DragOverlay>
+      </DndContext>
     </div>
   );
 };
