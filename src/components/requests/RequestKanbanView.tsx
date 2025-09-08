@@ -217,9 +217,9 @@ export const RequestKanbanView = () => {
   );
 
   const columns = [
-    { key: 'todo' as const, title: 'To Do', color: 'bg-slate-400' },
-    { key: 'in_progress' as const, title: 'In Progress', color: 'bg-blue-500' },
-    { key: 'on_hold' as const, title: 'On Hold', color: 'bg-yellow-500' },
+    { key: 'todo' as const, title: 'To Do', color: 'bg-blue-500' },
+    { key: 'in_progress' as const, title: 'In Progress', color: 'bg-orange-500' },
+    { key: 'on_hold' as const, title: 'On Hold', color: 'bg-red-500' },
     { key: 'completed' as const, title: 'Completed', color: 'bg-green-500' }
   ];
 

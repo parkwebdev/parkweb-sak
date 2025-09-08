@@ -1,6 +1,6 @@
 // Status-related utilities and helpers
 
-export const getStatusColor = (status: string, type: 'onboarding' | 'project' = 'onboarding') => {
+export const getStatusColor = (status: string, type: 'onboarding' | 'project' | 'request' = 'onboarding') => {
   if (type === 'onboarding') {
     switch (status) {
       case 'Sent': 
@@ -14,6 +14,21 @@ export const getStatusColor = (status: string, type: 'onboarding' | 'project' = 
       case 'Approved': 
         return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 border-green-200 dark:border-green-800';
       default: 
+        return 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-700';
+    }
+  }
+  
+  if (type === 'request') {
+    switch (status) {
+      case 'To Do':
+        return 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-800';
+      case 'In Progress':
+        return 'bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-200 border-orange-200 dark:border-orange-800';
+      case 'On Hold':
+        return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 border-red-200 dark:border-red-800';
+      case 'Completed':
+        return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 border-green-200 dark:border-green-800';
+      default:
         return 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-700';
     }
   }

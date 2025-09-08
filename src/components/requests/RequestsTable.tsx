@@ -97,11 +97,16 @@ export const RequestsTable = () => {
 
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
-      case 'todo': return 'secondary';
-      case 'in_progress': return 'default';
-      case 'on_hold': return 'outline';
-      case 'completed': return 'secondary';
-      default: return 'secondary';
+      case 'todo':
+        return 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-800';
+      case 'in_progress':
+        return 'bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-200 border-orange-200 dark:border-orange-800';
+      case 'on_hold':
+        return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200 border-red-200 dark:border-red-800';  
+      case 'completed':
+        return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 border-green-200 dark:border-green-800';
+      default:
+        return 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 border-gray-200 dark:border-gray-700';
     }
   };
 
@@ -263,7 +268,10 @@ export const RequestsTable = () => {
                 )}
                 {showColumns.status && (
                   <TableCell>
-                    <Badge variant={getStatusBadgeVariant(request.status)}>
+                    <Badge 
+                      variant="outline" 
+                      className={getStatusBadgeVariant(request.status)}
+                    >
                       {REQUEST_STATUSES[request.status]}
                     </Badge>
                   </TableCell>
