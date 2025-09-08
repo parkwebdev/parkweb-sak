@@ -60,7 +60,7 @@ export const SettingsLayout: React.FC<SettingsLayoutContentProps> = ({
   ];
 
   return (
-    <div className="flex flex-col lg:flex-row gap-4 lg:gap-8 max-w-7xl mx-auto">
+    <div className="flex flex-col lg:flex-row gap-4 lg:gap-8 w-full">
       {/* Mobile header with menu button and tabs */}
       <div className="lg:hidden">
         <div className="flex items-center gap-3 mb-4">
