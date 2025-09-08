@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Home01 as Home, Grid01 as Grid, File02 as FileText, Users01 as Users, X, ChevronLeft, ChevronRight } from '@untitledui/icons';
+import { Home01 as Home, Grid01 as Grid, File02 as FileText, Users01 as Users, X, ChevronLeft, ChevronRight, List } from '@untitledui/icons';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { SearchInput } from './SearchInput';
 import { Badge } from './Badge';
@@ -30,6 +30,12 @@ const navigationItems: NavigationItem[] = [
     label: 'Onboarding',
     icon: FileText,
     path: '/onboarding'
+  },
+  {
+    id: 'requests',
+    label: 'Requests',
+    icon: List,
+    path: '/requests'
   }
 ];
 
