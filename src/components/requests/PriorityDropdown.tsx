@@ -42,12 +42,12 @@ export const PriorityDropdown = ({ priority, onPriorityChange }: PriorityDropdow
           <ChevronDown size={12} className="ml-1" />
         </Badge>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent align="end" className="z-50 bg-background border border-border shadow-md">
         {priorityOptions.map(([key, label]) => (
           <DropdownMenuItem
             key={key}
             onClick={() => onPriorityChange(key)}
-            className={key === priority ? 'bg-accent' : ''}
+            className={`${key === priority ? 'bg-accent' : ''} hover:bg-accent/50`}
           >
             <Badge 
               variant="outline" 

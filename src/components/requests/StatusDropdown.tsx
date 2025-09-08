@@ -29,12 +29,12 @@ export const StatusDropdown = ({ status, onStatusChange, variant = 'badge' }: St
             <ChevronDown size={12} className="ml-1" />
           </span>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
+        <DropdownMenuContent align="end" className="z-50 bg-background border border-border shadow-md">
           {statusOptions.map(([key, label]) => (
             <DropdownMenuItem
               key={key}
               onClick={() => onStatusChange(key)}
-              className={key === status ? 'bg-accent' : ''}
+              className={`${key === status ? 'bg-accent' : ''} hover:bg-accent/50`}
             >
               <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border mr-2 ${
                 getStatusColor(label, 'request')
@@ -59,12 +59,12 @@ export const StatusDropdown = ({ status, onStatusChange, variant = 'badge' }: St
           <ChevronDown size={12} className="ml-1" />
         </Badge>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent align="end" className="z-50 bg-background border border-border shadow-md">
         {statusOptions.map(([key, label]) => (
           <DropdownMenuItem
             key={key}
             onClick={() => onStatusChange(key)}
-            className={key === status ? 'bg-accent' : ''}
+            className={`${key === status ? 'bg-accent' : ''} hover:bg-accent/50`}
           >
             <Badge 
               variant="outline" 

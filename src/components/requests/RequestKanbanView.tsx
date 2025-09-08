@@ -96,13 +96,6 @@ const SortableCard = ({ request, onStatusChange }: SortableCardProps) => {
               <Edit size={14} className="text-muted-foreground hover:text-foreground cursor-pointer transition-colors" />
             </div>
           </div>
-          <div className="mt-2">
-            <StatusDropdown 
-              status={request.status}
-              onStatusChange={(status) => onStatusChange(request.id, status)}
-              variant="kanban"
-            />
-          </div>
         </div>
       </CardContent>
     </Card>
