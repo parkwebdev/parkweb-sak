@@ -149,20 +149,9 @@ export const useRequests = () => {
           schema: 'public',
           table: 'requests'
         },
-        (payload) => {
-          if (payload.eventType === 'INSERT') {
-            setRequests(prev => [payload.new as Request, ...prev]);
-          } else if (payload.eventType === 'UPDATE') {
-            setRequests(prev =>
-              prev.map(request =>
-                request.id === payload.new.id ? payload.new as Request : request
-              )
-            );
-          } else if (payload.eventType === 'DELETE') {
-            setRequests(prev =>
-              prev.filter(request => request.id !== payload.old.id)
-            );
-          }
+        () => {
+          // Refetch data to ensure profile information is included
+          fetchRequests();
         }
       )
       .subscribe();
@@ -172,11 +161,37 @@ export const useRequests = () => {
     };
   }, []);
 
+  const deleteRequest = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('requests')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setRequests(prev => prev.filter(request => request.id !== id));
+      
+      toast({
+        title: "Request Deleted",
+        description: "Request has been successfully deleted",
+      });
+    } catch (error) {
+      console.error('Error deleting request:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete request",
+        variant: "destructive",
+      });
+    }
+  };
+
   return {
     requests,
     loading,
     updateRequestStatus,
     updateRequestPriority,
+    deleteRequest,
     refetch: fetchRequests
   };
 };

@@ -3,9 +3,12 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { REQUEST_PRIORITIES } from "@/lib/constants";
-import { Eye, Edit01 as Edit, Calendar, User01 as User } from "@untitledui/icons";
+import { Eye, Edit01 as Edit, Calendar, User01 as User, Trash01 as Trash } from "@untitledui/icons";
 import { useRequests, Request } from "@/hooks/useRequests";
 import { StatusDropdown } from "./StatusDropdown";
+import { ViewRequestDialog } from "./ViewRequestDialog";
+import { EditRequestDialog } from "./EditRequestDialog";
+import { useToast } from "@/hooks/use-toast";
 import {
   DndContext,
   DragEndEvent,
@@ -24,9 +27,12 @@ import { CSS } from "@dnd-kit/utilities";
 interface SortableCardProps {
   request: Request;
   onStatusChange: (id: string, status: Request['status']) => void;
+  onView: (request: Request) => void;
+  onEdit: (request: Request) => void;
+  onDelete: (request: Request) => void;
 }
 
-const SortableCard = ({ request, onStatusChange }: SortableCardProps) => {
+const SortableCard = ({ request, onStatusChange, onView, onEdit, onDelete }: SortableCardProps) => {
   const {
     attributes,
     listeners,
@@ -104,8 +110,9 @@ const SortableCard = ({ request, onStatusChange }: SortableCardProps) => {
               {formatPriority(request.priority)}
             </Badge>
             <div className="flex gap-1">
-              <Eye size={14} className="text-muted-foreground hover:text-foreground cursor-pointer transition-colors" />
-              <Edit size={14} className="text-muted-foreground hover:text-foreground cursor-pointer transition-colors" />
+              <Eye size={14} className="text-muted-foreground hover:text-foreground cursor-pointer transition-colors" onClick={() => onView(request)} />
+              <Edit size={14} className="text-muted-foreground hover:text-foreground cursor-pointer transition-colors" onClick={() => onEdit(request)} />
+              <Trash size={14} className="text-muted-foreground hover:text-red-500 cursor-pointer transition-colors" onClick={() => onDelete(request)} />
             </div>
           </div>
         </div>
@@ -122,9 +129,12 @@ interface DroppableColumnProps {
   };
   requests: Request[];
   onStatusChange: (id: string, status: Request['status']) => void;
+  onView: (request: Request) => void;
+  onEdit: (request: Request) => void;
+  onDelete: (request: Request) => void;
 }
 
-const DroppableColumn = ({ column, requests, onStatusChange }: DroppableColumnProps) => {
+const DroppableColumn = ({ column, requests, onStatusChange, onView, onEdit, onDelete }: DroppableColumnProps) => {
   const { setNodeRef, isOver } = useDroppable({
     id: column.key,
   });
@@ -156,6 +166,9 @@ const DroppableColumn = ({ column, requests, onStatusChange }: DroppableColumnPr
               key={request.id} 
               request={request} 
               onStatusChange={onStatusChange}
+              onView={onView}
+              onEdit={onEdit}
+              onDelete={onDelete}
             />
           ))}
         </div>
@@ -165,8 +178,12 @@ const DroppableColumn = ({ column, requests, onStatusChange }: DroppableColumnPr
 };
 
 export const RequestKanbanView = () => {
-  const { requests, loading, updateRequestStatus } = useRequests();
+  const { requests, loading, updateRequestStatus, deleteRequest, refetch } = useRequests();
   const [activeRequest, setActiveRequest] = useState<Request | null>(null);
+  const [selectedRequest, setSelectedRequest] = useState<Request | null>(null);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const { toast } = useToast();
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -239,6 +256,22 @@ export const RequestKanbanView = () => {
     setActiveRequest(null);
   };
 
+  const handleView = (request: Request) => {
+    setSelectedRequest(request);
+    setViewDialogOpen(true);
+  };
+
+  const handleEdit = (request: Request) => {
+    setSelectedRequest(request);
+    setEditDialogOpen(true);
+  };
+
+  const handleDelete = async (request: Request) => {
+    if (window.confirm(`Are you sure you want to delete "${request.title}"?`)) {
+      await deleteRequest(request.id);
+    }
+  };
+
   if (loading) {
     return <div className="flex items-center justify-center min-h-screen text-muted-foreground">Loading requests...</div>;
   }
@@ -258,6 +291,9 @@ export const RequestKanbanView = () => {
               column={column}
               requests={getRequestsByStatus(column.key)}
               onStatusChange={updateRequestStatus}
+              onView={handleView}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
             />
           ))}
         </div>
@@ -267,10 +303,26 @@ export const RequestKanbanView = () => {
             <SortableCard 
               request={activeRequest} 
               onStatusChange={updateRequestStatus}
+              onView={handleView}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
             />
           ) : null}
         </DragOverlay>
       </DndContext>
+
+      <ViewRequestDialog
+        request={selectedRequest}
+        open={viewDialogOpen}
+        onOpenChange={setViewDialogOpen}
+      />
+
+      <EditRequestDialog
+        request={selectedRequest}
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        onUpdate={refetch}
+      />
     </div>
   );
 };

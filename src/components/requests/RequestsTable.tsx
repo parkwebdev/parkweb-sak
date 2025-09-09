@@ -16,9 +16,12 @@ import {
   SearchSm as Search
 } from "@untitledui/icons";
 import { REQUEST_STATUSES, REQUEST_PRIORITIES } from "@/lib/constants";
-import { useRequests } from "@/hooks/useRequests";
+import { useRequests, Request } from "@/hooks/useRequests";
 import { StatusDropdown } from "./StatusDropdown";
 import { PriorityDropdown } from "./PriorityDropdown";
+import { ViewRequestDialog } from "./ViewRequestDialog";
+import { EditRequestDialog } from "./EditRequestDialog";
+import { useToast } from "@/hooks/use-toast";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,7 +34,11 @@ import {
 
 
 export const RequestsTable = () => {
-  const { requests, loading, updateRequestStatus, updateRequestPriority } = useRequests();
+  const { requests, loading, updateRequestStatus, updateRequestPriority, deleteRequest, refetch } = useRequests();
+  const [selectedRequest, setSelectedRequest] = useState<Request | null>(null);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const { toast } = useToast();
   const [activeStatus, setActiveStatus] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
@@ -76,6 +83,22 @@ export const RequestsTable = () => {
   const filteredRequests = activeStatus === 'all' 
     ? requests 
     : requests.filter(request => request.status === activeStatus);
+
+  const handleView = (request: Request) => {
+    setSelectedRequest(request);
+    setViewDialogOpen(true);
+  };
+
+  const handleEdit = (request: Request) => {
+    setSelectedRequest(request);
+    setEditDialogOpen(true);
+  };
+
+  const handleDelete = async (request: Request) => {
+    if (window.confirm(`Are you sure you want to delete "${request.title}"?`)) {
+      await deleteRequest(request.id);
+    }
+  };
 
   if (loading) {
     return <div className="flex items-center justify-center p-8 text-muted-foreground">Loading requests...</div>;
@@ -199,18 +222,18 @@ export const RequestsTable = () => {
             {filteredRequests.map((request) => (
               <TableRow key={request.id}>
                 {showColumns.request && (
-                  <TableCell>
+                  <TableCell className="max-w-[300px]">
                     <div>
-                      <p className="font-medium">{request.title}</p>
-                      <p className="text-sm text-muted-foreground">{request.description}</p>
+                      <p className="font-medium truncate">{request.title}</p>
+                      <p className="text-sm text-muted-foreground line-clamp-1">{request.description}</p>
                     </div>
                   </TableCell>
                 )}
                 {showColumns.client && (
-                  <TableCell>
+                  <TableCell className="max-w-[200px]">
                     <div>
-                      <p className="font-medium">{request.client_name}</p>
-                      <p className="text-sm text-muted-foreground">{request.website_name || request.website_url}</p>
+                      <p className="font-medium truncate">{request.client_name}</p>
+                      <p className="text-sm text-muted-foreground truncate">{request.website_name || request.website_url}</p>
                     </div>
                   </TableCell>
                 )}
@@ -231,7 +254,7 @@ export const RequestsTable = () => {
                   </TableCell>
                 )}
                 {showColumns.assigned && (
-                  <TableCell>
+                  <TableCell className="max-w-[150px]">
                     {request.assigned_to_name ? (
                       <div className="flex items-center gap-2">
                         <Avatar className="h-6 w-6">
@@ -240,7 +263,7 @@ export const RequestsTable = () => {
                             {request.assigned_to_name.split(' ').map(n => n[0]).join('').toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
-                        <span>{request.assigned_to_name}</span>
+                        <span className="truncate">{request.assigned_to_name}</span>
                       </div>
                     ) : (
                       <span className="text-muted-foreground">Unassigned</span>
@@ -252,14 +275,14 @@ export const RequestsTable = () => {
                 )}
                 {showColumns.actions && (
                   <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Button variant="ghost" size="sm">
+                    <div className="flex items-center gap-1">
+                      <Button variant="ghost" size="sm" onClick={() => handleView(request)}>
                         <Eye size={16} />
                       </Button>
-                      <Button variant="ghost" size="sm">
+                      <Button variant="ghost" size="sm" onClick={() => handleEdit(request)}>
                         <Edit size={16} />
                       </Button>
-                      <Button variant="ghost" size="sm">
+                      <Button variant="ghost" size="sm" onClick={() => handleDelete(request)}>
                         <Trash size={16} />
                       </Button>
                     </div>
@@ -276,6 +299,19 @@ export const RequestsTable = () => {
           No requests found matching your criteria.
         </div>
       )}
+
+      <ViewRequestDialog
+        request={selectedRequest}
+        open={viewDialogOpen}
+        onOpenChange={setViewDialogOpen}
+      />
+
+      <EditRequestDialog
+        request={selectedRequest}
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        onUpdate={refetch}
+      />
     </div>
   );
 };
