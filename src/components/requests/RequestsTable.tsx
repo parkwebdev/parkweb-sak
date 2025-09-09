@@ -4,6 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Checkbox } from "@/components/ui/checkbox";
 import { 
   Eye, 
   Edit01 as Edit, 
@@ -19,8 +20,7 @@ import { REQUEST_STATUSES, REQUEST_PRIORITIES } from "@/lib/constants";
 import { useRequests, Request } from "@/hooks/useRequests";
 import { StatusDropdown } from "./StatusDropdown";
 import { PriorityDropdown } from "./PriorityDropdown";
-import { ViewRequestSheet } from "./ViewRequestSheet";
-import { EditRequestSheet } from "./EditRequestSheet";
+import { RequestDetailsSheet } from "./RequestDetailsSheet";
 import { DeleteConfirmationDialog } from "@/components/DeleteConfirmationDialog";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -37,11 +37,11 @@ import {
 export const RequestsTable = () => {
   const { requests, loading, updateRequestStatus, updateRequestPriority, deleteRequest, refetch } = useRequests();
   const [selectedRequest, setSelectedRequest] = useState<Request | null>(null);
-  const [viewSheetOpen, setViewSheetOpen] = useState(false);
-  const [editSheetOpen, setEditSheetOpen] = useState(false);
+  const [detailsSheetOpen, setDetailsSheetOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
+  const [selectedRequestIds, setSelectedRequestIds] = useState<string[]>([]);
   const { toast } = useToast();
   const [activeStatus, setActiveStatus] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("");
@@ -88,31 +88,56 @@ export const RequestsTable = () => {
     ? requests 
     : requests.filter(request => request.status === activeStatus);
 
-  const handleView = (request: Request) => {
+  const handleRequestClick = (request: Request) => {
     setSelectedRequest(request);
-    setViewSheetOpen(true);
+    setDetailsSheetOpen(true);
   };
 
-  const handleEdit = (request: Request) => {
-    setSelectedRequest(request);
-    setEditSheetOpen(true);
-  };
-
-  const handleDelete = (request: Request) => {
-    setSelectedRequest(request);
+  const handleBulkDelete = () => {
+    if (selectedRequestIds.length === 0) return;
     setDeleteDialogOpen(true);
     setDeleteConfirmation("");
   };
 
-  const confirmDelete = async () => {
-    if (!selectedRequest) return;
-    
+  const confirmBulkDelete = async () => {
     setIsDeleting(true);
-    await deleteRequest(selectedRequest.id);
+    
+    try {
+      for (const id of selectedRequestIds) {
+        await deleteRequest(id);
+      }
+      setSelectedRequestIds([]);
+      toast({
+        title: "Requests Deleted",
+        description: `${selectedRequestIds.length} request(s) have been deleted`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error", 
+        description: "Failed to delete some requests",
+        variant: "destructive",
+      });
+    }
+    
     setIsDeleting(false);
     setDeleteDialogOpen(false);
-    setSelectedRequest(null);
     setDeleteConfirmation("");
+  };
+
+  const handleSelectAll = () => {
+    if (selectedRequestIds.length === filteredRequests.length) {
+      setSelectedRequestIds([]);
+    } else {
+      setSelectedRequestIds(filteredRequests.map(r => r.id));
+    }
+  };
+
+  const handleSelectRequest = (id: string) => {
+    setSelectedRequestIds(prev => 
+      prev.includes(id) 
+        ? prev.filter(requestId => requestId !== id)
+        : [...prev, id]
+    );
   };
 
   if (loading) {
@@ -125,29 +150,46 @@ export const RequestsTable = () => {
       <header className="w-full border-b border-border">
         <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-3 px-4 py-3">
           {/* Filter buttons - scrollable on mobile */}
-          <div className="overflow-x-auto">
-            <div className="border shadow-sm flex overflow-hidden text-xs text-foreground font-medium leading-none rounded-md border-border min-w-max">
-              {statusTabs.map((tab, index) => {
-                const isActive = activeStatus === tab.key;
-                return (
-                  <button
-                    key={tab.key}
-                    onClick={() => setActiveStatus(tab.key)}
-                    className={`justify-center items-center flex min-h-8 gap-1.5 px-2.5 py-1.5 transition-colors whitespace-nowrap ${
-                      isActive ? 'bg-primary text-primary-foreground' : 'bg-background hover:bg-accent/50'
-                    } ${index < statusTabs.length - 1 ? 'border-r-border border-r border-solid' : ''}`}
-                  >
-                    <div className="text-xs leading-4 self-stretch my-auto">
-                      {tab.label}
-                    </div>
-                  </button>
-                );
-              })}
+            <div className="overflow-x-auto">
+              <div className="border shadow-sm flex overflow-hidden text-xs text-foreground font-medium leading-none rounded-md border-border min-w-max">
+                {statusTabs.map((tab, index) => {
+                  const isActive = activeStatus === tab.key;
+                  return (
+                    <button
+                      key={tab.key}
+                      onClick={() => setActiveStatus(tab.key)}
+                      className={`justify-center items-center flex min-h-8 gap-1.5 px-2.5 py-1.5 transition-colors whitespace-nowrap ${
+                        isActive ? 'bg-primary text-primary-foreground' : 'bg-background hover:bg-accent/50'
+                      } ${index < statusTabs.length - 1 ? 'border-r-border border-r border-solid' : ''}`}
+                    >
+                      <div className="text-xs leading-4 self-stretch my-auto">
+                        {tab.label}
+                      </div>
+                      {tab.count > 0 && (
+                        <div className={`px-1.5 py-0.5 rounded text-[10px] ${isActive ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
+                          {tab.count}
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </div>
           
           {/* Controls */}
           <div className="flex items-center gap-2.5 ml-auto">
+            {/* Bulk Actions */}
+            {selectedRequestIds.length > 0 && (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={handleBulkDelete}
+                className="mr-2"
+              >
+                Delete ({selectedRequestIds.length})
+              </Button>
+            )}
+
             {/* Filter Dropdown - Icon Only */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -224,18 +266,33 @@ export const RequestsTable = () => {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-[50px]">
+                <Checkbox
+                  checked={selectedRequestIds.length === filteredRequests.length && filteredRequests.length > 0}
+                  onCheckedChange={handleSelectAll}
+                />
+              </TableHead>
               {showColumns.request && <TableHead>Request</TableHead>}
               {showColumns.client && <TableHead>Client</TableHead>}
               {showColumns.status && <TableHead>Status</TableHead>}
               {showColumns.priority && <TableHead>Priority</TableHead>}
               {showColumns.assigned && <TableHead>Assigned To</TableHead>}
               {showColumns.created && <TableHead>Created</TableHead>}
-              {showColumns.actions && <TableHead className="w-[100px]">Actions</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredRequests.map((request) => (
-              <TableRow key={request.id}>
+              <TableRow 
+                key={request.id}
+                className="cursor-pointer hover:bg-muted/50"
+                onClick={() => handleRequestClick(request)}
+              >
+                <TableCell onClick={(e) => e.stopPropagation()}>
+                  <Checkbox
+                    checked={selectedRequestIds.includes(request.id)}
+                    onCheckedChange={() => handleSelectRequest(request.id)}
+                  />
+                </TableCell>
                 {showColumns.request && (
                   <TableCell className="max-w-[300px]">
                     <div>
@@ -288,21 +345,6 @@ export const RequestsTable = () => {
                 {showColumns.created && (
                   <TableCell className="text-sm">{new Date(request.created_at).toLocaleDateString()}</TableCell>
                 )}
-                {showColumns.actions && (
-                  <TableCell>
-                    <div className="flex items-center gap-1">
-                      <Button variant="ghost" size="sm" onClick={() => handleView(request)}>
-                        <Eye size={16} />
-                      </Button>
-                      <Button variant="ghost" size="sm" onClick={() => handleEdit(request)}>
-                        <Edit size={16} />
-                      </Button>
-                      <Button variant="ghost" size="sm" onClick={() => handleDelete(request)}>
-                        <Trash size={16} />
-                      </Button>
-                    </div>
-                  </TableCell>
-                )}
               </TableRow>
             ))}
           </TableBody>
@@ -315,28 +357,22 @@ export const RequestsTable = () => {
         </div>
       )}
 
-      <ViewRequestSheet
+      <RequestDetailsSheet
         request={selectedRequest}
-        open={viewSheetOpen}
-        onOpenChange={setViewSheetOpen}
-      />
-
-      <EditRequestSheet
-        request={selectedRequest}
-        open={editSheetOpen}
-        onOpenChange={setEditSheetOpen}
+        open={detailsSheetOpen}
+        onOpenChange={setDetailsSheetOpen}
         onUpdate={refetch}
       />
 
       <DeleteConfirmationDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
-        title="Delete Request"
-        description={`Are you sure you want to delete "${selectedRequest?.title}"? This action cannot be undone.`}
+        title="Delete Requests"
+        description={`Are you sure you want to delete ${selectedRequestIds.length} request(s)? This action cannot be undone.`}
         confirmationText="delete"
         confirmationValue={deleteConfirmation}
         onConfirmationValueChange={setDeleteConfirmation}
-        onConfirm={confirmDelete}
+        onConfirm={confirmBulkDelete}
         isDeleting={isDeleting}
       />
     </div>

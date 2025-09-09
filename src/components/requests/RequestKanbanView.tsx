@@ -2,12 +2,12 @@ import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
 import { REQUEST_PRIORITIES } from "@/lib/constants";
-import { Eye, Edit01 as Edit, Calendar, User01 as User, Trash01 as Trash } from "@untitledui/icons";
+import { Calendar, User01 as User } from "@untitledui/icons";
 import { useRequests, Request } from "@/hooks/useRequests";
-import { StatusDropdown } from "./StatusDropdown";
-import { ViewRequestSheet } from "./ViewRequestSheet";
-import { EditRequestSheet } from "./EditRequestSheet";
+import { RequestDetailsSheet } from "./RequestDetailsSheet";
 import { DeleteConfirmationDialog } from "@/components/DeleteConfirmationDialog";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -28,12 +28,12 @@ import { CSS } from "@dnd-kit/utilities";
 interface SortableCardProps {
   request: Request;
   onStatusChange: (id: string, status: Request['status']) => void;
-  onView: (request: Request) => void;
-  onEdit: (request: Request) => void;
-  onDelete: (request: Request) => void;
+  onRequestClick: (request: Request) => void;
+  selectedRequestIds: string[];
+  onSelectRequest: (id: string) => void;
 }
 
-const SortableCard = ({ request, onStatusChange, onView, onEdit, onDelete }: SortableCardProps) => {
+const SortableCard = ({ request, onStatusChange, onRequestClick, selectedRequestIds, onSelectRequest }: SortableCardProps) => {
   const {
     attributes,
     listeners,
@@ -69,56 +69,65 @@ const SortableCard = ({ request, onStatusChange, onView, onEdit, onDelete }: Sor
   };
 
   return (
-    <Card
-      ref={setNodeRef}
-      style={style}
-      {...attributes}
-      {...listeners}
-      className="hover:shadow-md transition-all duration-200 cursor-grab active:cursor-grabbing bg-card/90 border-border/50"
-    >
-      <CardHeader className="pb-3">
-        <CardTitle className="text-sm font-medium">{request.title}</CardTitle>
-        <CardDescription className="text-xs line-clamp-2 text-muted-foreground">
-          {request.description}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="pt-0">
-        <div className="space-y-3">
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <User size={12} />
-            {request.client_name}
-          </div>
-          {request.assigned_to_name && (
+    <div className="relative">
+      <div 
+        className="absolute top-2 left-2 z-10" 
+        onClick={(e) => e.stopPropagation()}
+      >
+        <Checkbox
+          checked={selectedRequestIds.includes(request.id)}
+          onCheckedChange={() => onSelectRequest(request.id)}
+          className="bg-background border-2"
+        />
+      </div>
+      
+      <Card
+        ref={setNodeRef}
+        style={style}
+        {...attributes}
+        {...listeners}
+        className="hover:shadow-md transition-all duration-200 cursor-pointer bg-card/90 border-border/50 ml-6"
+        onClick={() => onRequestClick(request)}
+      >
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-medium">{request.title}</CardTitle>
+          <CardDescription className="text-xs line-clamp-2 text-muted-foreground">
+            {request.description}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <div className="space-y-3">
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Avatar className="h-4 w-4">
-                <AvatarImage src={request.assigned_to_avatar || undefined} alt={request.assigned_to_name} />
-                <AvatarFallback className="text-xs">
-                  {request.assigned_to_name.split(' ').map(n => n[0]).join('').toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <span>{request.assigned_to_name}</span>
+              <User size={12} />
+              {request.client_name}
             </div>
-          )}
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Calendar size={12} />
-            {new Date(request.created_at).toLocaleDateString()}
-          </div>
-          <div className="flex items-center justify-between">
-            <Badge 
-              variant="outline" 
-              className={`text-xs capitalize ${getPriorityColor(request.priority)}`}
-            >
-              {formatPriority(request.priority)}
-            </Badge>
-            <div className="flex gap-1">
-              <Eye size={14} className="text-muted-foreground hover:text-foreground cursor-pointer transition-colors" onClick={() => onView(request)} />
-              <Edit size={14} className="text-muted-foreground hover:text-foreground cursor-pointer transition-colors" onClick={() => onEdit(request)} />
-              <Trash size={14} className="text-muted-foreground hover:text-red-500 cursor-pointer transition-colors" onClick={() => onDelete(request)} />
+            {request.assigned_to_name && (
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <Avatar className="h-4 w-4">
+                  <AvatarImage src={request.assigned_to_avatar || undefined} alt={request.assigned_to_name} />
+                  <AvatarFallback className="text-xs">
+                    {request.assigned_to_name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <span>{request.assigned_to_name}</span>
+              </div>
+            )}
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Calendar size={12} />
+              {new Date(request.created_at).toLocaleDateString()}
+            </div>
+            <div className="flex items-center justify-between">
+              <Badge 
+                variant="outline" 
+                className={`text-xs capitalize ${getPriorityColor(request.priority)}`}
+              >
+                {formatPriority(request.priority)}
+              </Badge>
             </div>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 
@@ -130,12 +139,13 @@ interface DroppableColumnProps {
   };
   requests: Request[];
   onStatusChange: (id: string, status: Request['status']) => void;
-  onView: (request: Request) => void;
-  onEdit: (request: Request) => void;
-  onDelete: (request: Request) => void;
+  onRequestClick: (request: Request) => void;
+  selectedRequestIds: string[];
+  onSelectRequest: (id: string) => void;
+  onSelectAllInColumn: (columnKey: string) => void;
 }
 
-const DroppableColumn = ({ column, requests, onStatusChange, onView, onEdit, onDelete }: DroppableColumnProps) => {
+const DroppableColumn = ({ column, requests, onStatusChange, onRequestClick, selectedRequestIds, onSelectRequest, onSelectAllInColumn }: DroppableColumnProps) => {
   const { setNodeRef, isOver } = useDroppable({
     id: column.key,
   });
@@ -155,6 +165,11 @@ const DroppableColumn = ({ column, requests, onStatusChange, onView, onEdit, onD
         <Badge variant="secondary" className="ml-auto text-xs px-2 py-0.5">
           {requests.length}
         </Badge>
+        <Checkbox
+          checked={requests.length > 0 && requests.every(r => selectedRequestIds.includes(r.id))}
+          onCheckedChange={() => onSelectAllInColumn(column.key)}
+          className="ml-1"
+        />
       </div>
       
       <SortableContext 
@@ -167,9 +182,9 @@ const DroppableColumn = ({ column, requests, onStatusChange, onView, onEdit, onD
               key={request.id} 
               request={request} 
               onStatusChange={onStatusChange}
-              onView={onView}
-              onEdit={onEdit}
-              onDelete={onDelete}
+              onRequestClick={onRequestClick}
+              selectedRequestIds={selectedRequestIds}
+              onSelectRequest={onSelectRequest}
             />
           ))}
         </div>
@@ -182,11 +197,11 @@ export const RequestKanbanView = () => {
   const { requests, loading, updateRequestStatus, deleteRequest, refetch } = useRequests();
   const [activeRequest, setActiveRequest] = useState<Request | null>(null);
   const [selectedRequest, setSelectedRequest] = useState<Request | null>(null);
-  const [viewSheetOpen, setViewSheetOpen] = useState(false);
-  const [editSheetOpen, setEditSheetOpen] = useState(false);
+  const [detailsSheetOpen, setDetailsSheetOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
+  const [selectedRequestIds, setSelectedRequestIds] = useState<string[]>([]);
   const { toast } = useToast();
 
   const sensors = useSensors(
@@ -222,11 +237,9 @@ export const RequestKanbanView = () => {
     const activeId = active.id as string;
     const overId = over.id as string;
     
-    // Find the active request
     const activeRequest = requests.find(request => request.id === activeId);
     if (!activeRequest) return;
     
-    // Check if we're hovering over a column
     const targetColumn = columns.find(col => col.key === overId);
     if (targetColumn && activeRequest.status !== targetColumn.key) {
       updateRequestStatus(activeId, targetColumn.key);
@@ -244,14 +257,12 @@ export const RequestKanbanView = () => {
     const activeId = active.id as string;
     const overId = over.id as string;
 
-    // Find the active request
     const activeRequest = requests.find(request => request.id === activeId);
     if (!activeRequest) {
       setActiveRequest(null);
       return;
     }
 
-    // Check if we're dropping over a column
     const targetColumn = columns.find(col => col.key === overId);
     if (targetColumn && activeRequest.status !== targetColumn.key) {
       updateRequestStatus(activeId, targetColumn.key);
@@ -260,31 +271,60 @@ export const RequestKanbanView = () => {
     setActiveRequest(null);
   };
 
-  const handleView = (request: Request) => {
+  const handleRequestClick = (request: Request) => {
     setSelectedRequest(request);
-    setViewSheetOpen(true);
+    setDetailsSheetOpen(true);
   };
 
-  const handleEdit = (request: Request) => {
-    setSelectedRequest(request);
-    setEditSheetOpen(true);
-  };
-
-  const handleDelete = (request: Request) => {
-    setSelectedRequest(request);
+  const handleBulkDelete = () => {
+    if (selectedRequestIds.length === 0) return;
     setDeleteDialogOpen(true);
     setDeleteConfirmation("");
   };
 
-  const confirmDelete = async () => {
-    if (!selectedRequest) return;
-    
+  const confirmBulkDelete = async () => {
     setIsDeleting(true);
-    await deleteRequest(selectedRequest.id);
+    
+    try {
+      for (const id of selectedRequestIds) {
+        await deleteRequest(id);
+      }
+      setSelectedRequestIds([]);
+      toast({
+        title: "Requests Deleted",
+        description: `${selectedRequestIds.length} request(s) have been deleted`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error", 
+        description: "Failed to delete some requests",
+        variant: "destructive",
+      });
+    }
+    
     setIsDeleting(false);
     setDeleteDialogOpen(false);
-    setSelectedRequest(null);
     setDeleteConfirmation("");
+  };
+
+  const handleSelectRequest = (id: string) => {
+    setSelectedRequestIds(prev => 
+      prev.includes(id) 
+        ? prev.filter(requestId => requestId !== id)
+        : [...prev, id]
+    );
+  };
+
+  const handleSelectAllInColumn = (columnKey: string) => {
+    const columnRequests = getRequestsByStatus(columnKey);
+    const columnRequestIds = columnRequests.map(r => r.id);
+    const allSelected = columnRequestIds.every(id => selectedRequestIds.includes(id));
+    
+    if (allSelected) {
+      setSelectedRequestIds(prev => prev.filter(id => !columnRequestIds.includes(id)));
+    } else {
+      setSelectedRequestIds(prev => [...new Set([...prev, ...columnRequestIds])]);
+    }
   };
 
   if (loading) {
@@ -293,6 +333,22 @@ export const RequestKanbanView = () => {
 
   return (
     <div className="min-h-screen">
+      {/* Bulk Actions Bar */}
+      {selectedRequestIds.length > 0 && (
+        <div className="mb-4 p-3 bg-muted/50 rounded-lg border border-border flex items-center justify-between">
+          <span className="text-sm font-medium">
+            {selectedRequestIds.length} request(s) selected
+          </span>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={handleBulkDelete}
+          >
+            Delete Selected
+          </Button>
+        </div>
+      )}
+
       <DndContext
         sensors={sensors}
         onDragStart={handleDragStart}
@@ -306,9 +362,10 @@ export const RequestKanbanView = () => {
               column={column}
               requests={getRequestsByStatus(column.key)}
               onStatusChange={updateRequestStatus}
-              onView={handleView}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
+              onRequestClick={handleRequestClick}
+              selectedRequestIds={selectedRequestIds}
+              onSelectRequest={handleSelectRequest}
+              onSelectAllInColumn={handleSelectAllInColumn}
             />
           ))}
         </div>
@@ -318,36 +375,30 @@ export const RequestKanbanView = () => {
             <SortableCard 
               request={activeRequest} 
               onStatusChange={updateRequestStatus}
-              onView={handleView}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
+              onRequestClick={handleRequestClick}
+              selectedRequestIds={selectedRequestIds}
+              onSelectRequest={handleSelectRequest}
             />
           ) : null}
         </DragOverlay>
       </DndContext>
 
-      <ViewRequestSheet
+      <RequestDetailsSheet
         request={selectedRequest}
-        open={viewSheetOpen}
-        onOpenChange={setViewSheetOpen}
-      />
-
-      <EditRequestSheet
-        request={selectedRequest}
-        open={editSheetOpen}
-        onOpenChange={setEditSheetOpen}
+        open={detailsSheetOpen}
+        onOpenChange={setDetailsSheetOpen}
         onUpdate={refetch}
       />
 
       <DeleteConfirmationDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
-        title="Delete Request"
-        description={`Are you sure you want to delete "${selectedRequest?.title}"? This action cannot be undone.`}
+        title="Delete Requests"
+        description={`Are you sure you want to delete ${selectedRequestIds.length} request(s)? This action cannot be undone.`}
         confirmationText="delete"
         confirmationValue={deleteConfirmation}
         onConfirmationValueChange={setDeleteConfirmation}
-        onConfirm={confirmDelete}
+        onConfirm={confirmBulkDelete}
         isDeleting={isDeleting}
       />
     </div>
