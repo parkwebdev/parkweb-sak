@@ -353,6 +353,105 @@ export type Database = {
         }
         Relationships: []
       }
+      request_links: {
+        Row: {
+          active: boolean
+          client_email: string
+          client_name: string
+          company_name: string
+          created_at: string
+          id: string
+          submission_url: string
+          updated_at: string
+          user_id: string
+          website_name: string | null
+          website_url: string | null
+        }
+        Insert: {
+          active?: boolean
+          client_email: string
+          client_name: string
+          company_name: string
+          created_at?: string
+          id?: string
+          submission_url: string
+          updated_at?: string
+          user_id: string
+          website_name?: string | null
+          website_url?: string | null
+        }
+        Update: {
+          active?: boolean
+          client_email?: string
+          client_name?: string
+          company_name?: string
+          created_at?: string
+          id?: string
+          submission_url?: string
+          updated_at?: string
+          user_id?: string
+          website_name?: string | null
+          website_url?: string | null
+        }
+        Relationships: []
+      }
+      requests: {
+        Row: {
+          assigned_to: string | null
+          client_email: string
+          client_name: string
+          company_name: string
+          completed_at: string | null
+          created_at: string
+          description: string
+          due_date: string | null
+          id: string
+          priority: Database["public"]["Enums"]["request_priority"]
+          status: Database["public"]["Enums"]["request_status"]
+          title: string
+          updated_at: string
+          user_id: string
+          website_name: string | null
+          website_url: string | null
+        }
+        Insert: {
+          assigned_to?: string | null
+          client_email: string
+          client_name: string
+          company_name: string
+          completed_at?: string | null
+          created_at?: string
+          description: string
+          due_date?: string | null
+          id?: string
+          priority?: Database["public"]["Enums"]["request_priority"]
+          status?: Database["public"]["Enums"]["request_status"]
+          title: string
+          updated_at?: string
+          user_id: string
+          website_name?: string | null
+          website_url?: string | null
+        }
+        Update: {
+          assigned_to?: string | null
+          client_email?: string
+          client_name?: string
+          company_name?: string
+          completed_at?: string | null
+          created_at?: string
+          description?: string
+          due_date?: string | null
+          id?: string
+          priority?: Database["public"]["Enums"]["request_priority"]
+          status?: Database["public"]["Enums"]["request_status"]
+          title?: string
+          updated_at?: string
+          user_id?: string
+          website_name?: string | null
+          website_url?: string | null
+        }
+        Relationships: []
+      }
       scope_of_works: {
         Row: {
           branding_files: Json | null
@@ -594,6 +693,8 @@ export type Database = {
         | "manage_settings"
         | "view_settings"
       app_role: "admin" | "manager" | "member" | "super_admin" | "client"
+      request_priority: "low" | "medium" | "high" | "urgent"
+      request_status: "to_do" | "in_progress" | "on_hold" | "completed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -734,6 +835,8 @@ export const Constants = {
         "view_settings",
       ],
       app_role: ["admin", "manager", "member", "super_admin", "client"],
+      request_priority: ["low", "medium", "high", "urgent"],
+      request_status: ["to_do", "in_progress", "on_hold", "completed"],
     },
   },
 } as const
