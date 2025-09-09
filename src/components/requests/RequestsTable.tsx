@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
   Eye, 
   Edit01 as Edit, 
@@ -231,7 +232,19 @@ export const RequestsTable = () => {
                 )}
                 {showColumns.assigned && (
                   <TableCell>
-                    {request.assigned_to_name || <span className="text-muted-foreground">Unassigned</span>}
+                    {request.assigned_to_name ? (
+                      <div className="flex items-center gap-2">
+                        <Avatar className="h-6 w-6">
+                          <AvatarImage src={request.assigned_to_avatar || undefined} alt={request.assigned_to_name} />
+                          <AvatarFallback className="text-xs">
+                            {request.assigned_to_name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span>{request.assigned_to_name}</span>
+                      </div>
+                    ) : (
+                      <span className="text-muted-foreground">Unassigned</span>
+                    )}
                   </TableCell>
                 )}
                 {showColumns.created && (

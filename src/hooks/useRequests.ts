@@ -15,6 +15,7 @@ export interface Request {
   website_url?: string;
   assigned_to?: string;
   assigned_to_name?: string;
+  assigned_to_avatar?: string;
   due_date?: string;
   completed_at?: string;
   created_at: string;
@@ -33,16 +34,17 @@ export const useRequests = () => {
         .from('requests')
         .select(`
           *,
-          profiles!fk_requests_assigned_to_profiles(display_name)
+          profiles!fk_requests_assigned_to_profiles(display_name, avatar_url)
         `)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
       
-      // Map the data to include assigned_to_name
+      // Map the data to include assigned_to_name and avatar
       const requestsWithNames = (data || []).map(request => ({
         ...request,
-        assigned_to_name: request.profiles?.display_name || null
+        assigned_to_name: request.profiles?.display_name || null,
+        assigned_to_avatar: request.profiles?.avatar_url || null
       }));
       
       setRequests(requestsWithNames);

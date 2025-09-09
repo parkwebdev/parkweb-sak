@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { REQUEST_PRIORITIES } from "@/lib/constants";
 import { Eye, Edit01 as Edit, Calendar, User01 as User } from "@untitledui/icons";
 import { useRequests, Request } from "@/hooks/useRequests";
@@ -82,8 +83,13 @@ const SortableCard = ({ request, onStatusChange }: SortableCardProps) => {
           </div>
           {request.assigned_to_name && (
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <User size={12} />
-              Assigned: {request.assigned_to_name}
+              <Avatar className="h-4 w-4">
+                <AvatarImage src={request.assigned_to_avatar || undefined} alt={request.assigned_to_name} />
+                <AvatarFallback className="text-xs">
+                  {request.assigned_to_name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <span>Assigned: {request.assigned_to_name}</span>
             </div>
           )}
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
