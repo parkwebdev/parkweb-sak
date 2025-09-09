@@ -26,15 +26,11 @@ export const useRequests = () => {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  // Temporary fallback user ID for demo purposes
-  const DEMO_USER_ID = '11111111-1111-1111-1111-111111111111';
-
   const fetchRequests = async () => {
     try {
       const { data, error } = await supabase
         .from('requests')
         .select('*')
-        .eq('user_id', DEMO_USER_ID)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -60,12 +56,11 @@ export const useRequests = () => {
           updated_at: new Date().toISOString(),
           ...(status === 'completed' ? { completed_at: new Date().toISOString() } : { completed_at: null })
         })
-        .eq('id', id)
-        .eq('user_id', DEMO_USER_ID);
+        .eq('id', id);
 
       if (error) throw error;
 
-      // Update local state to reflect the change
+      // Update local state immediately for better UX
       setRequests(prev => 
         prev.map(request => 
           request.id === id 
@@ -101,12 +96,11 @@ export const useRequests = () => {
           priority,
           updated_at: new Date().toISOString()
         })
-        .eq('id', id)
-        .eq('user_id', DEMO_USER_ID);
+        .eq('id', id);
 
       if (error) throw error;
 
-      // Update local state to reflect the change
+      // Update local state immediately for better UX
       setRequests(prev => 
         prev.map(request => 
           request.id === id 
@@ -131,6 +125,38 @@ export const useRequests = () => {
 
   useEffect(() => {
     fetchRequests();
+
+    // Set up real-time subscription for changes
+    const channel = supabase
+      .channel('requests-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'requests'
+        },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            setRequests(prev => [payload.new as Request, ...prev]);
+          } else if (payload.eventType === 'UPDATE') {
+            setRequests(prev =>
+              prev.map(request =>
+                request.id === payload.new.id ? payload.new as Request : request
+              )
+            );
+          } else if (payload.eventType === 'DELETE') {
+            setRequests(prev =>
+              prev.filter(request => request.id !== payload.old.id)
+            );
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   return {
