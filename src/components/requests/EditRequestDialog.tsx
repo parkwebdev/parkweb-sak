@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,11 +19,21 @@ interface EditRequestDialogProps {
 
 export const EditRequestDialog = ({ request, open, onOpenChange, onUpdate }: EditRequestDialogProps) => {
   const [loading, setLoading] = useState(false);
-  const [title, setTitle] = useState(request?.title || "");
-  const [description, setDescription] = useState(request?.description || "");
-  const [status, setStatus] = useState<Request['status']>(request?.status || 'to_do');
-  const [priority, setPriority] = useState<Request['priority']>(request?.priority || 'medium');
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [status, setStatus] = useState<Request['status']>('to_do');
+  const [priority, setPriority] = useState<Request['priority']>('medium');
   const { toast } = useToast();
+
+  // Update form fields when request changes
+  useEffect(() => {
+    if (request) {
+      setTitle(request.title);
+      setDescription(request.description);
+      setStatus(request.status);
+      setPriority(request.priority);
+    }
+  }, [request]);
 
   const handleSave = async () => {
     if (!request) return;

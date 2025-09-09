@@ -21,6 +21,7 @@ import { StatusDropdown } from "./StatusDropdown";
 import { PriorityDropdown } from "./PriorityDropdown";
 import { ViewRequestDialog } from "./ViewRequestDialog";
 import { EditRequestDialog } from "./EditRequestDialog";
+import { DeleteConfirmationDialog } from "@/components/DeleteConfirmationDialog";
 import { useToast } from "@/hooks/use-toast";
 import {
   DropdownMenu,
@@ -38,6 +39,9 @@ export const RequestsTable = () => {
   const [selectedRequest, setSelectedRequest] = useState<Request | null>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
   const { toast } = useToast();
   const [activeStatus, setActiveStatus] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("");
@@ -94,10 +98,21 @@ export const RequestsTable = () => {
     setEditDialogOpen(true);
   };
 
-  const handleDelete = async (request: Request) => {
-    if (window.confirm(`Are you sure you want to delete "${request.title}"?`)) {
-      await deleteRequest(request.id);
-    }
+  const handleDelete = (request: Request) => {
+    setSelectedRequest(request);
+    setDeleteDialogOpen(true);
+    setDeleteConfirmation("");
+  };
+
+  const confirmDelete = async () => {
+    if (!selectedRequest) return;
+    
+    setIsDeleting(true);
+    await deleteRequest(selectedRequest.id);
+    setIsDeleting(false);
+    setDeleteDialogOpen(false);
+    setSelectedRequest(null);
+    setDeleteConfirmation("");
   };
 
   if (loading) {
@@ -311,6 +326,18 @@ export const RequestsTable = () => {
         open={editDialogOpen}
         onOpenChange={setEditDialogOpen}
         onUpdate={refetch}
+      />
+
+      <DeleteConfirmationDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title="Delete Request"
+        description={`Are you sure you want to delete "${selectedRequest?.title}"? This action cannot be undone.`}
+        confirmationText="delete"
+        confirmationValue={deleteConfirmation}
+        onConfirmationValueChange={setDeleteConfirmation}
+        onConfirm={confirmDelete}
+        isDeleting={isDeleting}
       />
     </div>
   );
