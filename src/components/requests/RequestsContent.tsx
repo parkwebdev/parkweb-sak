@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { RequestsTable } from "./RequestsTable";
@@ -9,6 +10,19 @@ import { LayoutGrid01 as LayoutGrid, Table, Menu01 as Menu } from "@untitledui/i
 export const RequestsContent = () => {
   const [viewMode, setViewMode] = useState<"table" | "kanban">("table");
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+  
+  // Check for 'open' parameter to auto-open a request
+  const openRequestId = searchParams.get('open');
+  
+  useEffect(() => {
+    // Clear the URL parameter after checking it to avoid keeping it in the URL
+    if (openRequestId) {
+      const newSearchParams = new URLSearchParams(searchParams);
+      newSearchParams.delete('open');
+      setSearchParams(newSearchParams, { replace: true });
+    }
+  }, [openRequestId, searchParams, setSearchParams]);
 
   return (
     <main className="flex-1 bg-muted/30 min-h-screen pt-4 lg:pt-8 pb-12">
@@ -67,11 +81,11 @@ export const RequestsContent = () => {
           {viewMode === "table" ? (
             <Card className="border-0 shadow-sm">
               <CardContent className="p-0">
-                <RequestsTable />
+                <RequestsTable openRequestId={openRequestId} />
               </CardContent>
             </Card>
           ) : (
-            <RequestKanbanView />
+            <RequestKanbanView openRequestId={openRequestId} />
           )}
         </div>
       </section>

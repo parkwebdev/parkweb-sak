@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { RoleManagementDialog } from './RoleManagementDialog';
 import { ProfileEditDialog } from '@/components/team/ProfileEditDialog';
@@ -10,7 +10,11 @@ import { useTeam } from '@/hooks/useTeam';
 import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
 import { TeamMember } from '@/types/team';
 
-export const TeamSettings: React.FC = () => {
+interface TeamSettingsProps {
+  openMemberId?: string | null;
+}
+
+export const TeamSettings: React.FC<TeamSettingsProps> = ({ openMemberId }) => {
   const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
   const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
@@ -27,6 +31,17 @@ export const TeamSettings: React.FC = () => {
   } = useTeam();
 
   const isSuperAdmin = currentUserRole === 'super_admin';
+
+  // Handle auto-opening a team member from URL parameter
+  useEffect(() => {
+    if (openMemberId && teamMembers.length > 0) {
+      const memberToOpen = teamMembers.find(m => m.user_id === openMemberId);
+      if (memberToOpen) {
+        setSelectedMember(memberToOpen);
+        setIsProfileDialogOpen(true);
+      }
+    }
+  }, [openMemberId, teamMembers]);
 
 
   const handleEditRole = (member: TeamMember) => {

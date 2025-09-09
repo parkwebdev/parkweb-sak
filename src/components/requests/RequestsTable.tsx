@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -34,7 +34,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 
-export const RequestsTable = () => {
+interface RequestsTableProps {
+  openRequestId?: string | null;
+}
+
+export const RequestsTable = ({ openRequestId }: RequestsTableProps) => {
   const { requests, loading, updateRequestStatus, updateRequestPriority, deleteRequest, refetch } = useRequests();
   const [selectedRequest, setSelectedRequest] = useState<Request | null>(null);
   const [detailsSheetOpen, setDetailsSheetOpen] = useState(false);
@@ -226,6 +230,17 @@ export const RequestsTable = () => {
       setSortOrder('asc');
     }
   };
+
+  // Handle auto-opening a request from URL parameter
+  useEffect(() => {
+    if (openRequestId && requests.length > 0) {
+      const requestToOpen = requests.find(r => r.id === openRequestId);
+      if (requestToOpen) {
+        setSelectedRequest(requestToOpen);
+        setDetailsSheetOpen(true);
+      }
+    }
+  }, [openRequestId, requests]);
 
   if (loading) {
     return <div className="flex items-center justify-center p-8 text-muted-foreground">Loading requests...</div>;

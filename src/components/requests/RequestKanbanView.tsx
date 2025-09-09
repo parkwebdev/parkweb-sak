@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -202,7 +202,11 @@ const DroppableColumn = ({ column, requests, onStatusChange, onRequestClick, sel
   );
 };
 
-export const RequestKanbanView = () => {
+interface RequestKanbanViewProps {
+  openRequestId?: string | null;
+}
+
+export const RequestKanbanView = ({ openRequestId }: RequestKanbanViewProps) => {
   const { requests, loading, updateRequestStatus, deleteRequest, refetch } = useRequests();
   const [activeRequest, setActiveRequest] = useState<Request | null>(null);
   const [selectedRequest, setSelectedRequest] = useState<Request | null>(null);
@@ -335,6 +339,17 @@ export const RequestKanbanView = () => {
       setSelectedRequestIds(prev => [...new Set([...prev, ...columnRequestIds])]);
     }
   };
+
+  // Handle auto-opening a request from URL parameter
+  useEffect(() => {
+    if (openRequestId && requests.length > 0) {
+      const requestToOpen = requests.find(r => r.id === openRequestId);
+      if (requestToOpen) {
+        setSelectedRequest(requestToOpen);
+        setDetailsSheetOpen(true);
+      }
+    }
+  }, [openRequestId, requests]);
 
   if (loading) {
     return <div className="flex items-center justify-center min-h-screen text-muted-foreground">Loading requests...</div>;

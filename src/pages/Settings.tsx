@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Sidebar } from '@/components/Sidebar';
 import { SettingsLayout } from '@/components/settings/SettingsLayout';
 import { GeneralSettings } from '@/components/settings/GeneralSettings';
@@ -12,6 +13,28 @@ export type SettingsTab = 'general' | 'profile' | 'team' | 'notifications';
 const Settings = () => {
   const { isCollapsed } = useSidebar();
   const [activeTab, setActiveTab] = useState<SettingsTab>('general');
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Check for URL parameters
+  const tabParam = searchParams.get('tab') as SettingsTab;
+  const openMemberId = searchParams.get('open');
+
+  // Set active tab from URL parameter
+  useEffect(() => {
+    if (tabParam && ['general', 'profile', 'team', 'notifications'].includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, [tabParam]);
+
+  // Clear URL parameters after processing
+  useEffect(() => {
+    if (tabParam || openMemberId) {
+      const newSearchParams = new URLSearchParams(searchParams);
+      newSearchParams.delete('tab');
+      newSearchParams.delete('open');
+      setSearchParams(newSearchParams, { replace: true });
+    }
+  }, [tabParam, openMemberId, searchParams, setSearchParams]);
 
   // Listen for custom events from keyboard shortcuts
   React.useEffect(() => {
@@ -30,7 +53,7 @@ const Settings = () => {
       case 'profile':
         return <ProfileSettings />;
       case 'team':
-        return <TeamSettings />;
+        return <TeamSettings openMemberId={openMemberId} />;
       case 'notifications':
         return <NotificationSettings />;
       default:

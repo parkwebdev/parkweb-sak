@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Sidebar } from '@/components/Sidebar';
 import { SimpleSearch } from '@/components/SimpleSearch';
 import { 
@@ -96,11 +97,36 @@ const ScopeOfWorks = () => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
   
   const { toast } = useToast();
   const { createScopeWorkNotification } = useNotifications();
   const { sendStageEmail } = useEmailTemplates();
   const { user } = useAuth();
+
+  // Check for 'open' parameter to auto-open a SOW
+  const openSowId = searchParams.get('open');
+
+  // Clear URL parameter after checking it
+  useEffect(() => {
+    if (openSowId) {
+      const newSearchParams = new URLSearchParams(searchParams);
+      newSearchParams.delete('open');
+      setSearchParams(newSearchParams, { replace: true });
+    }
+  }, [openSowId, searchParams, setSearchParams]);
+
+  // Handle auto-opening a SOW from URL parameter
+  useEffect(() => {
+    if (openSowId && scopeOfWorks.length > 0) {
+      const sowToOpen = scopeOfWorks.find(s => s.id === openSowId);
+      if (sowToOpen) {
+        setSelectedSow(sowToOpen);
+        setEditedContent(sowToOpen.content);
+        setEditedTitle(sowToOpen.title);
+      }
+    }
+  }, [openSowId, scopeOfWorks]);
 
   // Fetch scope of works from database
   useEffect(() => {

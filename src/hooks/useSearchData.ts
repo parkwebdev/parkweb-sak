@@ -94,7 +94,7 @@ export const useSearchData = () => {
             title: `${item.title} - ${item.client_name}`,
             description: `${item.company_name} • ${item.status.replace('_', ' ')} • ${item.priority} priority${assignedProfile ? ` • Assigned to ${assignedProfile.display_name}` : ''}`,
             category: 'Requests',
-            action: () => navigate('/requests')
+            action: () => navigate(`/requests?open=${item.id}`)
           });
         });
       }
@@ -112,7 +112,7 @@ export const useSearchData = () => {
             title: member.display_name || 'Team Member',
             description: member.email,  
             category: 'Team',
-            action: () => navigate('/settings?tab=team')
+            action: () => navigate(`/settings?tab=team&open=${member.user_id}`)
           });
         });
       }
@@ -131,7 +131,7 @@ export const useSearchData = () => {
             title: `${item.client_name} - ${item.company_name}`,
             description: `${item.email} • ${item.status} • ${item.industry}`,
             category: 'Onboarding',
-            action: () => navigate('/onboarding')
+            action: () => navigate(`/onboarding?open=${item.id}`)
           });
         });
       }
@@ -150,7 +150,7 @@ export const useSearchData = () => {
             title: `${item.title} - ${item.client}`,
             description: `${item.client_contact} • ${item.status} • ${item.industry}`,
             category: 'Scope of Work',
-            action: () => navigate('/scope-of-works')
+            action: () => navigate(`/scope-of-works?open=${item.id}`)
           });
         });
       }
@@ -188,7 +188,11 @@ export const useSearchData = () => {
             title: item.title,
             description: item.message,
             category: 'Notifications',
-            action: () => navigate('/dashboard')
+            action: () => {
+              // Mark as read and navigate to dashboard
+              supabase.from('notifications').update({ read: true }).eq('id', item.id);
+              navigate('/dashboard');
+            }
           });
         });
       }
