@@ -184,7 +184,7 @@ export const RequestsTable = () => {
                 variant="destructive"
                 size="sm"
                 onClick={handleBulkDelete}
-                className="mr-2"
+                className="mr-2 h-8 px-3 text-sm"
               >
                 Delete ({selectedRequestIds.length})
               </Button>
@@ -193,18 +193,29 @@ export const RequestsTable = () => {
             {/* Filter Dropdown - Icon Only */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden text-xs text-foreground font-medium leading-none bg-background px-2 py-1.5 rounded-md border-border hover:bg-accent/50">
+                <button className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden text-xs text-foreground font-medium leading-none bg-background px-2 py-1.5 rounded-md border-border hover:bg-accent/50 h-8">
                   <Filter size={16} className="text-muted-foreground" />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48 bg-background">
-                <DropdownMenuLabel>Filter by Priority</DropdownMenuLabel>
+              <DropdownMenuContent align="end" className="w-48 z-50">
+                <DropdownMenuLabel>Filter Options</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>All Priorities</DropdownMenuItem>
-                <DropdownMenuItem>Urgent</DropdownMenuItem>
-                <DropdownMenuItem>High</DropdownMenuItem>
-                <DropdownMenuItem>Medium</DropdownMenuItem>
-                <DropdownMenuItem>Low</DropdownMenuItem>
+                <DropdownMenuCheckboxItem>
+                  Show Unassigned
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem>
+                  Aaron Holley
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem>
+                  Jacob Holley
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuCheckboxItem>
+                  High Priority Only
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem>
+                  Urgent Only
+                </DropdownMenuCheckboxItem>
               </DropdownMenuContent>
             </DropdownMenu>
 
@@ -254,9 +265,38 @@ export const RequestsTable = () => {
             </DropdownMenu>
 
             {/* Settings - Icon Only */}
-            <button className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden text-xs text-foreground font-medium leading-none bg-background px-2 py-1.5 rounded-md border-border hover:bg-accent/50">
-              <Settings size={16} className="text-muted-foreground" />
-            </button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden text-xs text-foreground font-medium leading-none bg-background px-2 py-1.5 rounded-md border-border hover:bg-accent/50 h-8">
+                  <Settings size={16} className="text-muted-foreground" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56 z-50">
+                <DropdownMenuLabel>Sort Options</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>
+                  Sort by Created Date
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  Sort by Priority
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  Sort by Status
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  Sort by Client Name
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel>Display Options</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuCheckboxItem>
+                  Compact View
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem>
+                  Show Avatars
+                </DropdownMenuCheckboxItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </header>

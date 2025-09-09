@@ -343,6 +343,7 @@ export const RequestKanbanView = () => {
             variant="destructive"
             size="sm"
             onClick={handleBulkDelete}
+            className="h-8 px-3 text-sm"
           >
             Delete Selected
           </Button>

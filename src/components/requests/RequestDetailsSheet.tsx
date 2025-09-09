@@ -179,6 +179,22 @@ export const RequestDetailsSheet = ({ request, open, onOpenChange, onUpdate }: R
                 {REQUEST_PRIORITIES[priority as keyof typeof REQUEST_PRIORITIES]}
               </Badge>
             </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Status</Label>
+                <StatusDropdown
+                  status={status}
+                  onStatusChange={handleStatusChange}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Priority</Label>
+                <PriorityDropdown
+                  priority={priority}
+                  onPriorityChange={handlePriorityChange}
+                />
+              </div>
+            </div>
           </div>
         </SheetHeader>
         
@@ -197,23 +213,6 @@ export const RequestDetailsSheet = ({ request, open, onOpenChange, onUpdate }: R
               className="resize-none"
               disabled={isSavingDescription}
             />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">Status</Label>
-              <StatusDropdown
-                status={status}
-                onStatusChange={handleStatusChange}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">Priority</Label>
-              <PriorityDropdown
-                priority={priority}
-                onPriorityChange={handlePriorityChange}
-              />
-            </div>
           </div>
 
           <Separator />

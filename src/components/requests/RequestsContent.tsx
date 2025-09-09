@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { RequestsTable } from "./RequestsTable";
 import { RequestKanbanView } from "./RequestKanbanView";
 import { CreateRequestLinkDialog } from "./CreateRequestLinkDialog";
-import { Plus, LayoutGrid01 as LayoutGrid, Table, Menu01 as Menu } from "@untitledui/icons";
+import { LayoutGrid01 as LayoutGrid, Table, Menu01 as Menu } from "@untitledui/icons";
 
 export const RequestsContent = () => {
   const [viewMode, setViewMode] = useState<"table" | "kanban">("table");
@@ -50,8 +50,11 @@ export const RequestsContent = () => {
                   <LayoutGrid size={16} />
                 </Button>
               </div>
-              <Button onClick={() => setShowCreateDialog(true)}>
-                <Plus size={16} className="mr-2" />
+              <Button 
+                onClick={() => setShowCreateDialog(true)}
+                size="sm"
+                className="h-8 px-3 text-sm"
+              >
                 Create Client Link
               </Button>
             </div>
