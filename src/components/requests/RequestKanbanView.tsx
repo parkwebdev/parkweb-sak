@@ -6,8 +6,8 @@ import { REQUEST_PRIORITIES } from "@/lib/constants";
 import { Eye, Edit01 as Edit, Calendar, User01 as User, Trash01 as Trash } from "@untitledui/icons";
 import { useRequests, Request } from "@/hooks/useRequests";
 import { StatusDropdown } from "./StatusDropdown";
-import { ViewRequestDialog } from "./ViewRequestDialog";
-import { EditRequestDialog } from "./EditRequestDialog";
+import { ViewRequestSheet } from "./ViewRequestSheet";
+import { EditRequestSheet } from "./EditRequestSheet";
 import { DeleteConfirmationDialog } from "@/components/DeleteConfirmationDialog";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -182,8 +182,8 @@ export const RequestKanbanView = () => {
   const { requests, loading, updateRequestStatus, deleteRequest, refetch } = useRequests();
   const [activeRequest, setActiveRequest] = useState<Request | null>(null);
   const [selectedRequest, setSelectedRequest] = useState<Request | null>(null);
-  const [viewDialogOpen, setViewDialogOpen] = useState(false);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [viewSheetOpen, setViewSheetOpen] = useState(false);
+  const [editSheetOpen, setEditSheetOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
@@ -262,12 +262,12 @@ export const RequestKanbanView = () => {
 
   const handleView = (request: Request) => {
     setSelectedRequest(request);
-    setViewDialogOpen(true);
+    setViewSheetOpen(true);
   };
 
   const handleEdit = (request: Request) => {
     setSelectedRequest(request);
-    setEditDialogOpen(true);
+    setEditSheetOpen(true);
   };
 
   const handleDelete = (request: Request) => {
@@ -326,16 +326,16 @@ export const RequestKanbanView = () => {
         </DragOverlay>
       </DndContext>
 
-      <ViewRequestDialog
+      <ViewRequestSheet
         request={selectedRequest}
-        open={viewDialogOpen}
-        onOpenChange={setViewDialogOpen}
+        open={viewSheetOpen}
+        onOpenChange={setViewSheetOpen}
       />
 
-      <EditRequestDialog
+      <EditRequestSheet
         request={selectedRequest}
-        open={editDialogOpen}
-        onOpenChange={setEditDialogOpen}
+        open={editSheetOpen}
+        onOpenChange={setEditSheetOpen}
         onUpdate={refetch}
       />
 

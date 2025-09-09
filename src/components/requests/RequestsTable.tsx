@@ -19,8 +19,8 @@ import { REQUEST_STATUSES, REQUEST_PRIORITIES } from "@/lib/constants";
 import { useRequests, Request } from "@/hooks/useRequests";
 import { StatusDropdown } from "./StatusDropdown";
 import { PriorityDropdown } from "./PriorityDropdown";
-import { ViewRequestDialog } from "./ViewRequestDialog";
-import { EditRequestDialog } from "./EditRequestDialog";
+import { ViewRequestSheet } from "./ViewRequestSheet";
+import { EditRequestSheet } from "./EditRequestSheet";
 import { DeleteConfirmationDialog } from "@/components/DeleteConfirmationDialog";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -37,8 +37,8 @@ import {
 export const RequestsTable = () => {
   const { requests, loading, updateRequestStatus, updateRequestPriority, deleteRequest, refetch } = useRequests();
   const [selectedRequest, setSelectedRequest] = useState<Request | null>(null);
-  const [viewDialogOpen, setViewDialogOpen] = useState(false);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [viewSheetOpen, setViewSheetOpen] = useState(false);
+  const [editSheetOpen, setEditSheetOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
@@ -90,12 +90,12 @@ export const RequestsTable = () => {
 
   const handleView = (request: Request) => {
     setSelectedRequest(request);
-    setViewDialogOpen(true);
+    setViewSheetOpen(true);
   };
 
   const handleEdit = (request: Request) => {
     setSelectedRequest(request);
-    setEditDialogOpen(true);
+    setEditSheetOpen(true);
   };
 
   const handleDelete = (request: Request) => {
@@ -315,16 +315,16 @@ export const RequestsTable = () => {
         </div>
       )}
 
-      <ViewRequestDialog
+      <ViewRequestSheet
         request={selectedRequest}
-        open={viewDialogOpen}
-        onOpenChange={setViewDialogOpen}
+        open={viewSheetOpen}
+        onOpenChange={setViewSheetOpen}
       />
 
-      <EditRequestDialog
+      <EditRequestSheet
         request={selectedRequest}
-        open={editDialogOpen}
-        onOpenChange={setEditDialogOpen}
+        open={editSheetOpen}
+        onOpenChange={setEditSheetOpen}
         onUpdate={refetch}
       />
 
