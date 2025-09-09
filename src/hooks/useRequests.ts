@@ -14,6 +14,7 @@ export interface Request {
   website_name?: string;
   website_url?: string;
   assigned_to?: string;
+  assigned_to_name?: string;
   due_date?: string;
   completed_at?: string;
   created_at: string;
@@ -30,11 +31,21 @@ export const useRequests = () => {
     try {
       const { data, error } = await supabase
         .from('requests')
-        .select('*')
+        .select(`
+          *,
+          assigned_profile:profiles!requests_assigned_to_fkey(display_name)
+        `)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setRequests(data || []);
+      
+      // Map the data to include assigned_to_name
+      const requestsWithNames = (data || []).map(request => ({
+        ...request,
+        assigned_to_name: request.assigned_profile?.display_name || null
+      }));
+      
+      setRequests(requestsWithNames);
     } catch (error) {
       console.error('Error fetching requests:', error);
       toast({
