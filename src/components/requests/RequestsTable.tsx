@@ -200,22 +200,61 @@ export const RequestsTable = () => {
               <DropdownMenuContent align="end" className="w-48 z-50">
                 <DropdownMenuLabel>Filter Options</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuCheckboxItem>
-                  Show Unassigned
+                <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">Assignees</DropdownMenuLabel>
+                <DropdownMenuCheckboxItem className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-1">
+                    <div className="w-4 h-4 rounded-full bg-muted flex items-center justify-center">
+                      <span className="text-xs">?</span>
+                    </div>
+                    Unassigned
+                  </div>
                 </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem>
-                  Aaron Holley
+                <DropdownMenuCheckboxItem className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-1">
+                    <Avatar className="w-4 h-4">
+                      <AvatarFallback className="text-xs">AH</AvatarFallback>
+                    </Avatar>
+                    Aaron Holley
+                  </div>
                 </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem>
-                  Jacob Holley
+                <DropdownMenuCheckboxItem className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-1">
+                    <Avatar className="w-4 h-4">
+                      <AvatarFallback className="text-xs">JH</AvatarFallback>
+                    </Avatar>
+                    Jacob Holley
+                  </div>
                 </DropdownMenuCheckboxItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuCheckboxItem>
-                  High Priority Only
+                <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">Priority</DropdownMenuLabel>
+                <DropdownMenuCheckboxItem className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-1">
+                    <div className="w-2 h-2 rounded-full bg-red-500" />
+                    Urgent
+                  </div>
                 </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem>
-                  Urgent Only
+                <DropdownMenuCheckboxItem className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-1">
+                    <div className="w-2 h-2 rounded-full bg-orange-500" />
+                    High
+                  </div>
                 </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-1">
+                    <div className="w-2 h-2 rounded-full bg-yellow-500" />
+                    Medium
+                  </div>
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-1">
+                    <div className="w-2 h-2 rounded-full bg-blue-500" />
+                    Low
+                  </div>
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="text-red-600 hover:text-red-700">
+                  Clear All Filters
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
 
@@ -287,14 +326,9 @@ export const RequestsTable = () => {
                   Sort by Client Name
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuLabel>Display Options</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuCheckboxItem>
-                  Compact View
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem>
-                  Show Avatars
-                </DropdownMenuCheckboxItem>
+                <DropdownMenuItem className="text-red-600 hover:text-red-700">
+                  Reset to Default
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>

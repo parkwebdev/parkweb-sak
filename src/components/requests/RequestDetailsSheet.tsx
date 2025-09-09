@@ -9,11 +9,15 @@ import { Separator } from "@/components/ui/separator";
 import { Request } from "@/hooks/useRequests";
 import { REQUEST_PRIORITIES } from "@/lib/constants";
 import { Calendar, User01 as User, Mail01 as Mail, Globe01 as Globe, Building01 as Building } from "@untitledui/icons";
-import { StatusDropdown } from "./StatusDropdown";
-import { PriorityDropdown } from "./PriorityDropdown";
 import { useFieldAutoSave } from "@/hooks/useFieldAutoSave";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface RequestDetailsSheetProps {
   request: Request | null;
@@ -166,34 +170,67 @@ export const RequestDetailsSheet = ({ request, open, onOpenChange, onUpdate }: R
               Request details and editing
             </SheetDescription>
             <div className="flex gap-3">
-              <Badge 
-                variant="outline" 
-                className={`text-sm capitalize ${getStatusColor(status)}`}
-              >
-                {status.replace('_', ' ')}
-              </Badge>
-              <Badge 
-                variant="outline" 
-                className={`text-sm capitalize ${getPriorityColor(priority)}`}
-              >
-                {REQUEST_PRIORITIES[priority as keyof typeof REQUEST_PRIORITIES]}
-              </Badge>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">Status</Label>
-                <StatusDropdown
-                  status={status}
-                  onStatusChange={handleStatusChange}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">Priority</Label>
-                <PriorityDropdown
-                  priority={priority}
-                  onPriorityChange={handlePriorityChange}
-                />
-              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Badge 
+                    variant="outline" 
+                    className={`text-sm capitalize cursor-pointer hover:bg-accent/50 ${getStatusColor(status)}`}
+                  >
+                    {status.replace('_', ' ')}
+                  </Badge>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="z-50">
+                  <DropdownMenuItem onClick={() => handleStatusChange('to_do')}>
+                    To Do
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleStatusChange('in_progress')}>
+                    In Progress
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleStatusChange('on_hold')}>
+                    On Hold
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleStatusChange('completed')}>
+                    Completed
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Badge 
+                    variant="outline" 
+                    className={`text-sm capitalize cursor-pointer hover:bg-accent/50 ${getPriorityColor(priority)}`}
+                  >
+                    {REQUEST_PRIORITIES[priority as keyof typeof REQUEST_PRIORITIES]}
+                  </Badge>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="z-50">
+                  <DropdownMenuItem onClick={() => handlePriorityChange('low')}>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-blue-500" />
+                      Low
+                    </div>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handlePriorityChange('medium')}>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-yellow-500" />
+                      Medium
+                    </div>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handlePriorityChange('high')}>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-orange-500" />
+                      High
+                    </div>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handlePriorityChange('urgent')}>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-red-500" />
+                      Urgent
+                    </div>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </SheetHeader>
