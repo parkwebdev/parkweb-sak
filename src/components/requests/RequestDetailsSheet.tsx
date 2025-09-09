@@ -149,7 +149,7 @@ export const RequestDetailsSheet = ({ request, open, onOpenChange, onUpdate }: R
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-[700px] sm:max-w-[700px] overflow-y-auto">
+      <SheetContent side="right" className="w-[700px] sm:max-w-[700px] overflow-y-auto bg-background">
         <SheetHeader className="space-y-4">
           <div className="space-y-3">
             <div className="space-y-2">
@@ -252,8 +252,6 @@ export const RequestDetailsSheet = ({ request, open, onOpenChange, onUpdate }: R
             />
           </div>
 
-          <Separator />
-
           <div>
             <h3 className="font-semibold mb-4 text-base">Client Information</h3>
             <div className="grid grid-cols-2 gap-4">
@@ -310,8 +308,6 @@ export const RequestDetailsSheet = ({ request, open, onOpenChange, onUpdate }: R
               )}
             </div>
           </div>
-
-          <Separator />
 
           <div>
             <h3 className="font-semibold mb-4 text-base">Request Details</h3>

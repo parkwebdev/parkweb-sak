@@ -30,22 +30,37 @@ export const useRequests = () => {
 
   const fetchRequests = async () => {
     try {
-      const { data, error } = await supabase
+      // First get all requests
+      const { data: requestsData, error: requestsError } = await supabase
         .from('requests')
-        .select(`
-          *,
-          assigned_profile:profiles!assigned_to(display_name, avatar_url)
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (requestsError) throw requestsError;
+
+      // Get unique assigned_to IDs to fetch profiles
+      const assignedToIds = [...new Set(requestsData?.map(r => r.assigned_to).filter(Boolean) || [])];
       
+      let profilesData: any[] = [];
+      if (assignedToIds.length > 0) {
+        const { data: profiles, error: profilesError } = await supabase
+          .from('profiles')
+          .select('user_id, display_name, avatar_url')
+          .in('user_id', assignedToIds);
+          
+        if (profilesError) throw profilesError;
+        profilesData = profiles || [];
+      }
+
       // Map the data to include assigned_to_name and avatar
-      const requestsWithNames = (data || []).map(request => ({
-        ...request,
-        assigned_to_name: request.assigned_profile?.display_name || null,
-        assigned_to_avatar: request.assigned_profile?.avatar_url || null
-      }));
+      const requestsWithNames = (requestsData || []).map(request => {
+        const profile = profilesData.find(p => p.user_id === request.assigned_to);
+        return {
+          ...request,
+          assigned_to_name: profile?.display_name || null,
+          assigned_to_avatar: profile?.avatar_url || null
+        };
+      });
       
       setRequests(requestsWithNames);
     } catch (error) {
