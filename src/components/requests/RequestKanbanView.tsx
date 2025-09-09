@@ -101,17 +101,26 @@ const SortableCard = ({ request, onStatusChange, onRequestClick, selectedRequest
               <User size={12} />
               {request.client_name}
             </div>
-            {request.assigned_to_name && (
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Avatar className="h-4 w-4">
-                  <AvatarImage src={request.assigned_to_avatar || undefined} alt={request.assigned_to_name} />
-                  <AvatarFallback className="text-xs">
-                    {request.assigned_to_name.split(' ').map(n => n[0]).join('').toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <span>{request.assigned_to_name}</span>
-              </div>
-            )}
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              {request.assigned_to_name ? (
+                <>
+                  <Avatar className="h-4 w-4">
+                    <AvatarImage src={request.assigned_to_avatar || undefined} alt={request.assigned_to_name} />
+                    <AvatarFallback className="text-xs">
+                      {request.assigned_to_name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span>{request.assigned_to_name}</span>
+                </>
+              ) : (
+                <>
+                  <Avatar className="h-4 w-4">
+                    <AvatarFallback className="text-xs bg-muted">?</AvatarFallback>
+                  </Avatar>
+                  <span>Unassigned</span>
+                </>
+              )}
+            </div>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <Calendar size={12} />
               {new Date(request.created_at).toLocaleDateString()}

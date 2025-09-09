@@ -46,6 +46,11 @@ export const RequestsTable = () => {
   const [activeStatus, setActiveStatus] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [activeFilters, setActiveFilters] = useState({
+    assignees: [] as string[],
+    priorities: [] as string[],
+    companies: [] as string[]
+  });
   const [showColumns, setShowColumns] = useState({
     request: true,
     client: true,
@@ -84,9 +89,64 @@ export const RequestsTable = () => {
     return REQUEST_PRIORITIES[priority as keyof typeof REQUEST_PRIORITIES] || priority;
   };
 
-  const filteredRequests = activeStatus === 'all' 
-    ? requests 
-    : requests.filter(request => request.status === activeStatus);
+  // Get unique values for filters
+  const uniqueAssignees = Array.from(new Set(requests.map(r => r.assigned_to_name).filter(Boolean)));
+  const uniqueCompanies = Array.from(new Set(requests.map(r => r.company_name)));
+  
+  const filteredRequests = requests.filter(request => {
+    // Status filter
+    if (activeStatus !== 'all' && request.status !== activeStatus) return false;
+    
+    // Assignee filter
+    if (activeFilters.assignees.length > 0) {
+      const isUnassignedSelected = activeFilters.assignees.includes('unassigned');
+      const isAssigned = request.assigned_to_name !== null;
+      
+      if (isUnassignedSelected && !isAssigned) return true;
+      if (!isUnassignedSelected && !isAssigned) return false;
+      if (isAssigned && !activeFilters.assignees.includes(request.assigned_to_name!)) return false;
+    }
+    
+    // Priority filter
+    if (activeFilters.priorities.length > 0 && !activeFilters.priorities.includes(request.priority)) return false;
+    
+    // Company filter  
+    if (activeFilters.companies.length > 0 && !activeFilters.companies.includes(request.company_name)) return false;
+    
+    return true;
+  });
+
+  // Apply sorting
+  const sortedRequests = [...filteredRequests].sort((a, b) => {
+    if (!sortBy) return 0;
+    
+    let aVal: any, bVal: any;
+    switch (sortBy) {
+      case 'created':
+        aVal = new Date(a.created_at);
+        bVal = new Date(b.created_at);
+        break;
+      case 'priority':
+        const priorityOrder = { 'urgent': 4, 'high': 3, 'medium': 2, 'low': 1 };
+        aVal = priorityOrder[a.priority as keyof typeof priorityOrder];
+        bVal = priorityOrder[b.priority as keyof typeof priorityOrder];
+        break;
+      case 'status':
+        aVal = a.status;
+        bVal = b.status;
+        break;
+      case 'client':
+        aVal = a.client_name.toLowerCase();
+        bVal = b.client_name.toLowerCase();
+        break;
+      default:
+        return 0;
+    }
+    
+    if (aVal < bVal) return sortOrder === 'asc' ? -1 : 1;
+    if (aVal > bVal) return sortOrder === 'asc' ? 1 : -1;
+    return 0;
+  });
 
   const handleRequestClick = (request: Request) => {
     setSelectedRequest(request);
@@ -140,6 +200,33 @@ export const RequestsTable = () => {
     );
   };
 
+  const handleFilterChange = (filterType: keyof typeof activeFilters, value: string, checked: boolean) => {
+    setActiveFilters(prev => ({
+      ...prev,
+      [filterType]: checked 
+        ? [...prev[filterType], value]
+        : prev[filterType].filter(item => item !== value)
+    }));
+  };
+
+  const clearAllFilters = () => {
+    setActiveFilters({
+      assignees: [],
+      priorities: [],
+      companies: []
+    });
+    setSortBy("");
+  };
+
+  const handleSort = (field: string) => {
+    if (sortBy === field) {
+      setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(field);
+      setSortOrder('asc');
+    }
+  };
+
   if (loading) {
     return <div className="flex items-center justify-center p-8 text-muted-foreground">Loading requests...</div>;
   }
@@ -149,10 +236,11 @@ export const RequestsTable = () => {
       {/* Header with Filters and Controls */}
       <header className="w-full border-b border-border">
         <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-3 px-4 py-3">
-          {/* Filter buttons - scrollable on mobile */}
+      {/* Filter buttons - scrollable on mobile */}
             <div className="overflow-x-auto">
               <div className="border shadow-sm flex overflow-hidden text-xs text-foreground font-medium leading-none rounded-md border-border min-w-max">
                 {statusTabs.map((tab, index) => {
+                  const tabCount = tab.key === 'all' ? sortedRequests.length : sortedRequests.filter(r => r.status === tab.key).length;
                   const isActive = activeStatus === tab.key;
                   return (
                     <button
@@ -165,9 +253,9 @@ export const RequestsTable = () => {
                       <div className="text-xs leading-4 self-stretch my-auto">
                         {tab.label}
                       </div>
-                      {tab.count > 0 && (
+                      {tabCount > 0 && (
                         <div className={`px-1.5 py-0.5 rounded text-[10px] ${isActive ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
-                          {tab.count}
+                          {tabCount}
                         </div>
                       )}
                     </button>
@@ -180,14 +268,13 @@ export const RequestsTable = () => {
           <div className="flex items-center gap-2.5 ml-auto">
             {/* Bulk Actions */}
             {selectedRequestIds.length > 0 && (
-              <Button
-                variant="destructive"
-                size="sm"
+              <button
                 onClick={handleBulkDelete}
-                className="mr-2 h-8 px-3 text-sm"
+                className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden text-xs text-destructive font-medium leading-none bg-background px-2 py-1.5 rounded-md border-destructive hover:bg-destructive/10 h-8 mr-2"
               >
+                <Trash size={14} />
                 Delete ({selectedRequestIds.length})
-              </Button>
+              </button>
             )}
 
             {/* Filter Dropdown - Icon Only */}
@@ -201,58 +288,54 @@ export const RequestsTable = () => {
                 <DropdownMenuLabel>Filter Options</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">Assignees</DropdownMenuLabel>
-                <DropdownMenuCheckboxItem className="flex items-center gap-2">
-                  <div className="flex items-center gap-2 flex-1">
-                    <div className="w-4 h-4 rounded-full bg-muted flex items-center justify-center">
-                      <span className="text-xs">?</span>
-                    </div>
+                <DropdownMenuCheckboxItem 
+                  checked={activeFilters.assignees.includes('unassigned')}
+                  onCheckedChange={(checked) => handleFilterChange('assignees', 'unassigned', !!checked)}
+                >
+                  <div className="flex items-center gap-2">
+                    <Avatar className="w-4 h-4">
+                      <AvatarFallback className="text-xs bg-muted">?</AvatarFallback>
+                    </Avatar>
                     Unassigned
                   </div>
                 </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem className="flex items-center gap-2">
-                  <div className="flex items-center gap-2 flex-1">
-                    <Avatar className="w-4 h-4">
-                      <AvatarFallback className="text-xs">AH</AvatarFallback>
-                    </Avatar>
-                    Aaron Holley
-                  </div>
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem className="flex items-center gap-2">
-                  <div className="flex items-center gap-2 flex-1">
-                    <Avatar className="w-4 h-4">
-                      <AvatarFallback className="text-xs">JH</AvatarFallback>
-                    </Avatar>
-                    Jacob Holley
-                  </div>
-                </DropdownMenuCheckboxItem>
+                {uniqueAssignees.map(assignee => (
+                  <DropdownMenuCheckboxItem 
+                    key={assignee}
+                    checked={activeFilters.assignees.includes(assignee)}
+                    onCheckedChange={(checked) => handleFilterChange('assignees', assignee, !!checked)}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Avatar className="w-4 h-4">
+                        <AvatarImage src={requests.find(r => r.assigned_to_name === assignee)?.assigned_to_avatar} />
+                        <AvatarFallback className="text-xs">
+                          {assignee.split(' ').map(n => n[0]).join('').toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      {assignee}
+                    </div>
+                  </DropdownMenuCheckboxItem>
+                ))}
                 <DropdownMenuSeparator />
                 <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">Priority</DropdownMenuLabel>
-                <DropdownMenuCheckboxItem className="flex items-center gap-2">
-                  <div className="flex items-center gap-2 flex-1">
-                    <div className="w-2 h-2 rounded-full bg-red-500" />
-                    Urgent
-                  </div>
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem className="flex items-center gap-2">
-                  <div className="flex items-center gap-2 flex-1">
-                    <div className="w-2 h-2 rounded-full bg-orange-500" />
-                    High
-                  </div>
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem className="flex items-center gap-2">
-                  <div className="flex items-center gap-2 flex-1">
-                    <div className="w-2 h-2 rounded-full bg-yellow-500" />
-                    Medium
-                  </div>
-                </DropdownMenuCheckboxItem>
-                <DropdownMenuCheckboxItem className="flex items-center gap-2">
-                  <div className="flex items-center gap-2 flex-1">
-                    <div className="w-2 h-2 rounded-full bg-blue-500" />
-                    Low
-                  </div>
-                </DropdownMenuCheckboxItem>
+                {(['urgent', 'high', 'medium', 'low'] as const).map(priority => (
+                  <DropdownMenuCheckboxItem 
+                    key={priority}
+                    checked={activeFilters.priorities.includes(priority)}
+                    onCheckedChange={(checked) => handleFilterChange('priorities', priority, !!checked)}
+                  >
+                    <div className="flex items-center gap-2">
+                      <div className={`w-2 h-2 rounded-full ${
+                        priority === 'urgent' ? 'bg-red-500' : 
+                        priority === 'high' ? 'bg-orange-500' : 
+                        priority === 'medium' ? 'bg-yellow-500' : 'bg-blue-500'
+                      }`} />
+                      {REQUEST_PRIORITIES[priority]}
+                    </div>
+                  </DropdownMenuCheckboxItem>
+                ))}
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="text-red-600 hover:text-red-700">
+                <DropdownMenuItem onClick={clearAllFilters} className="text-red-600 hover:text-red-700">
                   Clear All Filters
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -313,20 +396,20 @@ export const RequestsTable = () => {
               <DropdownMenuContent align="end" className="w-56 z-50">
                 <DropdownMenuLabel>Sort Options</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  Sort by Created Date
+                <DropdownMenuItem onClick={() => handleSort('created')}>
+                  Sort by Created Date {sortBy === 'created' && (sortOrder === 'asc' ? '↑' : '↓')}
                 </DropdownMenuItem>
-                <DropdownMenuItem>
-                  Sort by Priority
+                <DropdownMenuItem onClick={() => handleSort('priority')}>
+                  Sort by Priority {sortBy === 'priority' && (sortOrder === 'asc' ? '↑' : '↓')}
                 </DropdownMenuItem>
-                <DropdownMenuItem>
-                  Sort by Status
+                <DropdownMenuItem onClick={() => handleSort('status')}>
+                  Sort by Status {sortBy === 'status' && (sortOrder === 'asc' ? '↑' : '↓')}
                 </DropdownMenuItem>
-                <DropdownMenuItem>
-                  Sort by Client Name
+                <DropdownMenuItem onClick={() => handleSort('client')}>
+                  Sort by Client Name {sortBy === 'client' && (sortOrder === 'asc' ? '↑' : '↓')}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="text-red-600 hover:text-red-700">
+                <DropdownMenuItem onClick={clearAllFilters} className="text-red-600 hover:text-red-700">
                   Reset to Default
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -342,7 +425,7 @@ export const RequestsTable = () => {
             <TableRow>
               <TableHead className="w-[50px]">
                 <Checkbox
-                  checked={selectedRequestIds.length === filteredRequests.length && filteredRequests.length > 0}
+                  checked={selectedRequestIds.length === sortedRequests.length && sortedRequests.length > 0}
                   onCheckedChange={handleSelectAll}
                 />
               </TableHead>
@@ -355,7 +438,7 @@ export const RequestsTable = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredRequests.map((request) => (
+            {sortedRequests.map((request) => (
               <TableRow 
                 key={request.id}
                 className="cursor-pointer hover:bg-muted/50"
@@ -411,9 +494,14 @@ export const RequestsTable = () => {
                         </Avatar>
                         <span className="truncate">{request.assigned_to_name}</span>
                       </div>
-                    ) : (
-                      <span className="text-muted-foreground">Unassigned</span>
-                    )}
+                     ) : (
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <Avatar className="h-6 w-6">
+                          <AvatarFallback className="text-xs bg-muted">?</AvatarFallback>
+                        </Avatar>
+                        <span className="text-sm">Unassigned</span>
+                      </div>
+                     )}
                   </TableCell>
                 )}
                 {showColumns.created && (
@@ -425,7 +513,7 @@ export const RequestsTable = () => {
         </Table>
       </div>
       
-      {filteredRequests.length === 0 && (
+      {sortedRequests.length === 0 && (
         <div className="text-center py-8 text-muted-foreground">
           No requests found matching your criteria.
         </div>
