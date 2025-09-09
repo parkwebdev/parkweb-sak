@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { SearchSm as Search } from '@untitledui/icons';
+import { SearchSm as Search, Calendar, User01 as User, File05 as FileText, Mail01 as Mail, Bell01 as Bell, Settings01 as Settings, ChevronRight } from '@untitledui/icons';
 import {
   CommandDialog,
   CommandInput,
@@ -9,6 +9,7 @@ import {
   CommandItem,
 } from "@/components/ui/command";
 import { useGlobalSearch } from '@/hooks/useGlobalSearch';
+import { useSearchData } from '@/hooks/useSearchData';
 
 interface SearchResult {
   id: string;
@@ -28,46 +29,73 @@ interface SearchInputProps {
 }
 
 export const SearchInput: React.FC<SearchInputProps> = ({
-  placeholder = "Search",
-  value = "",
-  onChange,
+  placeholder = "Search everything...",
   className = "",
-  searchResults = [],
-  onSelect
 }) => {
   const { open, setOpen } = useGlobalSearch();
-  const [searchValue, setSearchValue] = useState(value);
-
-  useEffect(() => {
-    setSearchValue(value);
-  }, [value]);
+  const { searchResults, loading } = useSearchData();
+  const [searchValue, setSearchValue] = useState('');
 
   const handleValueChange = (newValue: string) => {
     setSearchValue(newValue);
-    onChange?.(newValue);
-    
-    // Show dialog when user starts typing, but only if not already open
-    if (newValue.length > 0 && !open) {
-      setOpen(true);
-    }
-    // Close dialog when search is cleared
-    if (newValue.length === 0) {
-      setOpen(false);
-    }
   };
 
   const handleSelect = (result: SearchResult) => {
-    onSelect?.(result);
     result.action?.();
     setOpen(false);
+    setSearchValue('');
   };
 
   const filteredResults = searchValue.length > 0 
     ? searchResults.filter(result =>
         result.title.toLowerCase().includes(searchValue.toLowerCase()) ||
-        result.description?.toLowerCase().includes(searchValue.toLowerCase())
+        result.description?.toLowerCase().includes(searchValue.toLowerCase()) ||
+        result.category?.toLowerCase().includes(searchValue.toLowerCase())
       )
-    : searchResults; // Show all results when no search term
+    : searchResults;
+
+  // Group results by category
+  const groupedResults = filteredResults.reduce((acc, result) => {
+    const category = result.category || 'Other';
+    if (!acc[category]) {
+      acc[category] = [];
+    }
+    acc[category].push(result);
+    return acc;
+  }, {} as Record<string, SearchResult[]>);
+
+  const getCategoryIcon = (category: string) => {
+    switch (category) {
+      case 'Navigation':
+        return ChevronRight;
+      case 'Requests':
+        return Mail;
+      case 'Team':
+        return User;
+      case 'Onboarding':
+        return FileText;
+      case 'Scope of Work':
+        return FileText;
+      case 'Request Links':
+        return Mail;
+      case 'Notifications':
+        return Bell;
+      case 'Quick Actions':
+        return Settings;
+      default:
+        return Search;
+    }
+  };
+
+  const priorityOrder = ['Navigation', 'Quick Actions', 'Requests', 'Team', 'Onboarding', 'Scope of Work', 'Request Links', 'Notifications'];
+  const sortedCategories = Object.keys(groupedResults).sort((a, b) => {
+    const aIndex = priorityOrder.indexOf(a);
+    const bIndex = priorityOrder.indexOf(b);
+    if (aIndex === -1 && bIndex === -1) return a.localeCompare(b);
+    if (aIndex === -1) return 1;
+    if (bIndex === -1) return -1;
+    return aIndex - bIndex;
+  });
 
   return (
     <>
@@ -80,8 +108,7 @@ export const SearchInput: React.FC<SearchInputProps> = ({
             <Search size={14} className="text-muted-foreground flex-shrink-0" />
             <input
               type="text"
-              value={searchValue}
-              onChange={(e) => handleValueChange(e.target.value)}
+              value=""
               placeholder={placeholder}
               className="text-foreground text-ellipsis text-xs leading-4 self-stretch flex-1 shrink min-w-0 my-auto bg-transparent border-none outline-none placeholder:text-muted-foreground cursor-pointer"
               readOnly
@@ -102,27 +129,43 @@ export const SearchInput: React.FC<SearchInputProps> = ({
           onValueChange={handleValueChange}
         />
         <CommandList>
-          <CommandEmpty>No results found.</CommandEmpty>
-          {filteredResults.length > 0 && (
-            <CommandGroup heading={searchValue.length > 0 ? "Search Results" : "Quick Actions"}>
-              {filteredResults.map((result) => (
-                <CommandItem
-                  key={result.id}
-                  onSelect={() => handleSelect(result)}
-                  className="cursor-pointer"
-                >
-                  <Search className="mr-2 h-4 w-4" />
-                  <div className="flex flex-col">
-                    <span>{result.title}</span>
-                    {result.description && (
-                      <span className="text-sm text-muted-foreground">
-                        {result.description}
-                      </span>
-                    )}
-                  </div>
-                </CommandItem>
-              ))}
-            </CommandGroup>
+          {loading ? (
+            <div className="py-6 text-center text-sm text-muted-foreground">
+              Loading...
+            </div>
+          ) : (
+            <>
+              {filteredResults.length === 0 ? (
+                <CommandEmpty>No results found.</CommandEmpty>
+              ) : (
+                sortedCategories.map(category => {
+                  const categoryResults = groupedResults[category];
+                  const CategoryIcon = getCategoryIcon(category);
+                  
+                  return (
+                    <CommandGroup key={category} heading={category}>
+                      {categoryResults.slice(0, category === 'Navigation' ? 10 : 5).map((result) => (
+                        <CommandItem
+                          key={result.id}
+                          onSelect={() => handleSelect(result)}
+                          className="cursor-pointer"
+                        >
+                          <CategoryIcon className="mr-2 h-4 w-4" />
+                          <div className="flex flex-col flex-1 min-w-0">
+                            <span className="truncate">{result.title}</span>
+                            {result.description && (
+                              <span className="text-sm text-muted-foreground truncate">
+                                {result.description}
+                              </span>
+                            )}
+                          </div>
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  );
+                })
+              )}
+            </>
           )}
         </CommandList>
       </CommandDialog>

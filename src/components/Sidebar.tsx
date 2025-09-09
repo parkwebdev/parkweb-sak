@@ -1,13 +1,12 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Home01 as Home, Grid01 as Grid, File02 as FileText, Users01 as Users, X, ChevronLeft, ChevronRight, List } from '@untitledui/icons';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { SearchInput } from './SearchInput';
 import { Badge } from './Badge';
 import { UserAccountCard } from './UserAccountCard';
 import { ThemeToggle } from './ThemeToggle';
 import { NotificationCenter } from './notifications/NotificationCenter';
 import { useSidebar } from '@/hooks/use-sidebar';
-import { useSearchData } from '@/hooks/useSearchData';
 import { useTheme } from '@/components/ThemeProvider';
 
 interface NavigationItem {
@@ -46,11 +45,8 @@ interface SidebarProps {
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
-  const [searchTerm, setSearchTerm] = useState('');
   const location = useLocation();
-  const navigate = useNavigate();
   const { isCollapsed, toggle } = useSidebar();
-  const { searchResults } = useSearchData();
   const { theme } = useTheme();
 
   // Supabase storage URLs for logos
@@ -60,24 +56,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
   // Determine which logo to show based on theme
   const isDarkMode = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
   const logoSrc = isDarkMode ? logoWhiteUrl : logoBlackUrl;
-
-  const allResults = [
-    ...searchResults,
-    {
-      id: 'create-link',
-      title: 'Create Onboarding Link',
-      description: 'Generate a new client onboarding link',
-      category: 'Actions',
-      action: () => {} // This would be handled by parent
-    },
-    {
-      id: 'shortcuts',
-      title: 'Keyboard Shortcuts',
-      description: 'View keyboard shortcuts',
-      category: 'Help',
-      action: () => {} // This would be handled by parent
-    }
-  ];
 
   return (
     <aside className={`items-stretch flex ${isCollapsed ? 'w-[72px]' : 'w-[280px]'} h-screen bg-muted/30 p-1 transition-all duration-300`}>
@@ -113,12 +91,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
             </div>
             {!isCollapsed && (
               <div className="w-full gap-2 mt-4">
-                <SearchInput
-                  placeholder="Search"
-                  value={searchTerm}
-                  onChange={setSearchTerm}
-                  searchResults={allResults}
-                />
+                <SearchInput placeholder="Search everything..." />
               </div>
             )}
           </header>

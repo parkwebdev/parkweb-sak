@@ -28,11 +28,101 @@ export const useSearchData = () => {
     try {
       const results: SearchResult[] = [];
 
+      // Add main navigation actions first
+      const navigationActions: SearchResult[] = [
+        {
+          id: 'nav-dashboard',
+          title: 'Dashboard',
+          description: 'Go to main dashboard',
+          category: 'Navigation',
+          action: () => navigate('/dashboard')
+        },
+        {
+          id: 'nav-requests',
+          title: 'Requests',
+          description: 'View and manage client requests',
+          category: 'Navigation', 
+          action: () => navigate('/requests')
+        },
+        {
+          id: 'nav-onboarding',
+          title: 'Onboarding',
+          description: 'Client onboarding management',
+          category: 'Navigation',
+          action: () => navigate('/onboarding')
+        },
+        {
+          id: 'nav-sow',
+          title: 'Scope of Works',
+          description: 'View all scope of work documents',
+          category: 'Navigation',
+          action: () => navigate('/scope-of-works')
+        },
+        {
+          id: 'nav-settings',
+          title: 'Settings',
+          description: 'Configure your account settings',
+          category: 'Navigation',
+          action: () => navigate('/settings')
+        }
+      ];
+
+      // Fetch requests data  
+      const { data: requestsData, error: requestsError } = await supabase
+        .from('requests')
+        .select('id, title, description, status, priority, client_name, company_name, client_email, assigned_to')
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      if (!requestsError && requestsData) {
+        // Get assigned user names if there are any
+        const assignedToIds = [...new Set(requestsData.map(r => r.assigned_to).filter(Boolean))];
+        let assignedProfiles: any[] = [];
+        
+        if (assignedToIds.length > 0) {
+          const { data: profiles } = await supabase
+            .from('profiles')
+            .select('user_id, display_name')
+            .in('user_id', assignedToIds);
+          assignedProfiles = profiles || [];
+        }
+
+        requestsData.forEach(item => {
+          const assignedProfile = assignedProfiles.find(p => p.user_id === item.assigned_to);
+          results.push({
+            id: `request-${item.id}`,
+            title: `${item.title} - ${item.client_name}`,
+            description: `${item.company_name} • ${item.status.replace('_', ' ')} • ${item.priority} priority${assignedProfile ? ` • Assigned to ${assignedProfile.display_name}` : ''}`,
+            category: 'Requests',
+            action: () => navigate('/requests')
+          });
+        });
+      }
+
+      // Fetch team members
+      const { data: teamData, error: teamError } = await supabase
+        .from('profiles')
+        .select('user_id, display_name, email')
+        .order('display_name', { ascending: true });
+
+      if (!teamError && teamData) {
+        teamData.forEach(member => {
+          results.push({
+            id: `team-${member.user_id}`,
+            title: member.display_name || 'Team Member',
+            description: member.email,  
+            category: 'Team',
+            action: () => navigate('/settings?tab=team')
+          });
+        });
+      }
+
       // Fetch client onboarding data
       const { data: onboardingData, error: onboardingError } = await supabase
         .from('client_onboarding_links')
         .select('id, client_name, company_name, email, status, industry')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(30);
 
       if (!onboardingError && onboardingData) {
         onboardingData.forEach(item => {
@@ -50,7 +140,8 @@ export const useSearchData = () => {
       const { data: sowData, error: sowError } = await supabase
         .from('scope_of_works')
         .select('id, title, client, client_contact, status, industry')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(30);
 
       if (!sowError && sowData) {
         sowData.forEach(item => {
@@ -64,39 +155,70 @@ export const useSearchData = () => {
         });
       }
 
-      // Add quick navigation actions
+      // Fetch request links
+      const { data: requestLinksData, error: requestLinksError } = await supabase
+        .from('request_links')
+        .select('id, client_name, company_name, website_name, active')
+        .order('created_at', { ascending: false })
+        .limit(20);
+
+      if (!requestLinksError && requestLinksData) {
+        requestLinksData.forEach(item => {
+          results.push({
+            id: `request-link-${item.id}`,
+            title: `Request Link - ${item.client_name}`,
+            description: `${item.company_name} • ${item.active ? 'Active' : 'Inactive'}`,
+            category: 'Request Links',
+            action: () => navigate('/requests')
+          });
+        });
+      }
+
+      // Fetch recent notifications
+      const { data: notificationsData, error: notificationsError } = await supabase
+        .from('notifications')
+        .select('id, title, message, type, read')
+        .order('created_at', { ascending: false })
+        .limit(20);
+
+      if (!notificationsError && notificationsData) {
+        notificationsData.forEach(item => {
+          results.push({
+            id: `notification-${item.id}`,
+            title: item.title,
+            description: item.message,
+            category: 'Notifications',
+            action: () => navigate('/dashboard')
+          });
+        });
+      }
+
+      // Add quick actions
       const quickActions: SearchResult[] = [
         {
-          id: 'nav-onboarding',
+          id: 'action-create-onboarding',
           title: 'Create New Onboarding Link',
           description: 'Generate a new client onboarding link',
           category: 'Quick Actions',
           action: () => navigate('/onboarding')
         },
         {
-          id: 'nav-sow',
-          title: 'Go to Scope of Works',
-          description: 'View all scope of work documents',
+          id: 'action-create-request-link',
+          title: 'Create Request Link',
+          description: 'Generate a new client request link',
           category: 'Quick Actions',
-          action: () => navigate('/scope-of-works')
+          action: () => navigate('/requests')
         },
         {
-          id: 'nav-team',
-          title: 'Team Management',
-          description: 'Manage team members and roles',
+          id: 'action-invite-member',
+          title: 'Invite Team Member',
+          description: 'Send invitation to new team member',
           category: 'Quick Actions',
-          action: () => navigate('/team')
-        },
-        {
-          id: 'nav-settings',
-          title: 'Settings',
-          description: 'Configure your account settings',
-          category: 'Quick Actions',
-          action: () => navigate('/settings')
+          action: () => navigate('/settings?tab=team')
         }
       ];
 
-      setSearchResults([...quickActions, ...results]);
+      setSearchResults([...navigationActions, ...quickActions, ...results]);
     } catch (error) {
       console.error('Error fetching search data:', error);
     } finally {
