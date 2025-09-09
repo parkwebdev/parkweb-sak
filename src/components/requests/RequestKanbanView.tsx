@@ -80,6 +80,12 @@ const SortableCard = ({ request, onStatusChange }: SortableCardProps) => {
             <User size={12} />
             {request.client_name}
           </div>
+          {request.assigned_to_name && (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <User size={12} />
+              Assigned: {request.assigned_to_name}
+            </div>
+          )}
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <Calendar size={12} />
             {new Date(request.created_at).toLocaleDateString()}

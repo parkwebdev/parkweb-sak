@@ -450,7 +450,15 @@ export type Database = {
           website_name?: string | null
           website_url?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_requests_assigned_to_profiles"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       scope_of_works: {
         Row: {

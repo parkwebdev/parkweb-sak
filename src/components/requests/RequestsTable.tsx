@@ -231,7 +231,7 @@ export const RequestsTable = () => {
                 )}
                 {showColumns.assigned && (
                   <TableCell>
-                    {request.assigned_to || <span className="text-muted-foreground">Unassigned</span>}
+                    {request.assigned_to_name || <span className="text-muted-foreground">Unassigned</span>}
                   </TableCell>
                 )}
                 {showColumns.created && (
