@@ -26,87 +26,19 @@ export const useRequests = () => {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-// For now, return mock data until the requests table is properly set up
-  const mockRequests: Request[] = [
-    {
-      id: "1",
-      title: "Update homepage banner",
-      description: "Change the main banner image and text",
-      status: "to_do",
-      priority: "high",
-      client_name: "Acme Corp",
-      client_email: "contact@acmecorp.com",
-      company_name: "Acme Corp",
-      website_name: "Acme Corp Website",
-      website_url: "https://acmecorp.com",
-      created_at: "2024-01-15T10:00:00Z",
-      updated_at: "2024-01-15T10:00:00Z",
-      user_id: "user-1",
-      assigned_to: "John Doe"
-    },
-    {
-      id: "2", 
-      title: "Fix contact form",
-      description: "Contact form not sending emails properly",
-      status: "in_progress",
-      priority: "urgent",
-      client_name: "Tech Solutions",
-      client_email: "support@techsolutions.com",
-      company_name: "Tech Solutions",
-      website_name: "Tech Solutions",
-      website_url: "https://techsolutions.com",
-      created_at: "2024-01-14T10:00:00Z",
-      updated_at: "2024-01-14T10:00:00Z",
-      user_id: "user-1",
-      assigned_to: "John Doe"
-    },
-    {
-      id: "3",
-      title: "Add new product page",
-      description: "Create a dedicated page for the new product line",
-      status: "on_hold",
-      priority: "medium",
-      client_name: "StartupXYZ",
-      client_email: "info@startupxyz.com",
-      company_name: "StartupXYZ",
-      website_name: "StartupXYZ",
-      website_url: "https://startupxyz.com",
-      created_at: "2024-01-13T10:00:00Z",
-      updated_at: "2024-01-13T10:00:00Z",
-      user_id: "user-1",
-      assigned_to: "Jane Smith"
-    },
-    {
-      id: "4",
-      title: "Update company logo",
-      description: "Replace old logo across all pages",
-      status: "completed",
-      priority: "low",
-      client_name: "Global Inc",
-      client_email: "admin@globalinc.com",
-      company_name: "Global Inc",
-      website_name: "Global Inc",
-      website_url: "https://globalinc.com",
-      created_at: "2024-01-12T10:00:00Z",
-      updated_at: "2024-01-12T10:00:00Z",
-      user_id: "user-1",
-      assigned_to: "Mike Johnson"
-    }
-  ];
+  // Temporary fallback user ID for demo purposes
+  const DEMO_USER_ID = '11111111-1111-1111-1111-111111111111';
 
   const fetchRequests = async () => {
     try {
-      // For now, use mock data since the requests table doesn't exist in types yet
-      setRequests(mockRequests);
-      /*
       const { data, error } = await supabase
         .from('requests')
         .select('*')
+        .eq('user_id', DEMO_USER_ID)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
       setRequests(data || []);
-      */
     } catch (error) {
       console.error('Error fetching requests:', error);
       toast({
@@ -121,7 +53,19 @@ export const useRequests = () => {
 
   const updateRequestStatus = async (id: string, status: Request['status']) => {
     try {
-      // For now, update in memory since requests table doesn't exist in types yet
+      const { error } = await supabase
+        .from('requests')
+        .update({ 
+          status,
+          updated_at: new Date().toISOString(),
+          ...(status === 'completed' ? { completed_at: new Date().toISOString() } : { completed_at: null })
+        })
+        .eq('id', id)
+        .eq('user_id', DEMO_USER_ID);
+
+      if (error) throw error;
+
+      // Update local state to reflect the change
       setRequests(prev => 
         prev.map(request => 
           request.id === id 
@@ -134,19 +78,6 @@ export const useRequests = () => {
             : request
         )
       );
-
-      /*
-      const { error } = await supabase
-        .from('requests')
-        .update({ 
-          status,
-          updated_at: new Date().toISOString(),
-          ...(status === 'completed' ? { completed_at: new Date().toISOString() } : { completed_at: null })
-        })
-        .eq('id', id);
-
-      if (error) throw error;
-      */
 
       toast({
         title: "Status Updated",
@@ -164,7 +95,18 @@ export const useRequests = () => {
 
   const updateRequestPriority = async (id: string, priority: Request['priority']) => {
     try {
-      // For now, update in memory since requests table doesn't exist in types yet
+      const { error } = await supabase
+        .from('requests')
+        .update({ 
+          priority,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+        .eq('user_id', DEMO_USER_ID);
+
+      if (error) throw error;
+
+      // Update local state to reflect the change
       setRequests(prev => 
         prev.map(request => 
           request.id === id 
@@ -172,18 +114,6 @@ export const useRequests = () => {
             : request
         )
       );
-
-      /*
-      const { error } = await supabase
-        .from('requests')
-        .update({ 
-          priority,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', id);
-
-      if (error) throw error;
-      */
 
       toast({
         title: "Priority Updated",
