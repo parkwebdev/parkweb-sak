@@ -23,78 +23,50 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-
-interface ClientFolder {
-  id: string;
-  name: string;
-  description?: string;
-  color: string;
-  parent_id?: string;
-  client_count: number;
-  children?: ClientFolder[];
-}
+import { useFolders } from '@/hooks/useFolders';
+import type { ClientFolder } from '@/hooks/useClients';
 
 interface ClientFolderNavigationProps {
   currentFolder?: string | null;
   onFolderChange: (folderId: string | null) => void;
   clientCount: number;
+  clientsByFolder: Record<string, number>;
 }
 
 export const ClientFolderNavigation: React.FC<ClientFolderNavigationProps> = ({
   currentFolder,
   onFolderChange,
-  clientCount
+  clientCount,
+  clientsByFolder
 }) => {
-  const [folders, setFolders] = useState<ClientFolder[]>([
-    {
-      id: '1',
-      name: 'High Priority',
-      description: 'Important clients requiring immediate attention',
-      color: '#ef4444',
-      client_count: 5
-    },
-    {
-      id: '2',
-      name: 'E-commerce',
-      description: 'Online retail clients',
-      color: '#3b82f6',
-      client_count: 8
-    },
-    {
-      id: '3',
-      name: 'Healthcare',
-      description: 'Medical and healthcare clients',
-      color: '#10b981',
-      client_count: 3
-    }
-  ]);
+  const { folders, createFolder, deleteFolder } = useFolders();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
   const [newFolderDescription, setNewFolderDescription] = useState('');
   const [newFolderColor, setNewFolderColor] = useState('#6366f1');
 
-  const handleCreateFolder = () => {
+  const handleCreateFolder = async () => {
     if (!newFolderName.trim()) return;
 
-    const newFolder: ClientFolder = {
-      id: Date.now().toString(),
-      name: newFolderName,
-      description: newFolderDescription,
-      color: newFolderColor,
-      client_count: 0
-    };
-
-    setFolders([...folders, newFolder]);
-    setNewFolderName('');
-    setNewFolderDescription('');
-    setNewFolderColor('#6366f1');
-    setShowCreateDialog(false);
+    try {
+      await createFolder(newFolderName, newFolderDescription, newFolderColor);
+      setNewFolderName('');
+      setNewFolderDescription('');
+      setNewFolderColor('#6366f1');
+      setShowCreateDialog(false);
+    } catch (error) {
+      // Error is already handled in the hook
+    }
   };
 
-  const handleDeleteFolder = (folderId: string) => {
-    setFolders(folders.filter(f => f.id !== folderId));
-    if (currentFolder === folderId) {
-      onFolderChange(null);
+  const handleDeleteFolder = async (folderId: string) => {
+    try {
+      await deleteFolder(folderId);
+      if (currentFolder === folderId) {
+        onFolderChange(null);
+      }
+    } catch (error) {
+      // Error is already handled in the hook
     }
   };
 
@@ -158,24 +130,24 @@ export const ClientFolderNavigation: React.FC<ClientFolderNavigationProps> = ({
                   : 'bg-card border-border hover:bg-accent/50'
               }`}
             >
-              <div className="flex items-center gap-3">
-                <div
-                  className="w-4 h-4 rounded-full"
-                  style={{ backgroundColor: folder.color }}
-                />
-                <div className="text-left">
-                  <div className="font-medium">{folder.name}</div>
-                  {folder.description && (
-                    <div className="text-xs text-muted-foreground mt-0.5">
-                      {folder.description}
-                    </div>
-                  )}
+          <div className="flex items-center gap-3">
+            <div
+              className="w-4 h-4 rounded-full"
+              style={{ backgroundColor: folder.color }}
+            />
+            <div className="text-left">
+              <div className="font-medium">{folder.name}</div>
+              {folder.description && (
+                <div className="text-xs text-muted-foreground mt-0.5">
+                  {folder.description}
                 </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Badge variant="secondary" className="text-xs">
-                  {folder.client_count}
-                </Badge>
+              )}
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary" className="text-xs">
+              {clientsByFolder[folder.id] || 0}
+            </Badge>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button

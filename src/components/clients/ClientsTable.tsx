@@ -33,10 +33,12 @@ import {
 interface ClientsTableProps {
   currentFolder?: string | null;
   searchQuery?: string;
+  clients?: Client[];
 }
 
-export const ClientsTable = ({ currentFolder, searchQuery }: ClientsTableProps) => {
-  const { clients, loading, refetch } = useClients();
+export const ClientsTable = ({ currentFolder, searchQuery, clients: propClients }: ClientsTableProps) => {
+  const { clients: hookClients, loading, refetch } = useClients();
+  const clients = propClients || hookClients;
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [detailsSheetOpen, setDetailsSheetOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);

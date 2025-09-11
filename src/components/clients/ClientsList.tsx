@@ -5,8 +5,13 @@ import { ClientDetailsSheet } from './ClientDetailsSheet';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { Client } from '@/hooks/useClients';
 
-export const ClientsList: React.FC = () => {
-  const { clients, loading } = useClients();
+interface ClientsListProps {
+  clients?: Client[];
+}
+
+export const ClientsList: React.FC<ClientsListProps> = ({ clients: propClients }) => {
+  const { clients: hookClients, loading } = useClients();
+  const clients = propClients || hookClients;
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
 
