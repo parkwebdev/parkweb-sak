@@ -77,6 +77,16 @@ const App = () => (
                   <ClientsWrapper />
                 </ProtectedRoute>
               } />
+              <Route path="/clients/:clientId" element={
+                <ProtectedRoute>
+                  <ClientDetail />
+                </ProtectedRoute>
+              } />
+              <Route path="/clients/:clientId/projects/:projectId" element={
+                <ProtectedRoute>
+                  <ProjectDetail />
+                </ProtectedRoute>
+              } />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

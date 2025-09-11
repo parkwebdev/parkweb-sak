@@ -12,6 +12,7 @@ interface CreateProjectDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   clientId: string;
+  clientCompanyName?: string;
   onProjectCreated?: () => void;
 }
 
@@ -19,6 +20,7 @@ export const CreateProjectDialog: React.FC<CreateProjectDialogProps> = ({
   open,
   onOpenChange,
   clientId,
+  clientCompanyName,
   onProjectCreated
 }) => {
   const [name, setName] = useState('');
@@ -103,7 +105,7 @@ export const CreateProjectDialog: React.FC<CreateProjectDialogProps> = ({
                 id="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Enter project name"
+                placeholder={clientCompanyName ? `${clientCompanyName} Project` : "Enter project name"}
                 disabled={loading}
                 required
               />

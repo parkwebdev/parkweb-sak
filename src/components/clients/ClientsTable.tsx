@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -12,12 +13,10 @@ import {
   ArrowsDown as ArrowUpDown,
   DotsGrid as Columns,
   FilterLines as Filter,
-  Plus,
   Folder,
   Building01 as Building
 } from "@untitledui/icons";
 import { useClients, Client } from "@/hooks/useClients";
-import { ClientDetailsSheet } from "./ClientDetailsSheet";
 import { DeleteConfirmationDialog } from "@/components/DeleteConfirmationDialog";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -30,17 +29,15 @@ import {
   DropdownMenuCheckboxItem,
 } from "@/components/ui/dropdown-menu";
 
-interface ClientsTableProps {
-  searchQuery?: string;
-}
+interface ClientsTableProps {}
 
-export const ClientsTable: React.FC<ClientsTableProps> = ({ searchQuery }) => {
+export const ClientsTable: React.FC<ClientsTableProps> = () => {
   const { clients, loading, refetch } = useClients();
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
-  const [detailsSheetOpen, setDetailsSheetOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedClientIds, setSelectedClientIds] = useState<string[]>([]);
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [activeStatus, setActiveStatus] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
@@ -61,8 +58,6 @@ export const ClientsTable: React.FC<ClientsTableProps> = ({ searchQuery }) => {
   const statusTabs = [
     { key: 'all', label: 'All', count: clients.length },
     { key: 'active', label: 'Active', count: clients.filter(c => c.status === 'active').length },
-    { key: 'onboarding', label: 'Onboarding', count: clients.filter(c => c.status === 'onboarding').length },
-    { key: 'completed', label: 'Completed', count: clients.filter(c => c.status === 'completed').length },
     { key: 'inactive', label: 'Inactive', count: clients.filter(c => c.status === 'inactive').length },
   ];
 
@@ -70,10 +65,6 @@ export const ClientsTable: React.FC<ClientsTableProps> = ({ searchQuery }) => {
     switch (status) {
       case 'active':
         return 'default';
-      case 'onboarding':
-        return 'secondary';
-      case 'completed':
-        return 'outline';
       case 'inactive':
         return 'destructive';
       default:
@@ -86,14 +77,6 @@ export const ClientsTable: React.FC<ClientsTableProps> = ({ searchQuery }) => {
   const uniqueStatuses = Array.from(new Set(clients.map(c => c.status)));
   
   const filteredClients = clients.filter(client => {
-    // Search filter
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      if (!client.name.toLowerCase().includes(query) && 
-          !client.company.toLowerCase().includes(query) &&
-          !client.email.toLowerCase().includes(query)) return false;
-    }
-
     // Status filter
     if (activeStatus !== 'all' && client.status !== activeStatus) return false;
     
@@ -138,8 +121,7 @@ export const ClientsTable: React.FC<ClientsTableProps> = ({ searchQuery }) => {
   });
 
   const handleClientClick = (client: Client) => {
-    setSelectedClient(client);
-    setDetailsSheetOpen(true);
+    navigate(`/clients/${client.id}`);
   };
 
   const handleSelectAll = () => {
@@ -486,26 +468,14 @@ export const ClientsTable: React.FC<ClientsTableProps> = ({ searchQuery }) => {
             </div>
             <h3 className="text-lg font-semibold text-foreground mb-2">No clients found</h3>
             <p className="text-muted-foreground max-w-sm">
-              {searchQuery || activeFilters.industries.length > 0 || activeFilters.statuses.length > 0
-                ? "Try adjusting your filters or search query."
+              {activeFilters.industries.length > 0 || activeFilters.statuses.length > 0
+                ? "Try adjusting your filters."
                 : "Your clients will appear here once you start creating onboarding links."
               }
             </p>
           </div>
         </div>
       )}
-
-      <ClientDetailsSheet
-        client={selectedClient}
-        open={detailsSheetOpen}
-        onOpenChange={setDetailsSheetOpen}
-        onClose={() => {
-          setDetailsSheetOpen(false);
-          setSelectedClient(null);
-        }}
-        onClientUpdated={refetch}
-      />
-
       <DeleteConfirmationDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}

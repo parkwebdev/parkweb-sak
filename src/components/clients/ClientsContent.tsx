@@ -5,13 +5,11 @@ import { ClientsTable } from "./ClientsTable";
 import { ClientsList } from "./ClientsList";
 import { CreateClientDialog } from "./CreateClientDialog";
 import { LayoutGrid01 as LayoutGrid, Table, Menu01 as Menu, Plus } from "@untitledui/icons";
-import { SearchInput } from "@/components/SearchInput";
 import { useClients } from "@/hooks/useClients";
 
 export const ClientsContent = () => {
   const [viewMode, setViewMode] = useState<"table" | "cards">("table");
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
   const { refetch } = useClients();
 
   return (
@@ -59,18 +57,8 @@ export const ClientsContent = () => {
                 size="sm"
                 className="h-8 px-3 text-sm"
               >
-                <Plus size={16} className="mr-2" />
                 Add Client
               </Button>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-4">
-            <div className="flex-1 max-w-md">
-              <SearchInput 
-                placeholder="Search clients..." 
-                onChange={setSearchQuery}
-              />
             </div>
           </div>
         </div>
@@ -81,7 +69,7 @@ export const ClientsContent = () => {
           {viewMode === "table" ? (
             <Card className="border-0 shadow-sm">
               <CardContent className="p-0">
-                <ClientsTable searchQuery={searchQuery} />
+                <ClientsTable />
               </CardContent>
             </Card>
           ) : (

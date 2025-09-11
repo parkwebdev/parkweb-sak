@@ -363,6 +363,7 @@ const ClientDetail = () => {
           open={showCreateProjectDialog}
           onOpenChange={setShowCreateProjectDialog}
           clientId={clientId!}
+          clientCompanyName={client?.company}
           onProjectCreated={refetchProjects}
         />
       </div>

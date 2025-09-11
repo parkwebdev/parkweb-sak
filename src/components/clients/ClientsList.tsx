@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useClients } from '@/hooks/useClients';
 import { ClientCard } from './ClientCard';
-import { ClientDetailsSheet } from './ClientDetailsSheet';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { Client } from '@/hooks/useClients';
 
@@ -9,17 +9,10 @@ interface ClientsListProps {}
 
 export const ClientsList: React.FC<ClientsListProps> = () => {
   const { clients, loading, refetch } = useClients();
-  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
-  const [detailsOpen, setDetailsOpen] = useState(false);
+  const navigate = useNavigate();
 
   const handleClientClick = (client: Client) => {
-    setSelectedClient(client);
-    setDetailsOpen(true);
-  };
-
-  const handleDetailsClose = () => {
-    setDetailsOpen(false);
-    setSelectedClient(null);
+    navigate(`/clients/${client.id}`);
   };
 
   if (loading) {
@@ -63,14 +56,6 @@ export const ClientsList: React.FC<ClientsListProps> = () => {
           ))}
         </div>
       </div>
-
-        <ClientDetailsSheet 
-          client={selectedClient} 
-          open={detailsOpen} 
-          onOpenChange={setDetailsOpen}
-          onClose={handleDetailsClose}
-          onClientUpdated={refetch}
-        />
     </>
   );
 };
