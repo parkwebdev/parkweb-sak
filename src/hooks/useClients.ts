@@ -43,8 +43,17 @@ export const useClients = () => {
 
   const fetchClients = async () => {
     try {
+      const { data: user } = await supabase.auth.getUser();
+      const userId = user.user?.id;
+
+      if (!userId) {
+        console.error('User not authenticated');
+        return;
+      }
+
       // Fetch all client data from different tables including folders
       const [
+        { data: activeClients, error: clientsError },
         { data: onboardingLinks, error: onboardingError },
         { data: submissions, error: submissionsError },
         { data: requests, error: requestsError },
@@ -52,17 +61,18 @@ export const useClients = () => {
         { data: folders, error: foldersError },
         { data: folderAssignments, error: assignmentsError }
       ] = await Promise.all([
-        supabase.from('client_onboarding_links').select('*').eq('user_id', (await supabase.auth.getUser()).data.user?.id),
+        supabase.from('clients').select('*').eq('user_id', userId),
+        supabase.from('client_onboarding_links').select('*').eq('user_id', userId),
         supabase.from('onboarding_submissions').select('*'),
-        supabase.from('requests').select('*').eq('user_id', (await supabase.auth.getUser()).data.user?.id),
-        supabase.from('scope_of_works').select('*').eq('user_id', (await supabase.auth.getUser()).data.user?.id),
-        supabase.from('client_folders').select('*').eq('user_id', (await supabase.auth.getUser()).data.user?.id),
+        supabase.from('requests').select('*').eq('user_id', userId),
+        supabase.from('scope_of_works').select('*').eq('user_id', userId),
+        supabase.from('client_folders').select('*').eq('user_id', userId),
         supabase.from('client_folder_assignments').select('*')
       ]);
 
-      if (onboardingError || submissionsError || requestsError || sowError || foldersError || assignmentsError) {
+      if (clientsError || onboardingError || submissionsError || requestsError || sowError || foldersError || assignmentsError) {
         console.error('Error fetching client data:', { 
-          onboardingError, submissionsError, requestsError, sowError, foldersError, assignmentsError 
+          clientsError, onboardingError, submissionsError, requestsError, sowError, foldersError, assignmentsError 
         });
         return;
       }
@@ -73,34 +83,63 @@ export const useClients = () => {
       // Aggregate client data by email
       const clientMap = new Map<string, Client>();
 
-      // Process onboarding links (primary source)
-      onboardingLinks?.forEach(link => {
-        const lastActivity = new Date(Math.max(
-          new Date(link.last_activity || link.created_at).getTime(),
-          new Date(link.updated_at).getTime()
-        ));
-
+      // Process active clients (primary source - these are actual clients)
+      activeClients?.forEach(client => {
         // Find folder assignment for this client
-        const folderAssignment = folderAssignments?.find(fa => fa.client_email === link.email);
+        const folderAssignment = folderAssignments?.find(fa => fa.client_email === client.email);
 
-        clientMap.set(link.email, {
-          id: link.id,
-          email: link.email,
-          name: link.client_name,
-          company: link.company_name,
-          industry: link.industry,
-          status: getClientStatus(link.status),
-          onboarding_status: link.status,
+        clientMap.set(client.email, {
+          id: client.id,
+          email: client.email,
+          name: client.client_name,
+          company: client.company_name,
+          industry: client.industry,
+          status: client.status as Client['status'],
+          onboarding_status: 'completed', // Active clients have completed onboarding
           total_requests: 0,
           active_requests: 0,
           completed_requests: 0,
           scope_of_works: 0,
-          last_activity: lastActivity.toISOString(),
-          created_at: link.created_at,
-          onboarding_url: link.onboarding_url,
-          personal_note: link.personal_note,
-          folder_id: folderAssignment?.folder_id
+          last_activity: client.updated_at,
+          created_at: client.created_at,
+          personal_note: client.personal_note,
+          folder_id: folderAssignment?.folder_id,
+          phone: client.phone,
+          notes: client.personal_note
         });
+      });
+
+      // Process onboarding links (prospects going through onboarding)
+      onboardingLinks?.forEach(link => {
+        // Only add if not already in active clients
+        if (!clientMap.has(link.email)) {
+          const lastActivity = new Date(Math.max(
+            new Date(link.last_activity || link.created_at).getTime(),
+            new Date(link.updated_at).getTime()
+          ));
+
+          // Find folder assignment for this client
+          const folderAssignment = folderAssignments?.find(fa => fa.client_email === link.email);
+
+          clientMap.set(link.email, {
+            id: link.id,
+            email: link.email,
+            name: link.client_name,
+            company: link.company_name,
+            industry: link.industry,
+            status: getClientStatus(link.status),
+            onboarding_status: link.status,
+            total_requests: 0,
+            active_requests: 0,
+            completed_requests: 0,
+            scope_of_works: 0,
+            last_activity: lastActivity.toISOString(),
+            created_at: link.created_at,
+            onboarding_url: link.onboarding_url,
+            personal_note: link.personal_note,
+            folder_id: folderAssignment?.folder_id
+          });
+        }
       });
 
       // Process submissions to update client data
@@ -218,6 +257,14 @@ export const useClients = () => {
     fetchClients();
 
     // Set up real-time subscriptions
+    const clientsSubscription = supabase
+      .channel('clients-changes')
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'clients' },
+        () => fetchClients()
+      )
+      .subscribe();
+
     const onboardingSubscription = supabase
       .channel('client-onboarding-changes')
       .on('postgres_changes', 
@@ -235,6 +282,7 @@ export const useClients = () => {
       .subscribe();
 
     return () => {
+      supabase.removeChannel(clientsSubscription);
       supabase.removeChannel(onboardingSubscription);
       supabase.removeChannel(requestsSubscription);
     };

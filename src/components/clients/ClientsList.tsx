@@ -10,7 +10,7 @@ interface ClientsListProps {
 }
 
 export const ClientsList: React.FC<ClientsListProps> = ({ clients: propClients }) => {
-  const { clients: hookClients, loading } = useClients();
+  const { clients: hookClients, loading, refetch } = useClients();
   const clients = propClients || hookClients;
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
@@ -67,12 +67,13 @@ export const ClientsList: React.FC<ClientsListProps> = ({ clients: propClients }
         </div>
       </div>
 
-      <ClientDetailsSheet
-        client={selectedClient}
-        open={detailsOpen}
-        onOpenChange={setDetailsOpen}
-        onClose={handleDetailsClose}
-      />
+        <ClientDetailsSheet 
+          client={selectedClient} 
+          open={detailsOpen} 
+          onOpenChange={setDetailsOpen}
+          onClose={handleDetailsClose}
+          onClientUpdated={refetch}
+        />
     </>
   );
 };

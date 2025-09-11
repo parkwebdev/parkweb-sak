@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Mail01 as Mail, Building01 as Building, Globe01 as Globe, Calendar, File02 as FileText, Mail01 as MessageSquare, LinkExternal01 as ExternalLink } from '@untitledui/icons';
+import { X, Mail01 as Mail, Building01 as Building, Globe01 as Globe, Calendar, File02 as FileText, Mail01 as MessageSquare, LinkExternal01 as ExternalLink, ArrowUp } from '@untitledui/icons';
 import {
   Sheet,
   SheetContent,
@@ -12,21 +12,36 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { formatDistanceToNow, format } from 'date-fns';
 import type { Client } from '@/hooks/useClients';
+import { useClientPromotion } from '@/hooks/useClientPromotion';
 
 interface ClientDetailsSheetProps {
   client: Client | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onClose: () => void;
+  onClientUpdated?: () => void;
 }
 
 export const ClientDetailsSheet: React.FC<ClientDetailsSheetProps> = ({
   client,
   open,
   onOpenChange,
-  onClose
+  onClose,
+  onClientUpdated
 }) => {
+  const { promoteClientToActive, loading } = useClientPromotion();
+
   if (!client) return null;
+
+  const handlePromoteClient = async () => {
+    try {
+      await promoteClientToActive(client.email);
+      onClientUpdated?.();
+      onClose();
+    } catch (error) {
+      // Error is handled by the hook
+    }
+  };
 
   const getStatusVariant = (status: string) => {
     switch (status) {
@@ -198,6 +213,17 @@ export const ClientDetailsSheet: React.FC<ClientDetailsSheetProps> = ({
 
           {/* Actions */}
           <div className="space-y-2 pt-4">
+            {client.status === 'onboarding' && (
+              <Button 
+                className="w-full" 
+                size="sm"
+                onClick={handlePromoteClient}
+                disabled={loading}
+              >
+                <ArrowUp size={14} className="mr-1" />
+                {loading ? 'Promoting...' : 'Promote to Active Client'}
+              </Button>
+            )}
             <Button className="w-full" size="sm">
               Create New Request
             </Button>

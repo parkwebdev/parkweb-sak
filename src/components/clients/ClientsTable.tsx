@@ -506,6 +506,7 @@ export const ClientsTable = ({ currentFolder, searchQuery, clients: propClients 
           setDetailsSheetOpen(false);
           setSelectedClient(null);
         }}
+        onClientUpdated={refetch}
       />
 
       <DeleteConfirmationDialog

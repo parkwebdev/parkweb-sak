@@ -62,12 +62,9 @@ export const CreateClientDialog: React.FC<CreateClientDialogProps> = ({
         throw new Error('User not authenticated');
       }
 
-      // Generate onboarding URL
-      const baseUrl = window.location.origin;
-      const onboardingUrl = `${baseUrl}/onboarding?token=${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-
+      // Insert directly into clients table (bypassing onboarding)
       const { error } = await supabase
-        .from('client_onboarding_links')
+        .from('clients')
         .insert({
           user_id: user.user.id,
           client_name: formData.client_name.trim(),
@@ -75,8 +72,7 @@ export const CreateClientDialog: React.FC<CreateClientDialogProps> = ({
           company_name: formData.company_name.trim(),
           industry: formData.industry || 'other',
           personal_note: formData.personal_note.trim() || null,
-          onboarding_url: onboardingUrl,
-          status: 'Sent'
+          status: 'active'
         });
 
       if (error) throw error;

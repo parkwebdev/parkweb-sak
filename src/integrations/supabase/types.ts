@@ -138,6 +138,51 @@ export type Database = {
         }
         Relationships: []
       }
+      clients: {
+        Row: {
+          address: string | null
+          client_name: string
+          company_name: string
+          created_at: string
+          email: string
+          id: string
+          industry: string
+          personal_note: string | null
+          phone: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address?: string | null
+          client_name: string
+          company_name: string
+          created_at?: string
+          email: string
+          id?: string
+          industry: string
+          personal_note?: string | null
+          phone?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string | null
+          client_name?: string
+          company_name?: string
+          created_at?: string
+          email?: string
+          id?: string
+          industry?: string
+          personal_note?: string | null
+          phone?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       draft_submissions: {
         Row: {
           client_email: string
