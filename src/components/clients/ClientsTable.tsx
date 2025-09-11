@@ -14,10 +14,12 @@ import {
   DotsGrid as Columns,
   FilterLines as Filter,
   Folder,
-  Building01 as Building
+  Building01 as Building,
+  Upload01 as Upload
 } from "@untitledui/icons";
 import { useClients, Client } from "@/hooks/useClients";
 import { DeleteConfirmationDialog } from "@/components/DeleteConfirmationDialog";
+import { CSVImportDialog } from "./CSVImportDialog";
 import { useToast } from "@/hooks/use-toast";
 import {
   DropdownMenu,
@@ -36,6 +38,7 @@ export const ClientsTable: React.FC<ClientsTableProps> = () => {
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedClientIds, setSelectedClientIds] = useState<string[]>([]);
+  const [showImportDialog, setShowImportDialog] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
   const [activeStatus, setActiveStatus] = useState<string>("all");
@@ -215,18 +218,27 @@ export const ClientsTable: React.FC<ClientsTableProps> = () => {
             </div>
           </div>
           
-          {/* Controls */}
-          <div className="flex items-center gap-2.5 ml-auto">
-            {/* Bulk Actions */}
-            {selectedClientIds.length > 0 && (
+            {/* Controls */}
+            <div className="flex items-center gap-2.5 ml-auto">
+              {/* Bulk Actions */}
+              {selectedClientIds.length > 0 && (
+                <button
+                  onClick={() => {}}
+                  className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden text-xs text-foreground font-medium leading-none bg-background px-2 py-1.5 rounded-md border-border hover:bg-accent/50 h-8 mr-2"
+                >
+                  <Folder size={14} />
+                  Move to Folder ({selectedClientIds.length})
+                </button>
+              )}
+
+              {/* CSV Import Button */}
               <button
-                onClick={() => {}}
-                className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden text-xs text-foreground font-medium leading-none bg-background px-2 py-1.5 rounded-md border-border hover:bg-accent/50 h-8 mr-2"
+                onClick={() => setShowImportDialog(true)}
+                className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden text-xs text-foreground font-medium leading-none bg-background px-2 py-1.5 rounded-md border-border hover:bg-accent/50 h-8"
+                title="Import from CSV"
               >
-                <Folder size={14} />
-                Move to Folder ({selectedClientIds.length})
+                <Upload size={16} className="text-muted-foreground" />
               </button>
-            )}
 
             {/* Filter Dropdown */}
             <DropdownMenu>
@@ -484,6 +496,12 @@ export const ClientsTable: React.FC<ClientsTableProps> = () => {
         confirmationText="DELETE"
         onConfirm={() => {}}
         isDeleting={false}
+      />
+
+      <CSVImportDialog
+        open={showImportDialog}
+        onOpenChange={setShowImportDialog}
+        onImportComplete={refetch}
       />
     </div>
   );

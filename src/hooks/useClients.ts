@@ -28,6 +28,9 @@ export interface Client {
   last_activity: string;
   created_at: string;
   updated_at?: string;
+  first_name?: string;
+  last_name?: string;
+  title?: string;
   avatar_url?: string;
   phone?: string;
   address?: string;
@@ -93,8 +96,13 @@ export const useClients = () => {
         clientMap.set(client.email, {
           id: client.id,
           email: client.email,
-          name: client.client_name,
+          name: client.client_name || `${client.first_name || ''} ${client.last_name || ''}`.trim() || 'Unknown',
+          first_name: client.first_name,
+          last_name: client.last_name,
+          title: client.title,
           company: client.company_name,
+          phone: client.phone,
+          address: client.address,
           industry: client.industry,
           status: client.status as Client['status'],
           onboarding_status: 'completed', // Active clients have completed onboarding
@@ -102,11 +110,11 @@ export const useClients = () => {
           active_requests: 0,
           completed_requests: 0,
           scope_of_works: 0,
-          last_activity: client.updated_at,
+          last_activity: client.updated_at || client.created_at,
           created_at: client.created_at,
+          updated_at: client.updated_at,
           personal_note: client.personal_note,
           folder_id: folderAssignment?.folder_id,
-          phone: client.phone,
           notes: client.personal_note
         });
       });
@@ -127,7 +135,12 @@ export const useClients = () => {
             id: link.id,
             email: link.email,
             name: link.client_name,
+            first_name: undefined,
+            last_name: undefined,
+            title: undefined,
             company: link.company_name,
+            phone: undefined,
+            address: undefined,
             industry: link.industry,
             status: getClientStatus(link.status),
             onboarding_status: link.status,
@@ -137,6 +150,7 @@ export const useClients = () => {
             scope_of_works: 0,
             last_activity: lastActivity.toISOString(),
             created_at: link.created_at,
+            updated_at: link.updated_at,
             onboarding_url: link.onboarding_url,
             personal_note: link.personal_note,
             folder_id: folderAssignment?.folder_id
@@ -169,7 +183,12 @@ export const useClients = () => {
             id: submission.id,
             email: submission.client_email,
             name: submission.client_name,
+            first_name: undefined,
+            last_name: undefined,
+            title: undefined,
             company: submission.client_email.split('@')[1]?.split('.')[0] || 'Unknown',
+            phone: undefined,
+            address: undefined,
             industry: submission.industry || 'Unknown',
             status: getClientStatus(submission.status),
             onboarding_status: submission.status || 'pending',
@@ -179,6 +198,7 @@ export const useClients = () => {
             scope_of_works: 0,
             last_activity: submission.submitted_at,
             created_at: submission.submitted_at,
+            updated_at: undefined,
             folder_id: folderAssignment?.folder_id
           });
         }

@@ -141,43 +141,52 @@ export type Database = {
       clients: {
         Row: {
           address: string | null
-          client_name: string
+          client_name: string | null
           company_name: string
           created_at: string
           email: string
+          first_name: string | null
           id: string
           industry: string
+          last_name: string | null
           personal_note: string | null
           phone: string | null
           status: string
+          title: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
           address?: string | null
-          client_name: string
+          client_name?: string | null
           company_name: string
           created_at?: string
           email: string
+          first_name?: string | null
           id?: string
           industry: string
+          last_name?: string | null
           personal_note?: string | null
           phone?: string | null
           status?: string
+          title?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
           address?: string | null
-          client_name?: string
+          client_name?: string | null
           company_name?: string
           created_at?: string
           email?: string
+          first_name?: string | null
           id?: string
           industry?: string
+          last_name?: string | null
           personal_note?: string | null
           phone?: string | null
           status?: string
+          title?: string | null
           updated_at?: string
           user_id?: string
         }

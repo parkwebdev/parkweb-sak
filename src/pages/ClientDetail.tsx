@@ -188,6 +188,9 @@ const ClientDetail = () => {
                     <div>
                       <CardTitle className="text-2xl">{client.name}</CardTitle>
                       <p className="text-lg text-muted-foreground">{client.company}</p>
+                      {client.title && (
+                        <p className="text-sm text-muted-foreground">{client.title}</p>
+                      )}
                       <p className="text-sm text-muted-foreground">{client.email}</p>
                       <Badge variant={getStatusVariant(client.status)} className="mt-2">
                         {client.status}
@@ -202,10 +205,22 @@ const ClientDetail = () => {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {(client.first_name || client.last_name) && (
+                    <div>
+                      <h4 className="font-medium text-sm text-muted-foreground mb-1">Name</h4>
+                      <p>{`${client.first_name || ''} ${client.last_name || ''}`.trim()}</p>
+                    </div>
+                  )}
                   <div>
                     <h4 className="font-medium text-sm text-muted-foreground mb-1">Industry</h4>
                     <p>{client.industry}</p>
                   </div>
+                  {client.title && (
+                    <div>
+                      <h4 className="font-medium text-sm text-muted-foreground mb-1">Title</h4>
+                      <p>{client.title}</p>
+                    </div>
+                  )}
                   {client.phone && (
                     <div>
                       <h4 className="font-medium text-sm text-muted-foreground mb-1">Phone</h4>
