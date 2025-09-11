@@ -203,7 +203,18 @@ export const CSVImportDialog: React.FC<CSVImportDialogProps> = ({
         Object.entries(mappingMap).forEach(([clientField, csvIndex]) => {
           const value = row[csvIndex]?.trim();
           if (value) {
-            client[clientField] = value;
+            // Normalize status values to match database constraints
+            if (clientField === 'status') {
+              const normalizedStatus = value.toLowerCase();
+              if (normalizedStatus === 'active' || normalizedStatus === 'inactive') {
+                client[clientField] = normalizedStatus;
+              } else {
+                // Default to active for any other status values
+                client[clientField] = 'active';
+              }
+            } else {
+              client[clientField] = value;
+            }
           }
         });
 
