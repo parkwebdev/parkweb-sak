@@ -136,7 +136,7 @@ export const CSVImportDialog: React.FC<CSVImportDialogProps> = ({
     setFieldMappings(prev => 
       prev.map(mapping => 
         mapping.csvField === csvField 
-          ? { ...mapping, clientField }
+          ? { ...mapping, clientField: clientField === 'skip' ? '' : clientField }
           : mapping
       )
     );
@@ -317,14 +317,14 @@ export const CSVImportDialog: React.FC<CSVImportDialogProps> = ({
                     </div>
                     <div className="flex-1">
                       <Select
-                        value={mapping.clientField}
+                        value={mapping.clientField || 'skip'}
                         onValueChange={(value) => updateFieldMapping(mapping.csvField, value)}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select field..." />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">Skip this field</SelectItem>
+                          <SelectItem value="skip">Skip this field</SelectItem>
                           {CLIENT_FIELDS.map((field) => (
                             <SelectItem key={field.key} value={field.key}>
                               {field.label} {field.required && '*'}
