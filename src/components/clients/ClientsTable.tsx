@@ -31,14 +31,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 interface ClientsTableProps {
-  currentFolder?: string | null;
   searchQuery?: string;
-  clients?: Client[];
 }
 
-export const ClientsTable = ({ currentFolder, searchQuery, clients: propClients }: ClientsTableProps) => {
-  const { clients: hookClients, loading, refetch } = useClients();
-  const clients = propClients || hookClients;
+export const ClientsTable: React.FC<ClientsTableProps> = ({ searchQuery }) => {
+  const { clients, loading, refetch } = useClients();
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [detailsSheetOpen, setDetailsSheetOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);

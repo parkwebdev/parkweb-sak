@@ -16,6 +16,8 @@ import EmailTest from "./pages/EmailTest";
 import NotFound from "./pages/NotFound";
 import Requests from "./pages/Requests";
 import ClientsWrapper from "./pages/ClientsWrapper";
+import ClientDetail from "./pages/ClientDetail";
+import ProjectDetail from "./pages/ProjectDetail";
 import { Dashboard } from "./pages/Dashboard";
 import OnboardingPage from "./pages/OnboardingPage";
 import DashboardWrapper from "./pages/DashboardWrapper";

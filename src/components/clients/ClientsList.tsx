@@ -5,13 +5,10 @@ import { ClientDetailsSheet } from './ClientDetailsSheet';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { Client } from '@/hooks/useClients';
 
-interface ClientsListProps {
-  clients?: Client[];
-}
+interface ClientsListProps {}
 
-export const ClientsList: React.FC<ClientsListProps> = ({ clients: propClients }) => {
-  const { clients: hookClients, loading, refetch } = useClients();
-  const clients = propClients || hookClients;
+export const ClientsList: React.FC<ClientsListProps> = () => {
+  const { clients, loading, refetch } = useClients();
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
 
