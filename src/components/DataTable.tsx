@@ -28,7 +28,7 @@ import { logger } from '@/utils/logger';
 import { ClientActionButtons, RowActionButtons } from './ClientActionButtons';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
-import { DeleteConfirmationDialog } from './DeleteConfirmationDialog';
+import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog';
 import {
   Table,
   TableBody,
