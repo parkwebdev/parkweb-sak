@@ -388,7 +388,15 @@ const Onboarding = () => {
     
     // Apply status filter
     if (activeFilter !== 'View all') {
-      filtered = filtered.filter(link => link.status === activeFilter);
+      if (activeFilter === 'Completed') {
+        filtered = filtered.filter(link => link.status === 'Completed' || link.status === 'Approved');
+      } else if (activeFilter === 'Sent') {
+        filtered = filtered.filter(link => link.status === 'Sent');
+      } else if (activeFilter === 'In Progress') {
+        filtered = filtered.filter(link => link.status === 'In Progress' || link.status === 'SOW Generated');
+      } else {
+        filtered = filtered.filter(link => link.status === activeFilter);
+      }
     }
     
     // Apply sorting
@@ -763,19 +771,34 @@ const Onboarding = () => {
                   {/* Status tabs - scrollable on mobile */}
                   <div className="overflow-x-auto">
                     <div className="border shadow-sm flex overflow-hidden text-xs text-foreground font-medium leading-none rounded-md border-border min-w-max">
-                      {['View all', 'Sent', 'In Progress', 'Completed', 'SOW Generated', 'Approved'].map((tab, index) => {
-                        const tabCount = tab === 'View all' ? getFilteredClientLinks().length : getFilteredClientLinks().filter(l => l.status === tab).length;
-                        const isActive = activeFilter === tab;
+                      {[
+                        { key: 'View all', label: 'View All' },
+                        { key: 'Completed', label: 'Complete' },
+                        { key: 'Sent', label: 'Incomplete' },
+                        { key: 'In Progress', label: 'In Review' }
+                      ].map((tab, index) => {
+                        const allCount = clientLinks.length;
+                        const completedCount = clientLinks.filter(l => l.status === 'Completed' || l.status === 'Approved').length;
+                        const incompleteCount = clientLinks.filter(l => l.status === 'Sent').length;
+                        const inReviewCount = clientLinks.filter(l => l.status === 'In Progress' || l.status === 'SOW Generated').length;
+                        
+                        let tabCount = 0;
+                        if (tab.key === 'View all') tabCount = allCount;
+                        else if (tab.key === 'Completed') tabCount = completedCount;
+                        else if (tab.key === 'Sent') tabCount = incompleteCount;
+                        else if (tab.key === 'In Progress') tabCount = inReviewCount;
+                        
+                        const isActive = activeFilter === tab.key;
                         return (
                           <button
-                            key={tab}
-                            onClick={() => setActiveFilter(tab)}
+                            key={tab.key}
+                            onClick={() => setActiveFilter(tab.key)}
                             className={`justify-center items-center flex min-h-8 gap-1.5 px-2.5 py-1.5 transition-colors whitespace-nowrap ${
                               isActive ? 'bg-primary text-primary-foreground' : 'bg-background hover:bg-accent/50'
-                            } ${index < 5 ? 'border-r-border border-r border-solid' : ''}`}
+                            } ${index < 3 ? 'border-r-border border-r border-solid' : ''}`}
                           >
                             <div className="text-xs leading-4 self-stretch my-auto">
-                              {tab}
+                              {tab.label}
                             </div>
                             {tabCount > 0 && (
                               <div className={`px-1.5 py-0.5 rounded text-[10px] ${isActive ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>

@@ -15,7 +15,8 @@ import {
   Calendar, 
   Building07 as Building2, 
   FilterLines as Filter, 
-  ChevronSelectorVertical as GripVertical 
+  ChevronSelectorVertical as GripVertical,
+  Trash01 as Trash
 } from '@untitledui/icons';
 import { Badge } from './Badge';
 import { ProgressBar } from './ProgressBar';
@@ -25,6 +26,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { formatBusinessType, formatDate, formatPercentage } from '@/lib/formatting';
 import { logger } from '@/utils/logger';
 import { ClientActionButtons, RowActionButtons } from './ClientActionButtons';
+import { Checkbox } from '@/components/ui/checkbox';
+import { useToast } from '@/hooks/use-toast';
+import { DeleteConfirmationDialog } from './DeleteConfirmationDialog';
 import {
   Table,
   TableBody,
@@ -70,11 +74,15 @@ interface DataTableProps {
 
 export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'links-invitations' }) => {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
   const [activeFilter, setActiveFilter] = useState<string>('view-all');
   const [currentActiveTab, setCurrentActiveTab] = useState(activeTab);
   const [tableData, setTableData] = useState<TableRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
   const [showColumns, setShowColumns] = useState({
     companyName: true,
     businessType: true,
@@ -359,6 +367,66 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'links-invitat
     );
   };
 
+  const handleDeleteSelected = async () => {
+    if (selectedRows.length === 0) return;
+    
+    try {
+      setIsDeleting(true);
+      
+      // Delete from the appropriate table based on current tab
+      if (currentActiveTab === 'links-invitations') {
+        const { error } = await supabase
+          .from('client_onboarding_links')
+          .delete()
+          .in('id', selectedRows);
+
+        if (error) {
+          logger.error('Error deleting onboarding links:', error);
+          toast({
+            title: "Error",
+            description: "Failed to delete selected items. Please try again.",
+            variant: "destructive",
+          });
+          return;
+        }
+      } else if (currentActiveTab === 'submissions-sows') {
+        const { error } = await supabase
+          .from('scope_of_works')
+          .delete()
+          .in('id', selectedRows);
+
+        if (error) {
+          logger.error('Error deleting scope of works:', error);
+          toast({
+            title: "Error",
+            description: "Failed to delete selected items. Please try again.",
+            variant: "destructive",
+          });
+          return;
+        }
+      }
+
+      toast({
+        title: "Items deleted",
+        description: `Successfully deleted ${selectedRows.length} item(s).`,
+      });
+      
+      setSelectedRows([]);
+      setShowDeleteDialog(false);
+      setDeleteConfirmation('');
+      fetchTableData();
+    } catch (error) {
+      logger.error('Error deleting items:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete selected items. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const handleExportData = () => {
     const csvContent = "data:text/csv;charset=utf-8," 
       + "Company Name,Client Name,Business Type,Submitted Date,Status,Completion\n"
@@ -429,12 +497,25 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'links-invitat
       {/* New Header with Filters, Search, and Settings */}
       <header className="w-full border-b border-border">
         <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-3 px-4 py-3">
-          {/* Filter buttons - scrollable on mobile */}
+          {/* Filter buttons with counts - scrollable on mobile */}
           <div className="overflow-x-auto">
             <div className="border shadow-sm flex overflow-hidden text-xs text-foreground font-medium leading-none rounded-md border-border min-w-max">
               {['View all', 'Complete', 'Incomplete', 'In Review'].map((filter, index) => {
                 const filterKey = filter.toLowerCase().replace(' ', '-');
                 const isActive = activeFilter === filterKey;
+                
+                // Calculate counts based on current tab data
+                let tabCount = 0;
+                if (filterKey === 'view-all') {
+                  tabCount = tableData.length;
+                } else if (filterKey === 'complete') {
+                  tabCount = tableData.filter(item => item.status === 'Complete').length;
+                } else if (filterKey === 'incomplete') {
+                  tabCount = tableData.filter(item => item.status === 'Incomplete').length;
+                } else if (filterKey === 'in-review') {
+                  tabCount = tableData.filter(item => item.status === 'In Review').length;
+                }
+                
                 return (
                   <button
                     key={filter}
@@ -446,6 +527,11 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'links-invitat
                     <div className="text-xs leading-4 self-stretch my-auto">
                       {filter}
                     </div>
+                    {tabCount > 0 && (
+                      <div className={`px-1.5 py-0.5 rounded text-[10px] ${isActive ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
+                        {tabCount}
+                      </div>
+                    )}
                   </button>
                 );
               })}
@@ -454,6 +540,17 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'links-invitat
           
           {/* Search and controls */}
           <div className="flex items-center gap-2.5 ml-auto">
+            {/* Bulk Delete Button - appears when items are selected */}
+            {selectedRows.length > 0 && (
+              <button
+                onClick={() => setShowDeleteDialog(true)}
+                className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden text-xs text-destructive font-medium leading-none bg-background px-2 py-1.5 rounded-md border-destructive hover:bg-destructive/10 h-8 mr-2"
+              >
+                <Trash size={14} />
+                Delete ({selectedRows.length})
+              </button>
+            )}
+            
             <ClientActionButtons activeTab={currentActiveTab} onRefresh={fetchTableData} />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -581,6 +678,13 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'links-invitat
         <Table className="min-w-[800px]">
           <TableHeader>
             <TableRow>
+              <TableHead className="w-12">
+                <Checkbox
+                  checked={selectedRows.length === filteredData.length && filteredData.length > 0}
+                  onCheckedChange={toggleAllSelection}
+                  aria-label="Select all"
+                />
+              </TableHead>
               {columnOrder.map(column => {
                 if (!showColumns[column as keyof typeof showColumns]) return null;
                 
@@ -642,6 +746,13 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'links-invitat
           <TableBody>
             {filteredData.map((row) => (
               <TableRow key={row.id}>
+                <TableCell>
+                  <Checkbox
+                    checked={selectedRows.includes(row.id)}
+                    onCheckedChange={() => toggleRowSelection(row.id)}
+                    aria-label={`Select ${row.companyName}`}
+                  />
+                </TableCell>
                 {columnOrder.map(column => {
                   if (!showColumns[column as keyof typeof showColumns]) return null;
                   
@@ -730,6 +841,18 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'links-invitat
           </div>
         )}
       </footer>
+      
+      <DeleteConfirmationDialog
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        title="Delete Selected Items"
+        description={`Are you sure you want to delete ${selectedRows.length} selected item(s)? This action cannot be undone.`}
+        confirmationText="delete"
+        confirmationValue={deleteConfirmation}
+        onConfirmationValueChange={setDeleteConfirmation}
+        onConfirm={handleDeleteSelected}
+        isDeleting={isDeleting}
+      />
     </div>
   );
 };

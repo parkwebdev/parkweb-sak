@@ -9,10 +9,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import { logger } from '@/utils/logger';
 
 const tabs = [
-  { id: 'links-invitations', label: 'Links & Invitations' },
-  { id: 'submissions-sows', label: 'Submissions & SOWs' },
-  { id: 'completed', label: 'Completed' },
-  { id: 'all-clients', label: 'All Clients' }
+  { id: 'links-invitations', label: 'View All' },
+  { id: 'completed', label: 'Complete' },
+  { id: 'submissions-sows', label: 'Incomplete' }, 
+  { id: 'all-clients', label: 'In Review' }
 ];
 
 interface MainContentProps {
