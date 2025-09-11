@@ -27,8 +27,10 @@ export interface Client {
   scope_of_works: number;
   last_activity: string;
   created_at: string;
+  updated_at?: string;
   avatar_url?: string;
   phone?: string;
+  address?: string;
   notes?: string;
   onboarding_url?: string;
   personal_note?: string;

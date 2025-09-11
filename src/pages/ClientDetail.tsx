@@ -56,6 +56,7 @@ const ClientDetail = () => {
           company: data.company_name,
           email: data.email,
           phone: data.phone,
+          address: data.address,
           industry: data.industry,
           status: data.status as Client['status'],
           personal_note: data.personal_note,
@@ -64,6 +65,8 @@ const ClientDetail = () => {
           onboarding_status: 'completed',
           total_requests: 0,
           active_requests: 0,
+          completed_requests: 0,
+          scope_of_works: 0,
           last_activity: data.updated_at,
           avatar_url: undefined,
           folder_id: undefined
@@ -209,10 +212,10 @@ const ClientDetail = () => {
                       <p>{client.phone}</p>
                     </div>
                   )}
-                  {data.address && (
+                  {client.address && (
                     <div>
                       <h4 className="font-medium text-sm text-muted-foreground mb-1">Address</h4>
-                      <p>{data.address}</p>
+                      <p>{client.address}</p>
                     </div>
                   )}
                 </div>
