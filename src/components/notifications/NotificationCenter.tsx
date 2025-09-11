@@ -10,6 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
+import { logger } from '@/utils/logger';
 
 interface Notification {
   id: string;
@@ -54,14 +55,14 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNotifi
         .limit(50);
 
       if (error) {
-        console.error('Error fetching notifications:', error);
+        logger.error('Error fetching notifications:', error);
         return;
       }
 
       setNotifications(data || []);
       setUnreadCount((data || []).filter(n => !n.read).length);
     } catch (error) {
-      console.error('Error in fetchNotifications:', error);
+      logger.error('Error in fetchNotifications:', error);
     } finally {
       setLoading(false);
     }
@@ -142,7 +143,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNotifi
         .eq('user_id', user?.id);
 
       if (error) {
-        console.error('Error marking notification as read:', error);
+        logger.error('Error marking notification as read:', error);
         return;
       }
 
@@ -151,7 +152,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNotifi
       );
       setUnreadCount(prev => Math.max(0, prev - 1));
     } catch (error) {
-      console.error('Error in markAsRead:', error);
+      logger.error('Error in markAsRead:', error);
     }
   };
 
@@ -166,7 +167,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNotifi
         .eq('read', false);
 
       if (error) {
-        console.error('Error marking all notifications as read:', error);
+        logger.error('Error marking all notifications as read:', error);
         return;
       }
 
@@ -178,7 +179,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNotifi
         description: "You're all caught up!",
       });
     } catch (error) {
-      console.error('Error in markAllAsRead:', error);
+      logger.error('Error in markAllAsRead:', error);
     }
   };
 
@@ -191,7 +192,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNotifi
         .eq('user_id', user?.id);
 
       if (error) {
-        console.error('Error deleting notification:', error);
+        logger.error('Error deleting notification:', error);
         return;
       }
 
@@ -203,7 +204,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNotifi
         setUnreadCount(prev => Math.max(0, prev - 1));
       }
     } catch (error) {
-      console.error('Error in deleteNotification:', error);
+      logger.error('Error in deleteNotification:', error);
     }
   };
 

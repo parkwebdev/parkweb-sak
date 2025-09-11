@@ -287,6 +287,39 @@ export type Database = {
         }
         Relationships: []
       }
+      onboarding_tokens: {
+        Row: {
+          client_email: string
+          client_name: string
+          created_at: string
+          created_by: string | null
+          expires_at: string
+          id: string
+          token: string
+          used: boolean
+        }
+        Insert: {
+          client_email: string
+          client_name: string
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string
+          id?: string
+          token: string
+          used?: boolean
+        }
+        Update: {
+          client_email?: string
+          client_name?: string
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string
+          id?: string
+          token?: string
+          used?: boolean
+        }
+        Relationships: []
+      }
       pending_invitations: {
         Row: {
           company_name: string | null
@@ -693,6 +726,18 @@ export type Database = {
           p_user_id: string
         }
         Returns: undefined
+      }
+      mark_token_used: {
+        Args: { p_email: string; p_token: string }
+        Returns: undefined
+      }
+      validate_onboarding_token: {
+        Args: { p_token: string }
+        Returns: boolean
+      }
+      validate_submission_token: {
+        Args: { p_email: string }
+        Returns: boolean
       }
     }
     Enums: {

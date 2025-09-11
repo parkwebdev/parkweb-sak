@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/Badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { logger } from '@/utils/logger';
 
 const tabs = [
   { id: 'links-invitations', label: 'Links & Invitations' },
@@ -60,7 +61,7 @@ export const MainContent: React.FC<MainContentProps> = ({
         .single();
 
       if (error) {
-        console.error('Error fetching user profile:', error);
+        logger.error('Error fetching user profile:', error);
         // Fallback to user email or default
         const fallbackName = user.user_metadata?.display_name || user.email?.split('@')[0] || 'User';
         setUserDisplayName(fallbackName);
@@ -69,7 +70,7 @@ export const MainContent: React.FC<MainContentProps> = ({
         setUserDisplayName(displayName);
       }
     } catch (error) {
-      console.error('Error in fetchUserProfile:', error);
+      logger.error('Error in fetchUserProfile:', error);
       const fallbackName = user.user_metadata?.display_name || user.email?.split('@')[0] || 'User';
       setUserDisplayName(fallbackName);
     }
@@ -114,7 +115,7 @@ export const MainContent: React.FC<MainContentProps> = ({
         conversionRate
       });
     } catch (error) {
-      console.error('Error fetching stats:', error);
+      logger.error('Error fetching stats:', error);
     }
   };
 

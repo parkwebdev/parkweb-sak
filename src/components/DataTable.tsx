@@ -23,6 +23,7 @@ import { getBadgeVariant } from '@/lib/status-helpers';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatBusinessType, formatDate, formatPercentage } from '@/lib/formatting';
+import { logger } from '@/utils/logger';
 import { ClientActionButtons, RowActionButtons } from './ClientActionButtons';
 import {
   Table,
@@ -119,7 +120,7 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'links-invitat
           .order('date_sent', { ascending: false });
 
         if (error) {
-          console.error('Error fetching onboarding data:', error);
+          logger.error('Error fetching onboarding data:', error);
           return;
         }
 
@@ -149,7 +150,7 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'links-invitat
           .order('date_created', { ascending: false });
 
         if (error) {
-          console.error('Error fetching scope of work data:', error);
+          logger.error('Error fetching scope of work data:', error);
           return;
         }
 
@@ -300,7 +301,7 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'links-invitat
       
       setTableData(data);
     } catch (error) {
-      console.error('Error fetching table data:', error);
+      logger.error('Error fetching table data:', error);
     } finally {
       setLoading(false);
     }

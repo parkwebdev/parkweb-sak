@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { INDUSTRY_OPTIONS } from '@/lib/constants';
 import { createOnboardingUrl, copyToClipboard } from '@/lib/form-helpers';
 import { useAuth } from '@/contexts/AuthContext';
+import { logger } from '@/utils/logger';
 
 interface ClientActionButtonsProps {
   activeTab: string;
@@ -51,7 +52,7 @@ export const ClientActionButtons: React.FC<ClientActionButtonsProps> = ({
         });
 
       if (error) {
-        console.error('Error creating client link:', error);
+        logger.error('Error creating client link:', error);
         toast({
           title: "Error",
           description: "Failed to create onboarding link. Please try again.",
@@ -81,7 +82,7 @@ export const ClientActionButtons: React.FC<ClientActionButtonsProps> = ({
       onRefresh?.();
       
       if (!emailResult.success) {
-        console.error("Failed to send welcome email:", emailResult.error);
+        logger.error("Failed to send welcome email:", emailResult.error);
         toast({
           title: "Link Created",
           description: "Onboarding link created but welcome email failed to send. You can resend it manually.",
@@ -93,7 +94,7 @@ export const ClientActionButtons: React.FC<ClientActionButtonsProps> = ({
         });
       }
     } catch (error) {
-      console.error('Error creating client link:', error);
+      logger.error('Error creating client link:', error);
       toast({
         title: "Error",
         description: "Failed to create onboarding link. Please try again.",
@@ -246,7 +247,7 @@ export const RowActionButtons: React.FC<{
       );
       
       if (!emailResult.success) {
-        console.error("Failed to send welcome email:", emailResult.error);
+        logger.error("Failed to send welcome email:", emailResult.error);
         toast({
           title: "Email Error",
           description: "Failed to send email. Please try again.",
@@ -259,7 +260,7 @@ export const RowActionButtons: React.FC<{
         });
       }
     } catch (error) {
-      console.error('Error sending email:', error);
+      logger.error('Error sending email:', error);
       toast({
         title: "Error",
         description: "Failed to send email. Please try again.",
@@ -289,7 +290,7 @@ export const RowActionButtons: React.FC<{
           .eq('id', itemData.id);
 
         if (updateError) {
-          console.error('Error updating link status:', updateError);
+          logger.error('Error updating link status:', updateError);
           toast({
             title: "Error",
             description: "Failed to approve SOW. Please try again.",
@@ -312,10 +313,10 @@ export const RowActionButtons: React.FC<{
           });
 
           if (emailError) {
-            console.error('Error sending completion email:', emailError);
+            logger.error('Error sending completion email:', emailError);
           }
         } catch (emailError) {
-          console.error('Error sending completion email:', emailError);
+          logger.error('Error sending completion email:', emailError);
         }
 
         onRefresh?.();
@@ -360,10 +361,10 @@ export const RowActionButtons: React.FC<{
           });
 
           if (emailError) {
-            console.error('Error sending approval email:', emailError);
+            logger.error('Error sending approval email:', emailError);
           }
         } catch (emailError) {
-          console.error('Error sending approval email:', emailError);
+          logger.error('Error sending approval email:', emailError);
         }
 
         onRefresh?.();
@@ -374,7 +375,7 @@ export const RowActionButtons: React.FC<{
         });
       }
     } catch (error) {
-      console.error('Error approving SOW:', error);
+      logger.error('Error approving SOW:', error);
       toast({
         title: "Error",
         description: "Failed to approve SOW. Please try again.",
