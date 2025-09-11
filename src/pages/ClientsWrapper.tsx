@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Clients } from './Clients';
+import Clients from './Clients';
 import { Sidebar } from '@/components/Sidebar';
 import { useSidebar } from '@/hooks/use-sidebar';
 
