@@ -67,16 +67,6 @@ export const ClientsTable: React.FC<ClientsTableProps> = () => {
     { key: 'inactive', label: 'Inactive', count: clients.filter(c => c.status === 'inactive').length },
   ];
 
-  const getStatusVariant = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'default';
-      case 'inactive':
-        return 'destructive';
-      default:
-        return 'outline';
-    }
-  };
 
   // Get unique values for filters
   const uniqueIndustries = Array.from(new Set(clients.map(c => c.industry).filter(Boolean)));
