@@ -193,6 +193,17 @@ export const CSVImportDialog: React.FC<CSVImportDialogProps> = ({
         // Generate client_name from first_name + last_name if available
         if (client.first_name || client.last_name) {
           client.client_name = `${client.first_name || ''} ${client.last_name || ''}`.trim();
+        } else if (!client.client_name && client.email) {
+          // Use email username as fallback name
+          client.client_name = client.email.split('@')[0];
+        }
+
+        // Default company_name if not provided - use email domain or "Unknown Company"
+        if (!client.company_name && client.email) {
+          const emailDomain = client.email.split('@')[1]?.split('.')[0];
+          client.company_name = emailDomain ? emailDomain.charAt(0).toUpperCase() + emailDomain.slice(1) : 'Unknown Company';
+        } else if (!client.company_name) {
+          client.company_name = 'Unknown Company';
         }
 
         // Default industry if not provided
