@@ -19,6 +19,7 @@ import {
 import { useClients, Client } from "@/hooks/useClients";
 import { DeleteConfirmationDialog } from "@/components/DeleteConfirmationDialog";
 import { CSVImportDialog } from "./CSVImportDialog";
+import { ClientStatusDropdown } from "./ClientStatusDropdown";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -162,6 +163,29 @@ export const ClientsTable: React.FC<ClientsTableProps> = () => {
       setIsDeleting(false);
       setDeleteDialogOpen(false);
       setDeleteConfirmation("");
+    }
+  };
+
+  const updateClientStatus = async (clientId: string, newStatus: 'active' | 'inactive') => {
+    try {
+      const { error } = await supabase
+        .from('clients')
+        .update({ status: newStatus })
+        .eq('id', clientId);
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Status Updated",
+        description: `Client status changed to ${newStatus}.`,
+      });
+      refetch();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update client status.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -454,9 +478,10 @@ export const ClientsTable: React.FC<ClientsTableProps> = () => {
                 )}
                 {showColumns.status && (
                   <TableCell>
-                    <Badge variant={getStatusVariant(client.status)}>
-                      {client.status}
-                    </Badge>
+                    <ClientStatusDropdown
+                      status={client.status as 'active' | 'inactive'}
+                      onStatusChange={(status) => updateClientStatus(client.id, status)}
+                    />
                   </TableCell>
                 )}
                 {showColumns.requests && (

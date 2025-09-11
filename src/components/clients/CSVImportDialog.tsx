@@ -84,10 +84,11 @@ export const CSVImportDialog: React.FC<CSVImportDialogProps> = ({
   };
 
   const autoMapFields = (csvHeaders: string[]): FieldMapping[] => {
-    return csvHeaders.map(csvField => {
+    // First create mappings for all CSV headers
+    const mappings = csvHeaders.map(csvField => {
       const normalizedCsvField = csvField.toLowerCase().trim();
       
-      // Try to find a match in our aliases
+      // Try to find a match in our predefined aliases
       for (const [clientField, aliases] of Object.entries(FIELD_ALIASES)) {
         if (aliases.some(alias => 
           normalizedCsvField === alias || 
@@ -98,8 +99,20 @@ export const CSVImportDialog: React.FC<CSVImportDialogProps> = ({
         }
       }
       
+      // If no predefined match, check if it matches any of our client field keys directly
+      const directMatch = CLIENT_FIELDS.find(field => 
+        field.key.toLowerCase() === normalizedCsvField ||
+        field.label.toLowerCase() === normalizedCsvField
+      );
+      
+      if (directMatch) {
+        return { csvField, clientField: directMatch.key };
+      }
+      
       return { csvField, clientField: '' };
     });
+    
+    return mappings;
   };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -178,7 +191,7 @@ export const CSVImportDialog: React.FC<CSVImportDialogProps> = ({
         return acc;
       }, {} as Record<string, number>);
 
-      const clientsToInsert = csvData.map(row => {
+      const clientsToProcess = csvData.map(row => {
         const client: any = {
           user_id: user.id,
           status: 'active',
@@ -216,19 +229,23 @@ export const CSVImportDialog: React.FC<CSVImportDialogProps> = ({
         return client;
       }).filter(client => client.email); // Only import rows with email
 
-      if (clientsToInsert.length === 0) {
+      if (clientsToProcess.length === 0) {
         throw new Error('No valid clients to import (email is required)');
       }
 
+      // Use upsert to handle existing clients
       const { error } = await supabase
         .from('clients')
-        .insert(clientsToInsert);
+        .upsert(clientsToProcess, { 
+          onConflict: 'email,user_id',
+          ignoreDuplicates: false 
+        });
 
       if (error) throw error;
 
       toast({
         title: "Import Successful",
-        description: `Successfully imported ${clientsToInsert.length} clients.`,
+        description: `Successfully processed ${clientsToProcess.length} clients. Existing clients were updated with new information.`,
       });
 
       onImportComplete();
@@ -301,15 +318,6 @@ export const CSVImportDialog: React.FC<CSVImportDialogProps> = ({
                 Choose File
               </Button>
             </div>
-
-            <div className="text-sm text-muted-foreground">
-              <p className="font-medium mb-2">Expected columns:</p>
-              <ul className="list-disc list-inside space-y-1">
-                <li>First Name, Last Name (or Full Name)</li>
-                <li>Email (required)</li>
-                <li>Phone, Title, Company, Industry</li>
-              </ul>
-            </div>
           </div>
         )}
 
@@ -354,7 +362,7 @@ export const CSVImportDialog: React.FC<CSVImportDialogProps> = ({
             <div className="flex items-center gap-2 p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg">
               <AlertCircle size={16} className="text-blue-600" />
               <span className="text-sm text-blue-700 dark:text-blue-400">
-                * Email is required for each client
+                * Email is required. Existing clients with matching emails will be updated.
               </span>
             </div>
           </div>
@@ -429,7 +437,7 @@ export const CSVImportDialog: React.FC<CSVImportDialogProps> = ({
                 Back to Mapping
               </Button>
               <Button onClick={importData} disabled={loading}>
-                {loading ? 'Importing...' : `Import ${csvData.length} Clients`}
+                {loading ? 'Processing...' : `Process ${csvData.length} Clients`}
               </Button>
             </>
           )}
