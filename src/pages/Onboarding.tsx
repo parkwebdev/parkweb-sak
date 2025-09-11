@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Sidebar } from '@/components/Sidebar';
-import { Plus, Link01 as Link2, Copy01 as Copy, Send01 as Send, Eye as Eye, Trash01 as Trash, Check, SearchSm, FilterLines, Settings01, Download01 as Download, ArrowUp as SortAsc, ArrowDown as SortDesc, ArrowsDown as ArrowUpDown } from '@untitledui/icons';
+import { Plus, Link01 as Link2, Copy01 as Copy, Send01 as Send, Eye as Eye, Trash01 as Trash, Check, SearchSm, FilterLines, Settings01, ArrowUp as SortAsc, ArrowDown as SortDesc, ArrowsDown as ArrowUpDown } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/Badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { INDUSTRY_OPTIONS } from '@/lib/constants';
 import { getStatusColor, formatDate } from '@/lib/status-helpers';
@@ -660,6 +661,17 @@ const Onboarding = () => {
                 </div>
                 
                 <div className="flex items-center gap-2">
+                  {/* Bulk Delete Button - appears when items are selected */}
+                  {selectedForDelete.length > 0 && (
+                    <button
+                      onClick={() => setShowDeleteDialog(true)}
+                      className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden text-xs text-destructive font-medium leading-none bg-background px-2 py-1.5 rounded-md border-destructive hover:bg-destructive/10 h-8 mr-2"
+                    >
+                      <Trash size={14} />
+                      Delete ({selectedForDelete.length})
+                    </button>
+                  )}
+                  
                   <BulkActionDropdown
                     selectedCount={selectedForDelete.length}
                     onStatusUpdate={handleBulkStatusUpdate}
@@ -743,252 +755,218 @@ const Onboarding = () => {
               </div>
             </header>
 
-            {/* Compact Client Links */}
-            <Card>
-                <CardContent className="p-0">
-                    <div className="border-b border-border px-4 py-3">
-                      {/* Select All and Tabs Row with Controls */}
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-3">
+            {/* Table View */}
+            <div className="w-full bg-card border border-border rounded-xl overflow-hidden">
+              {/* Header with Status Tabs and Controls */}
+              <header className="w-full border-b border-border">
+                <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-3 px-4 py-3">
+                  {/* Status tabs - scrollable on mobile */}
+                  <div className="overflow-x-auto">
+                    <div className="border shadow-sm flex overflow-hidden text-xs text-foreground font-medium leading-none rounded-md border-border min-w-max">
+                      {['View all', 'Sent', 'In Progress', 'Completed', 'SOW Generated', 'Approved'].map((tab, index) => {
+                        const tabCount = tab === 'View all' ? getFilteredClientLinks().length : getFilteredClientLinks().filter(l => l.status === tab).length;
+                        const isActive = activeFilter === tab;
+                        return (
                           <button
-                            onClick={toggleAllSelection}
-                            className="flex items-center justify-center w-5"
+                            key={tab}
+                            onClick={() => setActiveFilter(tab)}
+                            className={`justify-center items-center flex min-h-8 gap-1.5 px-2.5 py-1.5 transition-colors whitespace-nowrap ${
+                              isActive ? 'bg-primary text-primary-foreground' : 'bg-background hover:bg-accent/50'
+                            } ${index < 5 ? 'border-r-border border-r border-solid' : ''}`}
                           >
-                            <div className={`border flex min-h-5 w-5 h-5 rounded-md border-solid border-border items-center justify-center ${
-                              selectedForDelete.length === getFilteredClientLinks().length && getFilteredClientLinks().length > 0 ? 'bg-primary border-primary' : 'bg-background'
-                            }`}>
-                              {selectedForDelete.length === getFilteredClientLinks().length && getFilteredClientLinks().length > 0 && (
-                                <Check size={12} className="text-primary-foreground" />
-                              )}
+                            <div className="text-xs leading-4 self-stretch my-auto">
+                              {tab}
                             </div>
+                            {tabCount > 0 && (
+                              <div className={`px-1.5 py-0.5 rounded text-[10px] ${isActive ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
+                                {tabCount}
+                              </div>
+                            )}
                           </button>
-                          {selectedForDelete.length > 0 && (
-                            <span className="text-sm text-muted-foreground">
-                              {selectedForDelete.length} selected
-                            </span>
-                          )}
-                          
-                          {/* Tab Navigation */}
-                          <div className="overflow-x-auto">
-                            <div className="border shadow-sm flex overflow-hidden text-xs text-foreground font-medium leading-none rounded-md border-border min-w-max">
-                              {['View all', 'Sent', 'In Progress', 'Completed', 'SOW Generated', 'Approved'].map((tab, index) => {
-                                const isActive = activeFilter === tab;
-                                const isFirst = index === 0;
-                                const isLast = index === 5;
-                                return (
-                                  <button
-                                    key={tab}
-                                    onClick={() => setActiveFilter(tab)}
-                                    className={`px-3 py-2 ${
-                                      isActive
-                                        ? 'bg-primary text-primary-foreground'
-                                        : 'bg-card hover:bg-accent'
-                                    } ${
-                                      isFirst ? 'rounded-l-md' : ''
-                                    } ${
-                                      isLast ? 'rounded-r-md' : ''
-                                    } ${
-                                      !isLast ? 'border-r border-border' : ''
-                                    } transition-colors`}
-                                  >
-                                    {tab}
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        </div>
-                        
-                          {/* Filter and Settings */}
-                          <div className="flex items-center gap-2">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="outline" size="sm" className="h-8 px-2">
-                                  <FilterLines className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="w-56">
-                                <DropdownMenuLabel>Sort & Filter</DropdownMenuLabel>
-                                <DropdownMenuSeparator />
-                                
-                                <DropdownMenuLabel className="text-xs text-muted-foreground">Sort By</DropdownMenuLabel>
-                                <DropdownMenuItem onClick={() => setSortBy('client_name')}>
-                                  <div className="flex items-center justify-between w-full">
-                                    <span>Client Name</span>
-                                    {sortBy === 'client_name' && (
-                                      sortOrder === 'asc' ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />
-                                    )}
-                                  </div>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => setSortBy('company_name')}>
-                                  <div className="flex items-center justify-between w-full">
-                                    <span>Company Name</span>
-                                    {sortBy === 'company_name' && (
-                                      sortOrder === 'asc' ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />
-                                    )}
-                                  </div>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => setSortBy('email')}>
-                                  <div className="flex items-center justify-between w-full">
-                                    <span>Email</span>
-                                    {sortBy === 'email' && (
-                                      sortOrder === 'asc' ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />
-                                    )}
-                                  </div>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => setSortBy('industry')}>
-                                  <div className="flex items-center justify-between w-full">
-                                    <span>Industry</span>
-                                    {sortBy === 'industry' && (
-                                      sortOrder === 'asc' ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />
-                                    )}
-                                  </div>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => setSortBy('status')}>
-                                  <div className="flex items-center justify-between w-full">
-                                    <span>Status</span>
-                                    {sortBy === 'status' && (
-                                      sortOrder === 'asc' ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />
-                                    )}
-                                  </div>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => setSortBy('date_sent')}>
-                                  <div className="flex items-center justify-between w-full">
-                                    <span>Date Sent</span>
-                                    {sortBy === 'date_sent' && (
-                                      sortOrder === 'asc' ? <SortAsc className="h-4 w-4" /> : <SortDesc className="h-4 w-4" />
-                                    )}
-                                  </div>
-                                </DropdownMenuItem>
-                                
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}>
-                                  <ArrowUpDown className="mr-2 h-4 w-4" />
-                                  {sortOrder === 'asc' ? 'Sort Descending' : 'Sort Ascending'}
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                            
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="outline" size="sm" className="h-8 px-2">
-                                  <Settings01 className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="w-56">
-                                <DropdownMenuLabel>Table Settings</DropdownMenuLabel>
-                                <DropdownMenuSeparator />
-                                
-                                <DropdownMenuItem onClick={handleExportData}>
-                                  <Download className="mr-2 h-4 w-4" />
-                                  Export to CSV
-                                </DropdownMenuItem>
-                                
-                                <DropdownMenuSeparator />
-                                <DropdownMenuLabel className="text-xs text-muted-foreground">Quick Actions</DropdownMenuLabel>
-                                <DropdownMenuItem onClick={() => setActiveFilter('View all')}>
-                                  <span>Reset Filters</span>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => {
-                                  setSortBy('date_sent');
-                                  setSortOrder('desc');
-                                }}>
-                                  <span>Reset Sort</span>
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div>
-                      </div>
+                        );
+                      })}
                     </div>
-                {clientLinks.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-                    <Link2 className="h-12 w-12 text-muted-foreground/50 mb-4" />
-                    <h3 className="text-lg font-medium text-foreground mb-2">No client links yet</h3>
-                    <p className="text-sm text-muted-foreground mb-6 max-w-sm">
-                      Create your first onboarding link to start managing client intake workflow.
-                    </p>
-                    <Button onClick={() => setShowCreateDialog(true)} size="sm">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Create Onboarding Link
-                    </Button>
                   </div>
-                 ) : (
-                   <div className="divide-y divide-border">
-                     {getFilteredClientLinks().map((link) => (
-                      <div key={link.id} className="px-4 py-4">
-                        <div className="flex items-start gap-3">
-                           <button
-                             onClick={() => toggleSelection(link.id)}
-                             className="flex items-center justify-center w-5 mt-1"
-                           >
-                             <div className={`border flex min-h-5 w-5 h-5 rounded-md border-solid border-border items-center justify-center ${
-                               selectedForDelete.includes(link.id) ? 'bg-primary border-primary' : 'bg-background'
-                             }`}>
-                               {selectedForDelete.includes(link.id) && (
-                                 <Check size={12} className="text-primary-foreground" />
-                               )}
-                             </div>
-                           </button>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2 lg:gap-4">
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <h3 className="text-sm font-medium text-card-foreground truncate">
-                                    {link.client_name}
-                                  </h3>
-                                  <Badge variant="default" className="text-xs px-1.5 py-0.5">
-                                    {link.status}
-                                  </Badge>
-                                </div>
-                                <p className="text-xs text-muted-foreground mb-1 truncate">
-                                  {link.company_name} • {link.email} • {link.industry}
-                                </p>
-                                <p className="text-xs text-muted-foreground">
-                                  Created {formatDate(link.date_sent)}
-                                </p>
-                              </div>
-                              <div className="flex items-center gap-1 flex-shrink-0">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleCopyToClipboard(link.onboarding_url)}
-                                  className="h-8 px-2 text-xs"
-                                >
-                                  <Copy className="h-3 w-3" />
-                                </Button>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleSendEmail(link)}
-                                  disabled={sendingEmail === link.id}
-                                  className="h-8 px-2 text-xs"
-                                >
-                                  <Send className="h-3 w-3" />
-                                </Button>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleViewOnboarding(link.onboarding_url)}
-                                  className="h-8 px-2 text-xs"
-                                >
-                                  <Eye className="h-3 w-3" />
-                                </Button>
-                              </div>
-                            </div>
-                            <div className="mt-4 mb-6 space-y-3">
-                              <ProgressBar 
-                                percentage={getProgressPercentage(link.status)} 
-                                className="h-1.5"
-                              />
+                  
+                  {/* Controls */}
+                  <div className="flex items-center gap-2.5 ml-auto">
+                    {/* Bulk Delete Button - appears when items are selected */}
+                    {selectedForDelete.length > 0 && (
+                      <button
+                        onClick={() => setShowDeleteDialog(true)}
+                        className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden text-xs text-destructive font-medium leading-none bg-background px-2 py-1.5 rounded-md border-destructive hover:bg-destructive/10 h-8 mr-2"
+                      >
+                        <Trash size={14} />
+                        Delete ({selectedForDelete.length})
+                      </button>
+                    )}
+
+                    {/* Filter Dropdown */}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden text-xs text-foreground font-medium leading-none bg-background px-2 py-1.5 rounded-md border-border hover:bg-accent/50 h-8">
+                          <FilterLines size={16} className="text-muted-foreground" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-48 z-50">
+                        <DropdownMenuLabel>Sort Options</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => setSortBy('client_name')}>
+                          Sort by Client Name {sortBy === 'client_name' && (sortOrder === 'asc' ? '↑' : '↓')}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setSortBy('company_name')}>
+                          Sort by Company {sortBy === 'company_name' && (sortOrder === 'asc' ? '↑' : '↓')}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setSortBy('status')}>
+                          Sort by Status {sortBy === 'status' && (sortOrder === 'asc' ? '↑' : '↓')}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setSortBy('date_sent')}>
+                          Sort by Date {sortBy === 'date_sent' && (sortOrder === 'asc' ? '↑' : '↓')}
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+
+                    {/* Settings Dropdown */}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden text-xs text-foreground font-medium leading-none bg-background px-2 py-1.5 rounded-md border-border hover:bg-accent/50 h-8">
+                          <Settings01 size={16} className="text-muted-foreground" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-56 z-50">
+                        <DropdownMenuLabel>Export Options</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={handleExportData}>
+                          Export All to CSV
+                        </DropdownMenuItem>
+                        {selectedForDelete.length > 0 && (
+                          <DropdownMenuItem onClick={handleBulkExport}>
+                            Export Selected to CSV
+                          </DropdownMenuItem>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </div>
+              </header>
+
+              {clientLinks.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+                  <Link2 className="h-12 w-12 text-muted-foreground/50 mb-4" />
+                  <h3 className="text-lg font-medium text-foreground mb-2">No client links yet</h3>
+                  <p className="text-sm text-muted-foreground mb-6 max-w-sm">
+                    Create your first onboarding link to start managing client intake workflow.
+                  </p>
+                  <Button onClick={() => setShowCreateDialog(true)} size="sm">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create Onboarding Link
+                  </Button>
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-12">
+                        <Checkbox
+                          checked={selectedForDelete.length === getFilteredClientLinks().length && getFilteredClientLinks().length > 0}
+                          onCheckedChange={toggleAllSelection}
+                          aria-label="Select all"
+                        />
+                      </TableHead>
+                      <TableHead>Client</TableHead>
+                      <TableHead>Company</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Progress</TableHead>
+                      <TableHead>Created</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {getFilteredClientLinks().map((link) => (
+                      <TableRow key={link.id}>
+                        <TableCell>
+                          <Checkbox
+                            checked={selectedForDelete.includes(link.id)}
+                            onCheckedChange={() => toggleSelection(link.id)}
+                            aria-label={`Select ${link.client_name}`}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <div className="font-medium">{link.client_name}</div>
+                          <div className="text-sm text-muted-foreground">{link.email}</div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="font-medium">{link.company_name}</div>
+                          <div className="text-sm text-muted-foreground">{link.industry}</div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="default" className={getStatusColor(link.status)}>
+                            {link.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="w-full">
+                            <ProgressBar 
+                              percentage={getProgressPercentage(link.status)} 
+                              className="h-2"
+                            />
+                            <div className="text-xs text-muted-foreground mt-1">
+                              {getProgressPercentage(link.status)}%
                             </div>
                           </div>
-                        </div>
-                      </div>
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {formatDate(link.date_sent)}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleCopyToClipboard(link.onboarding_url)}
+                              className="h-8 w-8 p-0"
+                            >
+                              <Copy size={16} />
+                              <span className="sr-only">Copy link</span>
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleSendEmail(link)}
+                              disabled={sendingEmail === link.id}
+                              className="h-8 w-8 p-0"
+                            >
+                              <Send size={16} />
+                              <span className="sr-only">Send email</span>
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleViewOnboarding(link.onboarding_url)}
+                              className="h-8 w-8 p-0"
+                            >
+                              <Eye size={16} />
+                              <span className="sr-only">View onboarding</span>
+                            </Button>
+                            {link.status === 'SOW Generated' && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleApproveSOW(link)}
+                                className="h-8 w-8 p-0 text-green-600 hover:text-green-700"
+                              >
+                                <Check size={16} />
+                                <span className="sr-only">Approve SOW</span>
+                              </Button>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
                     ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                  </TableBody>
+                </Table>
+              )}
+            </div>
           </div>
         </main>
       </div>
