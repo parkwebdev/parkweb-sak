@@ -13,7 +13,6 @@ import {
   ArrowsDown as ArrowUpDown,
   DotsGrid as Columns,
   FilterLines as Filter,
-  Folder,
   Building01 as Building,
   Upload01 as Upload
 } from "@untitledui/icons";
@@ -21,6 +20,7 @@ import { useClients, Client } from "@/hooks/useClients";
 import { DeleteConfirmationDialog } from "@/components/DeleteConfirmationDialog";
 import { CSVImportDialog } from "./CSVImportDialog";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,6 +39,8 @@ export const ClientsTable: React.FC<ClientsTableProps> = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedClientIds, setSelectedClientIds] = useState<string[]>([]);
   const [showImportDialog, setShowImportDialog] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
   const [activeStatus, setActiveStatus] = useState<string>("all");
@@ -125,6 +127,42 @@ export const ClientsTable: React.FC<ClientsTableProps> = () => {
 
   const handleClientClick = (client: Client) => {
     navigate(`/clients/${client.id}`);
+  };
+
+  const handleBulkDelete = () => {
+    if (selectedClientIds.length === 0) return;
+    setDeleteDialogOpen(true);
+    setDeleteConfirmation("");
+  };
+
+  const confirmBulkDelete = async () => {
+    setIsDeleting(true);
+    
+    try {
+      const { error } = await supabase
+        .from('clients')
+        .delete()
+        .in('id', selectedClientIds);
+      
+      if (error) throw error;
+      
+      setSelectedClientIds([]);
+      toast({
+        title: "Clients Deleted",
+        description: `Successfully deleted ${selectedClientIds.length} client(s).`,
+      });
+      refetch();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete clients.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
+      setDeleteDialogOpen(false);
+      setDeleteConfirmation("");
+    }
   };
 
   const handleSelectAll = () => {
@@ -223,11 +261,11 @@ export const ClientsTable: React.FC<ClientsTableProps> = () => {
               {/* Bulk Actions */}
               {selectedClientIds.length > 0 && (
                 <button
-                  onClick={() => {}}
-                  className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden text-xs text-foreground font-medium leading-none bg-background px-2 py-1.5 rounded-md border-border hover:bg-accent/50 h-8 mr-2"
+                  onClick={handleBulkDelete}
+                  className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden text-xs text-destructive font-medium leading-none bg-background px-2 py-1.5 rounded-md border-destructive hover:bg-destructive/10 h-8 mr-2"
                 >
-                  <Folder size={14} />
-                  Move to Folder ({selectedClientIds.length})
+                  <Trash size={14} />
+                  Delete ({selectedClientIds.length})
                 </button>
               )}
 
@@ -491,11 +529,13 @@ export const ClientsTable: React.FC<ClientsTableProps> = () => {
       <DeleteConfirmationDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
-        title="Delete Selected Clients"
+        title="Delete Clients"
         description={`Are you sure you want to delete ${selectedClientIds.length} client(s)? This action cannot be undone.`}
-        confirmationText="DELETE"
-        onConfirm={() => {}}
-        isDeleting={false}
+        confirmationText="delete"
+        confirmationValue={deleteConfirmation}
+        onConfirmationValueChange={setDeleteConfirmation}
+        onConfirm={confirmBulkDelete}
+        isDeleting={isDeleting}
       />
 
       <CSVImportDialog
