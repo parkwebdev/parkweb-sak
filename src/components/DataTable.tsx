@@ -375,34 +375,99 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'links-invitat
       
       // Delete from the appropriate table based on current tab
       if (currentActiveTab === 'links-invitations') {
-        const { error } = await supabase
-          .from('client_onboarding_links')
-          .delete()
-          .in('id', selectedRows);
+        // Extract actual IDs for onboarding links
+        const onboardingIds = selectedRows.filter(id => id.startsWith('link-')).map(id => id.replace('link-', ''));
+        const sowIds = selectedRows.filter(id => id.startsWith('sow-')).map(id => id.replace('sow-', ''));
+        
+        if (onboardingIds.length > 0) {
+          const { error } = await supabase
+            .from('client_onboarding_links')
+            .delete()
+            .in('id', onboardingIds);
 
-        if (error) {
-          logger.error('Error deleting onboarding links:', error);
-          toast({
-            title: "Error",
-            description: "Failed to delete selected items. Please try again.",
-            variant: "destructive",
-          });
-          return;
+          if (error) {
+            logger.error('Error deleting onboarding links:', error);
+            toast({
+              title: "Error",
+              description: "Failed to delete selected items. Please try again.",
+              variant: "destructive",
+            });
+            return;
+          }
+        }
+        
+        if (sowIds.length > 0) {
+          const { error } = await supabase
+            .from('scope_of_works')
+            .delete()
+            .in('id', sowIds);
+
+          if (error) {
+            logger.error('Error deleting scope of works:', error);
+            toast({
+              title: "Error",
+              description: "Failed to delete selected items. Please try again.",
+              variant: "destructive",
+            });
+            return;
+          }
         }
       } else if (currentActiveTab === 'submissions-sows') {
-        const { error } = await supabase
-          .from('scope_of_works')
-          .delete()
-          .in('id', selectedRows);
+        const sowIds = selectedRows.filter(id => id.startsWith('sow-')).map(id => id.replace('sow-', ''));
+        
+        if (sowIds.length > 0) {
+          const { error } = await supabase
+            .from('scope_of_works')
+            .delete()
+            .in('id', sowIds);
 
-        if (error) {
-          logger.error('Error deleting scope of works:', error);
-          toast({
-            title: "Error",
-            description: "Failed to delete selected items. Please try again.",
-            variant: "destructive",
-          });
-          return;
+          if (error) {
+            logger.error('Error deleting scope of works:', error);
+            toast({
+              title: "Error",
+              description: "Failed to delete selected items. Please try again.",
+              variant: "destructive",
+            });
+            return;
+          }
+        }
+      } else if (currentActiveTab === 'all-clients') {
+        // Handle "In Review" tab - can have items from both tables
+        const onboardingIds = selectedRows.filter(id => id.startsWith('link-')).map(id => id.replace('link-', ''));
+        const sowIds = selectedRows.filter(id => id.startsWith('sow-')).map(id => id.replace('sow-', ''));
+        
+        if (onboardingIds.length > 0) {
+          const { error } = await supabase
+            .from('client_onboarding_links')
+            .delete()
+            .in('id', onboardingIds);
+
+          if (error) {
+            logger.error('Error deleting onboarding links:', error);
+            toast({
+              title: "Error",
+              description: "Failed to delete selected items. Please try again.",
+              variant: "destructive",
+            });
+            return;
+          }
+        }
+        
+        if (sowIds.length > 0) {
+          const { error } = await supabase
+            .from('scope_of_works')
+            .delete()
+            .in('id', sowIds);
+
+          if (error) {
+            logger.error('Error deleting scope of works:', error);
+            toast({
+              title: "Error",
+              description: "Failed to delete selected items. Please try again.",
+              variant: "destructive",
+            });
+            return;
+          }
         }
       }
 
@@ -419,7 +484,7 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'links-invitat
       logger.error('Error deleting items:', error);
       toast({
         title: "Error",
-        description: "Failed to delete selected items. Please try again.",
+        description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -551,7 +616,6 @@ export const DataTable: React.FC<DataTableProps> = ({ activeTab = 'links-invitat
               </button>
             )}
             
-            <ClientActionButtons activeTab={currentActiveTab} onRefresh={fetchTableData} />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="justify-center items-center border shadow-sm flex gap-1 overflow-hidden text-xs text-foreground font-medium leading-none bg-background px-2 py-1.5 rounded-md border-border hover:bg-accent/50">

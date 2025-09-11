@@ -7,6 +7,7 @@ import { Badge } from '@/components/Badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { logger } from '@/utils/logger';
+import { ClientActionButtons } from './ClientActionButtons';
 
 const tabs = [
   { id: 'links-invitations', label: 'View All' },
@@ -145,6 +146,13 @@ export const MainContent: React.FC<MainContentProps> = ({
                   {pageDescription}
                 </p>
               </div>
+              
+              {/* Create Link Button for Onboarding Page */}
+              {pageTitle === "Onboarding" && activeTab === 'links-invitations' && (
+                <div className="hidden lg:flex">
+                  <ClientActionButtons activeTab={activeTab} onRefresh={() => {}} />
+                </div>
+              )}
             </div>
           </div>
 

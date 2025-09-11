@@ -109,7 +109,6 @@ export const ClientActionButtons: React.FC<ClientActionButtonsProps> = ({
       <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
         <DialogTrigger asChild>
           <Button size="sm" className="ml-auto">
-            <Plus size={16} className="mr-2" />
             Create Link
           </Button>
         </DialogTrigger>

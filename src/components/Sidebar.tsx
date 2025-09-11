@@ -122,8 +122,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
                           <item.icon size={14} className="self-stretch my-auto" />
                         </div>
                         {!isCollapsed && (
-                          <div className={`text-sm font-medium leading-4 self-stretch my-auto ${
-                            isActive ? 'text-accent-foreground' : ''
+                          <div className={`text-sm font-normal leading-4 self-stretch my-auto ${
+                            isActive ? 'text-accent-foreground font-medium' : ''
                           }`}>
                             {item.label}
                           </div>
