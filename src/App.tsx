@@ -16,7 +16,7 @@ import Settings from "./pages/Settings";
 import EmailTest from "./pages/EmailTest";
 import NotFound from "./pages/NotFound";
 import Requests from "./pages/Requests";
-import Clients from "./pages/Clients";
+import ClientsWrapper from "./pages/ClientsWrapper";
 import { Dashboard } from "./pages/Dashboard";
 import OnboardingPage from "./pages/OnboardingPage";
 import DashboardWrapper from "./pages/DashboardWrapper";
@@ -73,7 +73,7 @@ const App = () => (
               } />
               <Route path="/clients" element={
                 <ProtectedRoute>
-                  <Clients />
+                  <ClientsWrapper />
                 </ProtectedRoute>
               } />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

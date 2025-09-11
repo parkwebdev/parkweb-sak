@@ -2,6 +2,17 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
+export interface ClientFolder {
+  id: string;
+  name: string;
+  description?: string;
+  color: string;
+  parent_id?: string;
+  user_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Client {
   id: string;
   email: string;
@@ -21,32 +32,43 @@ export interface Client {
   notes?: string;
   onboarding_url?: string;
   personal_note?: string;
+  folder_id?: string;
 }
 
 export const useClients = () => {
   const [clients, setClients] = useState<Client[]>([]);
+  const [folders, setFolders] = useState<ClientFolder[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
   const fetchClients = async () => {
     try {
-      // Fetch all client data from different tables
+      // Fetch all client data from different tables including folders
       const [
         { data: onboardingLinks, error: onboardingError },
         { data: submissions, error: submissionsError },
         { data: requests, error: requestsError },
-        { data: scopeOfWorks, error: sowError }
+        { data: scopeOfWorks, error: sowError },
+        { data: folders, error: foldersError },
+        { data: folderAssignments, error: assignmentsError }
       ] = await Promise.all([
         supabase.from('client_onboarding_links').select('*').eq('user_id', (await supabase.auth.getUser()).data.user?.id),
         supabase.from('onboarding_submissions').select('*'),
         supabase.from('requests').select('*').eq('user_id', (await supabase.auth.getUser()).data.user?.id),
-        supabase.from('scope_of_works').select('*').eq('user_id', (await supabase.auth.getUser()).data.user?.id)
+        supabase.from('scope_of_works').select('*').eq('user_id', (await supabase.auth.getUser()).data.user?.id),
+        supabase.from('client_folders').select('*').eq('user_id', (await supabase.auth.getUser()).data.user?.id),
+        supabase.from('client_folder_assignments').select('*')
       ]);
 
-      if (onboardingError || submissionsError || requestsError || sowError) {
-        console.error('Error fetching client data:', { onboardingError, submissionsError, requestsError, sowError });
+      if (onboardingError || submissionsError || requestsError || sowError || foldersError || assignmentsError) {
+        console.error('Error fetching client data:', { 
+          onboardingError, submissionsError, requestsError, sowError, foldersError, assignmentsError 
+        });
         return;
       }
+
+      // Set folders data
+      setFolders(folders || []);
 
       // Aggregate client data by email
       const clientMap = new Map<string, Client>();
@@ -57,6 +79,9 @@ export const useClients = () => {
           new Date(link.last_activity || link.created_at).getTime(),
           new Date(link.updated_at).getTime()
         ));
+
+        // Find folder assignment for this client
+        const folderAssignment = folderAssignments?.find(fa => fa.client_email === link.email);
 
         clientMap.set(link.email, {
           id: link.id,
@@ -73,7 +98,8 @@ export const useClients = () => {
           last_activity: lastActivity.toISOString(),
           created_at: link.created_at,
           onboarding_url: link.onboarding_url,
-          personal_note: link.personal_note
+          personal_note: link.personal_note,
+          folder_id: folderAssignment?.folder_id
         });
       });
 
@@ -96,6 +122,8 @@ export const useClients = () => {
           }
         } else {
           // Create new client from submission
+          const folderAssignment = folderAssignments?.find(fa => fa.client_email === submission.client_email);
+          
           clientMap.set(submission.client_email, {
             id: submission.id,
             email: submission.client_email,
@@ -109,7 +137,8 @@ export const useClients = () => {
             completed_requests: 0,
             scope_of_works: 0,
             last_activity: submission.submitted_at,
-            created_at: submission.submitted_at
+            created_at: submission.submitted_at,
+            folder_id: folderAssignment?.folder_id
           });
         }
       });
@@ -213,6 +242,7 @@ export const useClients = () => {
 
   return {
     clients,
+    folders,
     loading,
     refetch: fetchClients
   };

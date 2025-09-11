@@ -14,6 +14,79 @@ export type Database = {
   }
   public: {
     Tables: {
+      client_folder_assignments: {
+        Row: {
+          assigned_at: string
+          assigned_by: string
+          client_email: string
+          folder_id: string
+          id: string
+        }
+        Insert: {
+          assigned_at?: string
+          assigned_by: string
+          client_email: string
+          folder_id: string
+          id?: string
+        }
+        Update: {
+          assigned_at?: string
+          assigned_by?: string
+          client_email?: string
+          folder_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_folder_assignments_folder_id_fkey"
+            columns: ["folder_id"]
+            isOneToOne: false
+            referencedRelation: "client_folders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      client_folders: {
+        Row: {
+          color: string | null
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          parent_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          parent_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          parent_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_folders_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "client_folders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_onboarding_links: {
         Row: {
           client_name: string
