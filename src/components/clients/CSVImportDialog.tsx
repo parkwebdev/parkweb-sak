@@ -29,6 +29,7 @@ const CLIENT_FIELDS = [
   { key: 'company_name', label: 'Company', required: false },
   { key: 'industry', label: 'Industry', required: false },
   { key: 'address', label: 'Address', required: false },
+  { key: 'status', label: 'Status', required: false },
 ];
 
 const FIELD_ALIASES = {
@@ -40,6 +41,7 @@ const FIELD_ALIASES = {
   'company_name': ['company', 'company name', 'organization', 'org', 'business'],
   'industry': ['industry', 'sector', 'business type'],
   'address': ['address', 'street address', 'full address', 'location', 'addr'],
+  'status': ['status', 'client status', 'account status', 'active', 'inactive'],
 };
 
 export const CSVImportDialog: React.FC<CSVImportDialogProps> = ({
