@@ -9,7 +9,6 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { useRealtimeNotifications } from "@/hooks/useRealtimeNotifications";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
-import Onboarding from "./pages/Onboarding";
 import ClientOnboarding from "./pages/ClientOnboarding";
 import ScopeOfWorks from "./pages/ScopeOfWorks";
 import Settings from "./pages/Settings";

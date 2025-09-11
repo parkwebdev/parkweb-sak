@@ -230,11 +230,6 @@ export const MainContent: React.FC<MainContentProps> = ({
             </div>
           )}
 
-          <TabNavigation
-            tabs={tabs}
-            defaultActiveTab={activeTab}
-            onTabChange={onTabChange}
-          />
         </div>
       </header>
 
