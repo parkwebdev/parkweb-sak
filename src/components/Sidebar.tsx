@@ -35,6 +35,12 @@ const navigationItems: NavigationItem[] = [
     label: 'Requests',
     icon: List,
     path: '/requests'
+  },
+  {
+    id: 'clients',
+    label: 'Clients',
+    icon: Users,
+    path: '/clients'
   }
 ];
 

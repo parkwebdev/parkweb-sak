@@ -11,6 +11,7 @@ export const ROUTES = {
   onboarding: '/onboarding',
   clientOnboarding: '/client-onboarding',
   scopeOfWorks: '/scope-of-works',
+  clients: '/clients',
   team: '/team',
   profile: '/profile',
   settings: '/settings',
