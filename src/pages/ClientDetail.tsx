@@ -67,6 +67,7 @@ const ClientDetail = () => {
           active_requests: 0,
           completed_requests: 0,
           scope_of_works: 0,
+          active_tasks: 0,
           last_activity: data.updated_at,
           avatar_url: undefined,
           folder_id: undefined

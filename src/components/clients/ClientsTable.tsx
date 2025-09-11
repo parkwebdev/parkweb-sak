@@ -57,7 +57,7 @@ export const ClientsTable: React.FC<ClientsTableProps> = () => {
     industry: true,
     status: true,
     requests: true,
-    lastActivity: true,
+    activeTasks: true,
     actions: true,
   });
 
@@ -91,9 +91,9 @@ export const ClientsTable: React.FC<ClientsTableProps> = () => {
     
     let aVal: any, bVal: any;
     switch (sortBy) {
-      case 'lastActivity':
-        aVal = new Date(a.last_activity);
-        bVal = new Date(b.last_activity);
+      case 'activeTasks':
+        aVal = a.active_tasks;
+        bVal = b.active_tasks;
         break;
       case 'company':
         aVal = a.company.toLowerCase();
@@ -246,7 +246,6 @@ export const ClientsTable: React.FC<ClientsTableProps> = () => {
           <div className="overflow-x-auto">
             <div className="border shadow-sm flex overflow-hidden text-xs text-foreground font-medium leading-none rounded-md border-border min-w-max">
               {statusTabs.map((tab, index) => {
-                const tabCount = tab.key === 'all' ? sortedClients.length : sortedClients.filter(c => c.status === tab.key).length;
                 const isActive = activeStatus === tab.key;
                 return (
                   <button
@@ -259,9 +258,9 @@ export const ClientsTable: React.FC<ClientsTableProps> = () => {
                     <div className="text-xs leading-4 self-stretch my-auto">
                       {tab.label}
                     </div>
-                    {tabCount > 0 && (
+                    {tab.count > 0 && (
                       <div className={`px-1.5 py-0.5 rounded text-[10px] ${isActive ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
-                        {tabCount}
+                        {tab.count}
                       </div>
                     )}
                   </button>
@@ -356,9 +355,9 @@ export const ClientsTable: React.FC<ClientsTableProps> = () => {
               <DropdownMenuContent align="end" className="w-56 z-50">
                 <DropdownMenuLabel>Sort Options</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => handleSort('lastActivity')}>
-                  Sort by Last Activity {sortBy === 'lastActivity' && (sortOrder === 'asc' ? '↑' : '↓')}
-                </DropdownMenuItem>
+                 <DropdownMenuItem onClick={() => handleSort('activeTasks')}>
+                   Sort by Active Tasks {sortBy === 'activeTasks' && (sortOrder === 'asc' ? '↑' : '↓')}
+                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => handleSort('company')}>
                   Sort by Company {sortBy === 'company' && (sortOrder === 'asc' ? '↑' : '↓')}
                 </DropdownMenuItem>
@@ -417,13 +416,13 @@ export const ClientsTable: React.FC<ClientsTableProps> = () => {
                   </button>
                 </TableHead>
               )}
-              {showColumns.lastActivity && (
+              {showColumns.activeTasks && (
                 <TableHead>
                   <button
-                    onClick={() => handleSort('lastActivity')}
+                    onClick={() => handleSort('activeTasks')}
                     className="flex items-center gap-1 hover:text-foreground"
                   >
-                    Last Activity
+                    Active Tasks
                     <ArrowUpDown size={12} className="text-muted-foreground" />
                   </button>
                 </TableHead>
@@ -487,9 +486,12 @@ export const ClientsTable: React.FC<ClientsTableProps> = () => {
                     </div>
                   </TableCell>
                 )}
-                {showColumns.lastActivity && (
+                {showColumns.activeTasks && (
                   <TableCell className="text-muted-foreground">
-                    {formatDate(client.last_activity)}
+                    <div className="text-sm">
+                      <span className="font-medium">{client.active_tasks || 0}</span>
+                      <span className="text-muted-foreground"> active</span>
+                    </div>
                   </TableCell>
                 )}
                 {showColumns.actions && (

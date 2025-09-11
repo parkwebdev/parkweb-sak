@@ -25,6 +25,7 @@ export interface Client {
   active_requests: number;
   completed_requests: number;
   scope_of_works: number;
+  active_tasks: number;
   last_activity: string;
   created_at: string;
   updated_at?: string;
@@ -56,7 +57,7 @@ export const useClients = () => {
         return;
       }
 
-      // Fetch all client data from different tables including folders
+      // Fetch all client data from different tables including folders and tasks
       const [
         { data: activeClients, error: clientsError },
         { data: onboardingLinks, error: onboardingError },
@@ -64,7 +65,9 @@ export const useClients = () => {
         { data: requests, error: requestsError },
         { data: scopeOfWorks, error: sowError },
         { data: folders, error: foldersError },
-        { data: folderAssignments, error: assignmentsError }
+        { data: folderAssignments, error: assignmentsError },
+        { data: allProjects, error: projectsError },
+        { data: allTasks, error: tasksError }
       ] = await Promise.all([
         supabase.from('clients').select('*').eq('user_id', userId),
         supabase.from('client_onboarding_links').select('*').eq('user_id', userId),
@@ -72,12 +75,14 @@ export const useClients = () => {
         supabase.from('requests').select('*').eq('user_id', userId),
         supabase.from('scope_of_works').select('*').eq('user_id', userId),
         supabase.from('client_folders').select('*').eq('user_id', userId),
-        supabase.from('client_folder_assignments').select('*')
+        supabase.from('client_folder_assignments').select('*'),
+        supabase.from('projects').select('*').eq('user_id', userId),
+        supabase.from('project_tasks').select('*').eq('user_id', userId)
       ]);
 
-      if (clientsError || onboardingError || submissionsError || requestsError || sowError || foldersError || assignmentsError) {
+      if (clientsError || onboardingError || submissionsError || requestsError || sowError || foldersError || assignmentsError || projectsError || tasksError) {
         console.error('Error fetching client data:', { 
-          clientsError, onboardingError, submissionsError, requestsError, sowError, foldersError, assignmentsError 
+          clientsError, onboardingError, submissionsError, requestsError, sowError, foldersError, assignmentsError, projectsError, tasksError 
         });
         return;
       }
@@ -110,6 +115,7 @@ export const useClients = () => {
           active_requests: 0,
           completed_requests: 0,
           scope_of_works: 0,
+          active_tasks: 0,
           last_activity: client.updated_at || client.created_at,
           created_at: client.created_at,
           updated_at: client.updated_at,
@@ -148,6 +154,7 @@ export const useClients = () => {
             active_requests: 0,
             completed_requests: 0,
             scope_of_works: 0,
+            active_tasks: 0,
             last_activity: lastActivity.toISOString(),
             created_at: link.created_at,
             updated_at: link.updated_at,
@@ -196,6 +203,7 @@ export const useClients = () => {
             active_requests: 0,
             completed_requests: 0,
             scope_of_works: 0,
+            active_tasks: 0,
             last_activity: submission.submitted_at,
             created_at: submission.submitted_at,
             updated_at: undefined,
@@ -238,6 +246,28 @@ export const useClients = () => {
           
           if (sowDate > lastActivityDate) {
             client.last_activity = sow.updated_at;
+          }
+        }
+      });
+
+      // Process tasks to update active task counters
+      // First, create a map of project_id to client_email for faster lookup
+      const projectClientMap = new Map<string, string>();
+      allProjects?.forEach(project => {
+        // Find the client by looking up project.client_id in the clientMap
+        const client = Array.from(clientMap.values()).find(c => c.id === project.client_id);
+        if (client) {
+          projectClientMap.set(project.id, client.email);
+        }
+      });
+
+      // Count active tasks per client
+      allTasks?.forEach(task => {
+        const clientEmail = projectClientMap.get(task.project_id);
+        if (clientEmail) {
+          const client = clientMap.get(clientEmail);
+          if (client && ['to_do', 'in_progress', 'on_hold'].includes(task.status)) {
+            client.active_tasks++;
           }
         }
       });
