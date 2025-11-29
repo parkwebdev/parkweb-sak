@@ -9,6 +9,7 @@ import { OrganizationProvider } from "@/contexts/OrganizationContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
+import HostedChat from "./pages/HostedChat";
 import DashboardWrapper from "./pages/DashboardWrapper";
 import AgentsWrapper from "./pages/AgentsWrapper";
 import ConversationsWrapper from "./pages/ConversationsWrapper";
@@ -29,6 +30,7 @@ const App = () => (
             <OrganizationProvider>
               <Routes>
                 <Route path="/login" element={<Auth />} />
+                <Route path="/:orgSlug/:agentSlug" element={<HostedChat />} />
                 <Route path="/" element={
                   <ProtectedRoute>
                     <DashboardWrapper />
