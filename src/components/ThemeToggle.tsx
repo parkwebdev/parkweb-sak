@@ -10,8 +10,9 @@ interface ThemeToggleProps {
 export function ThemeToggle({ isCollapsed = false }: ThemeToggleProps) {
   const { theme, setTheme } = useTheme();
   const { ref, toggleSwitchTheme, isDarkMode } = useModeAnimation({
-    animationType: ThemeAnimationType.CIRCLE,
-    blurAmount: 5
+    animationType: ThemeAnimationType.BLUR_CIRCLE,
+    blurAmount: 4,
+    duration: 1000
   });
 
   const handleToggle = () => {
@@ -27,7 +28,7 @@ export function ThemeToggle({ isCollapsed = false }: ThemeToggleProps) {
       ref={ref}
       variant="outline" 
       size="sm" 
-      className={`p-0 ${isCollapsed ? 'h-6 w-6' : 'h-7 w-7'}`}
+      className={`relative z-[9999] p-0 ${isCollapsed ? 'h-6 w-6' : 'h-7 w-7'}`}
       onClick={handleToggle}
     >
       {isCurrentlyDark ? (
