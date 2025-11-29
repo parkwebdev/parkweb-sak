@@ -28,6 +28,11 @@ export interface HelpArticle {
   order: number;
 }
 
+export interface HelpCategory {
+  name: string;
+  description: string;
+}
+
 export interface EmbeddedChatConfig {
   agentId: string;
   primaryColor: string;
@@ -86,7 +91,7 @@ export interface EmbeddedChatConfig {
   
   // Help Articles
   helpArticles: HelpArticle[];
-  helpCategories: string[];
+  helpCategories: HelpCategory[];
 }
 
 export const useEmbeddedChatConfig = (agentId: string) => {
