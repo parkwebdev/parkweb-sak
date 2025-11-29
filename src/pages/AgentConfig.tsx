@@ -7,6 +7,7 @@ import { AgentBehaviorTab } from '@/components/agents/tabs/AgentBehaviorTab';
 import { AgentKnowledgeTab } from '@/components/agents/tabs/AgentKnowledgeTab';
 import { AgentToolsTab } from '@/components/agents/tabs/AgentToolsTab';
 import { AgentEmbedTab } from '@/components/agents/tabs/AgentEmbedTab';
+import { AgentAnnouncementsTab } from '@/components/agents/tabs/AgentAnnouncementsTab';
 import { AgentConfigLayout, type AgentConfigTab } from '@/components/agents/AgentConfigLayout';
 import type { Tables } from '@/integrations/supabase/types';
 
@@ -121,6 +122,9 @@ const AgentConfig: React.FC<AgentConfigProps> = ({ onMenuClick }) => {
                 onUpdate={handleUpdate}
                 onFormChange={setHasUnsavedChanges}
               />
+            )}
+            {activeTab === 'announcements' && (
+              <AgentAnnouncementsTab />
             )}
           </AgentConfigLayout>
         </div>

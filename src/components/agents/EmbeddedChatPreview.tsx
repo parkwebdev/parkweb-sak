@@ -21,6 +21,7 @@ import { z } from 'zod';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useHelpArticles } from '@/hooks/useHelpArticles';
+import { useAnnouncements } from '@/hooks/useAnnouncements';
 import { Badge } from '@/components/ui/badge';
 
 interface EmbeddedChatPreviewProps {
@@ -32,6 +33,9 @@ type ViewType = 'home' | 'messages' | 'help' | 'contact';
 export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
   // Load help articles from database
   const { articles: helpArticles, categories: helpCategories, loading: helpLoading } = useHelpArticles(config.agentId);
+  const { announcements: allAnnouncements } = useAnnouncements(config.agentId || '');
+  
+  const activeAnnouncements = allAnnouncements.filter(a => a.is_active);
 
   const [isOpen, setIsOpen] = useState(false);
   const [currentView, setCurrentView] = useState<ViewType>('home');
@@ -617,36 +621,91 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
               <div className="flex-1 overflow-hidden bg-background flex flex-col relative">
                 {/* Home View */}
                 {currentView === 'home' && (
-                  <div className={`flex-1 overflow-y-auto p-4 space-y-3 ${getTransitionClasses()} ${config.viewTransition === 'fade' ? 'opacity-100' : ''}`}>
-                    {config.quickActions.map((action, idx) => (
-                      <div
-                        key={action.id}
-                        className="p-4 border rounded-lg bg-card hover:bg-accent/50 cursor-pointer transition-all hover:shadow-md group animate-fade-in"
-                        style={{ 
-                          animationDelay: `${idx * 100}ms`,
-                          animationFillMode: 'backwards'
-                        }}
-                        onClick={() => handleQuickActionClick(action.action)}
-                      >
-                        <div className="flex items-start gap-3">
-                          <div 
-                            className="p-2 rounded-lg shrink-0"
-                            style={{ backgroundColor: `${config.primaryColor}15` }}
+                  <div className={`flex-1 overflow-y-auto p-4 ${getTransitionClasses()} ${config.viewTransition === 'fade' ? 'opacity-100' : ''}`}>
+                    {/* Announcements */}
+                    {activeAnnouncements.length > 0 && (
+                      <div className="space-y-3 mb-6">
+                        {activeAnnouncements.map((announcement, idx) => (
+                          <div
+                            key={announcement.id}
+                            className="rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition-shadow animate-fade-in"
+                            style={{ 
+                              backgroundColor: announcement.background_color,
+                              animationDelay: `${idx * 100}ms`,
+                              animationFillMode: 'backwards'
+                            }}
+                            onClick={() => {
+                              if (announcement.action_type === 'open_url' && announcement.action_url) {
+                                window.open(announcement.action_url, '_blank');
+                              } else if (announcement.action_type === 'start_chat') {
+                                setCurrentView('messages');
+                              } else if (announcement.action_type === 'open_help') {
+                                setCurrentView('help');
+                              }
+                            }}
                           >
-                            <div style={{ color: config.primaryColor }}>
-                              {getQuickActionIcon(action.icon)}
+                            {announcement.image_url && (
+                              <div className="h-32 overflow-hidden">
+                                <img 
+                                  src={announcement.image_url} 
+                                  alt="" 
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                            )}
+                            <div className="p-4 flex items-center justify-between">
+                              <div className="flex-1 min-w-0">
+                                <h3 
+                                  className="font-semibold text-base"
+                                  style={{ color: announcement.title_color }}
+                                >
+                                  {announcement.title}
+                                </h3>
+                                {announcement.subtitle && (
+                                  <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
+                                    {announcement.subtitle}
+                                  </p>
+                                )}
+                              </div>
+                              <ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0 ml-2" />
                             </div>
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between gap-2">
-                              <h4 className="font-medium text-sm">{action.title}</h4>
-                              <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:translate-x-1 transition-transform" />
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Quick Actions */}
+                    <div className="space-y-3">
+                      {config.quickActions.map((action, idx) => (
+                        <div
+                          key={action.id}
+                          className="p-4 border rounded-lg bg-card hover:bg-accent/50 cursor-pointer transition-all hover:shadow-md group animate-fade-in"
+                          style={{ 
+                            animationDelay: `${idx * 100}ms`,
+                            animationFillMode: 'backwards'
+                          }}
+                          onClick={() => handleQuickActionClick(action.action)}
+                        >
+                          <div className="flex items-start gap-3">
+                            <div 
+                              className="p-2 rounded-lg shrink-0"
+                              style={{ backgroundColor: `${config.primaryColor}15` }}
+                            >
+                              <div style={{ color: config.primaryColor }}>
+                                {getQuickActionIcon(action.icon)}
+                              </div>
                             </div>
-                            <p className="text-xs text-muted-foreground mt-0.5">{action.subtitle}</p>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between gap-2">
+                                <h4 className="font-medium text-sm">{action.title}</h4>
+                                <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:translate-x-1 transition-transform" />
+                              </div>
+                              <p className="text-xs text-muted-foreground mt-0.5">{action.subtitle}</p>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
                 )}
 
@@ -957,27 +1016,27 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
                              </div>
                            ))}
                           
-                           {/* Typing Indicator - Always enabled, only shows when AI is responding */}
-                          {isTyping && (
-                            <div className="flex items-start animate-fade-in">
-                              <div className="bg-muted rounded-lg px-4 py-3">
-                                <div className="flex gap-1">
-                                  <div 
-                                    className="w-2 h-2 rounded-full bg-muted-foreground/60 animate-bounce"
-                                    style={{ animationDelay: '0ms', animationDuration: '1s' }}
-                                  />
-                                  <div 
-                                    className="w-2 h-2 rounded-full bg-muted-foreground/60 animate-bounce"
-                                    style={{ animationDelay: '200ms', animationDuration: '1s' }}
-                                  />
-                                  <div 
-                                    className="w-2 h-2 rounded-full bg-muted-foreground/60 animate-bounce"
-                                    style={{ animationDelay: '400ms', animationDuration: '1s' }}
-                                  />
-                                </div>
-                              </div>
-                            </div>
-                          )}
+                            {/* Typing Indicator - Always enabled, only shows when AI is responding */}
+                           {isTyping && (
+                             <div className="flex items-start animate-fade-in">
+                               <div className="bg-muted rounded-lg px-3 py-2">
+                                 <div className="flex gap-1">
+                                   <div 
+                                     className="w-1.5 h-1.5 rounded-full bg-muted-foreground/60 animate-bounce"
+                                     style={{ animationDelay: '0ms', animationDuration: '1s' }}
+                                   />
+                                   <div 
+                                     className="w-1.5 h-1.5 rounded-full bg-muted-foreground/60 animate-bounce"
+                                     style={{ animationDelay: '150ms', animationDuration: '1s' }}
+                                   />
+                                   <div 
+                                     className="w-1.5 h-1.5 rounded-full bg-muted-foreground/60 animate-bounce"
+                                     style={{ animationDelay: '300ms', animationDuration: '1s' }}
+                                   />
+                                 </div>
+                               </div>
+                             </div>
+                           )}
                         </div>
 
                         {/* Input */}
