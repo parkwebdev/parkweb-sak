@@ -10,7 +10,6 @@ import { AgentPerformanceChart } from '@/components/analytics/AgentPerformanceCh
 import { UsageMetricsChart } from '@/components/analytics/UsageMetricsChart';
 import { ReportBuilder, ReportConfig } from '@/components/analytics/ReportBuilder';
 import { ScheduledReportsManager } from '@/components/analytics/ScheduledReportsManager';
-import { DataTables } from '@/components/analytics/DataTables';
 import { AnalyticsToolbar } from '@/components/analytics/AnalyticsToolbar';
 import { generateCSVReport, generatePDFReport } from '@/lib/report-export';
 import { toast } from 'sonner';
@@ -23,7 +22,6 @@ interface AnalyticsProps {
 const Analytics: React.FC<AnalyticsProps> = ({ onMenuClick }) => {
   const { currentOrg } = useOrganization();
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [reportsSubTab, setReportsSubTab] = useState('configure');
 
   // Date state
   const [startDate, setStartDate] = useState(subDays(new Date(), 30));
@@ -244,23 +242,7 @@ const Analytics: React.FC<AnalyticsProps> = ({ onMenuClick }) => {
 
         {/* Reports Tab */}
         <TabsContent value="reports" className="space-y-6 mt-6">
-          <Tabs value={reportsSubTab} onValueChange={setReportsSubTab}>
-            <TabsList>
-              <TabsTrigger value="configure">Configure</TabsTrigger>
-              <TabsTrigger value="data">View Data</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="configure" className="mt-6">
-              <ReportBuilder config={reportConfig} onConfigChange={setReportConfig} />
-            </TabsContent>
-
-            <TabsContent value="data" className="mt-6">
-              <DataTables
-                activeTab="conversations"
-                data={analyticsData}
-              />
-            </TabsContent>
-          </Tabs>
+          <ReportBuilder config={reportConfig} onConfigChange={setReportConfig} />
         </TabsContent>
 
         {/* Schedule Tab */}

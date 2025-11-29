@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { Plus, Edit02, Trash01, Clock } from '@untitledui/icons';
+import { Edit02, Trash01, Clock } from '@untitledui/icons';
 import { useScheduledReports } from '@/hooks/useScheduledReports';
 import { CreateScheduledReportDialog } from './CreateScheduledReportDialog';
 import { format } from 'date-fns';
@@ -66,7 +66,6 @@ export const ScheduledReportsManager = () => {
               </CardDescription>
             </div>
             <Button onClick={() => setIsCreateOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" />
               Schedule Report
             </Button>
           </div>
@@ -80,11 +79,7 @@ export const ScheduledReportsManager = () => {
             <div className="text-center py-8 text-muted-foreground">
               <Clock className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <p className="text-lg font-medium mb-2">No scheduled reports yet</p>
-              <p className="text-sm mb-4">Create your first scheduled report to automate analytics delivery</p>
-              <Button onClick={() => setIsCreateOpen(true)}>
-                <Plus className="mr-2 h-4 w-4" />
-                Create Scheduled Report
-              </Button>
+              <p className="text-sm">Create your first scheduled report to automate analytics delivery</p>
             </div>
           ) : (
             <Table>
