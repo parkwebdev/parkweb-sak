@@ -1,24 +1,25 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Settings01, Link03 } from '@untitledui/icons';
+import { Link03, ChevronDown, ChevronRight } from '@untitledui/icons';
 import { toast } from 'sonner';
 import type { Tables } from '@/integrations/supabase/types';
 import { WidgetConfigurator } from '../WidgetConfigurator';
 import { useOrganization } from '@/contexts/OrganizationContext';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 type Agent = Tables<'agents'>;
 
 interface AgentDeploymentTabProps {
   agent: Agent;
   onUpdate: (id: string, updates: any) => Promise<any>;
+  onFormChange?: (hasChanges: boolean) => void;
 }
 
-export const AgentDeploymentTab = ({ agent, onUpdate }: AgentDeploymentTabProps) => {
+export const AgentDeploymentTab = ({ agent, onUpdate, onFormChange }: AgentDeploymentTabProps) => {
   const { currentOrg } = useOrganization();
   const deploymentConfig = (agent.deployment_config as any) || {
     api_enabled: false,
@@ -27,60 +28,67 @@ export const AgentDeploymentTab = ({ agent, onUpdate }: AgentDeploymentTabProps)
   };
 
   const [config, setConfig] = useState(deploymentConfig);
-  const [saving, setSaving] = useState(false);
-
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      await onUpdate(agent.id, { deployment_config: config });
-    } finally {
-      setSaving(false);
-    }
-  };
+  const [apiOpen, setApiOpen] = useState(false);
+  const [widgetOpen, setWidgetOpen] = useState(false);
+  const [hostedOpen, setHostedOpen] = useState(false);
 
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
     toast.success(`${label} copied to clipboard`);
   };
 
-  // Generate agent slug from name (lowercase, hyphens for spaces)
   const agentSlug = agent.name.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-');
-  
   const apiEndpoint = `https://mvaimvwdukpgvkifkfpa.supabase.co/functions/v1/widget-chat`;
-  const widgetCode = `<script src="https://cdn.example.com/agent-widget.js" data-agent-id="${agent.id}"></script>`;
   const hostedUrl = currentOrg ? `${window.location.origin}/${currentOrg.slug}/${agentSlug}` : `Loading...`;
 
   const hasChanges = JSON.stringify(config) !== JSON.stringify(deploymentConfig);
 
-  return (
-    <div className="space-y-6">
-      <Tabs defaultValue="settings">
-        <TabsList>
-          <TabsTrigger value="settings">
-            <Settings01 className="h-4 w-4 mr-2" />
-            Deployment Settings
-          </TabsTrigger>
-          <TabsTrigger value="widget" disabled={!config.widget_enabled}>
-            Widget Configurator
-          </TabsTrigger>
-        </TabsList>
+  useEffect(() => {
+    onFormChange?.(hasChanges);
+  }, [hasChanges, onFormChange]);
 
-        <TabsContent value="settings" className="space-y-4 mt-4">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>API Access</CardTitle>
-                  <CardDescription>Enable REST API access to your agent</CardDescription>
-                </div>
-                <Switch
-                  checked={config.api_enabled}
-                  onCheckedChange={(checked) => setConfig({ ...config, api_enabled: checked })}
-                />
+  // Export save function for parent
+  (AgentDeploymentTab as any).handleSave = async () => {
+    if (hasChanges) {
+      await onUpdate(agent.id, { deployment_config: config });
+    }
+  };
+
+  return (
+    <div className="space-y-4 max-w-4xl">
+      {/* API Access Card */}
+      <Card>
+        <Collapsible open={apiOpen || config.api_enabled} onOpenChange={setApiOpen}>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <CardTitle className="flex items-center gap-2">
+                  <CollapsibleTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0 -ml-1">
+                      {(apiOpen || config.api_enabled) ? (
+                        <ChevronDown size={16} />
+                      ) : (
+                        <ChevronRight size={16} />
+                      )}
+                    </Button>
+                  </CollapsibleTrigger>
+                  API Access
+                </CardTitle>
+                <CardDescription>Enable REST API access to your agent</CardDescription>
               </div>
-            </CardHeader>
+              <Switch
+                checked={config.api_enabled}
+                onCheckedChange={(checked) => {
+                  setConfig({ ...config, api_enabled: checked });
+                  if (checked) setApiOpen(true);
+                }}
+              />
+            </div>
+          </CardHeader>
+          
+          <CollapsibleContent>
             {config.api_enabled && (
-              <CardContent className="space-y-3">
+              <CardContent className="space-y-3 pt-0">
                 <div className="space-y-2">
                   <Label>API Endpoint</Label>
                   <div className="flex gap-2">
@@ -99,45 +107,83 @@ export const AgentDeploymentTab = ({ agent, onUpdate }: AgentDeploymentTabProps)
                 </p>
               </CardContent>
             )}
-          </Card>
+          </CollapsibleContent>
+        </Collapsible>
+      </Card>
 
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>Chat Widget</CardTitle>
-                  <CardDescription>Embed a chat widget on your website</CardDescription>
-                </div>
-                <Switch
-                  checked={config.widget_enabled}
-                  onCheckedChange={(checked) => setConfig({ ...config, widget_enabled: checked })}
-                />
+      {/* Chat Widget Card */}
+      <Card>
+        <Collapsible open={widgetOpen || config.widget_enabled} onOpenChange={setWidgetOpen}>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <CardTitle className="flex items-center gap-2">
+                  <CollapsibleTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0 -ml-1">
+                      {(widgetOpen || config.widget_enabled) ? (
+                        <ChevronDown size={16} />
+                      ) : (
+                        <ChevronRight size={16} />
+                      )}
+                    </Button>
+                  </CollapsibleTrigger>
+                  Chat Widget
+                </CardTitle>
+                <CardDescription>Embed a chat widget on your website</CardDescription>
               </div>
-            </CardHeader>
+              <Switch
+                checked={config.widget_enabled}
+                onCheckedChange={(checked) => {
+                  setConfig({ ...config, widget_enabled: checked });
+                  if (checked) setWidgetOpen(true);
+                }}
+              />
+            </div>
+          </CardHeader>
+          
+          <CollapsibleContent>
             {config.widget_enabled && (
-              <CardContent className="space-y-3">
-                <p className="text-sm text-muted-foreground">
-                  Widget is enabled. Use the Widget Configurator tab to customize appearance and generate embed code.
-                </p>
+              <CardContent className="pt-0">
+                <WidgetConfigurator agentId={agent.id} />
               </CardContent>
             )}
-          </Card>
+          </CollapsibleContent>
+        </Collapsible>
+      </Card>
 
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>Hosted Chat Page</CardTitle>
-                  <CardDescription>Standalone chat page hosted by us</CardDescription>
-                </div>
-                <Switch
-                  checked={config.hosted_page_enabled}
-                  onCheckedChange={(checked) => setConfig({ ...config, hosted_page_enabled: checked })}
-                />
+      {/* Hosted Chat Page Card */}
+      <Card>
+        <Collapsible open={hostedOpen || config.hosted_page_enabled} onOpenChange={setHostedOpen}>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <CardTitle className="flex items-center gap-2">
+                  <CollapsibleTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0 -ml-1">
+                      {(hostedOpen || config.hosted_page_enabled) ? (
+                        <ChevronDown size={16} />
+                      ) : (
+                        <ChevronRight size={16} />
+                      )}
+                    </Button>
+                  </CollapsibleTrigger>
+                  Hosted Chat Page
+                </CardTitle>
+                <CardDescription>Standalone chat page hosted by us</CardDescription>
               </div>
-            </CardHeader>
+              <Switch
+                checked={config.hosted_page_enabled}
+                onCheckedChange={(checked) => {
+                  setConfig({ ...config, hosted_page_enabled: checked });
+                  if (checked) setHostedOpen(true);
+                }}
+              />
+            </div>
+          </CardHeader>
+          
+          <CollapsibleContent>
             {config.hosted_page_enabled && (
-              <CardContent className="space-y-3">
+              <CardContent className="space-y-3 pt-0">
                 <div className="space-y-2">
                   <Label>Hosted Page URL</Label>
                   <div className="flex gap-2">
@@ -163,19 +209,9 @@ export const AgentDeploymentTab = ({ agent, onUpdate }: AgentDeploymentTabProps)
                 </p>
               </CardContent>
             )}
-          </Card>
-
-          <div className="flex justify-end pt-4 border-t border-border">
-            <Button onClick={handleSave} disabled={saving || !hasChanges}>
-              {saving ? 'Saving...' : 'Save Deployment Settings'}
-            </Button>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="widget" className="mt-4">
-          {config.widget_enabled && <WidgetConfigurator agentId={agent.id} />}
-        </TabsContent>
-      </Tabs>
+          </CollapsibleContent>
+        </Collapsible>
+      </Card>
     </div>
   );
 };
