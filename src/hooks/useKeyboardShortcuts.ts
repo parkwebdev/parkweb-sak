@@ -16,48 +16,34 @@ export const useKeyboardShortcuts = (shortcuts: KeyboardShortcut[] = []) => {
   // Default global shortcuts
   const defaultShortcuts: KeyboardShortcut[] = [
     {
-      key: 'n',
-      ctrlKey: true,
-      description: 'Create new onboarding',
-      action: () => navigate('/onboarding')
-    },
-    {
-      key: 's',
-      ctrlKey: true,
-      description: 'Go to Scope of Works',
-      action: () => navigate('/scope-of-works')
-    },
-    {
-      key: 'h',
+      key: 'd',
       ctrlKey: true,
       description: 'Go to Dashboard',
-      action: () => navigate('/')
+      action: () => navigate('/dashboard')
     },
     {
-      key: 't',
+      key: 'a',
       ctrlKey: true,
-      description: 'Go to Team Settings',
-      action: () => {
-        navigate('/settings');
-        // Use a small timeout to ensure navigation completes before setting tab
-        setTimeout(() => {
-          const event = new CustomEvent('setActiveTab', { detail: 'team' });
-          window.dispatchEvent(event);
-        }, 100);
-      }
+      description: 'Go to Agents',
+      action: () => navigate('/agents')
     },
     {
-      key: 'p',
+      key: 'c',
       ctrlKey: true,
-      description: 'Go to Profile Settings',
-      action: () => {
-        navigate('/settings');
-        // Use a small timeout to ensure navigation completes before setting tab
-        setTimeout(() => {
-          const event = new CustomEvent('setActiveTab', { detail: 'profile' });
-          window.dispatchEvent(event);
-        }, 100);
-      }
+      description: 'Go to Conversations',
+      action: () => navigate('/conversations')
+    },
+    {
+      key: 'l',
+      ctrlKey: true,
+      description: 'Go to Leads',
+      action: () => navigate('/leads')
+    },
+    {
+      key: 'y',
+      ctrlKey: true,
+      description: 'Go to Analytics',
+      action: () => navigate('/analytics')
     },
     {
       key: ',',
