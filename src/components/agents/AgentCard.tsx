@@ -48,24 +48,20 @@ export const AgentCard = ({ agent, onEdit, onDelete, onStatusChange }: AgentCard
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => onEdit(agent)}>
-                <Settings01 className="h-4 w-4 mr-2" />
                 Configure
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               {agent.status === 'active' ? (
                 <DropdownMenuItem onClick={() => onStatusChange(agent.id, 'paused')}>
-                  <PauseCircle className="h-4 w-4 mr-2" />
                   Pause
                 </DropdownMenuItem>
               ) : (
                 <DropdownMenuItem onClick={() => onStatusChange(agent.id, 'active')}>
-                  <Play className="h-4 w-4 mr-2" />
                   Activate
                 </DropdownMenuItem>
               )}
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => onDelete(agent.id)} className="text-destructive">
-                <Trash01 className="h-4 w-4 mr-2" />
                 Delete
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -109,7 +105,6 @@ export const AgentCard = ({ agent, onEdit, onDelete, onStatusChange }: AgentCard
 
       <CardFooter>
         <Button variant="outline" size="sm" onClick={() => onEdit(agent)} className="w-full">
-          <Settings01 className="h-4 w-4 mr-2" />
           Configure Agent
         </Button>
       </CardFooter>

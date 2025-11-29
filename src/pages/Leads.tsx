@@ -93,11 +93,9 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
             </div>
             <div className="flex gap-2">
               <Button variant="outline" onClick={handleExport} disabled={filteredLeads.length === 0}>
-                <Download01 className="h-4 w-4 mr-2" />
                 Export
               </Button>
               <Button onClick={() => setIsCreateOpen(true)}>
-                <Plus className="h-4 w-4 mr-2" />
                 Add Lead
               </Button>
             </div>

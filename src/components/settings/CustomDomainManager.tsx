@@ -110,7 +110,6 @@ export const CustomDomainManager = () => {
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button size="sm">
-                <Plus className="w-4 h-4 mr-2" />
                 Add Domain
               </Button>
             </DialogTrigger>
@@ -211,7 +210,6 @@ export const CustomDomainManager = () => {
                               </>
                             ) : (
                               <>
-                                <CheckCircle className="w-4 h-4 mr-2" />
                                 Verify
                               </>
                             )}
@@ -223,7 +221,6 @@ export const CustomDomainManager = () => {
                             variant="outline"
                             onClick={() => setPrimaryDomain(domain.id)}
                           >
-                            <Star01 className="w-4 h-4 mr-2" />
                             Set Primary
                           </Button>
                         )}

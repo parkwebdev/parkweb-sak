@@ -26,7 +26,6 @@ export const AgentKnowledgeTab = ({ agentId, orgId }: AgentKnowledgeTabProps) =>
           Add knowledge sources to give your agent access to specific information through vector search.
         </p>
         <Button size="sm" onClick={() => setAddDialogOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
           Add Source
         </Button>
       </div>
@@ -42,7 +41,6 @@ export const AgentKnowledgeTab = ({ agentId, orgId }: AgentKnowledgeTabProps) =>
               Add documents, URLs, or custom content to enhance your agent's knowledge
             </p>
             <Button onClick={() => setAddDialogOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
               Add Your First Source
             </Button>
           </CardContent>
