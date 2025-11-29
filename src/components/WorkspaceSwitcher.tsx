@@ -14,8 +14,9 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useSidebar } from '@/hooks/use-sidebar';
 import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { DropdownMenuPortal } from '@/components/ui/dropdown-menu';
 
 export const WorkspaceSwitcher = () => {
   const { currentOrg, organizations, switchOrganization } = useOrganization();
@@ -24,6 +25,7 @@ export const WorkspaceSwitcher = () => {
   const navigate = useNavigate();
   const [memberCounts, setMemberCounts] = useState<Record<string, number>>({});
   const [orgLogos, setOrgLogos] = useState<Record<string, string | null>>({});
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchOrgData = async () => {
@@ -77,8 +79,9 @@ export const WorkspaceSwitcher = () => {
   const hasMultipleWorkspaces = organizations.length > 1;
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
+    <div ref={containerRef}>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
           className={`w-full justify-start gap-2 h-auto bg-muted/50 hover:bg-muted ${
@@ -101,10 +104,11 @@ export const WorkspaceSwitcher = () => {
           )}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent 
-        align="start" 
-        className="w-[calc(100%-0.5rem)] max-w-[264px] bg-background border shadow-lg z-50"
-      >
+      <DropdownMenuPortal container={containerRef.current}>
+        <DropdownMenuContent 
+          align="start" 
+          className="w-[264px] bg-background border shadow-lg z-50"
+        >
         {hasMultipleWorkspaces && (
           <>
             <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">
@@ -191,7 +195,9 @@ export const WorkspaceSwitcher = () => {
             <span className="text-sm">Create New Workspace</span>
           </div>
         </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+        </DropdownMenuContent>
+      </DropdownMenuPortal>
+      </DropdownMenu>
+    </div>
   );
 };
