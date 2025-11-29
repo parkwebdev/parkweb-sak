@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Settings01 as Settings, User01 as User, Users01 as Users, Menu01 as Menu, Bell02 as Bell, Building02, CreditCard01, BarChart02 } from '@untitledui/icons';
+import { Menu01 as Menu } from '@untitledui/icons';
 import { cn } from '@/lib/utils';
 
 interface SettingsLayoutProps {
@@ -11,7 +11,6 @@ export type SettingsTab = 'general' | 'profile' | 'team' | 'notifications' | 'or
 interface SettingsMenuItemProps {
   id: SettingsTab;
   label: string;
-  icon: React.ComponentType<{ size?: number; className?: string }>;
   active: boolean;
   onClick: (id: SettingsTab) => void;
 }
@@ -19,7 +18,6 @@ interface SettingsMenuItemProps {
 const SettingsMenuItem: React.FC<SettingsMenuItemProps> = ({
   id,
   label,
-  icon: Icon,
   active,
   onClick,
 }) => {
@@ -33,7 +31,6 @@ const SettingsMenuItem: React.FC<SettingsMenuItemProps> = ({
           : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
       )}
     >
-      <Icon size={16} />
       {label}
     </button>
   );
@@ -53,15 +50,15 @@ export const SettingsLayout: React.FC<SettingsLayoutContentProps> = ({
   onMenuClick,
 }) => {
   const menuItems = [
-    { id: 'general' as SettingsTab, label: 'General', icon: Settings },
-    { id: 'profile' as SettingsTab, label: 'Profile', icon: User },
-    { id: 'organization' as SettingsTab, label: 'Workspace', icon: Building02 },
-    { id: 'team' as SettingsTab, label: 'Team', icon: Users },
-    { id: 'billing' as SettingsTab, label: 'Billing', icon: CreditCard01 },
-    { id: 'usage' as SettingsTab, label: 'Usage', icon: BarChart02 },
-    { id: 'notifications' as SettingsTab, label: 'Notifications', icon: Bell },
-    { id: 'webhooks' as SettingsTab, label: 'Webhooks', icon: Settings },
-    { id: 'api-keys' as SettingsTab, label: 'API Keys', icon: Settings },
+    { id: 'general' as SettingsTab, label: 'General' },
+    { id: 'profile' as SettingsTab, label: 'Profile' },
+    { id: 'organization' as SettingsTab, label: 'Workspace' },
+    { id: 'team' as SettingsTab, label: 'Team' },
+    { id: 'billing' as SettingsTab, label: 'Billing' },
+    { id: 'usage' as SettingsTab, label: 'Usage' },
+    { id: 'notifications' as SettingsTab, label: 'Notifications' },
+    { id: 'webhooks' as SettingsTab, label: 'Webhooks' },
+    { id: 'api-keys' as SettingsTab, label: 'API Keys' },
   ];
 
   return (
@@ -96,7 +93,6 @@ export const SettingsLayout: React.FC<SettingsLayoutContentProps> = ({
                   : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
               )}
             >
-              <item.icon size={16} />
               {item.label}
             </button>
           ))}
@@ -118,7 +114,6 @@ export const SettingsLayout: React.FC<SettingsLayoutContentProps> = ({
                 key={item.id}
                 id={item.id}
                 label={item.label}
-                icon={item.icon}
                 active={activeTab === item.id}
                 onClick={onTabChange}
               />

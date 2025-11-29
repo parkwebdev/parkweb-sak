@@ -162,7 +162,6 @@ export const CreateWebhookDialog = ({ open, onOpenChange }: CreateWebhookDialogP
                   </p>
                 </div>
                 <Button type="button" variant="outline" size="sm" onClick={addHeader}>
-                  <Plus className="h-4 w-4 mr-1" />
                   Add Header
                 </Button>
               </div>
@@ -182,10 +181,10 @@ export const CreateWebhookDialog = ({ open, onOpenChange }: CreateWebhookDialogP
                     <Button
                       type="button"
                       variant="ghost"
-                      size="icon"
+                      size="sm"
                       onClick={() => removeHeader(index)}
                     >
-                      <Trash01 className="h-4 w-4" />
+                      Remove
                     </Button>
                   </div>
                 ))}

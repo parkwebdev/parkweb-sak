@@ -26,7 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Plus, DotsVertical, Trash02, Mail01 } from '@untitledui/icons';
+import { DotsVertical } from '@untitledui/icons';
 import { useOrgMembers } from '@/hooks/useOrgMembers';
 import { useOrganization } from '@/contexts/OrganizationContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -96,7 +96,6 @@ export const TeamManagement = () => {
             </div>
             {canManageTeam && (
               <Button onClick={() => setIsInviteOpen(true)}>
-                <Plus className="h-4 w-4 mr-2" />
                 Invite Member
               </Button>
             )}
@@ -123,7 +122,6 @@ export const TeamManagement = () => {
                       {member.profiles?.display_name || 'Unknown User'}
                     </div>
                     <div className="text-sm text-muted-foreground flex items-center gap-2">
-                      <Mail01 className="h-3 w-3" />
                       {member.profiles?.email || 'No email'}
                     </div>
                   </div>
@@ -134,11 +132,11 @@ export const TeamManagement = () => {
                     {member.role}
                   </Badge>
 
-                  {canManageTeam && member.user_id !== currentUserId && (
+                   {canManageTeam && member.user_id !== currentUserId && (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="sm">
-                          <DotsVertical className="h-4 w-4" />
+                          •••
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="bg-background z-50">
@@ -165,7 +163,6 @@ export const TeamManagement = () => {
                           }}
                           className="text-destructive focus:text-destructive"
                         >
-                          <Trash02 className="h-4 w-4 mr-2" />
                           Remove
                         </DropdownMenuItem>
                       </DropdownMenuContent>

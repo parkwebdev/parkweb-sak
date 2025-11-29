@@ -110,7 +110,6 @@ export const CustomDomainManager = () => {
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button size="sm">
-                <Plus className="w-4 h-4 mr-2" />
                 Add Domain
               </Button>
             </DialogTrigger>
@@ -232,7 +231,7 @@ export const CustomDomainManager = () => {
                           variant="ghost"
                           onClick={() => removeDomain(domain.id)}
                         >
-                          <Trash02 className="w-4 h-4" />
+                          Delete
                         </Button>
                       </div>
                     </div>

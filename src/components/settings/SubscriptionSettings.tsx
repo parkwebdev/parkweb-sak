@@ -3,7 +3,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { CheckCircle, ArrowUpRight } from '@untitledui/icons';
 import { supabase } from '@/integrations/supabase/client';
 import { useOrganization } from '@/contexts/OrganizationContext';
 import type { Tables } from '@/integrations/supabase/types';
@@ -68,7 +67,6 @@ export const SubscriptionSettings = () => {
               </CardDescription>
             </div>
             <Button>
-              <ArrowUpRight className="h-4 w-4 mr-2" />
               Upgrade Plan
             </Button>
           </div>
@@ -113,7 +111,6 @@ export const SubscriptionSettings = () => {
                     <div className="space-y-2">
                       {Object.entries(features).map(([key, value]) => (
                         <div key={key} className="flex items-center gap-2 text-sm">
-                          <CheckCircle className="h-4 w-4 text-success" />
                           <span className="capitalize">{key.replace(/_/g, ' ')}</span>
                         </div>
                       ))}
