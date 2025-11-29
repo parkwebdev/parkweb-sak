@@ -300,15 +300,26 @@ body.compact-mode .gap-8 {
   gap: var(--spacing-2xl);
 }
 
-/* Force View Transition animation to render above all content */
-::view-transition-group(root),
-::view-transition-image-pair(root),
+/* Custom View Transition styles for theme toggle */
 ::view-transition-old(root),
 ::view-transition-new(root) {
-  z-index: 2147483647 !important;
+  animation: none;
+  mix-blend-mode: normal;
 }
 
-/* Override library's dynamically injected z-index: -1 specifically */
+/* Ensure the new view is on top during the reveal */
+::view-transition-new(root) {
+  z-index: 1;
+}
+
 ::view-transition-old(root) {
-  z-index: 2147483646 !important;
+  z-index: -1;
+}
+
+/* Force view transition to render above all elements */
+html::view-transition {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+  pointer-events: none;
 }
