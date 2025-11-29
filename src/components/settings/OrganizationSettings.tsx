@@ -5,12 +5,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Save01, Upload01, Palette, AlertCircle, CheckCircle } from '@untitledui/icons';
+import { Save01, Upload01, Palette, AlertCircle, CheckCircle, Lightbulb01 } from '@untitledui/icons';
 import { useOrganizationSettings } from '@/hooks/useOrganizationSettings';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { SlugPreviewTool } from './SlugPreviewTool';
+import { CustomDomainManager } from './CustomDomainManager';
 
 export const OrganizationSettings = () => {
   const { organization, branding, loading, updateOrganization, updateBranding, uploadLogo } = useOrganizationSettings();
@@ -159,9 +161,12 @@ export const OrganizationSettings = () => {
         <TabsList>
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="branding">Branding</TabsTrigger>
+          <TabsTrigger value="domains">Domains</TabsTrigger>
         </TabsList>
 
         <TabsContent value="profile" className="space-y-6">
+          <SlugPreviewTool currentSlug={organization?.slug} />
+          
           <Card>
             <CardHeader>
               <CardTitle>Organization Profile</CardTitle>
@@ -333,6 +338,10 @@ export const OrganizationSettings = () => {
               </Button>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="domains" className="space-y-6">
+          <CustomDomainManager />
         </TabsContent>
       </Tabs>
     </div>
