@@ -55,7 +55,7 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
     { role: 'assistant', content: config.greeting, read: true, timestamp: new Date(), type: 'text', reactions: [] },
   ]);
 
-  // Chat settings state with localStorage persistence
+  // Chat settings state with localStorage persistence (removed compact mode)
   const [chatSettings, setChatSettings] = useState(() => {
     const saved = localStorage.getItem(`chatpad_settings_${config.agentId}`);
     if (saved) {
@@ -64,7 +64,6 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
     return {
       soundEnabled: config.defaultSoundEnabled ?? true,
       autoScroll: config.defaultAutoScroll ?? true,
-      compactMode: config.defaultCompactMode ?? false,
     };
   });
 
@@ -437,61 +436,39 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
                   
                   {/* Close and Settings buttons overlay */}
                   <div className="absolute top-3 right-3 z-20 flex gap-1">
-                    {config.enableChatSettings && (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-white hover:bg-white/10 h-8 w-8"
-                          >
-                            <Settings01 className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-56">
-                          <DropdownMenuLabel>Chat Settings</DropdownMenuLabel>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            onClick={() => setChatSettings(prev => ({ ...prev, soundEnabled: !prev.soundEnabled }))}
-                            className="flex items-center justify-between"
-                          >
-                            <span>Sound Notifications</span>
-                            <div className={`w-9 h-5 rounded-full transition-colors ${chatSettings.soundEnabled ? 'bg-primary' : 'bg-muted'}`}>
-                              <div className={`w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${chatSettings.soundEnabled ? 'translate-x-5' : 'translate-x-0.5'} mt-0.5`} />
-                            </div>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => setChatSettings(prev => ({ ...prev, autoScroll: !prev.autoScroll }))}
-                            className="flex items-center justify-between"
-                          >
-                            <span>Auto-Scroll</span>
-                            <div className={`w-9 h-5 rounded-full transition-colors ${chatSettings.autoScroll ? 'bg-primary' : 'bg-muted'}`}>
-                              <div className={`w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${chatSettings.autoScroll ? 'translate-x-5' : 'translate-x-0.5'} mt-0.5`} />
-                            </div>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => setChatSettings(prev => ({ ...prev, compactMode: !prev.compactMode }))}
-                            className="flex items-center justify-between"
-                          >
-                            <span>Compact Mode</span>
-                            <div className={`w-9 h-5 rounded-full transition-colors ${chatSettings.compactMode ? 'bg-primary' : 'bg-muted'}`}>
-                              <div className={`w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${chatSettings.compactMode ? 'translate-x-5' : 'translate-x-0.5'} mt-0.5`} />
-                            </div>
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            onClick={() => {
-                              localStorage.removeItem(`chatpad_messages_${config.agentId}`);
-                              setMessages([{ role: 'assistant', content: config.greeting, read: true, timestamp: new Date(), type: 'text', reactions: [] }]);
-                              toast.success('Chat history cleared');
-                            }}
-                            className="text-destructive"
-                          >
-                            Clear Chat History
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    )}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-white hover:bg-white/10 h-8 w-8"
+                        >
+                          <Settings01 className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-56">
+                        <DropdownMenuLabel>Chat Settings</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onClick={() => setChatSettings(prev => ({ ...prev, soundEnabled: !prev.soundEnabled }))}
+                          className="flex items-center justify-between"
+                        >
+                          <span>Sound Notifications</span>
+                          <div className={`w-9 h-5 rounded-full transition-colors ${chatSettings.soundEnabled ? 'bg-primary' : 'bg-muted'}`}>
+                            <div className={`w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${chatSettings.soundEnabled ? 'translate-x-5' : 'translate-x-0.5'} mt-0.5`} />
+                          </div>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => setChatSettings(prev => ({ ...prev, autoScroll: !prev.autoScroll }))}
+                          className="flex items-center justify-between"
+                        >
+                          <span>Auto-Scroll</span>
+                          <div className={`w-9 h-5 rounded-full transition-colors ${chatSettings.autoScroll ? 'bg-primary' : 'bg-muted'}`}>
+                            <div className={`w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${chatSettings.autoScroll ? 'translate-x-5' : 'translate-x-0.5'} mt-0.5`} />
+                          </div>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                     <Button
                       variant="ghost"
                       size="icon"
@@ -562,7 +539,7 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
                 {/* Home View */}
                 {currentView === 'home' && (
                   <div className={`flex-1 overflow-y-auto p-4 space-y-3 ${getTransitionClasses()} ${config.viewTransition === 'fade' ? 'opacity-100' : ''}`}>
-                    {config.showQuickActions && config.quickActions.map((action, idx) => (
+                    {config.quickActions.map((action, idx) => (
                       <div
                         key={action.id}
                         className="p-4 border rounded-lg bg-card hover:bg-accent/50 cursor-pointer transition-all hover:shadow-md group animate-fade-in"
@@ -823,7 +800,8 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
                                )}
                                
                                {/* Emoji Reactions */}
-                               {config.enableEmojiReactions && msg.reactions && msg.reactions.length > 0 && (
+                                {/* Emoji reactions - always enabled */}
+                                {msg.reactions && msg.reactions.length > 0 && (
                                  <MessageReactions
                                    reactions={msg.reactions}
                                    onAddReaction={(emoji) => {
@@ -873,8 +851,8 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
                                    compact={true}
                                  />
                                )}
-                               
-                               {config.enableEmojiReactions && (!msg.reactions || msg.reactions.length === 0) && (
+                                
+                                {(!msg.reactions || msg.reactions.length === 0) && (
                                  <MessageReactions
                                    reactions={[]}
                                    onAddReaction={(emoji) => {
@@ -898,8 +876,8 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
                              </div>
                            ))}
                           
-                          {/* Typing Indicator */}
-                          {config.showTypingIndicator && isTyping && (
+                           {/* Typing Indicator - Always enabled, only shows when AI is responding */}
+                          {isTyping && (
                             <div className="flex items-start animate-fade-in">
                               <div className="bg-muted rounded-lg px-4 py-3">
                                 <div className="flex gap-1">
@@ -1039,9 +1017,9 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
                                       handleSendMessage();
                                     }
                                   }}
-                                />
-                                {config.enableFileAttachments && (
-                                  <>
+                                 />
+                                {/* File attachments - always enabled */}
+                                <>
                                     <input
                                       type="file"
                                       id="file-upload"
@@ -1057,18 +1035,18 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
                                     >
                                       <Attachment01 className="h-4 w-4" />
                                     </Button>
-                                  </>
-                                )}
-                                {config.enableAudioMessages && (
+                                   </>
+                                {/* Audio messages - always enabled */}
+                                <>
                                   <Button
                                     size="icon"
                                     variant="outline"
                                     onClick={() => setIsRecordingAudio(true)}
                                   >
                                     <Microphone01 className="h-4 w-4" />
-                                  </Button>
-                                )}
-                                <Button 
+                                   </Button>
+                                 </>
+                                <Button
                                   size="icon" 
                                   style={{ backgroundColor: config.primaryColor }}
                                   onClick={handleSendMessage}

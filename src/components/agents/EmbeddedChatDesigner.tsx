@@ -328,23 +328,8 @@ export const EmbeddedChatDesigner = ({ agentId }: EmbeddedChatDesignerProps) => 
       <div className="space-y-3">
         <h3 className="text-sm font-medium">Quick Actions</h3>
         
-        <div className="flex items-center justify-between">
-          <div className="space-y-0.5">
-            <Label htmlFor="quick-actions">Show Quick Actions</Label>
-            <p className="text-xs text-muted-foreground">
-              Display action cards on home screen
-            </p>
-          </div>
-          <Switch
-            id="quick-actions"
-            checked={config.showQuickActions}
-            onCheckedChange={(checked) => saveConfig({ showQuickActions: checked })}
-          />
-        </div>
-
         <p className="text-xs text-muted-foreground bg-muted p-2 rounded">
-          Quick actions like "Start a conversation" and "Browse help articles" are pre-configured. 
-          Advanced customization coming soon.
+          Quick actions are always displayed on the home screen and cannot be disabled.
         </p>
       </div>
 
@@ -397,19 +382,9 @@ export const EmbeddedChatDesigner = ({ agentId }: EmbeddedChatDesignerProps) => 
       <div className="space-y-3">
         <h3 className="text-sm font-medium">Real-time Indicators</h3>
         
-        <div className="flex items-center justify-between">
-          <div className="space-y-0.5">
-            <Label htmlFor="typing">Typing Indicator</Label>
-            <p className="text-xs text-muted-foreground">
-              Show animated dots when agent is responding
-            </p>
-          </div>
-          <Switch
-            id="typing"
-            checked={config.showTypingIndicator}
-            onCheckedChange={(checked) => saveConfig({ showTypingIndicator: checked })}
-          />
-        </div>
+        <p className="text-xs text-muted-foreground bg-muted p-2 rounded">
+          Typing indicator and read receipts are always enabled for a better user experience.
+        </p>
 
         <div className="flex items-center justify-between">
           <div className="space-y-0.5">
@@ -422,85 +397,6 @@ export const EmbeddedChatDesigner = ({ agentId }: EmbeddedChatDesignerProps) => 
             id="read-receipts"
             checked={config.showReadReceipts}
             onCheckedChange={(checked) => saveConfig({ showReadReceipts: checked })}
-          />
-        </div>
-      </div>
-
-      <Separator />
-
-      {/* Audio Messages */}
-      <div className="space-y-3">
-        <h3 className="text-sm font-medium">Audio Messages</h3>
-        <div className="flex items-center justify-between">
-          <div className="space-y-0.5">
-            <Label htmlFor="audio-messages">Enable Audio Messages</Label>
-            <p className="text-xs text-muted-foreground">
-              Allow users to record and send voice messages
-            </p>
-          </div>
-          <Switch
-            id="audio-messages"
-            checked={config.enableAudioMessages}
-            onCheckedChange={(checked) => saveConfig({ enableAudioMessages: checked })}
-          />
-        </div>
-      </div>
-
-      <Separator />
-
-      {/* File Attachments */}
-      <div className="space-y-3">
-        <h3 className="text-sm font-medium">File Attachments</h3>
-        <div className="flex items-center justify-between">
-          <div className="space-y-0.5">
-            <Label htmlFor="file-attachments">Enable File Attachments</Label>
-            <p className="text-xs text-muted-foreground">
-              Allow users to upload and share files
-            </p>
-          </div>
-          <Switch
-            id="file-attachments"
-            checked={config.enableFileAttachments}
-            onCheckedChange={(checked) => saveConfig({ enableFileAttachments: checked })}
-          />
-        </div>
-        
-        {config.enableFileAttachments && (
-          <div className="space-y-3 pl-4 border-l-2">
-            <div className="space-y-2">
-              <Label htmlFor="max-file-size">Max File Size (MB)</Label>
-              <Input
-                id="max-file-size"
-                type="number"
-                min="1"
-                max="50"
-                value={config.maxFileSize}
-                onChange={(e) => saveConfig({ maxFileSize: parseInt(e.target.value) })}
-              />
-              <p className="text-xs text-muted-foreground">
-                Maximum size per file in megabytes
-              </p>
-            </div>
-          </div>
-        )}
-      </div>
-
-      <Separator />
-
-      {/* Emoji Reactions */}
-      <div className="space-y-3">
-        <h3 className="text-sm font-medium">Emoji Reactions</h3>
-        <div className="flex items-center justify-between">
-          <div className="space-y-0.5">
-            <Label htmlFor="emoji-reactions">Enable Emoji Reactions</Label>
-            <p className="text-xs text-muted-foreground">
-              Allow users to react to messages with emojis
-            </p>
-          </div>
-          <Switch
-            id="emoji-reactions"
-            checked={config.enableEmojiReactions}
-            onCheckedChange={(checked) => saveConfig({ enableEmojiReactions: checked })}
           />
         </div>
       </div>

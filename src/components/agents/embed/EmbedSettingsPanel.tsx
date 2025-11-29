@@ -281,18 +281,6 @@ export const EmbedSettingsPanel = ({ config, onConfigChange, embedCode }: EmbedS
 
             <div className="flex items-center justify-between">
               <div>
-                <Label htmlFor="quick-actions" className="text-sm">Quick Actions</Label>
-                <p className="text-xs text-muted-foreground">Show action cards</p>
-              </div>
-              <Switch
-                id="quick-actions"
-                checked={config.showQuickActions}
-                onCheckedChange={(checked) => onConfigChange({ showQuickActions: checked })}
-              />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div>
                 <Label htmlFor="bottom-nav" className="text-sm">Bottom Navigation</Label>
                 <p className="text-xs text-muted-foreground">Show nav bar</p>
               </div>
@@ -503,69 +491,6 @@ export const EmbedSettingsPanel = ({ config, onConfigChange, embedCode }: EmbedS
             </div>
             <div className="flex items-center justify-between">
               <div>
-                <Label htmlFor="audio" className="text-sm">Audio Messages</Label>
-                <p className="text-xs text-muted-foreground">Voice recording</p>
-              </div>
-              <Switch
-                id="audio"
-                checked={config.enableAudioMessages}
-                onCheckedChange={(checked) => onConfigChange({ enableAudioMessages: checked })}
-              />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div>
-                <Label htmlFor="files" className="text-sm">File Attachments</Label>
-                <p className="text-xs text-muted-foreground">Upload files</p>
-              </div>
-              <Switch
-                id="files"
-                checked={config.enableFileAttachments}
-                onCheckedChange={(checked) => onConfigChange({ enableFileAttachments: checked })}
-              />
-            </div>
-
-            {config.enableFileAttachments && (
-              <div className="space-y-2 pl-4 border-l-2">
-                <Label htmlFor="max-file-size" className="text-sm">Max File Size (MB)</Label>
-                <Input
-                  id="max-file-size"
-                  type="number"
-                  min="1"
-                  max="50"
-                  value={config.maxFileSize}
-                  onChange={(e) => onConfigChange({ maxFileSize: parseInt(e.target.value) })}
-                  className="text-sm"
-                />
-              </div>
-            )}
-
-            <div className="flex items-center justify-between">
-              <div>
-                <Label htmlFor="reactions" className="text-sm">Emoji Reactions</Label>
-                <p className="text-xs text-muted-foreground">React to messages</p>
-              </div>
-              <Switch
-                id="reactions"
-                checked={config.enableEmojiReactions}
-                onCheckedChange={(checked) => onConfigChange({ enableEmojiReactions: checked })}
-              />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div>
-                <Label htmlFor="typing" className="text-sm">Typing Indicator</Label>
-                <p className="text-xs text-muted-foreground">Show typing dots</p>
-              </div>
-              <Switch
-                id="typing"
-                checked={config.showTypingIndicator}
-                onCheckedChange={(checked) => onConfigChange({ showTypingIndicator: checked })}
-              />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div>
                 <Label htmlFor="receipts" className="text-sm">Read Receipts</Label>
                 <p className="text-xs text-muted-foreground">Show checkmarks</p>
               </div>
@@ -576,46 +501,24 @@ export const EmbedSettingsPanel = ({ config, onConfigChange, embedCode }: EmbedS
               />
             </div>
 
-            <div className="flex items-center justify-between">
-              <div>
-                <Label htmlFor="chat-settings" className="text-sm">Chat Settings</Label>
-                <p className="text-xs text-muted-foreground">User controls</p>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="default-sound" className="text-sm">Sound by Default</Label>
+                <Switch
+                  id="default-sound"
+                  checked={config.defaultSoundEnabled}
+                  onCheckedChange={(checked) => onConfigChange({ defaultSoundEnabled: checked })}
+                />
               </div>
-              <Switch
-                id="chat-settings"
-                checked={config.enableChatSettings}
-                onCheckedChange={(checked) => onConfigChange({ enableChatSettings: checked })}
-              />
+              <div className="flex items-center justify-between">
+                <Label htmlFor="default-scroll" className="text-sm">Auto-Scroll by Default</Label>
+                <Switch
+                  id="default-scroll"
+                  checked={config.defaultAutoScroll}
+                  onCheckedChange={(checked) => onConfigChange({ defaultAutoScroll: checked })}
+                />
+              </div>
             </div>
-
-            {config.enableChatSettings && (
-              <div className="space-y-3 pl-4 border-l-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="default-sound" className="text-sm">Sound by Default</Label>
-                  <Switch
-                    id="default-sound"
-                    checked={config.defaultSoundEnabled}
-                    onCheckedChange={(checked) => onConfigChange({ defaultSoundEnabled: checked })}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="default-scroll" className="text-sm">Auto-Scroll by Default</Label>
-                  <Switch
-                    id="default-scroll"
-                    checked={config.defaultAutoScroll}
-                    onCheckedChange={(checked) => onConfigChange({ defaultAutoScroll: checked })}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="default-compact" className="text-sm">Compact Mode by Default</Label>
-                  <Switch
-                    id="default-compact"
-                    checked={config.defaultCompactMode}
-                    onCheckedChange={(checked) => onConfigChange({ defaultCompactMode: checked })}
-                  />
-                </div>
-              </div>
-            )}
           </AccordionContent>
         </AccordionItem>
 
