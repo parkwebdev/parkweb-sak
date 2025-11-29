@@ -314,6 +314,7 @@ body.compact-mode .gap-8 {
 
 ::view-transition-old(root) {
   z-index: -1;
+  animation: blur-out 0.5s ease-out;
 }
 
 /* Force view transition to render above all elements */
@@ -322,4 +323,16 @@ html::view-transition {
   inset: 0;
   z-index: 2147483647;
   pointer-events: none;
+}
+
+/* Blur animation keyframes */
+@keyframes blur-out {
+  from {
+    filter: blur(0px);
+    opacity: 1;
+  }
+  to {
+    filter: blur(8px);
+    opacity: 0;
+  }
 }
