@@ -15,6 +15,8 @@ import { FileDropZone } from '@/components/chat/FileDropZone';
 import { MessageFileAttachment } from '@/components/chat/FileAttachment';
 import { MessageReactions, Reaction } from '@/components/chat/MessageReactions';
 import { BubbleBackground } from '@/components/ui/bubble-background';
+import { z } from 'zod';
+import { toast } from 'sonner';
 
 interface EmbeddedChatPreviewProps {
   config: EmbeddedChatConfig;
@@ -31,6 +33,8 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
   const [isTyping, setIsTyping] = useState(false);
   const [isRecordingAudio, setIsRecordingAudio] = useState(false);
   const [isAttachingFiles, setIsAttachingFiles] = useState(false);
+  const [messageInput, setMessageInput] = useState('');
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [messages, setMessages] = useState<Array<{ 
     role: 'user' | 'assistant'; 
     content: string;
@@ -49,28 +53,6 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
     { role: 'assistant', content: config.greeting, read: true, timestamp: new Date(), type: 'text', reactions: [] },
   ]);
   
-  // Mock conversation history
-  const conversations = [
-    {
-      id: '1',
-      preview: 'I need help with my account settings',
-      timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-      unread: true,
-    },
-    {
-      id: '2',
-      preview: 'Question about pricing plans',
-      timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000), // 1 day ago
-      unread: false,
-    },
-    {
-      id: '3',
-      preview: 'Technical support request',
-      timestamp: new Date(Date.now() - 48 * 60 * 60 * 1000), // 2 days ago
-      unread: false,
-    },
-  ];
-  
   const formatTimestamp = (date: Date) => {
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
@@ -87,6 +69,76 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
     } else {
       return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     }
+  };
+
+  // Form validation schema
+  const createFormSchema = () => {
+    const schemaFields: Record<string, z.ZodTypeAny> = {
+      firstName: z.string().trim().min(1, 'First name is required').max(50, 'First name must be less than 50 characters'),
+      lastName: z.string().trim().min(1, 'Last name is required').max(50, 'Last name must be less than 50 characters'),
+      email: z.string().trim().email('Invalid email address').max(255, 'Email must be less than 255 characters'),
+    };
+
+    config.customFields.forEach(field => {
+      let fieldSchema: z.ZodTypeAny;
+      
+      switch (field.fieldType) {
+        case 'email':
+          fieldSchema = z.string().trim().email('Invalid email address');
+          break;
+        case 'phone':
+          fieldSchema = z.string().trim().regex(/^[+]?[(]?[0-9]{1,4}[)]?[-\s.]?[(]?[0-9]{1,4}[)]?[-\s.]?[0-9]{1,9}$/, 'Invalid phone number');
+          break;
+        case 'textarea':
+          fieldSchema = z.string().trim().max(1000, 'Text must be less than 1000 characters');
+          break;
+        case 'select':
+          fieldSchema = z.string().trim();
+          break;
+        default:
+          fieldSchema = z.string().trim().max(100, 'Text must be less than 100 characters');
+      }
+
+      if (field.required) {
+        fieldSchema = (fieldSchema as z.ZodString).min(1, `${field.label} is required`);
+      } else {
+        fieldSchema = fieldSchema.optional();
+      }
+
+      schemaFields[field.id] = fieldSchema;
+    });
+
+    return z.object(schemaFields);
+  };
+
+  const handleSendMessage = () => {
+    if (!messageInput.trim()) return;
+
+    const newMessage = {
+      role: 'user' as const,
+      content: messageInput,
+      read: false,
+      timestamp: new Date(),
+      type: 'text' as const,
+      reactions: [],
+    };
+
+    setMessages(prev => [...prev, newMessage]);
+    setMessageInput('');
+
+    // Simulate AI response
+    setIsTyping(true);
+    setTimeout(() => {
+      setMessages(prev => [...prev, {
+        role: 'assistant' as const,
+        content: 'Thanks for your message! This is a demo response.',
+        read: true,
+        timestamp: new Date(),
+        type: 'text' as const,
+        reactions: [],
+      }]);
+      setIsTyping(false);
+    }, 2000);
   };
 
   useEffect(() => {
@@ -211,11 +263,7 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
         <div className={`absolute ${positionClasses[config.position]} z-10`}>
           {isOpen ? (
             <Card 
-              className="w-[380px] max-h-[650px] flex flex-col shadow-xl overflow-hidden"
-              style={{ 
-                borderColor: config.primaryColor,
-                borderWidth: '2px',
-              }}
+              className="w-[380px] max-h-[650px] flex flex-col shadow-xl overflow-hidden border-0"
             >
               {/* Header/Hero - Dynamic based on view */}
               {currentView === 'home' ? (
@@ -230,7 +278,7 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
                   />
                   
                   {/* Hero Content */}
-                  <div className="relative z-10 h-full flex flex-col items-center justify-center p-6 text-center">
+                  <div className="relative z-10 h-full flex flex-col items-start justify-center p-6 text-left">
                     {/* Team Avatars */}
                     {config.showTeamAvatars && config.teamAvatarUrls.length > 0 && (
                       <div className="flex -space-x-2 mb-4">
@@ -373,50 +421,88 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
                       {/* Contact Form */}
                       <form className="space-y-3" onSubmit={(e) => {
                         e.preventDefault();
-                        // Simulate form submission
-                        setTimeout(() => {
-                          setCurrentView('messages');
-                          setActiveConversationId('new');
-                          setMessages([{ 
-                            role: 'assistant', 
-                            content: 'Thanks for your information! How can I help you today?', 
-                            read: true, 
-                            timestamp: new Date(),
-                            type: 'text',
-                            reactions: []
-                          }]);
-                        }, 500);
+                        const formData = new FormData(e.currentTarget);
+                        const data: Record<string, string> = {
+                          firstName: formData.get('firstName') as string || '',
+                          lastName: formData.get('lastName') as string || '',
+                          email: formData.get('email') as string || '',
+                        };
+
+                        config.customFields.forEach(field => {
+                          data[field.id] = formData.get(field.id) as string || '';
+                        });
+
+                        try {
+                          const schema = createFormSchema();
+                          schema.parse(data);
+                          setFormErrors({});
+                          
+                          // Success - proceed to chat
+                          toast.success('Form submitted successfully!');
+                          setTimeout(() => {
+                            setCurrentView('messages');
+                            setActiveConversationId('new');
+                            setMessages([{ 
+                              role: 'assistant', 
+                              content: 'Thanks for your information! How can I help you today?', 
+                              read: true, 
+                              timestamp: new Date(),
+                              type: 'text',
+                              reactions: []
+                            }]);
+                          }, 500);
+                        } catch (error) {
+                          if (error instanceof z.ZodError) {
+                            const errors: Record<string, string> = {};
+                            error.errors.forEach(err => {
+                              if (err.path[0]) {
+                                errors[err.path[0] as string] = err.message;
+                              }
+                            });
+                            setFormErrors(errors);
+                            toast.error('Please fix the form errors');
+                          }
+                        }
                       }}>
                         {/* Required Fields */}
                         <div className="space-y-2">
-                          <Label htmlFor="first-name" className="text-sm">First Name *</Label>
+                          <Label htmlFor="firstName" className="text-sm">First Name *</Label>
                           <Input
-                            id="first-name"
+                            id="firstName"
+                            name="firstName"
                             placeholder="John"
-                            required
                             className="text-sm"
                           />
+                          {formErrors.firstName && (
+                            <p className="text-xs text-destructive">{formErrors.firstName}</p>
+                          )}
                         </div>
 
                         <div className="space-y-2">
-                          <Label htmlFor="last-name" className="text-sm">Last Name *</Label>
+                          <Label htmlFor="lastName" className="text-sm">Last Name *</Label>
                           <Input
-                            id="last-name"
+                            id="lastName"
+                            name="lastName"
                             placeholder="Doe"
-                            required
                             className="text-sm"
                           />
+                          {formErrors.lastName && (
+                            <p className="text-xs text-destructive">{formErrors.lastName}</p>
+                          )}
                         </div>
 
                         <div className="space-y-2">
                           <Label htmlFor="email" className="text-sm">Email *</Label>
                           <Input
                             id="email"
+                            name="email"
                             type="email"
                             placeholder="john@example.com"
-                            required
                             className="text-sm"
                           />
+                          {formErrors.email && (
+                            <p className="text-xs text-destructive">{formErrors.email}</p>
+                          )}
                         </div>
 
                         {/* Custom Fields */}
@@ -428,13 +514,13 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
                             {field.fieldType === 'textarea' ? (
                               <Textarea
                                 id={field.id}
+                                name={field.id}
                                 placeholder={field.placeholder}
-                                required={field.required}
                                 className="text-sm"
                                 rows={3}
                               />
                             ) : field.fieldType === 'select' ? (
-                              <Select required={field.required}>
+                              <Select name={field.id}>
                                 <SelectTrigger className="text-sm">
                                   <SelectValue placeholder={field.placeholder || 'Select an option'} />
                                 </SelectTrigger>
@@ -449,11 +535,14 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
                             ) : (
                               <Input
                                 id={field.id}
+                                name={field.id}
                                 type={field.fieldType}
                                 placeholder={field.placeholder}
-                                required={field.required}
                                 className="text-sm"
                               />
+                            )}
+                            {formErrors[field.id] && (
+                              <p className="text-xs text-destructive">{formErrors[field.id]}</p>
                             )}
                           </div>
                         ))}
@@ -717,6 +806,14 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
                               <Input
                                 placeholder={config.placeholder}
                                 className="flex-1"
+                                value={messageInput}
+                                onChange={(e) => setMessageInput(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter' && !e.shiftKey) {
+                                    e.preventDefault();
+                                    handleSendMessage();
+                                  }
+                                }}
                               />
                               {config.enableFileAttachments && (
                                 <Button
@@ -736,7 +833,11 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
                                   <Microphone01 className="h-4 w-4" />
                                 </Button>
                               )}
-                              <Button size="icon" style={{ backgroundColor: config.primaryColor }}>
+                              <Button 
+                                size="icon" 
+                                style={{ backgroundColor: config.primaryColor }}
+                                onClick={handleSendMessage}
+                              >
                                 <Send01 className="h-4 w-4 text-white" />
                               </Button>
                             </div>
@@ -745,50 +846,24 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
                       </>
                     ) : (
                       <>
-                        {/* Conversation History List */}
-                        <div className="flex-1 overflow-y-auto">
-                          <div className="p-3 border-b bg-muted/30">
-                            <h4 className="text-sm font-semibold">Your Conversations</h4>
-                          </div>
-                          <div className="divide-y">
-                            {conversations.map((conv, idx) => (
-                              <div
-                                key={conv.id}
-                                className="p-4 hover:bg-accent/50 cursor-pointer transition-all animate-fade-in"
-                                style={{ 
-                                  animationDelay: `${idx * 50}ms`,
-                                  animationFillMode: 'backwards'
-                                }}
-                                onClick={() => setActiveConversationId(conv.id)}
-                              >
-                                <div className="flex items-start justify-between gap-3">
-                                  <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2">
-                                      <p className={`text-sm truncate ${conv.unread ? 'font-semibold' : 'font-normal'}`}>
-                                        {conv.preview}
-                                      </p>
-                                      {conv.unread && (
-                                        <div className="w-2 h-2 bg-primary rounded-full shrink-0" />
-                                      )}
-                                    </div>
-                                    <p className="text-xs text-muted-foreground mt-1">
-                                      {formatTimestamp(conv.timestamp)}
-                                    </p>
-                                  </div>
-                                  <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                          
-                          {/* New Conversation Button */}
-                          <div className="p-3 border-t">
+                        {/* Empty State - No conversation history */}
+                        <div className="flex-1 flex items-center justify-center p-8">
+                          <div className="text-center space-y-3">
+                            <div className="w-16 h-16 mx-auto rounded-full bg-muted flex items-center justify-center">
+                              <MessageChatCircle className="h-8 w-8 text-muted-foreground" />
+                            </div>
+                            <div>
+                              <h4 className="font-semibold text-sm">No conversations yet</h4>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                Start a new conversation to get started
+                              </p>
+                            </div>
                             <Button
-                              className="w-full"
+                              className="mt-4"
                               style={{ backgroundColor: config.primaryColor }}
                               onClick={() => {
                                 setActiveConversationId('new');
-                                setMessages([{ role: 'assistant', content: config.greeting, read: true, timestamp: new Date() }]);
+                                setMessages([{ role: 'assistant', content: config.greeting, read: true, timestamp: new Date(), type: 'text', reactions: [] }]);
                               }}
                             >
                               <MessageChatCircle className="h-4 w-4 mr-2" />
@@ -904,21 +979,21 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
               )}
 
               <div className="relative">
-                {/* Subtle Pulsating Ring Animation */}
+                {/* Pulse Ring Animation */}
                 {config.animation === 'ring' && (
                   <>
                     <div 
-                      className="absolute inset-0 w-12 h-12 rounded-full opacity-10"
+                      className="absolute inset-0 rounded-full animate-ping"
                       style={{ 
                         backgroundColor: config.primaryColor,
-                        animation: 'ping 3s cubic-bezier(0, 0, 0.2, 1) infinite'
+                        opacity: 0.75,
                       }}
                     />
                     <div 
-                      className="absolute inset-0 w-12 h-12 rounded-full opacity-5"
+                      className="absolute inset-0 rounded-full animate-pulse"
                       style={{ 
                         backgroundColor: config.primaryColor,
-                        animation: 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+                        opacity: 0.5,
                       }}
                     />
                   </>
@@ -931,14 +1006,14 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
                 
                 <Button
                   size="icon"
-                  className={`w-12 h-12 rounded-full shadow-lg relative ${animationClasses[config.animation]} hover:scale-110 transition-transform`}
+                  className={`w-16 h-16 rounded-full shadow-lg relative ${animationClasses[config.animation]} hover:scale-110 transition-transform`}
                   style={{ backgroundColor: config.primaryColor }}
                   onClick={() => {
                     setIsOpen(true);
                     setShowTeaser(false);
                   }}
                 >
-                  <ChatBubbleIcon className="h-10 w-10 text-white" />
+                  <ChatBubbleIcon className="h-8 w-8 text-white" />
                 </Button>
               </div>
             </div>
