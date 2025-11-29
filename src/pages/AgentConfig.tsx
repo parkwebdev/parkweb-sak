@@ -6,7 +6,7 @@ import { AgentConfigureTab } from '@/components/agents/tabs/AgentConfigureTab';
 import { AgentBehaviorTab } from '@/components/agents/tabs/AgentBehaviorTab';
 import { AgentKnowledgeTab } from '@/components/agents/tabs/AgentKnowledgeTab';
 import { AgentToolsTab } from '@/components/agents/tabs/AgentToolsTab';
-import { AgentDeployTab } from '@/components/agents/tabs/AgentDeployTab';
+import { AgentEmbedTab } from '@/components/agents/tabs/AgentEmbedTab';
 import { AgentConfigLayout, type AgentConfigTab } from '@/components/agents/AgentConfigLayout';
 import type { Tables } from '@/integrations/supabase/types';
 
@@ -48,8 +48,8 @@ const AgentConfig: React.FC<AgentConfigProps> = ({ onMenuClick }) => {
         await (AgentConfigureTab as any).handleSave?.();
       } else if (activeTab === 'behavior') {
         await (AgentBehaviorTab as any).handleSave?.();
-      } else if (activeTab === 'deploy') {
-        await (AgentDeployTab as any).handleSave?.();
+      } else if (activeTab === 'embed') {
+        await (AgentEmbedTab as any).handleSave?.();
       }
       
       setHasUnsavedChanges(false);
@@ -113,10 +113,10 @@ const AgentConfig: React.FC<AgentConfigProps> = ({ onMenuClick }) => {
               <AgentKnowledgeTab agentId={agent.id} orgId={agent.org_id} />
             )}
             {activeTab === 'tools' && (
-              <AgentToolsTab agentId={agent.id} />
+              <AgentToolsTab agentId={agent.id} agent={agent} onUpdate={handleUpdate} />
             )}
-            {activeTab === 'deploy' && (
-              <AgentDeployTab
+            {activeTab === 'embed' && (
+              <AgentEmbedTab
                 agent={agent}
                 onUpdate={handleUpdate}
                 onFormChange={setHasUnsavedChanges}
