@@ -30,3 +30,9 @@ verify_jwt = false
 
 [functions.validate-api-key]
 verify_jwt = false
+
+[functions.process-knowledge-source]
+verify_jwt = true
+
+[functions.search-knowledge]
+verify_jwt = false
