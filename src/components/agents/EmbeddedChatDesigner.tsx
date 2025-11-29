@@ -134,6 +134,32 @@ export const EmbeddedChatDesigner = ({ agentId }: EmbeddedChatDesignerProps) => 
         </div>
         <p className="text-xs text-muted-foreground">Show a dot to indicate availability</p>
       </div>
+
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <Label htmlFor="teaser">Conversation Teaser</Label>
+          <Switch
+            id="teaser"
+            checked={config.showTeaser}
+            onCheckedChange={(checked) => saveConfig({ showTeaser: checked })}
+          />
+        </div>
+        <p className="text-xs text-muted-foreground">Show preview text above chat bubble</p>
+      </div>
+
+      {config.showTeaser && (
+        <div className="space-y-2 pl-4">
+          <Label htmlFor="teaser-text">Teaser Text</Label>
+          <Input
+            id="teaser-text"
+            value={config.teaserText}
+            onChange={(e) => saveConfig({ teaserText: e.target.value })}
+            placeholder="Need help? Chat with us!"
+            maxLength={50}
+          />
+          <p className="text-xs text-muted-foreground">Short message to encourage engagement</p>
+        </div>
+      )}
       </div>
 
       <Separator />
