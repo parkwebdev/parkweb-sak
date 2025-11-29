@@ -107,7 +107,6 @@ export const BrandingSettings = () => {
                 size="sm"
                 onClick={deleteLogo}
               >
-                <Trash02 className="h-4 w-4 mr-2" />
                 Remove Logo
               </Button>
             </div>
@@ -126,7 +125,6 @@ export const BrandingSettings = () => {
               onClick={() => fileInputRef.current?.click()}
               disabled={uploading}
             >
-              <Upload01 className="h-4 w-4 mr-2" />
               {uploading ? 'Uploading...' : branding?.logo_url ? 'Change Logo' : 'Upload Logo'}
             </Button>
           </div>

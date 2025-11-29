@@ -149,7 +149,6 @@ export const LeadDetailsSheet = ({
                 <h3 className="font-semibold">Related Conversation</h3>
                 <Button variant="outline" className="w-full" asChild>
                   <a href={`/conversations?id=${lead.conversation_id}`}>
-                    <LinkExternal02 className="h-4 w-4 mr-2" />
                     View Conversation
                   </a>
                 </Button>
@@ -164,7 +163,6 @@ export const LeadDetailsSheet = ({
               disabled={isSaving || Object.keys(editedLead).length === 0}
               className="flex-1"
             >
-              <Save01 className="h-4 w-4 mr-2" />
               Save Changes
             </Button>
             <Button

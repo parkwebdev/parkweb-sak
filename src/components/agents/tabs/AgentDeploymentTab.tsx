@@ -57,7 +57,6 @@ export const AgentDeploymentTab = ({ agent, onUpdate }: AgentDeploymentTabProps)
       <Tabs defaultValue="settings">
         <TabsList>
           <TabsTrigger value="settings">
-            <Settings01 className="h-4 w-4 mr-2" />
             Deployment Settings
           </TabsTrigger>
           <TabsTrigger value="widget" disabled={!config.widget_enabled}>

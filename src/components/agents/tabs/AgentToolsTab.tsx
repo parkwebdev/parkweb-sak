@@ -119,7 +119,6 @@ export const AgentToolsTab = ({ agentId }: AgentToolsTabProps) => {
           Tools allow your agent to perform actions and access external services.
         </p>
         <Button size="sm" onClick={() => setShowAddForm(!showAddForm)}>
-          <Plus className="h-4 w-4 mr-2" />
           Add Tool
         </Button>
       </div>
