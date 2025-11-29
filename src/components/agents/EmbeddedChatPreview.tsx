@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { X, Send01, Minimize02, Home05, MessageChatCircle, HelpCircle, ChevronRight, Zap, BookOpen01, Check, Microphone01 } from '@untitledui/icons';
+import { X, Send01, Minimize02, Home05, MessageChatCircle, HelpCircle, ChevronRight, Zap, BookOpen01, Check, Microphone01, Attachment01 } from '@untitledui/icons';
 import type { EmbeddedChatConfig } from '@/hooks/useEmbeddedChatConfig';
 import { ChatBubbleIcon } from './ChatBubbleIcon';
 import { AudioRecorder } from '@/components/chat/AudioRecorder';
 import { AudioPlayer } from '@/components/chat/AudioPlayer';
+import { FileDropZone } from '@/components/chat/FileDropZone';
+import { MessageFileAttachment } from '@/components/chat/FileAttachment';
 
 interface EmbeddedChatPreviewProps {
   config: EmbeddedChatConfig;
@@ -22,13 +24,20 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [isTyping, setIsTyping] = useState(false);
   const [isRecordingAudio, setIsRecordingAudio] = useState(false);
+  const [isAttachingFiles, setIsAttachingFiles] = useState(false);
   const [messages, setMessages] = useState<Array<{ 
     role: 'user' | 'assistant'; 
     content: string;
     read?: boolean;
     timestamp: Date;
     audioUrl?: string;
-    type?: 'text' | 'audio';
+    type?: 'text' | 'audio' | 'file';
+    files?: Array<{
+      name: string;
+      url: string;
+      type: string;
+      size: number;
+    }>;
   }>>([
     { role: 'assistant', content: config.greeting, read: true, timestamp: new Date(), type: 'text' },
   ]);
@@ -305,6 +314,20 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
                                >
                                  {msg.type === 'audio' && msg.audioUrl ? (
                                    <AudioPlayer audioUrl={msg.audioUrl} primaryColor={config.primaryColor} />
+                                 ) : msg.type === 'file' && msg.files ? (
+                                   <div className="space-y-2">
+                                     {msg.content && <p className="text-sm mb-2">{msg.content}</p>}
+                                     {msg.files.map((file, fileIdx) => (
+                                       <MessageFileAttachment
+                                         key={fileIdx}
+                                         fileName={file.name}
+                                         fileUrl={file.url}
+                                         fileType={file.type}
+                                         fileSize={file.size}
+                                         primaryColor={config.primaryColor}
+                                       />
+                                     ))}
+                                   </div>
                                  ) : (
                                    <p className="text-sm">{msg.content}</p>
                                  )}
@@ -383,6 +406,40 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
                             onCancel={() => setIsRecordingAudio(false)}
                             primaryColor={config.primaryColor}
                           />
+                        ) : isAttachingFiles ? (
+                          <FileDropZone
+                            onFilesSelected={(files: File[], fileUrls: string[]) => {
+                              const newMessage = {
+                                role: 'user' as const,
+                                content: files.length > 1 ? `${files.length} files` : files[0].name,
+                                read: false,
+                                timestamp: new Date(),
+                                type: 'file' as const,
+                                files: files.map((file, idx) => ({
+                                  name: file.name,
+                                  url: fileUrls[idx],
+                                  type: file.type,
+                                  size: file.size,
+                                })),
+                              };
+                              setMessages(prev => [...prev, newMessage]);
+                              setIsAttachingFiles(false);
+                              
+                              // Simulate AI response
+                              setIsTyping(true);
+                              setTimeout(() => {
+                                setMessages(prev => [...prev, {
+                                  role: 'assistant' as const,
+                                  content: `I received your ${files.length > 1 ? 'files' : 'file'}!`,
+                                  timestamp: new Date(),
+                                  type: 'text' as const,
+                                }]);
+                                setIsTyping(false);
+                              }, 2000);
+                            }}
+                            onCancel={() => setIsAttachingFiles(false)}
+                            primaryColor={config.primaryColor}
+                          />
                         ) : (
                           <div className="p-4 border-t">
                             <div className="flex gap-2">
@@ -390,6 +447,15 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
                                 placeholder={config.placeholder}
                                 className="flex-1"
                               />
+                              {config.enableFileAttachments && (
+                                <Button
+                                  size="icon"
+                                  variant="outline"
+                                  onClick={() => setIsAttachingFiles(true)}
+                                >
+                                  <Attachment01 className="h-4 w-4" />
+                                </Button>
+                              )}
                               {config.enableAudioMessages && (
                                 <Button
                                   size="icon"

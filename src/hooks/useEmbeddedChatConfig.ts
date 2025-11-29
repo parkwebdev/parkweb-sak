@@ -56,6 +56,11 @@ export interface EmbeddedChatConfig {
   
   // Audio Messages
   enableAudioMessages: boolean;
+  
+  // File Attachments
+  enableFileAttachments: boolean;
+  maxFileSize: number;
+  allowedFileTypes: string[];
 }
 
 export const useEmbeddedChatConfig = (agentId: string) => {
@@ -119,6 +124,11 @@ export const useEmbeddedChatConfig = (agentId: string) => {
     
     // Audio Messages
     enableAudioMessages: true,
+    
+    // File Attachments
+    enableFileAttachments: true,
+    maxFileSize: 10,
+    allowedFileTypes: ['image', 'document'],
   });
 
   const [config, setConfig] = useState<EmbeddedChatConfig>(getDefaultConfig());
@@ -247,6 +257,9 @@ export const useEmbeddedChatConfig = (agentId: string) => {
     script.setAttribute('data-show-typing-indicator', '${config.showTypingIndicator}');
     script.setAttribute('data-show-read-receipts', '${config.showReadReceipts}');
     script.setAttribute('data-enable-audio-messages', '${config.enableAudioMessages}');
+    script.setAttribute('data-enable-file-attachments', '${config.enableFileAttachments}');
+    script.setAttribute('data-max-file-size', '${config.maxFileSize}');
+    script.setAttribute('data-allowed-file-types', '${config.allowedFileTypes.join(',')}');
     ${config.avatarUrl ? `script.setAttribute('data-avatar-url', '${config.avatarUrl}');` : ''}
     document.head.appendChild(script);
   })();
