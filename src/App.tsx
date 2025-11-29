@@ -5,12 +5,15 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { OrganizationProvider } from "@/contexts/OrganizationContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Auth from "./pages/Auth";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
-import ClientsWrapper from "./pages/ClientsWrapper";
 import DashboardWrapper from "./pages/DashboardWrapper";
+import Agents from "./pages/Agents";
+import Conversations from "./pages/Conversations";
+import Leads from "./pages/Leads";
 
 const queryClient = new QueryClient();
 
@@ -22,26 +25,38 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <AuthProvider>
-            <Routes>
-              <Route path="/login" element={<Auth />} />
-              <Route path="/" element={
-                <ProtectedRoute>
-                  <DashboardWrapper />
-                </ProtectedRoute>
-              } />
-              <Route path="/clients" element={
-                <ProtectedRoute>
-                  <ClientsWrapper />
-                </ProtectedRoute>
-              } />
-              <Route path="/settings" element={
-                <ProtectedRoute>
-                  <Settings />
-                </ProtectedRoute>
-              } />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+            <OrganizationProvider>
+              <Routes>
+                <Route path="/login" element={<Auth />} />
+                <Route path="/" element={
+                  <ProtectedRoute>
+                    <DashboardWrapper />
+                  </ProtectedRoute>
+                } />
+                <Route path="/agents" element={
+                  <ProtectedRoute>
+                    <Agents />
+                  </ProtectedRoute>
+                } />
+                <Route path="/conversations" element={
+                  <ProtectedRoute>
+                    <Conversations />
+                  </ProtectedRoute>
+                } />
+                <Route path="/leads" element={
+                  <ProtectedRoute>
+                    <Leads />
+                  </ProtectedRoute>
+                } />
+                <Route path="/settings" element={
+                  <ProtectedRoute>
+                    <Settings />
+                  </ProtectedRoute>
+                } />
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </OrganizationProvider>
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
