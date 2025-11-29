@@ -114,12 +114,25 @@ export const EmbeddedChatDesigner = ({ agentId }: EmbeddedChatDesignerProps) => 
           </SelectTrigger>
           <SelectContent className="bg-background z-50">
             <SelectItem value="none">None</SelectItem>
+            <SelectItem value="ring">Pulse Ring (Recommended)</SelectItem>
             <SelectItem value="pulse">Pulse</SelectItem>
             <SelectItem value="bounce">Bounce</SelectItem>
             <SelectItem value="fade">Fade</SelectItem>
           </SelectContent>
         </Select>
         <p className="text-xs text-muted-foreground">Add motion to attract attention</p>
+      </div>
+
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <Label htmlFor="badge">Notification Badge</Label>
+          <Switch
+            id="badge"
+            checked={config.showBadge}
+            onCheckedChange={(checked) => saveConfig({ showBadge: checked })}
+          />
+        </div>
+        <p className="text-xs text-muted-foreground">Show a dot to indicate availability</p>
       </div>
       </div>
 
@@ -159,6 +172,58 @@ export const EmbeddedChatDesigner = ({ agentId }: EmbeddedChatDesignerProps) => 
             placeholder="AI Assistant"
           />
         </div>
+      </div>
+
+      <Separator />
+
+      {/* Timing Section */}
+      <div className="space-y-3">
+        <h3 className="text-sm font-medium">Display Timing</h3>
+        
+        <div className="space-y-2">
+          <Label htmlFor="timing">When to Show</Label>
+          <Select value={config.displayTiming} onValueChange={(value: any) => saveConfig({ displayTiming: value })}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="bg-background z-50">
+              <SelectItem value="immediate">Immediately</SelectItem>
+              <SelectItem value="delayed">After Delay</SelectItem>
+              <SelectItem value="scroll">On Scroll Depth</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {config.displayTiming === 'delayed' && (
+          <div className="space-y-2">
+            <Label htmlFor="delay">Delay (seconds)</Label>
+            <Input
+              id="delay"
+              type="number"
+              min="1"
+              max="60"
+              value={config.delaySeconds}
+              onChange={(e) => saveConfig({ delaySeconds: parseInt(e.target.value) })}
+            />
+            <p className="text-xs text-muted-foreground">Show chat after this many seconds</p>
+          </div>
+        )}
+
+        {config.displayTiming === 'scroll' && (
+          <div className="space-y-2">
+            <Label htmlFor="scroll">Scroll Depth (%)</Label>
+            <Input
+              id="scroll"
+              type="number"
+              min="10"
+              max="100"
+              step="10"
+              value={config.scrollDepth}
+              onChange={(e) => saveConfig({ scrollDepth: parseInt(e.target.value) })}
+            />
+            <p className="text-xs text-muted-foreground">Show chat after user scrolls this far down the page</p>
+          </div>
+        )}
       </div>
 
       <Separator />
