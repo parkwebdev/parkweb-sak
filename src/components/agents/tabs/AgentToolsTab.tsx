@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
+import { Separator } from '@/components/ui/separator';
 import { Plus, Trash01 } from '@untitledui/icons';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -14,9 +15,11 @@ type AgentTool = Tables<'agent_tools'>;
 
 interface AgentToolsTabProps {
   agentId: string;
+  agent?: Tables<'agents'>;
+  onUpdate?: (id: string, updates: any) => Promise<any>;
 }
 
-export const AgentToolsTab = ({ agentId }: AgentToolsTabProps) => {
+export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) => {
   const [tools, setTools] = useState<AgentTool[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -25,6 +28,10 @@ export const AgentToolsTab = ({ agentId }: AgentToolsTabProps) => {
     description: '',
     parameters: '{}',
   });
+
+  const deploymentConfig = (agent?.deployment_config as any) || {};
+  const apiEnabled = deploymentConfig.api_enabled || false;
+  const apiEndpoint = `https://mvaimvwdukpgvkifkfpa.supabase.co/functions/v1/widget-chat`;
 
   useEffect(() => {
     fetchTools();
@@ -108,21 +115,80 @@ export const AgentToolsTab = ({ agentId }: AgentToolsTabProps) => {
     }
   };
 
+  const handleToggleApi = async (checked: boolean) => {
+    if (!agent || !onUpdate) return;
+    await onUpdate(agent.id, {
+      deployment_config: {
+        ...deploymentConfig,
+        api_enabled: checked,
+      },
+    });
+  };
+
+  const copyToClipboard = (text: string, label: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success(`${label} copied to clipboard`);
+  };
+
   if (loading) {
     return <div className="text-center py-8 text-muted-foreground">Loading tools...</div>;
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">
-          Tools allow your agent to perform actions and access external services.
-        </p>
-        <Button size="sm" onClick={() => setShowAddForm(!showAddForm)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Add Tool
-        </Button>
-      </div>
+    <div className="space-y-6">
+      {/* API Access Section */}
+      {agent && onUpdate && (
+        <>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">API Access</CardTitle>
+              <CardDescription>Enable REST API access to your agent</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="api-toggle">Enable API</Label>
+                <Switch
+                  id="api-toggle"
+                  checked={apiEnabled}
+                  onCheckedChange={handleToggleApi}
+                />
+              </div>
+              {apiEnabled && (
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">API Endpoint</Label>
+                  <div className="flex gap-2">
+                    <Input value={apiEndpoint} readOnly className="font-mono text-xs h-9" />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => copyToClipboard(apiEndpoint, 'API endpoint')}
+                    >
+                      Copy
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Separator />
+        </>
+      )}
+
+      {/* Tools Section */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-medium">Agent Tools</h3>
+            <p className="text-xs text-muted-foreground">
+              Tools allow your agent to perform actions and access external services
+            </p>
+          </div>
+          <Button size="sm" onClick={() => setShowAddForm(!showAddForm)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Add Tool
+          </Button>
+        </div>
 
       {showAddForm && (
         <Card>
@@ -220,6 +286,7 @@ export const AgentToolsTab = ({ agentId }: AgentToolsTabProps) => {
           ))}
         </div>
       )}
+      </div>
     </div>
   );
 };
