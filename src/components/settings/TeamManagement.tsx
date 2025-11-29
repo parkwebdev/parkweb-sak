@@ -37,6 +37,8 @@ export const TeamManagement = () => {
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState<'member' | 'admin'>('member');
   const [isInviting, setIsInviting] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [memberToDelete, setMemberToDelete] = useState<typeof members[0] | null>(null);
 
   const currentUserRole = currentOrg?.role || 'member';
   const canManageTeam = currentUserRole === 'owner' || currentUserRole === 'admin';
@@ -53,6 +55,14 @@ export const TeamManagement = () => {
     } finally {
       setIsInviting(false);
     }
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!memberToDelete) return;
+    
+    await removeMember(memberToDelete.id);
+    setDeleteConfirmOpen(false);
+    setMemberToDelete(null);
   };
 
   const getRoleBadgeColor = (role: string) => {
@@ -143,9 +153,8 @@ export const TeamManagement = () => {
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => {
-                            if (confirm('Are you sure you want to remove this member?')) {
-                              removeMember(member.id);
-                            }
+                            setMemberToDelete(member);
+                            setDeleteConfirmOpen(true);
                           }}
                           className="text-destructive focus:text-destructive"
                         >
@@ -215,6 +224,30 @@ export const TeamManagement = () => {
             </Button>
             <Button onClick={handleInvite} disabled={isInviting || !inviteEmail}>
               Send Invitation
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Remove Team Member</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to remove {memberToDelete?.profiles?.display_name || memberToDelete?.profiles?.email} from your organization? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              setDeleteConfirmOpen(false);
+              setMemberToDelete(null);
+            }}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteConfirm}>
+              Remove Member
             </Button>
           </DialogFooter>
         </DialogContent>
