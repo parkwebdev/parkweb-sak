@@ -11,6 +11,7 @@ import { AgentPerformanceChart } from '@/components/analytics/AgentPerformanceCh
 import { UsageMetricsChart } from '@/components/analytics/UsageMetricsChart';
 import { AnalyticsKPIs } from '@/components/analytics/AnalyticsKPIs';
 import { DateRangePicker } from '@/components/analytics/DateRangePicker';
+import { ComparisonPeriodSelector } from '@/components/analytics/ComparisonPeriodSelector';
 import { ReportFiltersPanel, ReportFilters } from '@/components/analytics/ReportFilters';
 import { ReportBuilder, ReportConfig } from '@/components/analytics/ReportBuilder';
 import { DataTables } from '@/components/analytics/DataTables';
@@ -205,48 +206,38 @@ const Analytics: React.FC<AnalyticsProps> = ({ onMenuClick }) => {
 
           {/* Date Range Picker */}
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Switch
-                  id="comparison-mode"
-                  checked={comparisonMode}
-                  onCheckedChange={setComparisonMode}
-                />
-                <Label htmlFor="comparison-mode" className="text-sm font-medium">
-                  Compare Time Periods
-                </Label>
-              </div>
+            <DateRangePicker
+              startDate={startDate}
+              endDate={endDate}
+              onDateChange={(start, end) => {
+                setStartDate(start);
+                setEndDate(end);
+              }}
+            />
+
+            <div className="flex items-center gap-3">
+              <Switch
+                id="comparison-mode"
+                checked={comparisonMode}
+                onCheckedChange={setComparisonMode}
+              />
+              <Label htmlFor="comparison-mode" className="text-sm font-medium">
+                Compare Time Periods
+              </Label>
             </div>
 
-            <div className={comparisonMode ? 'grid grid-cols-1 md:grid-cols-2 gap-4' : ''}>
-              <div>
-                {comparisonMode && (
-                  <Label className="text-sm font-medium mb-2 block">Current Period</Label>
-                )}
-                <DateRangePicker
-                  startDate={startDate}
-                  endDate={endDate}
-                  onDateChange={(start, end) => {
-                    setStartDate(start);
-                    setEndDate(end);
-                  }}
-                />
-              </div>
-
-              {comparisonMode && (
-                <div>
-                  <Label className="text-sm font-medium mb-2 block">Comparison Period</Label>
-                  <DateRangePicker
-                    startDate={comparisonStartDate}
-                    endDate={comparisonEndDate}
-                    onDateChange={(start, end) => {
-                      setComparisonStartDate(start);
-                      setComparisonEndDate(end);
-                    }}
-                  />
-                </div>
-              )}
-            </div>
+            {comparisonMode && (
+              <ComparisonPeriodSelector
+                currentStartDate={startDate}
+                currentEndDate={endDate}
+                comparisonStartDate={comparisonStartDate}
+                comparisonEndDate={comparisonEndDate}
+                onComparisonDateChange={(start, end) => {
+                  setComparisonStartDate(start);
+                  setComparisonEndDate(end);
+                }}
+              />
+            )}
           </div>
 
           {/* Filters */}
