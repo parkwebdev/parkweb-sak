@@ -93,9 +93,9 @@ const Conversations: React.FC<ConversationsProps> = ({ onMenuClick }) => {
   };
 
   return (
-    <main className="flex-1 bg-muted/30 h-screen p-4">
+    <main className="flex-1 bg-muted/30 h-screen p-1">
       {/* Mobile header */}
-      <header className="lg:hidden mb-4">
+      <header className="lg:hidden mb-4 px-3">
         <div className="flex items-center gap-3">
           <Button
             variant="ghost"
@@ -108,8 +108,8 @@ const Conversations: React.FC<ConversationsProps> = ({ onMenuClick }) => {
         </div>
       </header>
 
-      <div className="h-full lg:h-[calc(100%-2rem)]">
-        <div className="flex h-full rounded-lg border bg-card overflow-hidden shadow-sm">
+      <div className="h-full">
+        <div className="flex h-full rounded-xl border bg-card overflow-hidden shadow-sm">
           {/* Conversations List Sidebar */}
           <div className="hidden lg:flex lg:w-80 xl:w-96 border-r flex-col">
           {/* Header */}
