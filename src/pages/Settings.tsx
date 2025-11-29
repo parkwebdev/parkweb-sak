@@ -9,9 +9,10 @@ import { TeamManagement } from '@/components/settings/TeamManagement';
 import { NotificationSettings } from '@/components/settings/NotificationSettings';
 import { OrganizationSettings } from '@/components/settings/OrganizationSettings';
 import { SubscriptionSettings } from '@/components/settings/SubscriptionSettings';
+import { WebhookSettings } from '@/components/settings/WebhookSettings';
 import { useSidebar } from '@/hooks/use-sidebar';
 
-export type SettingsTab = 'general' | 'profile' | 'team' | 'notifications' | 'organization' | 'subscription';
+export type SettingsTab = 'general' | 'profile' | 'team' | 'notifications' | 'organization' | 'subscription' | 'webhooks';
 
 const Settings = () => {
   const { isCollapsed } = useSidebar();
@@ -24,7 +25,7 @@ const Settings = () => {
 
   // Set active tab from URL parameter
   useEffect(() => {
-    if (tabParam && ['general', 'profile', 'team', 'notifications', 'organization', 'subscription'].includes(tabParam)) {
+    if (tabParam && ['general', 'profile', 'team', 'notifications', 'organization', 'subscription', 'webhooks'].includes(tabParam)) {
       setActiveTab(tabParam);
     }
   }, [tabParam]);
@@ -63,6 +64,8 @@ const Settings = () => {
         return <SubscriptionSettings />;
       case 'notifications':
         return <NotificationSettings />;
+      case 'webhooks':
+        return <WebhookSettings />;
       default:
         return <GeneralSettings />;
     }

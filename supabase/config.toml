@@ -21,3 +21,9 @@ verify_jwt = false
 
 [functions.widget-chat]
 verify_jwt = false
+
+[functions.trigger-webhook]
+verify_jwt = true
+
+[functions.dispatch-webhook-event]
+verify_jwt = false
