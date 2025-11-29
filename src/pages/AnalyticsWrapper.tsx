@@ -8,7 +8,7 @@ const AnalyticsWrapper = () => {
   const { isCollapsed } = useSidebar();
 
   return (
-    <div className="flex h-screen bg-muted/30">
+    <div className="flex h-screen bg-muted/30" style={{ isolation: 'isolate' }}>
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div 
