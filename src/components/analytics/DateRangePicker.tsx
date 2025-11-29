@@ -1,9 +1,4 @@
-import { useState } from 'react';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Button } from '@/components/ui/button';
-import { Calendar } from '@untitledui/icons';
-import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 
 interface DateRangePickerProps {
@@ -15,14 +10,18 @@ interface DateRangePickerProps {
 
 const presets = [
   { label: 'Today', days: 0 },
-  { label: 'Yesterday', days: 1 },
   { label: '7 days', days: 7 },
   { label: '30 days', days: 30 },
+  { label: '60 days', days: 60 },
   { label: '90 days', days: 90 },
 ];
 
-export const DateRangePicker = ({ startDate, endDate, onDateChange, showExternalPresets = true }: DateRangePickerProps) => {
-  const [isOpen, setIsOpen] = useState(false);
+export const DateRangePicker = ({ 
+  startDate, 
+  endDate, 
+  onDateChange,
+  showExternalPresets = true 
+}: DateRangePickerProps) => {
 
   const handlePresetClick = (days: number) => {
     const end = new Date();
@@ -30,78 +29,41 @@ export const DateRangePicker = ({ startDate, endDate, onDateChange, showExternal
     
     if (days === 0) {
       start.setHours(0, 0, 0, 0);
-    } else if (days === 1) {
-      start.setDate(start.getDate() - 1);
-      start.setHours(0, 0, 0, 0);
-      end.setDate(end.getDate() - 1);
       end.setHours(23, 59, 59, 999);
     } else {
       start.setDate(start.getDate() - days);
     }
     
     onDateChange(start, end);
-    setIsOpen(false);
   };
 
   return (
-    <div className="flex items-center gap-2">
-      <Popover open={isOpen} onOpenChange={setIsOpen}>
-        <PopoverTrigger asChild>
-          <Button variant="outline" className="justify-start text-left font-normal min-w-[280px]">
-            <Calendar className="mr-2 h-4 w-4" />
-            {format(startDate, 'MMM d, yyyy')} - {format(endDate, 'MMM d, yyyy')}
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="start">
-          <div className="flex">
-            <div className="border-r border-border p-3">
-              <div className="space-y-1">
-                <p className="text-sm font-medium mb-2">Quick Select</p>
-                {presets.map((preset) => (
-                  <Button
-                    key={preset.label}
-                    variant="ghost"
-                    size="sm"
-                    className="w-full justify-start"
-                    onClick={() => handlePresetClick(preset.days)}
-                  >
-                    {preset.label}
-                  </Button>
-                ))}
-              </div>
-            </div>
-            <div className="p-3">
-              <p className="text-sm font-medium mb-2">Custom Range</p>
-              <CalendarComponent
-                mode="range"
-                selected={{ from: startDate, to: endDate }}
-                onSelect={(range) => {
-                  if (range?.from && range?.to) {
-                    onDateChange(range.from, range.to);
-                  }
-                }}
-                numberOfMonths={2}
-                className={cn("pointer-events-auto")}
-              />
-            </div>
-          </div>
-        </PopoverContent>
-      </Popover>
-      
-      {showExternalPresets && (
-        <div className="flex gap-1">
+    <div className="p-3 space-y-3">
+      <CalendarComponent
+        mode="range"
+        selected={{ from: startDate, to: endDate }}
+        onSelect={(range) => {
+          if (range?.from && range?.to) {
+            onDateChange(range.from, range.to);
+          }
+        }}
+        numberOfMonths={2}
+        className={cn("pointer-events-auto")}
+      />
+      <div className="border-t pt-3 space-y-2">
+        <p className="text-xs font-medium text-muted-foreground mb-2">Quick Select</p>
+        <div className="grid grid-cols-2 gap-2">
           {presets.map((preset) => (
-            <Button
+            <button
               key={preset.label}
-              variant="outline"
-              size="sm"
+              className="text-sm px-3 py-1.5 rounded-md hover:bg-muted transition-colors text-left"
               onClick={() => handlePresetClick(preset.days)}
             >
               {preset.label}
-            </Button>
+            </button>
           ))}
         </div>
-      )}
+      </div>
     </div>
   );
 };

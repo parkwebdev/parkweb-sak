@@ -1,24 +1,20 @@
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
-import { RefreshCcw01, Menu01 as Menu } from '@untitledui/icons';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import { useOrganization } from '@/contexts/OrganizationContext';
+import { AnalyticsKPIs } from '@/components/analytics/AnalyticsKPIs';
+import { ComparisonView } from '@/components/analytics/ComparisonView';
 import { ConversationChart } from '@/components/analytics/ConversationChart';
 import { LeadConversionChart } from '@/components/analytics/LeadConversionChart';
 import { AgentPerformanceChart } from '@/components/analytics/AgentPerformanceChart';
 import { UsageMetricsChart } from '@/components/analytics/UsageMetricsChart';
-import { AnalyticsKPIs } from '@/components/analytics/AnalyticsKPIs';
-import { DateRangePicker } from '@/components/analytics/DateRangePicker';
-import { ComparisonPeriodSelector } from '@/components/analytics/ComparisonPeriodSelector';
-import { ReportFiltersPanel, ReportFilters } from '@/components/analytics/ReportFilters';
 import { ReportBuilder, ReportConfig } from '@/components/analytics/ReportBuilder';
-import { DataTables } from '@/components/analytics/DataTables';
-import { ExportButtons } from '@/components/analytics/ExportButtons';
 import { ScheduledReportsManager } from '@/components/analytics/ScheduledReportsManager';
-import { ComparisonView } from '@/components/analytics/ComparisonView';
-import { useOrganization } from '@/contexts/OrganizationContext';
+import { DataTables } from '@/components/analytics/DataTables';
+import { AnalyticsToolbar } from '@/components/analytics/AnalyticsToolbar';
+import { generateCSVReport, generatePDFReport } from '@/lib/report-export';
+import { toast } from 'sonner';
+import { subDays } from 'date-fns';
 
 interface AnalyticsProps {
   onMenuClick?: () => void;
@@ -26,40 +22,28 @@ interface AnalyticsProps {
 
 const Analytics: React.FC<AnalyticsProps> = ({ onMenuClick }) => {
   const { currentOrg } = useOrganization();
-  const [activeTab, setActiveTab] = useState('overview');
-  const [dataTableTab, setDataTableTab] = useState<'conversations' | 'leads' | 'agents' | 'usage'>('conversations');
-  const [comparisonMode, setComparisonMode] = useState(false);
-  
-  // Date range state
-  const [startDate, setStartDate] = useState<Date>(() => {
-    const date = new Date();
-    date.setDate(date.getDate() - 30);
-    return date;
-  });
-  const [endDate, setEndDate] = useState<Date>(new Date());
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const [reportsSubTab, setReportsSubTab] = useState('configure');
 
-  // Comparison period state
-  const [comparisonStartDate, setComparisonStartDate] = useState<Date>(() => {
-    const date = new Date();
-    date.setDate(date.getDate() - 60);
-    return date;
-  });
-  const [comparisonEndDate, setComparisonEndDate] = useState<Date>(() => {
-    const date = new Date();
-    date.setDate(date.getDate() - 31);
-    return date;
-  });
+  // Date state
+  const [startDate, setStartDate] = useState(subDays(new Date(), 30));
+  const [endDate, setEndDate] = useState(new Date());
+
+  // Comparison state
+  const [comparisonMode, setComparisonMode] = useState(false);
+  const [comparisonStartDate, setComparisonStartDate] = useState(subDays(new Date(), 60));
+  const [comparisonEndDate, setComparisonEndDate] = useState(subDays(new Date(), 30));
 
   // Filters state
-  const [filters, setFilters] = useState<ReportFilters>({
+  const [filters, setFilters] = useState({
     agentId: 'all',
     leadStatus: 'all',
     conversationStatus: 'all',
   });
 
-  // Report config state
+  // Report config
   const [reportConfig, setReportConfig] = useState<ReportConfig>({
-    type: 'detailed',
+    type: 'summary',
     includeConversations: true,
     includeLeads: true,
     includeAgentPerformance: true,
@@ -70,26 +54,22 @@ const Analytics: React.FC<AnalyticsProps> = ({ onMenuClick }) => {
     includeTables: true,
   });
 
-  const { 
-    conversationStats, 
-    leadStats, 
-    agentPerformance, 
+  // Fetch analytics data
+  const {
+    conversationStats,
+    leadStats,
+    agentPerformance,
     usageMetrics,
     conversations,
     leads,
     loading,
-    refetch 
+    refetch,
   } = useAnalytics(startDate, endDate, filters);
 
-  // Fetch comparison data if comparison mode is enabled
-  const { 
-    conversationStats: comparisonConversationStats, 
-    leadStats: comparisonLeadStats, 
-    agentPerformance: comparisonAgentPerformance, 
-    usageMetrics: comparisonUsageMetrics,
-  } = useAnalytics(
-    comparisonMode ? comparisonStartDate : startDate,
-    comparisonMode ? comparisonEndDate : endDate,
+  // Comparison data
+  const comparisonData = useAnalytics(
+    comparisonStartDate,
+    comparisonEndDate,
     filters
   );
 
@@ -100,22 +80,54 @@ const Analytics: React.FC<AnalyticsProps> = ({ onMenuClick }) => {
   const conversionRate = totalLeads > 0 ? ((convertedLeads / totalLeads) * 100).toFixed(1) : '0';
   const totalMessages = usageMetrics.reduce((sum, metric) => sum + metric.messages, 0);
 
-  // Calculate comparison KPIs
-  const comparisonTotalConversations = comparisonConversationStats.reduce((sum, stat) => sum + stat.total, 0);
-  const comparisonTotalLeads = comparisonLeadStats.reduce((sum, stat) => sum + stat.total, 0);
-  const comparisonConvertedLeads = comparisonLeadStats.reduce((sum, stat) => sum + stat.converted, 0);
-  const comparisonConversionRate = comparisonTotalLeads > 0 ? (comparisonConvertedLeads / comparisonTotalLeads) * 100 : 0;
-  const comparisonTotalMessages = comparisonUsageMetrics.reduce((sum, metric) => sum + metric.messages, 0);
+  const comparisonTotalConversations = comparisonData.conversationStats.reduce((sum, stat) => sum + stat.total, 0);
+  const comparisonTotalLeads = comparisonData.leadStats.reduce((sum, stat) => sum + stat.total, 0);
+  const comparisonConvertedLeads = comparisonData.leadStats.reduce((sum, stat) => sum + stat.converted, 0);
+  const comparisonConversionRate = comparisonTotalLeads > 0 ? ((comparisonConvertedLeads / comparisonTotalLeads) * 100).toFixed(1) : '0';
 
+  const kpis = [
+    {
+      title: 'Total Conversations',
+      value: totalConversations.toString(),
+      change: comparisonMode && comparisonTotalConversations > 0
+        ? ((totalConversations - comparisonTotalConversations) / comparisonTotalConversations * 100)
+        : 0,
+      changeLabel: 'vs previous period',
+    },
+    {
+      title: 'Total Leads',
+      value: totalLeads.toString(),
+      change: comparisonMode && comparisonTotalLeads > 0
+        ? ((totalLeads - comparisonTotalLeads) / comparisonTotalLeads * 100)
+        : 0,
+      changeLabel: 'vs previous period',
+    },
+    {
+      title: 'Conversion Rate',
+      value: `${conversionRate}%`,
+      change: comparisonMode
+        ? (parseFloat(conversionRate) - parseFloat(comparisonConversionRate))
+        : 0,
+      changeLabel: 'vs previous period',
+    },
+    {
+      title: 'Total Messages',
+      value: totalMessages.toString(),
+      change: 0,
+      changeLabel: 'vs previous period',
+    },
+  ];
+
+  // Comparison metrics
   const comparisonMetrics = [
     {
-      label: 'Total Conversations',
+      label: 'Conversations',
       currentValue: totalConversations,
       previousValue: comparisonTotalConversations,
       format: 'number' as const,
     },
     {
-      label: 'Total Leads',
+      label: 'Leads',
       currentValue: totalLeads,
       previousValue: comparisonTotalLeads,
       format: 'number' as const,
@@ -123,44 +135,12 @@ const Analytics: React.FC<AnalyticsProps> = ({ onMenuClick }) => {
     {
       label: 'Conversion Rate',
       currentValue: parseFloat(conversionRate),
-      previousValue: comparisonConversionRate,
+      previousValue: parseFloat(comparisonConversionRate),
       format: 'percentage' as const,
     },
-    {
-      label: 'Total Messages',
-      currentValue: totalMessages,
-      previousValue: comparisonTotalMessages,
-      format: 'number' as const,
-    },
   ];
 
-  const kpis = [
-    {
-      title: 'Total Conversations',
-      value: totalConversations.toString(),
-      change: 12.5,
-      changeLabel: 'vs last period',
-    },
-    {
-      title: 'Total Leads',
-      value: totalLeads.toString(),
-      change: 8.3,
-      changeLabel: 'vs last period',
-    },
-    {
-      title: 'Conversion Rate',
-      value: `${conversionRate}%`,
-      change: 5.2,
-      changeLabel: 'vs last period',
-    },
-    {
-      title: 'Total Messages',
-      value: totalMessages.toString(),
-      change: 15.7,
-      changeLabel: 'vs last period',
-    },
-  ];
-
+  // Analytics data for export
   const analyticsData = {
     conversationStats,
     leadStats,
@@ -168,169 +148,127 @@ const Analytics: React.FC<AnalyticsProps> = ({ onMenuClick }) => {
     usageMetrics,
     conversations,
     leads,
-    totalConversations,
-    totalLeads,
-    conversationsChange: 12.5,
-    leadsChange: 8.3,
-    conversionRate,
-    conversionChange: 5.2,
-    totalMessages,
-    messagesChange: 15.7,
+    kpis,
+  };
+
+  const handleDateChange = (start: Date, end: Date) => {
+    setStartDate(start);
+    setEndDate(end);
+  };
+
+  const handleComparisonDateChange = (start: Date, end: Date) => {
+    setComparisonStartDate(start);
+    setComparisonEndDate(end);
+  };
+
+  const handleExportCSV = async () => {
+    try {
+      await generateCSVReport(analyticsData, reportConfig, startDate, endDate, currentOrg?.name || 'Organization');
+      toast.success('CSV exported successfully');
+    } catch (error) {
+      console.error('Export error:', error);
+      toast.error('Failed to export CSV');
+    }
+  };
+
+  const handleExportPDF = async () => {
+    try {
+      await generatePDFReport(analyticsData, reportConfig, startDate, endDate, currentOrg?.name || 'Organization');
+      toast.success('PDF exported successfully');
+    } catch (error) {
+      console.error('Export error:', error);
+      toast.error('Failed to export PDF');
+    }
   };
 
   return (
-    <main className="flex-1 bg-muted/30 min-h-screen pt-4 lg:pt-8">
-      <header className="w-full font-medium">
-        <div className="items-stretch flex w-full flex-col gap-6 px-4 lg:px-8 py-0">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-4 w-full sm:w-auto">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="lg:hidden flex items-center gap-2"
-                onClick={onMenuClick}
-              >
-                <Menu size={16} />
-              </Button>
-              <div className="flex-1 sm:flex-none">
-                <h1 className="text-2xl font-bold text-foreground">Analytics & Reports</h1>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Real-time insights and custom reports for {currentOrg?.name || 'your organization'}
-                </p>
-              </div>
-            </div>
-            <Button variant="outline" size="icon" onClick={refetch} disabled={loading}>
-              <RefreshCcw01 className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-            </Button>
-          </div>
-
-          {/* Date Range Picker */}
-          <div className="space-y-4">
-            <DateRangePicker
-              startDate={startDate}
-              endDate={endDate}
-              onDateChange={(start, end) => {
-                setStartDate(start);
-                setEndDate(end);
-              }}
-            />
-
-            <div className="flex items-center gap-3">
-              <Switch
-                id="comparison-mode"
-                checked={comparisonMode}
-                onCheckedChange={setComparisonMode}
-              />
-              <Label htmlFor="comparison-mode" className="text-sm font-medium">
-                Compare Time Periods
-              </Label>
-            </div>
-
-            {comparisonMode && (
-              <ComparisonPeriodSelector
-                currentStartDate={startDate}
-                currentEndDate={endDate}
-                comparisonStartDate={comparisonStartDate}
-                comparisonEndDate={comparisonEndDate}
-                onComparisonDateChange={(start, end) => {
-                  setComparisonStartDate(start);
-                  setComparisonEndDate(end);
-                }}
-              />
-            )}
-          </div>
-
-          {/* Filters */}
-          <ReportFiltersPanel filters={filters} onFiltersChange={setFilters} />
-        </div>
-      </header>
-
-      <div className="px-4 lg:px-8 mt-6">
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <div className="flex items-center justify-between mb-6">
-            <TabsList>
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="reports">Reports</TabsTrigger>
-              <TabsTrigger value="scheduled">Scheduled</TabsTrigger>
-              <TabsTrigger value="data">Data</TabsTrigger>
-            </TabsList>
-            <ExportButtons 
-              data={analyticsData}
-              startDate={startDate}
-              endDate={endDate}
-              orgName={currentOrg?.name || 'Organization'}
-              config={reportConfig}
-            />
-          </div>
-
-          {/* Overview Tab */}
-          <TabsContent value="overview" className="space-y-6">
-            {comparisonMode ? (
-              <ComparisonView
-                currentPeriod={{ start: startDate, end: endDate }}
-                previousPeriod={{ start: comparisonStartDate, end: comparisonEndDate }}
-                metrics={comparisonMetrics}
-              />
-            ) : (
-              <AnalyticsKPIs kpis={kpis} />
-            )}
-
-            {loading ? (
-              <div className="text-center py-12 text-muted-foreground">
-                Loading analytics data...
-              </div>
-            ) : (
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <ConversationChart data={conversationStats} />
-                  <LeadConversionChart data={leadStats} />
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <AgentPerformanceChart data={agentPerformance} />
-                  <UsageMetricsChart data={usageMetrics} />
-                </div>
-              </div>
-            )}
-
-            {!loading && conversationStats.length === 0 && (
-              <div className="text-center py-12 text-muted-foreground">
-                No data available for the selected time range
-              </div>
-            )}
-          </TabsContent>
-
-          {/* Reports Tab */}
-          <TabsContent value="reports" className="space-y-6">
-            <ReportBuilder 
-              config={reportConfig}
-              onConfigChange={setReportConfig}
-            />
-          </TabsContent>
-
-          {/* Scheduled Reports Tab */}
-          <TabsContent value="scheduled" className="space-y-6">
-            <ScheduledReportsManager />
-          </TabsContent>
-
-          {/* Data Tab */}
-          <TabsContent value="data" className="space-y-6">
-            <Tabs value={dataTableTab} onValueChange={(v) => setDataTableTab(v as any)}>
-              <TabsList>
-                <TabsTrigger value="conversations">Conversations</TabsTrigger>
-                <TabsTrigger value="leads">Leads</TabsTrigger>
-                <TabsTrigger value="agents">Agents</TabsTrigger>
-                <TabsTrigger value="usage">Usage</TabsTrigger>
-              </TabsList>
-
-              <div className="mt-6">
-                <DataTables activeTab={dataTableTab} data={analyticsData} />
-              </div>
-            </Tabs>
-          </TabsContent>
-        </Tabs>
+    <div className="space-y-6 p-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-bold">Analytics</h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Track performance and insights across your organization
+        </p>
       </div>
-    </main>
+
+      {/* Unified Toolbar */}
+      <AnalyticsToolbar
+        startDate={startDate}
+        endDate={endDate}
+        onDateChange={handleDateChange}
+        comparisonMode={comparisonMode}
+        onComparisonModeChange={setComparisonMode}
+        comparisonStartDate={comparisonStartDate}
+        comparisonEndDate={comparisonEndDate}
+        onComparisonDateChange={handleComparisonDateChange}
+        filters={filters}
+        onFiltersChange={setFilters}
+        onRefresh={refetch}
+        onExportCSV={handleExportCSV}
+        onExportPDF={handleExportPDF}
+      />
+
+      {/* Main Content */}
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList>
+          <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+          <TabsTrigger value="reports">Reports</TabsTrigger>
+          <TabsTrigger value="schedule">Schedule</TabsTrigger>
+        </TabsList>
+
+        {/* Dashboard Tab */}
+        <TabsContent value="dashboard" className="space-y-6 mt-6">
+          {comparisonMode ? (
+            <ComparisonView 
+              currentPeriod={{ start: startDate, end: endDate }}
+              previousPeriod={{ start: comparisonStartDate, end: comparisonEndDate }}
+              metrics={comparisonMetrics} 
+            />
+          ) : (
+            <AnalyticsKPIs kpis={kpis} />
+          )}
+
+          {loading ? (
+            <div className="text-center py-12 text-muted-foreground">
+              Loading analytics data...
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <ConversationChart data={conversationStats} />
+              <LeadConversionChart data={leadStats} />
+              <AgentPerformanceChart data={agentPerformance} />
+              <UsageMetricsChart data={usageMetrics} />
+            </div>
+          )}
+        </TabsContent>
+
+        {/* Reports Tab */}
+        <TabsContent value="reports" className="space-y-6 mt-6">
+          <Tabs value={reportsSubTab} onValueChange={setReportsSubTab}>
+            <TabsList>
+              <TabsTrigger value="configure">Configure</TabsTrigger>
+              <TabsTrigger value="data">View Data</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="configure" className="mt-6">
+              <ReportBuilder config={reportConfig} onConfigChange={setReportConfig} />
+            </TabsContent>
+
+            <TabsContent value="data" className="mt-6">
+              <DataTables
+                activeTab="conversations"
+                data={analyticsData}
+              />
+            </TabsContent>
+          </Tabs>
+        </TabsContent>
+
+        {/* Schedule Tab */}
+        <TabsContent value="schedule" className="mt-6">
+          <ScheduledReportsManager />
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 };
 
