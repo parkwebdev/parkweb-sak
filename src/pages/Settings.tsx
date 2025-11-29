@@ -5,10 +5,13 @@ import { SettingsLayout } from '@/components/settings/SettingsLayout';
 import { GeneralSettings } from '@/components/settings/GeneralSettings';
 import { ProfileSettings } from '@/components/settings/ProfileSettings';
 import { TeamSettings } from '@/components/settings/TeamSettings';
+import { TeamManagement } from '@/components/settings/TeamManagement';
 import { NotificationSettings } from '@/components/settings/NotificationSettings';
+import { OrganizationSettings } from '@/components/settings/OrganizationSettings';
+import { SubscriptionSettings } from '@/components/settings/SubscriptionSettings';
 import { useSidebar } from '@/hooks/use-sidebar';
 
-export type SettingsTab = 'general' | 'profile' | 'team' | 'notifications';
+export type SettingsTab = 'general' | 'profile' | 'team' | 'notifications' | 'organization' | 'subscription';
 
 const Settings = () => {
   const { isCollapsed } = useSidebar();
@@ -21,7 +24,7 @@ const Settings = () => {
 
   // Set active tab from URL parameter
   useEffect(() => {
-    if (tabParam && ['general', 'profile', 'team', 'notifications'].includes(tabParam)) {
+    if (tabParam && ['general', 'profile', 'team', 'notifications', 'organization', 'subscription'].includes(tabParam)) {
       setActiveTab(tabParam);
     }
   }, [tabParam]);
@@ -52,8 +55,12 @@ const Settings = () => {
         return <GeneralSettings />;
       case 'profile':
         return <ProfileSettings />;
+      case 'organization':
+        return <OrganizationSettings />;
       case 'team':
-        return <TeamSettings openMemberId={openMemberId} />;
+        return <TeamManagement />;
+      case 'subscription':
+        return <SubscriptionSettings />;
       case 'notifications':
         return <NotificationSettings />;
       default:
