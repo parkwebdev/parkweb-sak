@@ -299,3 +299,11 @@ body.compact-mode .gap-6 {
 body.compact-mode .gap-8 {
   gap: var(--spacing-2xl);
 }
+
+/* Force View Transition animation to render above all content */
+::view-transition-group(root),
+::view-transition-image-pair(root),
+::view-transition-old(root),
+::view-transition-new(root) {
+  z-index: 2147483647 !important;
+}
