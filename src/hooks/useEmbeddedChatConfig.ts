@@ -17,6 +17,8 @@ export interface EmbeddedChatConfig {
   displayTiming: 'immediate' | 'delayed' | 'scroll';
   delaySeconds: number;
   scrollDepth: number;
+  showTeaser: boolean;
+  teaserText: string;
 }
 
 export const useEmbeddedChatConfig = (agentId: string) => {
@@ -34,6 +36,8 @@ export const useEmbeddedChatConfig = (agentId: string) => {
     displayTiming: 'immediate',
     delaySeconds: 3,
     scrollDepth: 50,
+    showTeaser: true,
+    teaserText: 'Need help? Chat with us!',
   });
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
@@ -135,6 +139,8 @@ export const useEmbeddedChatConfig = (agentId: string) => {
     script.setAttribute('data-display-timing', '${config.displayTiming}');
     script.setAttribute('data-delay-seconds', '${config.delaySeconds}');
     script.setAttribute('data-scroll-depth', '${config.scrollDepth}');
+    script.setAttribute('data-show-teaser', '${config.showTeaser}');
+    script.setAttribute('data-teaser-text', '${config.teaserText}');
     ${config.avatarUrl ? `script.setAttribute('data-avatar-url', '${config.avatarUrl}');` : ''}
     document.head.appendChild(script);
   })();

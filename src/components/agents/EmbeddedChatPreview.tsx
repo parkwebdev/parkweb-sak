@@ -13,20 +13,35 @@ interface EmbeddedChatPreviewProps {
 export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isVisible, setIsVisible] = useState(config.displayTiming === 'immediate');
+  const [showTeaser, setShowTeaser] = useState(false);
   const [messages, setMessages] = useState<Array<{ role: 'user' | 'assistant'; content: string }>>([
     { role: 'assistant', content: config.greeting },
   ]);
 
   useEffect(() => {
     if (config.displayTiming === 'delayed') {
-      const timer = setTimeout(() => setIsVisible(true), config.delaySeconds * 1000);
+      const timer = setTimeout(() => {
+        setIsVisible(true);
+        if (config.showTeaser) {
+          setTimeout(() => setShowTeaser(true), 300);
+        }
+      }, config.delaySeconds * 1000);
       return () => clearTimeout(timer);
     } else if (config.displayTiming === 'scroll') {
       // Simulate scroll trigger for preview - show after 1 second
-      const timer = setTimeout(() => setIsVisible(true), 1000);
+      const timer = setTimeout(() => {
+        setIsVisible(true);
+        if (config.showTeaser) {
+          setTimeout(() => setShowTeaser(true), 300);
+        }
+      }, 1000);
+      return () => clearTimeout(timer);
+    } else if (config.showTeaser) {
+      // Show teaser after a short delay for immediate display
+      const timer = setTimeout(() => setShowTeaser(true), 500);
       return () => clearTimeout(timer);
     }
-  }, [config.displayTiming, config.delaySeconds]);
+  }, [config.displayTiming, config.delaySeconds, config.showTeaser]);
 
   const positionClasses = {
     'bottom-right': 'bottom-4 right-4',
@@ -41,6 +56,18 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
     'bounce': 'animate-bounce',
     'fade': 'animate-pulse opacity-75',
     'ring': '',
+  };
+
+  const getTeaserPosition = () => {
+    if (config.position.includes('right')) return 'right-0 mr-16';
+    if (config.position.includes('left')) return 'left-0 ml-16';
+    return 'right-0 mr-16';
+  };
+
+  const getTeaserVerticalPosition = () => {
+    if (config.position.includes('bottom')) return 'bottom-0 mb-2';
+    if (config.position.includes('top')) return 'top-0 mt-2';
+    return 'bottom-0 mb-2';
   };
 
   return (
@@ -137,34 +164,69 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
               </div>
             </Card>
           ) : (
-            <div className="relative">
-              {/* Pulsating Ring Animation */}
-              {config.animation === 'ring' && (
-                <>
+            <div className="relative flex items-end gap-3">
+              {/* Teaser Text */}
+              {config.showTeaser && showTeaser && !isOpen && (
+                <div 
+                  className={`absolute ${getTeaserVerticalPosition()} ${getTeaserPosition()} max-w-[200px] animate-fade-in`}
+                  onClick={() => setIsOpen(true)}
+                >
                   <div 
-                    className="absolute inset-0 w-12 h-12 rounded-full animate-ping opacity-20"
-                    style={{ backgroundColor: config.primaryColor }}
-                  />
-                  <div 
-                    className="absolute inset-0 w-12 h-12 rounded-full animate-pulse opacity-30"
-                    style={{ backgroundColor: config.primaryColor }}
-                  />
-                </>
+                    className="bg-background border shadow-lg rounded-lg px-4 py-2 cursor-pointer hover:shadow-xl transition-shadow"
+                    style={{ borderColor: config.primaryColor }}
+                  >
+                    <p className="text-sm font-medium" style={{ color: config.primaryColor }}>
+                      {config.teaserText}
+                    </p>
+                    {/* Small arrow pointing to bubble */}
+                    <div 
+                      className={`absolute ${config.position.includes('bottom') ? 'bottom-3' : 'top-3'} ${config.position.includes('right') ? '-right-2' : '-left-2'} w-0 h-0 border-t-[6px] border-t-transparent border-b-[6px] border-b-transparent ${config.position.includes('right') ? 'border-l-[8px]' : 'border-r-[8px]'}`}
+                      style={{ 
+                        [config.position.includes('right') ? 'borderLeftColor' : 'borderRightColor']: config.primaryColor 
+                      }}
+                    />
+                  </div>
+                </div>
               )}
-              
-              {/* Notification Badge */}
-              {config.showBadge && (
-                <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-background z-10 animate-pulse" />
-              )}
-              
-              <Button
-                size="icon"
-                className={`w-12 h-12 rounded-full shadow-lg relative ${animationClasses[config.animation]} hover:scale-110 transition-transform`}
-                style={{ backgroundColor: config.primaryColor }}
-                onClick={() => setIsOpen(true)}
-              >
-                <ChatBubbleIcon className="h-10 w-10 text-white" />
-              </Button>
+
+              <div className="relative">
+                {/* Subtle Pulsating Ring Animation - Slower and more subtle */}
+                {config.animation === 'ring' && (
+                  <>
+                    <div 
+                      className="absolute inset-0 w-12 h-12 rounded-full opacity-10"
+                      style={{ 
+                        backgroundColor: config.primaryColor,
+                        animation: 'ping 3s cubic-bezier(0, 0, 0.2, 1) infinite'
+                      }}
+                    />
+                    <div 
+                      className="absolute inset-0 w-12 h-12 rounded-full opacity-5"
+                      style={{ 
+                        backgroundColor: config.primaryColor,
+                        animation: 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+                      }}
+                    />
+                  </>
+                )}
+                
+                {/* Notification Badge - No animation, constant */}
+                {config.showBadge && (
+                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-background z-10" />
+                )}
+                
+                <Button
+                  size="icon"
+                  className={`w-12 h-12 rounded-full shadow-lg relative ${animationClasses[config.animation]} hover:scale-110 transition-transform`}
+                  style={{ backgroundColor: config.primaryColor }}
+                  onClick={() => {
+                    setIsOpen(true);
+                    setShowTeaser(false);
+                  }}
+                >
+                  <ChatBubbleIcon className="h-10 w-10 text-white" />
+                </Button>
+              </div>
             </div>
           )}
         </div>
