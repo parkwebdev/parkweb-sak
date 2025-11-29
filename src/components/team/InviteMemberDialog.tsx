@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { Mail01 as Mail } from '@untitledui/icons';
+import { Mail01 as Mail, AlertCircle } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { isValidEmail } from '@/utils/validation';
+import { usePlanLimits } from '@/hooks/usePlanLimits';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface InviteMemberDialogProps {
   onInvite: (email: string) => Promise<boolean>;
@@ -18,9 +20,16 @@ export const InviteMemberDialog: React.FC<InviteMemberDialogProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
+  const { canAddTeamMember, showLimitWarning } = usePlanLimits();
+  const limitCheck = canAddTeamMember();
 
   const handleInvite = async () => {
     if (!email || !isValidEmail(email)) {
+      return;
+    }
+
+    if (!limitCheck.allowed) {
+      showLimitWarning('team members', limitCheck, 'invite');
       return;
     }
 
@@ -52,6 +61,25 @@ export const InviteMemberDialog: React.FC<InviteMemberDialogProps> = ({
             Send an invitation to a new team member via email.
           </DialogDescription>
         </DialogHeader>
+
+        {limitCheck.isAtLimit && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              You've reached your plan limit of {limitCheck.limit} team members. Upgrade to invite more.
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {limitCheck.isNearLimit && !limitCheck.isAtLimit && (
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              You have {limitCheck.limit - limitCheck.current + 1} team member slots remaining.
+            </AlertDescription>
+          </Alert>
+        )}
+
         <div className="space-y-4">
           <div className="space-y-1.5">
             <Label htmlFor="email">Email Address <span className="text-destructive">*</span></Label>

@@ -12,7 +12,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useKnowledgeSources } from '@/hooks/useKnowledgeSources';
-import { Upload01, Link03, File01 } from '@untitledui/icons';
+import { usePlanLimits } from '@/hooks/usePlanLimits';
+import { Upload01, Link03, File01, AlertCircle } from '@untitledui/icons';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface AddKnowledgeDialogProps {
   open: boolean;
@@ -28,6 +30,9 @@ export const AddKnowledgeDialog: React.FC<AddKnowledgeDialogProps> = ({
   orgId,
 }) => {
   const { uploadDocument, addUrlSource, addTextSource } = useKnowledgeSources(agentId);
+  const { canAddKnowledgeSource, showLimitWarning } = usePlanLimits();
+  const limitCheck = canAddKnowledgeSource();
+  
   const [uploading, setUploading] = useState(false);
   const [url, setUrl] = useState('');
   const [textContent, setTextContent] = useState('');
@@ -36,6 +41,11 @@ export const AddKnowledgeDialog: React.FC<AddKnowledgeDialogProps> = ({
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    if (!limitCheck.allowed) {
+      showLimitWarning('knowledge sources', limitCheck, 'add');
+      return;
+    }
 
     setUploading(true);
     try {
@@ -48,6 +58,11 @@ export const AddKnowledgeDialog: React.FC<AddKnowledgeDialogProps> = ({
 
   const handleUrlSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!limitCheck.allowed) {
+      showLimitWarning('knowledge sources', limitCheck, 'add');
+      return;
+    }
     if (!url) return;
 
     setUploading(true);
@@ -63,6 +78,11 @@ export const AddKnowledgeDialog: React.FC<AddKnowledgeDialogProps> = ({
   const handleTextSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!textContent) return;
+
+    if (!limitCheck.allowed) {
+      showLimitWarning('knowledge sources', limitCheck, 'add');
+      return;
+    }
 
     setUploading(true);
     try {
@@ -86,6 +106,24 @@ export const AddKnowledgeDialog: React.FC<AddKnowledgeDialogProps> = ({
             Upload documents, add URLs, or paste content to train your agent
           </DialogDescription>
         </DialogHeader>
+
+        {limitCheck.isAtLimit && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              You've reached your plan limit of {limitCheck.limit} knowledge sources. Upgrade to add more.
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {limitCheck.isNearLimit && !limitCheck.isAtLimit && (
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              You're using {limitCheck.current} of {limitCheck.limit} knowledge sources ({Math.round(limitCheck.percentage)}%).
+            </AlertDescription>
+          </Alert>
+        )}
 
         <Tabs defaultValue="upload" className="w-full">
           <TabsList className="grid w-full grid-cols-3">

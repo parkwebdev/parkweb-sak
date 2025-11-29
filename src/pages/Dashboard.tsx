@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users01 as Users, MessageChatSquare, UserPlus01 as UserPlus, TrendUp01 as TrendUp, Cube01 as Bot, Zap, Menu01 as Menu } from '@untitledui/icons';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
+import { PlanLimitsCard } from '@/components/settings/PlanLimitsCard';
 
 interface DashboardProps {
   onMenuClick?: () => void;
@@ -234,6 +235,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ onMenuClick }) => {
                 </p>
               </CardContent>
             </Card>
+          </div>
+        )}
+
+        {/* Plan Limits */}
+        {!loading && (
+          <div className="mt-6">
+            <PlanLimitsCard />
           </div>
         )}
       </div>
