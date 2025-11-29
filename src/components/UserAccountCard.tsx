@@ -1,5 +1,5 @@
 import React from 'react';
-import { User01 as User, Settings01 as Settings, LogOut01 as LogOut } from '@untitledui/icons';
+import { User01 as User, Settings01 as Settings, LogOut01 as LogOut, CreditCard01 } from '@untitledui/icons';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Link, useNavigate } from 'react-router-dom';
@@ -124,7 +124,19 @@ export const UserAccountCard: React.FC<UserAccountCardProps> = ({ isCollapsed = 
             )}
           </button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-48">
+        <DropdownMenuContent align="end" className="w-48 bg-background border shadow-lg z-50">
+            <DropdownMenuItem asChild>
+              <Link to="/settings?tab=profile" className="w-full flex items-center gap-2">
+                <User size={16} />
+                Profile
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link to="/settings?tab=subscription" className="w-full flex items-center gap-2">
+                <CreditCard01 size={16} />
+                Billing
+              </Link>
+            </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link to="/settings" className="w-full flex items-center gap-2">
                 <Settings size={16} />
