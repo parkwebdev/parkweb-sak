@@ -880,10 +880,13 @@ export type Database = {
       webhooks: {
         Row: {
           active: boolean | null
+          auth_config: Json | null
+          auth_type: string
           created_at: string
           events: string[] | null
           headers: Json | null
           id: string
+          method: string
           name: string
           org_id: string
           updated_at: string
@@ -891,10 +894,13 @@ export type Database = {
         }
         Insert: {
           active?: boolean | null
+          auth_config?: Json | null
+          auth_type?: string
           created_at?: string
           events?: string[] | null
           headers?: Json | null
           id?: string
+          method?: string
           name: string
           org_id: string
           updated_at?: string
@@ -902,10 +908,13 @@ export type Database = {
         }
         Update: {
           active?: boolean | null
+          auth_config?: Json | null
+          auth_type?: string
           created_at?: string
           events?: string[] | null
           headers?: Json | null
           id?: string
+          method?: string
           name?: string
           org_id?: string
           updated_at?: string

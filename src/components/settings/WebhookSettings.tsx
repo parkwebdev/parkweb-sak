@@ -52,6 +52,19 @@ export const WebhookSettings = () => {
 
   return (
     <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-lg font-medium">Webhooks</h3>
+          <p className="text-sm text-muted-foreground">
+            Send real-time events to external APIs
+          </p>
+        </div>
+        <Button onClick={() => setCreateDialogOpen(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Create Webhook
+        </Button>
+      </div>
+
       <div className="grid gap-4">
         {webhooks.length === 0 ? (
           <Card>
@@ -73,8 +86,18 @@ export const WebhookSettings = () => {
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <CardTitle>{webhook.name}</CardTitle>
+                      <Badge variant="outline" className="font-mono text-xs">
+                        {webhook.method || 'POST'}
+                      </Badge>
+                      {webhook.auth_type && webhook.auth_type !== 'none' && (
+                        <Badge variant="secondary" className="text-xs">
+                          {webhook.auth_type === 'api_key' && 'API Key'}
+                          {webhook.auth_type === 'bearer_token' && 'Bearer Token'}
+                          {webhook.auth_type === 'basic_auth' && 'Basic Auth'}
+                        </Badge>
+                      )}
                       <Badge variant={webhook.active ? 'default' : 'secondary'}>
                         {webhook.active ? 'Active' : 'Inactive'}
                       </Badge>
