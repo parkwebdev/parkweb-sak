@@ -7,7 +7,7 @@ import { ThemeToggle } from './ThemeToggle';
 import { NotificationCenter } from './notifications/NotificationCenter';
 import { OrganizationSwitcher } from './OrganizationSwitcher';
 import { useSidebar } from '@/hooks/use-sidebar';
-import { useTheme } from '@/components/ThemeProvider';
+import chatpadLogo from '@/assets/chatpad-logo.png';
 
 interface NavigationItem {
   id: string;
@@ -66,15 +66,6 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
   const location = useLocation();
   const { isCollapsed, toggle } = useSidebar();
-  const { theme } = useTheme();
-
-  // Supabase storage URLs for logos
-  const logoBlackUrl = 'https://mvaimvwdukpgvkifkfpa.supabase.co/storage/v1/object/public/logos/Icon%20Only%20-%20Black%20Square@2x.png';
-  const logoWhiteUrl = 'https://mvaimvwdukpgvkifkfpa.supabase.co/storage/v1/object/public/logos/Icon%20Only%20-%20White%20Square@2x.png';
-
-  // Determine which logo to show based on theme
-  const isDarkMode = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-  const logoSrc = isDarkMode ? logoWhiteUrl : logoBlackUrl;
 
   return (
     <aside className={`items-stretch flex ${isCollapsed ? 'w-[72px]' : 'w-[280px]'} h-screen bg-muted/30 p-1 transition-all duration-300`}>
@@ -84,8 +75,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
             <div className="flex min-h-[24px] w-full max-w-full items-center justify-between">
               {!isCollapsed && (
                 <img 
-                  src={logoSrc} 
-                  alt="KW Logo" 
+                  src={chatpadLogo} 
+                  alt="ChatPad Logo" 
                   className="h-6 w-6 object-contain"
                 />
               )}
