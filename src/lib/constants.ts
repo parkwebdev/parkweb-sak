@@ -1,7 +1,7 @@
 // Application constants and shared configuration
 
 export const APP_CONFIG = {
-  name: 'Agency Dashboard',
+  name: 'ChatPad',
   version: '1.0.0',
   defaultTheme: 'dark' as const,
 } as const;

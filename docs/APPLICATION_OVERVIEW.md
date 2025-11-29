@@ -1,4 +1,4 @@
-# Agency Dashboard - Application Overview
+# ChatPad - Application Overview
 
 ## Table of Contents
 - [Application Overview](#application-overview)
@@ -14,14 +14,15 @@
 
 ## Application Overview
 
-The Agency Dashboard is a comprehensive client management and project onboarding platform designed for digital agencies. It provides a centralized hub for managing client onboarding, scope of works, team collaboration, and project requests.
+ChatPad is a comprehensive multi-tenant AI agent platform that enables organizations to build, deploy, and manage conversational AI agents. It provides tools for knowledge management, conversation handling, lead capture, and analytics.
 
 ### Core Purpose
-- Streamline client onboarding processes
-- Generate and manage Scope of Work (SOW) documents
-- Track and manage client change requests
-- Facilitate team collaboration and project management
-- Provide secure, role-based access to agency resources
+- Deploy AI agents via multiple channels (widget, hosted page, API)
+- Manage agent knowledge bases with RAG (Retrieval Augmented Generation)
+- Handle conversations with human takeover capabilities
+- Capture and manage leads from agent interactions
+- Provide analytics and monitoring for agent performance
+- Support multi-tenant organizations with team management
 
 ## Technology Stack
 
@@ -432,4 +433,4 @@ src/
 5. **Documentation** - Update relevant documentation
 6. **Deployment** - Staged rollout with monitoring
 
-This document serves as the authoritative guide for understanding and maintaining the Agency Dashboard application. All development should align with these established patterns and conventions to ensure consistency and maintainability.
+This document serves as the authoritative guide for understanding and maintaining the ChatPad application. All development should align with these established patterns and conventions to ensure consistency and maintainability.
