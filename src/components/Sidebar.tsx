@@ -5,6 +5,7 @@ import { SearchInput } from './SearchInput';
 import { UserAccountCard } from './UserAccountCard';
 import { ThemeToggle } from './ThemeToggle';
 import { NotificationCenter } from './notifications/NotificationCenter';
+import { OrganizationSwitcher } from './OrganizationSwitcher';
 import { useSidebar } from '@/hooks/use-sidebar';
 import { useTheme } from '@/components/ThemeProvider';
 
@@ -102,7 +103,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
               </div>
             </div>
             {!isCollapsed && (
-              <div className="w-full gap-2 mt-4">
+              <div className="w-full gap-2 mt-4 space-y-2">
+                <OrganizationSwitcher />
                 <SearchInput placeholder="Search everything..." />
               </div>
             )}
