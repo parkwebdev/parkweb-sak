@@ -18,7 +18,7 @@ interface HelpArticlesManagerProps {
 }
 
 export const HelpArticlesManager = ({ agentId }: HelpArticlesManagerProps) => {
-  const { articles, categories, addArticle, updateArticle, deleteArticle, addCategory, reorderArticles } = useHelpArticles(agentId);
+  const { articles, categories, addArticle, updateArticle, deleteArticle, addCategory, updateCategory, reorderArticles } = useHelpArticles(agentId);
   
   // Configure sensors for drag and drop (require 5px movement to start dragging)
   const sensors = useSensors(
@@ -31,6 +31,8 @@ export const HelpArticlesManager = ({ agentId }: HelpArticlesManagerProps) => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingArticle, setEditingArticle] = useState<string | null>(null);
   const [newCategoryDialogOpen, setNewCategoryDialogOpen] = useState(false);
+  const [editCategoryDialogOpen, setEditCategoryDialogOpen] = useState(false);
+  const [editingCategoryName, setEditingCategoryName] = useState('');
   
   const [formData, setFormData] = useState({
     title: '',
@@ -38,7 +40,14 @@ export const HelpArticlesManager = ({ agentId }: HelpArticlesManagerProps) => {
     category: '',
     icon: '',
   });
-  const [newCategoryName, setNewCategoryName] = useState('');
+  const [newCategoryForm, setNewCategoryForm] = useState({
+    name: '',
+    description: '',
+  });
+  const [editCategoryForm, setEditCategoryForm] = useState({
+    name: '',
+    description: '',
+  });
 
   const handleSubmit = () => {
     if (!formData.title.trim() || !formData.content.trim() || !formData.category) {
@@ -85,14 +94,35 @@ export const HelpArticlesManager = ({ agentId }: HelpArticlesManagerProps) => {
   };
 
   const handleAddCategory = () => {
-    if (!newCategoryName.trim()) {
+    if (!newCategoryForm.name.trim()) {
       toast.error('Please enter a category name');
       return;
     }
-    addCategory(newCategoryName);
+    addCategory(newCategoryForm.name, newCategoryForm.description);
     toast.success('Category added');
-    setNewCategoryName('');
+    setNewCategoryForm({ name: '', description: '' });
     setNewCategoryDialogOpen(false);
+  };
+
+  const handleEditCategory = (categoryName: string) => {
+    const category = categories.find(c => c.name === categoryName);
+    if (category) {
+      setEditingCategoryName(categoryName);
+      setEditCategoryForm({ name: category.name, description: category.description });
+      setEditCategoryDialogOpen(true);
+    }
+  };
+
+  const handleUpdateCategory = () => {
+    if (!editCategoryForm.name.trim()) {
+      toast.error('Please enter a category name');
+      return;
+    }
+    updateCategory(editingCategoryName, editCategoryForm.name, editCategoryForm.description);
+    toast.success('Category updated');
+    setEditCategoryDialogOpen(false);
+    setEditingCategoryName('');
+    setEditCategoryForm({ name: '', description: '' });
   };
 
   const handleDragEnd = (event: DragEndEvent, category: string) => {
@@ -151,9 +181,19 @@ export const HelpArticlesManager = ({ agentId }: HelpArticlesManagerProps) => {
                   <Label htmlFor="category-name">Category Name *</Label>
                   <Input
                     id="category-name"
-                    value={newCategoryName}
-                    onChange={(e) => setNewCategoryName(e.target.value)}
+                    value={newCategoryForm.name}
+                    onChange={(e) => setNewCategoryForm({ ...newCategoryForm, name: e.target.value })}
                     placeholder="e.g., Getting Started, FAQ, Troubleshooting"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="category-description">Category Description</Label>
+                  <Textarea
+                    id="category-description"
+                    value={newCategoryForm.description}
+                    onChange={(e) => setNewCategoryForm({ ...newCategoryForm, description: e.target.value })}
+                    placeholder="Brief description to help users understand this category"
+                    rows={2}
                   />
                 </div>
               </div>
@@ -162,6 +202,41 @@ export const HelpArticlesManager = ({ agentId }: HelpArticlesManagerProps) => {
                   Cancel
                 </Button>
                 <Button onClick={handleAddCategory}>Add Category</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={editCategoryDialogOpen} onOpenChange={setEditCategoryDialogOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Edit Category</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-category-name">Category Name *</Label>
+                  <Input
+                    id="edit-category-name"
+                    value={editCategoryForm.name}
+                    onChange={(e) => setEditCategoryForm({ ...editCategoryForm, name: e.target.value })}
+                    placeholder="e.g., Getting Started, FAQ, Troubleshooting"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-category-description">Category Description</Label>
+                  <Textarea
+                    id="edit-category-description"
+                    value={editCategoryForm.description}
+                    onChange={(e) => setEditCategoryForm({ ...editCategoryForm, description: e.target.value })}
+                    placeholder="Brief description to help users understand this category"
+                    rows={2}
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setEditCategoryDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleUpdateCategory}>Update Category</Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
@@ -214,8 +289,8 @@ export const HelpArticlesManager = ({ agentId }: HelpArticlesManagerProps) => {
                       </SelectTrigger>
                       <SelectContent>
                         {categories.map((cat) => (
-                          <SelectItem key={cat} value={cat}>
-                            {cat}
+                          <SelectItem key={cat.name} value={cat.name}>
+                            {cat.name}
                           </SelectItem>
                         ))}
                         {categories.length === 0 && (
@@ -271,24 +346,39 @@ export const HelpArticlesManager = ({ agentId }: HelpArticlesManagerProps) => {
         <div className="space-y-4">
           {categories.map((category) => {
             const categoryArticles = articles
-              .filter(article => article.category === category)
+              .filter(article => article.category === category.name)
               .sort((a, b) => a.order - b.order);
             
             if (categoryArticles.length === 0) return null;
             
             return (
-              <Card key={category}>
+              <Card key={category.name}>
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between mb-3">
-                    <h4 className="font-semibold">{category}</h4>
-                    <p className="text-xs text-muted-foreground">
-                      Drag to reorder
-                    </p>
+                    <div>
+                      <h4 className="font-semibold">{category.name}</h4>
+                      {category.description && (
+                        <p className="text-xs text-muted-foreground mt-0.5">{category.description}</p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleEditCategory(category.name)}
+                        className="h-7 px-2"
+                      >
+                        Edit
+                      </Button>
+                      <p className="text-xs text-muted-foreground">
+                        Drag to reorder
+                      </p>
+                    </div>
                   </div>
                   <DndContext
                     sensors={sensors}
                     collisionDetection={closestCenter}
-                    onDragEnd={(event) => handleDragEnd(event, category)}
+                    onDragEnd={(event) => handleDragEnd(event, category.name)}
                   >
                     <SortableContext
                       items={categoryArticles.map(a => a.id)}

@@ -46,7 +46,8 @@ export const EmbeddedChatPreview = ({ config: baseConfig }: EmbeddedChatPreviewP
 
   const [isOpen, setIsOpen] = useState(false);
   const [currentView, setCurrentView] = useState<ViewType>('home');
-  const [expandedArticle, setExpandedArticle] = useState<HelpArticle | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedArticle, setSelectedArticle] = useState<HelpArticle | null>(null);
   const [hasSubmittedContactForm, setHasSubmittedContactForm] = useState(() => {
     return localStorage.getItem(`chatpad_contact_submitted_${baseConfig.agentId}`) === 'true';
   });
@@ -1121,105 +1122,144 @@ export const EmbeddedChatPreview = ({ config: baseConfig }: EmbeddedChatPreviewP
                   </div>
                 )}
 
-                {/* Help View - Categories & Articles */}
+                {/* Help View - Categories & Articles & Article Content */}
                 {currentView === 'help' && (
                   <div className={`flex-1 overflow-y-auto p-4 ${getTransitionClasses()} ${config.viewTransition === 'fade' ? 'opacity-100' : ''}`}>
-                    {config.helpArticles.length === 0 ? (
-                      <div className="text-center py-8 space-y-3">
-                        <BookOpen01 className="h-12 w-12 mx-auto text-muted-foreground" />
-                        <div>
-                          <h4 className="font-semibold text-sm">No help articles yet</h4>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Help articles will appear here once added
+                    {!selectedCategory && !selectedArticle && (
+                      <>
+                        <div className="flex items-center justify-between mb-4">
+                          <h3 className="text-lg font-semibold" style={{ color: config.primaryColor }}>
+                            Help Center
+                          </h3>
+                        </div>
+                        
+                        {config.helpCategories.length === 0 ? (
+                          <div className="text-center py-8">
+                            <BookOpen01 className="h-12 w-12 mx-auto mb-3 opacity-40" />
+                            <p className="text-sm text-muted-foreground">
+                              No help articles available yet
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="space-y-3">
+                            {config.helpCategories.filter(cat => 
+                              config.helpArticles.some(article => article.category === cat.name)
+                            ).map((category) => (
+                              <button
+                                key={category.name}
+                                onClick={() => setSelectedCategory(category.name)}
+                                className="w-full text-left p-4 rounded-lg border border-border hover:border-primary/50 hover:bg-accent transition-all group"
+                              >
+                                <div className="flex items-center justify-between">
+                                  <div className="flex-1">
+                                    <h4 className="font-semibold text-sm group-hover:text-primary transition-colors">
+                                      {category.name}
+                                    </h4>
+                                    {category.description && (
+                                      <p className="text-xs text-muted-foreground mt-1">
+                                        {category.description}
+                                      </p>
+                                    )}
+                                  </div>
+                                  <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
+                                </div>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </>
+                    )}
+
+                    {selectedCategory && !selectedArticle && (
+                      <>
+                        <div className="flex items-center gap-2 mb-4">
+                          <button
+                            onClick={() => setSelectedCategory(null)}
+                            className="p-1 hover:bg-accent rounded-md transition-colors"
+                          >
+                            <ChevronRight className="h-5 w-5 rotate-180" />
+                          </button>
+                          <h3 className="text-lg font-semibold" style={{ color: config.primaryColor }}>
+                            {selectedCategory}
+                          </h3>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          {config.helpArticles
+                            .filter(article => article.category === selectedCategory)
+                            .sort((a, b) => a.order - b.order)
+                            .map((article) => (
+                              <button
+                                key={article.id}
+                                onClick={() => setSelectedArticle(article)}
+                                className="w-full text-left p-3 rounded-lg hover:bg-accent transition-colors group"
+                              >
+                                <div className="flex items-start gap-3">
+                                  {article.icon && (
+                                    <span className="text-xl mt-0.5 flex-shrink-0">
+                                      {article.icon}
+                                    </span>
+                                  )}
+                                  <div className="flex-1 min-w-0">
+                                    <p className="font-medium text-sm group-hover:text-primary transition-colors">
+                                      {article.title}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                                      {article.content.substring(0, 100)}...
+                                    </p>
+                                  </div>
+                                  <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0 mt-1" />
+                                </div>
+                              </button>
+                            ))}
+                        </div>
+                      </>
+                    )}
+
+                    {selectedArticle && (
+                      <>
+                        <div className="flex items-center gap-2 mb-4">
+                          <button
+                            onClick={() => setSelectedArticle(null)}
+                            className="p-1 hover:bg-accent rounded-md transition-colors"
+                          >
+                            <ChevronRight className="h-5 w-5 rotate-180" />
+                          </button>
+                          <h3 className="text-base font-semibold flex-1" style={{ color: config.primaryColor }}>
+                            {selectedArticle.title}
+                          </h3>
+                        </div>
+                        
+                        <div className="prose prose-sm max-w-none">
+                          <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                            {selectedArticle.content}
                           </p>
                         </div>
-                      </div>
-                    ) : (
-                      <div className="space-y-4">
-                        {/* Categories */}
-                        {config.helpCategories.map((category, idx) => {
-                          const categoryArticles = config.helpArticles
-                            .filter(article => article.category === category)
-                            .sort((a, b) => a.order - b.order);
-                          
-                          if (categoryArticles.length === 0) return null;
-                          
-                          return (
-                            <div key={category} className="space-y-2 animate-fade-in" style={{ animationDelay: `${idx * 100}ms`, animationFillMode: 'backwards' }}>
-                              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-1">
-                                {category}
-                              </h4>
-                              <div className="space-y-1">
-                                {categoryArticles.map((article) => (
-                                  <div
-                                    key={article.id}
-                                    className="p-3 border rounded-lg hover:bg-accent/50 cursor-pointer transition-all group"
-                                    onClick={() => setExpandedArticle(article)}
-                                  >
-                                    <div className="flex items-start justify-between gap-2">
-                                      <div className="flex items-start gap-2 flex-1 min-w-0">
-                                        {article.icon && (
-                                          <span className="text-base mt-0.5">{article.icon}</span>
-                                        )}
-                                        <div className="flex-1 min-w-0">
-                                          <p className="text-sm font-medium">{article.title}</p>
-                                          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
-                                            {article.content}
-                                          </p>
-                                        </div>
-                                      </div>
-                                      <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:translate-x-0.5 transition-transform shrink-0" />
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                     )}
-                   </div>
-                 )}
-               </div>
 
-               {/* Article Expansion Dialog */}
-               <Dialog open={expandedArticle !== null} onOpenChange={(open) => !open && setExpandedArticle(null)}>
-                 <DialogContent className="max-w-md">
-                   <DialogHeader>
-                     <DialogTitle className="flex items-center gap-2">
-                       {expandedArticle?.icon && <span className="text-xl">{expandedArticle.icon}</span>}
-                       {expandedArticle?.title}
-                     </DialogTitle>
-                   </DialogHeader>
-                   <div className="mt-4 space-y-4">
-                     <div className="text-sm whitespace-pre-wrap">
-                       {expandedArticle?.content}
-                     </div>
-                     <div className="flex justify-end gap-2 pt-4 border-t">
-                       <Button
-                         variant="outline"
-                         size="sm"
-                         onClick={() => setExpandedArticle(null)}
-                       >
-                         Close
-                       </Button>
-                       <Button
-                         size="sm"
-                         style={{ backgroundColor: config.primaryColor }}
-                         onClick={() => {
-                           setExpandedArticle(null);
-                           setCurrentView('messages');
-                           setActiveConversationId('new');
-                         }}
-                       >
-                         Start Chat
-                       </Button>
-                     </div>
-                   </div>
-                 </DialogContent>
-               </Dialog>
+                        <div className="mt-4 pt-4 border-t flex gap-2">
+                          <Button
+                            onClick={() => {
+                              setSelectedArticle(null);
+                              setSelectedCategory(null);
+                              setCurrentView('messages');
+                              setActiveConversationId('new');
+                            }}
+                            className="flex-1"
+                            style={{ 
+                              backgroundColor: config.primaryColor,
+                              color: '#ffffff'
+                            }}
+                          >
+                            Start Chat
+                          </Button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
 
-               {/* Bottom Navigation */}
+              {/* Bottom Navigation */}
               {config.showBottomNav && (
                 <div className="border-t bg-background">
                   <div className="flex items-center justify-around p-2">

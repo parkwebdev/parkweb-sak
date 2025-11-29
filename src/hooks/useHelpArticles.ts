@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import type { HelpArticle } from './useEmbeddedChatConfig';
+import type { HelpArticle, HelpCategory } from './useEmbeddedChatConfig';
 
 export const useHelpArticles = (agentId: string) => {
   const [articles, setArticles] = useState<HelpArticle[]>([]);
-  const [categories, setCategories] = useState<string[]>([]);
+  const [categories, setCategories] = useState<HelpCategory[]>([]);
   const [loading, setLoading] = useState(false);
 
   // Load articles and categories from localStorage
@@ -51,8 +51,8 @@ export const useHelpArticles = (agentId: string) => {
     setArticles(prev => [...prev, newArticle]);
     
     // Add category if it doesn't exist
-    if (!categories.includes(article.category)) {
-      setCategories(prev => [...prev, article.category]);
+    if (!categories.some(cat => cat.name === article.category)) {
+      setCategories(prev => [...prev, { name: article.category, description: '' }]);
     }
   };
 
@@ -62,8 +62,8 @@ export const useHelpArticles = (agentId: string) => {
     ));
     
     // Update categories if category changed
-    if (updates.category && !categories.includes(updates.category)) {
-      setCategories(prev => [...prev, updates.category]);
+    if (updates.category && !categories.some(cat => cat.name === updates.category)) {
+      setCategories(prev => [...prev, { name: updates.category, description: '' }]);
     }
   };
 
@@ -78,9 +78,29 @@ export const useHelpArticles = (agentId: string) => {
     })));
   };
 
-  const addCategory = (name: string) => {
-    if (!categories.includes(name)) {
-      setCategories(prev => [...prev, name]);
+  const addCategory = (name: string, description: string = '') => {
+    if (categories.some(cat => cat.name === name)) {
+      return; // Category already exists
+    }
+    const newCategories = [...categories, { name, description }];
+    setCategories(newCategories);
+    localStorage.setItem(`help_categories_${agentId}`, JSON.stringify(newCategories));
+  };
+
+  const updateCategory = (oldName: string, newName: string, description: string) => {
+    const updatedCategories = categories.map(cat =>
+      cat.name === oldName ? { name: newName, description } : cat
+    );
+    setCategories(updatedCategories);
+    localStorage.setItem(`help_categories_${agentId}`, JSON.stringify(updatedCategories));
+    
+    // Update articles that use this category
+    if (oldName !== newName) {
+      const updatedArticles = articles.map(article =>
+        article.category === oldName ? { ...article, category: newName } : article
+      );
+      setArticles(updatedArticles);
+      localStorage.setItem(`help_articles_${agentId}`, JSON.stringify(updatedArticles));
     }
   };
 
@@ -88,7 +108,7 @@ export const useHelpArticles = (agentId: string) => {
     // Only remove if no articles use this category
     const hasArticles = articles.some(article => article.category === name);
     if (!hasArticles) {
-      setCategories(prev => prev.filter(cat => cat !== name));
+      setCategories(prev => prev.filter(cat => cat.name !== name));
     }
   };
 
@@ -116,8 +136,8 @@ export const useHelpArticles = (agentId: string) => {
     // Add new categories
     const newCategories = [...new Set(importedArticles.map(a => a.category))];
     newCategories.forEach(cat => {
-      if (!categories.includes(cat)) {
-        setCategories(prev => [...prev, cat]);
+      if (!categories.some(c => c.name === cat)) {
+        setCategories(prev => [...prev, { name: cat, description: '' }]);
       }
     });
   };
@@ -131,6 +151,7 @@ export const useHelpArticles = (agentId: string) => {
     deleteArticle,
     reorderArticles,
     addCategory,
+    updateCategory,
     removeCategory,
     importFromKnowledge,
     bulkImport,
