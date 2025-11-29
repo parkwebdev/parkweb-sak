@@ -52,7 +52,7 @@ export interface EmbeddedChatConfig {
 }
 
 export const useEmbeddedChatConfig = (agentId: string) => {
-  const [config, setConfig] = useState<EmbeddedChatConfig>({
+  const getDefaultConfig = (): EmbeddedChatConfig => ({
     agentId,
     primaryColor: '#000000',
     secondaryColor: '#ffffff',
@@ -67,7 +67,7 @@ export const useEmbeddedChatConfig = (agentId: string) => {
     delaySeconds: 3,
     scrollDepth: 50,
     showTeaser: true,
-    teaserText: 'Need help? Chat with us!',
+    teaserText: 'Need help! Chat with us!',
     
     // Home Screen
     welcomeEmoji: '👋',
@@ -106,6 +106,8 @@ export const useEmbeddedChatConfig = (agentId: string) => {
     showTeamAvatars: false,
     teamAvatarUrls: [],
   });
+
+  const [config, setConfig] = useState<EmbeddedChatConfig>(getDefaultConfig());
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
@@ -121,9 +123,11 @@ export const useEmbeddedChatConfig = (agentId: string) => {
       if (error) throw error;
 
       const deploymentConfig = agent.deployment_config as any;
+      const defaultConfig = getDefaultConfig();
+      
       if (deploymentConfig?.embedded_chat) {
         setConfig({
-          ...config,
+          ...defaultConfig,
           ...deploymentConfig.embedded_chat,
           agentId,
           agentName: agent.name,
@@ -131,16 +135,17 @@ export const useEmbeddedChatConfig = (agentId: string) => {
       } else if (deploymentConfig?.widget) {
         // Backward compatibility with old "widget" naming
         setConfig({
-          ...config,
+          ...defaultConfig,
           ...deploymentConfig.widget,
           agentId,
           agentName: agent.name,
         });
       } else {
-        setConfig(prev => ({
-          ...prev,
+        setConfig({
+          ...defaultConfig,
+          agentId,
           agentName: agent.name,
-        }));
+        });
       }
     } catch (error: any) {
       console.error('Error loading embedded chat config:', error);

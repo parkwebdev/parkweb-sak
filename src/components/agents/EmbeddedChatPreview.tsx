@@ -17,9 +17,50 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
   const [currentView, setCurrentView] = useState<ViewType>('home');
   const [isVisible, setIsVisible] = useState(config.displayTiming === 'immediate');
   const [showTeaser, setShowTeaser] = useState(false);
+  const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Array<{ role: 'user' | 'assistant'; content: string }>>([
     { role: 'assistant', content: config.greeting },
   ]);
+  
+  // Mock conversation history
+  const conversations = [
+    {
+      id: '1',
+      preview: 'I need help with my account settings',
+      timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
+      unread: true,
+    },
+    {
+      id: '2',
+      preview: 'Question about pricing plans',
+      timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000), // 1 day ago
+      unread: false,
+    },
+    {
+      id: '3',
+      preview: 'Technical support request',
+      timestamp: new Date(Date.now() - 48 * 60 * 60 * 1000), // 2 days ago
+      unread: false,
+    },
+  ];
+  
+  const formatTimestamp = (date: Date) => {
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    
+    if (diffMins < 60) {
+      return `${diffMins}m ago`;
+    } else if (diffHours < 24) {
+      return `${diffHours}h ago`;
+    } else if (diffDays < 7) {
+      return `${diffDays}d ago`;
+    } else {
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+  };
 
   useEffect(() => {
     if (config.displayTiming === 'delayed') {
@@ -208,38 +249,106 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
                 {/* Messages View */}
                 {currentView === 'messages' && (
                   <>
-                    <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                      {messages.map((msg, idx) => (
-                        <div
-                          key={idx}
-                          className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in`}
-                        >
-                          <div
-                            className={`max-w-[80%] rounded-lg px-4 py-2 ${
-                              msg.role === 'user'
-                                ? 'text-white'
-                                : 'bg-muted'
-                            }`}
-                            style={msg.role === 'user' ? { backgroundColor: config.primaryColor } : {}}
+                    {activeConversationId ? (
+                      <>
+                        {/* Active Conversation */}
+                        <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="mb-2"
+                            onClick={() => setActiveConversationId(null)}
                           >
-                            <p className="text-sm">{msg.content}</p>
+                            <ChevronRight className="h-4 w-4 rotate-180 mr-1" />
+                            Back to conversations
+                          </Button>
+                          {messages.map((msg, idx) => (
+                            <div
+                              key={idx}
+                              className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in`}
+                            >
+                              <div
+                                className={`max-w-[80%] rounded-lg px-4 py-2 ${
+                                  msg.role === 'user'
+                                    ? 'text-white'
+                                    : 'bg-muted'
+                                }`}
+                                style={msg.role === 'user' ? { backgroundColor: config.primaryColor } : {}}
+                              >
+                                <p className="text-sm">{msg.content}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Input */}
+                        <div className="p-4 border-t">
+                          <div className="flex gap-2">
+                            <Input
+                              placeholder={config.placeholder}
+                              className="flex-1"
+                            />
+                            <Button size="icon" style={{ backgroundColor: config.primaryColor }}>
+                              <Send01 className="h-4 w-4 text-white" />
+                            </Button>
                           </div>
                         </div>
-                      ))}
-                    </div>
-
-                    {/* Input */}
-                    <div className="p-4 border-t">
-                      <div className="flex gap-2">
-                        <Input
-                          placeholder={config.placeholder}
-                          className="flex-1"
-                        />
-                        <Button size="icon" style={{ backgroundColor: config.primaryColor }}>
-                          <Send01 className="h-4 w-4 text-white" />
-                        </Button>
-                      </div>
-                    </div>
+                      </>
+                    ) : (
+                      <>
+                        {/* Conversation History List */}
+                        <div className="flex-1 overflow-y-auto">
+                          <div className="p-3 border-b bg-muted/30">
+                            <h4 className="text-sm font-semibold">Your Conversations</h4>
+                          </div>
+                          <div className="divide-y">
+                            {conversations.map((conv, idx) => (
+                              <div
+                                key={conv.id}
+                                className="p-4 hover:bg-accent/50 cursor-pointer transition-all animate-fade-in"
+                                style={{ 
+                                  animationDelay: `${idx * 50}ms`,
+                                  animationFillMode: 'backwards'
+                                }}
+                                onClick={() => setActiveConversationId(conv.id)}
+                              >
+                                <div className="flex items-start justify-between gap-3">
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2">
+                                      <p className={`text-sm truncate ${conv.unread ? 'font-semibold' : 'font-normal'}`}>
+                                        {conv.preview}
+                                      </p>
+                                      {conv.unread && (
+                                        <div className="w-2 h-2 bg-primary rounded-full shrink-0" />
+                                      )}
+                                    </div>
+                                    <p className="text-xs text-muted-foreground mt-1">
+                                      {formatTimestamp(conv.timestamp)}
+                                    </p>
+                                  </div>
+                                  <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                          
+                          {/* New Conversation Button */}
+                          <div className="p-3 border-t">
+                            <Button
+                              className="w-full"
+                              style={{ backgroundColor: config.primaryColor }}
+                              onClick={() => {
+                                setActiveConversationId('new');
+                                setMessages([{ role: 'assistant', content: config.greeting }]);
+                              }}
+                            >
+                              <MessageChatCircle className="h-4 w-4 mr-2" />
+                              Start New Conversation
+                            </Button>
+                          </div>
+                        </div>
+                      </>
+                    )}
                   </>
                 )}
 
