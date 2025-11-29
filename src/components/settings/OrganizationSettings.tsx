@@ -169,14 +169,14 @@ export const OrganizationSettings = () => {
           
           <Card>
             <CardHeader>
-              <CardTitle>Organization Profile</CardTitle>
+              <CardTitle>Workspace Profile</CardTitle>
               <CardDescription>
-                Manage your organization's basic information
+                Manage your workspace's basic information
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="org-name">Organization Name</Label>
+                <Label htmlFor="org-name">Workspace Name</Label>
                 <Input
                   id="org-name"
                   value={orgName}
@@ -186,7 +186,7 @@ export const OrganizationSettings = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="org-slug">Organization Slug</Label>
+                <Label htmlFor="org-slug">Workspace Slug</Label>
                 <div className="relative">
                   <Input
                     id="org-slug"
@@ -232,9 +232,9 @@ export const OrganizationSettings = () => {
         <TabsContent value="branding" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Organization Branding</CardTitle>
+              <CardTitle>Workspace Branding</CardTitle>
               <CardDescription>
-                Customize your organization's visual identity
+                Customize your workspace's visual identity
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">

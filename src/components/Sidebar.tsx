@@ -5,10 +5,9 @@ import { SearchInput } from './SearchInput';
 import { UserAccountCard } from './UserAccountCard';
 import { ThemeToggle } from './ThemeToggle';
 import { NotificationCenter } from './notifications/NotificationCenter';
-import { OrganizationSwitcher } from './OrganizationSwitcher';
+import { WorkspaceSwitcher } from './WorkspaceSwitcher';
 import { useSidebar } from '@/hooks/use-sidebar';
 import { useConversations } from '@/hooks/useConversations';
-import chatpadLogo from '@/assets/chatpad-logo.png';
 
 interface NavigationItem {
   id: string;
@@ -80,39 +79,34 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
       <div className="border shadow-sm w-full flex-1 bg-card rounded-xl border-border">
         <nav className="w-full gap-4 pt-4">
           <header className="w-full whitespace-nowrap gap-4 px-4 py-0">
-            <div className="flex min-h-[24px] w-full max-w-full items-center justify-between">
-              {!isCollapsed && (
-                <img 
-                  src={chatpadLogo} 
-                  alt="ChatPad Logo" 
-                  className="h-6 w-6 object-contain"
-                />
-              )}
-              <div className="flex items-center gap-2">
+            <div className="w-full space-y-3">
+              <WorkspaceSwitcher />
+              
+              <div className="flex items-center justify-between">
                 {!isCollapsed && <NotificationCenter />}
-                <button
-                  onClick={toggle}
-                  className="p-1 rounded-md hover:bg-accent/50 text-muted-foreground hover:text-foreground"
-                  title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-                >
-                  {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
-                </button>
-                {onClose && (
+                <div className="flex items-center gap-2 ml-auto">
                   <button
-                    onClick={onClose}
-                    className="lg:hidden p-1 rounded-md hover:bg-accent/50 text-muted-foreground hover:text-foreground"
+                    onClick={toggle}
+                    className="p-1 rounded-md hover:bg-accent/50 text-muted-foreground hover:text-foreground"
+                    title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
                   >
-                    <X size={16} />
+                    {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
                   </button>
-                )}
+                  {onClose && (
+                    <button
+                      onClick={onClose}
+                      className="lg:hidden p-1 rounded-md hover:bg-accent/50 text-muted-foreground hover:text-foreground"
+                    >
+                      <X size={16} />
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
-            {!isCollapsed && (
-              <div className="w-full gap-2 mt-4 space-y-2">
-                <OrganizationSwitcher />
+
+              {!isCollapsed && (
                 <SearchInput placeholder="Search everything..." />
-              </div>
-            )}
+              )}
+            </div>
           </header>
 
           <div className="w-full mt-4 flex-1">

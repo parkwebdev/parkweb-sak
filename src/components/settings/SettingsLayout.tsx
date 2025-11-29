@@ -55,7 +55,7 @@ export const SettingsLayout: React.FC<SettingsLayoutContentProps> = ({
   const menuItems = [
     { id: 'general' as SettingsTab, label: 'General', icon: Settings },
     { id: 'profile' as SettingsTab, label: 'Profile', icon: User },
-    { id: 'organization' as SettingsTab, label: 'Organization', icon: Building02 },
+    { id: 'organization' as SettingsTab, label: 'Workspace', icon: Building02 },
     { id: 'team' as SettingsTab, label: 'Team', icon: Users },
     { id: 'subscription' as SettingsTab, label: 'Subscription', icon: CreditCard01 },
     { id: 'branding' as SettingsTab, label: 'Branding', icon: Palette },
