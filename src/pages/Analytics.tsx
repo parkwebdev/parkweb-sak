@@ -123,17 +123,9 @@ const Analytics: React.FC<AnalyticsProps> = ({ onMenuClick }) => {
                 </p>
               </div>
             </div>
-            <div className="flex gap-2">
-              <ExportButtons 
-                data={analyticsData}
-                startDate={startDate}
-                endDate={endDate}
-                orgName={currentOrg?.name || 'Organization'}
-              />
-              <Button variant="outline" size="icon" onClick={refetch} disabled={loading}>
-                <RefreshCcw01 className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-              </Button>
-            </div>
+            <Button variant="outline" size="icon" onClick={refetch} disabled={loading}>
+              <RefreshCcw01 className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            </Button>
           </div>
 
           {/* Date Range Picker */}
@@ -153,12 +145,20 @@ const Analytics: React.FC<AnalyticsProps> = ({ onMenuClick }) => {
 
       <div className="px-4 lg:px-8 mt-6">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="mb-6">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="reports">Reports</TabsTrigger>
-            <TabsTrigger value="scheduled">Scheduled</TabsTrigger>
-            <TabsTrigger value="data">Data</TabsTrigger>
-          </TabsList>
+          <div className="flex items-center justify-between mb-6">
+            <TabsList>
+              <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsTrigger value="reports">Reports</TabsTrigger>
+              <TabsTrigger value="scheduled">Scheduled</TabsTrigger>
+              <TabsTrigger value="data">Data</TabsTrigger>
+            </TabsList>
+            <ExportButtons 
+              data={analyticsData}
+              startDate={startDate}
+              endDate={endDate}
+              orgName={currentOrg?.name || 'Organization'}
+            />
+          </div>
 
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-6">
