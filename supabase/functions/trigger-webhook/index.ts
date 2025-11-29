@@ -138,7 +138,7 @@ Deno.serve(async (req) => {
         event_type: testMode ? 'test' : eventType,
         payload,
         response_status: responseStatus,
-        response_body: responseBody?.substring(0, 1000), // Limit response body size
+        response_body: responseBody?.substring(0, 1000),
         error_message: lastError,
         retry_count: attempt - 1,
         delivered: success,
@@ -147,6 +147,56 @@ Deno.serve(async (req) => {
 
     if (logError) {
       console.error('Error logging webhook delivery:', logError);
+    }
+
+    // Handle response actions if webhook was successful
+    if (success && !testMode && webhook.response_actions) {
+      const responseActions = webhook.response_actions as any;
+      if (responseActions.actions && Array.isArray(responseActions.actions)) {
+        console.log('Processing response actions...');
+        
+        for (const action of responseActions.actions) {
+          try {
+            // Check if response matches the condition
+            const conditionMet = 
+              (!action.condition.status_code || responseStatus === action.condition.status_code) &&
+              (!action.condition.body_contains || responseBody?.includes(action.condition.body_contains));
+
+            if (conditionMet) {
+              console.log('Response action condition met:', action.action.type);
+
+              // Perform the action
+              if (action.action.type === 'update_lead' && eventData?.id) {
+                const { error: updateError } = await supabase
+                  .from('leads')
+                  .update(action.action.updates)
+                  .eq('id', eventData.id)
+                  .eq('org_id', webhook.org_id);
+
+                if (updateError) {
+                  console.error('Error updating lead:', updateError);
+                } else {
+                  console.log('Lead updated successfully via response action');
+                }
+              } else if (action.action.type === 'update_conversation' && eventData?.id) {
+                const { error: updateError } = await supabase
+                  .from('conversations')
+                  .update(action.action.updates)
+                  .eq('id', eventData.id)
+                  .eq('org_id', webhook.org_id);
+
+                if (updateError) {
+                  console.error('Error updating conversation:', updateError);
+                } else {
+                  console.log('Conversation updated successfully via response action');
+                }
+              }
+            }
+          } catch (actionError) {
+            console.error('Error executing response action:', actionError);
+          }
+        }
+      }
     }
 
     return new Response(
