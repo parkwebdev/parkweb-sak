@@ -29,10 +29,12 @@ import {
 import { Plus, DotsVertical, Trash02, Mail01 } from '@untitledui/icons';
 import { useOrgMembers } from '@/hooks/useOrgMembers';
 import { useOrganization } from '@/contexts/OrganizationContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 export const TeamManagement = () => {
   const { members, loading, inviteMember, updateMemberRole, removeMember } = useOrgMembers();
   const { currentOrg } = useOrganization();
+  const { user } = useAuth();
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState<'member' | 'admin'>('member');
@@ -42,6 +44,7 @@ export const TeamManagement = () => {
 
   const currentUserRole = currentOrg?.role || 'member';
   const canManageTeam = currentUserRole === 'owner' || currentUserRole === 'admin';
+  const currentUserId = user?.id;
 
   const handleInvite = async () => {
     if (!inviteEmail) return;
@@ -131,7 +134,7 @@ export const TeamManagement = () => {
                     {member.role}
                   </Badge>
 
-                  {canManageTeam && member.role !== 'owner' && (
+                  {canManageTeam && member.user_id !== currentUserId && (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="sm">
@@ -139,18 +142,22 @@ export const TeamManagement = () => {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="bg-background z-50">
-                        <DropdownMenuItem
-                          onClick={() => updateMemberRole(member.id, 'admin')}
-                          disabled={member.role === 'admin'}
-                        >
-                          Make Admin
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => updateMemberRole(member.id, 'member')}
-                          disabled={member.role === 'member'}
-                        >
-                          Make Member
-                        </DropdownMenuItem>
+                        {member.role !== 'owner' && (
+                          <>
+                            <DropdownMenuItem
+                              onClick={() => updateMemberRole(member.id, 'admin')}
+                              disabled={member.role === 'admin'}
+                            >
+                              Make Admin
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => updateMemberRole(member.id, 'member')}
+                              disabled={member.role === 'member'}
+                            >
+                              Make Member
+                            </DropdownMenuItem>
+                          </>
+                        )}
                         <DropdownMenuItem
                           onClick={() => {
                             setMemberToDelete(member);
