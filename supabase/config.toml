@@ -27,3 +27,6 @@ verify_jwt = true
 
 [functions.dispatch-webhook-event]
 verify_jwt = false
+
+[functions.validate-api-key]
+verify_jwt = false
