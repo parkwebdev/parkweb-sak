@@ -11,7 +11,11 @@ import type { Tables } from '@/integrations/supabase/types';
 
 type Agent = Tables<'agents'>;
 
-const Agents: React.FC = () => {
+interface AgentsProps {
+  onMenuClick?: () => void;
+}
+
+const Agents: React.FC<AgentsProps> = ({ onMenuClick }) => {
   const { currentOrg } = useOrganization();
   const { agents, loading, createAgent, updateAgent, deleteAgent } = useAgents();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -30,15 +34,25 @@ const Agents: React.FC = () => {
   };
 
   return (
-    <div className="h-full overflow-auto pt-4 lg:pt-8">
+    <main className="flex-1 bg-muted/30 min-h-screen pt-4 lg:pt-8">
       <header className="w-full font-medium">
         <div className="items-stretch flex w-full flex-col gap-6 px-4 lg:px-8 py-0">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
-              <h1 className="text-sm font-semibold text-foreground">Agents</h1>
-              <p className="text-xs text-muted-foreground mt-1">
-                Manage AI agents for {currentOrg?.name || 'your organization'}
-              </p>
+            <div className="flex items-center gap-4 w-full sm:w-auto">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="lg:hidden flex items-center gap-2"
+                onClick={onMenuClick}
+              >
+                <Menu size={16} />
+              </Button>
+              <div className="flex-1 sm:flex-none">
+                <h1 className="text-sm font-semibold text-foreground">Agents</h1>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Manage AI agents for {currentOrg?.name || 'your organization'}
+                </p>
+              </div>
             </div>
             <Button onClick={() => setCreateDialogOpen(true)}>
               Create Agent
@@ -109,7 +123,7 @@ const Agents: React.FC = () => {
           onSubmit={createAgent}
         />
       </div>
-    </div>
+    </main>
   );
 };
 

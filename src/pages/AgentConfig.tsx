@@ -10,7 +10,11 @@ import type { Tables } from '@/integrations/supabase/types';
 
 type Agent = Tables<'agents'>;
 
-const AgentConfig: React.FC = () => {
+interface AgentConfigProps {
+  onMenuClick?: () => void;
+}
+
+const AgentConfig: React.FC<AgentConfigProps> = ({ onMenuClick }) => {
   const { agentId } = useParams<{ agentId: string }>();
   const { agents, updateAgent } = useAgents();
   const [agent, setAgent] = useState<Agent | null>(null);
@@ -39,11 +43,12 @@ const AgentConfig: React.FC = () => {
   }
 
   return (
-    <div className="h-full overflow-auto pt-4 lg:pt-8">
+    <main className="flex-1 bg-muted/30 min-h-screen pt-4 lg:pt-8">
       <div className="px-4 lg:px-8 pb-8">
         <AgentConfigLayout
           activeTab={activeTab}
           onTabChange={setActiveTab}
+          onMenuClick={onMenuClick}
           agentName={agent.name}
         >
           {activeTab === 'settings' && (
@@ -60,7 +65,7 @@ const AgentConfig: React.FC = () => {
           )}
         </AgentConfigLayout>
       </div>
-    </div>
+    </main>
   );
 };
 

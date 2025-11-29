@@ -10,7 +10,11 @@ import { LeadDetailsSheet } from '@/components/leads/LeadDetailsSheet';
 import { CreateLeadDialog } from '@/components/leads/CreateLeadDialog';
 import type { Tables } from '@/integrations/supabase/types';
 
-const Leads: React.FC = () => {
+interface LeadsProps {
+  onMenuClick?: () => void;
+}
+
+const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
   const { leads, loading, createLead, updateLead, deleteLead } = useLeads();
   const [selectedLead, setSelectedLead] = useState<Tables<'leads'> | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
@@ -67,15 +71,25 @@ const Leads: React.FC = () => {
   };
 
   return (
-    <div className="h-full overflow-auto pt-4 lg:pt-8">
+    <main className="flex-1 bg-muted/30 min-h-screen pt-4 lg:pt-8">
       <header className="w-full font-medium">
         <div className="items-stretch flex w-full flex-col gap-6 px-4 lg:px-8 py-0">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
-              <h1 className="text-sm font-semibold text-foreground">Leads</h1>
-              <p className="text-xs text-muted-foreground mt-1">
-                Track and manage leads captured from conversations
-              </p>
+            <div className="flex items-center gap-4 w-full sm:w-auto">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="lg:hidden flex items-center gap-2"
+                onClick={onMenuClick}
+              >
+                <Menu size={16} />
+              </Button>
+              <div className="flex-1 sm:flex-none">
+                <h1 className="text-sm font-semibold text-foreground">Leads</h1>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Track and manage leads captured from conversations
+                </p>
+              </div>
             </div>
             <div className="flex gap-2">
               <Button variant="outline" onClick={handleExport} disabled={filteredLeads.length === 0}>
@@ -197,7 +211,7 @@ const Leads: React.FC = () => {
           await createLead(lead);
         }}
       />
-    </div>
+    </main>
   );
 };
 
