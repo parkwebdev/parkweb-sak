@@ -6,59 +6,75 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Check DNS records for a domain
-async function checkDNSRecords(domain: string, expectedToken: string) {
+// DNS verification using Google's DNS-over-HTTPS API
+const checkDNSRecords = async (domain: string, expectedToken: string) => {
   try {
-    // In a production environment, you would:
-    // 1. Query DNS servers for A records
-    // 2. Verify TXT record with verification token
-    // 3. Check SSL certificate availability
+    console.log(`Starting DNS verification for ${domain}`);
     
-    // For this implementation, we'll simulate the checks
-    console.log(`Checking DNS for domain: ${domain}`);
+    // Check A records for root domain and www
+    const [rootAResponse, wwwAResponse] = await Promise.all([
+      fetch(`https://dns.google/resolve?name=${domain}&type=A`),
+      fetch(`https://dns.google/resolve?name=www.${domain}&type=A`)
+    ]);
     
-    const results = {
-      a_record_valid: false,
-      txt_record_valid: false,
-      ssl_available: false,
+    const rootAData = await rootAResponse.json();
+    const wwwAData = await wwwAResponse.json();
+    
+    console.log('Root A record:', rootAData);
+    console.log('WWW A record:', wwwAData);
+    
+    const hasRootARecord = rootAData.Answer?.some(
+      (record: any) => record.data === '185.158.133.1'
+    );
+    
+    const hasWwwARecord = wwwAData.Answer?.some(
+      (record: any) => record.data === '185.158.133.1'
+    );
+
+    // Check TXT record for verification
+    const txtRecordResponse = await fetch(
+      `https://dns.google/resolve?name=_verification.${domain}&type=TXT`
+    );
+    const txtRecordData = await txtRecordResponse.json();
+    
+    console.log('TXT record:', txtRecordData);
+    
+    const hasCorrectTxtRecord = txtRecordData.Answer?.some(
+      (record: any) => {
+        const txtValue = record.data.replace(/"/g, '');
+        return txtValue.includes(expectedToken);
+      }
+    );
+
+    const dnsConfigured = hasRootARecord && hasWwwARecord && hasCorrectTxtRecord;
+    
+    return {
+      aRecordConfigured: hasRootARecord,
+      wwwRecordConfigured: hasWwwARecord,
+      txtRecordConfigured: hasCorrectTxtRecord,
+      dnsConfigured,
+      verified: dnsConfigured,
+      details: {
+        rootARecords: rootAData.Answer?.map((r: any) => r.data) || [],
+        wwwARecords: wwwAData.Answer?.map((r: any) => r.data) || [],
+        txtRecords: txtRecordData.Answer?.map((r: any) => r.data) || []
+      }
     };
-
-    // Simulate DNS lookup (in production, use DNS resolver)
-    // You would typically use a DNS API or resolver library here
-    const dnsApiUrl = `https://dns.google/resolve?name=${domain}&type=A`;
-    const response = await fetch(dnsApiUrl);
-    const data = await response.json();
-    
-    // Check if A record points to our IP (185.158.133.1)
-    if (data.Answer) {
-      results.a_record_valid = data.Answer.some((record: any) => 
-        record.type === 1 && record.data === '185.158.133.1'
-      );
-    }
-
-    // Check TXT record for verification token
-    const txtApiUrl = `https://dns.google/resolve?name=_lovable-verification.${domain}&type=TXT`;
-    const txtResponse = await fetch(txtApiUrl);
-    const txtData = await txtResponse.json();
-    
-    if (txtData.Answer) {
-      results.txt_record_valid = txtData.Answer.some((record: any) =>
-        record.type === 16 && record.data.includes(expectedToken)
-      );
-    }
-
-    // SSL check would be done by attempting HTTPS connection
-    // For now, we'll mark it as available if DNS is configured
-    results.ssl_available = results.a_record_valid && results.txt_record_valid;
-
-    return results;
   } catch (error) {
     console.error('DNS check error:', error);
-    throw new Error('Failed to check DNS records');
+    return {
+      aRecordConfigured: false,
+      wwwRecordConfigured: false,
+      txtRecordConfigured: false,
+      dnsConfigured: false,
+      verified: false,
+      details: {}
+    };
   }
-}
+};
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -70,70 +86,81 @@ serve(async (req) => {
       throw new Error('Domain and organization ID are required');
     }
 
-    // Initialize Supabase client
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    console.log(`Verifying domain: ${domain} for org: ${orgId}`);
 
-    // Get organization's branding to retrieve expected verification token
-    const { data: branding, error: brandingError } = await supabase
-      .from('org_branding')
-      .select('custom_domain')
+    // Initialize Supabase client
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    );
+
+    // Get the domain record to retrieve verification token
+    const { data: domainRecord, error: domainError } = await supabaseClient
+      .from('custom_domains')
+      .select('verification_token')
+      .eq('domain', domain)
       .eq('org_id', orgId)
       .single();
 
-    if (brandingError) throw brandingError;
+    if (domainError || !domainRecord) {
+      throw new Error('Domain not found');
+    }
 
-    // Generate expected token (in production, store this in the database)
-    const expectedToken = `lovable_verify_${orgId.substring(0, 16)}`;
+    const expectedToken = domainRecord.verification_token;
+    console.log('Expected verification token:', expectedToken);
 
     // Check DNS records
-    const dnsResults = await checkDNSRecords(domain, expectedToken);
+    const dnsCheck = await checkDNSRecords(domain, expectedToken);
+    console.log('DNS check result:', dnsCheck);
 
-    // Determine overall verification status
-    const verified = dnsResults.a_record_valid && dnsResults.txt_record_valid;
-    const sslStatus = dnsResults.ssl_available ? 'active' : 
-                      dnsResults.a_record_valid ? 'pending' : 'failed';
-
-    // In a production environment, you would:
-    // 1. Update custom_domains table with verification status
-    // 2. Trigger SSL certificate generation if verified
-    // 3. Configure routing for the domain
-
-    console.log('Verification results:', {
-      domain,
-      verified,
-      sslStatus,
-      details: dnsResults,
-    });
+    // Update domain record with verification results
+    if (dnsCheck.verified) {
+      await supabaseClient
+        .from('custom_domains')
+        .update({
+          verified: true,
+          verified_at: new Date().toISOString(),
+          dns_configured: true,
+          ssl_status: 'active' // In production, would check actual SSL
+        })
+        .eq('domain', domain)
+        .eq('org_id', orgId);
+    } else {
+      // Update with failed verification
+      await supabaseClient
+        .from('custom_domains')
+        .update({
+          dns_configured: dnsCheck.dnsConfigured,
+          ssl_status: dnsCheck.dnsConfigured ? 'pending' : 'failed'
+        })
+        .eq('domain', domain)
+        .eq('org_id', orgId);
+    }
 
     return new Response(
       JSON.stringify({
-        success: true,
-        domain,
-        verified,
-        ssl_status: sslStatus,
-        details: dnsResults,
-        message: verified 
-          ? 'Domain verified successfully! SSL certificate will be provisioned shortly.'
-          : 'DNS records not configured correctly. Please check your settings.',
+        verified: dnsCheck.verified,
+        dns_configured: dnsCheck.dnsConfigured,
+        ssl_status: dnsCheck.verified ? 'active' : 'pending',
+        ssl_active: dnsCheck.verified,
+        details: dnsCheck.details
       }),
       {
-        status: 200,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
+        status: 200,
+      },
     );
   } catch (error) {
     console.error('Verification error:', error);
     return new Response(
-      JSON.stringify({ 
-        success: false,
-        error: error.message || 'Failed to verify domain',
+      JSON.stringify({
+        error: error.message,
+        verified: false
       }),
       {
-        status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
+        status: 400,
+      },
     );
   }
 });

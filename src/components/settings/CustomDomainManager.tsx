@@ -1,385 +1,342 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Globe01, CheckCircle, XCircle, AlertCircle, Trash02, RefreshCw01, Lightbulb01 } from '@untitledui/icons';
-import { supabase } from '@/integrations/supabase/client';
-import { useOrganization } from '@/contexts/OrganizationContext';
 import { toast } from 'sonner';
-
-interface CustomDomain {
-  id: string;
-  domain: string;
-  verified: boolean;
-  ssl_status: 'pending' | 'active' | 'failed';
-  verification_token?: string;
-  created_at: string;
-  dns_configured?: boolean;
-  is_primary?: boolean;
-}
+import { Plus, Globe01, CheckCircle, AlertCircle, Trash02, Star01, Copy03, RefreshCw01, Link03 } from '@untitledui/icons';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { useCustomDomains } from '@/hooks/useCustomDomains';
+import { Separator } from '@/components/ui/separator';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 export const CustomDomainManager = () => {
-  const { currentOrg } = useOrganization();
-  const [domains, setDomains] = useState<CustomDomain[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const { domains, loading, verifying, addDomain, verifyDomain, removeDomain, setPrimaryDomain } = useCustomDomains();
   const [newDomain, setNewDomain] = useState('');
-  const [isAdding, setIsAdding] = useState(false);
-  const [verificationToken, setVerificationToken] = useState('');
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  useEffect(() => {
-    fetchDomains();
-  }, [currentOrg?.id]);
-
-  const fetchDomains = async () => {
-    if (!currentOrg?.id) return;
-
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('custom_domains')
-        .select('*')
-        .eq('org_id', currentOrg.id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      setDomains((data || []).map(d => ({
-        ...d,
-        ssl_status: d.ssl_status as 'pending' | 'active' | 'failed',
-      })));
-    } catch (error) {
-      console.error('Error fetching domains:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const validateDomain = (domain: string): { valid: boolean; error?: string } => {
+  const validateDomain = (domain: string): boolean => {
     const domainRegex = /^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$/i;
     
-    if (!domain) {
-      return { valid: false, error: 'Domain is required' };
-    }
+    if (!domain) return false;
+    if (!domainRegex.test(domain)) return false;
+    if (domain.includes('://')) return false;
+    if (domain.includes('/')) return false;
     
-    if (!domainRegex.test(domain)) {
-      return { valid: false, error: 'Invalid domain format' };
-    }
-    
-    if (domain.includes('://')) {
-      return { valid: false, error: 'Do not include protocol (http/https)' };
-    }
-    
-    if (domain.includes('/')) {
-      return { valid: false, error: 'Do not include path or trailing slash' };
-    }
-    
-    return { valid: true };
+    return true;
   };
 
   const handleAddDomain = async () => {
-    const validation = validateDomain(newDomain);
-    if (!validation.valid) {
-      toast.error(validation.error);
+    const cleanDomain = newDomain.toLowerCase().trim();
+    
+    if (!validateDomain(cleanDomain)) {
+      toast.error('Please enter a valid domain name');
       return;
     }
 
-    if (!currentOrg?.id) return;
+    await addDomain(cleanDomain);
+    setNewDomain('');
+    setIsDialogOpen(false);
+  };
 
-    setIsAdding(true);
-    try {
-      // Generate verification token
-      const token = `lovable_verify_${Math.random().toString(36).substr(2, 16)}`;
-      setVerificationToken(token);
+  const copyToClipboard = (text: string, label: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success(`${label} copied to clipboard`);
+  };
 
-      const { error } = await supabase
-        .from('custom_domains')
-        .insert({
-          org_id: currentOrg.id,
-          domain: newDomain,
-          verification_token: token,
-        });
+  const getSSLStatusBadge = (status: string | null) => {
+    switch (status) {
+      case 'active':
+        return <Badge className="gap-1 bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20"><CheckCircle className="w-3 h-3" /> SSL Active</Badge>;
+      case 'pending':
+        return <Badge variant="secondary" className="gap-1"><RefreshCw01 className="w-3 h-3 animate-spin" /> Provisioning</Badge>;
+      case 'failed':
+        return <Badge variant="destructive" className="gap-1"><AlertCircle className="w-3 h-3" /> SSL Failed</Badge>;
+      default:
+        return <Badge variant="outline" className="gap-1"><AlertCircle className="w-3 h-3" /> Pending</Badge>;
+    }
+  };
 
-      if (error) throw error;
+  const getVerificationStatusBadge = (verified: boolean, dnsConfigured: boolean | null) => {
+    if (verified) {
+      return <Badge className="gap-1 bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20"><CheckCircle className="w-3 h-3" /> Verified</Badge>;
+    }
+    if (dnsConfigured === false) {
+      return <Badge variant="destructive" className="gap-1"><AlertCircle className="w-3 h-3" /> DNS Not Configured</Badge>;
+    }
+    return <Badge variant="secondary" className="gap-1"><AlertCircle className="w-3 h-3" /> Pending Verification</Badge>;
+  };
 
-      toast.success('Domain added! Please configure DNS records.');
-      setNewDomain('');
-      setIsAddDialogOpen(false);
-      fetchDomains();
-    } catch (error: any) {
-      console.error('Error adding domain:', error);
-      if (error.message?.includes('duplicate')) {
-        toast.error('This domain is already added');
-      } else {
-        toast.error('Failed to add domain');
+  const getDNSInstructions = (domain: string, verificationToken: string) => {
+    return [
+      {
+        type: 'A',
+        name: '@',
+        value: '185.158.133.1',
+        ttl: '3600',
+        description: 'Points your root domain to our servers'
+      },
+      {
+        type: 'A',
+        name: 'www',
+        value: '185.158.133.1',
+        ttl: '3600',
+        description: 'Points www subdomain to our servers'
+      },
+      {
+        type: 'TXT',
+        name: '_verification',
+        value: verificationToken,
+        ttl: '3600',
+        description: 'Verifies domain ownership'
       }
-    } finally {
-      setIsAdding(false);
-    }
+    ];
   };
-
-  const handleVerifyDomain = async (domain: string) => {
-    if (!currentOrg?.id) return;
-    
-    toast.info('Checking DNS records...');
-    
-    try {
-      const { data, error } = await supabase.functions.invoke('verify-custom-domain', {
-        body: {
-          domain,
-          orgId: currentOrg.id,
-        },
-      });
-
-      if (error) throw error;
-
-      if (data.verified) {
-        toast.success(data.message);
-        // Update local state to show verified
-        setDomains(domains.map(d => 
-          d.domain === domain 
-            ? { ...d, verified: true, ssl_status: data.ssl_status }
-            : d
-        ));
-      } else {
-        toast.warning(data.message);
-      }
-    } catch (error: any) {
-      console.error('Verification error:', error);
-      toast.error('Failed to verify domain. Please check your DNS records.');
-    }
-  };
-
-  const handleRemoveDomain = async (domainId: string) => {
-    if (!currentOrg?.id) return;
-    
-    try {
-      const { error } = await supabase
-        .from('custom_domains')
-        .delete()
-        .eq('id', domainId)
-        .eq('org_id', currentOrg.id);
-
-      if (error) throw error;
-
-      toast.success('Domain removed');
-      fetchDomains();
-    } catch (error) {
-      console.error('Error removing domain:', error);
-      toast.error('Failed to remove domain');
-    }
-  };
-
-  const getDNSInstructions = (domain: CustomDomain) => [
-    {
-      type: 'A',
-      name: '@',
-      value: '185.158.133.1',
-      description: 'Points your root domain to our servers',
-    },
-    {
-      type: 'A',
-      name: 'www',
-      value: '185.158.133.1',
-      description: 'Points www subdomain to our servers',
-    },
-    {
-      type: 'TXT',
-      name: '_lovable-verification',
-      value: domain.verification_token || 'lovable_verify_xxx',
-      description: 'Verifies domain ownership',
-    },
-  ];
-
-  if (loading) {
-    return (
-      <Card>
-        <CardContent className="py-8">
-          <div className="flex items-center justify-center gap-2">
-            <div className="h-5 w-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-            <span className="text-muted-foreground">Loading domains...</span>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
-    <div className="space-y-4">
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <Globe01 className="h-5 w-5" />
-                Custom Domains
-              </CardTitle>
-              <CardDescription>
-                Add your own domain for hosted chat pages
-              </CardDescription>
-            </div>
-            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-              <DialogTrigger asChild>
-                <Button size="sm">
-                  <Plus className="h-4 w-4 mr-2" />
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <Globe01 className="w-5 h-5" />
+              Custom Domains
+            </CardTitle>
+            <CardDescription>
+              Connect your own domain for hosted chat interfaces
+            </CardDescription>
+          </div>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm">
+                <Plus className="w-4 h-4 mr-2" />
+                Add Domain
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Add Custom Domain</DialogTitle>
+                <DialogDescription>
+                  Enter your domain name to get started with DNS configuration
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Input
+                    placeholder="example.com"
+                    value={newDomain}
+                    onChange={(e) => setNewDomain(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleAddDomain()}
+                  />
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Enter your root domain (e.g., example.com) without http:// or www
+                  </p>
+                </div>
+                <Button onClick={handleAddDomain} className="w-full">
                   Add Domain
                 </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Add Custom Domain</DialogTitle>
-                  <DialogDescription>
-                    Add a custom domain to use for your hosted chat pages
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="domain">Domain Name</Label>
-                    <Input
-                      id="domain"
-                      value={newDomain}
-                      onChange={(e) => setNewDomain(e.target.value.toLowerCase())}
-                      placeholder="chat.yourdomain.com"
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Enter your domain without http:// or https://
-                    </p>
-                  </div>
-
-                  <Alert>
-                    <AlertCircle className="h-4 w-4" />
-                    <AlertDescription>
-                      After adding, you'll need to configure DNS records at your domain provider
-                    </AlertDescription>
-                  </Alert>
-
-                  <div className="flex justify-end gap-2">
-                    <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-                      Cancel
-                    </Button>
-                    <Button onClick={handleAddDomain} disabled={isAdding}>
-                      {isAdding ? 'Adding...' : 'Add Domain'}
-                    </Button>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {loading ? (
+          <div className="flex items-center justify-center py-8">
+            <RefreshCw01 className="w-6 h-6 animate-spin text-muted-foreground" />
           </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {domains.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <Globe01 className="h-12 w-12 mx-auto mb-2 opacity-50" />
-              <p className="text-sm">No custom domains configured</p>
-              <p className="text-xs mt-1">Add a domain to use your own URL for hosted chats</p>
-            </div>
-          ) : (
-            domains.map((domain) => (
-              <Card key={domain.id} className="bg-muted/50">
-                <CardContent className="pt-6 space-y-4">
-                  <div className="flex items-start justify-between">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">{domain.domain}</span>
-                        {domain.verified ? (
-                          <Badge variant="default" className="gap-1">
-                            <CheckCircle className="h-3 w-3" />
-                            Verified
-                          </Badge>
-                        ) : (
-                          <Badge variant="secondary" className="gap-1">
-                            <AlertCircle className="h-3 w-3" />
-                            Pending Verification
-                          </Badge>
-                        )}
+        ) : domains.length === 0 ? (
+          <Alert>
+            <Globe01 className="h-4 w-4" />
+            <AlertDescription>
+              <p className="font-medium mb-2">No custom domains configured</p>
+              <p className="text-sm">
+                Add a custom domain to host your chat interfaces on your own branded URL.
+                Once configured, your agents will be accessible at your domain instead of the default subdomain.
+              </p>
+            </AlertDescription>
+          </Alert>
+        ) : (
+          <div className="space-y-4">
+            {domains.map((domain) => (
+              <Card key={domain.id} className="border-2">
+                <CardContent className="pt-6">
+                  <div className="space-y-4">
+                    <div className="flex items-start justify-between">
+                      <div className="space-y-2 flex-1">
+                        <div className="flex items-center gap-2">
+                          <Globe01 className="w-5 h-5 text-primary" />
+                          <span className="font-semibold text-lg">{domain.domain}</span>
+                          {domain.is_primary && (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger>
+                                  <Star01 className="w-4 h-4 fill-yellow-500 text-yellow-500" />
+                                </TooltipTrigger>
+                                <TooltipContent>Primary domain</TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {getVerificationStatusBadge(domain.verified, domain.dns_configured)}
+                          {getSSLStatusBadge(domain.ssl_status)}
+                          {domain.verified && (
+                            <Badge variant="outline" className="gap-1">
+                              <Link03 className="w-3 h-3" />
+                              <a 
+                                href={`https://${domain.domain}`} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="hover:underline"
+                              >
+                                Visit
+                              </a>
+                            </Badge>
+                          )}
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <span>SSL: {domain.ssl_status}</span>
-                        {domain.ssl_status === 'active' && (
-                          <CheckCircle className="h-3 w-3 text-green-500" />
+                      <div className="flex gap-2">
+                        {!domain.verified && (
+                          <Button
+                            size="sm"
+                            onClick={() => verifyDomain(domain.id, domain.domain)}
+                            disabled={verifying === domain.id}
+                          >
+                            {verifying === domain.id ? (
+                              <>
+                                <RefreshCw01 className="w-4 h-4 mr-2 animate-spin" />
+                                Verifying...
+                              </>
+                            ) : (
+                              <>
+                                <CheckCircle className="w-4 h-4 mr-2" />
+                                Verify
+                              </>
+                            )}
+                          </Button>
                         )}
-                        {domain.ssl_status === 'failed' && (
-                          <XCircle className="h-3 w-3 text-destructive" />
+                        {domain.verified && !domain.is_primary && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setPrimaryDomain(domain.id)}
+                          >
+                            <Star01 className="w-4 h-4 mr-2" />
+                            Set Primary
+                          </Button>
                         )}
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      {!domain.verified && (
                         <Button
                           size="sm"
-                          variant="outline"
-                          onClick={() => handleVerifyDomain(domain.domain)}
+                          variant="ghost"
+                          onClick={() => removeDomain(domain.id)}
                         >
-                          <RefreshCw01 className="h-4 w-4 mr-2" />
-                          Verify
+                          <Trash02 className="w-4 h-4" />
                         </Button>
-                      )}
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handleRemoveDomain(domain.id)}
-                      >
-                        <Trash02 className="h-4 w-4" />
-                      </Button>
+                      </div>
                     </div>
-                  </div>
 
-                  {!domain.verified && (
-                    <Alert>
-                      <AlertCircle className="h-4 w-4" />
-                      <AlertDescription>
-                        <div className="space-y-2">
-                          <p className="font-medium">DNS Configuration Required</p>
-                          <p className="text-xs">Add these records at your domain provider:</p>
-                          <div className="mt-2 space-y-2">
-                            {getDNSInstructions(domain).map((record, idx) => (
-                              <div key={idx} className="bg-background p-2 rounded text-xs font-mono">
-                                <div className="flex justify-between mb-1">
-                                  <span className="font-semibold">{record.type}</span>
-                                  <span className="text-muted-foreground">{record.description}</span>
-                                </div>
-                                <div className="grid grid-cols-2 gap-2">
-                                  <div>
-                                    <span className="text-muted-foreground">Name: </span>
-                                    {record.name}
-                                  </div>
-                                  <div>
-                                    <span className="text-muted-foreground">Value: </span>
-                                    {record.value}
-                                  </div>
-                                </div>
+                    {!domain.verified && (
+                      <>
+                        <Separator />
+                        <Alert>
+                          <AlertCircle className="h-4 w-4" />
+                          <AlertDescription>
+                            <div className="space-y-4">
+                              <div>
+                                <p className="font-semibold mb-2">Step 1: Configure DNS Records</p>
+                                <p className="text-sm text-muted-foreground mb-3">
+                                  Add these DNS records at your domain provider (e.g., Cloudflare, Namecheap, GoDaddy):
+                                </p>
                               </div>
-                            ))}
-                          </div>
-                          <p className="text-xs text-muted-foreground mt-2">
-                            DNS changes can take up to 48 hours to propagate. Click "Verify" to check status.
+                              
+                              <div className="space-y-3">
+                                {getDNSInstructions(domain.domain, domain.verification_token).map((record, idx) => (
+                                  <div key={idx} className="bg-muted/50 rounded-lg p-3 space-y-2">
+                                    <div className="flex items-center justify-between">
+                                      <span className="font-semibold text-sm">{record.type} Record</span>
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        onClick={() => copyToClipboard(record.value, record.type)}
+                                      >
+                                        <Copy03 className="w-3 h-3" />
+                                      </Button>
+                                    </div>
+                                    <div className="grid grid-cols-[80px_1fr] gap-2 text-sm font-mono">
+                                      <span className="text-muted-foreground">Type:</span>
+                                      <span>{record.type}</span>
+                                      <span className="text-muted-foreground">Name:</span>
+                                      <span>{record.name}</span>
+                                      <span className="text-muted-foreground">Value:</span>
+                                      <span className="break-all">{record.value}</span>
+                                      <span className="text-muted-foreground">TTL:</span>
+                                      <span>{record.ttl} (or Auto)</span>
+                                    </div>
+                                    <p className="text-xs text-muted-foreground italic">{record.description}</p>
+                                  </div>
+                                ))}
+                              </div>
+
+                              <div className="pt-2">
+                                <p className="font-semibold text-sm mb-1">Step 2: Wait for DNS Propagation</p>
+                                <p className="text-xs text-muted-foreground">
+                                  DNS changes typically take 5-30 minutes but can take up to 24-48 hours.
+                                  You can check propagation status at{' '}
+                                  <a 
+                                    href={`https://dnschecker.org/#A/${domain.domain}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-primary hover:underline"
+                                  >
+                                    dnschecker.org
+                                  </a>
+                                </p>
+                              </div>
+
+                              <div className="pt-2">
+                                <p className="font-semibold text-sm mb-1">Step 3: Verify Domain</p>
+                                <p className="text-xs text-muted-foreground">
+                                  Once DNS records are configured and propagated, click the "Verify" button above.
+                                  SSL certificates will be automatically provisioned after verification.
+                                </p>
+                              </div>
+                            </div>
+                          </AlertDescription>
+                        </Alert>
+                      </>
+                    )}
+
+                    {domain.verified && domain.ssl_status === 'active' && (
+                      <Alert className="bg-green-500/5 border-green-500/20">
+                        <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
+                        <AlertDescription>
+                          <p className="font-medium text-green-700 dark:text-green-400">Domain is live!</p>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            Your domain is verified and secured with SSL. Your agents can now be accessed at this domain.
                           </p>
-                        </div>
-                      </AlertDescription>
-                    </Alert>
-                  )}
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
-            ))
-          )}
-        </CardContent>
-      </Card>
+            ))}
+          </div>
+        )}
 
-      <Alert>
-        <Lightbulb01 className="h-4 w-4" />
-        <AlertDescription>
-          <p className="font-medium mb-1">Custom Domain Benefits</p>
-          <ul className="text-xs space-y-1 list-disc list-inside">
-            <li>Use your own branded URL for hosted chat pages</li>
-            <li>Automatic SSL certificate provisioning</li>
-            <li>Better trust and recognition from users</li>
-          </ul>
-        </AlertDescription>
-      </Alert>
-    </div>
+        <Alert>
+          <Globe01 className="h-4 w-4" />
+          <AlertDescription>
+            <p className="font-medium mb-1">About Custom Domains</p>
+            <p className="text-sm">
+              Custom domains provide a professional, branded experience for your chat interfaces.
+              Once verified, agents will be accessible at your domain with automatic SSL encryption.
+            </p>
+          </AlertDescription>
+        </Alert>
+      </CardContent>
+    </Card>
   );
 };
