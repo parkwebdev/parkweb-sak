@@ -8,6 +8,7 @@ import { NotificationCenter } from './notifications/NotificationCenter';
 import { WorkspaceSwitcher } from './WorkspaceSwitcher';
 import { useSidebar } from '@/hooks/use-sidebar';
 import { useConversations } from '@/hooks/useConversations';
+import chatpadLogo from '@/assets/chatpad-logo.png';
 
 interface NavigationItem {
   id: string;
@@ -80,6 +81,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
         <nav className="w-full gap-4 pt-4">
           <header className="w-full whitespace-nowrap gap-4 px-4 py-0">
             <div className="w-full space-y-3">
+              {!isCollapsed && (
+                <img 
+                  src={chatpadLogo} 
+                  alt="ChatPad Logo" 
+                  className="h-6 w-6 object-contain"
+                />
+              )}
+              
               <WorkspaceSwitcher />
               
               <div className="flex items-center justify-between">
