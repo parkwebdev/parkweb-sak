@@ -2,7 +2,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Settings01, DotsHorizontal, Play, PauseCircle, Trash01 } from '@untitledui/icons';
+import { DotsHorizontal, Play, PauseCircle, Trash01 } from '@untitledui/icons';
+import { useNavigate } from 'react-router-dom';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Agent = Tables<'agents'>;
@@ -15,6 +16,7 @@ interface AgentCardProps {
 }
 
 export const AgentCard = ({ agent, onEdit, onDelete, onStatusChange }: AgentCardProps) => {
+  const navigate = useNavigate();
   const statusColors = {
     draft: 'bg-muted text-muted-foreground',
     active: 'bg-success/10 text-success border-success/20',
@@ -47,25 +49,21 @@ export const AgentCard = ({ agent, onEdit, onDelete, onStatusChange }: AgentCard
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => onEdit(agent)}>
-                <Settings01 className="h-4 w-4 mr-2" />
+              <DropdownMenuItem onClick={() => navigate(`/agents/${agent.id}`)}>
                 Configure
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               {agent.status === 'active' ? (
                 <DropdownMenuItem onClick={() => onStatusChange(agent.id, 'paused')}>
-                  <PauseCircle className="h-4 w-4 mr-2" />
                   Pause
                 </DropdownMenuItem>
               ) : (
                 <DropdownMenuItem onClick={() => onStatusChange(agent.id, 'active')}>
-                  <Play className="h-4 w-4 mr-2" />
                   Activate
                 </DropdownMenuItem>
               )}
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => onDelete(agent.id)} className="text-destructive">
-                <Trash01 className="h-4 w-4 mr-2" />
                 Delete
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -108,8 +106,7 @@ export const AgentCard = ({ agent, onEdit, onDelete, onStatusChange }: AgentCard
       </CardContent>
 
       <CardFooter>
-        <Button variant="outline" size="sm" onClick={() => onEdit(agent)} className="w-full">
-          <Settings01 className="h-4 w-4 mr-2" />
+        <Button variant="outline" size="sm" onClick={() => navigate(`/agents/${agent.id}`)} className="w-full">
           Configure Agent
         </Button>
       </CardFooter>
