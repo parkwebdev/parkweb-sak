@@ -11,8 +11,8 @@ export function ThemeToggle({ isCollapsed = false }: ThemeToggleProps) {
   const { theme, setTheme } = useTheme();
   const { ref, toggleSwitchTheme, isDarkMode } = useModeAnimation({
     animationType: ThemeAnimationType.BLUR_CIRCLE,
-    blurAmount: 4,
-    duration: 1000
+    blurAmount: 2,
+    duration: 600
   });
 
   const handleToggle = () => {
