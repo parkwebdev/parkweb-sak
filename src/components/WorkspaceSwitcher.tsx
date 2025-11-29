@@ -103,7 +103,7 @@ export const WorkspaceSwitcher = () => {
       </DropdownMenuTrigger>
       <DropdownMenuContent 
         align="start" 
-        className="w-[280px] bg-background border shadow-lg z-50"
+        className="w-[calc(100%-0.5rem)] max-w-[264px] bg-background border shadow-lg z-50"
       >
         {hasMultipleWorkspaces && (
           <>
