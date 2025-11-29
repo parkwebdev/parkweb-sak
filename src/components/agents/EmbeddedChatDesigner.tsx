@@ -487,6 +487,26 @@ export const EmbeddedChatDesigner = ({ agentId }: EmbeddedChatDesignerProps) => 
 
       <Separator />
 
+      {/* Emoji Reactions */}
+      <div className="space-y-3">
+        <h3 className="text-sm font-medium">Emoji Reactions</h3>
+        <div className="flex items-center justify-between">
+          <div className="space-y-0.5">
+            <Label htmlFor="emoji-reactions">Enable Emoji Reactions</Label>
+            <p className="text-xs text-muted-foreground">
+              Allow users to react to messages with emojis
+            </p>
+          </div>
+          <Switch
+            id="emoji-reactions"
+            checked={config.enableEmojiReactions}
+            onCheckedChange={(checked) => saveConfig({ enableEmojiReactions: checked })}
+          />
+        </div>
+      </div>
+
+      <Separator />
+
       {/* Branding Section */}
       <div className="space-y-3">
         <h3 className="text-sm font-medium">Branding</h3>
