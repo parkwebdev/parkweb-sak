@@ -67,18 +67,6 @@ export const ApiKeySettings = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold">API Keys</h2>
-          <p className="text-muted-foreground mt-1">
-            Manage API keys for programmatic access to your organization
-          </p>
-        </div>
-        <Button onClick={() => setCreateDialogOpen(true)}>
-          Create API Key
-        </Button>
-      </div>
-
       <Card>
         <CardHeader>
           <CardTitle>Security Best Practices</CardTitle>
