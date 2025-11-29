@@ -14,6 +14,7 @@ import DashboardWrapper from "./pages/DashboardWrapper";
 import Agents from "./pages/Agents";
 import Conversations from "./pages/Conversations";
 import Leads from "./pages/Leads";
+import Analytics from "./pages/Analytics";
 
 const queryClient = new QueryClient();
 
@@ -46,6 +47,11 @@ const App = () => (
                 <Route path="/leads" element={
                   <ProtectedRoute>
                     <Leads />
+                  </ProtectedRoute>
+                } />
+                <Route path="/analytics" element={
+                  <ProtectedRoute>
+                    <Analytics />
                   </ProtectedRoute>
                 } />
                 <Route path="/settings" element={

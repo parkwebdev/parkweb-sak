@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, ChevronLeft, ChevronRight, Settings01 as Settings, Grid01 as Grid, MessageChatSquare, Users01 as Users, Cube01 as Bot } from '@untitledui/icons';
+import { X, ChevronLeft, ChevronRight, Settings01 as Settings, Grid01 as Grid, MessageChatSquare, Users01 as Users, Cube01 as Bot, BarChart03 } from '@untitledui/icons';
 import { Link, useLocation } from 'react-router-dom';
 import { SearchInput } from './SearchInput';
 import { UserAccountCard } from './UserAccountCard';
@@ -41,6 +41,12 @@ const navigationItems: NavigationItem[] = [
     label: 'Leads',
     icon: Users,
     path: '/leads'
+  },
+  {
+    id: 'analytics',
+    label: 'Analytics',
+    icon: BarChart03,
+    path: '/analytics'
   }
 ];
 
