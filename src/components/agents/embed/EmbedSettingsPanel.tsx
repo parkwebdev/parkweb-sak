@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -5,8 +6,8 @@ import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Copy01 } from '@untitledui/icons';
-import type { EmbeddedChatConfig } from '@/hooks/useEmbeddedChatConfig';
+import { Copy01, Plus, Trash01 } from '@untitledui/icons';
+import type { EmbeddedChatConfig, CustomField } from '@/hooks/useEmbeddedChatConfig';
 import { toast } from 'sonner';
 
 interface EmbedSettingsPanelProps {
@@ -16,9 +17,46 @@ interface EmbedSettingsPanelProps {
 }
 
 export const EmbedSettingsPanel = ({ config, onConfigChange, embedCode }: EmbedSettingsPanelProps) => {
+  const [newFieldLabel, setNewFieldLabel] = useState('');
+  const [newFieldType, setNewFieldType] = useState<'text' | 'email' | 'phone' | 'textarea' | 'select'>('text');
+  
   const copyEmbedCode = () => {
     navigator.clipboard.writeText(embedCode);
     toast.success('Embed code copied to clipboard');
+  };
+
+  const addCustomField = () => {
+    if (!newFieldLabel.trim()) return;
+    
+    const newField: CustomField = {
+      id: `field-${Date.now()}`,
+      label: newFieldLabel,
+      fieldType: newFieldType,
+      required: false,
+      placeholder: '',
+      options: newFieldType === 'select' ? [] : undefined,
+    };
+    
+    onConfigChange({
+      customFields: [...config.customFields, newField],
+    });
+    
+    setNewFieldLabel('');
+    setNewFieldType('text');
+  };
+
+  const removeCustomField = (fieldId: string) => {
+    onConfigChange({
+      customFields: config.customFields.filter(f => f.id !== fieldId),
+    });
+  };
+
+  const updateCustomField = (fieldId: string, updates: Partial<CustomField>) => {
+    onConfigChange({
+      customFields: config.customFields.map(f => 
+        f.id === fieldId ? { ...f, ...updates } : f
+      ),
+    });
   };
 
   return (
@@ -288,10 +326,181 @@ export const EmbedSettingsPanel = ({ config, onConfigChange, embedCode }: EmbedS
           </AccordionContent>
         </AccordionItem>
 
+        {/* Contact Form Section */}
+        <AccordionItem value="contact-form">
+          <AccordionTrigger className="text-sm font-medium">Contact Form</AccordionTrigger>
+          <AccordionContent className="space-y-4 pt-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <Label htmlFor="contact-form" className="text-sm">Enable Contact Form</Label>
+                <p className="text-xs text-muted-foreground">Collect user info before chat</p>
+              </div>
+              <Switch
+                id="contact-form"
+                checked={config.enableContactForm}
+                onCheckedChange={(checked) => onConfigChange({ enableContactForm: checked })}
+              />
+            </div>
+
+            {config.enableContactForm && (
+              <div className="space-y-4 pl-4 border-l-2">
+                <div className="space-y-2">
+                  <Label htmlFor="form-title" className="text-sm">Form Title</Label>
+                  <Input
+                    id="form-title"
+                    value={config.contactFormTitle}
+                    onChange={(e) => onConfigChange({ contactFormTitle: e.target.value })}
+                    className="text-sm"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="form-subtitle" className="text-sm">Form Subtitle</Label>
+                  <Textarea
+                    id="form-subtitle"
+                    value={config.contactFormSubtitle}
+                    onChange={(e) => onConfigChange({ contactFormSubtitle: e.target.value })}
+                    rows={2}
+                    className="text-sm"
+                  />
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm">Custom Fields</Label>
+                    <p className="text-xs text-muted-foreground">First, Last, Email are default</p>
+                  </div>
+
+                  {/* Existing Custom Fields */}
+                  {config.customFields.map((field) => (
+                    <div key={field.id} className="p-3 border rounded-lg space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Input
+                          value={field.label}
+                          onChange={(e) => updateCustomField(field.id, { label: e.target.value })}
+                          className="text-sm flex-1 mr-2"
+                          placeholder="Field label"
+                        />
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => removeCustomField(field.id)}
+                        >
+                          <Trash01 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <Select
+                          value={field.fieldType}
+                          onValueChange={(value: any) => updateCustomField(field.id, { fieldType: value })}
+                        >
+                          <SelectTrigger className="text-sm">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="text">Text</SelectItem>
+                            <SelectItem value="email">Email</SelectItem>
+                            <SelectItem value="phone">Phone</SelectItem>
+                            <SelectItem value="textarea">Text Area</SelectItem>
+                            <SelectItem value="select">Select</SelectItem>
+                          </SelectContent>
+                        </Select>
+
+                        <div className="flex items-center gap-2">
+                          <Switch
+                            checked={field.required}
+                            onCheckedChange={(checked) => updateCustomField(field.id, { required: checked })}
+                          />
+                          <Label className="text-xs">Required</Label>
+                        </div>
+                      </div>
+
+                      <Input
+                        value={field.placeholder || ''}
+                        onChange={(e) => updateCustomField(field.id, { placeholder: e.target.value })}
+                        placeholder="Placeholder text"
+                        className="text-sm"
+                      />
+
+                      {field.fieldType === 'select' && (
+                        <div className="space-y-2">
+                          <Label className="text-xs">Options (comma-separated)</Label>
+                          <Input
+                            value={field.options?.join(', ') || ''}
+                            onChange={(e) => updateCustomField(field.id, { 
+                              options: e.target.value.split(',').map(o => o.trim()).filter(Boolean) 
+                            })}
+                            placeholder="Option 1, Option 2, Option 3"
+                            className="text-sm"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  ))}
+
+                  {/* Add New Field */}
+                  <div className="p-3 bg-muted/30 rounded-lg space-y-2">
+                    <Label className="text-sm">Add Custom Field</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        value={newFieldLabel}
+                        onChange={(e) => setNewFieldLabel(e.target.value)}
+                        placeholder="Field label"
+                        className="text-sm"
+                      />
+                      <Select
+                        value={newFieldType}
+                        onValueChange={(value: any) => setNewFieldType(value)}
+                      >
+                        <SelectTrigger className="text-sm w-32">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="text">Text</SelectItem>
+                          <SelectItem value="email">Email</SelectItem>
+                          <SelectItem value="phone">Phone</SelectItem>
+                          <SelectItem value="textarea">Text Area</SelectItem>
+                          <SelectItem value="select">Select</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={addCustomField}
+                      className="w-full"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Field
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </AccordionContent>
+        </AccordionItem>
+
         {/* Features Section */}
         <AccordionItem value="features">
           <AccordionTrigger className="text-sm font-medium">Features</AccordionTrigger>
           <AccordionContent className="space-y-4 pt-4">
+            <div className="space-y-2">
+              <Label htmlFor="transitions" className="text-sm">View Transitions</Label>
+              <Select 
+                value={config.viewTransition} 
+                onValueChange={(value: any) => onConfigChange({ viewTransition: value })}
+              >
+                <SelectTrigger className="text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="slide">Slide</SelectItem>
+                  <SelectItem value="fade">Fade</SelectItem>
+                  <SelectItem value="none">None</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <div className="flex items-center justify-between">
               <div>
                 <Label htmlFor="audio" className="text-sm">Audio Messages</Label>

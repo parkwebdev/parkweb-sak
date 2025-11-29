@@ -3,6 +3,9 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { X, Send01, Minimize02, Home05, MessageChatCircle, HelpCircle, ChevronRight, Zap, BookOpen01, Check, Microphone01, Attachment01 } from '@untitledui/icons';
 import type { EmbeddedChatConfig } from '@/hooks/useEmbeddedChatConfig';
 import { ChatBubbleIcon } from './ChatBubbleIcon';
@@ -17,7 +20,7 @@ interface EmbeddedChatPreviewProps {
   config: EmbeddedChatConfig;
 }
 
-type ViewType = 'home' | 'messages' | 'help';
+type ViewType = 'home' | 'messages' | 'help' | 'contact';
 
 export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -142,6 +145,7 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
       case 'help': return <BookOpen01 className="h-5 w-5" />;
       case 'bug': return <Zap className="h-5 w-5" />;
       case 'feature': return <Zap className="h-5 w-5" />;
+      case 'contact': return <MessageChatCircle className="h-5 w-5" />;
       default: return <MessageChatCircle className="h-5 w-5" />;
     }
   };
@@ -158,6 +162,8 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
       }, 500);
     } else if (actionType === 'open_help') {
       setCurrentView('help');
+    } else if (actionType === 'open_contact') {
+      setCurrentView('contact');
     }
   };
   
@@ -179,6 +185,19 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
     return {
       background: `linear-gradient(135deg, ${config.primaryColor} 0%, ${config.gradientEndColor} 100%)`,
     };
+  };
+
+  // Get transition classes based on config
+  const getTransitionClasses = () => {
+    switch (config.viewTransition) {
+      case 'slide':
+        return 'transition-transform duration-300 ease-out';
+      case 'fade':
+        return 'transition-opacity duration-300 ease-out';
+      case 'none':
+      default:
+        return '';
+    }
   };
 
   return (
@@ -305,10 +324,10 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
               )}
 
               {/* Content Area */}
-              <div className="flex-1 overflow-hidden bg-background flex flex-col">
+              <div className="flex-1 overflow-hidden bg-background flex flex-col relative">
                 {/* Home View */}
                 {currentView === 'home' && (
-                  <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                  <div className={`flex-1 overflow-y-auto p-4 space-y-3 ${getTransitionClasses()} ${config.viewTransition === 'fade' ? 'opacity-100' : ''}`}>
                     {config.showQuickActions && config.quickActions.map((action, idx) => (
                       <div
                         key={action.id}
@@ -341,9 +360,129 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
                   </div>
                 )}
 
+                {/* Contact Form View */}
+                {currentView === 'contact' && (
+                  <div className={`flex-1 overflow-y-auto p-4 ${getTransitionClasses()} ${config.viewTransition === 'fade' ? 'opacity-100' : ''}`}>
+                    <div className="space-y-4">
+                      {/* Form Header */}
+                      <div className="text-center space-y-1">
+                        <h3 className="text-lg font-semibold">{config.contactFormTitle}</h3>
+                        <p className="text-sm text-muted-foreground">{config.contactFormSubtitle}</p>
+                      </div>
+
+                      {/* Contact Form */}
+                      <form className="space-y-3" onSubmit={(e) => {
+                        e.preventDefault();
+                        // Simulate form submission
+                        setTimeout(() => {
+                          setCurrentView('messages');
+                          setActiveConversationId('new');
+                          setMessages([{ 
+                            role: 'assistant', 
+                            content: 'Thanks for your information! How can I help you today?', 
+                            read: true, 
+                            timestamp: new Date(),
+                            type: 'text',
+                            reactions: []
+                          }]);
+                        }, 500);
+                      }}>
+                        {/* Required Fields */}
+                        <div className="space-y-2">
+                          <Label htmlFor="first-name" className="text-sm">First Name *</Label>
+                          <Input
+                            id="first-name"
+                            placeholder="John"
+                            required
+                            className="text-sm"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="last-name" className="text-sm">Last Name *</Label>
+                          <Input
+                            id="last-name"
+                            placeholder="Doe"
+                            required
+                            className="text-sm"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="email" className="text-sm">Email *</Label>
+                          <Input
+                            id="email"
+                            type="email"
+                            placeholder="john@example.com"
+                            required
+                            className="text-sm"
+                          />
+                        </div>
+
+                        {/* Custom Fields */}
+                        {config.customFields.map((field) => (
+                          <div key={field.id} className="space-y-2">
+                            <Label htmlFor={field.id} className="text-sm">
+                              {field.label} {field.required && '*'}
+                            </Label>
+                            {field.fieldType === 'textarea' ? (
+                              <Textarea
+                                id={field.id}
+                                placeholder={field.placeholder}
+                                required={field.required}
+                                className="text-sm"
+                                rows={3}
+                              />
+                            ) : field.fieldType === 'select' ? (
+                              <Select required={field.required}>
+                                <SelectTrigger className="text-sm">
+                                  <SelectValue placeholder={field.placeholder || 'Select an option'} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {field.options?.map((option) => (
+                                    <SelectItem key={option} value={option}>
+                                      {option}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            ) : (
+                              <Input
+                                id={field.id}
+                                type={field.fieldType}
+                                placeholder={field.placeholder}
+                                required={field.required}
+                                className="text-sm"
+                              />
+                            )}
+                          </div>
+                        ))}
+
+                        {/* Submit Button */}
+                        <Button
+                          type="submit"
+                          className="w-full"
+                          style={{ backgroundColor: config.primaryColor }}
+                        >
+                          Continue to Chat
+                        </Button>
+
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          className="w-full"
+                          onClick={() => setCurrentView('home')}
+                        >
+                          Back
+                        </Button>
+                      </form>
+                    </div>
+                  </div>
+                )}
+
                 {/* Messages View */}
                 {currentView === 'messages' && (
-                  <>
+                  <div className={`flex-1 flex flex-col ${getTransitionClasses()} ${config.viewTransition === 'fade' ? 'opacity-100' : ''}`}>
                     {activeConversationId ? (
                       <>
                         {/* Active Conversation */}
@@ -659,12 +798,12 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
                         </div>
                       </>
                     )}
-                  </>
+                  </div>
                 )}
 
                 {/* Help View */}
                 {currentView === 'help' && (
-                  <div className="flex-1 overflow-y-auto p-4">
+                  <div className={`flex-1 overflow-y-auto p-4 ${getTransitionClasses()} ${config.viewTransition === 'fade' ? 'opacity-100' : ''}`}>
                     <div className="space-y-2">
                       {['Getting Started', 'Common Questions', 'Troubleshooting'].map((topic, idx) => (
                         <div

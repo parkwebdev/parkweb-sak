@@ -2,12 +2,21 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
+export interface CustomField {
+  id: string;
+  label: string;
+  fieldType: 'text' | 'email' | 'phone' | 'textarea' | 'select';
+  required: boolean;
+  placeholder?: string;
+  options?: string[]; // For select fields
+}
+
 export interface QuickAction {
   id: string;
   title: string;
   subtitle: string;
-  icon: 'chat' | 'help' | 'bug' | 'feature' | 'custom';
-  action: 'start_chat' | 'open_help' | 'custom_url';
+  icon: 'chat' | 'help' | 'bug' | 'feature' | 'custom' | 'contact';
+  action: 'start_chat' | 'open_help' | 'open_contact' | 'custom_url';
 }
 
 export interface EmbeddedChatConfig {
@@ -64,6 +73,15 @@ export interface EmbeddedChatConfig {
   
   // Emoji Reactions
   enableEmojiReactions: boolean;
+  
+  // Contact Form
+  enableContactForm: boolean;
+  contactFormTitle: string;
+  contactFormSubtitle: string;
+  customFields: CustomField[];
+  
+  // View Transitions
+  viewTransition: 'slide' | 'fade' | 'none';
 }
 
 export const useEmbeddedChatConfig = (agentId: string) => {
@@ -106,6 +124,13 @@ export const useEmbeddedChatConfig = (agentId: string) => {
         icon: 'help',
         action: 'open_help',
       },
+      {
+        id: 'contact-form',
+        title: 'Get in touch',
+        subtitle: 'Fill out a quick form to connect with us',
+        icon: 'contact',
+        action: 'open_contact',
+      },
     ],
     
     // Bottom Navigation
@@ -139,6 +164,15 @@ export const useEmbeddedChatConfig = (agentId: string) => {
     
     // Emoji Reactions
     enableEmojiReactions: true,
+    
+    // Contact Form
+    enableContactForm: true,
+    contactFormTitle: 'Get in touch',
+    contactFormSubtitle: 'Fill out the form below and we\'ll get back to you',
+    customFields: [],
+    
+    // View Transitions
+    viewTransition: 'slide',
   });
 
   const [config, setConfig] = useState<EmbeddedChatConfig>(getDefaultConfig());
@@ -194,7 +228,7 @@ export const useEmbeddedChatConfig = (agentId: string) => {
       setConfig(updatedConfig);
 
       // Convert to plain object for JSON storage
-      const configForStorage = {
+      const configForStorage: any = {
         ...updatedConfig,
         quickActions: updatedConfig.quickActions.map(action => ({
           id: action.id,
@@ -202,6 +236,14 @@ export const useEmbeddedChatConfig = (agentId: string) => {
           subtitle: action.subtitle,
           icon: action.icon,
           action: action.action,
+        })),
+        customFields: updatedConfig.customFields.map(field => ({
+          id: field.id,
+          label: field.label,
+          fieldType: field.fieldType,
+          required: field.required,
+          placeholder: field.placeholder || '',
+          options: field.options || [],
         })),
       };
 
