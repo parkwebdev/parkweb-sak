@@ -20,6 +20,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { z } from 'zod';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { useHelpArticles } from '@/hooks/useHelpArticles';
+import { Badge } from '@/components/ui/badge';
 
 interface EmbeddedChatPreviewProps {
   config: EmbeddedChatConfig;
@@ -27,30 +29,16 @@ interface EmbeddedChatPreviewProps {
 
 type ViewType = 'home' | 'messages' | 'help' | 'contact';
 
-export const EmbeddedChatPreview = ({ config: baseConfig }: EmbeddedChatPreviewProps) => {
-  // Load help articles from localStorage and merge with config
-  const [config, setConfig] = useState(baseConfig);
-  
-  useEffect(() => {
-    const storedArticles = localStorage.getItem(`help_articles_${baseConfig.agentId}`);
-    const storedCategories = localStorage.getItem(`help_categories_${baseConfig.agentId}`);
-    
-    const helpArticles = storedArticles ? JSON.parse(storedArticles) : [];
-    const helpCategories = storedCategories ? JSON.parse(storedCategories) : [];
-    
-    setConfig({
-      ...baseConfig,
-      helpArticles,
-      helpCategories,
-    });
-  }, [baseConfig]);
+export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
+  // Load help articles from database
+  const { articles: helpArticles, categories: helpCategories, loading: helpLoading } = useHelpArticles(config.agentId);
 
   const [isOpen, setIsOpen] = useState(false);
   const [currentView, setCurrentView] = useState<ViewType>('home');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedArticle, setSelectedArticle] = useState<HelpArticle | null>(null);
   const [hasSubmittedContactForm, setHasSubmittedContactForm] = useState(() => {
-    return localStorage.getItem(`chatpad_contact_submitted_${baseConfig.agentId}`) === 'true';
+    return localStorage.getItem(`chatpad_contact_submitted_${config.agentId}`) === 'true';
   });
   
   // Reset feedback when article changes
@@ -1204,10 +1192,14 @@ export const EmbeddedChatPreview = ({ config: baseConfig }: EmbeddedChatPreviewP
                           />
                         </div>
                         
-                        {helpSearchQuery ? (
+                        {helpLoading ? (
+                          <div className="text-center py-8">
+                            <p className="text-sm text-muted-foreground">Loading help articles...</p>
+                          </div>
+                        ) : helpSearchQuery ? (
                           // Show search results
-                          <div className="space-y-2">
-                            {config.helpArticles
+                          <div className="space-y-3">
+                            {helpArticles
                               .filter(article => 
                                 article.title.toLowerCase().includes(helpSearchQuery.toLowerCase()) ||
                                 article.content.toLowerCase().includes(helpSearchQuery.toLowerCase())
@@ -1220,32 +1212,27 @@ export const EmbeddedChatPreview = ({ config: baseConfig }: EmbeddedChatPreviewP
                                     setSelectedCategory(article.category);
                                     setHelpSearchQuery('');
                                   }}
-                                  className="w-full text-left p-3 rounded-lg hover:bg-accent transition-colors group border border-border"
+                                  className="w-full text-left p-4 rounded-lg hover:bg-accent transition-colors group border border-border"
                                 >
-                                  <div className="flex items-start gap-3">
-                                    {article.icon && (
-                                      <span className="text-xl mt-0.5 flex-shrink-0">
-                                        {article.icon}
-                                      </span>
-                                    )}
+                                  <div className="flex items-center gap-3">
                                     <div className="flex-1 min-w-0">
-                                      <div className="flex items-center gap-2 mb-1">
-                                        <p className="font-medium text-sm group-hover:text-primary transition-colors">
-                                          {article.title}
-                                        </p>
-                                        <span className="text-xs text-muted-foreground px-2 py-0.5 bg-muted rounded-full">
-                                          {article.category}
-                                        </span>
-                                      </div>
-                                      <p className="text-xs text-muted-foreground line-clamp-2">
+                                      <h4 className="font-semibold text-sm mb-1 group-hover:text-primary transition-colors">
+                                        {article.title}
+                                      </h4>
+                                      <p className="text-xs text-muted-foreground line-clamp-2 mb-2">
                                         {article.content.substring(0, 150)}...
                                       </p>
                                     </div>
-                                    <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0 mt-1" />
+                                    <div className="flex items-center gap-2 flex-shrink-0">
+                                      <Badge variant="secondary" className="text-xs whitespace-nowrap">
+                                        {article.category}
+                                      </Badge>
+                                      <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                                    </div>
                                   </div>
                                 </button>
                               ))}
-                            {config.helpArticles.filter(article => 
+                            {helpArticles.filter(article => 
                               article.title.toLowerCase().includes(helpSearchQuery.toLowerCase()) ||
                               article.content.toLowerCase().includes(helpSearchQuery.toLowerCase())
                             ).length === 0 && (
@@ -1257,7 +1244,7 @@ export const EmbeddedChatPreview = ({ config: baseConfig }: EmbeddedChatPreviewP
                               </div>
                             )}
                           </div>
-                        ) : config.helpCategories.length === 0 ? (
+                        ) : helpCategories.length === 0 ? (
                           <div className="text-center py-8">
                             <BookOpen01 className="h-12 w-12 mx-auto mb-3 opacity-40" />
                             <p className="text-sm text-muted-foreground">
@@ -1266,21 +1253,21 @@ export const EmbeddedChatPreview = ({ config: baseConfig }: EmbeddedChatPreviewP
                           </div>
                         ) : (
                           <div className="space-y-3">
-                            {config.helpCategories.filter(cat => 
-                              config.helpArticles.some(article => article.category === cat.name)
+                            {helpCategories.filter(cat => 
+                              helpArticles.some(article => article.category === cat.name)
                             ).map((category) => (
                               <button
                                 key={category.name}
                                 onClick={() => setSelectedCategory(category.name)}
                                 className="w-full text-left p-4 rounded-lg border border-border hover:border-primary/50 hover:bg-accent transition-all group"
                               >
-                                <div className="flex items-center justify-between">
-                                  <div className="flex-1">
-                                    <h4 className="font-semibold text-sm group-hover:text-primary transition-colors">
+                                <div className="flex items-center gap-3">
+                                  <div className="flex-1 min-w-0">
+                                    <h4 className="font-semibold text-sm mb-1 group-hover:text-primary transition-colors">
                                       {category.name}
                                     </h4>
                                     {category.description && (
-                                      <p className="text-xs text-muted-foreground mt-1">
+                                      <p className="text-xs text-muted-foreground">
                                         {category.description}
                                       </p>
                                     )}
@@ -1308,31 +1295,26 @@ export const EmbeddedChatPreview = ({ config: baseConfig }: EmbeddedChatPreviewP
                           </h3>
                         </div>
                         
-                        <div className="space-y-2">
-                          {config.helpArticles
+                        <div className="space-y-3">
+                          {helpArticles
                             .filter(article => article.category === selectedCategory)
                             .sort((a, b) => a.order - b.order)
                             .map((article) => (
                               <button
                                 key={article.id}
                                 onClick={() => setSelectedArticle(article)}
-                                className="w-full text-left p-3 rounded-lg hover:bg-accent transition-colors group"
+                                className="w-full text-left p-4 rounded-lg hover:bg-accent transition-colors group border border-border"
                               >
-                                <div className="flex items-start gap-3">
-                                  {article.icon && (
-                                    <span className="text-xl mt-0.5 flex-shrink-0">
-                                      {article.icon}
-                                    </span>
-                                  )}
+                                <div className="flex items-center gap-3">
                                   <div className="flex-1 min-w-0">
-                                    <p className="font-medium text-sm group-hover:text-primary transition-colors">
+                                    <h4 className="font-semibold text-sm mb-1 group-hover:text-primary transition-colors">
                                       {article.title}
-                                    </p>
-                                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                                    </h4>
+                                    <p className="text-xs text-muted-foreground line-clamp-2">
                                       {article.content.substring(0, 100)}...
                                     </p>
                                   </div>
-                                  <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0 mt-1" />
+                                  <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
                                 </div>
                               </button>
                             ))}
