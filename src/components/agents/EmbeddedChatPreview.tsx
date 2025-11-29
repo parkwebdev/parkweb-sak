@@ -25,7 +25,24 @@ interface EmbeddedChatPreviewProps {
 
 type ViewType = 'home' | 'messages' | 'help' | 'contact';
 
-export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
+export const EmbeddedChatPreview = ({ config: baseConfig }: EmbeddedChatPreviewProps) => {
+  // Load help articles from localStorage and merge with config
+  const [config, setConfig] = useState(baseConfig);
+  
+  useEffect(() => {
+    const storedArticles = localStorage.getItem(`help_articles_${baseConfig.agentId}`);
+    const storedCategories = localStorage.getItem(`help_categories_${baseConfig.agentId}`);
+    
+    const helpArticles = storedArticles ? JSON.parse(storedArticles) : [];
+    const helpCategories = storedCategories ? JSON.parse(storedCategories) : [];
+    
+    setConfig({
+      ...baseConfig,
+      helpArticles,
+      helpCategories,
+    });
+  }, [baseConfig]);
+
   const [isOpen, setIsOpen] = useState(false);
   const [currentView, setCurrentView] = useState<ViewType>('home');
   const [isVisible, setIsVisible] = useState(config.displayTiming === 'immediate');
@@ -1090,26 +1107,62 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
                   </div>
                 )}
 
-                {/* Help View */}
+                {/* Help View - Categories & Articles */}
                 {currentView === 'help' && (
                   <div className={`flex-1 overflow-y-auto p-4 ${getTransitionClasses()} ${config.viewTransition === 'fade' ? 'opacity-100' : ''}`}>
-                    <div className="space-y-2">
-                      {['Getting Started', 'Common Questions', 'Troubleshooting'].map((topic, idx) => (
-                        <div
-                          key={topic}
-                          className="p-3 border rounded-lg hover:bg-accent/50 cursor-pointer transition-all animate-fade-in"
-                          style={{ 
-                            animationDelay: `${idx * 100}ms`,
-                            animationFillMode: 'backwards'
-                          }}
-                        >
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium">{topic}</span>
-                            <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                          </div>
+                    {config.helpArticles.length === 0 ? (
+                      <div className="text-center py-8 space-y-3">
+                        <BookOpen01 className="h-12 w-12 mx-auto text-muted-foreground" />
+                        <div>
+                          <h4 className="font-semibold text-sm">No help articles yet</h4>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Help articles will appear here once added
+                          </p>
                         </div>
-                      ))}
-                    </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {/* Categories */}
+                        {config.helpCategories.map((category, idx) => {
+                          const categoryArticles = config.helpArticles
+                            .filter(article => article.category === category)
+                            .sort((a, b) => a.order - b.order);
+                          
+                          if (categoryArticles.length === 0) return null;
+                          
+                          return (
+                            <div key={category} className="space-y-2 animate-fade-in" style={{ animationDelay: `${idx * 100}ms`, animationFillMode: 'backwards' }}>
+                              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-1">
+                                {category}
+                              </h4>
+                              <div className="space-y-1">
+                                {categoryArticles.map((article) => (
+                                  <div
+                                    key={article.id}
+                                    className="p-3 border rounded-lg hover:bg-accent/50 cursor-pointer transition-all group"
+                                  >
+                                    <div className="flex items-start justify-between gap-2">
+                                      <div className="flex items-start gap-2 flex-1 min-w-0">
+                                        {article.icon && (
+                                          <span className="text-base mt-0.5">{article.icon}</span>
+                                        )}
+                                        <div className="flex-1 min-w-0">
+                                          <p className="text-sm font-medium">{article.title}</p>
+                                          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
+                                            {article.content}
+                                          </p>
+                                        </div>
+                                      </div>
+                                      <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:translate-x-0.5 transition-transform shrink-0" />
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -1204,7 +1257,7 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
                       }}
                     />
                     <div 
-                      className="absolute inset-0 rounded-full animate-pulse"
+                      className="absolute inset-0 rounded-full animate-slow-pulse"
                       style={{ 
                         backgroundColor: config.primaryColor,
                         opacity: 0.5,
@@ -1220,14 +1273,14 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
                 
                 <Button
                   size="icon"
-                  className={`w-16 h-16 rounded-full shadow-lg relative ${animationClasses[config.animation]} hover:scale-110 transition-transform`}
+                  className={`w-14 h-14 rounded-full shadow-lg relative ${animationClasses[config.animation]} hover:scale-110 transition-transform`}
                   style={{ backgroundColor: config.primaryColor }}
                   onClick={() => {
                     setIsOpen(true);
                     setShowTeaser(false);
                   }}
                 >
-                  <ChatBubbleIcon className="h-8 w-8 text-white" />
+                  <ChatBubbleIcon className="h-9 w-9 text-white" />
                 </Button>
               </div>
             </div>
