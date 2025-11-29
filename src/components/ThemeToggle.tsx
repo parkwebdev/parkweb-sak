@@ -30,7 +30,8 @@ export function ThemeToggle({ isCollapsed = false }: ThemeToggleProps) {
       {createPortal(
         <div 
           ref={ref as any}
-          className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-[9999]"
+          className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+          style={{ zIndex: 999999 }}
           aria-hidden="true"
         />,
         document.body
