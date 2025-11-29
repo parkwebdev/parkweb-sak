@@ -652,7 +652,7 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
 
                 {/* Contact Form View */}
                 {currentView === 'contact' && (
-                  <div className={`flex-1 overflow-y-auto p-4 ${getTransitionClasses()} ${config.viewTransition === 'fade' ? 'opacity-100' : ''}`}>
+                  <div className={`flex-1 overflow-y-auto p-4 animate-fade-in ${getTransitionClasses()} ${config.viewTransition === 'fade' ? 'opacity-100' : ''}`}>
                     <div className="space-y-4">
                       {/* Form Header */}
                       <div className="text-center space-y-1">
@@ -815,11 +815,11 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
 
                 {/* Messages View */}
                 {currentView === 'messages' && (
-                  <div className={`flex-1 flex flex-col ${getTransitionClasses()} ${config.viewTransition === 'fade' ? 'opacity-100' : ''}`}>
+                  <div className={`flex-1 flex flex-col animate-fade-in ${getTransitionClasses()} ${config.viewTransition === 'fade' ? 'opacity-100' : ''}`}>
                     {activeConversationId ? (
                       <>
                         {/* Active Conversation */}
-                        <div className={`flex-1 overflow-y-auto messages-container ${chatSettings.compactMode ? 'p-3 space-y-2' : 'p-4 space-y-3'}`}>
+                        <div className={`flex-1 overflow-y-auto messages-container animate-fade-in ${chatSettings.compactMode ? 'p-3 space-y-2' : 'p-4 space-y-3'}`}>
                           <Button
                             variant="ghost"
                             size="sm"
@@ -1173,7 +1173,7 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
 
                 {/* Help View - Categories & Articles & Article Content */}
                 {currentView === 'help' && (
-                  <div className={`flex-1 overflow-y-auto p-4 ${getTransitionClasses()} ${config.viewTransition === 'fade' ? 'opacity-100' : ''}`}>
+                  <div className={`flex-1 overflow-y-auto p-4 animate-fade-in ${getTransitionClasses()} ${config.viewTransition === 'fade' ? 'opacity-100' : ''}`}>
                     {!selectedCategory && !selectedArticle && (
                       <>
                         <div className="flex items-center justify-between mb-4">
@@ -1283,7 +1283,7 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
 
                     {selectedCategory && !selectedArticle && (
                       <>
-                        <div className="flex items-center gap-2 mb-4">
+                        <div className="flex items-center gap-2 mb-4 animate-fade-in">
                           <button
                             onClick={() => setSelectedCategory(null)}
                             className="p-1 hover:bg-accent rounded-md transition-colors"
@@ -1324,7 +1324,7 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
 
                     {selectedArticle && (
                       <>
-                        <div className="flex items-center gap-2 mb-4">
+                        <div className="flex items-center gap-2 mb-4 animate-fade-in">
                           <button
                             onClick={() => {
                               setSelectedArticle(null);
@@ -1508,17 +1508,16 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
                 {config.animation === 'ring' && (
                   <>
                     <div 
-                      className="absolute inset-0 rounded-full animate-ping"
+                      className="absolute inset-0 rounded-full animate-subtle-ring"
                       style={{ 
                         backgroundColor: config.primaryColor,
-                        opacity: 0.75,
                       }}
                     />
                     <div 
                       className="absolute inset-0 rounded-full animate-slow-pulse"
                       style={{ 
                         backgroundColor: config.primaryColor,
-                        opacity: 0.5,
+                        opacity: 0.4,
                       }}
                     />
                   </>
@@ -1531,14 +1530,14 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
                 
                 <Button
                   size="icon"
-                  className={`w-14 h-14 rounded-full shadow-lg relative ${animationClasses[config.animation]} hover:scale-110 transition-transform`}
+                  className={`w-11 h-11 rounded-full shadow-lg relative ${animationClasses[config.animation]} hover:scale-110 transition-transform`}
                   style={{ backgroundColor: config.primaryColor }}
                   onClick={() => {
                     setIsOpen(true);
                     setShowTeaser(false);
                   }}
                 >
-                  <ChatBubbleIcon className="h-9 w-9 text-white" />
+                  <ChatBubbleIcon className="h-7 w-7 text-white" />
                 </Button>
               </div>
             </div>
