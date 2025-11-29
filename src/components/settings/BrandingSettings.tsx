@@ -43,7 +43,7 @@ export const BrandingSettings = () => {
     if (!branding || !primaryColor || primaryColor === branding?.primary_color) return;
     
     const timer = setTimeout(async () => {
-      await updateBranding({ primary_color: primaryColor });
+      await updateBranding({ primary_color: primaryColor }, true);
       showSaved('primaryColor');
     }, 1000);
 
@@ -54,7 +54,7 @@ export const BrandingSettings = () => {
     if (!branding || !secondaryColor || secondaryColor === branding?.secondary_color) return;
     
     const timer = setTimeout(async () => {
-      await updateBranding({ secondary_color: secondaryColor });
+      await updateBranding({ secondary_color: secondaryColor }, true);
       showSaved('secondaryColor');
     }, 1000);
 
@@ -65,7 +65,7 @@ export const BrandingSettings = () => {
     if (!branding || customDomain === branding?.custom_domain) return;
     
     const timer = setTimeout(async () => {
-      await updateBranding({ custom_domain: customDomain || null });
+      await updateBranding({ custom_domain: customDomain || null }, true);
       showSaved('customDomain');
     }, 1000);
 
@@ -90,13 +90,14 @@ export const BrandingSettings = () => {
 
     const logoUrl = await uploadLogo(file);
     if (logoUrl) {
-      await updateBranding({ logo_url: logoUrl });
+      await updateBranding({ logo_url: logoUrl }, true);
+      toast.success('Logo uploaded successfully');
     }
   };
 
   const handleHidePoweredByToggle = async (checked: boolean) => {
     setHidePoweredBy(checked);
-    await updateBranding({ hide_powered_by: checked });
+    await updateBranding({ hide_powered_by: checked }, true);
   };
 
   if (loading) {
