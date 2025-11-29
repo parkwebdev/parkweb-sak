@@ -855,7 +855,7 @@ export type Database = {
           created_at: string
           details: Json | null
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           resource_id: string | null
           resource_type: string
           success: boolean
@@ -867,7 +867,7 @@ export type Database = {
           created_at?: string
           details?: Json | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           resource_id?: string | null
           resource_type: string
           success?: boolean
@@ -879,7 +879,7 @@ export type Database = {
           created_at?: string
           details?: Json | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           resource_id?: string | null
           resource_type?: string
           success?: boolean
@@ -951,7 +951,7 @@ export type Database = {
     }
     Functions: {
       get_current_user_role: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: Database["public"]["Enums"]["app_role"]
       }
       get_user_role: {
@@ -965,10 +965,7 @@ export type Database = {
         }
         Returns: boolean
       }
-      is_admin: {
-        Args: { target_user_id: string }
-        Returns: boolean
-      }
+      is_admin: { Args: { target_user_id: string }; Returns: boolean }
       log_security_event: {
         Args: {
           p_action: string
@@ -984,14 +981,8 @@ export type Database = {
         Args: { p_email: string; p_token: string }
         Returns: undefined
       }
-      validate_onboarding_token: {
-        Args: { p_token: string }
-        Returns: boolean
-      }
-      validate_submission_token: {
-        Args: { p_email: string }
-        Returns: boolean
-      }
+      validate_onboarding_token: { Args: { p_token: string }; Returns: boolean }
+      validate_submission_token: { Args: { p_email: string }; Returns: boolean }
     }
     Enums: {
       app_permission:
