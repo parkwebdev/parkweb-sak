@@ -60,7 +60,6 @@ export const WebhookSettings = () => {
           </p>
         </div>
         <Button onClick={() => setCreateDialogOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
           Create Webhook
         </Button>
       </div>
@@ -102,7 +101,6 @@ export const WebhookSettings = () => {
                       variant="outline"
                       onClick={() => handleTest(webhook.id)}
                     >
-                      <PlayCircle className="h-4 w-4 mr-1" />
                       Test
                     </Button>
                     <Button
@@ -127,7 +125,7 @@ export const WebhookSettings = () => {
                         setDeleteDialogOpen(true);
                       }}
                     >
-                      <Trash01 className="h-4 w-4" />
+                      Delete
                     </Button>
                   </div>
                 </div>

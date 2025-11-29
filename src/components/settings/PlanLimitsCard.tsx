@@ -3,7 +3,6 @@ import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { usePlanLimits } from '@/hooks/usePlanLimits';
-import { ArrowRight } from '@untitledui/icons';
 import { useNavigate } from 'react-router-dom';
 
 export const PlanLimitsCard = () => {
@@ -91,7 +90,6 @@ export const PlanLimitsCard = () => {
             onClick={() => navigate('/settings?tab=billing')}
           >
             Upgrade Plan
-            <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </div>
       </CardContent>

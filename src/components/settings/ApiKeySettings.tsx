@@ -75,7 +75,6 @@ export const ApiKeySettings = () => {
           </p>
         </div>
         <Button onClick={() => setCreateDialogOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
           Create API Key
         </Button>
       </div>
@@ -145,7 +144,6 @@ export const ApiKeySettings = () => {
                         setRotateDialogOpen(true);
                       }}
                     >
-                      <RefreshCcw01 className="h-4 w-4 mr-1" />
                       Rotate
                     </Button>
                     <Button
@@ -156,7 +154,7 @@ export const ApiKeySettings = () => {
                         setDeleteDialogOpen(true);
                       }}
                     >
-                      <Trash01 className="h-4 w-4" />
+                      Delete
                     </Button>
                   </div>
                 </div>
@@ -227,14 +225,14 @@ export const ApiKeySettings = () => {
                   variant="ghost"
                   onClick={() => setShowKey(!showKey)}
                 >
-                  {showKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showKey ? 'Hide' : 'Show'}
                 </Button>
                 <Button
                   size="sm"
                   variant="ghost"
                   onClick={() => newGeneratedKey && copyToClipboard(newGeneratedKey)}
                 >
-                  <Copy01 className="h-4 w-4" />
+                  Copy
                 </Button>
               </div>
             </div>
