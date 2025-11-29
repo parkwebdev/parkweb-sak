@@ -204,7 +204,7 @@ const Analytics: React.FC<AnalyticsProps> = ({ onMenuClick }) => {
           </TabsContent>
 
           {/* Reports Tab */}
-          <TabsContent value="reports">
+          <TabsContent value="reports" className="space-y-6">
             <ReportBuilder 
               config={reportConfig}
               onConfigChange={setReportConfig}
@@ -212,7 +212,7 @@ const Analytics: React.FC<AnalyticsProps> = ({ onMenuClick }) => {
           </TabsContent>
 
           {/* Scheduled Reports Tab */}
-          <TabsContent value="scheduled">
+          <TabsContent value="scheduled" className="space-y-6">
             <ScheduledReportsManager />
           </TabsContent>
 
