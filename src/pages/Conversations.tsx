@@ -93,208 +93,217 @@ const Conversations: React.FC<ConversationsProps> = ({ onMenuClick }) => {
   };
 
   return (
-    <main className="flex-1 bg-muted/30 min-h-screen pt-4 lg:pt-8">
-      <header className="w-full font-medium mb-6">
-        <div className="items-stretch flex w-full flex-col gap-4 px-4 lg:px-8 py-0">
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="lg:hidden"
-              onClick={onMenuClick}
-            >
-              <Menu size={16} />
-            </Button>
-            <h1 className="text-sm font-semibold text-foreground">Conversations</h1>
-          </div>
+    <main className="flex-1 bg-background min-h-screen">
+      {/* Mobile header */}
+      <header className="lg:hidden border-b bg-card px-4 py-3">
+        <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onMenuClick}
+          >
+            <Menu size={16} />
+          </Button>
+          <h1 className="text-sm font-semibold text-foreground">Conversations</h1>
         </div>
       </header>
 
-      <div className="px-4 lg:px-8 pb-8">
-        <div className="grid grid-cols-12 gap-4 h-[calc(100vh-180px)]">
-          {/* Conversations List */}
-          <div className="col-span-12 lg:col-span-4 xl:col-span-3">
-            <div className="bg-card rounded-lg border h-full flex flex-col">
-              {/* Search */}
-              <div className="p-4 border-b">
-                <div className="relative">
-                  <SearchMd className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search conversations..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-9"
-                  />
+      <div className="flex h-[calc(100vh-57px)] lg:h-screen">
+        {/* Conversations List Sidebar */}
+        <div className="hidden lg:flex lg:w-80 xl:w-96 border-r bg-card flex-col">
+          {/* Header */}
+          <div className="p-4 border-b">
+            <h2 className="text-base font-semibold text-foreground mb-3">Conversations</h2>
+            <div className="relative">
+              <SearchMd className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search conversations..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 bg-muted/50 border-0"
+              />
+            </div>
+          </div>
+
+          {/* Conversation List */}
+          <ScrollArea className="flex-1">
+            {loading ? (
+              <div className="p-4 text-center text-sm text-muted-foreground">
+                Loading...
+              </div>
+            ) : filteredConversations.length === 0 ? (
+              <div className="p-8 text-center">
+                <MessageChatSquare className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+                <p className="text-sm text-muted-foreground">No conversations yet</p>
+              </div>
+            ) : (
+              <div>
+                {filteredConversations.map((conv) => {
+                  const isSelected = selectedConversation?.id === conv.id;
+                  const metadata = (conv.metadata as any) || {};
+                  
+                  return (
+                    <button
+                      key={conv.id}
+                      onClick={() => setSelectedConversation(conv)}
+                      className={`w-full text-left p-4 hover:bg-accent/30 transition-colors border-b ${
+                        isSelected ? 'bg-accent/50' : ''
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="w-11 h-11 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                          <User01 size={20} className="text-primary" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-2 mb-0.5">
+                            <p className="font-medium text-sm truncate text-foreground">
+                              {metadata.lead_name || metadata.lead_email || 'Anonymous'}
+                            </p>
+                            <span className="text-[10px] text-muted-foreground whitespace-nowrap mt-0.5">
+                              {formatDistanceToNow(new Date(conv.updated_at), { addSuffix: true })}
+                            </span>
+                          </div>
+                          <p className="text-xs text-muted-foreground truncate mb-1.5">
+                            via {conv.agents?.name}
+                          </p>
+                          <Badge variant="outline" className={`${getStatusColor(conv.status)} text-[10px] px-2 py-0.5`}>
+                            {conv.status.replace('_', ' ')}
+                          </Badge>
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </ScrollArea>
+        </div>
+
+        {/* Chat Area */}
+        <div className="flex-1 flex flex-col bg-background">
+          {selectedConversation ? (
+            <>
+              {/* Chat Header */}
+              <div className="px-6 py-4 border-b bg-card flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    <User01 size={20} className="text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-sm text-foreground">
+                      {((selectedConversation.metadata as any)?.lead_name || 
+                        (selectedConversation.metadata as any)?.lead_email || 
+                        'Anonymous')}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {selectedConversation.agents?.name} • {selectedConversation.status.replace('_', ' ')}
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  {selectedConversation.status === 'active' && (
+                    <Button size="sm" variant="outline" onClick={() => setTakeoverDialogOpen(true)}>
+                      Take Over
+                    </Button>
+                  )}
+                  {selectedConversation.status === 'human_takeover' && (
+                    <Button size="sm" variant="outline" onClick={handleReturnToAI}>
+                      Return to AI
+                    </Button>
+                  )}
+                  {selectedConversation.status !== 'closed' && (
+                    <Button size="sm" variant="destructive" onClick={handleClose}>
+                      Close
+                    </Button>
+                  )}
                 </div>
               </div>
 
-              {/* Conversation List */}
-              <ScrollArea className="flex-1">
-                {loading ? (
-                  <div className="p-4 text-center text-sm text-muted-foreground">
-                    Loading...
+              {/* Messages */}
+              <ScrollArea className="flex-1 px-6 py-4">
+                {loadingMessages ? (
+                  <div className="text-center py-12 text-sm text-muted-foreground">
+                    Loading messages...
                   </div>
-                ) : filteredConversations.length === 0 ? (
-                  <div className="p-4 text-center">
-                    <MessageChatSquare className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
-                    <p className="text-sm text-muted-foreground">No conversations yet</p>
+                ) : messages.length === 0 ? (
+                  <div className="text-center py-12">
+                    <MessageChatSquare className="h-16 w-16 mx-auto text-muted-foreground/50 mb-3" />
+                    <p className="text-sm text-muted-foreground">No messages yet</p>
                   </div>
                 ) : (
-                  <div className="divide-y">
-                    {filteredConversations.map((conv) => {
-                      const isSelected = selectedConversation?.id === conv.id;
-                      const metadata = (conv.metadata as any) || {};
-                      
+                  <div className="space-y-3 max-w-4xl mx-auto">
+                    {messages.map((message) => {
+                      const isUser = message.role === 'user';
                       return (
-                        <button
-                          key={conv.id}
-                          onClick={() => setSelectedConversation(conv)}
-                          className={`w-full text-left p-4 hover:bg-accent/50 transition-colors ${
-                            isSelected ? 'bg-accent' : ''
-                          }`}
+                        <div
+                          key={message.id}
+                          className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}
                         >
-                          <div className="flex items-start gap-3">
-                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                              <User01 size={20} className="text-primary" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center justify-between gap-2 mb-1">
-                                <p className="font-medium text-xs truncate">
-                                  {metadata.lead_name || metadata.lead_email || 'Anonymous'}
-                                </p>
-                                <span className="text-[10px] text-muted-foreground whitespace-nowrap">
-                                  {formatDistanceToNow(new Date(conv.updated_at), { addSuffix: true })}
-                                </span>
+                          <div className="flex items-start gap-2 max-w-[75%]">
+                            {!isUser && (
+                              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-1">
+                                <User01 size={14} className="text-primary" />
                               </div>
-                              <p className="text-[10px] text-muted-foreground truncate mb-1">
-                                {conv.agents?.name}
+                            )}
+                            <div>
+                              <div
+                                className={`rounded-2xl px-4 py-2.5 ${
+                                  isUser
+                                    ? 'bg-primary text-primary-foreground'
+                                    : 'bg-muted text-foreground'
+                                }`}
+                              >
+                                <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</p>
+                              </div>
+                              <p className={`text-[10px] mt-1 px-2 ${
+                                isUser ? 'text-right text-muted-foreground' : 'text-muted-foreground'
+                              }`}>
+                                {formatDistanceToNow(new Date(message.created_at), { addSuffix: true })}
                               </p>
-                              <Badge variant="outline" className={`${getStatusColor(conv.status)} text-[9px] px-1.5 py-0.5`}>
-                                {conv.status.replace('_', ' ')}
-                              </Badge>
                             </div>
+                            {isUser && (
+                              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-1">
+                                <User01 size={14} className="text-primary" />
+                              </div>
+                            )}
                           </div>
-                        </button>
+                        </div>
                       );
                     })}
                   </div>
                 )}
               </ScrollArea>
-            </div>
-          </div>
 
-          {/* Chat Area */}
-          <div className="col-span-12 lg:col-span-8 xl:col-span-9">
-            {selectedConversation ? (
-              <div className="bg-card rounded-lg border h-full flex flex-col">
-                {/* Chat Header */}
-                <div className="p-4 border-b flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                      <User01 size={20} className="text-primary" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-xs">
-                        {((selectedConversation.metadata as any)?.lead_name || 
-                          (selectedConversation.metadata as any)?.lead_email || 
-                          'Anonymous')}
-                      </p>
-                      <p className="text-[10px] text-muted-foreground">
-                        {selectedConversation.agents?.name} • {selectedConversation.status.replace('_', ' ')}
-                      </p>
-                    </div>
+              {/* Message Input (disabled for now) */}
+              {selectedConversation.status === 'human_takeover' && (
+                <div className="px-6 py-4 border-t bg-card">
+                  <div className="flex gap-3 max-w-4xl mx-auto">
+                    <Input 
+                      placeholder="Type a message..." 
+                      disabled
+                      className="flex-1 bg-muted/50"
+                    />
+                    <Button size="sm" disabled>
+                      <Send01 size={16} />
+                    </Button>
                   </div>
-                  
-                  <div className="flex items-center gap-2">
-                    {selectedConversation.status === 'active' && (
-                      <Button size="sm" variant="outline" onClick={() => setTakeoverDialogOpen(true)}>
-                        Take Over
-                      </Button>
-                    )}
-                    {selectedConversation.status === 'human_takeover' && (
-                      <Button size="sm" variant="outline" onClick={handleReturnToAI}>
-                        Return to AI
-                      </Button>
-                    )}
-                    {selectedConversation.status !== 'closed' && (
-                      <Button size="sm" variant="destructive" onClick={handleClose}>
-                        Close
-                      </Button>
-                    )}
-                  </div>
-                </div>
-
-                {/* Messages */}
-                <ScrollArea className="flex-1 p-4">
-                  {loadingMessages ? (
-                    <div className="text-center py-8 text-sm text-muted-foreground">
-                      Loading messages...
-                    </div>
-                  ) : messages.length === 0 ? (
-                    <div className="text-center py-8">
-                      <MessageChatSquare className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
-                      <p className="text-sm text-muted-foreground">No messages yet</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {messages.map((message) => {
-                        const isUser = message.role === 'user';
-                        return (
-                          <div
-                            key={message.id}
-                            className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}
-                          >
-                            <div
-                              className={`max-w-[70%] rounded-lg px-4 py-2 ${
-                                isUser
-                                  ? 'bg-primary text-primary-foreground'
-                                  : 'bg-muted text-foreground'
-                              }`}
-                            >
-                              <p className="text-xs whitespace-pre-wrap">{message.content}</p>
-                              <p className={`text-[9px] mt-1 ${
-                                isUser ? 'text-primary-foreground/70' : 'text-muted-foreground'
-                              }`}>
-                                {formatDistanceToNow(new Date(message.created_at), { addSuffix: true })}
-                              </p>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </ScrollArea>
-
-                {/* Message Input (disabled for now) */}
-                {selectedConversation.status === 'human_takeover' && (
-                  <div className="p-4 border-t">
-                    <div className="flex gap-2">
-                      <Input 
-                        placeholder="Type a message..." 
-                        disabled
-                        className="flex-1"
-                      />
-                      <Button size="sm" disabled>
-                        <Send01 size={16} />
-                      </Button>
-                    </div>
-                    <p className="text-[10px] text-muted-foreground mt-2">
-                      Human messaging coming soon
-                    </p>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="bg-card rounded-lg border h-full flex items-center justify-center">
-                <div className="text-center">
-                  <MessageChatSquare className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-                  <p className="text-sm text-muted-foreground">
-                    Select a conversation to view details
+                  <p className="text-xs text-muted-foreground mt-2 text-center">
+                    Human messaging coming soon
                   </p>
                 </div>
+              )}
+            </>
+          ) : (
+            <div className="flex-1 flex items-center justify-center">
+              <div className="text-center">
+                <MessageChatSquare className="h-20 w-20 mx-auto text-muted-foreground/50 mb-4" />
+                <p className="text-sm text-muted-foreground">
+                  Select a conversation to view messages
+                </p>
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
 
