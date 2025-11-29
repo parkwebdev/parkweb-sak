@@ -5,17 +5,29 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Trash01, Edit05, BookOpen01 } from '@untitledui/icons';
+import { Plus, BookOpen01 } from '@untitledui/icons';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { useHelpArticles } from '@/hooks/useHelpArticles';
 import { toast } from 'sonner';
+import { DndContext, closestCenter, DragEndEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
+import { SortableArticleItem } from './SortableArticleItem';
 
 interface HelpArticlesManagerProps {
   agentId: string;
 }
 
 export const HelpArticlesManager = ({ agentId }: HelpArticlesManagerProps) => {
-  const { articles, categories, addArticle, updateArticle, deleteArticle, addCategory } = useHelpArticles(agentId);
+  const { articles, categories, addArticle, updateArticle, deleteArticle, addCategory, reorderArticles } = useHelpArticles(agentId);
+  
+  // Configure sensors for drag and drop (require 5px movement to start dragging)
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 5,
+      },
+    })
+  );
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingArticle, setEditingArticle] = useState<string | null>(null);
   const [newCategoryDialogOpen, setNewCategoryDialogOpen] = useState(false);
@@ -81,6 +93,39 @@ export const HelpArticlesManager = ({ agentId }: HelpArticlesManagerProps) => {
     toast.success('Category added');
     setNewCategoryName('');
     setNewCategoryDialogOpen(false);
+  };
+
+  const handleDragEnd = (event: DragEndEvent, category: string) => {
+    const { active, over } = event;
+
+    if (!over || active.id === over.id) {
+      return;
+    }
+
+    const categoryArticles = articles
+      .filter(article => article.category === category)
+      .sort((a, b) => a.order - b.order);
+
+    const oldIndex = categoryArticles.findIndex(article => article.id === active.id);
+    const newIndex = categoryArticles.findIndex(article => article.id === over.id);
+
+    if (oldIndex === -1 || newIndex === -1) {
+      return;
+    }
+
+    // Reorder articles within this category
+    const reorderedCategoryArticles = arrayMove(categoryArticles, oldIndex, newIndex);
+    
+    // Update order for reordered articles
+    const updatedArticles = articles.map(article => {
+      if (article.category !== category) {
+        return article;
+      }
+      const newOrder = reorderedCategoryArticles.findIndex(a => a.id === article.id);
+      return { ...article, order: newOrder };
+    });
+
+    reorderArticles(updatedArticles);
   };
 
   return (
@@ -234,41 +279,33 @@ export const HelpArticlesManager = ({ agentId }: HelpArticlesManagerProps) => {
             return (
               <Card key={category}>
                 <CardContent className="p-4">
-                  <h4 className="font-semibold mb-3">{category}</h4>
-                  <div className="space-y-2">
-                    {categoryArticles.map((article) => (
-                      <div
-                        key={article.id}
-                        className="flex items-start gap-3 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
-                      >
-                        {article.icon && (
-                          <span className="text-xl">{article.icon}</span>
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <h5 className="font-medium text-sm">{article.title}</h5>
-                          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                            {article.content}
-                          </p>
-                        </div>
-                        <div className="flex gap-1">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleEdit(article.id)}
-                          >
-                            <Edit05 className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleDelete(article.id)}
-                          >
-                            <Trash01 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="font-semibold">{category}</h4>
+                    <p className="text-xs text-muted-foreground">
+                      Drag to reorder
+                    </p>
                   </div>
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={(event) => handleDragEnd(event, category)}
+                  >
+                    <SortableContext
+                      items={categoryArticles.map(a => a.id)}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      <div className="space-y-2">
+                        {categoryArticles.map((article) => (
+                          <SortableArticleItem
+                            key={article.id}
+                            article={article}
+                            onEdit={handleEdit}
+                            onDelete={handleDelete}
+                          />
+                        ))}
+                      </div>
+                    </SortableContext>
+                  </DndContext>
                 </CardContent>
               </Card>
             );
