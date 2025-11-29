@@ -448,6 +448,45 @@ export const EmbeddedChatDesigner = ({ agentId }: EmbeddedChatDesignerProps) => 
 
       <Separator />
 
+      {/* File Attachments */}
+      <div className="space-y-3">
+        <h3 className="text-sm font-medium">File Attachments</h3>
+        <div className="flex items-center justify-between">
+          <div className="space-y-0.5">
+            <Label htmlFor="file-attachments">Enable File Attachments</Label>
+            <p className="text-xs text-muted-foreground">
+              Allow users to upload and share files
+            </p>
+          </div>
+          <Switch
+            id="file-attachments"
+            checked={config.enableFileAttachments}
+            onCheckedChange={(checked) => saveConfig({ enableFileAttachments: checked })}
+          />
+        </div>
+        
+        {config.enableFileAttachments && (
+          <div className="space-y-3 pl-4 border-l-2">
+            <div className="space-y-2">
+              <Label htmlFor="max-file-size">Max File Size (MB)</Label>
+              <Input
+                id="max-file-size"
+                type="number"
+                min="1"
+                max="50"
+                value={config.maxFileSize}
+                onChange={(e) => saveConfig({ maxFileSize: parseInt(e.target.value) })}
+              />
+              <p className="text-xs text-muted-foreground">
+                Maximum size per file in megabytes
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <Separator />
+
       {/* Branding Section */}
       <div className="space-y-3">
         <h3 className="text-sm font-medium">Branding</h3>
