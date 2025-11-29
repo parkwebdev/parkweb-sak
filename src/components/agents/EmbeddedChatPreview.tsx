@@ -3,13 +3,13 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { X, Send01, MessageChatCircle, Minimize02 } from '@untitledui/icons';
-import type { WidgetConfig } from '@/hooks/useWidgetConfig';
+import type { EmbeddedChatConfig } from '@/hooks/useEmbeddedChatConfig';
 
-interface WidgetPreviewProps {
-  config: WidgetConfig;
+interface EmbeddedChatPreviewProps {
+  config: EmbeddedChatConfig;
 }
 
-export const WidgetPreview = ({ config }: WidgetPreviewProps) => {
+export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Array<{ role: 'user' | 'assistant'; content: string }>>([
     { role: 'assistant', content: config.greeting },
@@ -28,7 +28,7 @@ export const WidgetPreview = ({ config }: WidgetPreviewProps) => {
         <p>Website Preview Area</p>
       </div>
 
-      {/* Widget Container */}
+      {/* Chat Container */}
       <div className={`absolute ${positionClasses[config.position]} z-10`}>
         {isOpen ? (
           <Card 
