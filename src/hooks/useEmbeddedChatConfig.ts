@@ -118,8 +118,12 @@ export const useEmbeddedChatConfig = (agentId: string) => {
     gradientEndColor: '#1e40af',
     
     // Team Avatars
-    showTeamAvatars: false,
-    teamAvatarUrls: [],
+    showTeamAvatars: true,
+    teamAvatarUrls: [
+      'https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah',
+      'https://api.dicebear.com/7.x/avataaars/svg?seed=John',
+      'https://api.dicebear.com/7.x/avataaars/svg?seed=Emma',
+    ],
     
     // Real-time Indicators
     showTypingIndicator: true,

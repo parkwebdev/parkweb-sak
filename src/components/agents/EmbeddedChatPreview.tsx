@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { X, Send01, Minimize02, Home05, MessageChatCircle, HelpCircle, ChevronRight, Zap, BookOpen01, Check, Microphone01, Attachment01 } from '@untitledui/icons';
 import type { EmbeddedChatConfig } from '@/hooks/useEmbeddedChatConfig';
 import { ChatBubbleIcon } from './ChatBubbleIcon';
@@ -10,6 +11,7 @@ import { AudioPlayer } from '@/components/chat/AudioPlayer';
 import { FileDropZone } from '@/components/chat/FileDropZone';
 import { MessageFileAttachment } from '@/components/chat/FileAttachment';
 import { MessageReactions, Reaction } from '@/components/chat/MessageReactions';
+import { BubbleBackground } from '@/components/ui/bubble-background';
 
 interface EmbeddedChatPreviewProps {
   config: EmbeddedChatConfig;
@@ -180,7 +182,7 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
   };
 
   return (
-    <div className="relative h-[600px] bg-muted/30 rounded-lg p-4 overflow-hidden">
+    <div className="relative min-h-[700px] bg-muted/30 rounded-lg p-4 overflow-hidden">
       <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
         <p>Website Preview Area</p>
       </div>
@@ -190,63 +192,117 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
         <div className={`absolute ${positionClasses[config.position]} z-10`}>
           {isOpen ? (
             <Card 
-              className="w-[380px] h-[600px] flex flex-col shadow-xl overflow-hidden"
+              className="w-[380px] max-h-[650px] flex flex-col shadow-xl overflow-hidden"
               style={{ 
                 borderColor: config.primaryColor,
                 borderWidth: '2px',
               }}
             >
-              {/* Gradient Header */}
-              <div 
-                className="p-4 flex items-center justify-between relative"
-                style={getGradientStyle()}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
-                    <ChatBubbleIcon className="h-6 w-6 text-white" />
+              {/* Header/Hero - Dynamic based on view */}
+              {currentView === 'home' ? (
+                // Large Hero Header for Home View
+                <div className="relative h-[180px] overflow-hidden">
+                  {/* Animated Background */}
+                  <BubbleBackground 
+                    interactive 
+                    primaryColor={config.primaryColor}
+                    gradientEndColor={config.gradientEndColor}
+                    className="absolute inset-0"
+                  />
+                  
+                  {/* Hero Content */}
+                  <div className="relative z-10 h-full flex flex-col items-center justify-center p-6 text-center">
+                    {/* Team Avatars */}
+                    {config.showTeamAvatars && config.teamAvatarUrls.length > 0 && (
+                      <div className="flex -space-x-2 mb-4">
+                        {config.teamAvatarUrls.slice(0, 3).map((avatarUrl, idx) => (
+                          <Avatar key={idx} className="w-10 h-10 border-2 border-white ring-2 ring-white/20">
+                            <AvatarImage src={avatarUrl} />
+                            <AvatarFallback className="bg-white/20 text-white text-xs">
+                              {String.fromCharCode(65 + idx)}
+                            </AvatarFallback>
+                          </Avatar>
+                        ))}
+                      </div>
+                    )}
+                    
+                    {/* Large Greeting */}
+                    <div className="space-y-2">
+                      <h2 className="text-3xl font-bold text-white">
+                        {config.welcomeTitle} {config.welcomeEmoji}
+                      </h2>
+                      <p className="text-white/90 text-base">
+                        {config.welcomeSubtitle}
+                      </p>
+                    </div>
                   </div>
                   
-                  {currentView === 'home' && (
-                    <div>
-                      <h3 className="font-semibold text-white text-lg">{config.welcomeTitle} {config.welcomeEmoji}</h3>
-                      <p className="text-xs text-white/90">{config.welcomeSubtitle}</p>
-                    </div>
-                  )}
-                  
-                  {currentView === 'messages' && (
-                    <div>
-                      <h3 className="font-semibold text-white">{config.agentName}</h3>
-                      <p className="text-xs text-white/80">Online</p>
-                    </div>
-                  )}
-                  
-                  {currentView === 'help' && (
-                    <div>
-                      <h3 className="font-semibold text-white">Help Center</h3>
-                      <p className="text-xs text-white/80">Browse articles</p>
-                    </div>
-                  )}
+                  {/* Close button overlay */}
+                  <div className="absolute top-3 right-3 z-20 flex gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-white hover:bg-white/10 h-8 w-8"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      <Minimize02 className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-white hover:bg-white/10 h-8 w-8"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
-                
-                <div className="flex gap-1">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-white hover:bg-white/10 h-8 w-8"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    <Minimize02 className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-white hover:bg-white/10 h-8 w-8"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
+              ) : (
+                // Compact Header for Messages/Help View
+                <div 
+                  className="p-4 flex items-center justify-between relative"
+                  style={getGradientStyle()}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+                      <ChatBubbleIcon className="h-6 w-6 text-white" />
+                    </div>
+                    
+                    {currentView === 'messages' && (
+                      <div>
+                        <h3 className="font-semibold text-white">{config.agentName}</h3>
+                        <p className="text-xs text-white/80">Online</p>
+                      </div>
+                    )}
+                    
+                    {currentView === 'help' && (
+                      <div>
+                        <h3 className="font-semibold text-white">Help Center</h3>
+                        <p className="text-xs text-white/80">Browse articles</p>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="flex gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-white hover:bg-white/10 h-8 w-8"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      <Minimize02 className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-white hover:bg-white/10 h-8 w-8"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Content Area */}
               <div className="flex-1 overflow-hidden bg-background flex flex-col">
