@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { File02 } from '@untitledui/icons';
+import { PdfIcon, CsvIcon } from './ExportIcons';
 import { generateCSVReport, generatePDFReport } from '@/lib/report-export';
 import { toast } from 'sonner';
 
@@ -49,8 +49,8 @@ export const ExportButtons = ({ data, startDate, endDate, orgName }: ExportButto
       <div className="flex gap-2">
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="outline" size="icon" onClick={handleExportCSV}>
-              <File02 className="h-4 w-4 text-emerald-600" />
+            <Button variant="outline" size="icon" onClick={handleExportCSV} className="h-10 w-10">
+              <CsvIcon className="h-5 w-5" />
             </Button>
           </TooltipTrigger>
           <TooltipContent>
@@ -60,8 +60,8 @@ export const ExportButtons = ({ data, startDate, endDate, orgName }: ExportButto
         
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="outline" size="icon" onClick={handleExportPDF}>
-              <File02 className="h-4 w-4 text-red-600" />
+            <Button variant="outline" size="icon" onClick={handleExportPDF} className="h-10 w-10">
+              <PdfIcon className="h-5 w-5" />
             </Button>
           </TooltipTrigger>
           <TooltipContent>
