@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useOrganization } from '@/contexts/OrganizationContext';
-import { subDays, format, startOfDay, endOfDay } from 'date-fns';
+import { format } from 'date-fns';
 
 interface ConversationStats {
   date: string;
@@ -35,11 +35,23 @@ interface UsageMetrics {
   api_calls: number;
 }
 
-export const useAnalytics = (days: number = 30) => {
+interface AnalyticsFilters {
+  agentId: string;
+  leadStatus: string;
+  conversationStatus: string;
+}
+
+export const useAnalytics = (
+  startDate: Date,
+  endDate: Date,
+  filters: AnalyticsFilters
+) => {
   const [conversationStats, setConversationStats] = useState<ConversationStats[]>([]);
   const [leadStats, setLeadStats] = useState<LeadStats[]>([]);
   const [agentPerformance, setAgentPerformance] = useState<AgentPerformance[]>([]);
   const [usageMetrics, setUsageMetrics] = useState<UsageMetrics[]>([]);
+  const [conversations, setConversations] = useState<any[]>([]);
+  const [leads, setLeads] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const { currentOrg } = useOrganization();
@@ -48,15 +60,26 @@ export const useAnalytics = (days: number = 30) => {
     if (!currentOrg) return;
 
     try {
-      const startDate = subDays(new Date(), days);
-      
-      const { data, error } = await supabase
+      let query = supabase
         .from('conversations')
-        .select('created_at, status')
+        .select('created_at, status, agent_id, metadata')
         .eq('org_id', currentOrg.id)
-        .gte('created_at', startDate.toISOString());
+        .gte('created_at', startDate.toISOString())
+        .lte('created_at', endDate.toISOString());
+
+      if (filters.agentId !== 'all') {
+        query = query.eq('agent_id', filters.agentId);
+      }
+      if (filters.conversationStatus !== 'all') {
+        query = query.eq('status', filters.conversationStatus as 'active' | 'closed' | 'human_takeover');
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
+
+      // Set raw conversations for data table
+      setConversations(data || []);
 
       // Group by date
       const statsByDate: { [key: string]: ConversationStats } = {};
@@ -83,15 +106,23 @@ export const useAnalytics = (days: number = 30) => {
     if (!currentOrg) return;
 
     try {
-      const startDate = subDays(new Date(), days);
-      
-      const { data, error } = await supabase
+      let query = supabase
         .from('leads')
-        .select('created_at, status')
+        .select('created_at, status, name, email, company')
         .eq('org_id', currentOrg.id)
-        .gte('created_at', startDate.toISOString());
+        .gte('created_at', startDate.toISOString())
+        .lte('created_at', endDate.toISOString());
+
+      if (filters.leadStatus !== 'all') {
+        query = query.eq('status', filters.leadStatus as 'new' | 'contacted' | 'qualified' | 'converted');
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
+
+      // Set raw leads for data table
+      setLeads(data || []);
 
       // Group by date
       const statsByDate: { [key: string]: LeadStats } = {};
@@ -137,11 +168,19 @@ export const useAnalytics = (days: number = 30) => {
       const performance: AgentPerformance[] = [];
 
       for (const agent of agents || []) {
-        const { count } = await supabase
+        let countQuery = supabase
           .from('conversations')
           .select('*', { count: 'exact', head: true })
           .eq('agent_id', agent.id)
-          .eq('org_id', currentOrg.id);
+          .eq('org_id', currentOrg.id)
+          .gte('created_at', startDate.toISOString())
+          .lte('created_at', endDate.toISOString());
+
+        if (filters.agentId !== 'all' && filters.agentId !== agent.id) {
+          continue;
+        }
+
+        const { count } = await countQuery;
 
         performance.push({
           agent_id: agent.id,
@@ -162,13 +201,12 @@ export const useAnalytics = (days: number = 30) => {
     if (!currentOrg) return;
 
     try {
-      const startDate = subDays(new Date(), days);
-      
       const { data, error } = await supabase
         .from('usage_metrics')
         .select('*')
         .eq('org_id', currentOrg.id)
         .gte('period_start', startDate.toISOString())
+        .lte('period_end', endDate.toISOString())
         .order('period_start', { ascending: true });
 
       if (error) throw error;
@@ -246,13 +284,15 @@ export const useAnalytics = (days: number = 30) => {
       supabase.removeChannel(conversationsChannel);
       supabase.removeChannel(leadsChannel);
     };
-  }, [currentOrg?.id, days]);
+  }, [currentOrg?.id, startDate, endDate, filters]);
 
   return {
     conversationStats,
     leadStats,
     agentPerformance,
     usageMetrics,
+    conversations,
+    leads,
     loading,
     refetch: fetchAllData,
   };

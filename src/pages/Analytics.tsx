@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { RefreshCcw01, Menu01 as Menu } from '@untitledui/icons';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { ConversationChart } from '@/components/analytics/ConversationChart';
@@ -8,6 +8,11 @@ import { LeadConversionChart } from '@/components/analytics/LeadConversionChart'
 import { AgentPerformanceChart } from '@/components/analytics/AgentPerformanceChart';
 import { UsageMetricsChart } from '@/components/analytics/UsageMetricsChart';
 import { AnalyticsKPIs } from '@/components/analytics/AnalyticsKPIs';
+import { DateRangePicker } from '@/components/analytics/DateRangePicker';
+import { ReportFiltersPanel, ReportFilters } from '@/components/analytics/ReportFilters';
+import { ReportBuilder } from '@/components/analytics/ReportBuilder';
+import { DataTables } from '@/components/analytics/DataTables';
+import { ExportButtons } from '@/components/analytics/ExportButtons';
 import { useOrganization } from '@/contexts/OrganizationContext';
 
 interface AnalyticsProps {
@@ -16,15 +21,34 @@ interface AnalyticsProps {
 
 const Analytics: React.FC<AnalyticsProps> = ({ onMenuClick }) => {
   const { currentOrg } = useOrganization();
-  const [timeRange, setTimeRange] = useState<number>(30);
+  const [activeTab, setActiveTab] = useState('overview');
+  const [dataTableTab, setDataTableTab] = useState<'conversations' | 'leads' | 'agents' | 'usage'>('conversations');
+  
+  // Date range state
+  const [startDate, setStartDate] = useState<Date>(() => {
+    const date = new Date();
+    date.setDate(date.getDate() - 30);
+    return date;
+  });
+  const [endDate, setEndDate] = useState<Date>(new Date());
+
+  // Filters state
+  const [filters, setFilters] = useState<ReportFilters>({
+    agentId: 'all',
+    leadStatus: 'all',
+    conversationStatus: 'all',
+  });
+
   const { 
     conversationStats, 
     leadStats, 
     agentPerformance, 
     usageMetrics,
+    conversations,
+    leads,
     loading,
     refetch 
-  } = useAnalytics(timeRange);
+  } = useAnalytics(startDate, endDate, filters);
 
   // Calculate KPIs
   const totalConversations = conversationStats.reduce((sum, stat) => sum + stat.total, 0);
@@ -60,6 +84,23 @@ const Analytics: React.FC<AnalyticsProps> = ({ onMenuClick }) => {
     },
   ];
 
+  const analyticsData = {
+    conversationStats,
+    leadStats,
+    agentPerformance,
+    usageMetrics,
+    conversations,
+    leads,
+    totalConversations,
+    totalLeads,
+    conversationsChange: 12.5,
+    leadsChange: 8.3,
+    conversionRate,
+    conversionChange: 5.2,
+    totalMessages,
+    messagesChange: 15.7,
+  };
+
   return (
     <main className="flex-1 bg-muted/30 min-h-screen pt-4 lg:pt-8">
       <header className="w-full font-medium">
@@ -75,57 +116,102 @@ const Analytics: React.FC<AnalyticsProps> = ({ onMenuClick }) => {
                 <Menu size={16} />
               </Button>
               <div className="flex-1 sm:flex-none">
-                <h1 className="text-2xl font-bold text-foreground">Analytics</h1>
+                <h1 className="text-2xl font-bold text-foreground">Analytics & Reports</h1>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Real-time insights for {currentOrg?.name || 'your organization'}
+                  Real-time insights and custom reports for {currentOrg?.name || 'your organization'}
                 </p>
               </div>
             </div>
             <div className="flex gap-2">
-              <Tabs value={timeRange.toString()} onValueChange={(v) => setTimeRange(Number(v))}>
-                <TabsList>
-                  <TabsTrigger value="7">7 days</TabsTrigger>
-                  <TabsTrigger value="30">30 days</TabsTrigger>
-                  <TabsTrigger value="90">90 days</TabsTrigger>
-                </TabsList>
-              </Tabs>
+              <ExportButtons 
+                data={analyticsData}
+                startDate={startDate}
+                endDate={endDate}
+                orgName={currentOrg?.name || 'Organization'}
+              />
               <Button variant="outline" size="icon" onClick={refetch} disabled={loading}>
                 <RefreshCcw01 className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
               </Button>
             </div>
           </div>
+
+          {/* Date Range Picker */}
+          <DateRangePicker
+            startDate={startDate}
+            endDate={endDate}
+            onDateChange={(start, end) => {
+              setStartDate(start);
+              setEndDate(end);
+            }}
+          />
+
+          {/* Filters */}
+          <ReportFiltersPanel filters={filters} onFiltersChange={setFilters} />
         </div>
       </header>
 
-      <div className="px-4 lg:px-8 mt-6 space-y-6">
+      <div className="px-4 lg:px-8 mt-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="mb-6">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="reports">Reports</TabsTrigger>
+            <TabsTrigger value="data">Data</TabsTrigger>
+          </TabsList>
 
-        {/* KPIs */}
-        <AnalyticsKPIs kpis={kpis} />
+          {/* Overview Tab */}
+          <TabsContent value="overview" className="space-y-6">
+            <AnalyticsKPIs kpis={kpis} />
 
-        {/* Charts Grid */}
-        {loading ? (
-          <div className="text-center py-12 text-muted-foreground">
-            Loading analytics data...
-          </div>
-        ) : (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <ConversationChart data={conversationStats} />
-              <LeadConversionChart data={leadStats} />
-            </div>
+            {loading ? (
+              <div className="text-center py-12 text-muted-foreground">
+                Loading analytics data...
+              </div>
+            ) : (
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <ConversationChart data={conversationStats} />
+                  <LeadConversionChart data={leadStats} />
+                </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <AgentPerformanceChart data={agentPerformance} />
-              <UsageMetricsChart data={usageMetrics} />
-            </div>
-          </div>
-        )}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <AgentPerformanceChart data={agentPerformance} />
+                  <UsageMetricsChart data={usageMetrics} />
+                </div>
+              </div>
+            )}
 
-        {!loading && conversationStats.length === 0 && (
-          <div className="text-center py-12 text-muted-foreground">
-            No data available for the selected time range
-          </div>
-        )}
+            {!loading && conversationStats.length === 0 && (
+              <div className="text-center py-12 text-muted-foreground">
+                No data available for the selected time range
+              </div>
+            )}
+          </TabsContent>
+
+          {/* Reports Tab */}
+          <TabsContent value="reports">
+            <ReportBuilder 
+              data={analyticsData}
+              startDate={startDate}
+              endDate={endDate}
+            />
+          </TabsContent>
+
+          {/* Data Tab */}
+          <TabsContent value="data" className="space-y-6">
+            <Tabs value={dataTableTab} onValueChange={(v) => setDataTableTab(v as any)}>
+              <TabsList>
+                <TabsTrigger value="conversations">Conversations</TabsTrigger>
+                <TabsTrigger value="leads">Leads</TabsTrigger>
+                <TabsTrigger value="agents">Agents</TabsTrigger>
+                <TabsTrigger value="usage">Usage</TabsTrigger>
+              </TabsList>
+
+              <div className="mt-6">
+                <DataTables activeTab={dataTableTab} data={analyticsData} />
+              </div>
+            </Tabs>
+          </TabsContent>
+        </Tabs>
       </div>
     </main>
   );
