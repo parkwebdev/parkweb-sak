@@ -428,6 +428,26 @@ export const EmbeddedChatDesigner = ({ agentId }: EmbeddedChatDesignerProps) => 
 
       <Separator />
 
+      {/* Audio Messages */}
+      <div className="space-y-3">
+        <h3 className="text-sm font-medium">Audio Messages</h3>
+        <div className="flex items-center justify-between">
+          <div className="space-y-0.5">
+            <Label htmlFor="audio-messages">Enable Audio Messages</Label>
+            <p className="text-xs text-muted-foreground">
+              Allow users to record and send voice messages
+            </p>
+          </div>
+          <Switch
+            id="audio-messages"
+            checked={config.enableAudioMessages}
+            onCheckedChange={(checked) => saveConfig({ enableAudioMessages: checked })}
+          />
+        </div>
+      </div>
+
+      <Separator />
+
       {/* Branding Section */}
       <div className="space-y-3">
         <h3 className="text-sm font-medium">Branding</h3>

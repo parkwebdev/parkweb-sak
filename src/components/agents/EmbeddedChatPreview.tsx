@@ -2,9 +2,11 @@ import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { X, Send01, Minimize02, Home05, MessageChatCircle, HelpCircle, ChevronRight, Zap, BookOpen01, Check } from '@untitledui/icons';
+import { X, Send01, Minimize02, Home05, MessageChatCircle, HelpCircle, ChevronRight, Zap, BookOpen01, Check, Microphone01 } from '@untitledui/icons';
 import type { EmbeddedChatConfig } from '@/hooks/useEmbeddedChatConfig';
 import { ChatBubbleIcon } from './ChatBubbleIcon';
+import { AudioRecorder } from '@/components/chat/AudioRecorder';
+import { AudioPlayer } from '@/components/chat/AudioPlayer';
 
 interface EmbeddedChatPreviewProps {
   config: EmbeddedChatConfig;
@@ -19,13 +21,16 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
   const [showTeaser, setShowTeaser] = useState(false);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [isTyping, setIsTyping] = useState(false);
+  const [isRecordingAudio, setIsRecordingAudio] = useState(false);
   const [messages, setMessages] = useState<Array<{ 
     role: 'user' | 'assistant'; 
     content: string;
     read?: boolean;
     timestamp: Date;
+    audioUrl?: string;
+    type?: 'text' | 'audio';
   }>>([
-    { role: 'assistant', content: config.greeting, read: true, timestamp: new Date() },
+    { role: 'assistant', content: config.greeting, read: true, timestamp: new Date(), type: 'text' },
   ]);
   
   // Mock conversation history
@@ -290,16 +295,20 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
                               key={idx}
                               className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'} animate-fade-in`}
                             >
-                              <div
-                                className={`max-w-[80%] rounded-lg px-4 py-2 ${
-                                  msg.role === 'user'
-                                    ? 'text-white'
-                                    : 'bg-muted'
-                                }`}
-                                style={msg.role === 'user' ? { backgroundColor: config.primaryColor } : {}}
-                              >
-                                <p className="text-sm">{msg.content}</p>
-                              </div>
+                               <div
+                                 className={`max-w-[80%] rounded-lg px-4 py-2 ${
+                                   msg.role === 'user'
+                                     ? 'text-white'
+                                     : 'bg-muted'
+                                 }`}
+                                 style={msg.role === 'user' ? { backgroundColor: config.primaryColor } : {}}
+                               >
+                                 {msg.type === 'audio' && msg.audioUrl ? (
+                                   <AudioPlayer audioUrl={msg.audioUrl} primaryColor={config.primaryColor} />
+                                 ) : (
+                                   <p className="text-sm">{msg.content}</p>
+                                 )}
+                               </div>
                               
                               {/* Read Receipt */}
                               {config.showReadReceipts && msg.role === 'user' && (
@@ -344,17 +353,58 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
                         </div>
 
                         {/* Input */}
-                        <div className="p-4 border-t">
-                          <div className="flex gap-2">
-                            <Input
-                              placeholder={config.placeholder}
-                              className="flex-1"
-                            />
-                            <Button size="icon" style={{ backgroundColor: config.primaryColor }}>
-                              <Send01 className="h-4 w-4 text-white" />
-                            </Button>
+                        {isRecordingAudio ? (
+                          <AudioRecorder
+                            onRecordingComplete={(audioBlob: Blob) => {
+                              const audioUrl = URL.createObjectURL(audioBlob);
+                              const newMessage = {
+                                role: 'user' as const,
+                                content: 'Voice message',
+                                audioUrl,
+                                read: false,
+                                timestamp: new Date(),
+                                type: 'audio' as const,
+                              };
+                              setMessages(prev => [...prev, newMessage]);
+                              setIsRecordingAudio(false);
+                              
+                              // Simulate AI response
+                              setIsTyping(true);
+                              setTimeout(() => {
+                                setMessages(prev => [...prev, {
+                                  role: 'assistant' as const,
+                                  content: 'I received your voice message!',
+                                  timestamp: new Date(),
+                                  type: 'text' as const,
+                                }]);
+                                setIsTyping(false);
+                              }, 2000);
+                            }}
+                            onCancel={() => setIsRecordingAudio(false)}
+                            primaryColor={config.primaryColor}
+                          />
+                        ) : (
+                          <div className="p-4 border-t">
+                            <div className="flex gap-2">
+                              <Input
+                                placeholder={config.placeholder}
+                                className="flex-1"
+                              />
+                              {config.enableAudioMessages && (
+                                <Button
+                                  size="icon"
+                                  variant="outline"
+                                  onClick={() => setIsRecordingAudio(true)}
+                                >
+                                  <Microphone01 className="h-4 w-4" />
+                                </Button>
+                              )}
+                              <Button size="icon" style={{ backgroundColor: config.primaryColor }}>
+                                <Send01 className="h-4 w-4 text-white" />
+                              </Button>
+                            </div>
                           </div>
-                        </div>
+                        )}
                       </>
                     ) : (
                       <>
