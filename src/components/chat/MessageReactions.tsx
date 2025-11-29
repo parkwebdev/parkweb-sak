@@ -70,22 +70,20 @@ export const MessageReactions: React.FC<MessageReactionsProps> = ({
       ))}
 
       {compact ? (
-        <div className="relative">
+        <div 
+          className="relative"
+          onMouseEnter={() => setShowQuickPicker(true)}
+          onMouseLeave={() => setShowQuickPicker(false)}
+        >
           <Button
             variant="ghost"
             size="sm"
             className="h-6 w-6 p-0"
-            onMouseEnter={() => setShowQuickPicker(true)}
-            onMouseLeave={() => setShowQuickPicker(false)}
           >
             <FaceSmile className="h-3 w-3 text-muted-foreground" />
           </Button>
           {showQuickPicker && (
-            <div
-              className="absolute bottom-full left-0 mb-1 z-50"
-              onMouseEnter={() => setShowQuickPicker(true)}
-              onMouseLeave={() => setShowQuickPicker(false)}
-            >
+            <div className="absolute bottom-full left-0 mb-1 z-50">
               <QuickEmojiPicker
                 onEmojiSelect={handleEmojiSelect}
                 primaryColor={primaryColor}
