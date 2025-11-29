@@ -53,8 +53,8 @@ export const SubscriptionSettings = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-xl lg:text-2xl font-semibold text-foreground">Subscription</h1>
-        <p className="text-sm text-muted-foreground mt-1">
+        <h1 className="text-sm font-semibold text-foreground">Subscription</h1>
+        <p className="text-xs text-muted-foreground mt-1">
           Manage your subscription and billing
         </p>
       </div>
@@ -82,8 +82,8 @@ export const SubscriptionSettings = () => {
             <>
               <div className="flex items-center justify-between p-6 border rounded-lg bg-accent/50">
                 <div>
-                  <h3 className="text-2xl font-bold">{plan.name}</h3>
-                  <p className="text-muted-foreground mt-1">
+                  <h3 className="text-base font-bold">{plan.name}</h3>
+                  <p className="text-xs text-muted-foreground mt-1">
                     ${(plan.price_monthly / 100).toFixed(2)}/month
                   </p>
                 </div>

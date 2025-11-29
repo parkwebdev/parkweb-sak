@@ -76,8 +76,8 @@ export const SettingsLayout: React.FC<SettingsLayoutContentProps> = ({
             <Menu size={20} />
           </button>
           <div>
-            <h2 className="text-lg font-semibold text-foreground">Settings</h2>
-            <p className="text-sm text-muted-foreground">
+            <h2 className="text-sm font-semibold text-foreground">Settings</h2>
+            <p className="text-xs text-muted-foreground">
               Manage your account and preferences
             </p>
           </div>
@@ -107,8 +107,8 @@ export const SettingsLayout: React.FC<SettingsLayoutContentProps> = ({
       <div className="hidden lg:block w-64 flex-shrink-0">
         <div className="sticky top-8">
           <div className="mb-6">
-            <h2 className="text-lg font-semibold text-foreground mb-1">Settings</h2>
-            <p className="text-sm text-muted-foreground">
+            <h2 className="text-sm font-semibold text-foreground mb-1">Settings</h2>
+            <p className="text-xs text-muted-foreground">
               Manage your account and preferences
             </p>
           </div>
