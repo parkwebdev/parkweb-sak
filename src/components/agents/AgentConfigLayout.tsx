@@ -1,8 +1,8 @@
 import React from 'react';
-import { Settings01 as Settings, Database01, Tool01, Code01, MessageCircle02 } from '@untitledui/icons';
+import { Settings01 as Settings, Database01, Tool01, Code01, MessageCircle02, Announcement01 } from '@untitledui/icons';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-export type AgentConfigTab = 'configure' | 'behavior' | 'knowledge' | 'tools' | 'embed';
+export type AgentConfigTab = 'configure' | 'behavior' | 'knowledge' | 'tools' | 'embed' | 'announcements';
 
 interface AgentConfigLayoutProps {
   activeTab: AgentConfigTab;
@@ -60,6 +60,15 @@ export const AgentConfigLayout: React.FC<AgentConfigLayoutProps> = ({
             >
               <Code01 size={16} className="mr-2" />
               Embed
+            </TabsTrigger>
+            
+            <TabsTrigger
+              value="announcements"
+              className="h-12 px-0 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+            >
+              <Announcement01 size={16} className="mr-2" />
+              <span className="hidden sm:inline">Announcements</span>
+              <span className="sm:hidden">News</span>
             </TabsTrigger>
           </TabsList>
         </div>

@@ -105,6 +105,72 @@ export type Database = {
           },
         ]
       }
+      announcements: {
+        Row: {
+          action_type: string | null
+          action_url: string | null
+          agent_id: string
+          background_color: string | null
+          created_at: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          order_index: number | null
+          org_id: string
+          subtitle: string | null
+          title: string
+          title_color: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          action_type?: string | null
+          action_url?: string | null
+          agent_id: string
+          background_color?: string | null
+          created_at?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          order_index?: number | null
+          org_id: string
+          subtitle?: string | null
+          title: string
+          title_color?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          action_type?: string | null
+          action_url?: string | null
+          agent_id?: string
+          background_color?: string | null
+          created_at?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          order_index?: number | null
+          org_id?: string
+          subtitle?: string | null
+          title?: string
+          title_color?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "announcements_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "announcements_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       api_keys: {
         Row: {
           created_at: string
