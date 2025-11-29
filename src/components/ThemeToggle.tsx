@@ -2,6 +2,7 @@ import { Moon02 as Moon, Sun } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/components/ThemeProvider';
 import { useModeAnimation, ThemeAnimationType } from 'react-theme-switch-animation';
+import { createPortal } from 'react-dom';
 
 interface ThemeToggleProps {
   isCollapsed?: boolean;
@@ -25,12 +26,15 @@ export function ThemeToggle({ isCollapsed = false }: ThemeToggleProps) {
 
   return (
     <>
-      {/* Hidden element in screen center for animation origin */}
-      <div 
-        ref={ref as any}
-        className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-[9999]"
-        aria-hidden="true"
-      />
+      {/* Portal the animation trigger to document body so it's not constrained by sidebar */}
+      {createPortal(
+        <div 
+          ref={ref as any}
+          className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-[9999]"
+          aria-hidden="true"
+        />,
+        document.body
+      )}
       
       {/* Visible button */}
       <Button 
