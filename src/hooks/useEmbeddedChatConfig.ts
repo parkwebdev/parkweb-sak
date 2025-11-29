@@ -19,6 +19,15 @@ export interface QuickAction {
   action: 'start_chat' | 'open_help' | 'open_contact' | 'custom_url';
 }
 
+export interface HelpArticle {
+  id: string;
+  title: string;
+  content: string;
+  category: string;
+  icon?: string;
+  order: number;
+}
+
 export interface EmbeddedChatConfig {
   agentId: string;
   primaryColor: string;
@@ -42,8 +51,7 @@ export interface EmbeddedChatConfig {
   welcomeTitle: string;
   welcomeSubtitle: string;
   
-  // Quick Actions
-  showQuickActions: boolean;
+  // Quick Actions (always shown)
   quickActions: QuickAction[];
   
   // Bottom Navigation
@@ -59,20 +67,12 @@ export interface EmbeddedChatConfig {
   showTeamAvatars: boolean;
   teamAvatarUrls: string[];
   
-  // Real-time Indicators
-  showTypingIndicator: boolean;
+  // Real-time Indicators (always enabled)
   showReadReceipts: boolean;
   
-  // Audio Messages
-  enableAudioMessages: boolean;
-  
-  // File Attachments
-  enableFileAttachments: boolean;
+  // File Attachments (always enabled)
   maxFileSize: number;
   allowedFileTypes: string[];
-  
-  // Emoji Reactions
-  enableEmojiReactions: boolean;
   
   // Contact Form
   enableContactForm: boolean;
@@ -83,11 +83,13 @@ export interface EmbeddedChatConfig {
   // View Transitions
   viewTransition: 'slide' | 'fade' | 'none';
   
-  // Chat Settings
-  enableChatSettings: boolean;
+  // Chat Settings (simplified - only sound and auto-scroll)
   defaultSoundEnabled: boolean;
   defaultAutoScroll: boolean;
-  defaultCompactMode: boolean;
+  
+  // Help Articles
+  helpArticles: HelpArticle[];
+  helpCategories: string[];
 }
 
 export const useEmbeddedChatConfig = (agentId: string) => {
@@ -113,8 +115,7 @@ export const useEmbeddedChatConfig = (agentId: string) => {
     welcomeTitle: 'Hi',
     welcomeSubtitle: 'How can we help you today?',
     
-    // Quick Actions
-    showQuickActions: true,
+    // Quick Actions (always shown)
     quickActions: [
       {
         id: 'start-chat',
@@ -156,20 +157,12 @@ export const useEmbeddedChatConfig = (agentId: string) => {
       'https://api.dicebear.com/7.x/avataaars/svg?seed=Emma',
     ],
     
-    // Real-time Indicators
-    showTypingIndicator: true,
+    // Real-time Indicators (typing always enabled, read receipts configurable)
     showReadReceipts: true,
     
-    // Audio Messages
-    enableAudioMessages: true,
-    
-    // File Attachments
-    enableFileAttachments: true,
+    // File Attachments (always enabled)
     maxFileSize: 10,
     allowedFileTypes: ['image', 'document'],
-    
-    // Emoji Reactions
-    enableEmojiReactions: true,
     
     // Contact Form
     enableContactForm: true,
@@ -180,11 +173,13 @@ export const useEmbeddedChatConfig = (agentId: string) => {
     // View Transitions
     viewTransition: 'slide',
     
-    // Chat Settings
-    enableChatSettings: true,
+    // Chat Settings (simplified)
     defaultSoundEnabled: true,
     defaultAutoScroll: true,
-    defaultCompactMode: false,
+    
+    // Help Articles
+    helpArticles: [],
+    helpCategories: [],
   });
 
   const [config, setConfig] = useState<EmbeddedChatConfig>(getDefaultConfig());
@@ -318,13 +313,9 @@ export const useEmbeddedChatConfig = (agentId: string) => {
     script.setAttribute('data-welcome-subtitle', '${config.welcomeSubtitle}');
     script.setAttribute('data-use-gradient-header', '${config.useGradientHeader}');
     script.setAttribute('data-gradient-end-color', '${config.gradientEndColor}');
-    script.setAttribute('data-show-typing-indicator', '${config.showTypingIndicator}');
     script.setAttribute('data-show-read-receipts', '${config.showReadReceipts}');
-    script.setAttribute('data-enable-audio-messages', '${config.enableAudioMessages}');
-    script.setAttribute('data-enable-file-attachments', '${config.enableFileAttachments}');
     script.setAttribute('data-max-file-size', '${config.maxFileSize}');
     script.setAttribute('data-allowed-file-types', '${config.allowedFileTypes.join(',')}');
-    script.setAttribute('data-enable-emoji-reactions', '${config.enableEmojiReactions}');
     ${config.avatarUrl ? `script.setAttribute('data-avatar-url', '${config.avatarUrl}');` : ''}
     document.head.appendChild(script);
   })();
