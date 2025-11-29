@@ -53,60 +53,40 @@ export const EmbeddedChatDesigner = ({ agentId }: EmbeddedChatDesignerProps) => 
       <div className="space-y-3">
         <h3 className="text-sm font-medium">Appearance</h3>
         
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="primary-color">Primary Color</Label>
-            <div className="flex items-center gap-2">
-              <Input
-                id="primary-color"
-                type="color"
-                value={config.primaryColor}
-                onChange={(e) => saveConfig({ primaryColor: e.target.value })}
-                className="w-20 h-10 cursor-pointer"
-              />
-              <Input
-                value={config.primaryColor}
-                onChange={(e) => saveConfig({ primaryColor: e.target.value })}
-                placeholder="#000000"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="secondary-color">Secondary Color</Label>
-            <div className="flex items-center gap-2">
-              <Input
-                id="secondary-color"
-                type="color"
-                value={config.secondaryColor}
-                onChange={(e) => saveConfig({ secondaryColor: e.target.value })}
-                className="w-20 h-10 cursor-pointer"
-              />
-              <Input
-                value={config.secondaryColor}
-                onChange={(e) => saveConfig({ secondaryColor: e.target.value })}
-                placeholder="#ffffff"
-              />
-            </div>
+        <div className="space-y-2">
+          <Label htmlFor="primary-color">Text/Button Color</Label>
+          <div className="flex items-center gap-2">
+            <Input
+              id="primary-color"
+              type="color"
+              value={config.primaryColor}
+              onChange={(e) => saveConfig({ primaryColor: e.target.value })}
+              className="w-20 h-10 cursor-pointer"
+            />
+            <Input
+              value={config.primaryColor}
+              onChange={(e) => saveConfig({ primaryColor: e.target.value })}
+              placeholder="#000000"
+            />
           </div>
         </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="position">Chat Position</Label>
-        <Select value={config.position} onValueChange={(value: any) => saveConfig({ position: value })}>
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent className="bg-background z-50">
-            <SelectItem value="bottom-right">Bottom Right</SelectItem>
-            <SelectItem value="bottom-left">Bottom Left</SelectItem>
-            <SelectItem value="top-right">Top Right</SelectItem>
-            <SelectItem value="top-left">Top Left</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+        <div className="space-y-2">
+          <Label htmlFor="position">Chat Position</Label>
+          <Select value={config.position} onValueChange={(value: any) => saveConfig({ position: value })}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="bg-background z-50">
+              <SelectItem value="bottom-right">Bottom Right</SelectItem>
+              <SelectItem value="bottom-left">Bottom Left</SelectItem>
+              <SelectItem value="top-right">Top Right</SelectItem>
+              <SelectItem value="top-left">Top Left</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
-      <div className="space-y-2">
+        <div className="space-y-2">
         <Label htmlFor="animation">Bubble Animation</Label>
         <Select value={config.animation} onValueChange={(value: any) => saveConfig({ animation: value })}>
           <SelectTrigger>
@@ -386,19 +366,6 @@ export const EmbeddedChatDesigner = ({ agentId }: EmbeddedChatDesignerProps) => 
           Typing indicator and read receipts are always enabled for a better user experience.
         </p>
 
-        <div className="flex items-center justify-between">
-          <div className="space-y-0.5">
-            <Label htmlFor="read-receipts">Read Receipts</Label>
-            <p className="text-xs text-muted-foreground">
-              Show checkmarks when messages are read
-            </p>
-          </div>
-          <Switch
-            id="read-receipts"
-            checked={config.showReadReceipts}
-            onCheckedChange={(checked) => saveConfig({ showReadReceipts: checked })}
-          />
-        </div>
       </div>
 
       <Separator />
