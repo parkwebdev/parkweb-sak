@@ -6,10 +6,10 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { useOrgBranding } from '@/hooks/useOrgBranding';
-import { Upload01, Trash02, AlertCircle } from '@untitledui/icons';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Upload01, Trash02 } from '@untitledui/icons';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
+import { SavedIndicator } from './SavedIndicator';
 
 export const BrandingSettings = () => {
   const { branding, loading, uploading, uploadLogo, updateBranding, deleteLogo } = useOrgBranding();
@@ -19,6 +19,7 @@ export const BrandingSettings = () => {
   const [secondaryColor, setSecondaryColor] = useState('#6366F1');
   const [customDomain, setCustomDomain] = useState('');
   const [hidePoweredBy, setHidePoweredBy] = useState(false);
+  const [savedFields, setSavedFields] = useState<Record<string, boolean>>({});
 
   // Sync state with branding data when it loads
   useEffect(() => {
@@ -29,6 +30,47 @@ export const BrandingSettings = () => {
       setHidePoweredBy(branding.hide_powered_by || false);
     }
   }, [branding]);
+
+  const showSaved = (field: string) => {
+    setSavedFields(prev => ({ ...prev, [field]: true }));
+    setTimeout(() => {
+      setSavedFields(prev => ({ ...prev, [field]: false }));
+    }, 2000);
+  };
+
+  // Auto-save color changes
+  useEffect(() => {
+    if (!primaryColor || primaryColor === branding?.primary_color) return;
+    
+    const timer = setTimeout(async () => {
+      await updateBranding({ primary_color: primaryColor });
+      showSaved('primaryColor');
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [primaryColor]);
+
+  useEffect(() => {
+    if (!secondaryColor || secondaryColor === branding?.secondary_color) return;
+    
+    const timer = setTimeout(async () => {
+      await updateBranding({ secondary_color: secondaryColor });
+      showSaved('secondaryColor');
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [secondaryColor]);
+
+  useEffect(() => {
+    if (customDomain === branding?.custom_domain) return;
+    
+    const timer = setTimeout(async () => {
+      await updateBranding({ custom_domain: customDomain || null });
+      showSaved('customDomain');
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [customDomain]);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -50,14 +92,6 @@ export const BrandingSettings = () => {
     if (logoUrl) {
       await updateBranding({ logo_url: logoUrl });
     }
-  };
-
-  const handleColorUpdate = async (field: 'primary_color' | 'secondary_color', value: string) => {
-    await updateBranding({ [field]: value });
-  };
-
-  const handleDomainUpdate = async () => {
-    await updateBranding({ custom_domain: customDomain || null });
   };
 
   const handleHidePoweredByToggle = async (checked: boolean) => {
@@ -160,13 +194,8 @@ export const BrandingSettings = () => {
                   className="flex-1"
                   placeholder="#0066FF"
                 />
-                <Button
-                  size="sm"
-                  onClick={() => handleColorUpdate('primary_color', primaryColor)}
-                >
-                  Save
-                </Button>
               </div>
+              <SavedIndicator show={savedFields.primaryColor} />
             </div>
 
             <div className="space-y-2">
@@ -186,13 +215,8 @@ export const BrandingSettings = () => {
                   className="flex-1"
                   placeholder="#6366F1"
                 />
-                <Button
-                  size="sm"
-                  onClick={() => handleColorUpdate('secondary_color', secondaryColor)}
-                >
-                  Save
-                </Button>
               </div>
+              <SavedIndicator show={savedFields.secondaryColor} />
             </div>
           </div>
 
@@ -223,29 +247,16 @@ export const BrandingSettings = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Alert>
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              To use a custom domain, you'll need to configure DNS records. After saving your domain here, 
-              follow the instructions in your project settings to complete the setup.
-            </AlertDescription>
-          </Alert>
-
           <div className="space-y-2">
             <Label htmlFor="custom-domain">Domain</Label>
-            <div className="flex gap-2">
-              <Input
-                id="custom-domain"
-                type="text"
-                value={customDomain}
-                onChange={(e) => setCustomDomain(e.target.value)}
-                placeholder="chat.yourdomain.com"
-                className="flex-1"
-              />
-              <Button onClick={handleDomainUpdate}>
-                Save Domain
-              </Button>
-            </div>
+            <Input
+              id="custom-domain"
+              type="text"
+              value={customDomain}
+              onChange={(e) => setCustomDomain(e.target.value)}
+              placeholder="chat.yourdomain.com"
+            />
+            <SavedIndicator show={savedFields.customDomain} />
             <p className="text-xs text-muted-foreground">
               Enter your custom domain without "https://" or trailing slashes
             </p>

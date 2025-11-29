@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Camera01 as Camera, User01 as User } from '@untitledui/icons';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { PasswordStrengthIndicator } from '@/components/PasswordStrengthIndicator';
+import { Button } from '@/components/ui/button';
+import { SavedIndicator } from './SavedIndicator';
 
 export const ProfileSettings: React.FC = () => {
   const [profile, setProfile] = useState({
@@ -24,6 +24,7 @@ export const ProfileSettings: React.FC = () => {
   });
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
+  const [savedFields, setSavedFields] = useState<Record<string, boolean>>({});
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -68,6 +69,59 @@ export const ProfileSettings: React.FC = () => {
       setLoading(false);
     }
   };
+
+  const showSaved = (field: string) => {
+    setSavedFields(prev => ({ ...prev, [field]: true }));
+    setTimeout(() => {
+      setSavedFields(prev => ({ ...prev, [field]: false }));
+    }, 2000);
+  };
+
+  // Auto-save display_name changes
+  useEffect(() => {
+    if (!profile.display_name || loading || !user) return;
+    
+    const timer = setTimeout(async () => {
+      try {
+        await supabase
+          .from('profiles')
+          .upsert({
+            user_id: user.id,
+            display_name: profile.display_name,
+            email: profile.email,
+            avatar_url: profile.avatar_url,
+          });
+        showSaved('display_name');
+      } catch (error) {
+        console.error('Error auto-saving display name:', error);
+      }
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [profile.display_name]);
+
+  // Auto-save email changes
+  useEffect(() => {
+    if (!profile.email || loading || !user) return;
+    
+    const timer = setTimeout(async () => {
+      try {
+        await supabase
+          .from('profiles')
+          .upsert({
+            user_id: user.id,
+            display_name: profile.display_name,
+            email: profile.email,
+            avatar_url: profile.avatar_url,
+          });
+        showSaved('email');
+      } catch (error) {
+        console.error('Error auto-saving email:', error);
+      }
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [profile.email]);
 
   const handleSave = async () => {
     if (!user) return;
@@ -230,6 +284,7 @@ export const ProfileSettings: React.FC = () => {
                 disabled={updating}
                 className="text-sm"
               />
+              <SavedIndicator show={savedFields.display_name} />
             </div>
             <div className="space-y-1.5 sm:col-span-2 md:col-span-1">
               <Label htmlFor="email" className="text-xs">Email Address</Label>
@@ -241,13 +296,8 @@ export const ProfileSettings: React.FC = () => {
                 disabled={updating}
                 className="text-sm"
               />
+              <SavedIndicator show={savedFields.email} />
             </div>
-          </div>
-
-          <div className="flex justify-end">
-            <Button onClick={handleSave} size="sm" disabled={updating}>
-              {updating ? "Saving..." : "Save Changes"}
-            </Button>
           </div>
         </CardContent>
       </Card>

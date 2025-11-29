@@ -1,18 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Save01, Upload01, Palette, AlertCircle, CheckCircle, Lightbulb01 } from '@untitledui/icons';
+import { Upload01, Palette, AlertCircle, CheckCircle } from '@untitledui/icons';
 import { useOrganizationSettings } from '@/hooks/useOrganizationSettings';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { SlugPreviewTool } from './SlugPreviewTool';
 import { CustomDomainManager } from './CustomDomainManager';
+import { SavedIndicator } from './SavedIndicator';
 
 export const OrganizationSettings = () => {
   const { organization, branding, loading, updateOrganization, updateBranding, uploadLogo } = useOrganizationSettings();
@@ -21,9 +21,9 @@ export const OrganizationSettings = () => {
   const [primaryColor, setPrimaryColor] = useState(branding?.primary_color || '#000000');
   const [secondaryColor, setSecondaryColor] = useState(branding?.secondary_color || '#666666');
   const [customDomain, setCustomDomain] = useState(branding?.custom_domain || '');
-  const [isSaving, setIsSaving] = useState(false);
   const [slugError, setSlugError] = useState<string | null>(null);
   const [isCheckingSlug, setIsCheckingSlug] = useState(false);
+  const [savedFields, setSavedFields] = useState<Record<string, boolean>>({});
 
   React.useEffect(() => {
     if (organization) {
@@ -51,6 +51,13 @@ export const OrganizationSettings = () => {
       return 'Slug cannot start or end with a hyphen';
     }
     return null;
+  };
+
+  const showSaved = (field: string) => {
+    setSavedFields(prev => ({ ...prev, [field]: true }));
+    setTimeout(() => {
+      setSavedFields(prev => ({ ...prev, [field]: false }));
+    }, 2000);
   };
 
   const handleSlugChange = async (value: string) => {
@@ -84,6 +91,8 @@ export const OrganizationSettings = () => {
           setSlugError('This slug is already taken');
         } else {
           setSlugError(null);
+          // Auto-save if valid
+          await autoSaveSlug(formatted);
         }
       } catch (error) {
         console.error('Error checking slug:', error);
@@ -95,50 +104,80 @@ export const OrganizationSettings = () => {
     }
   };
 
-  const handleSaveProfile = async () => {
-    const formatError = validateSlug(orgSlug);
-    if (formatError) {
-      setSlugError(formatError);
-      toast.error(formatError);
-      return;
-    }
-
-    if (slugError) {
-      toast.error('Please fix the slug errors before saving');
-      return;
-    }
-
-    setIsSaving(true);
+  const autoSaveSlug = async (slug: string) => {
+    if (slugError || !organization) return;
+    
     try {
-      await updateOrganization({
-        name: orgName,
-        slug: orgSlug,
-      });
-      toast.success('Organization profile updated');
+      await updateOrganization({ slug });
+      showSaved('slug');
     } catch (error: any) {
       if (error.message?.includes('already exists')) {
         setSlugError('This slug is already taken');
         toast.error('This slug is already taken');
-      } else {
-        toast.error('Failed to update organization profile');
       }
-    } finally {
-      setIsSaving(false);
     }
   };
 
-  const handleSaveBranding = async () => {
-    setIsSaving(true);
-    try {
-      await updateBranding({
-        primary_color: primaryColor,
-        secondary_color: secondaryColor,
-        custom_domain: customDomain || null,
-      });
-    } finally {
-      setIsSaving(false);
-    }
-  };
+  useEffect(() => {
+    if (!orgName || orgName === organization?.name) return;
+    
+    const timer = setTimeout(async () => {
+      try {
+        await updateOrganization({ name: orgName });
+        showSaved('name');
+      } catch (error) {
+        toast.error('Failed to save organization name');
+      }
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [orgName]);
+
+  useEffect(() => {
+    if (!primaryColor || primaryColor === branding?.primary_color) return;
+    
+    const timer = setTimeout(async () => {
+      try {
+        await updateBranding({ primary_color: primaryColor });
+        showSaved('primaryColor');
+      } catch (error) {
+        toast.error('Failed to save primary color');
+      }
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [primaryColor]);
+
+  useEffect(() => {
+    if (!secondaryColor || secondaryColor === branding?.secondary_color) return;
+    
+    const timer = setTimeout(async () => {
+      try {
+        await updateBranding({ secondary_color: secondaryColor });
+        showSaved('secondaryColor');
+      } catch (error) {
+        toast.error('Failed to save secondary color');
+      }
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [secondaryColor]);
+
+  useEffect(() => {
+    if (customDomain === branding?.custom_domain) return;
+    
+    const timer = setTimeout(async () => {
+      try {
+        await updateBranding({ custom_domain: customDomain || null });
+        showSaved('customDomain');
+      } catch (error) {
+        toast.error('Failed to save custom domain');
+      }
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [customDomain]);
+
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -165,8 +204,6 @@ export const OrganizationSettings = () => {
         </TabsList>
 
         <TabsContent value="profile" className="space-y-6">
-          <SlugPreviewTool currentSlug={organization?.slug} />
-          
           <Card>
             <CardHeader>
               <CardTitle>Workspace Profile</CardTitle>
@@ -183,6 +220,7 @@ export const OrganizationSettings = () => {
                   onChange={(e) => setOrgName(e.target.value)}
                   placeholder="Acme Inc."
                 />
+                <SavedIndicator show={savedFields.name} />
               </div>
 
               <div className="space-y-2">
@@ -204,6 +242,7 @@ export const OrganizationSettings = () => {
                     <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-green-500" />
                   )}
                 </div>
+                <SavedIndicator show={savedFields.slug} />
                 {slugError && (
                   <Alert variant="destructive" className="mt-2">
                     <AlertCircle className="h-4 w-4" />
@@ -217,14 +256,6 @@ export const OrganizationSettings = () => {
                   Must be unique and contain only lowercase letters, numbers, and hyphens
                 </p>
               </div>
-
-              <Button 
-                onClick={handleSaveProfile} 
-                disabled={isSaving || isCheckingSlug || !!slugError}
-              >
-                <Save01 className="h-4 w-4 mr-2" />
-                {isSaving ? 'Saving...' : 'Save Changes'}
-              </Button>
             </CardContent>
           </Card>
         </TabsContent>
@@ -295,6 +326,7 @@ export const OrganizationSettings = () => {
                         placeholder="#000000"
                       />
                     </div>
+                    <SavedIndicator show={savedFields.primaryColor} />
                   </div>
 
                   <div className="space-y-2">
@@ -313,6 +345,7 @@ export const OrganizationSettings = () => {
                         placeholder="#666666"
                       />
                     </div>
+                    <SavedIndicator show={savedFields.secondaryColor} />
                   </div>
                 </div>
               </div>
@@ -327,15 +360,11 @@ export const OrganizationSettings = () => {
                   onChange={(e) => setCustomDomain(e.target.value)}
                   placeholder="chat.yourdomain.com"
                 />
+                <SavedIndicator show={savedFields.customDomain} />
                 <p className="text-sm text-muted-foreground">
                   Configure a custom domain for your agent widgets
                 </p>
               </div>
-
-              <Button onClick={handleSaveBranding} disabled={isSaving}>
-                <Save01 className="h-4 w-4 mr-2" />
-                Save Branding
-              </Button>
             </CardContent>
           </Card>
         </TabsContent>
