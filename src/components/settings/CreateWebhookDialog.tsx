@@ -1,18 +1,20 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useWebhooks } from '@/hooks/useWebhooks';
-import { Plus, Trash01 } from '@untitledui/icons';
+import { toast } from 'sonner';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface CreateWebhookDialogProps {
   open: boolean;
@@ -20,30 +22,47 @@ interface CreateWebhookDialogProps {
 }
 
 const AVAILABLE_EVENTS = [
-  { id: 'lead.created', label: 'Lead Created' },
-  { id: 'lead.updated', label: 'Lead Updated' },
-  { id: 'conversation.created', label: 'Conversation Created' },
-  { id: 'conversation.status_changed', label: 'Conversation Status Changed' },
-  { id: 'message.created', label: 'Message Created' },
-  { id: 'agent.message', label: 'Agent Message Sent' },
+  { value: 'lead.created', label: 'Lead Created' },
+  { value: 'lead.updated', label: 'Lead Updated' },
+  { value: 'conversation.started', label: 'Conversation Started' },
+  { value: 'conversation.closed', label: 'Conversation Closed' },
+  { value: 'message.received', label: 'Message Received' },
+];
+
+const HTTP_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'];
+
+const AUTH_TYPES = [
+  { value: 'none', label: 'None' },
+  { value: 'api_key', label: 'API Key' },
+  { value: 'bearer_token', label: 'Bearer Token' },
+  { value: 'basic_auth', label: 'Basic Auth' },
 ];
 
 export const CreateWebhookDialog = ({ open, onOpenChange }: CreateWebhookDialogProps) => {
   const { createWebhook } = useWebhooks();
+  const [loading, setLoading] = useState(false);
   const [name, setName] = useState('');
   const [url, setUrl] = useState('');
+  const [method, setMethod] = useState('POST');
   const [selectedEvents, setSelectedEvents] = useState<string[]>([]);
-  const [headers, setHeaders] = useState<{ key: string; value: string }[]>([]);
-  const [saving, setSaving] = useState(false);
+  const [authType, setAuthType] = useState('none');
+  const [authConfig, setAuthConfig] = useState<Record<string, string>>({});
+  const [customHeaders, setCustomHeaders] = useState<Array<{ key: string; value: string }>>([
+    { key: '', value: '' },
+  ]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSaving(true);
+    if (!name || !url || selectedEvents.length === 0) {
+      toast.error('Please fill in all required fields and select at least one event');
+      return;
+    }
 
+    setLoading(true);
     try {
-      const headersObject = headers.reduce((acc, { key, value }) => {
-        if (key && value) {
-          acc[key] = value;
+      const headers = customHeaders.reduce((acc, header) => {
+        if (header.key && header.value) {
+          acc[header.key] = header.value;
         }
         return acc;
       }, {} as Record<string, string>);
@@ -51,156 +70,314 @@ export const CreateWebhookDialog = ({ open, onOpenChange }: CreateWebhookDialogP
       await createWebhook({
         name,
         url,
+        method,
         events: selectedEvents,
-        headers: headersObject,
+        headers,
+        auth_type: authType,
+        auth_config: authConfig,
         active: true,
       });
 
+      toast.success('Webhook created successfully');
+      onOpenChange(false);
       // Reset form
       setName('');
       setUrl('');
+      setMethod('POST');
       setSelectedEvents([]);
-      setHeaders([]);
-      onOpenChange(false);
+      setAuthType('none');
+      setAuthConfig({});
+      setCustomHeaders([{ key: '', value: '' }]);
     } catch (error) {
       console.error('Error creating webhook:', error);
+      toast.error('Failed to create webhook');
     } finally {
-      setSaving(false);
+      setLoading(false);
     }
   };
 
-  const handleEventToggle = (eventId: string) => {
+  const handleEventToggle = (eventValue: string) => {
     setSelectedEvents((prev) =>
-      prev.includes(eventId)
-        ? prev.filter((id) => id !== eventId)
-        : [...prev, eventId]
+      prev.includes(eventValue)
+        ? prev.filter((e) => e !== eventValue)
+        : [...prev, eventValue]
     );
   };
 
   const addHeader = () => {
-    setHeaders([...headers, { key: '', value: '' }]);
+    setCustomHeaders([...customHeaders, { key: '', value: '' }]);
   };
 
   const updateHeader = (index: number, field: 'key' | 'value', value: string) => {
-    const newHeaders = [...headers];
+    const newHeaders = [...customHeaders];
     newHeaders[index][field] = value;
-    setHeaders(newHeaders);
+    setCustomHeaders(newHeaders);
   };
 
   const removeHeader = (index: number) => {
-    setHeaders(headers.filter((_, i) => i !== index));
+    setCustomHeaders(customHeaders.filter((_, i) => i !== index));
+  };
+
+  const getSamplePayload = () => {
+    return {
+      event: selectedEvents[0] || 'event.type',
+      timestamp: new Date().toISOString(),
+      data: {
+        id: 'example-id',
+        ...(selectedEvents[0]?.includes('lead') && {
+          name: 'John Doe',
+          email: 'john@example.com',
+          status: 'new',
+        }),
+        ...(selectedEvents[0]?.includes('conversation') && {
+          agent_id: 'agent-123',
+          status: 'active',
+        }),
+      },
+    };
+  };
+
+  const getPreviewHeaders = () => {
+    const previewHeaders: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'User-Agent': 'Lovable-Webhook/1.0',
+    };
+
+    customHeaders.forEach(header => {
+      if (header.key && header.value) {
+        previewHeaders[header.key] = header.value;
+      }
+    });
+
+    if (authType === 'api_key' && authConfig.header_name && authConfig.api_key) {
+      previewHeaders[authConfig.header_name] = '••••••••';
+    } else if (authType === 'bearer_token' && authConfig.token) {
+      previewHeaders['Authorization'] = 'Bearer ••••••••';
+    } else if (authType === 'basic_auth' && authConfig.username && authConfig.password) {
+      previewHeaders['Authorization'] = 'Basic ••••••••';
+    }
+
+    return previewHeaders;
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[90vh]">
         <DialogHeader>
-          <DialogTitle>Create Webhook</DialogTitle>
-          <DialogDescription>
-            Configure a webhook to receive real-time events from your organization
-          </DialogDescription>
+          <DialogTitle>Create New Webhook</DialogTitle>
         </DialogHeader>
+        <ScrollArea className="max-h-[calc(90vh-180px)] pr-4">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Name *</Label>
+                <Input
+                  id="name"
+                  placeholder="My API Webhook"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                />
+              </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="name">Webhook Name</Label>
-              <Input
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="My CRM Integration"
-                required
-              />
+              <div className="space-y-2">
+                <Label htmlFor="url">URL *</Label>
+                <Input
+                  id="url"
+                  type="url"
+                  placeholder="https://api.example.com/webhook"
+                  value={url}
+                  onChange={(e) => setUrl(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="method">HTTP Method *</Label>
+                <Select value={method} onValueChange={setMethod}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {HTTP_METHODS.map((m) => (
+                      <SelectItem key={m} value={m}>
+                        {m}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
-            <div>
-              <Label htmlFor="url">Endpoint URL</Label>
-              <Input
-                id="url"
-                type="url"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                placeholder="https://api.example.com/webhook"
-                required
-              />
-              <p className="text-xs text-muted-foreground mt-1">
-                This URL will receive POST requests with event data
-              </p>
+            <div className="space-y-4 border-t pt-4">
+              <Label>Authentication</Label>
+              <RadioGroup value={authType} onValueChange={(value) => {
+                setAuthType(value);
+                setAuthConfig({});
+              }}>
+                <div className="flex flex-wrap gap-4">
+                  {AUTH_TYPES.map((type) => (
+                    <div key={type.value} className="flex items-center space-x-2">
+                      <RadioGroupItem value={type.value} id={`auth-${type.value}`} />
+                      <Label htmlFor={`auth-${type.value}`} className="font-normal cursor-pointer">
+                        {type.label}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              </RadioGroup>
+
+              {authType === 'api_key' && (
+                <div className="space-y-3 pl-6 border-l-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="header-name">Header Name</Label>
+                    <Input
+                      id="header-name"
+                      placeholder="X-API-Key"
+                      value={authConfig.header_name || ''}
+                      onChange={(e) => setAuthConfig({ ...authConfig, header_name: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="api-key">API Key</Label>
+                    <Input
+                      id="api-key"
+                      type="password"
+                      placeholder="Enter API key"
+                      value={authConfig.api_key || ''}
+                      onChange={(e) => setAuthConfig({ ...authConfig, api_key: e.target.value })}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {authType === 'bearer_token' && (
+                <div className="space-y-2 pl-6 border-l-2">
+                  <Label htmlFor="token">Bearer Token</Label>
+                  <Input
+                    id="token"
+                    type="password"
+                    placeholder="Enter bearer token"
+                    value={authConfig.token || ''}
+                    onChange={(e) => setAuthConfig({ ...authConfig, token: e.target.value })}
+                  />
+                </div>
+              )}
+
+              {authType === 'basic_auth' && (
+                <div className="space-y-3 pl-6 border-l-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="username">Username</Label>
+                    <Input
+                      id="username"
+                      placeholder="Enter username"
+                      value={authConfig.username || ''}
+                      onChange={(e) => setAuthConfig({ ...authConfig, username: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="password">Password</Label>
+                    <Input
+                      id="password"
+                      type="password"
+                      placeholder="Enter password"
+                      value={authConfig.password || ''}
+                      onChange={(e) => setAuthConfig({ ...authConfig, password: e.target.value })}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
-            <div>
-              <Label>Events</Label>
-              <p className="text-xs text-muted-foreground mb-3">
-                Select which events should trigger this webhook
-              </p>
+            <div className="space-y-2 border-t pt-4">
+              <Label>Events *</Label>
               <div className="space-y-2">
                 {AVAILABLE_EVENTS.map((event) => (
-                  <div key={event.id} className="flex items-center space-x-2">
+                  <div key={event.value} className="flex items-center space-x-2">
                     <Checkbox
-                      id={event.id}
-                      checked={selectedEvents.includes(event.id)}
-                      onCheckedChange={() => handleEventToggle(event.id)}
+                      id={event.value}
+                      checked={selectedEvents.includes(event.value)}
+                      onCheckedChange={() => handleEventToggle(event.value)}
                     />
-                    <label
-                      htmlFor={event.id}
-                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                    >
+                    <Label htmlFor={event.value} className="font-normal cursor-pointer">
                       {event.label}
-                    </label>
+                    </Label>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <div>
-                  <Label>Custom Headers (Optional)</Label>
-                  <p className="text-xs text-muted-foreground">
-                    Add custom headers to include with webhook requests
-                  </p>
+            <div className="space-y-2 border-t pt-4">
+              <Label>Custom Headers (Optional)</Label>
+              {customHeaders.map((header, index) => (
+                <div key={index} className="flex gap-2">
+                  <Input
+                    placeholder="Header name"
+                    value={header.key}
+                    onChange={(e) => updateHeader(index, 'key', e.target.value)}
+                  />
+                  <Input
+                    placeholder="Header value"
+                    value={header.value}
+                    onChange={(e) => updateHeader(index, 'value', e.target.value)}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => removeHeader(index)}
+                    disabled={customHeaders.length === 1}
+                  >
+                    ✕
+                  </Button>
                 </div>
-                <Button type="button" variant="outline" size="sm" onClick={addHeader}>
-                  Add Header
-                </Button>
-              </div>
-              <div className="space-y-2">
-                {headers.map((header, index) => (
-                  <div key={index} className="flex gap-2">
-                    <Input
-                      placeholder="Header name"
-                      value={header.key}
-                      onChange={(e) => updateHeader(index, 'key', e.target.value)}
-                    />
-                    <Input
-                      placeholder="Header value"
-                      value={header.value}
-                      onChange={(e) => updateHeader(index, 'value', e.target.value)}
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeHeader(index)}
-                    >
-                      Remove
-                    </Button>
-                  </div>
-                ))}
-              </div>
+              ))}
+              <Button type="button" variant="outline" size="sm" onClick={addHeader}>
+                + Add Header
+              </Button>
             </div>
-          </div>
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={saving || selectedEvents.length === 0}>
-              {saving ? 'Creating...' : 'Create Webhook'}
-            </Button>
-          </DialogFooter>
-        </form>
+            {url && selectedEvents.length > 0 && (
+              <div className="space-y-2 border-t pt-4">
+                <Label>Payload Preview</Label>
+                <div className="bg-muted p-4 rounded-md space-y-3 font-mono text-xs">
+                  <div className="text-primary font-semibold">
+                    {method} {url}
+                  </div>
+                  
+                  <div>
+                    <div className="text-muted-foreground mb-1">Headers:</div>
+                    <div className="pl-2 space-y-0.5">
+                      {Object.entries(getPreviewHeaders()).map(([key, value]) => (
+                        <div key={key} className="text-foreground/80">
+                          {key}: {value}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {method !== 'GET' && method !== 'HEAD' && (
+                    <div>
+                      <div className="text-muted-foreground mb-1">Body:</div>
+                      <pre className="pl-2 text-foreground/80 overflow-x-auto">
+                        {JSON.stringify(getSamplePayload(), null, 2)}
+                      </pre>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </form>
+        </ScrollArea>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
+            Cancel
+          </Button>
+          <Button onClick={handleSubmit} disabled={loading}>
+            {loading ? 'Creating...' : 'Create Webhook'}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

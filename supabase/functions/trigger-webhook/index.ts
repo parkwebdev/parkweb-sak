@@ -41,6 +41,12 @@ Deno.serve(async (req) => {
       throw new Error('Webhook is not active');
     }
 
+    console.log('Webhook config:', { 
+      method: webhook.method, 
+      auth_type: webhook.auth_type,
+      url: webhook.url 
+    });
+
     // Prepare payload
     const payload = testMode
       ? {
@@ -61,6 +67,21 @@ Deno.serve(async (req) => {
       ...(webhook.headers as Record<string, string> || {}),
     };
 
+    // Add authentication headers based on auth_type
+    const authConfig = webhook.auth_config as Record<string, any> || {};
+    
+    if (webhook.auth_type === 'api_key' && authConfig.header_name && authConfig.api_key) {
+      headers[authConfig.header_name] = authConfig.api_key;
+      console.log(`Added API Key header: ${authConfig.header_name}`);
+    } else if (webhook.auth_type === 'bearer_token' && authConfig.token) {
+      headers['Authorization'] = `Bearer ${authConfig.token}`;
+      console.log('Added Bearer Token authorization');
+    } else if (webhook.auth_type === 'basic_auth' && authConfig.username && authConfig.password) {
+      const credentials = btoa(`${authConfig.username}:${authConfig.password}`);
+      headers['Authorization'] = `Basic ${credentials}`;
+      console.log('Added Basic Auth authorization');
+    }
+
     // Send webhook with retry logic
     let attempt = 0;
     let success = false;
@@ -70,13 +91,19 @@ Deno.serve(async (req) => {
 
     while (attempt < 3 && !success) {
       try {
-        console.log(`Attempt ${attempt + 1} to send webhook to ${webhook.url}`);
+        console.log(`Attempt ${attempt + 1} to send ${webhook.method} request to ${webhook.url}`);
         
-        const response = await fetch(webhook.url, {
-          method: 'POST',
+        const fetchOptions: RequestInit = {
+          method: webhook.method || 'POST',
           headers,
-          body: JSON.stringify(payload),
-        });
+        };
+
+        // Only add body for methods that support it
+        if (webhook.method !== 'GET' && webhook.method !== 'HEAD') {
+          fetchOptions.body = JSON.stringify(payload);
+        }
+        
+        const response = await fetch(webhook.url, fetchOptions);
 
         responseStatus = response.status;
         responseBody = await response.text();
