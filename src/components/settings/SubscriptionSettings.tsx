@@ -3,20 +3,37 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
 import { useOrganization } from '@/contexts/OrganizationContext';
 import type { Tables } from '@/integrations/supabase/types';
 import { formatDate } from '@/lib/formatting';
-import { CheckCircle } from '@untitledui/icons';
+import { CheckCircle, Download01, LinkExternal01, RefreshCw01 } from '@untitledui/icons';
+import { toast } from 'sonner';
 
 type Subscription = Tables<'subscriptions'> & {
   plans?: Tables<'plans'>;
+};
+
+type Invoice = {
+  id: string;
+  number: string | null;
+  date: number;
+  amount: number;
+  currency: string;
+  status: string | null;
+  pdfUrl: string | null;
+  hostedUrl: string | null;
+  periodStart: number | null;
+  periodEnd: number | null;
 };
 
 export const SubscriptionSettings = () => {
   const { currentOrg } = useOrganization();
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(true);
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [invoicesLoading, setInvoicesLoading] = useState(true);
 
   useEffect(() => {
     const fetchSubscription = async () => {
@@ -41,6 +58,29 @@ export const SubscriptionSettings = () => {
     fetchSubscription();
   }, [currentOrg]);
 
+  const fetchInvoices = async () => {
+    if (!currentOrg) return;
+
+    setInvoicesLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('get-invoices');
+
+      if (error) throw error;
+      if (data?.invoices) {
+        setInvoices(data.invoices);
+      }
+    } catch (error) {
+      console.error('Error fetching invoices:', error);
+      toast.error('Failed to load billing history');
+    } finally {
+      setInvoicesLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchInvoices();
+  }, [currentOrg]);
+
   if (loading) {
     return <div className="text-center py-8">Loading subscription...</div>;
   }
@@ -48,6 +88,28 @@ export const SubscriptionSettings = () => {
   const plan = subscription?.plans;
   const features = plan?.features as any;
   const limits = plan?.limits as any;
+
+  const getStatusColor = (status: string | null) => {
+    switch (status) {
+      case 'paid':
+        return 'bg-success/10 text-success border-success/20';
+      case 'open':
+        return 'bg-warning/10 text-warning border-warning/20';
+      case 'void':
+        return 'bg-muted text-muted-foreground border-border';
+      case 'uncollectible':
+        return 'bg-destructive/10 text-destructive border-destructive/20';
+      default:
+        return 'bg-muted text-muted-foreground border-border';
+    }
+  };
+
+  const formatCurrency = (amount: number, currency: string) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currency.toUpperCase(),
+    }).format(amount / 100);
+  };
 
   return (
     <div className="space-y-6">
@@ -151,15 +213,97 @@ export const SubscriptionSettings = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Billing History</CardTitle>
-          <CardDescription>
-            View and download your invoices
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Billing History</CardTitle>
+              <CardDescription>
+                View and download your invoices
+              </CardDescription>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={fetchInvoices}
+              disabled={invoicesLoading}
+            >
+              <RefreshCw01 className={`h-4 w-4 mr-2 ${invoicesLoading ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-8 text-muted-foreground">
-            No billing history available
-          </div>
+          {invoicesLoading ? (
+            <div className="text-center py-8 text-muted-foreground">
+              Loading invoices...
+            </div>
+          ) : invoices.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              No billing history available
+            </div>
+          ) : (
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Invoice</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Amount</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {invoices.map((invoice) => (
+                    <TableRow key={invoice.id}>
+                      <TableCell className="font-medium">
+                        {invoice.number || invoice.id.substring(0, 8)}
+                      </TableCell>
+                      <TableCell>
+                        {formatDate(new Date(invoice.date * 1000), {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                        })}
+                      </TableCell>
+                      <TableCell>
+                        {formatCurrency(invoice.amount, invoice.currency)}
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant="outline"
+                          className={getStatusColor(invoice.status)}
+                        >
+                          {invoice.status || 'unknown'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          {invoice.hostedUrl && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => window.open(invoice.hostedUrl!, '_blank')}
+                            >
+                              <LinkExternal01 className="h-4 w-4" />
+                            </Button>
+                          )}
+                          {invoice.pdfUrl && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => window.open(invoice.pdfUrl!, '_blank')}
+                            >
+                              <Download01 className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
