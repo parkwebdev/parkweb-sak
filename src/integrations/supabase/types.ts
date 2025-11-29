@@ -882,6 +882,7 @@ export type Database = {
           active: boolean | null
           auth_config: Json | null
           auth_type: string
+          conditions: Json | null
           created_at: string
           events: string[] | null
           headers: Json | null
@@ -889,6 +890,7 @@ export type Database = {
           method: string
           name: string
           org_id: string
+          response_actions: Json | null
           updated_at: string
           url: string
         }
@@ -896,6 +898,7 @@ export type Database = {
           active?: boolean | null
           auth_config?: Json | null
           auth_type?: string
+          conditions?: Json | null
           created_at?: string
           events?: string[] | null
           headers?: Json | null
@@ -903,6 +906,7 @@ export type Database = {
           method?: string
           name: string
           org_id: string
+          response_actions?: Json | null
           updated_at?: string
           url: string
         }
@@ -910,6 +914,7 @@ export type Database = {
           active?: boolean | null
           auth_config?: Json | null
           auth_type?: string
+          conditions?: Json | null
           created_at?: string
           events?: string[] | null
           headers?: Json | null
@@ -917,6 +922,7 @@ export type Database = {
           method?: string
           name?: string
           org_id?: string
+          response_actions?: Json | null
           updated_at?: string
           url?: string
         }

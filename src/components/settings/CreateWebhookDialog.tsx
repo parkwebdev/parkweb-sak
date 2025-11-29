@@ -15,6 +15,9 @@ import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ConditionBuilder } from './ConditionBuilder';
+import { ResponseActionBuilder } from './ResponseActionBuilder';
 
 interface CreateWebhookDialogProps {
   open: boolean;
@@ -50,6 +53,11 @@ export const CreateWebhookDialog = ({ open, onOpenChange }: CreateWebhookDialogP
   const [customHeaders, setCustomHeaders] = useState<Array<{ key: string; value: string }>>([
     { key: '', value: '' },
   ]);
+  const [conditions, setConditions] = useState<{ rules: any[]; logic: string }>({
+    rules: [],
+    logic: 'AND',
+  });
+  const [responseActions, setResponseActions] = useState<any[]>([]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,6 +83,8 @@ export const CreateWebhookDialog = ({ open, onOpenChange }: CreateWebhookDialogP
         headers,
         auth_type: authType,
         auth_config: authConfig,
+        conditions: conditions.rules.length > 0 ? conditions : {},
+        response_actions: responseActions.length > 0 ? { actions: responseActions } : {},
         active: true,
       });
 
@@ -88,6 +98,8 @@ export const CreateWebhookDialog = ({ open, onOpenChange }: CreateWebhookDialogP
       setAuthType('none');
       setAuthConfig({});
       setCustomHeaders([{ key: '', value: '' }]);
+      setConditions({ rules: [], logic: 'AND' });
+      setResponseActions([]);
     } catch (error) {
       console.error('Error creating webhook:', error);
       toast.error('Failed to create webhook');
@@ -167,7 +179,15 @@ export const CreateWebhookDialog = ({ open, onOpenChange }: CreateWebhookDialogP
           <DialogTitle>Create New Webhook</DialogTitle>
         </DialogHeader>
         <ScrollArea className="max-h-[calc(90vh-180px)] pr-4">
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <Tabs defaultValue="basic" className="w-full">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="basic">Basic</TabsTrigger>
+              <TabsTrigger value="auth">Authentication</TabsTrigger>
+              <TabsTrigger value="conditions">Conditions</TabsTrigger>
+              <TabsTrigger value="actions">Response Actions</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="basic" className="space-y-6 pt-4">
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Name *</Label>
@@ -207,9 +227,58 @@ export const CreateWebhookDialog = ({ open, onOpenChange }: CreateWebhookDialogP
                   </SelectContent>
                 </Select>
               </div>
-            </div>
 
-            <div className="space-y-4 border-t pt-4">
+              <div className="space-y-2 border-t pt-4">
+                <Label>Events *</Label>
+                <div className="space-y-2">
+                  {AVAILABLE_EVENTS.map((event) => (
+                    <div key={event.value} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={event.value}
+                        checked={selectedEvents.includes(event.value)}
+                        onCheckedChange={() => handleEventToggle(event.value)}
+                      />
+                      <Label htmlFor={event.value} className="font-normal cursor-pointer">
+                        {event.label}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-2 border-t pt-4">
+                <Label>Custom Headers (Optional)</Label>
+                {customHeaders.map((header, index) => (
+                  <div key={index} className="flex gap-2">
+                    <Input
+                      placeholder="Header name"
+                      value={header.key}
+                      onChange={(e) => updateHeader(index, 'key', e.target.value)}
+                    />
+                    <Input
+                      placeholder="Header value"
+                      value={header.value}
+                      onChange={(e) => updateHeader(index, 'value', e.target.value)}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => removeHeader(index)}
+                      disabled={customHeaders.length === 1}
+                    >
+                      ✕
+                    </Button>
+                  </div>
+                ))}
+                <Button type="button" variant="outline" size="sm" onClick={addHeader}>
+                  + Add Header
+                </Button>
+              </div>
+            </div>
+            </TabsContent>
+
+            <TabsContent value="auth" className="space-y-4 pt-4">
               <Label>Authentication</Label>
               <RadioGroup value={authType} onValueChange={(value) => {
                 setAuthType(value);
@@ -287,87 +356,54 @@ export const CreateWebhookDialog = ({ open, onOpenChange }: CreateWebhookDialogP
                   </div>
                 </div>
               )}
-            </div>
+            </TabsContent>
 
-            <div className="space-y-2 border-t pt-4">
-              <Label>Events *</Label>
-              <div className="space-y-2">
-                {AVAILABLE_EVENTS.map((event) => (
-                  <div key={event.value} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={event.value}
-                      checked={selectedEvents.includes(event.value)}
-                      onCheckedChange={() => handleEventToggle(event.value)}
-                    />
-                    <Label htmlFor={event.value} className="font-normal cursor-pointer">
-                      {event.label}
-                    </Label>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <TabsContent value="conditions" className="space-y-4 pt-4">
+              <ConditionBuilder
+                conditions={conditions}
+                onChange={setConditions}
+                eventType={selectedEvents[0] || 'lead'}
+              />
+            </TabsContent>
 
-            <div className="space-y-2 border-t pt-4">
-              <Label>Custom Headers (Optional)</Label>
-              {customHeaders.map((header, index) => (
-                <div key={index} className="flex gap-2">
-                  <Input
-                    placeholder="Header name"
-                    value={header.key}
-                    onChange={(e) => updateHeader(index, 'key', e.target.value)}
-                  />
-                  <Input
-                    placeholder="Header value"
-                    value={header.value}
-                    onChange={(e) => updateHeader(index, 'value', e.target.value)}
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    onClick={() => removeHeader(index)}
-                    disabled={customHeaders.length === 1}
-                  >
-                    ✕
-                  </Button>
+            <TabsContent value="actions" className="space-y-4 pt-4">
+              <ResponseActionBuilder
+                actions={responseActions}
+                onChange={setResponseActions}
+              />
+            </TabsContent>
+          </Tabs>
+
+          {url && selectedEvents.length > 0 && (
+            <div className="space-y-2 border-t pt-4 mt-4">
+              <Label>Payload Preview</Label>
+              <div className="bg-muted p-4 rounded-md space-y-3 font-mono text-xs">
+                <div className="text-primary font-semibold">
+                  {method} {url}
                 </div>
-              ))}
-              <Button type="button" variant="outline" size="sm" onClick={addHeader}>
-                + Add Header
-              </Button>
-            </div>
-
-            {url && selectedEvents.length > 0 && (
-              <div className="space-y-2 border-t pt-4">
-                <Label>Payload Preview</Label>
-                <div className="bg-muted p-4 rounded-md space-y-3 font-mono text-xs">
-                  <div className="text-primary font-semibold">
-                    {method} {url}
+                
+                <div>
+                  <div className="text-muted-foreground mb-1">Headers:</div>
+                  <div className="pl-2 space-y-0.5">
+                    {Object.entries(getPreviewHeaders()).map(([key, value]) => (
+                      <div key={key} className="text-foreground/80">
+                        {key}: {value}
+                      </div>
+                    ))}
                   </div>
-                  
+                </div>
+
+                {method !== 'GET' && method !== 'HEAD' && (
                   <div>
-                    <div className="text-muted-foreground mb-1">Headers:</div>
-                    <div className="pl-2 space-y-0.5">
-                      {Object.entries(getPreviewHeaders()).map(([key, value]) => (
-                        <div key={key} className="text-foreground/80">
-                          {key}: {value}
-                        </div>
-                      ))}
-                    </div>
+                    <div className="text-muted-foreground mb-1">Body:</div>
+                    <pre className="pl-2 text-foreground/80 overflow-x-auto">
+                      {JSON.stringify(getSamplePayload(), null, 2)}
+                    </pre>
                   </div>
-
-                  {method !== 'GET' && method !== 'HEAD' && (
-                    <div>
-                      <div className="text-muted-foreground mb-1">Body:</div>
-                      <pre className="pl-2 text-foreground/80 overflow-x-auto">
-                        {JSON.stringify(getSamplePayload(), null, 2)}
-                      </pre>
-                    </div>
-                  )}
-                </div>
+                )}
               </div>
-            )}
-          </form>
+            </div>
+          )}
         </ScrollArea>
 
         <DialogFooter>
