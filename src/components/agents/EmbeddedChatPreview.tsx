@@ -118,11 +118,11 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
         ) : (
           <Button
             size="icon"
-            className="w-14 h-14 rounded-full shadow-lg"
+            className="w-12 h-12 rounded-full shadow-lg"
             style={{ backgroundColor: config.primaryColor }}
             onClick={() => setIsOpen(true)}
           >
-            <ChatBubbleIcon className="h-6 w-6 text-white" />
+            <ChatBubbleIcon className="h-8 w-8 text-white" />
           </Button>
         )}
       </div>
