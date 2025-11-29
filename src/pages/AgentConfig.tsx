@@ -10,11 +10,7 @@ import type { Tables } from '@/integrations/supabase/types';
 
 type Agent = Tables<'agents'>;
 
-interface AgentConfigProps {
-  onMenuClick?: () => void;
-}
-
-const AgentConfig: React.FC<AgentConfigProps> = ({ onMenuClick }) => {
+const AgentConfig: React.FC = () => {
   const { agentId } = useParams<{ agentId: string }>();
   const { agents, updateAgent } = useAgents();
   const [agent, setAgent] = useState<Agent | null>(null);
@@ -48,7 +44,6 @@ const AgentConfig: React.FC<AgentConfigProps> = ({ onMenuClick }) => {
         <AgentConfigLayout
           activeTab={activeTab}
           onTabChange={setActiveTab}
-          onMenuClick={onMenuClick}
           agentName={agent.name}
         >
           {activeTab === 'settings' && (

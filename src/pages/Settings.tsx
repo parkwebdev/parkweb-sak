@@ -16,11 +16,7 @@ import { BrandingSettings } from '@/components/settings/BrandingSettings';
 
 export type SettingsTab = 'general' | 'profile' | 'team' | 'notifications' | 'organization' | 'subscription' | 'webhooks' | 'api-keys' | 'branding';
 
-interface SettingsProps {
-  onMenuClick?: () => void;
-}
-
-const Settings: React.FC<SettingsProps> = ({ onMenuClick }) => {
+const Settings: React.FC = () => {
   const [activeTab, setActiveTab] = useState<SettingsTab>('general');
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -84,16 +80,6 @@ const Settings: React.FC<SettingsProps> = ({ onMenuClick }) => {
     <main className="flex-1 bg-muted/30 min-h-screen pt-4 lg:pt-8 pb-12">
       <header className="w-full font-medium">
         <div className="items-stretch flex w-full flex-col gap-6 px-4 lg:px-8 py-0">
-          <div className="flex items-center gap-4 mb-6">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="lg:hidden flex items-center gap-2"
-              onClick={onMenuClick}
-            >
-              <Menu size={16} />
-            </Button>
-          </div>
           <SettingsLayout 
             activeTab={activeTab} 
             onTabChange={setActiveTab}

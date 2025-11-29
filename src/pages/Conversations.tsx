@@ -16,11 +16,7 @@ type Conversation = Tables<'conversations'> & {
 
 type Message = Tables<'messages'>;
 
-interface ConversationsProps {
-  onMenuClick?: () => void;
-}
-
-const Conversations: React.FC<ConversationsProps> = ({ onMenuClick }) => {
+const Conversations: React.FC = () => {
   const { currentOrg } = useOrganization();
   const { 
     conversations, 
@@ -94,20 +90,6 @@ const Conversations: React.FC<ConversationsProps> = ({ onMenuClick }) => {
 
   return (
     <main className="flex-1 bg-muted/30 h-screen p-1">
-      {/* Mobile header */}
-      <header className="lg:hidden mb-4 px-3">
-        <div className="flex items-center gap-3">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onMenuClick}
-          >
-            <Menu size={16} />
-          </Button>
-          <h1 className="text-sm font-semibold text-foreground">Conversations</h1>
-        </div>
-      </header>
-
       <div className="h-full">
         <div className="flex h-full rounded-xl border bg-card overflow-hidden shadow-sm">
           {/* Conversations List Sidebar */}
