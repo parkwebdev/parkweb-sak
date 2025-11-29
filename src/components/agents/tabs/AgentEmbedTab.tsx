@@ -17,28 +17,27 @@ interface AgentEmbedTabProps {
 export const AgentEmbedTab = ({ agent, onUpdate, onFormChange }: AgentEmbedTabProps) => {
   const { config, loading, saveConfig, generateEmbedCode } = useEmbeddedChatConfig(agent.id);
   const [localConfig, setLocalConfig] = useState(config);
-  const [embedEnabled, setEmbedEnabled] = useState(
-    (agent.deployment_config as any)?.embedded_chat_enabled || false
-  );
-
   useEffect(() => {
     setLocalConfig(config);
   }, [config]);
+
+  useEffect(() => {
+    // Enable embedded chat by default
+    const deploymentConfig = (agent.deployment_config as any) || {};
+    if (!deploymentConfig.embedded_chat_enabled) {
+      onUpdate(agent.id, {
+        deployment_config: {
+          ...deploymentConfig,
+          embedded_chat_enabled: true,
+        },
+      });
+    }
+  }, []);
 
   const handleConfigChange = (updates: Partial<typeof config>) => {
     const newConfig = { ...localConfig, ...updates };
     setLocalConfig(newConfig);
     saveConfig(updates);
-  };
-
-  const handleToggleEmbed = async (checked: boolean) => {
-    setEmbedEnabled(checked);
-    await onUpdate(agent.id, {
-      deployment_config: {
-        ...((agent.deployment_config as any) || {}),
-        embedded_chat_enabled: checked,
-      },
-    });
   };
 
   if (loading) {
@@ -50,41 +49,20 @@ export const AgentEmbedTab = ({ agent, onUpdate, onFormChange }: AgentEmbedTabPr
   }
 
   return (
-    <div className="space-y-6">
-      {/* Enable Toggle */}
-      <div className="flex items-center justify-between p-4 border rounded-lg bg-card">
-        <div>
-          <h3 className="text-sm font-medium">Embedded Chat Widget</h3>
-          <p className="text-xs text-muted-foreground">
-            Add a chat bubble to your website for customer engagement
-          </p>
-        </div>
-        <Switch checked={embedEnabled} onCheckedChange={handleToggleEmbed} />
+    <div className="grid grid-cols-1 lg:grid-cols-[400px_1fr] gap-6">
+      {/* Left Panel - Settings */}
+      <div className="space-y-4">
+        <EmbedSettingsPanel
+          config={localConfig}
+          onConfigChange={handleConfigChange}
+          embedCode={generateEmbedCode()}
+        />
       </div>
 
-      {embedEnabled && (
-        <div className="grid grid-cols-1 lg:grid-cols-[400px_1fr] gap-6">
-          {/* Left Panel - Settings */}
-          <div className="space-y-4">
-            <EmbedSettingsPanel
-              config={localConfig}
-              onConfigChange={handleConfigChange}
-              embedCode={generateEmbedCode()}
-            />
-          </div>
-
-          {/* Right Panel - Preview */}
-          <div className="hidden lg:block">
-            <EmbedPreviewPanel config={localConfig} />
-          </div>
-        </div>
-      )}
-
-      {!embedEnabled && (
-        <div className="text-center py-12 text-muted-foreground text-sm">
-          Enable the embedded chat widget to start customizing
-        </div>
-      )}
+      {/* Right Panel - Preview */}
+      <div className="hidden lg:block">
+        <EmbedPreviewPanel config={localConfig} />
+      </div>
     </div>
   );
 };

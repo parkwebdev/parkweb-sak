@@ -23,14 +23,14 @@ export const EmbedSettingsPanel = ({ config, onConfigChange, embedCode }: EmbedS
 
   return (
     <div className="space-y-4">
-      <Accordion type="multiple" defaultValue={["appearance"]} className="w-full">
+      <Accordion type="single" collapsible defaultValue="appearance" className="w-full">
         {/* Appearance Section */}
         <AccordionItem value="appearance">
           <AccordionTrigger className="text-sm font-medium">Appearance</AccordionTrigger>
           <AccordionContent className="space-y-4 pt-4">
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
-                <Label htmlFor="primary-color" className="text-xs">Primary Color</Label>
+                <Label htmlFor="primary-color" className="text-sm">Primary Color</Label>
                 <div className="flex items-center gap-2">
                   <Input
                     id="primary-color"
@@ -42,13 +42,13 @@ export const EmbedSettingsPanel = ({ config, onConfigChange, embedCode }: EmbedS
                   <Input
                     value={config.primaryColor}
                     onChange={(e) => onConfigChange({ primaryColor: e.target.value })}
-                    className="text-xs"
+                    className="text-sm"
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="secondary-color" className="text-xs">Secondary Color</Label>
+                <Label htmlFor="secondary-color" className="text-sm">Secondary Color</Label>
                 <div className="flex items-center gap-2">
                   <Input
                     id="secondary-color"
@@ -60,16 +60,16 @@ export const EmbedSettingsPanel = ({ config, onConfigChange, embedCode }: EmbedS
                   <Input
                     value={config.secondaryColor}
                     onChange={(e) => onConfigChange({ secondaryColor: e.target.value })}
-                    className="text-xs"
+                    className="text-sm"
                   />
                 </div>
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="position" className="text-xs">Chat Position</Label>
+              <Label htmlFor="position" className="text-sm">Chat Position</Label>
               <Select value={config.position} onValueChange={(value: any) => onConfigChange({ position: value })}>
-                <SelectTrigger className="text-xs">
+                <SelectTrigger className="text-sm">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -82,9 +82,9 @@ export const EmbedSettingsPanel = ({ config, onConfigChange, embedCode }: EmbedS
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="animation" className="text-xs">Bubble Animation</Label>
+              <Label htmlFor="animation" className="text-sm">Bubble Animation</Label>
               <Select value={config.animation} onValueChange={(value: any) => onConfigChange({ animation: value })}>
-                <SelectTrigger className="text-xs">
+                <SelectTrigger className="text-sm">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -99,8 +99,8 @@ export const EmbedSettingsPanel = ({ config, onConfigChange, embedCode }: EmbedS
 
             <div className="flex items-center justify-between">
               <div>
-                <Label htmlFor="badge" className="text-xs">Notification Badge</Label>
-                <p className="text-[10px] text-muted-foreground">Show availability dot</p>
+                <Label htmlFor="badge" className="text-sm">Notification Badge</Label>
+                <p className="text-xs text-muted-foreground">Show availability dot</p>
               </div>
               <Switch
                 id="badge"
@@ -111,8 +111,8 @@ export const EmbedSettingsPanel = ({ config, onConfigChange, embedCode }: EmbedS
 
             <div className="flex items-center justify-between">
               <div>
-                <Label htmlFor="teaser" className="text-xs">Conversation Teaser</Label>
-                <p className="text-[10px] text-muted-foreground">Show preview text</p>
+                <Label htmlFor="teaser" className="text-sm">Conversation Teaser</Label>
+                <p className="text-xs text-muted-foreground">Show preview text</p>
               </div>
               <Switch
                 id="teaser"
@@ -123,13 +123,13 @@ export const EmbedSettingsPanel = ({ config, onConfigChange, embedCode }: EmbedS
 
             {config.showTeaser && (
               <div className="space-y-2 pl-4 border-l-2">
-                <Label htmlFor="teaser-text" className="text-xs">Teaser Text</Label>
+                <Label htmlFor="teaser-text" className="text-sm">Teaser Text</Label>
                 <Input
                   id="teaser-text"
                   value={config.teaserText}
                   onChange={(e) => onConfigChange({ teaserText: e.target.value })}
                   placeholder="Need help? Chat with us!"
-                  className="text-xs"
+                  className="text-sm"
                   maxLength={50}
                 />
               </div>
@@ -142,77 +142,77 @@ export const EmbedSettingsPanel = ({ config, onConfigChange, embedCode }: EmbedS
           <AccordionTrigger className="text-sm font-medium">Messages & Content</AccordionTrigger>
           <AccordionContent className="space-y-4 pt-4">
             <div className="space-y-2">
-              <Label htmlFor="greeting" className="text-xs">Greeting Message</Label>
+              <Label htmlFor="greeting" className="text-sm">Greeting Message</Label>
               <Textarea
                 id="greeting"
                 value={config.greeting}
                 onChange={(e) => onConfigChange({ greeting: e.target.value })}
                 placeholder="Hi! How can I help you today?"
                 rows={2}
-                className="text-xs"
+                className="text-sm"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="placeholder" className="text-xs">Input Placeholder</Label>
+              <Label htmlFor="placeholder" className="text-sm">Input Placeholder</Label>
               <Input
                 id="placeholder"
                 value={config.placeholder}
                 onChange={(e) => onConfigChange({ placeholder: e.target.value })}
                 placeholder="Type your message..."
-                className="text-xs"
+                className="text-sm"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="agent-name" className="text-xs">Agent Name</Label>
+              <Label htmlFor="agent-name" className="text-sm">Agent Name</Label>
               <Input
                 id="agent-name"
                 value={config.agentName}
                 onChange={(e) => onConfigChange({ agentName: e.target.value })}
                 placeholder="AI Assistant"
-                className="text-xs"
+                className="text-sm"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="welcome-emoji" className="text-xs">Welcome Emoji</Label>
+              <Label htmlFor="welcome-emoji" className="text-sm">Welcome Emoji</Label>
               <Input
                 id="welcome-emoji"
                 value={config.welcomeEmoji}
                 onChange={(e) => onConfigChange({ welcomeEmoji: e.target.value })}
                 placeholder="👋"
                 maxLength={2}
-                className="text-xs"
+                className="text-sm"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="welcome-title" className="text-xs">Welcome Title</Label>
+              <Label htmlFor="welcome-title" className="text-sm">Welcome Title</Label>
               <Input
                 id="welcome-title"
                 value={config.welcomeTitle}
                 onChange={(e) => onConfigChange({ welcomeTitle: e.target.value })}
                 placeholder="Hi"
-                className="text-xs"
+                className="text-sm"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="welcome-subtitle" className="text-xs">Welcome Subtitle</Label>
+              <Label htmlFor="welcome-subtitle" className="text-sm">Welcome Subtitle</Label>
               <Input
                 id="welcome-subtitle"
                 value={config.welcomeSubtitle}
                 onChange={(e) => onConfigChange({ welcomeSubtitle: e.target.value })}
                 placeholder="How can we help you today?"
-                className="text-xs"
+                className="text-sm"
               />
             </div>
 
             <div className="flex items-center justify-between">
               <div>
-                <Label htmlFor="gradient" className="text-xs">Gradient Header</Label>
-                <p className="text-[10px] text-muted-foreground">Use gradient effect</p>
+                <Label htmlFor="gradient" className="text-sm">Gradient Header</Label>
+                <p className="text-xs text-muted-foreground">Use gradient effect</p>
               </div>
               <Switch
                 id="gradient"
@@ -223,7 +223,7 @@ export const EmbedSettingsPanel = ({ config, onConfigChange, embedCode }: EmbedS
 
             {config.useGradientHeader && (
               <div className="space-y-2 pl-4 border-l-2">
-                <Label htmlFor="gradient-end" className="text-xs">Gradient End Color</Label>
+                <Label htmlFor="gradient-end" className="text-sm">Gradient End Color</Label>
                 <div className="flex items-center gap-2">
                   <Input
                     id="gradient-end"
@@ -235,7 +235,7 @@ export const EmbedSettingsPanel = ({ config, onConfigChange, embedCode }: EmbedS
                   <Input
                     value={config.gradientEndColor}
                     onChange={(e) => onConfigChange({ gradientEndColor: e.target.value })}
-                    className="text-xs"
+                    className="text-sm"
                   />
                 </div>
               </div>
@@ -243,8 +243,8 @@ export const EmbedSettingsPanel = ({ config, onConfigChange, embedCode }: EmbedS
 
             <div className="flex items-center justify-between">
               <div>
-                <Label htmlFor="quick-actions" className="text-xs">Quick Actions</Label>
-                <p className="text-[10px] text-muted-foreground">Show action cards</p>
+                <Label htmlFor="quick-actions" className="text-sm">Quick Actions</Label>
+                <p className="text-xs text-muted-foreground">Show action cards</p>
               </div>
               <Switch
                 id="quick-actions"
@@ -255,8 +255,8 @@ export const EmbedSettingsPanel = ({ config, onConfigChange, embedCode }: EmbedS
 
             <div className="flex items-center justify-between">
               <div>
-                <Label htmlFor="bottom-nav" className="text-xs">Bottom Navigation</Label>
-                <p className="text-[10px] text-muted-foreground">Show nav bar</p>
+                <Label htmlFor="bottom-nav" className="text-sm">Bottom Navigation</Label>
+                <p className="text-xs text-muted-foreground">Show nav bar</p>
               </div>
               <Switch
                 id="bottom-nav"
@@ -268,7 +268,7 @@ export const EmbedSettingsPanel = ({ config, onConfigChange, embedCode }: EmbedS
             {config.showBottomNav && (
               <div className="space-y-3 pl-4 border-l-2">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="messages-tab" className="text-xs">Messages Tab</Label>
+                  <Label htmlFor="messages-tab" className="text-sm">Messages Tab</Label>
                   <Switch
                     id="messages-tab"
                     checked={config.enableMessagesTab}
@@ -276,7 +276,7 @@ export const EmbedSettingsPanel = ({ config, onConfigChange, embedCode }: EmbedS
                   />
                 </div>
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="help-tab" className="text-xs">Help Tab</Label>
+                  <Label htmlFor="help-tab" className="text-sm">Help Tab</Label>
                   <Switch
                     id="help-tab"
                     checked={config.enableHelpTab}
@@ -294,8 +294,8 @@ export const EmbedSettingsPanel = ({ config, onConfigChange, embedCode }: EmbedS
           <AccordionContent className="space-y-4 pt-4">
             <div className="flex items-center justify-between">
               <div>
-                <Label htmlFor="audio" className="text-xs">Audio Messages</Label>
-                <p className="text-[10px] text-muted-foreground">Voice recording</p>
+                <Label htmlFor="audio" className="text-sm">Audio Messages</Label>
+                <p className="text-xs text-muted-foreground">Voice recording</p>
               </div>
               <Switch
                 id="audio"
@@ -306,8 +306,8 @@ export const EmbedSettingsPanel = ({ config, onConfigChange, embedCode }: EmbedS
 
             <div className="flex items-center justify-between">
               <div>
-                <Label htmlFor="files" className="text-xs">File Attachments</Label>
-                <p className="text-[10px] text-muted-foreground">Upload files</p>
+                <Label htmlFor="files" className="text-sm">File Attachments</Label>
+                <p className="text-xs text-muted-foreground">Upload files</p>
               </div>
               <Switch
                 id="files"
@@ -318,7 +318,7 @@ export const EmbedSettingsPanel = ({ config, onConfigChange, embedCode }: EmbedS
 
             {config.enableFileAttachments && (
               <div className="space-y-2 pl-4 border-l-2">
-                <Label htmlFor="max-file-size" className="text-xs">Max File Size (MB)</Label>
+                <Label htmlFor="max-file-size" className="text-sm">Max File Size (MB)</Label>
                 <Input
                   id="max-file-size"
                   type="number"
@@ -326,15 +326,15 @@ export const EmbedSettingsPanel = ({ config, onConfigChange, embedCode }: EmbedS
                   max="50"
                   value={config.maxFileSize}
                   onChange={(e) => onConfigChange({ maxFileSize: parseInt(e.target.value) })}
-                  className="text-xs"
+                  className="text-sm"
                 />
               </div>
             )}
 
             <div className="flex items-center justify-between">
               <div>
-                <Label htmlFor="reactions" className="text-xs">Emoji Reactions</Label>
-                <p className="text-[10px] text-muted-foreground">React to messages</p>
+                <Label htmlFor="reactions" className="text-sm">Emoji Reactions</Label>
+                <p className="text-xs text-muted-foreground">React to messages</p>
               </div>
               <Switch
                 id="reactions"
@@ -345,8 +345,8 @@ export const EmbedSettingsPanel = ({ config, onConfigChange, embedCode }: EmbedS
 
             <div className="flex items-center justify-between">
               <div>
-                <Label htmlFor="typing" className="text-xs">Typing Indicator</Label>
-                <p className="text-[10px] text-muted-foreground">Show typing dots</p>
+                <Label htmlFor="typing" className="text-sm">Typing Indicator</Label>
+                <p className="text-xs text-muted-foreground">Show typing dots</p>
               </div>
               <Switch
                 id="typing"
@@ -357,8 +357,8 @@ export const EmbedSettingsPanel = ({ config, onConfigChange, embedCode }: EmbedS
 
             <div className="flex items-center justify-between">
               <div>
-                <Label htmlFor="receipts" className="text-xs">Read Receipts</Label>
-                <p className="text-[10px] text-muted-foreground">Show checkmarks</p>
+                <Label htmlFor="receipts" className="text-sm">Read Receipts</Label>
+                <p className="text-xs text-muted-foreground">Show checkmarks</p>
               </div>
               <Switch
                 id="receipts"
@@ -374,13 +374,13 @@ export const EmbedSettingsPanel = ({ config, onConfigChange, embedCode }: EmbedS
           <AccordionTrigger className="text-sm font-medium">Installation</AccordionTrigger>
           <AccordionContent className="space-y-4 pt-4">
             <div className="space-y-2">
-              <Label className="text-xs">Embed Code</Label>
+              <Label className="text-sm">Embed Code</Label>
               <div className="relative">
                 <Textarea
                   value={embedCode}
                   readOnly
                   rows={8}
-                  className="font-mono text-[10px] pr-10"
+                  className="font-mono text-xs pr-10"
                 />
                 <Button
                   size="sm"
@@ -393,9 +393,9 @@ export const EmbedSettingsPanel = ({ config, onConfigChange, embedCode }: EmbedS
               </div>
             </div>
 
-            <div className="space-y-2 p-3 bg-muted/50 rounded-lg text-xs">
-              <p className="font-medium">Installation Steps:</p>
-              <ol className="list-decimal list-inside space-y-1 text-[11px] text-muted-foreground">
+            <div className="space-y-2 p-3 bg-muted/50 rounded-lg">
+              <p className="text-sm font-medium">Installation Steps:</p>
+              <ol className="list-decimal list-inside space-y-1 text-xs text-muted-foreground">
                 <li>Copy the embed code above</li>
                 <li>Paste it before the closing &lt;/body&gt; tag</li>
                 <li>The chat widget will appear automatically</li>
