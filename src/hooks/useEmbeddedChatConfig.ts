@@ -2,6 +2,14 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
+export interface QuickAction {
+  id: string;
+  title: string;
+  subtitle: string;
+  icon: 'chat' | 'help' | 'bug' | 'feature' | 'custom';
+  action: 'start_chat' | 'open_help' | 'custom_url';
+}
+
 export interface EmbeddedChatConfig {
   agentId: string;
   primaryColor: string;
@@ -19,6 +27,28 @@ export interface EmbeddedChatConfig {
   scrollDepth: number;
   showTeaser: boolean;
   teaserText: string;
+  
+  // Home Screen Options
+  welcomeEmoji: string;
+  welcomeTitle: string;
+  welcomeSubtitle: string;
+  
+  // Quick Actions
+  showQuickActions: boolean;
+  quickActions: QuickAction[];
+  
+  // Bottom Navigation
+  showBottomNav: boolean;
+  enableMessagesTab: boolean;
+  enableHelpTab: boolean;
+  
+  // Gradient
+  useGradientHeader: boolean;
+  gradientEndColor: string;
+  
+  // Team Avatars
+  showTeamAvatars: boolean;
+  teamAvatarUrls: string[];
 }
 
 export const useEmbeddedChatConfig = (agentId: string) => {
@@ -38,6 +68,43 @@ export const useEmbeddedChatConfig = (agentId: string) => {
     scrollDepth: 50,
     showTeaser: true,
     teaserText: 'Need help? Chat with us!',
+    
+    // Home Screen
+    welcomeEmoji: '👋',
+    welcomeTitle: 'Hi',
+    welcomeSubtitle: 'How can we help you today?',
+    
+    // Quick Actions
+    showQuickActions: true,
+    quickActions: [
+      {
+        id: 'start-chat',
+        title: 'Start a conversation',
+        subtitle: 'Chat with our AI assistant',
+        icon: 'chat',
+        action: 'start_chat',
+      },
+      {
+        id: 'get-help',
+        title: 'Browse help articles',
+        subtitle: 'Find answers in our knowledge base',
+        icon: 'help',
+        action: 'open_help',
+      },
+    ],
+    
+    // Bottom Navigation
+    showBottomNav: true,
+    enableMessagesTab: true,
+    enableHelpTab: false,
+    
+    // Gradient
+    useGradientHeader: true,
+    gradientEndColor: '#1e40af',
+    
+    // Team Avatars
+    showTeamAvatars: false,
+    teamAvatarUrls: [],
   });
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
@@ -87,12 +154,24 @@ export const useEmbeddedChatConfig = (agentId: string) => {
       const updatedConfig = { ...config, ...newConfig };
       setConfig(updatedConfig);
 
+      // Convert to plain object for JSON storage
+      const configForStorage = {
+        ...updatedConfig,
+        quickActions: updatedConfig.quickActions.map(action => ({
+          id: action.id,
+          title: action.title,
+          subtitle: action.subtitle,
+          icon: action.icon,
+          action: action.action,
+        })),
+      };
+
       const { error } = await supabase
         .from('agents')
         .update({
           deployment_config: {
             embedded_chat_enabled: true,
-            embedded_chat: updatedConfig,
+            embedded_chat: configForStorage,
           },
         })
         .eq('id', agentId);
@@ -141,6 +220,11 @@ export const useEmbeddedChatConfig = (agentId: string) => {
     script.setAttribute('data-scroll-depth', '${config.scrollDepth}');
     script.setAttribute('data-show-teaser', '${config.showTeaser}');
     script.setAttribute('data-teaser-text', '${config.teaserText}');
+    script.setAttribute('data-welcome-emoji', '${config.welcomeEmoji}');
+    script.setAttribute('data-welcome-title', '${config.welcomeTitle}');
+    script.setAttribute('data-welcome-subtitle', '${config.welcomeSubtitle}');
+    script.setAttribute('data-use-gradient-header', '${config.useGradientHeader}');
+    script.setAttribute('data-gradient-end-color', '${config.gradientEndColor}');
     ${config.avatarUrl ? `script.setAttribute('data-avatar-url', '${config.avatarUrl}');` : ''}
     document.head.appendChild(script);
   })();
