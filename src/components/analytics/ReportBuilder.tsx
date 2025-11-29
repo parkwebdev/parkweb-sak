@@ -1,14 +1,8 @@
-import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
-import { Download01 } from '@untitledui/icons';
-import { generateCSVReport, generatePDFReport } from '@/lib/report-export';
-import { useOrganization } from '@/contexts/OrganizationContext';
-import { toast } from 'sonner';
 
 export interface ReportConfig {
   type: 'summary' | 'detailed' | 'comparison';
@@ -23,47 +17,13 @@ export interface ReportConfig {
 }
 
 interface ReportBuilderProps {
-  data: any;
-  startDate: Date;
-  endDate: Date;
+  config: ReportConfig;
+  onConfigChange: (config: ReportConfig) => void;
 }
 
-export const ReportBuilder = ({ data, startDate, endDate }: ReportBuilderProps) => {
-  const { currentOrg } = useOrganization();
-  const [config, setConfig] = useState<ReportConfig>({
-    type: 'detailed',
-    includeConversations: true,
-    includeLeads: true,
-    includeAgentPerformance: true,
-    includeUsageMetrics: true,
-    grouping: 'day',
-    includeKPIs: true,
-    includeCharts: true,
-    includeTables: true,
-  });
-
+export const ReportBuilder = ({ config, onConfigChange }: ReportBuilderProps) => {
   const updateConfig = <K extends keyof ReportConfig>(key: K, value: ReportConfig[K]) => {
-    setConfig((prev) => ({ ...prev, [key]: value }));
-  };
-
-  const handleExportCSV = async () => {
-    try {
-      await generateCSVReport(data, config, startDate, endDate, currentOrg?.name || 'Organization');
-      toast.success('CSV report generated successfully');
-    } catch (error) {
-      console.error('CSV export error:', error);
-      toast.error('Failed to generate CSV report');
-    }
-  };
-
-  const handleExportPDF = async () => {
-    try {
-      await generatePDFReport(data, config, startDate, endDate, currentOrg?.name || 'Organization');
-      toast.success('PDF report generated successfully');
-    } catch (error) {
-      console.error('PDF export error:', error);
-      toast.error('Failed to generate PDF report');
-    }
+    onConfigChange({ ...config, [key]: value });
   };
 
   return (
@@ -179,18 +139,6 @@ export const ReportBuilder = ({ data, startDate, endDate }: ReportBuilderProps) 
           </div>
         </CardContent>
       </Card>
-
-      {/* Export Buttons */}
-      <div className="flex justify-end gap-3">
-        <Button onClick={handleExportCSV} variant="outline" size="lg">
-          <Download01 className="mr-2 h-4 w-4" />
-          Generate CSV
-        </Button>
-        <Button onClick={handleExportPDF} size="lg">
-          <Download01 className="mr-2 h-4 w-4" />
-          Generate PDF
-        </Button>
-      </div>
     </div>
   );
 };

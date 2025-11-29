@@ -10,7 +10,7 @@ import { UsageMetricsChart } from '@/components/analytics/UsageMetricsChart';
 import { AnalyticsKPIs } from '@/components/analytics/AnalyticsKPIs';
 import { DateRangePicker } from '@/components/analytics/DateRangePicker';
 import { ReportFiltersPanel, ReportFilters } from '@/components/analytics/ReportFilters';
-import { ReportBuilder } from '@/components/analytics/ReportBuilder';
+import { ReportBuilder, ReportConfig } from '@/components/analytics/ReportBuilder';
 import { DataTables } from '@/components/analytics/DataTables';
 import { ExportButtons } from '@/components/analytics/ExportButtons';
 import { ScheduledReportsManager } from '@/components/analytics/ScheduledReportsManager';
@@ -38,6 +38,19 @@ const Analytics: React.FC<AnalyticsProps> = ({ onMenuClick }) => {
     agentId: 'all',
     leadStatus: 'all',
     conversationStatus: 'all',
+  });
+
+  // Report config state
+  const [reportConfig, setReportConfig] = useState<ReportConfig>({
+    type: 'detailed',
+    includeConversations: true,
+    includeLeads: true,
+    includeAgentPerformance: true,
+    includeUsageMetrics: true,
+    grouping: 'day',
+    includeKPIs: true,
+    includeCharts: true,
+    includeTables: true,
   });
 
   const { 
@@ -157,6 +170,7 @@ const Analytics: React.FC<AnalyticsProps> = ({ onMenuClick }) => {
               startDate={startDate}
               endDate={endDate}
               orgName={currentOrg?.name || 'Organization'}
+              config={reportConfig}
             />
           </div>
 
@@ -192,9 +206,8 @@ const Analytics: React.FC<AnalyticsProps> = ({ onMenuClick }) => {
           {/* Reports Tab */}
           <TabsContent value="reports">
             <ReportBuilder 
-              data={analyticsData}
-              startDate={startDate}
-              endDate={endDate}
+              config={reportConfig}
+              onConfigChange={setReportConfig}
             />
           </TabsContent>
 
