@@ -66,43 +66,75 @@ export const EmbedSettingsPanel = ({ config, onConfigChange, embedCode }: EmbedS
         <AccordionItem value="appearance">
           <AccordionTrigger className="text-sm font-medium">Appearance</AccordionTrigger>
           <AccordionContent className="space-y-4 pt-4">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label htmlFor="primary-color" className="text-sm">Primary Color</Label>
-                <div className="flex items-center gap-2">
-                  <Input
-                    id="primary-color"
-                    type="color"
-                    value={config.primaryColor}
-                    onChange={(e) => onConfigChange({ primaryColor: e.target.value })}
-                    className="w-16 h-9 cursor-pointer"
-                  />
-                  <Input
-                    value={config.primaryColor}
-                    onChange={(e) => onConfigChange({ primaryColor: e.target.value })}
-                    className="text-sm"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="secondary-color" className="text-sm">Secondary Color</Label>
-                <div className="flex items-center gap-2">
-                  <Input
-                    id="secondary-color"
-                    type="color"
-                    value={config.secondaryColor}
-                    onChange={(e) => onConfigChange({ secondaryColor: e.target.value })}
-                    className="w-16 h-9 cursor-pointer"
-                  />
-                  <Input
-                    value={config.secondaryColor}
-                    onChange={(e) => onConfigChange({ secondaryColor: e.target.value })}
-                    className="text-sm"
-                  />
-                </div>
+            <div className="space-y-2">
+              <Label htmlFor="primary-color" className="text-sm">Text/Button Color</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  id="primary-color"
+                  type="color"
+                  value={config.primaryColor}
+                  onChange={(e) => onConfigChange({ primaryColor: e.target.value })}
+                  className="w-16 h-9 cursor-pointer"
+                />
+                <Input
+                  value={config.primaryColor}
+                  onChange={(e) => onConfigChange({ primaryColor: e.target.value })}
+                  className="text-sm"
+                />
               </div>
             </div>
+
+            <div className="flex items-center justify-between">
+              <div>
+                <Label htmlFor="gradient" className="text-sm">Gradient Header</Label>
+                <p className="text-xs text-muted-foreground">Use gradient effect</p>
+              </div>
+              <Switch
+                id="gradient"
+                checked={config.useGradientHeader}
+                onCheckedChange={(checked) => onConfigChange({ useGradientHeader: checked })}
+              />
+            </div>
+
+            {config.useGradientHeader && (
+              <div className="space-y-3 pl-4 border-l-2">
+                <div className="space-y-2">
+                  <Label htmlFor="gradient-start" className="text-sm">Gradient Start Color</Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      id="gradient-start"
+                      type="color"
+                      value={config.gradientStartColor}
+                      onChange={(e) => onConfigChange({ gradientStartColor: e.target.value })}
+                      className="w-16 h-9 cursor-pointer"
+                    />
+                    <Input
+                      value={config.gradientStartColor}
+                      onChange={(e) => onConfigChange({ gradientStartColor: e.target.value })}
+                      className="text-sm"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="gradient-end" className="text-sm">Gradient End Color</Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      id="gradient-end"
+                      type="color"
+                      value={config.gradientEndColor}
+                      onChange={(e) => onConfigChange({ gradientEndColor: e.target.value })}
+                      className="w-16 h-9 cursor-pointer"
+                    />
+                    <Input
+                      value={config.gradientEndColor}
+                      onChange={(e) => onConfigChange({ gradientEndColor: e.target.value })}
+                      className="text-sm"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="space-y-2">
               <Label htmlFor="position" className="text-sm">Chat Position</Label>
@@ -246,38 +278,6 @@ export const EmbedSettingsPanel = ({ config, onConfigChange, embedCode }: EmbedS
                 className="text-sm"
               />
             </div>
-
-            <div className="flex items-center justify-between">
-              <div>
-                <Label htmlFor="gradient" className="text-sm">Gradient Header</Label>
-                <p className="text-xs text-muted-foreground">Use gradient effect</p>
-              </div>
-              <Switch
-                id="gradient"
-                checked={config.useGradientHeader}
-                onCheckedChange={(checked) => onConfigChange({ useGradientHeader: checked })}
-              />
-            </div>
-
-            {config.useGradientHeader && (
-              <div className="space-y-2 pl-4 border-l-2">
-                <Label htmlFor="gradient-end" className="text-sm">Gradient End Color</Label>
-                <div className="flex items-center gap-2">
-                  <Input
-                    id="gradient-end"
-                    type="color"
-                    value={config.gradientEndColor}
-                    onChange={(e) => onConfigChange({ gradientEndColor: e.target.value })}
-                    className="w-16 h-9 cursor-pointer"
-                  />
-                  <Input
-                    value={config.gradientEndColor}
-                    onChange={(e) => onConfigChange({ gradientEndColor: e.target.value })}
-                    className="text-sm"
-                  />
-                </div>
-              </div>
-            )}
 
             <div className="flex items-center justify-between">
               <div>
@@ -489,18 +489,6 @@ export const EmbedSettingsPanel = ({ config, onConfigChange, embedCode }: EmbedS
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <Label htmlFor="receipts" className="text-sm">Read Receipts</Label>
-                <p className="text-xs text-muted-foreground">Show checkmarks</p>
-              </div>
-              <Switch
-                id="receipts"
-                checked={config.showReadReceipts}
-                onCheckedChange={(checked) => onConfigChange({ showReadReceipts: checked })}
-              />
-            </div>
-
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <Label htmlFor="default-sound" className="text-sm">Sound by Default</Label>

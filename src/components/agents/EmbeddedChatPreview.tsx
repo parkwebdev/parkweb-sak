@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { X, Send01, Minimize02, Home05, MessageChatCircle, HelpCircle, ChevronRight, Zap, BookOpen01, Check, Microphone01, Attachment01, Settings01, Image03, FileCheck02 } from '@untitledui/icons';
-import type { EmbeddedChatConfig } from '@/hooks/useEmbeddedChatConfig';
+import type { EmbeddedChatConfig, HelpArticle } from '@/hooks/useEmbeddedChatConfig';
 import { ChatBubbleIcon } from './ChatBubbleIcon';
 import { AudioRecorder } from '@/components/chat/AudioRecorder';
 import { AudioPlayer } from '@/components/chat/AudioPlayer';
@@ -16,6 +16,7 @@ import { MessageFileAttachment } from '@/components/chat/FileAttachment';
 import { MessageReactions, Reaction } from '@/components/chat/MessageReactions';
 import { BubbleBackground } from '@/components/ui/bubble-background';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from '@/components/ui/dropdown-menu';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { z } from 'zod';
 import { toast } from 'sonner';
 
@@ -45,6 +46,10 @@ export const EmbeddedChatPreview = ({ config: baseConfig }: EmbeddedChatPreviewP
 
   const [isOpen, setIsOpen] = useState(false);
   const [currentView, setCurrentView] = useState<ViewType>('home');
+  const [expandedArticle, setExpandedArticle] = useState<HelpArticle | null>(null);
+  const [hasSubmittedContactForm, setHasSubmittedContactForm] = useState(() => {
+    return localStorage.getItem(`chatpad_contact_submitted_${baseConfig.agentId}`) === 'true';
+  });
   const [isVisible, setIsVisible] = useState(config.displayTiming === 'immediate');
   const [showTeaser, setShowTeaser] = useState(false);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
@@ -370,13 +375,13 @@ export const EmbeddedChatPreview = ({ config: baseConfig }: EmbeddedChatPreviewP
     }
   }, [currentView, activeConversationId]);
 
-  // Calculate gradient end color (lighter version of primary)
+  // Calculate gradient style
   const getGradientStyle = () => {
     if (!config.useGradientHeader) {
       return { backgroundColor: config.primaryColor };
     }
     return {
-      background: `linear-gradient(135deg, ${config.primaryColor} 0%, ${config.gradientEndColor} 100%)`,
+      background: `linear-gradient(135deg, ${config.gradientStartColor} 0%, ${config.gradientEndColor} 100%)`,
     };
   };
 
@@ -392,6 +397,13 @@ export const EmbeddedChatPreview = ({ config: baseConfig }: EmbeddedChatPreviewP
         return '';
     }
   };
+
+  // Check if we should show contact form first
+  useEffect(() => {
+    if (isOpen && config.enableContactForm && !hasSubmittedContactForm) {
+      setCurrentView('contact');
+    }
+  }, [isOpen, config.enableContactForm, hasSubmittedContactForm]);
 
   return (
     <div className="relative min-h-[700px] bg-muted/30 rounded-lg p-4 overflow-hidden">
@@ -414,11 +426,11 @@ export const EmbeddedChatPreview = ({ config: baseConfig }: EmbeddedChatPreviewP
                   <BubbleBackground 
                     interactive
                     colors={{
-                      first: hexToRgb(config.primaryColor),
+                      first: hexToRgb(config.gradientStartColor),
                       second: hexToRgb(config.gradientEndColor),
-                      third: hexToRgb(config.primaryColor),
+                      third: hexToRgb(config.gradientStartColor),
                       fourth: hexToRgb(config.gradientEndColor),
-                      fifth: hexToRgb(config.primaryColor),
+                      fifth: hexToRgb(config.gradientStartColor),
                       sixth: hexToRgb(config.gradientEndColor),
                     }}
                     className="absolute inset-0"
@@ -619,6 +631,8 @@ export const EmbeddedChatPreview = ({ config: baseConfig }: EmbeddedChatPreviewP
                           
                           // Success - proceed to chat
                           toast.success('Form submitted successfully!');
+                          setHasSubmittedContactForm(true);
+                          localStorage.setItem(`chatpad_contact_submitted_${config.agentId}`, 'true');
                           setTimeout(() => {
                             setCurrentView('messages');
                             setActiveConversationId('new');
@@ -798,23 +812,23 @@ export const EmbeddedChatPreview = ({ config: baseConfig }: EmbeddedChatPreviewP
                                    <p className="text-sm">{msg.content}</p>
                                  )}
                                </div>
-                              
-                               {/* Read Receipt */}
-                               {config.showReadReceipts && msg.role === 'user' && (
-                                 <div className="flex items-center gap-1 mt-1 px-1">
-                                   {msg.read ? (
-                                     <div className="flex">
-                                       <Check className="h-3 w-3 text-primary -mr-1.5" />
-                                       <Check className="h-3 w-3 text-primary" />
-                                     </div>
-                                   ) : (
-                                     <Check className="h-3 w-3 text-muted-foreground" />
-                                   )}
-                                   <span className="text-xs text-muted-foreground">
-                                     {msg.read ? 'Read' : 'Sent'}
-                                   </span>
-                                 </div>
-                               )}
+                               
+                                {/* Read Receipt - always enabled */}
+                                {msg.role === 'user' && (
+                                  <div className="flex items-center gap-1 mt-1 px-1">
+                                    {msg.read ? (
+                                      <div className="flex">
+                                        <Check className="h-3 w-3 text-primary -mr-1.5" />
+                                        <Check className="h-3 w-3 text-primary" />
+                                      </div>
+                                    ) : (
+                                      <Check className="h-3 w-3 text-muted-foreground" />
+                                    )}
+                                    <span className="text-xs text-muted-foreground">
+                                      {msg.read ? 'Read' : 'Sent'}
+                                    </span>
+                                  </div>
+                                )}
                                
                                {/* Emoji Reactions */}
                                 {/* Emoji reactions - always enabled */}
@@ -1140,6 +1154,7 @@ export const EmbeddedChatPreview = ({ config: baseConfig }: EmbeddedChatPreviewP
                                   <div
                                     key={article.id}
                                     className="p-3 border rounded-lg hover:bg-accent/50 cursor-pointer transition-all group"
+                                    onClick={() => setExpandedArticle(article)}
                                   >
                                     <div className="flex items-start justify-between gap-2">
                                       <div className="flex items-start gap-2 flex-1 min-w-0">
@@ -1162,12 +1177,49 @@ export const EmbeddedChatPreview = ({ config: baseConfig }: EmbeddedChatPreviewP
                           );
                         })}
                       </div>
-                    )}
-                  </div>
-                )}
-              </div>
+                     )}
+                   </div>
+                 )}
+               </div>
 
-              {/* Bottom Navigation */}
+               {/* Article Expansion Dialog */}
+               <Dialog open={expandedArticle !== null} onOpenChange={(open) => !open && setExpandedArticle(null)}>
+                 <DialogContent className="max-w-md">
+                   <DialogHeader>
+                     <DialogTitle className="flex items-center gap-2">
+                       {expandedArticle?.icon && <span className="text-xl">{expandedArticle.icon}</span>}
+                       {expandedArticle?.title}
+                     </DialogTitle>
+                   </DialogHeader>
+                   <div className="mt-4 space-y-4">
+                     <div className="text-sm whitespace-pre-wrap">
+                       {expandedArticle?.content}
+                     </div>
+                     <div className="flex justify-end gap-2 pt-4 border-t">
+                       <Button
+                         variant="outline"
+                         size="sm"
+                         onClick={() => setExpandedArticle(null)}
+                       >
+                         Close
+                       </Button>
+                       <Button
+                         size="sm"
+                         style={{ backgroundColor: config.primaryColor }}
+                         onClick={() => {
+                           setExpandedArticle(null);
+                           setCurrentView('messages');
+                           setActiveConversationId('new');
+                         }}
+                       >
+                         Start Chat
+                       </Button>
+                     </div>
+                   </div>
+                 </DialogContent>
+               </Dialog>
+
+               {/* Bottom Navigation */}
               {config.showBottomNav && (
                 <div className="border-t bg-background">
                   <div className="flex items-center justify-around p-2">

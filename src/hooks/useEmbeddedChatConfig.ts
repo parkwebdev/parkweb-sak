@@ -31,7 +31,6 @@ export interface HelpArticle {
 export interface EmbeddedChatConfig {
   agentId: string;
   primaryColor: string;
-  secondaryColor: string;
   position: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
   greeting: string;
   placeholder: string;
@@ -61,14 +60,12 @@ export interface EmbeddedChatConfig {
   
   // Gradient
   useGradientHeader: boolean;
+  gradientStartColor: string;
   gradientEndColor: string;
   
   // Team Avatars
   showTeamAvatars: boolean;
   teamAvatarUrls: string[];
-  
-  // Real-time Indicators (always enabled)
-  showReadReceipts: boolean;
   
   // File Attachments (always enabled)
   maxFileSize: number;
@@ -96,7 +93,6 @@ export const useEmbeddedChatConfig = (agentId: string) => {
   const getDefaultConfig = (): EmbeddedChatConfig => ({
     agentId,
     primaryColor: '#000000',
-    secondaryColor: '#ffffff',
     position: 'bottom-right',
     greeting: 'Hi! How can I help you today?',
     placeholder: 'Type your message...',
@@ -147,6 +143,7 @@ export const useEmbeddedChatConfig = (agentId: string) => {
     
     // Gradient
     useGradientHeader: true,
+    gradientStartColor: '#000000',
     gradientEndColor: '#1e40af',
     
     // Team Avatars
@@ -156,9 +153,6 @@ export const useEmbeddedChatConfig = (agentId: string) => {
       'https://api.dicebear.com/7.x/avataaars/svg?seed=John',
       'https://api.dicebear.com/7.x/avataaars/svg?seed=Emma',
     ],
-    
-    // Real-time Indicators (typing always enabled, read receipts configurable)
-    showReadReceipts: true,
     
     // File Attachments (always enabled)
     maxFileSize: 10,
@@ -295,7 +289,6 @@ export const useEmbeddedChatConfig = (agentId: string) => {
     script.src = '${baseUrl}/widget.js';
     script.setAttribute('data-agent-id', '${agentId}');
     script.setAttribute('data-primary-color', '${config.primaryColor}');
-    script.setAttribute('data-secondary-color', '${config.secondaryColor}');
     script.setAttribute('data-position', '${config.position}');
     script.setAttribute('data-greeting', '${config.greeting}');
     script.setAttribute('data-placeholder', '${config.placeholder}');
@@ -312,8 +305,8 @@ export const useEmbeddedChatConfig = (agentId: string) => {
     script.setAttribute('data-welcome-title', '${config.welcomeTitle}');
     script.setAttribute('data-welcome-subtitle', '${config.welcomeSubtitle}');
     script.setAttribute('data-use-gradient-header', '${config.useGradientHeader}');
+    script.setAttribute('data-gradient-start-color', '${config.gradientStartColor}');
     script.setAttribute('data-gradient-end-color', '${config.gradientEndColor}');
-    script.setAttribute('data-show-read-receipts', '${config.showReadReceipts}');
     script.setAttribute('data-max-file-size', '${config.maxFileSize}');
     script.setAttribute('data-allowed-file-types', '${config.allowedFileTypes.join(',')}');
     ${config.avatarUrl ? `script.setAttribute('data-avatar-url', '${config.avatarUrl}');` : ''}
