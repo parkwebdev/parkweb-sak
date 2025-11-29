@@ -18,7 +18,7 @@ interface HelpArticlesManagerProps {
 }
 
 export const HelpArticlesManager = ({ agentId }: HelpArticlesManagerProps) => {
-  const { articles, categories, addArticle, updateArticle, deleteArticle, addCategory, updateCategory, reorderArticles } = useHelpArticles(agentId);
+  const { articles, categories, loading, addArticle, updateArticle, deleteArticle, addCategory, updateCategory, reorderArticles } = useHelpArticles(agentId);
   
   // Configure sensors for drag and drop (require 5px movement to start dragging)
   const sensors = useSensors(
@@ -49,22 +49,26 @@ export const HelpArticlesManager = ({ agentId }: HelpArticlesManagerProps) => {
     description: '',
   });
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!formData.title.trim() || !formData.content.trim() || !formData.category) {
       toast.error('Please fill in all required fields');
       return;
     }
 
-    if (editingArticle) {
-      updateArticle(editingArticle, formData);
-      toast.success('Article updated');
-    } else {
-      addArticle(formData);
-      toast.success('Article added');
-    }
+    try {
+      if (editingArticle) {
+        await updateArticle(editingArticle, formData);
+        toast.success('Article updated');
+      } else {
+        await addArticle(formData);
+        toast.success('Article added');
+      }
 
-    resetForm();
-    setDialogOpen(false);
+      resetForm();
+      setDialogOpen(false);
+    } catch (error) {
+      toast.error('Failed to save article');
+    }
   };
 
   const handleEdit = (articleId: string) => {
@@ -81,10 +85,14 @@ export const HelpArticlesManager = ({ agentId }: HelpArticlesManagerProps) => {
     }
   };
 
-  const handleDelete = (articleId: string) => {
+  const handleDelete = async (articleId: string) => {
     if (confirm('Are you sure you want to delete this article?')) {
-      deleteArticle(articleId);
-      toast.success('Article deleted');
+      try {
+        await deleteArticle(articleId);
+        toast.success('Article deleted');
+      } catch (error) {
+        toast.error('Failed to delete article');
+      }
     }
   };
 
@@ -93,15 +101,19 @@ export const HelpArticlesManager = ({ agentId }: HelpArticlesManagerProps) => {
     setEditingArticle(null);
   };
 
-  const handleAddCategory = () => {
+  const handleAddCategory = async () => {
     if (!newCategoryForm.name.trim()) {
       toast.error('Please enter a category name');
       return;
     }
-    addCategory(newCategoryForm.name, newCategoryForm.description);
-    toast.success('Category added');
-    setNewCategoryForm({ name: '', description: '' });
-    setNewCategoryDialogOpen(false);
+    try {
+      await addCategory(newCategoryForm.name, newCategoryForm.description);
+      toast.success('Category added');
+      setNewCategoryForm({ name: '', description: '' });
+      setNewCategoryDialogOpen(false);
+    } catch (error) {
+      toast.error('Failed to add category');
+    }
   };
 
   const handleEditCategory = (categoryName: string) => {
@@ -113,19 +125,23 @@ export const HelpArticlesManager = ({ agentId }: HelpArticlesManagerProps) => {
     }
   };
 
-  const handleUpdateCategory = () => {
+  const handleUpdateCategory = async () => {
     if (!editCategoryForm.name.trim()) {
       toast.error('Please enter a category name');
       return;
     }
-    updateCategory(editingCategoryName, editCategoryForm.name, editCategoryForm.description);
-    toast.success('Category updated');
-    setEditCategoryDialogOpen(false);
-    setEditingCategoryName('');
-    setEditCategoryForm({ name: '', description: '' });
+    try {
+      await updateCategory(editingCategoryName, editCategoryForm.name, editCategoryForm.description);
+      toast.success('Category updated');
+      setEditCategoryDialogOpen(false);
+      setEditingCategoryName('');
+      setEditCategoryForm({ name: '', description: '' });
+    } catch (error) {
+      toast.error('Failed to update category');
+    }
   };
 
-  const handleDragEnd = (event: DragEndEvent, category: string) => {
+  const handleDragEnd = async (event: DragEndEvent, category: string) => {
     const { active, over } = event;
 
     if (!over || active.id === over.id) {
@@ -155,16 +171,29 @@ export const HelpArticlesManager = ({ agentId }: HelpArticlesManagerProps) => {
       return { ...article, order: newOrder };
     });
 
-    reorderArticles(updatedArticles);
+    try {
+      await reorderArticles(updatedArticles);
+    } catch (error) {
+      toast.error('Failed to reorder articles');
+    }
   };
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">
-          Add help articles to display in the chat widget's help tab, organized by categories.
-        </p>
-        <div className="flex gap-2">
+      {loading && (
+        <div className="text-center py-8">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent motion-reduce:animate-[spin_1.5s_linear_infinite]" />
+          <p className="text-sm text-muted-foreground mt-2">Loading help articles...</p>
+        </div>
+      )}
+      
+      {!loading && (
+        <>
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">
+              Add help articles to display in the chat widget's help tab, organized by categories.
+            </p>
+            <div className="flex gap-2">
           <Dialog open={newCategoryDialogOpen} onOpenChange={setNewCategoryDialogOpen}>
             <DialogTrigger asChild>
               <Button size="sm" variant="outline">
@@ -401,6 +430,8 @@ export const HelpArticlesManager = ({ agentId }: HelpArticlesManagerProps) => {
             );
           })}
         </div>
+      )}
+      </>
       )}
     </div>
   );

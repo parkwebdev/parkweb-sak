@@ -6,7 +6,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { X, Send01, Minimize02, Home05, MessageChatCircle, HelpCircle, ChevronRight, Zap, BookOpen01, Check, Microphone01, Attachment01, Settings01, Image03, FileCheck02 } from '@untitledui/icons';
+import { X, Send01, Minimize02, Home05, MessageChatCircle, HelpCircle, ChevronRight, Zap, BookOpen01, Check, Microphone01, Attachment01, Settings01, Image03, FileCheck02, ThumbsUp, ThumbsDown } from '@untitledui/icons';
 import type { EmbeddedChatConfig, HelpArticle } from '@/hooks/useEmbeddedChatConfig';
 import { ChatBubbleIcon } from './ChatBubbleIcon';
 import { AudioRecorder } from '@/components/chat/AudioRecorder';
@@ -19,6 +19,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { z } from 'zod';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface EmbeddedChatPreviewProps {
   config: EmbeddedChatConfig;
@@ -51,6 +52,16 @@ export const EmbeddedChatPreview = ({ config: baseConfig }: EmbeddedChatPreviewP
   const [hasSubmittedContactForm, setHasSubmittedContactForm] = useState(() => {
     return localStorage.getItem(`chatpad_contact_submitted_${baseConfig.agentId}`) === 'true';
   });
+  
+  // Reset feedback when article changes
+  useEffect(() => {
+    if (selectedArticle) {
+      setArticleFeedback(null);
+      setFeedbackComment('');
+      setShowFeedbackComment(false);
+      setFeedbackSubmitted(false);
+    }
+  }, [selectedArticle]);
   const [isVisible, setIsVisible] = useState(config.displayTiming === 'immediate');
   const [showTeaser, setShowTeaser] = useState(false);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
@@ -60,6 +71,14 @@ export const EmbeddedChatPreview = ({ config: baseConfig }: EmbeddedChatPreviewP
   const [messageInput, setMessageInput] = useState('');
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [pendingFiles, setPendingFiles] = useState<Array<{ file: File; preview: string }>>([]);
+  
+  // Help article search and feedback state
+  const [helpSearchQuery, setHelpSearchQuery] = useState('');
+  const [articleFeedback, setArticleFeedback] = useState<'helpful' | 'not_helpful' | null>(null);
+  const [feedbackComment, setFeedbackComment] = useState('');
+  const [showFeedbackComment, setShowFeedbackComment] = useState(false);
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
+  
   const [messages, setMessages] = useState<Array<{ 
     role: 'user' | 'assistant'; 
     content: string;
@@ -186,6 +205,48 @@ export const EmbeddedChatPreview = ({ config: baseConfig }: EmbeddedChatPreviewP
     });
 
     return z.object(schemaFields);
+  };
+
+  // Generate or retrieve session ID for feedback
+  const getSessionId = () => {
+    let sessionId = localStorage.getItem('chatpad_session_id');
+    if (!sessionId) {
+      sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      localStorage.setItem('chatpad_session_id', sessionId);
+    }
+    return sessionId;
+  };
+
+  // Handle feedback submission
+  const handleSubmitFeedback = async () => {
+    if (!selectedArticle || articleFeedback === null) return;
+
+    try {
+      const sessionId = getSessionId();
+      const { error } = await supabase
+        .from('article_feedback')
+        .insert({
+          article_id: selectedArticle.id,
+          session_id: sessionId,
+          is_helpful: articleFeedback === 'helpful',
+          comment: feedbackComment || null,
+        });
+
+      if (error) {
+        // Handle unique constraint violation (already submitted)
+        if (error.code === '23505') {
+          toast.error('You have already provided feedback for this article');
+        } else {
+          throw error;
+        }
+      } else {
+        setFeedbackSubmitted(true);
+        toast.success('Thank you for your feedback!');
+      }
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
+      toast.error('Failed to submit feedback');
+    }
   };
 
   const handleSendMessage = () => {
@@ -1133,7 +1194,70 @@ export const EmbeddedChatPreview = ({ config: baseConfig }: EmbeddedChatPreviewP
                           </h3>
                         </div>
                         
-                        {config.helpCategories.length === 0 ? (
+                        {/* Search Bar */}
+                        <div className="mb-4">
+                          <Input
+                            placeholder="Search help articles..."
+                            value={helpSearchQuery}
+                            onChange={(e) => setHelpSearchQuery(e.target.value)}
+                            className="w-full"
+                          />
+                        </div>
+                        
+                        {helpSearchQuery ? (
+                          // Show search results
+                          <div className="space-y-2">
+                            {config.helpArticles
+                              .filter(article => 
+                                article.title.toLowerCase().includes(helpSearchQuery.toLowerCase()) ||
+                                article.content.toLowerCase().includes(helpSearchQuery.toLowerCase())
+                              )
+                              .map((article) => (
+                                <button
+                                  key={article.id}
+                                  onClick={() => {
+                                    setSelectedArticle(article);
+                                    setSelectedCategory(article.category);
+                                    setHelpSearchQuery('');
+                                  }}
+                                  className="w-full text-left p-3 rounded-lg hover:bg-accent transition-colors group border border-border"
+                                >
+                                  <div className="flex items-start gap-3">
+                                    {article.icon && (
+                                      <span className="text-xl mt-0.5 flex-shrink-0">
+                                        {article.icon}
+                                      </span>
+                                    )}
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <p className="font-medium text-sm group-hover:text-primary transition-colors">
+                                          {article.title}
+                                        </p>
+                                        <span className="text-xs text-muted-foreground px-2 py-0.5 bg-muted rounded-full">
+                                          {article.category}
+                                        </span>
+                                      </div>
+                                      <p className="text-xs text-muted-foreground line-clamp-2">
+                                        {article.content.substring(0, 150)}...
+                                      </p>
+                                    </div>
+                                    <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0 mt-1" />
+                                  </div>
+                                </button>
+                              ))}
+                            {config.helpArticles.filter(article => 
+                              article.title.toLowerCase().includes(helpSearchQuery.toLowerCase()) ||
+                              article.content.toLowerCase().includes(helpSearchQuery.toLowerCase())
+                            ).length === 0 && (
+                              <div className="text-center py-8">
+                                <BookOpen01 className="h-12 w-12 mx-auto mb-3 opacity-40" />
+                                <p className="text-sm text-muted-foreground">
+                                  No articles found matching "{helpSearchQuery}"
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        ) : config.helpCategories.length === 0 ? (
                           <div className="text-center py-8">
                             <BookOpen01 className="h-12 w-12 mx-auto mb-3 opacity-40" />
                             <p className="text-sm text-muted-foreground">
@@ -1220,7 +1344,13 @@ export const EmbeddedChatPreview = ({ config: baseConfig }: EmbeddedChatPreviewP
                       <>
                         <div className="flex items-center gap-2 mb-4">
                           <button
-                            onClick={() => setSelectedArticle(null)}
+                            onClick={() => {
+                              setSelectedArticle(null);
+                              setArticleFeedback(null);
+                              setFeedbackComment('');
+                              setShowFeedbackComment(false);
+                              setFeedbackSubmitted(false);
+                            }}
                             className="p-1 hover:bg-accent rounded-md transition-colors"
                           >
                             <ChevronRight className="h-5 w-5 rotate-180" />
@@ -1236,7 +1366,64 @@ export const EmbeddedChatPreview = ({ config: baseConfig }: EmbeddedChatPreviewP
                           </p>
                         </div>
 
-                        <div className="mt-4 pt-4 border-t flex gap-2">
+                        <div className="mt-6 pt-4 border-t space-y-4">
+                          {!feedbackSubmitted ? (
+                            <>
+                              <div className="text-center">
+                                <p className="text-sm font-medium mb-3">Was this article helpful?</p>
+                                <div className="flex justify-center gap-3">
+                                  <Button
+                                    variant={articleFeedback === 'helpful' ? 'default' : 'outline'}
+                                    size="sm"
+                                    onClick={() => {
+                                      setArticleFeedback('helpful');
+                                      setShowFeedbackComment(true);
+                                    }}
+                                  >
+                                    <ThumbsUp className="h-4 w-4 mr-2" />
+                                    Yes
+                                  </Button>
+                                  <Button
+                                    variant={articleFeedback === 'not_helpful' ? 'default' : 'outline'}
+                                    size="sm"
+                                    onClick={() => {
+                                      setArticleFeedback('not_helpful');
+                                      setShowFeedbackComment(true);
+                                    }}
+                                  >
+                                    <ThumbsDown className="h-4 w-4 mr-2" />
+                                    No
+                                  </Button>
+                                </div>
+                              </div>
+                              
+                              {showFeedbackComment && (
+                                <div className="space-y-2">
+                                  <Textarea
+                                    placeholder="Any additional feedback? (optional)"
+                                    value={feedbackComment}
+                                    onChange={(e) => setFeedbackComment(e.target.value)}
+                                    rows={2}
+                                    className="text-sm"
+                                  />
+                                  <Button 
+                                    className="w-full" 
+                                    onClick={handleSubmitFeedback}
+                                    style={{ backgroundColor: config.primaryColor }}
+                                  >
+                                    Submit Feedback
+                                  </Button>
+                                </div>
+                              )}
+                            </>
+                          ) : (
+                            <div className="text-center py-2">
+                              <p className="text-sm text-muted-foreground">
+                                Thanks for your feedback! ✓
+                              </p>
+                            </div>
+                          )}
+                          
                           <Button
                             onClick={() => {
                               setSelectedArticle(null);
@@ -1244,13 +1431,10 @@ export const EmbeddedChatPreview = ({ config: baseConfig }: EmbeddedChatPreviewP
                               setCurrentView('messages');
                               setActiveConversationId('new');
                             }}
-                            className="flex-1"
-                            style={{ 
-                              backgroundColor: config.primaryColor,
-                              color: '#ffffff'
-                            }}
+                            variant="outline"
+                            className="w-full"
                           >
-                            Start Chat
+                            Still need help? Start Chat
                           </Button>
                         </div>
                       </>

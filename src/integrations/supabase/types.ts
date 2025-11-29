@@ -149,6 +149,41 @@ export type Database = {
           },
         ]
       }
+      article_feedback: {
+        Row: {
+          article_id: string
+          comment: string | null
+          created_at: string | null
+          id: string
+          is_helpful: boolean
+          session_id: string
+        }
+        Insert: {
+          article_id: string
+          comment?: string | null
+          created_at?: string | null
+          id?: string
+          is_helpful: boolean
+          session_id: string
+        }
+        Update: {
+          article_id?: string
+          comment?: string | null
+          created_at?: string | null
+          id?: string
+          is_helpful?: boolean
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "article_feedback_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "help_articles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conversation_takeovers: {
         Row: {
           conversation_id: string
@@ -275,6 +310,115 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "custom_domains_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      help_articles: {
+        Row: {
+          agent_id: string
+          category_id: string
+          content: string
+          created_at: string | null
+          icon: string | null
+          id: string
+          order_index: number | null
+          org_id: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          agent_id: string
+          category_id: string
+          content: string
+          created_at?: string | null
+          icon?: string | null
+          id?: string
+          order_index?: number | null
+          org_id: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          agent_id?: string
+          category_id?: string
+          content?: string
+          created_at?: string | null
+          icon?: string | null
+          id?: string
+          order_index?: number | null
+          org_id?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "help_articles_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "help_articles_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "help_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "help_articles_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      help_categories: {
+        Row: {
+          agent_id: string
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+          order_index: number | null
+          org_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          agent_id: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          order_index?: number | null
+          org_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          agent_id?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          order_index?: number | null
+          org_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "help_categories_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "help_categories_org_id_fkey"
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "organizations"
