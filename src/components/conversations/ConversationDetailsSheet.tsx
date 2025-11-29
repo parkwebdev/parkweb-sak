@@ -7,6 +7,7 @@ import { Separator } from '@/components/ui/separator';
 import { User01, Zap, UserCheck01, RefreshCcw01, XCircle } from '@untitledui/icons';
 import { formatDistanceToNow } from 'date-fns';
 import { TakeoverDialog } from './TakeoverDialog';
+import { supabase } from '@/integrations/supabase/client';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Conversation = Tables<'conversations'> & {
@@ -41,6 +42,27 @@ export const ConversationDetailsSheet = ({
   useEffect(() => {
     if (conversation?.id && open) {
       loadMessages();
+
+      // Set up real-time subscription for new messages
+      const channel = supabase
+        .channel(`messages-${conversation.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'messages',
+            filter: `conversation_id=eq.${conversation.id}`
+          },
+          () => {
+            loadMessages();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
   }, [conversation?.id, open]);
 
