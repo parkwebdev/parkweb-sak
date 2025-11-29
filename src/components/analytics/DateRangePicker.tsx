@@ -10,6 +10,7 @@ interface DateRangePickerProps {
   startDate: Date;
   endDate: Date;
   onDateChange: (start: Date, end: Date) => void;
+  showExternalPresets?: boolean;
 }
 
 const presets = [
@@ -20,7 +21,7 @@ const presets = [
   { label: '90 days', days: 90 },
 ];
 
-export const DateRangePicker = ({ startDate, endDate, onDateChange }: DateRangePickerProps) => {
+export const DateRangePicker = ({ startDate, endDate, onDateChange, showExternalPresets = true }: DateRangePickerProps) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const handlePresetClick = (days: number) => {
@@ -87,18 +88,20 @@ export const DateRangePicker = ({ startDate, endDate, onDateChange }: DateRangeP
         </PopoverContent>
       </Popover>
       
-      <div className="flex gap-1">
-        {presets.map((preset) => (
-          <Button
-            key={preset.label}
-            variant="outline"
-            size="sm"
-            onClick={() => handlePresetClick(preset.days)}
-          >
-            {preset.label}
-          </Button>
-        ))}
-      </div>
+      {showExternalPresets && (
+        <div className="flex gap-1">
+          {presets.map((preset) => (
+            <Button
+              key={preset.label}
+              variant="outline"
+              size="sm"
+              onClick={() => handlePresetClick(preset.days)}
+            >
+              {preset.label}
+            </Button>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
