@@ -254,6 +254,145 @@ export const EmbeddedChatDesigner = ({ agentId }: EmbeddedChatDesignerProps) => 
 
       <Separator />
 
+      {/* Home Screen Section */}
+      <div className="space-y-3">
+        <h3 className="text-sm font-medium">Home Screen</h3>
+        
+        <div className="space-y-2">
+          <Label htmlFor="welcome-emoji">Welcome Emoji</Label>
+          <Input
+            id="welcome-emoji"
+            value={config.welcomeEmoji}
+            onChange={(e) => saveConfig({ welcomeEmoji: e.target.value })}
+            placeholder="👋"
+            maxLength={2}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="welcome-title">Welcome Title</Label>
+          <Input
+            id="welcome-title"
+            value={config.welcomeTitle}
+            onChange={(e) => saveConfig({ welcomeTitle: e.target.value })}
+            placeholder="Hi"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="welcome-subtitle">Welcome Subtitle</Label>
+          <Input
+            id="welcome-subtitle"
+            value={config.welcomeSubtitle}
+            onChange={(e) => saveConfig({ welcomeSubtitle: e.target.value })}
+            placeholder="How can we help you today?"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label htmlFor="gradient">Use Gradient Header</Label>
+            <Switch
+              id="gradient"
+              checked={config.useGradientHeader}
+              onCheckedChange={(checked) => saveConfig({ useGradientHeader: checked })}
+            />
+          </div>
+          <p className="text-xs text-muted-foreground">Apply gradient effect to header</p>
+        </div>
+
+        {config.useGradientHeader && (
+          <div className="space-y-2 pl-4">
+            <Label htmlFor="gradient-end">Gradient End Color</Label>
+            <div className="flex items-center gap-2">
+              <Input
+                id="gradient-end"
+                type="color"
+                value={config.gradientEndColor}
+                onChange={(e) => saveConfig({ gradientEndColor: e.target.value })}
+                className="w-20 h-10 cursor-pointer"
+              />
+              <Input
+                value={config.gradientEndColor}
+                onChange={(e) => saveConfig({ gradientEndColor: e.target.value })}
+                placeholder="#1e40af"
+              />
+            </div>
+          </div>
+        )}
+      </div>
+
+      <Separator />
+
+      {/* Quick Actions Section */}
+      <div className="space-y-3">
+        <h3 className="text-sm font-medium">Quick Actions</h3>
+        
+        <div className="flex items-center justify-between">
+          <div className="space-y-0.5">
+            <Label htmlFor="quick-actions">Show Quick Actions</Label>
+            <p className="text-xs text-muted-foreground">
+              Display action cards on home screen
+            </p>
+          </div>
+          <Switch
+            id="quick-actions"
+            checked={config.showQuickActions}
+            onCheckedChange={(checked) => saveConfig({ showQuickActions: checked })}
+          />
+        </div>
+
+        <p className="text-xs text-muted-foreground bg-muted p-2 rounded">
+          Quick actions like "Start a conversation" and "Browse help articles" are pre-configured. 
+          Advanced customization coming soon.
+        </p>
+      </div>
+
+      <Separator />
+
+      {/* Navigation Section */}
+      <div className="space-y-3">
+        <h3 className="text-sm font-medium">Navigation</h3>
+        
+        <div className="flex items-center justify-between">
+          <div className="space-y-0.5">
+            <Label htmlFor="bottom-nav">Show Bottom Navigation</Label>
+            <p className="text-xs text-muted-foreground">
+              Display navigation bar at bottom
+            </p>
+          </div>
+          <Switch
+            id="bottom-nav"
+            checked={config.showBottomNav}
+            onCheckedChange={(checked) => saveConfig({ showBottomNav: checked })}
+          />
+        </div>
+
+        {config.showBottomNav && (
+          <div className="space-y-2 pl-4">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="messages-tab">Messages Tab</Label>
+              <Switch
+                id="messages-tab"
+                checked={config.enableMessagesTab}
+                onCheckedChange={(checked) => saveConfig({ enableMessagesTab: checked })}
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <Label htmlFor="help-tab">Help Tab</Label>
+              <Switch
+                id="help-tab"
+                checked={config.enableHelpTab}
+                onCheckedChange={(checked) => saveConfig({ enableHelpTab: checked })}
+              />
+            </div>
+          </div>
+        )}
+      </div>
+
+      <Separator />
+
       {/* Branding Section */}
       <div className="space-y-3">
         <h3 className="text-sm font-medium">Branding</h3>
