@@ -70,14 +70,66 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Get agent configuration
+    // Get agent configuration and org_id
     const { data: agent, error: agentError } = await supabase
       .from('agents')
-      .select('system_prompt, model')
+      .select('system_prompt, model, org_id')
       .eq('id', agentId)
       .single();
 
     if (agentError) throw agentError;
+
+    // Check plan limits - get subscription and limits
+    const { data: subscription } = await supabase
+      .from('subscriptions')
+      .select('plan_id, plans(limits)')
+      .eq('org_id', agent.org_id)
+      .eq('status', 'active')
+      .maybeSingle();
+
+    // Default free plan limit
+    let maxApiCalls = 1000;
+    
+    if (subscription?.plans) {
+      const plan = subscription.plans as any;
+      const limits = plan.limits as any;
+      maxApiCalls = limits?.max_api_calls_per_month || 1000;
+    }
+
+    // Get current month's API usage
+    const now = new Date();
+    const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    
+    const { data: usageMetrics } = await supabase
+      .from('usage_metrics')
+      .select('api_calls_count')
+      .eq('org_id', agent.org_id)
+      .gte('period_start', firstDayOfMonth.toISOString())
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const currentApiCalls = usageMetrics?.api_calls_count || 0;
+
+    // Hard limit enforcement
+    if (currentApiCalls >= maxApiCalls) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'API call limit exceeded for this month. Please upgrade your plan or wait until next month.',
+          limit_reached: true,
+          current: currentApiCalls,
+          limit: maxApiCalls,
+        }),
+        {
+          status: 429,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    // Soft limit warning (80% threshold)
+    const usagePercentage = (currentApiCalls / maxApiCalls) * 100;
+    console.log(`API usage: ${currentApiCalls}/${maxApiCalls} (${usagePercentage.toFixed(1)}%)`);
 
     // Get Lovable AI key
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
@@ -199,6 +251,21 @@ When answering, you can naturally reference the information from the knowledge b
     if (sources.length > 0) {
       responseHeaders['X-Knowledge-Sources'] = JSON.stringify(sources);
     }
+
+    // Track API call usage (fire and forget - don't wait)
+    const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    supabase
+      .from('usage_metrics')
+      .upsert({
+        org_id: agent.org_id,
+        period_start: firstDayOfMonth.toISOString(),
+        period_end: lastDayOfMonth.toISOString(),
+        api_calls_count: currentApiCalls + 1,
+      }, {
+        onConflict: 'org_id,period_start',
+      })
+      .then(() => console.log('API usage tracked'))
+      .catch(err => console.error('Failed to track usage:', err));
 
     // Return the stream
     return new Response(response.body, {

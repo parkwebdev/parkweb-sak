@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useOrganization } from '@/contexts/OrganizationContext';
 import type { Tables } from '@/integrations/supabase/types';
 import { formatDate } from '@/lib/formatting';
+import { PlanLimitsCard } from './PlanLimitsCard';
 
 type Subscription = Tables<'subscriptions'> & {
   plans?: Tables<'plans'>;
@@ -51,6 +52,16 @@ export const SubscriptionSettings = () => {
 
   return (
     <div className="space-y-6">
+      <div>
+        <h1 className="text-xl lg:text-2xl font-semibold text-foreground">Subscription</h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Manage your subscription and billing
+        </p>
+      </div>
+
+      {/* Plan Usage Limits */}
+      <PlanLimitsCard />
+
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">

@@ -5,6 +5,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { usePlanLimits } from '@/hooks/usePlanLimits';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertCircle } from '@untitledui/icons';
 
 interface CreateAgentDialogProps {
   open: boolean;
@@ -29,6 +32,9 @@ const MODELS = [
 
 export const CreateAgentDialog = ({ open, onOpenChange, onSubmit }: CreateAgentDialogProps) => {
   const [loading, setLoading] = useState(false);
+  const { canCreateAgent, showLimitWarning } = usePlanLimits();
+  const limitCheck = canCreateAgent();
+  
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -40,6 +46,13 @@ export const CreateAgentDialog = ({ open, onOpenChange, onSubmit }: CreateAgentD
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Check limits before creating
+    if (!limitCheck.allowed) {
+      showLimitWarning('agents', limitCheck);
+      return;
+    }
+    
     setLoading(true);
     try {
       await onSubmit(formData);
@@ -66,6 +79,24 @@ export const CreateAgentDialog = ({ open, onOpenChange, onSubmit }: CreateAgentD
             Configure your AI agent's basic settings. You can add tools and knowledge sources after creation.
           </DialogDescription>
         </DialogHeader>
+
+        {limitCheck.isAtLimit && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              You've reached your plan limit of {limitCheck.limit} agents. Upgrade your plan to create more agents.
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {limitCheck.isNearLimit && !limitCheck.isAtLimit && (
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              You're using {limitCheck.current} of {limitCheck.limit} agents ({Math.round(limitCheck.percentage)}%). Consider upgrading soon.
+            </AlertDescription>
+          </Alert>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
