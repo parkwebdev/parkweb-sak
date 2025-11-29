@@ -29,13 +29,26 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
     parameters: '{}',
   });
 
-  const deploymentConfig = (agent?.deployment_config as any) || {};
-  const apiEnabled = deploymentConfig.api_enabled || false;
   const apiEndpoint = `https://mvaimvwdukpgvkifkfpa.supabase.co/functions/v1/widget-chat`;
 
   useEffect(() => {
     fetchTools();
   }, [agentId]);
+
+  useEffect(() => {
+    // Enable API by default
+    if (agent && onUpdate) {
+      const deploymentConfig = (agent.deployment_config as any) || {};
+      if (!deploymentConfig.api_enabled) {
+        onUpdate(agent.id, {
+          deployment_config: {
+            ...deploymentConfig,
+            api_enabled: true,
+          },
+        });
+      }
+    }
+  }, []);
 
   const fetchTools = async () => {
     try {
@@ -115,16 +128,6 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
     }
   };
 
-  const handleToggleApi = async (checked: boolean) => {
-    if (!agent || !onUpdate) return;
-    await onUpdate(agent.id, {
-      deployment_config: {
-        ...deploymentConfig,
-        api_enabled: checked,
-      },
-    });
-  };
-
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
     toast.success(`${label} copied to clipboard`);
@@ -141,33 +144,26 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
         <>
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">API Access</CardTitle>
-              <CardDescription>Enable REST API access to your agent</CardDescription>
+              <CardTitle className="text-lg">API Access</CardTitle>
+              <CardDescription className="text-sm">REST API endpoint for your agent</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="api-toggle">Enable API</Label>
-                <Switch
-                  id="api-toggle"
-                  checked={apiEnabled}
-                  onCheckedChange={handleToggleApi}
-                />
-              </div>
-              {apiEnabled && (
-                <div className="space-y-2">
-                  <Label className="text-xs text-muted-foreground">API Endpoint</Label>
-                  <div className="flex gap-2">
-                    <Input value={apiEndpoint} readOnly className="font-mono text-xs h-9" />
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => copyToClipboard(apiEndpoint, 'API endpoint')}
-                    >
-                      Copy
-                    </Button>
-                  </div>
+            <CardContent className="space-y-3">
+              <div className="space-y-2">
+                <Label className="text-sm">API Endpoint</Label>
+                <div className="flex gap-2">
+                  <Input value={apiEndpoint} readOnly className="font-mono text-sm" />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => copyToClipboard(apiEndpoint, 'API endpoint')}
+                  >
+                    Copy
+                  </Button>
                 </div>
-              )}
+                <p className="text-xs text-muted-foreground">
+                  Use this endpoint to integrate your agent via REST API
+                </p>
+              </div>
             </CardContent>
           </Card>
 
@@ -179,9 +175,9 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-sm font-medium">Agent Tools</h3>
-            <p className="text-xs text-muted-foreground">
-              Tools allow your agent to perform actions and access external services
+            <h3 className="text-lg font-semibold">Agent Tools</h3>
+            <p className="text-sm text-muted-foreground">
+              Extend agent capabilities with custom tools and integrations
             </p>
           </div>
           <Button size="sm" onClick={() => setShowAddForm(!showAddForm)}>
@@ -193,32 +189,35 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
       {showAddForm && (
         <Card>
           <CardHeader>
-            <CardTitle>Add New Tool</CardTitle>
+            <CardTitle className="text-lg">Add New Tool</CardTitle>
+            <CardDescription className="text-sm">Define a custom tool for your agent</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="tool-name">Tool Name</Label>
+              <Label htmlFor="tool-name" className="text-sm">Tool Name</Label>
               <Input
                 id="tool-name"
                 value={newTool.name}
                 onChange={(e) => setNewTool({ ...newTool, name: e.target.value })}
                 placeholder="get_weather"
+                className="text-sm"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="tool-description">Description</Label>
+              <Label htmlFor="tool-description" className="text-sm">Description</Label>
               <Textarea
                 id="tool-description"
                 value={newTool.description}
                 onChange={(e) => setNewTool({ ...newTool, description: e.target.value })}
                 placeholder="Gets the current weather for a location"
                 rows={2}
+                className="text-sm"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="tool-parameters">Parameters (JSON)</Label>
+              <Label htmlFor="tool-parameters" className="text-sm">Parameters (JSON)</Label>
               <Textarea
                 id="tool-parameters"
                 value={newTool.parameters}
@@ -243,7 +242,7 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
 
       {tools.length === 0 ? (
         <Card>
-          <CardContent className="py-8 text-center text-muted-foreground">
+          <CardContent className="py-12 text-center text-sm text-muted-foreground">
             No tools configured yet. Add your first tool to extend agent capabilities.
           </CardContent>
         </Card>
@@ -255,7 +254,7 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <CardTitle className="text-base">{tool.name}</CardTitle>
-                    <CardDescription>{tool.description}</CardDescription>
+                    <CardDescription className="text-sm">{tool.description}</CardDescription>
                   </div>
                   <div className="flex items-center gap-2">
                     <Switch
@@ -277,7 +276,7 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
                   <summary className="cursor-pointer text-muted-foreground mb-2">
                     View Parameters
                   </summary>
-                  <pre className="bg-muted p-3 rounded-md overflow-x-auto text-xs">
+                  <pre className="bg-muted p-3 rounded-md overflow-x-auto text-xs font-mono">
                     {JSON.stringify(tool.parameters, null, 2)}
                   </pre>
                 </details>
