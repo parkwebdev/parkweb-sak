@@ -89,7 +89,7 @@ const Conversations: React.FC = () => {
   };
 
   return (
-    <main className="flex-1 bg-muted/30 h-screen p-1">
+    <div className="h-full overflow-hidden p-1">
       <div className="h-full">
         <div className="flex h-full rounded-xl border bg-card overflow-hidden shadow-sm">
           {/* Conversations List Sidebar */}
@@ -298,7 +298,7 @@ const Conversations: React.FC = () => {
           onConfirm={handleTakeover}
         />
       )}
-    </main>
+    </div>
   );
 };
 
