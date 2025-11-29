@@ -27,7 +27,7 @@ export const ReportBuilder = ({ config, onConfigChange }: ReportBuilderProps) =>
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-6">
       <Card>
         <CardHeader>
           <CardTitle>Report Configuration</CardTitle>

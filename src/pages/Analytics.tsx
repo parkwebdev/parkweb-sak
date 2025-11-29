@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { RefreshCcw01, Menu01 as Menu } from '@untitledui/icons';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { ConversationChart } from '@/components/analytics/ConversationChart';
@@ -14,6 +16,7 @@ import { ReportBuilder, ReportConfig } from '@/components/analytics/ReportBuilde
 import { DataTables } from '@/components/analytics/DataTables';
 import { ExportButtons } from '@/components/analytics/ExportButtons';
 import { ScheduledReportsManager } from '@/components/analytics/ScheduledReportsManager';
+import { ComparisonView } from '@/components/analytics/ComparisonView';
 import { useOrganization } from '@/contexts/OrganizationContext';
 
 interface AnalyticsProps {
@@ -24,6 +27,7 @@ const Analytics: React.FC<AnalyticsProps> = ({ onMenuClick }) => {
   const { currentOrg } = useOrganization();
   const [activeTab, setActiveTab] = useState('overview');
   const [dataTableTab, setDataTableTab] = useState<'conversations' | 'leads' | 'agents' | 'usage'>('conversations');
+  const [comparisonMode, setComparisonMode] = useState(false);
   
   // Date range state
   const [startDate, setStartDate] = useState<Date>(() => {
@@ -32,6 +36,18 @@ const Analytics: React.FC<AnalyticsProps> = ({ onMenuClick }) => {
     return date;
   });
   const [endDate, setEndDate] = useState<Date>(new Date());
+
+  // Comparison period state
+  const [comparisonStartDate, setComparisonStartDate] = useState<Date>(() => {
+    const date = new Date();
+    date.setDate(date.getDate() - 60);
+    return date;
+  });
+  const [comparisonEndDate, setComparisonEndDate] = useState<Date>(() => {
+    const date = new Date();
+    date.setDate(date.getDate() - 31);
+    return date;
+  });
 
   // Filters state
   const [filters, setFilters] = useState<ReportFilters>({
@@ -64,12 +80,58 @@ const Analytics: React.FC<AnalyticsProps> = ({ onMenuClick }) => {
     refetch 
   } = useAnalytics(startDate, endDate, filters);
 
+  // Fetch comparison data if comparison mode is enabled
+  const { 
+    conversationStats: comparisonConversationStats, 
+    leadStats: comparisonLeadStats, 
+    agentPerformance: comparisonAgentPerformance, 
+    usageMetrics: comparisonUsageMetrics,
+  } = useAnalytics(
+    comparisonMode ? comparisonStartDate : startDate,
+    comparisonMode ? comparisonEndDate : endDate,
+    filters
+  );
+
   // Calculate KPIs
   const totalConversations = conversationStats.reduce((sum, stat) => sum + stat.total, 0);
   const totalLeads = leadStats.reduce((sum, stat) => sum + stat.total, 0);
   const convertedLeads = leadStats.reduce((sum, stat) => sum + stat.converted, 0);
   const conversionRate = totalLeads > 0 ? ((convertedLeads / totalLeads) * 100).toFixed(1) : '0';
   const totalMessages = usageMetrics.reduce((sum, metric) => sum + metric.messages, 0);
+
+  // Calculate comparison KPIs
+  const comparisonTotalConversations = comparisonConversationStats.reduce((sum, stat) => sum + stat.total, 0);
+  const comparisonTotalLeads = comparisonLeadStats.reduce((sum, stat) => sum + stat.total, 0);
+  const comparisonConvertedLeads = comparisonLeadStats.reduce((sum, stat) => sum + stat.converted, 0);
+  const comparisonConversionRate = comparisonTotalLeads > 0 ? (comparisonConvertedLeads / comparisonTotalLeads) * 100 : 0;
+  const comparisonTotalMessages = comparisonUsageMetrics.reduce((sum, metric) => sum + metric.messages, 0);
+
+  const comparisonMetrics = [
+    {
+      label: 'Total Conversations',
+      currentValue: totalConversations,
+      previousValue: comparisonTotalConversations,
+      format: 'number' as const,
+    },
+    {
+      label: 'Total Leads',
+      currentValue: totalLeads,
+      previousValue: comparisonTotalLeads,
+      format: 'number' as const,
+    },
+    {
+      label: 'Conversion Rate',
+      currentValue: parseFloat(conversionRate),
+      previousValue: comparisonConversionRate,
+      format: 'percentage' as const,
+    },
+    {
+      label: 'Total Messages',
+      currentValue: totalMessages,
+      previousValue: comparisonTotalMessages,
+      format: 'number' as const,
+    },
+  ];
 
   const kpis = [
     {
@@ -142,14 +204,50 @@ const Analytics: React.FC<AnalyticsProps> = ({ onMenuClick }) => {
           </div>
 
           {/* Date Range Picker */}
-          <DateRangePicker
-            startDate={startDate}
-            endDate={endDate}
-            onDateChange={(start, end) => {
-              setStartDate(start);
-              setEndDate(end);
-            }}
-          />
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Switch
+                  id="comparison-mode"
+                  checked={comparisonMode}
+                  onCheckedChange={setComparisonMode}
+                />
+                <Label htmlFor="comparison-mode" className="text-sm font-medium">
+                  Compare Time Periods
+                </Label>
+              </div>
+            </div>
+
+            <div className={comparisonMode ? 'grid grid-cols-1 md:grid-cols-2 gap-4' : ''}>
+              <div>
+                {comparisonMode && (
+                  <Label className="text-sm font-medium mb-2 block">Current Period</Label>
+                )}
+                <DateRangePicker
+                  startDate={startDate}
+                  endDate={endDate}
+                  onDateChange={(start, end) => {
+                    setStartDate(start);
+                    setEndDate(end);
+                  }}
+                />
+              </div>
+
+              {comparisonMode && (
+                <div>
+                  <Label className="text-sm font-medium mb-2 block">Comparison Period</Label>
+                  <DateRangePicker
+                    startDate={comparisonStartDate}
+                    endDate={comparisonEndDate}
+                    onDateChange={(start, end) => {
+                      setComparisonStartDate(start);
+                      setComparisonEndDate(end);
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+          </div>
 
           {/* Filters */}
           <ReportFiltersPanel filters={filters} onFiltersChange={setFilters} />
@@ -176,7 +274,15 @@ const Analytics: React.FC<AnalyticsProps> = ({ onMenuClick }) => {
 
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-6">
-            <AnalyticsKPIs kpis={kpis} />
+            {comparisonMode ? (
+              <ComparisonView
+                currentPeriod={{ start: startDate, end: endDate }}
+                previousPeriod={{ start: comparisonStartDate, end: comparisonEndDate }}
+                metrics={comparisonMetrics}
+              />
+            ) : (
+              <AnalyticsKPIs kpis={kpis} />
+            )}
 
             {loading ? (
               <div className="text-center py-12 text-muted-foreground">
