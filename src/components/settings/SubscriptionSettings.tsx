@@ -52,7 +52,7 @@ export const SubscriptionSettings = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-sm font-semibold text-foreground">Subscription</h1>
+        <h1 className="text-sm font-semibold text-foreground">Billing</h1>
         <p className="text-xs text-muted-foreground mt-1">
           Manage your subscription and billing
         </p>

@@ -5,7 +5,6 @@ import { Menu01 as Menu } from '@untitledui/icons';
 import { SettingsLayout } from '@/components/settings/SettingsLayout';
 import { GeneralSettings } from '@/components/settings/GeneralSettings';
 import { ProfileSettings } from '@/components/settings/ProfileSettings';
-import { TeamSettings } from '@/components/settings/TeamSettings';
 import { TeamManagement } from '@/components/settings/TeamManagement';
 import { NotificationSettings } from '@/components/settings/NotificationSettings';
 import { OrganizationSettings } from '@/components/settings/OrganizationSettings';
@@ -13,9 +12,8 @@ import { SubscriptionSettings } from '@/components/settings/SubscriptionSettings
 import { UsageSettings } from '@/components/settings/UsageSettings';
 import { WebhookSettings } from '@/components/settings/WebhookSettings';
 import { ApiKeySettings } from '@/components/settings/ApiKeySettings';
-import { BrandingSettings } from '@/components/settings/BrandingSettings';
 
-export type SettingsTab = 'general' | 'profile' | 'team' | 'notifications' | 'organization' | 'subscription' | 'usage' | 'webhooks' | 'api-keys' | 'branding';
+export type SettingsTab = 'general' | 'profile' | 'team' | 'notifications' | 'organization' | 'billing' | 'usage' | 'webhooks' | 'api-keys';
 
 interface SettingsProps {
   onMenuClick?: () => void;
@@ -26,13 +24,19 @@ const Settings: React.FC<SettingsProps> = ({ onMenuClick }) => {
   const [searchParams, setSearchParams] = useSearchParams();
 
   // Check for URL parameters
-  const tabParam = searchParams.get('tab') as SettingsTab;
+  const tabParam = searchParams.get('tab');
   const openMemberId = searchParams.get('open');
 
   // Set active tab from URL parameter
   useEffect(() => {
-    if (tabParam && ['general', 'profile', 'team', 'notifications', 'organization', 'subscription', 'usage', 'webhooks', 'api-keys', 'branding'].includes(tabParam)) {
-      setActiveTab(tabParam);
+    // Handle legacy subscription param
+    if (tabParam === 'subscription') {
+      setActiveTab('billing');
+      return;
+    }
+    
+    if (tabParam && ['general', 'profile', 'team', 'notifications', 'organization', 'billing', 'usage', 'webhooks', 'api-keys'].includes(tabParam)) {
+      setActiveTab(tabParam as SettingsTab);
     }
   }, [tabParam]);
 
@@ -66,12 +70,10 @@ const Settings: React.FC<SettingsProps> = ({ onMenuClick }) => {
         return <OrganizationSettings />;
       case 'team':
         return <TeamManagement />;
-      case 'subscription':
+      case 'billing':
         return <SubscriptionSettings />;
       case 'usage':
         return <UsageSettings />;
-      case 'branding':
-        return <BrandingSettings />;
       case 'notifications':
         return <NotificationSettings />;
       case 'webhooks':

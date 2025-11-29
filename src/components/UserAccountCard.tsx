@@ -132,7 +132,7 @@ export const UserAccountCard: React.FC<UserAccountCardProps> = ({ isCollapsed = 
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
-              <Link to="/settings?tab=subscription" className="w-full flex items-center gap-2">
+              <Link to="/settings?tab=billing" className="w-full flex items-center gap-2">
                 <CreditCard01 size={16} />
                 Billing
               </Link>
