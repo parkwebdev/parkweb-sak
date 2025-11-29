@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button';
-import { Download01 } from '@untitledui/icons';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { File02 } from '@untitledui/icons';
 import { generateCSVReport, generatePDFReport } from '@/lib/report-export';
 import { toast } from 'sonner';
 
@@ -44,15 +45,30 @@ export const ExportButtons = ({ data, startDate, endDate, orgName }: ExportButto
   };
 
   return (
-    <div className="flex gap-2">
-      <Button variant="outline" size="sm" onClick={handleExportCSV}>
-        <Download01 className="h-4 w-4 mr-2" />
-        CSV
-      </Button>
-      <Button variant="outline" size="sm" onClick={handleExportPDF}>
-        <Download01 className="h-4 w-4 mr-2" />
-        PDF
-      </Button>
-    </div>
+    <TooltipProvider>
+      <div className="flex gap-2">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant="outline" size="icon" onClick={handleExportCSV}>
+              <File02 className="h-4 w-4 text-emerald-600" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Export as CSV</p>
+          </TooltipContent>
+        </Tooltip>
+        
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant="outline" size="icon" onClick={handleExportPDF}>
+              <File02 className="h-4 w-4 text-red-600" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Export as PDF</p>
+          </TooltipContent>
+        </Tooltip>
+      </div>
+    </TooltipProvider>
   );
 };
