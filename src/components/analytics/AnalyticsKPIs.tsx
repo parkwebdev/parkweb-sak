@@ -23,7 +23,7 @@ export const AnalyticsKPIs = ({ kpis }: AnalyticsKPIsProps) => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{kpi.value}</div>
+            <div className="text-xl font-bold">{kpi.value}</div>
             <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
               {kpi.change >= 0 ? (
                 <TrendUp01 className="h-3 w-3 text-success" />

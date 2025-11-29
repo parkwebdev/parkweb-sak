@@ -124,8 +124,8 @@ const Conversations: React.FC<ConversationsProps> = ({ onMenuClick }) => {
                 <Menu size={16} />
               </Button>
               <div className="flex-1 sm:flex-none">
-                <h1 className="text-xl lg:text-2xl font-semibold text-foreground">Conversations</h1>
-                <p className="text-sm text-muted-foreground mt-1">
+                <h1 className="text-sm font-semibold text-foreground">Conversations</h1>
+                <p className="text-xs text-muted-foreground mt-1">
                   Manage and monitor all conversations for {currentOrg?.name || 'your organization'}
                 </p>
               </div>
@@ -135,20 +135,20 @@ const Conversations: React.FC<ConversationsProps> = ({ onMenuClick }) => {
           {/* Stats */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="bg-card rounded-lg border p-4">
-              <p className="text-sm text-muted-foreground">Total</p>
-              <p className="text-2xl font-semibold text-foreground mt-1">{stats.total}</p>
+              <p className="text-xs text-muted-foreground">Total</p>
+              <p className="text-xl font-semibold text-foreground mt-1">{stats.total}</p>
             </div>
             <div className="bg-card rounded-lg border p-4">
-              <p className="text-sm text-muted-foreground">Active</p>
-              <p className="text-2xl font-semibold text-success mt-1">{stats.active}</p>
+              <p className="text-xs text-muted-foreground">Active</p>
+              <p className="text-xl font-semibold text-success mt-1">{stats.active}</p>
             </div>
             <div className="bg-card rounded-lg border p-4">
-              <p className="text-sm text-muted-foreground">Human Control</p>
-              <p className="text-2xl font-semibold text-warning mt-1">{stats.humanTakeover}</p>
+              <p className="text-xs text-muted-foreground">Human Control</p>
+              <p className="text-xl font-semibold text-warning mt-1">{stats.humanTakeover}</p>
             </div>
             <div className="bg-card rounded-lg border p-4">
-              <p className="text-sm text-muted-foreground">Closed</p>
-              <p className="text-2xl font-semibold text-muted-foreground mt-1">{stats.closed}</p>
+              <p className="text-xs text-muted-foreground">Closed</p>
+              <p className="text-xl font-semibold text-muted-foreground mt-1">{stats.closed}</p>
             </div>
           </div>
 

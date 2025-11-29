@@ -26,7 +26,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
         </div>
         <div className="border shadow-sm relative w-full gap-4 bg-background p-4 rounded-lg border-border">
           <div className="items-center content-center flex-wrap z-0 flex w-full gap-2.5">
-            <div className="text-foreground text-2xl font-semibold leading-8 self-stretch my-auto">
+            <div className="text-foreground text-xl font-semibold leading-8 self-stretch my-auto">
               {value}
             </div>
             <div className="items-center self-stretch flex gap-1.5 text-xs font-medium leading-none my-auto">

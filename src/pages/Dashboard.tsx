@@ -97,9 +97,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ onMenuClick }) => {
     return (
       <div className="flex items-center justify-center min-h-screen p-8">
         <div className="text-center max-w-md">
-          <Bot className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-          <h2 className="text-2xl font-bold mb-2">No Organization</h2>
-          <p className="text-muted-foreground">
+          <Bot className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+          <h2 className="text-base font-bold mb-2">No Organization</h2>
+          <p className="text-sm text-muted-foreground">
             You don't belong to any organization yet. Contact your administrator to get access.
           </p>
         </div>
@@ -122,8 +122,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ onMenuClick }) => {
                 <Menu size={16} />
               </Button>
               <div className="flex-1 sm:flex-none">
-                <h1 className="text-xl lg:text-2xl font-semibold text-foreground">Dashboard</h1>
-                <p className="text-sm text-muted-foreground mt-1">{currentOrg.name}</p>
+                <h1 className="text-sm font-semibold text-foreground">Dashboard</h1>
+                <p className="text-xs text-muted-foreground mt-1">{currentOrg.name}</p>
               </div>
             </div>
           </div>
@@ -150,7 +150,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onMenuClick }) => {
                 <Bot className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stats.totalAgents}</div>
+                <div className="text-xl font-bold">{stats.totalAgents}</div>
                 <p className="text-xs text-muted-foreground mt-1">
                   AI agents ready to assist
                 </p>
@@ -166,7 +166,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onMenuClick }) => {
                 <MessageChatSquare size={16} className="text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stats.activeConversations}</div>
+                <div className="text-xl font-bold">{stats.activeConversations}</div>
                 <p className="text-xs text-muted-foreground mt-1">
                   Out of {stats.totalConversations} total
                 </p>
@@ -182,7 +182,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onMenuClick }) => {
                 <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stats.totalLeads}</div>
+                <div className="text-xl font-bold">{stats.totalLeads}</div>
                 <p className="text-xs text-muted-foreground mt-1">
                   Leads captured
                 </p>
@@ -198,7 +198,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onMenuClick }) => {
                 <UserPlus className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stats.newLeads}</div>
+                <div className="text-xl font-bold">{stats.newLeads}</div>
                 <p className="text-xs text-muted-foreground mt-1">
                   Recent leads
                 </p>
@@ -214,7 +214,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onMenuClick }) => {
                 <TrendUp size={16} className="text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{stats.conversionRate}%</div>
+                <div className="text-xl font-bold">{stats.conversionRate}%</div>
                 <p className="text-xs text-muted-foreground mt-1">
                   Lead to conversion
                 </p>

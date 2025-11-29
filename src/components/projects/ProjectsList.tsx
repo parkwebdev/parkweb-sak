@@ -64,8 +64,8 @@ export const ProjectsList: React.FC<ProjectsListProps> = ({ projects, loading, c
           <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
             📋
           </div>
-          <h3 className="text-lg font-semibold text-foreground mb-2">No projects yet</h3>
-          <p className="text-muted-foreground">
+          <h3 className="text-sm font-semibold text-foreground mb-2">No projects yet</h3>
+          <p className="text-xs text-muted-foreground">
             Create your first project to get started.
           </p>
         </div>
@@ -84,7 +84,7 @@ export const ProjectsList: React.FC<ProjectsListProps> = ({ projects, loading, c
           >
             <CardHeader className="pb-3">
               <div className="flex items-start justify-between">
-                <CardTitle className="text-lg line-clamp-1">{project.name}</CardTitle>
+                <CardTitle className="text-sm line-clamp-1">{project.name}</CardTitle>
                 <div className="flex flex-col gap-1">
                   <Badge variant={getStatusVariant(project.status)} className="text-xs">
                     {project.status.replace('_', ' ')}

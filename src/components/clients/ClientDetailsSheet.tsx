@@ -70,7 +70,7 @@ export const ClientDetailsSheet: React.FC<ClientDetailsSheetProps> = ({
       <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
         <SheetHeader className="space-y-4">
           <div className="flex items-center justify-between">
-            <SheetTitle className="text-xl">Client Details</SheetTitle>
+            <SheetTitle className="text-base">Client Details</SheetTitle>
             <Button variant="ghost" size="sm" onClick={onClose}>
               <X size={16} />
             </Button>
@@ -82,14 +82,14 @@ export const ClientDetailsSheet: React.FC<ClientDetailsSheetProps> = ({
           <div className="flex items-start gap-4">
             <Avatar className="h-16 w-16">
               <AvatarImage src={client.avatar_url} alt={client.name} />
-              <AvatarFallback className="bg-primary/10 text-primary font-medium text-lg">
+              <AvatarFallback className="bg-primary/10 text-primary font-medium text-sm">
                 {getInitials(client.name)}
               </AvatarFallback>
             </Avatar>
             
             <div className="flex-1">
-              <h2 className="text-2xl font-semibold text-foreground">{client.name}</h2>
-              <p className="text-muted-foreground flex items-center gap-2 mt-1">
+              <h2 className="text-base font-semibold text-foreground">{client.name}</h2>
+              <p className="text-xs text-muted-foreground flex items-center gap-2 mt-1">
                 <Building size={14} />
                 {client.company}
               </p>
@@ -114,15 +114,15 @@ export const ClientDetailsSheet: React.FC<ClientDetailsSheetProps> = ({
           {/* Quick Stats */}
           <div className="grid grid-cols-2 gap-4">
             <div className="text-center p-4 bg-muted/50 rounded-lg">
-              <div className="text-2xl font-bold text-foreground">{client.total_requests}</div>
-              <div className="text-sm text-muted-foreground flex items-center justify-center gap-1 mt-1">
+              <div className="text-xl font-bold text-foreground">{client.total_requests}</div>
+              <div className="text-xs text-muted-foreground flex items-center justify-center gap-1 mt-1">
                 <MessageSquare size={12} />
                 Total Requests
               </div>
             </div>
             <div className="text-center p-4 bg-muted/50 rounded-lg">
-              <div className="text-2xl font-bold text-foreground">{client.scope_of_works}</div>
-              <div className="text-sm text-muted-foreground flex items-center justify-center gap-1 mt-1">
+              <div className="text-xl font-bold text-foreground">{client.scope_of_works}</div>
+              <div className="text-xs text-muted-foreground flex items-center justify-center gap-1 mt-1">
                 <FileText size={12} />
                 Scope of Works
               </div>

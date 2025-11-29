@@ -50,8 +50,8 @@ const Agents: React.FC<AgentsProps> = ({ onMenuClick }) => {
                 <Menu size={16} />
               </Button>
               <div className="flex-1 sm:flex-none">
-                <h1 className="text-xl lg:text-2xl font-semibold text-foreground">Agents</h1>
-                <p className="text-sm text-muted-foreground mt-1">
+                <h1 className="text-sm font-semibold text-foreground">Agents</h1>
+                <p className="text-xs text-muted-foreground mt-1">
                   Manage AI agents for {currentOrg?.name || 'your organization'}
                 </p>
               </div>

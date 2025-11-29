@@ -30,13 +30,13 @@ export const AgentCard = ({ agent, onEdit, onDelete, onStatusChange }: AgentCard
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-1">
-              <CardTitle className="text-lg">{agent.name}</CardTitle>
+              <CardTitle className="text-sm">{agent.name}</CardTitle>
               <Badge variant="outline" className={statusColors[agent.status]}>
                 {agent.status}
               </Badge>
             </div>
             {agent.description && (
-              <CardDescription className="line-clamp-2">{agent.description}</CardDescription>
+              <CardDescription className="line-clamp-2 text-xs">{agent.description}</CardDescription>
             )}
           </div>
           

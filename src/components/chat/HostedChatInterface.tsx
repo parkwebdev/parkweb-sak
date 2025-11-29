@@ -138,16 +138,16 @@ export const HostedChatInterface = ({ agent, branding, orgName }: HostedChatInte
             </Avatar>
           ) : (
             <div
-              className="h-10 w-10 sm:h-12 sm:w-12 rounded-full flex items-center justify-center text-white font-bold text-lg"
+              className="h-10 w-10 sm:h-12 sm:w-12 rounded-full flex items-center justify-center text-white font-bold text-base"
               style={{ backgroundColor: primaryColor }}
             >
               {agent.name.charAt(0)}
             </div>
           )}
           <div className="flex-1 min-w-0">
-            <h1 className="text-lg sm:text-xl font-semibold truncate">{agent.name}</h1>
+            <h1 className="text-sm font-semibold truncate">{agent.name}</h1>
             {agent.description && (
-              <p className="text-sm text-muted-foreground truncate">{agent.description}</p>
+              <p className="text-xs text-muted-foreground truncate">{agent.description}</p>
             )}
           </div>
         </div>

@@ -85,8 +85,8 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
                 <Menu size={16} />
               </Button>
               <div className="flex-1 sm:flex-none">
-                <h1 className="text-xl lg:text-2xl font-semibold text-foreground">Leads</h1>
-                <p className="text-sm text-muted-foreground mt-1">
+                <h1 className="text-sm font-semibold text-foreground">Leads</h1>
+                <p className="text-xs text-muted-foreground mt-1">
                   Track and manage leads captured from conversations
                 </p>
               </div>
@@ -109,24 +109,24 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           <div className="p-4 border rounded-lg">
-            <div className="text-2xl font-bold">{stats.total}</div>
-            <div className="text-sm text-muted-foreground">Total Leads</div>
+            <div className="text-xl font-bold">{stats.total}</div>
+            <div className="text-xs text-muted-foreground">Total Leads</div>
           </div>
           <div className="p-4 border rounded-lg">
-            <div className="text-2xl font-bold text-blue-500">{stats.new}</div>
-            <div className="text-sm text-muted-foreground">New</div>
+            <div className="text-xl font-bold text-blue-500">{stats.new}</div>
+            <div className="text-xs text-muted-foreground">New</div>
           </div>
           <div className="p-4 border rounded-lg">
-            <div className="text-2xl font-bold text-purple-500">{stats.contacted}</div>
-            <div className="text-sm text-muted-foreground">Contacted</div>
+            <div className="text-xl font-bold text-purple-500">{stats.contacted}</div>
+            <div className="text-xs text-muted-foreground">Contacted</div>
           </div>
           <div className="p-4 border rounded-lg">
-            <div className="text-2xl font-bold text-green-500">{stats.qualified}</div>
-            <div className="text-sm text-muted-foreground">Qualified</div>
+            <div className="text-xl font-bold text-green-500">{stats.qualified}</div>
+            <div className="text-xs text-muted-foreground">Qualified</div>
           </div>
           <div className="p-4 border rounded-lg">
-            <div className="text-2xl font-bold text-success">{stats.converted}</div>
-            <div className="text-sm text-muted-foreground">Converted</div>
+            <div className="text-xl font-bold text-success">{stats.converted}</div>
+            <div className="text-xs text-muted-foreground">Converted</div>
           </div>
         </div>
 

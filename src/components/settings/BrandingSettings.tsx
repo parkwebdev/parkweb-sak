@@ -78,8 +78,8 @@ export const BrandingSettings = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-xl lg:text-2xl font-semibold text-foreground">Branding</h1>
-        <p className="text-sm text-muted-foreground mt-1">
+        <h1 className="text-sm font-semibold text-foreground">Branding</h1>
+        <p className="text-xs text-muted-foreground mt-1">
           Customize the appearance of your organization's public-facing pages
         </p>
       </div>
