@@ -8,7 +8,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { useOrganization } from '@/contexts/OrganizationContext';
 import type { Tables } from '@/integrations/supabase/types';
 import { formatDate } from '@/lib/formatting';
-import { PlanLimitsCard } from './PlanLimitsCard';
 
 type Subscription = Tables<'subscriptions'> & {
   plans?: Tables<'plans'>;
@@ -58,9 +57,6 @@ export const SubscriptionSettings = () => {
           Manage your subscription and billing
         </p>
       </div>
-
-      {/* Plan Usage Limits */}
-      <PlanLimitsCard />
 
       <Card>
         <CardHeader>
