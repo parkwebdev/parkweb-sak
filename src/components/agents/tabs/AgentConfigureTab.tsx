@@ -56,88 +56,78 @@ export const AgentConfigureTab = ({ agent, onUpdate, onFormChange }: AgentConfig
 
   return (
     <div className="max-w-4xl space-y-6">
-      {/* Identity & Model - Two Column Layout */}
+      {/* Two Column Layout */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Left Column */}
         <div className="space-y-4">
-          <div>
-            <h3 className="text-sm font-medium mb-3">Identity</h3>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Agent Name</Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => handleUpdate({ name: e.target.value })}
-                  placeholder="My Assistant"
-                  required
-                />
-              </div>
+          <div className="space-y-2">
+            <Label htmlFor="name">Agent Name</Label>
+            <Input
+              id="name"
+              value={formData.name}
+              onChange={(e) => handleUpdate({ name: e.target.value })}
+              placeholder="My Assistant"
+              required
+            />
+          </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => handleUpdate({ description: e.target.value })}
-                  placeholder="A helpful AI assistant that..."
-                  rows={3}
-                />
-                <p className="text-xs text-muted-foreground">Brief description of what this agent does</p>
-              </div>
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="description">Description</Label>
+            <Textarea
+              id="description"
+              value={formData.description}
+              onChange={(e) => handleUpdate({ description: e.target.value })}
+              placeholder="A helpful AI assistant that..."
+              rows={3}
+            />
+            <p className="text-xs text-muted-foreground">Brief description of what this agent does</p>
           </div>
         </div>
 
         {/* Right Column */}
         <div className="space-y-4">
-          <div>
-            <h3 className="text-sm font-medium mb-3">Model Configuration</h3>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="model">Model</Label>
-                <Select value={formData.model} onValueChange={(value) => handleUpdate({ model: value })}>
-                  <SelectTrigger id="model">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {MODELS.map((model) => (
-                      <SelectItem key={model.value} value={model.value}>
-                        {model.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+          <div className="space-y-2">
+            <Label htmlFor="model">Model</Label>
+            <Select value={formData.model} onValueChange={(value) => handleUpdate({ model: value })}>
+              <SelectTrigger id="model">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {MODELS.map((model) => (
+                  <SelectItem key={model.value} value={model.value}>
+                    {model.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="temperature">Temperature</Label>
-                <Input
-                  id="temperature"
-                  type="number"
-                  min="0"
-                  max="2"
-                  step="0.1"
-                  value={formData.temperature}
-                  onChange={(e) => handleUpdate({ temperature: parseFloat(e.target.value) })}
-                />
-                <p className="text-xs text-muted-foreground">0 = focused, 2 = creative</p>
-              </div>
+          <div className="space-y-2">
+            <Label htmlFor="temperature">Temperature</Label>
+            <Input
+              id="temperature"
+              type="number"
+              min="0"
+              max="2"
+              step="0.1"
+              value={formData.temperature}
+              onChange={(e) => handleUpdate({ temperature: parseFloat(e.target.value) })}
+            />
+            <p className="text-xs text-muted-foreground">0 = focused, 2 = creative</p>
+          </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="max_tokens">Max Tokens</Label>
-                <Input
-                  id="max_tokens"
-                  type="number"
-                  min="100"
-                  max="8000"
-                  step="100"
-                  value={formData.max_tokens}
-                  onChange={(e) => handleUpdate({ max_tokens: parseInt(e.target.value) })}
-                />
-                <p className="text-xs text-muted-foreground">Maximum response length</p>
-              </div>
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="max_tokens">Max Tokens</Label>
+            <Input
+              id="max_tokens"
+              type="number"
+              min="100"
+              max="8000"
+              step="100"
+              value={formData.max_tokens}
+              onChange={(e) => handleUpdate({ max_tokens: parseInt(e.target.value) })}
+            />
+            <p className="text-xs text-muted-foreground">Maximum response length</p>
           </div>
         </div>
       </div>

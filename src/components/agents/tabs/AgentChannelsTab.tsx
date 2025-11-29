@@ -4,11 +4,11 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Link03, Settings01 } from '@untitledui/icons';
 import { toast } from 'sonner';
 import type { Tables } from '@/integrations/supabase/types';
-import { WidgetConfigurator } from '../WidgetConfigurator';
+import { EmbeddedChatDesigner } from '../EmbeddedChatDesigner';
 import { useOrganization } from '@/contexts/OrganizationContext';
 
 type Agent = Tables<'agents'>;
@@ -23,7 +23,7 @@ export const AgentChannelsTab = ({ agent, onUpdate, onFormChange }: AgentChannel
   const { currentOrg } = useOrganization();
   const deploymentConfig = (agent.deployment_config as any) || {
     api_enabled: false,
-    widget_enabled: false,
+    embedded_chat_enabled: false,
     hosted_page_enabled: false,
   };
 
@@ -84,34 +84,31 @@ export const AgentChannelsTab = ({ agent, onUpdate, onFormChange }: AgentChannel
 
       <Separator />
 
-      {/* Chat Widget */}
+      {/* Embedded Chat */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-sm font-medium">Chat Widget</h3>
-            <p className="text-xs text-muted-foreground">Embed a chat widget on your website</p>
+            <h3 className="text-sm font-medium">Embedded Chat</h3>
+            <p className="text-xs text-muted-foreground">Add a chat bubble to your website</p>
           </div>
           <Switch
-            checked={config.widget_enabled}
-            onCheckedChange={(checked) => setConfig({ ...config, widget_enabled: checked })}
+            checked={config.embedded_chat_enabled}
+            onCheckedChange={(checked) => setConfig({ ...config, embedded_chat_enabled: checked })}
           />
         </div>
-        {config.widget_enabled && (
+        {config.embedded_chat_enabled && (
           <div className="pl-4">
-            <Dialog>
-              <DialogTrigger asChild>
+            <Sheet>
+              <SheetTrigger asChild>
                 <Button variant="outline" size="sm">
                   <Settings01 className="h-4 w-4 mr-2" />
-                  Configure Widget
+                  Customize Chat
                 </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle>Widget Configuration</DialogTitle>
-                </DialogHeader>
-                <WidgetConfigurator agentId={agent.id} />
-              </DialogContent>
-            </Dialog>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-full sm:max-w-2xl overflow-y-auto">
+                <EmbeddedChatDesigner agentId={agent.id} />
+              </SheetContent>
+            </Sheet>
           </div>
         )}
       </div>
