@@ -12,7 +12,11 @@ export interface EmbeddedChatConfig {
   showBranding: boolean;
   avatarUrl?: string;
   agentName: string;
-  animation: 'none' | 'pulse' | 'bounce' | 'fade';
+  animation: 'none' | 'pulse' | 'bounce' | 'fade' | 'ring';
+  showBadge: boolean;
+  displayTiming: 'immediate' | 'delayed' | 'scroll';
+  delaySeconds: number;
+  scrollDepth: number;
 }
 
 export const useEmbeddedChatConfig = (agentId: string) => {
@@ -25,7 +29,11 @@ export const useEmbeddedChatConfig = (agentId: string) => {
     placeholder: 'Type your message...',
     showBranding: true,
     agentName: 'AI Assistant',
-    animation: 'pulse',
+    animation: 'ring',
+    showBadge: true,
+    displayTiming: 'immediate',
+    delaySeconds: 3,
+    scrollDepth: 50,
   });
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
@@ -123,6 +131,10 @@ export const useEmbeddedChatConfig = (agentId: string) => {
     script.setAttribute('data-show-branding', '${config.showBranding}');
     script.setAttribute('data-agent-name', '${config.agentName}');
     script.setAttribute('data-animation', '${config.animation}');
+    script.setAttribute('data-show-badge', '${config.showBadge}');
+    script.setAttribute('data-display-timing', '${config.displayTiming}');
+    script.setAttribute('data-delay-seconds', '${config.delaySeconds}');
+    script.setAttribute('data-scroll-depth', '${config.scrollDepth}');
     ${config.avatarUrl ? `script.setAttribute('data-avatar-url', '${config.avatarUrl}');` : ''}
     document.head.appendChild(script);
   })();
