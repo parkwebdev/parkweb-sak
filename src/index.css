@@ -307,3 +307,8 @@ body.compact-mode .gap-8 {
 ::view-transition-new(root) {
   z-index: 2147483647 !important;
 }
+
+/* Override library's dynamically injected z-index: -1 specifically */
+::view-transition-old(root) {
+  z-index: 2147483646 !important;
+}

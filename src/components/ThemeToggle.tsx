@@ -10,9 +10,8 @@ interface ThemeToggleProps {
 export function ThemeToggle({ isCollapsed = false }: ThemeToggleProps) {
   const { theme, setTheme } = useTheme();
   const { ref, toggleSwitchTheme, isDarkMode } = useModeAnimation({
-    animationType: ThemeAnimationType.BLUR_CIRCLE,
-    blurAmount: 2,
-    duration: 600
+    animationType: ThemeAnimationType.CIRCLE,
+    duration: 500
   });
 
   const handleToggle = () => {
