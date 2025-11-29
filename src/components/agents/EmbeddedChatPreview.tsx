@@ -28,7 +28,14 @@ interface EmbeddedChatPreviewProps {
   config: EmbeddedChatConfig;
 }
 
-type ViewType = 'home' | 'messages' | 'help' | 'contact';
+type ViewType = 'home' | 'messages' | 'help';
+
+interface ChatUser {
+  firstName: string;
+  lastName: string;
+  email: string;
+  leadId: string;
+}
 
 export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
   // Load help articles from database
@@ -41,8 +48,11 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
   const [currentView, setCurrentView] = useState<ViewType>('home');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedArticle, setSelectedArticle] = useState<HelpArticle | null>(null);
-  const [hasSubmittedContactForm, setHasSubmittedContactForm] = useState(() => {
-    return localStorage.getItem(`chatpad_contact_submitted_${config.agentId}`) === 'true';
+  
+  // User state from localStorage
+  const [chatUser, setChatUser] = useState<ChatUser | null>(() => {
+    const stored = localStorage.getItem(`chatpad_user_${config.agentId}`);
+    return stored ? JSON.parse(stored) : null;
   });
   
   // Reset feedback when article changes
@@ -405,17 +415,20 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
   const handleQuickActionClick = (actionType: string) => {
     if (actionType === 'start_chat') {
       setCurrentView('messages');
-      // Simulate agent typing after a moment
-      setTimeout(() => {
-        setIsTyping(true);
+      if (!chatUser) {
+        // New user - will see inline form
+        setActiveConversationId('new');
+      } else {
+        // Returning user - show welcome message
         setTimeout(() => {
-          setIsTyping(false);
-        }, 2000);
-      }, 500);
+          setIsTyping(true);
+          setTimeout(() => {
+            setIsTyping(false);
+          }, 2000);
+        }, 500);
+      }
     } else if (actionType === 'open_help') {
       setCurrentView('help');
-    } else if (actionType === 'open_contact') {
-      setCurrentView('contact');
     }
   };
   
@@ -452,12 +465,28 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
     }
   };
 
-  // Check if we should show contact form first
+  // Update greeting based on user status
   useEffect(() => {
-    if (isOpen && config.enableContactForm && !hasSubmittedContactForm) {
-      setCurrentView('contact');
+    if (chatUser) {
+      setMessages([{ 
+        role: 'assistant', 
+        content: `Welcome back, ${chatUser.firstName}! 👋 How can I help you today?`, 
+        read: true, 
+        timestamp: new Date(),
+        type: 'text',
+        reactions: []
+      }]);
+    } else {
+      setMessages([{ 
+        role: 'assistant', 
+        content: config.greeting, 
+        read: true, 
+        timestamp: new Date(), 
+        type: 'text', 
+        reactions: [] 
+      }]);
     }
-  }, [isOpen, config.enableContactForm, hasSubmittedContactForm]);
+  }, [chatUser, config.greeting]);
 
   return (
     <div className="relative min-h-[700px] bg-muted/30 rounded-lg p-4 overflow-hidden">
@@ -709,186 +738,128 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
                   </div>
                 )}
 
-                {/* Contact Form View */}
-                {currentView === 'contact' && (
-                  <div className={`flex-1 overflow-y-auto p-4 animate-fade-in ${getTransitionClasses()} ${config.viewTransition === 'fade' ? 'opacity-100' : ''}`}>
-                    <div className="space-y-4">
-                      {/* Form Header */}
-                      <div className="text-center space-y-1">
-                        <h3 className="text-lg font-semibold">{config.contactFormTitle}</h3>
-                        <p className="text-sm text-muted-foreground">{config.contactFormSubtitle}</p>
-                      </div>
-
-                      {/* Contact Form */}
-                      <form className="space-y-3" onSubmit={(e) => {
-                        e.preventDefault();
-                        const formData = new FormData(e.currentTarget);
-                        const data: Record<string, string> = {
-                          firstName: formData.get('firstName') as string || '',
-                          lastName: formData.get('lastName') as string || '',
-                          email: formData.get('email') as string || '',
-                        };
-
-                        config.customFields.forEach(field => {
-                          data[field.id] = formData.get(field.id) as string || '';
-                        });
-
-                        try {
-                          const schema = createFormSchema();
-                          schema.parse(data);
-                          setFormErrors({});
-                          
-                          // Success - proceed to chat
-                          toast.success('Form submitted successfully!');
-                          setHasSubmittedContactForm(true);
-                          localStorage.setItem(`chatpad_contact_submitted_${config.agentId}`, 'true');
-                          setTimeout(() => {
-                            setCurrentView('messages');
-                            setActiveConversationId('new');
-                            setMessages([{ 
-                              role: 'assistant', 
-                              content: 'Thanks for your information! How can I help you today?', 
-                              read: true, 
-                              timestamp: new Date(),
-                              type: 'text',
-                              reactions: []
-                            }]);
-                          }, 500);
-                        } catch (error) {
-                          if (error instanceof z.ZodError) {
-                            const errors: Record<string, string> = {};
-                            error.errors.forEach(err => {
-                              if (err.path[0]) {
-                                errors[err.path[0] as string] = err.message;
-                              }
-                            });
-                            setFormErrors(errors);
-                            toast.error('Please fix the form errors');
-                          }
-                        }
-                      }}>
-                        {/* Required Fields */}
-                        <div className="space-y-2">
-                          <Label htmlFor="firstName" className="text-sm">First Name *</Label>
-                          <Input
-                            id="firstName"
-                            name="firstName"
-                            placeholder="John"
-                            className="text-sm"
-                          />
-                          {formErrors.firstName && (
-                            <p className="text-xs text-destructive">{formErrors.firstName}</p>
-                          )}
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="lastName" className="text-sm">Last Name *</Label>
-                          <Input
-                            id="lastName"
-                            name="lastName"
-                            placeholder="Doe"
-                            className="text-sm"
-                          />
-                          {formErrors.lastName && (
-                            <p className="text-xs text-destructive">{formErrors.lastName}</p>
-                          )}
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="email" className="text-sm">Email *</Label>
-                          <Input
-                            id="email"
-                            name="email"
-                            type="email"
-                            placeholder="john@example.com"
-                            className="text-sm"
-                          />
-                          {formErrors.email && (
-                            <p className="text-xs text-destructive">{formErrors.email}</p>
-                          )}
-                        </div>
-
-                        {/* Custom Fields */}
-                        {config.customFields.map((field) => (
-                          <div key={field.id} className="space-y-2">
-                            <Label htmlFor={field.id} className="text-sm">
-                              {field.label} {field.required && '*'}
-                            </Label>
-                            {field.fieldType === 'textarea' ? (
-                              <Textarea
-                                id={field.id}
-                                name={field.id}
-                                placeholder={field.placeholder}
-                                className="text-sm"
-                                rows={3}
-                              />
-                            ) : field.fieldType === 'select' ? (
-                              <Select name={field.id}>
-                                <SelectTrigger className="text-sm">
-                                  <SelectValue placeholder={field.placeholder || 'Select an option'} />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {field.options?.map((option) => (
-                                    <SelectItem key={option} value={option}>
-                                      {option}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            ) : (
-                              <Input
-                                id={field.id}
-                                name={field.id}
-                                type={field.fieldType}
-                                placeholder={field.placeholder}
-                                className="text-sm"
-                              />
-                            )}
-                            {formErrors[field.id] && (
-                              <p className="text-xs text-destructive">{formErrors[field.id]}</p>
-                            )}
-                          </div>
-                        ))}
-
-                        {/* Submit Button */}
-                        <Button
-                          type="submit"
-                          className="w-full"
-                          style={{ backgroundColor: config.primaryColor }}
-                        >
-                          Continue to Chat
-                        </Button>
-
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          className="w-full"
-                          onClick={() => setCurrentView('home')}
-                        >
-                          Back
-                        </Button>
-                      </form>
-                    </div>
-                  </div>
-                )}
-
                 {/* Messages View */}
                 {currentView === 'messages' && (
                   <div className={`flex-1 flex flex-col animate-fade-in ${getTransitionClasses()} ${config.viewTransition === 'fade' ? 'opacity-100' : ''}`}>
                     {activeConversationId ? (
                       <>
                         {/* Active Conversation */}
-                        <div className={`flex-1 overflow-y-auto messages-container animate-fade-in ${chatSettings.compactMode ? 'p-3 space-y-2' : 'p-4 space-y-3'}`}>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="mb-2"
-                            onClick={() => setActiveConversationId(null)}
-                          >
-                            <ChevronRight className="h-4 w-4 rotate-180 mr-1" />
-                            Back to conversations
-                          </Button>
-                          {messages.map((msg, idx) => (
+                        <div className={`flex-1 overflow-y-auto messages-container animate-fade-in p-4 space-y-3`}>
+                          {/* Show inline form for new users */}
+                          {!chatUser && (
+                            <div className="flex items-start animate-fade-in">
+                              <div className="bg-muted rounded-lg p-3 max-w-[85%]">
+                                <p className="text-sm font-medium mb-3">Quick intro before we chat 👋</p>
+                                <form 
+                                  className="space-y-2"
+                                  onSubmit={async (e) => {
+                                    e.preventDefault();
+                                    const formData = new FormData(e.currentTarget);
+                                    const firstName = formData.get('firstName') as string || '';
+                                    const lastName = formData.get('lastName') as string || '';
+                                    const email = formData.get('email') as string || '';
+
+                                    try {
+                                      // Validate
+                                      const schema = z.object({
+                                        firstName: z.string().trim().min(1, 'First name required').max(50),
+                                        lastName: z.string().trim().min(1, 'Last name required').max(50),
+                                        email: z.string().trim().email('Invalid email').max(255),
+                                      });
+                                      schema.parse({ firstName, lastName, email });
+                                      setFormErrors({});
+
+                                      // Create lead
+                                      const { data: lead, error } = await supabase
+                                        .from('leads')
+                                        .insert({
+                                          org_id: config.orgId,
+                                          name: `${firstName} ${lastName}`,
+                                          email: email,
+                                          data: { firstName, lastName },
+                                          status: 'new'
+                                        })
+                                        .select()
+                                        .single();
+
+                                      if (error) throw error;
+
+                                      // Save user to localStorage
+                                      const userData = { firstName, lastName, email, leadId: lead.id };
+                                      localStorage.setItem(`chatpad_user_${config.agentId}`, JSON.stringify(userData));
+                                      setChatUser(userData);
+
+                                      // Update greeting message
+                                      setMessages([{ 
+                                        role: 'assistant', 
+                                        content: `Thanks ${firstName}! How can I help you today?`, 
+                                        read: true, 
+                                        timestamp: new Date(),
+                                        type: 'text',
+                                        reactions: []
+                                      }]);
+
+                                      toast.success('Welcome!');
+                                    } catch (error) {
+                                      if (error instanceof z.ZodError) {
+                                        const errors: Record<string, string> = {};
+                                        error.errors.forEach(err => {
+                                          if (err.path[0]) {
+                                            errors[err.path[0] as string] = err.message;
+                                          }
+                                        });
+                                        setFormErrors(errors);
+                                        toast.error('Please fix the form errors');
+                                      } else {
+                                        console.error('Error creating lead:', error);
+                                        toast.error('Failed to submit form');
+                                      }
+                                    }
+                                  }}
+                                >
+                                  <Input 
+                                    name="firstName" 
+                                    placeholder="First name" 
+                                    className="h-8 text-sm" 
+                                    required
+                                  />
+                                  {formErrors.firstName && (
+                                    <p className="text-xs text-destructive">{formErrors.firstName}</p>
+                                  )}
+                                  <Input 
+                                    name="lastName" 
+                                    placeholder="Last name" 
+                                    className="h-8 text-sm" 
+                                    required
+                                  />
+                                  {formErrors.lastName && (
+                                    <p className="text-xs text-destructive">{formErrors.lastName}</p>
+                                  )}
+                                  <Input 
+                                    name="email" 
+                                    type="email" 
+                                    placeholder="Email" 
+                                    className="h-8 text-sm" 
+                                    required
+                                  />
+                                  {formErrors.email && (
+                                    <p className="text-xs text-destructive">{formErrors.email}</p>
+                                  )}
+                                  <Button 
+                                    type="submit" 
+                                    size="sm" 
+                                    className="w-full"
+                                    style={{ backgroundColor: config.primaryColor }}
+                                  >
+                                    Start Chat
+                                  </Button>
+                                </form>
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* Chat messages */}
+                          {chatUser && messages.map((msg, idx) => (
                             <div
                               key={idx}
                               className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'} animate-fade-in`}
