@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Download01, Grid01, List, SearchLg } from '@untitledui/icons';
+import { Plus, Download01, Grid01, List, SearchLg, Menu01 as Menu } from '@untitledui/icons';
 import { useLeads } from '@/hooks/useLeads';
 import { LeadCard } from '@/components/leads/LeadCard';
 import { LeadsTable } from '@/components/leads/LeadsTable';
@@ -10,7 +10,11 @@ import { LeadDetailsSheet } from '@/components/leads/LeadDetailsSheet';
 import { CreateLeadDialog } from '@/components/leads/CreateLeadDialog';
 import type { Tables } from '@/integrations/supabase/types';
 
-const Leads = () => {
+interface LeadsProps {
+  onMenuClick?: () => void;
+}
+
+const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
   const { leads, loading, createLead, updateLead, deleteLead } = useLeads();
   const [selectedLead, setSelectedLead] = useState<Tables<'leads'> | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
@@ -67,28 +71,41 @@ const Leads = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Leads</h1>
-            <p className="text-muted-foreground">
-              Track and manage leads captured from conversations
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={handleExport} disabled={filteredLeads.length === 0}>
-              <Download01 className="h-4 w-4 mr-2" />
-              Export
-            </Button>
-            <Button onClick={() => setIsCreateOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Lead
-            </Button>
+    <main className="flex-1 bg-muted/30 min-h-screen pt-4 lg:pt-8">
+      <header className="w-full font-medium">
+        <div className="items-stretch flex w-full flex-col gap-6 px-4 lg:px-8 py-0">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-4 w-full sm:w-auto">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="lg:hidden flex items-center gap-2"
+                onClick={onMenuClick}
+              >
+                <Menu size={16} />
+              </Button>
+              <div className="flex-1 sm:flex-none">
+                <h1 className="text-xl lg:text-2xl font-semibold text-foreground">Leads</h1>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Track and manage leads captured from conversations
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={handleExport} disabled={filteredLeads.length === 0}>
+                <Download01 className="h-4 w-4 mr-2" />
+                Export
+              </Button>
+              <Button onClick={() => setIsCreateOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Lead
+              </Button>
+            </div>
           </div>
         </div>
+      </header>
 
+      <div className="px-4 lg:px-8 mt-6 space-y-6">
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           <div className="p-4 border rounded-lg">
@@ -196,7 +213,7 @@ const Leads = () => {
           await createLead(lead);
         }}
       />
-    </div>
+    </main>
   );
 };
 

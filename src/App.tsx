@@ -8,13 +8,13 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { OrganizationProvider } from "@/contexts/OrganizationContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Auth from "./pages/Auth";
-import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import DashboardWrapper from "./pages/DashboardWrapper";
-import Agents from "./pages/Agents";
-import Conversations from "./pages/Conversations";
-import Leads from "./pages/Leads";
-import Analytics from "./pages/Analytics";
+import AgentsWrapper from "./pages/AgentsWrapper";
+import ConversationsWrapper from "./pages/ConversationsWrapper";
+import LeadsWrapper from "./pages/LeadsWrapper";
+import AnalyticsWrapper from "./pages/AnalyticsWrapper";
+import SettingsWrapper from "./pages/SettingsWrapper";
 
 const queryClient = new QueryClient();
 
@@ -36,27 +36,27 @@ const App = () => (
                 } />
                 <Route path="/agents" element={
                   <ProtectedRoute>
-                    <Agents />
+                    <AgentsWrapper />
                   </ProtectedRoute>
                 } />
                 <Route path="/conversations" element={
                   <ProtectedRoute>
-                    <Conversations />
+                    <ConversationsWrapper />
                   </ProtectedRoute>
                 } />
                 <Route path="/leads" element={
                   <ProtectedRoute>
-                    <Leads />
+                    <LeadsWrapper />
                   </ProtectedRoute>
                 } />
                 <Route path="/analytics" element={
                   <ProtectedRoute>
-                    <Analytics />
+                    <AnalyticsWrapper />
                   </ProtectedRoute>
                 } />
                 <Route path="/settings" element={
                   <ProtectedRoute>
-                    <Settings />
+                    <SettingsWrapper />
                   </ProtectedRoute>
                 } />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

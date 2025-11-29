@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { RefreshCcw01 } from '@untitledui/icons';
+import { RefreshCcw01, Menu01 as Menu } from '@untitledui/icons';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { ConversationChart } from '@/components/analytics/ConversationChart';
 import { LeadConversionChart } from '@/components/analytics/LeadConversionChart';
@@ -10,7 +10,11 @@ import { UsageMetricsChart } from '@/components/analytics/UsageMetricsChart';
 import { AnalyticsKPIs } from '@/components/analytics/AnalyticsKPIs';
 import { useOrganization } from '@/contexts/OrganizationContext';
 
-const Analytics = () => {
+interface AnalyticsProps {
+  onMenuClick?: () => void;
+}
+
+const Analytics: React.FC<AnalyticsProps> = ({ onMenuClick }) => {
   const { currentOrg } = useOrganization();
   const [timeRange, setTimeRange] = useState<number>(30);
   const { 
@@ -57,29 +61,43 @@ const Analytics = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold">Analytics</h1>
-            <p className="text-muted-foreground">
-              Real-time insights for {currentOrg?.name || 'your organization'}
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <Tabs value={timeRange.toString()} onValueChange={(v) => setTimeRange(Number(v))}>
-              <TabsList>
-                <TabsTrigger value="7">7 days</TabsTrigger>
-                <TabsTrigger value="30">30 days</TabsTrigger>
-                <TabsTrigger value="90">90 days</TabsTrigger>
-              </TabsList>
-            </Tabs>
-            <Button variant="outline" size="icon" onClick={refetch} disabled={loading}>
-              <RefreshCcw01 className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-            </Button>
+    <main className="flex-1 bg-muted/30 min-h-screen pt-4 lg:pt-8">
+      <header className="w-full font-medium">
+        <div className="items-stretch flex w-full flex-col gap-6 px-4 lg:px-8 py-0">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-4 w-full sm:w-auto">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="lg:hidden flex items-center gap-2"
+                onClick={onMenuClick}
+              >
+                <Menu size={16} />
+              </Button>
+              <div className="flex-1 sm:flex-none">
+                <h1 className="text-xl lg:text-2xl font-semibold text-foreground">Analytics</h1>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Real-time insights for {currentOrg?.name || 'your organization'}
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Tabs value={timeRange.toString()} onValueChange={(v) => setTimeRange(Number(v))}>
+                <TabsList>
+                  <TabsTrigger value="7">7 days</TabsTrigger>
+                  <TabsTrigger value="30">30 days</TabsTrigger>
+                  <TabsTrigger value="90">90 days</TabsTrigger>
+                </TabsList>
+              </Tabs>
+              <Button variant="outline" size="icon" onClick={refetch} disabled={loading}>
+                <RefreshCcw01 className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+              </Button>
+            </div>
           </div>
         </div>
+      </header>
+
+      <div className="px-4 lg:px-8 mt-6 space-y-6">
 
         {/* KPIs */}
         <AnalyticsKPIs kpis={kpis} />
@@ -109,7 +127,7 @@ const Analytics = () => {
           </div>
         )}
       </div>
-    </div>
+    </main>
   );
 };
 
