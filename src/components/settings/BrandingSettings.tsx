@@ -40,7 +40,7 @@ export const BrandingSettings = () => {
 
   // Auto-save color changes
   useEffect(() => {
-    if (!primaryColor || primaryColor === branding?.primary_color) return;
+    if (!branding || !primaryColor || primaryColor === branding?.primary_color) return;
     
     const timer = setTimeout(async () => {
       await updateBranding({ primary_color: primaryColor });
@@ -48,10 +48,10 @@ export const BrandingSettings = () => {
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, [primaryColor]);
+  }, [primaryColor, branding]);
 
   useEffect(() => {
-    if (!secondaryColor || secondaryColor === branding?.secondary_color) return;
+    if (!branding || !secondaryColor || secondaryColor === branding?.secondary_color) return;
     
     const timer = setTimeout(async () => {
       await updateBranding({ secondary_color: secondaryColor });
@@ -59,10 +59,10 @@ export const BrandingSettings = () => {
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, [secondaryColor]);
+  }, [secondaryColor, branding]);
 
   useEffect(() => {
-    if (customDomain === branding?.custom_domain) return;
+    if (!branding || customDomain === branding?.custom_domain) return;
     
     const timer = setTimeout(async () => {
       await updateBranding({ custom_domain: customDomain || null });
@@ -70,7 +70,7 @@ export const BrandingSettings = () => {
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, [customDomain]);
+  }, [customDomain, branding]);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

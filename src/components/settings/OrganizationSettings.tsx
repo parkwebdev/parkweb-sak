@@ -119,7 +119,7 @@ export const OrganizationSettings = () => {
   };
 
   useEffect(() => {
-    if (!orgName || orgName === organization?.name) return;
+    if (!organization || !orgName || orgName === organization?.name) return;
     
     const timer = setTimeout(async () => {
       try {
@@ -131,10 +131,10 @@ export const OrganizationSettings = () => {
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, [orgName]);
+  }, [orgName, organization]);
 
   useEffect(() => {
-    if (!primaryColor || primaryColor === branding?.primary_color) return;
+    if (!branding || !primaryColor || primaryColor === branding?.primary_color) return;
     
     const timer = setTimeout(async () => {
       try {
@@ -146,10 +146,10 @@ export const OrganizationSettings = () => {
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, [primaryColor]);
+  }, [primaryColor, branding]);
 
   useEffect(() => {
-    if (!secondaryColor || secondaryColor === branding?.secondary_color) return;
+    if (!branding || !secondaryColor || secondaryColor === branding?.secondary_color) return;
     
     const timer = setTimeout(async () => {
       try {
@@ -161,10 +161,10 @@ export const OrganizationSettings = () => {
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, [secondaryColor]);
+  }, [secondaryColor, branding]);
 
   useEffect(() => {
-    if (customDomain === branding?.custom_domain) return;
+    if (!branding || customDomain === branding?.custom_domain) return;
     
     const timer = setTimeout(async () => {
       try {
@@ -176,7 +176,7 @@ export const OrganizationSettings = () => {
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, [customDomain]);
+  }, [customDomain, branding]);
 
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {

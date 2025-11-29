@@ -25,6 +25,7 @@ export const ProfileSettings: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [savedFields, setSavedFields] = useState<Record<string, boolean>>({});
+  const [initialProfile, setInitialProfile] = useState<typeof profile | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -77,51 +78,57 @@ export const ProfileSettings: React.FC = () => {
     }, 2000);
   };
 
+  useEffect(() => {
+    if (!loading && profile.display_name && !initialProfile) {
+      setInitialProfile(profile);
+    }
+  }, [loading, profile.display_name]);
+
   // Auto-save display_name changes
   useEffect(() => {
-    if (!profile.display_name || loading || !user) return;
+    if (loading || !user || !initialProfile || !profile.display_name) return;
+    if (profile.display_name === initialProfile.display_name) return;
     
     const timer = setTimeout(async () => {
       try {
         await supabase
           .from('profiles')
-          .upsert({
-            user_id: user.id,
+          .update({
             display_name: profile.display_name,
-            email: profile.email,
-            avatar_url: profile.avatar_url,
-          });
+          })
+          .eq('user_id', user.id);
         showSaved('display_name');
+        setInitialProfile(profile);
       } catch (error) {
         console.error('Error auto-saving display name:', error);
       }
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, [profile.display_name]);
+  }, [profile.display_name, loading, user, initialProfile]);
 
   // Auto-save email changes
   useEffect(() => {
-    if (!profile.email || loading || !user) return;
+    if (loading || !user || !initialProfile || !profile.email) return;
+    if (profile.email === initialProfile.email) return;
     
     const timer = setTimeout(async () => {
       try {
         await supabase
           .from('profiles')
-          .upsert({
-            user_id: user.id,
-            display_name: profile.display_name,
+          .update({
             email: profile.email,
-            avatar_url: profile.avatar_url,
-          });
+          })
+          .eq('user_id', user.id);
         showSaved('email');
+        setInitialProfile(profile);
       } catch (error) {
         console.error('Error auto-saving email:', error);
       }
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, [profile.email]);
+  }, [profile.email, loading, user, initialProfile]);
 
   const handleSave = async () => {
     if (!user) return;
