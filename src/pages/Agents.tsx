@@ -11,11 +11,7 @@ import type { Tables } from '@/integrations/supabase/types';
 
 type Agent = Tables<'agents'>;
 
-interface AgentsProps {
-  onMenuClick?: () => void;
-}
-
-const Agents: React.FC<AgentsProps> = ({ onMenuClick }) => {
+const Agents: React.FC = () => {
   const { currentOrg } = useOrganization();
   const { agents, loading, createAgent, updateAgent, deleteAgent } = useAgents();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -38,21 +34,11 @@ const Agents: React.FC<AgentsProps> = ({ onMenuClick }) => {
       <header className="w-full font-medium">
         <div className="items-stretch flex w-full flex-col gap-6 px-4 lg:px-8 py-0">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-4 w-full sm:w-auto">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="lg:hidden flex items-center gap-2"
-                onClick={onMenuClick}
-              >
-                <Menu size={16} />
-              </Button>
-              <div className="flex-1 sm:flex-none">
-                <h1 className="text-sm font-semibold text-foreground">Agents</h1>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Manage AI agents for {currentOrg?.name || 'your organization'}
-                </p>
-              </div>
+            <div>
+              <h1 className="text-sm font-semibold text-foreground">Agents</h1>
+              <p className="text-xs text-muted-foreground mt-1">
+                Manage AI agents for {currentOrg?.name || 'your organization'}
+              </p>
             </div>
             <Button onClick={() => setCreateDialogOpen(true)}>
               Create Agent
