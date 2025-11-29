@@ -76,8 +76,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
   }).length;
 
   return (
-    <aside className={`items-stretch flex ${isCollapsed ? 'w-[72px]' : 'w-[280px]'} h-screen bg-muted/30 p-1 transition-all duration-300`}>
-      <div className="border shadow-sm w-full flex-1 bg-card rounded-xl border-border">
+    <aside className={`items-stretch flex ${isCollapsed ? 'w-[72px]' : 'w-[280px]'} h-screen bg-muted/30 p-1 transition-all duration-300 overflow-visible`}>
+      <div className="border shadow-sm w-full flex-1 bg-card rounded-xl border-border overflow-visible">
         <nav className="w-full gap-4 pt-4">
           <header className="w-full whitespace-nowrap gap-4 px-4 py-0">
             <div className="w-full space-y-3">
