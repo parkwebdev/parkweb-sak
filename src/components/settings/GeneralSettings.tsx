@@ -249,7 +249,7 @@ export const GeneralSettings: React.FC = () => {
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label className="text-sm font-medium">Default Project View</Label>
+              <Label className="text-sm font-medium">Default View</Label>
               <p className="text-xs text-muted-foreground">Choose which page loads first when opening the application</p>
             </div>
             <Select 
@@ -262,9 +262,10 @@ export const GeneralSettings: React.FC = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="dashboard">Dashboard</SelectItem>
-                <SelectItem value="onboarding">Client Onboarding</SelectItem>
-                <SelectItem value="scope-works">Scope of Works</SelectItem>
-                <SelectItem value="team">Team</SelectItem>
+                <SelectItem value="agents">Agents</SelectItem>
+                <SelectItem value="conversations">Conversations</SelectItem>
+                <SelectItem value="leads">Leads</SelectItem>
+                <SelectItem value="analytics">Analytics</SelectItem>
                 <SelectItem value="settings">Settings</SelectItem>
               </SelectContent>
             </Select>
