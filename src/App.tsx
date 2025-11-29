@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { OrganizationProvider } from "@/contexts/OrganizationContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { GlobalSearch } from "@/components/GlobalSearch";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import HostedChat from "./pages/HostedChat";
@@ -29,6 +30,7 @@ const App = () => (
         <BrowserRouter>
           <AuthProvider>
             <OrganizationProvider>
+              <GlobalSearch />
               <Routes>
                 <Route path="/login" element={<Auth />} />
                 <Route path="/:orgSlug/:agentSlug" element={<HostedChat />} />
