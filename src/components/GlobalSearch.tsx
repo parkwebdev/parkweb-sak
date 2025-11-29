@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/command';
 import { useGlobalSearch } from '@/hooks/useGlobalSearch';
 import { useSearchData, type SearchResult } from '@/hooks/useSearchData';
+import * as Icons from '@untitledui/icons';
 
 export const GlobalSearch = () => {
   const { open, setOpen } = useGlobalSearch();
@@ -70,25 +71,29 @@ export const GlobalSearch = () => {
             <CommandEmpty>No results found.</CommandEmpty>
             {Object.entries(groupedResults).map(([category, results]) => (
               <CommandGroup key={category} heading={category}>
-                {results.map((result) => (
-                  <CommandItem
-                    key={result.id}
-                    value={`${result.title} ${result.description || ''}`}
-                    onSelect={() => handleSelect(result)}
-                  >
-                    {result.icon && (
-                      <span className="mr-2 text-lg">{result.icon}</span>
-                    )}
-                    <div className="flex flex-col">
-                      <span className="font-medium">{result.title}</span>
-                      {result.description && (
-                        <span className="text-xs text-muted-foreground">
-                          {result.description}
-                        </span>
+                {results.map((result) => {
+                  const IconComponent = result.iconName ? (Icons as any)[result.iconName] : null;
+                  
+                  return (
+                    <CommandItem
+                      key={result.id}
+                      value={`${result.title} ${result.description || ''}`}
+                      onSelect={() => handleSelect(result)}
+                    >
+                      {IconComponent && (
+                        <IconComponent className="mr-2 h-4 w-4 text-muted-foreground" />
                       )}
-                    </div>
-                  </CommandItem>
-                ))}
+                      <div className="flex flex-col">
+                        <span className="font-medium">{result.title}</span>
+                        {result.description && (
+                          <span className="text-xs text-muted-foreground">
+                            {result.description}
+                          </span>
+                        )}
+                      </div>
+                    </CommandItem>
+                  );
+                })}
               </CommandGroup>
             ))}
           </>

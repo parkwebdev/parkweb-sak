@@ -9,7 +9,7 @@ export interface SearchResult {
   title: string;
   description?: string;
   category: string;
-  icon?: string;
+  iconName?: string;
   url?: string;
   action?: () => void;
 }
@@ -64,7 +64,7 @@ export const useSearchData = () => {
           title: 'Dashboard',
           description: 'View overview and statistics',
           category: 'Navigation',
-          icon: '📊',
+          iconName: 'LayoutGrid01',
           url: '/',
         },
         {
@@ -72,7 +72,7 @@ export const useSearchData = () => {
           title: 'Agents',
           description: 'Manage AI agents',
           category: 'Navigation',
-          icon: '🤖',
+          iconName: 'Cube01',
           url: '/agents',
         },
         {
@@ -80,7 +80,7 @@ export const useSearchData = () => {
           title: 'Conversations',
           description: 'View all conversations',
           category: 'Navigation',
-          icon: '💬',
+          iconName: 'MessageChatSquare',
           url: '/conversations',
         },
         {
@@ -88,7 +88,7 @@ export const useSearchData = () => {
           title: 'Leads',
           description: 'Manage captured leads',
           category: 'Navigation',
-          icon: '👥',
+          iconName: 'Users01',
           url: '/leads',
         },
         {
@@ -96,7 +96,7 @@ export const useSearchData = () => {
           title: 'Analytics',
           description: 'View insights and metrics',
           category: 'Navigation',
-          icon: '📈',
+          iconName: 'TrendUp01',
           url: '/analytics',
         },
         {
@@ -104,7 +104,7 @@ export const useSearchData = () => {
           title: 'Settings',
           description: 'Manage organization settings',
           category: 'Navigation',
-          icon: '⚙️',
+          iconName: 'Settings01',
           url: '/settings',
         },
       ];
@@ -118,7 +118,7 @@ export const useSearchData = () => {
           title: agent.name,
           description: agent.description || `${agent.status} • ${agent.model}`,
           category: 'Agents',
-          icon: '🤖',
+          iconName: 'Cube01',
           url: `/agents/${agent.id}`,
         }));
         results.push(...agentResults);
@@ -133,7 +133,7 @@ export const useSearchData = () => {
             title: metadata.lead_name || metadata.lead_email || 'Anonymous',
             description: `via ${conv.agents?.name || 'Unknown Agent'} • ${conv.status}`,
             category: 'Conversations',
-            icon: '💬',
+            iconName: 'MessageChatSquare',
             url: '/conversations',
             action: () => navigate('/conversations'),
           };
@@ -148,7 +148,7 @@ export const useSearchData = () => {
           title: lead.name || lead.email || 'Unnamed Lead',
           description: `${lead.company || ''} • ${lead.status}`,
           category: 'Leads',
-          icon: '👤',
+          iconName: 'User01',
           url: '/leads',
           action: () => navigate('/leads'),
         }));
@@ -162,7 +162,7 @@ export const useSearchData = () => {
           title: 'Profile Settings',
           description: 'Manage your profile',
           category: 'Settings',
-          icon: '👤',
+          iconName: 'User01',
           url: '/settings?tab=profile',
         },
         {
@@ -170,7 +170,7 @@ export const useSearchData = () => {
           title: 'Team Settings',
           description: 'Manage team members',
           category: 'Settings',
-          icon: '👥',
+          iconName: 'Users01',
           url: '/settings?tab=team',
         },
         {
@@ -178,7 +178,7 @@ export const useSearchData = () => {
           title: 'Organization Settings',
           description: 'Manage organization',
           category: 'Settings',
-          icon: '🏢',
+          iconName: 'Building07',
           url: '/settings?tab=organization',
         },
         {
@@ -186,7 +186,7 @@ export const useSearchData = () => {
           title: 'Subscription & Billing',
           description: 'Manage subscription and invoices',
           category: 'Settings',
-          icon: '💳',
+          iconName: 'CreditCard01',
           url: '/settings?tab=subscription',
         },
         {
@@ -194,7 +194,7 @@ export const useSearchData = () => {
           title: 'API Keys',
           description: 'Manage API keys',
           category: 'Settings',
-          icon: '🔑',
+          iconName: 'Key01',
           url: '/settings?tab=api-keys',
         },
         {
@@ -202,7 +202,7 @@ export const useSearchData = () => {
           title: 'Webhooks',
           description: 'Configure webhooks',
           category: 'Settings',
-          icon: '🔗',
+          iconName: 'Link01',
           url: '/settings?tab=webhooks',
         },
         {
@@ -210,7 +210,7 @@ export const useSearchData = () => {
           title: 'Branding',
           description: 'Customize branding',
           category: 'Settings',
-          icon: '🎨',
+          iconName: 'Palette',
           url: '/settings?tab=branding',
         },
       ];
