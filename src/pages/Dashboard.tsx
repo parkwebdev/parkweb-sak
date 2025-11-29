@@ -122,8 +122,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ onMenuClick }) => {
                 <Menu size={16} />
               </Button>
               <div className="flex-1 sm:flex-none">
-                <h1 className="text-sm font-semibold text-foreground">Dashboard</h1>
-                <p className="text-xs text-muted-foreground mt-1">{currentOrg.name}</p>
+                <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
+                <p className="text-sm text-muted-foreground mt-1">{currentOrg.name}</p>
               </div>
             </div>
           </div>
