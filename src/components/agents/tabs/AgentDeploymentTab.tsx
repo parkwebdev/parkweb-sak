@@ -5,10 +5,11 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Settings01 } from '@untitledui/icons';
+import { Settings01, Link03 } from '@untitledui/icons';
 import { toast } from 'sonner';
 import type { Tables } from '@/integrations/supabase/types';
 import { WidgetConfigurator } from '../WidgetConfigurator';
+import { useOrganization } from '@/contexts/OrganizationContext';
 
 type Agent = Tables<'agents'>;
 
@@ -18,6 +19,7 @@ interface AgentDeploymentTabProps {
 }
 
 export const AgentDeploymentTab = ({ agent, onUpdate }: AgentDeploymentTabProps) => {
+  const { currentOrg } = useOrganization();
   const deploymentConfig = (agent.deployment_config as any) || {
     api_enabled: false,
     widget_enabled: false,
@@ -41,9 +43,12 @@ export const AgentDeploymentTab = ({ agent, onUpdate }: AgentDeploymentTabProps)
     toast.success(`${label} copied to clipboard`);
   };
 
-  const apiEndpoint = `https://mvaimvwdukpgvkifkfpa.supabase.co/functions/v1/chat?agent_id=${agent.id}`;
+  // Generate agent slug from name (lowercase, hyphens for spaces)
+  const agentSlug = agent.name.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-');
+  
+  const apiEndpoint = `https://mvaimvwdukpgvkifkfpa.supabase.co/functions/v1/widget-chat`;
   const widgetCode = `<script src="https://cdn.example.com/agent-widget.js" data-agent-id="${agent.id}"></script>`;
-  const hostedUrl = `https://chat.example.com/agent/${agent.id}`;
+  const hostedUrl = currentOrg ? `${window.location.origin}/${currentOrg.slug}/${agentSlug}` : `Loading...`;
 
   const hasChanges = JSON.stringify(config) !== JSON.stringify(deploymentConfig);
 
@@ -144,10 +149,17 @@ export const AgentDeploymentTab = ({ agent, onUpdate }: AgentDeploymentTabProps)
                     >
                       Copy
                     </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => window.open(hostedUrl, '_blank')}
+                    >
+                      <Link03 className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Share this URL to give users direct access to your agent.
+                  Share this URL to give users direct access to your agent. The URL is based on your organization slug and agent name.
                 </p>
               </CardContent>
             )}

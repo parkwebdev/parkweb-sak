@@ -876,6 +876,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_unique_slug: {
+        Args: { org_id?: string; org_name: string }
+        Returns: string
+      }
       get_current_user_role: {
         Args: never
         Returns: Database["public"]["Enums"]["app_role"]

@@ -5,9 +5,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Save01, Upload01, Palette } from '@untitledui/icons';
+import { Save01, Upload01, Palette, AlertCircle, CheckCircle } from '@untitledui/icons';
 import { useOrganizationSettings } from '@/hooks/useOrganizationSettings';
 import { Separator } from '@/components/ui/separator';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 export const OrganizationSettings = () => {
   const { organization, branding, loading, updateOrganization, updateBranding, uploadLogo } = useOrganizationSettings();
@@ -17,6 +20,8 @@ export const OrganizationSettings = () => {
   const [secondaryColor, setSecondaryColor] = useState(branding?.secondary_color || '#666666');
   const [customDomain, setCustomDomain] = useState(branding?.custom_domain || '');
   const [isSaving, setIsSaving] = useState(false);
+  const [slugError, setSlugError] = useState<string | null>(null);
+  const [isCheckingSlug, setIsCheckingSlug] = useState(false);
 
   React.useEffect(() => {
     if (organization) {
@@ -33,13 +38,88 @@ export const OrganizationSettings = () => {
     }
   }, [branding]);
 
+  const validateSlug = (slug: string): string | null => {
+    if (!slug) return 'Slug is required';
+    if (slug.length < 3) return 'Slug must be at least 3 characters';
+    if (slug.length > 63) return 'Slug must be less than 64 characters';
+    if (!/^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/.test(slug)) {
+      return 'Slug can only contain lowercase letters, numbers, and hyphens (no spaces or special characters)';
+    }
+    if (slug.startsWith('-') || slug.endsWith('-')) {
+      return 'Slug cannot start or end with a hyphen';
+    }
+    return null;
+  };
+
+  const handleSlugChange = async (value: string) => {
+    // Auto-format: lowercase and replace invalid characters
+    const formatted = value.toLowerCase().replace(/[^a-z0-9-]/g, '');
+    setOrgSlug(formatted);
+    
+    // Validate format
+    const formatError = validateSlug(formatted);
+    if (formatError) {
+      setSlugError(formatError);
+      return;
+    }
+
+    // Check uniqueness only if slug changed from original
+    if (formatted !== organization?.slug && formatted.length >= 3) {
+      setIsCheckingSlug(true);
+      setSlugError(null);
+      
+      try {
+        const { data, error } = await supabase
+          .from('organizations')
+          .select('id')
+          .eq('slug', formatted)
+          .neq('id', organization?.id || '')
+          .maybeSingle();
+
+        if (error) throw error;
+        
+        if (data) {
+          setSlugError('This slug is already taken');
+        } else {
+          setSlugError(null);
+        }
+      } catch (error) {
+        console.error('Error checking slug:', error);
+      } finally {
+        setIsCheckingSlug(false);
+      }
+    } else {
+      setSlugError(null);
+    }
+  };
+
   const handleSaveProfile = async () => {
+    const formatError = validateSlug(orgSlug);
+    if (formatError) {
+      setSlugError(formatError);
+      toast.error(formatError);
+      return;
+    }
+
+    if (slugError) {
+      toast.error('Please fix the slug errors before saving');
+      return;
+    }
+
     setIsSaving(true);
     try {
       await updateOrganization({
         name: orgName,
         slug: orgSlug,
       });
+      toast.success('Organization profile updated');
+    } catch (error: any) {
+      if (error.message?.includes('already exists')) {
+        setSlugError('This slug is already taken');
+        toast.error('This slug is already taken');
+      } else {
+        toast.error('Failed to update organization profile');
+      }
     } finally {
       setIsSaving(false);
     }
@@ -102,20 +182,43 @@ export const OrganizationSettings = () => {
 
               <div className="space-y-2">
                 <Label htmlFor="org-slug">Organization Slug</Label>
-                <Input
-                  id="org-slug"
-                  value={orgSlug}
-                  onChange={(e) => setOrgSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
-                  placeholder="acme-inc"
-                />
+                <div className="relative">
+                  <Input
+                    id="org-slug"
+                    value={orgSlug}
+                    onChange={(e) => handleSlugChange(e.target.value)}
+                    placeholder="acme-inc"
+                    className={slugError ? 'border-destructive' : ''}
+                  />
+                  {isCheckingSlug && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                      <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                    </div>
+                  )}
+                  {!isCheckingSlug && orgSlug && !slugError && orgSlug !== organization?.slug && (
+                    <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-green-500" />
+                  )}
+                </div>
+                {slugError && (
+                  <Alert variant="destructive" className="mt-2">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>{slugError}</AlertDescription>
+                  </Alert>
+                )}
                 <p className="text-sm text-muted-foreground">
-                  Used in URLs and must be unique
+                  Used in hosted chat URLs: /{orgSlug}/agent-name
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Must be unique and contain only lowercase letters, numbers, and hyphens
                 </p>
               </div>
 
-              <Button onClick={handleSaveProfile} disabled={isSaving}>
+              <Button 
+                onClick={handleSaveProfile} 
+                disabled={isSaving || isCheckingSlug || !!slugError}
+              >
                 <Save01 className="h-4 w-4 mr-2" />
-                Save Changes
+                {isSaving ? 'Saving...' : 'Save Changes'}
               </Button>
             </CardContent>
           </Card>
