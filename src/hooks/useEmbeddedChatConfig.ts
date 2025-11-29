@@ -12,6 +12,7 @@ export interface EmbeddedChatConfig {
   showBranding: boolean;
   avatarUrl?: string;
   agentName: string;
+  animation: 'none' | 'pulse' | 'bounce' | 'fade';
 }
 
 export const useEmbeddedChatConfig = (agentId: string) => {
@@ -24,6 +25,7 @@ export const useEmbeddedChatConfig = (agentId: string) => {
     placeholder: 'Type your message...',
     showBranding: true,
     agentName: 'AI Assistant',
+    animation: 'pulse',
   });
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
@@ -120,6 +122,7 @@ export const useEmbeddedChatConfig = (agentId: string) => {
     script.setAttribute('data-placeholder', '${config.placeholder}');
     script.setAttribute('data-show-branding', '${config.showBranding}');
     script.setAttribute('data-agent-name', '${config.agentName}');
+    script.setAttribute('data-animation', '${config.animation}');
     ${config.avatarUrl ? `script.setAttribute('data-avatar-url', '${config.avatarUrl}');` : ''}
     document.head.appendChild(script);
   })();

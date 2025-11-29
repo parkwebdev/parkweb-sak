@@ -91,20 +91,36 @@ export const EmbeddedChatDesigner = ({ agentId }: EmbeddedChatDesignerProps) => 
           </div>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="position">Chat Position</Label>
-          <Select value={config.position} onValueChange={(value: any) => saveConfig({ position: value })}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="bg-background z-50">
-              <SelectItem value="bottom-right">Bottom Right</SelectItem>
-              <SelectItem value="bottom-left">Bottom Left</SelectItem>
-              <SelectItem value="top-right">Top Right</SelectItem>
-              <SelectItem value="top-left">Top Left</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+      <div className="space-y-2">
+        <Label htmlFor="position">Chat Position</Label>
+        <Select value={config.position} onValueChange={(value: any) => saveConfig({ position: value })}>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent className="bg-background z-50">
+            <SelectItem value="bottom-right">Bottom Right</SelectItem>
+            <SelectItem value="bottom-left">Bottom Left</SelectItem>
+            <SelectItem value="top-right">Top Right</SelectItem>
+            <SelectItem value="top-left">Top Left</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="animation">Bubble Animation</Label>
+        <Select value={config.animation} onValueChange={(value: any) => saveConfig({ animation: value })}>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent className="bg-background z-50">
+            <SelectItem value="none">None</SelectItem>
+            <SelectItem value="pulse">Pulse</SelectItem>
+            <SelectItem value="bounce">Bounce</SelectItem>
+            <SelectItem value="fade">Fade</SelectItem>
+          </SelectContent>
+        </Select>
+        <p className="text-xs text-muted-foreground">Add motion to attract attention</p>
+      </div>
       </div>
 
       <Separator />

@@ -23,6 +23,13 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
     'top-left': 'top-4 left-4',
   };
 
+  const animationClasses = {
+    'none': '',
+    'pulse': 'animate-pulse',
+    'bounce': 'animate-bounce',
+    'fade': 'animate-pulse opacity-75',
+  };
+
   return (
     <div className="relative h-[600px] bg-muted/30 rounded-lg p-4 overflow-hidden">
       <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
@@ -118,11 +125,11 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
         ) : (
           <Button
             size="icon"
-            className="w-12 h-12 rounded-full shadow-lg"
+            className={`w-12 h-12 rounded-full shadow-lg ${animationClasses[config.animation]}`}
             style={{ backgroundColor: config.primaryColor }}
             onClick={() => setIsOpen(true)}
           >
-            <ChatBubbleIcon className="h-8 w-8 text-white" />
+            <ChatBubbleIcon className="h-10 w-10 text-white" />
           </Button>
         )}
       </div>
