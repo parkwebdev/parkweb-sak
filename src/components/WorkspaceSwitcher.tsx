@@ -81,13 +81,13 @@ export const WorkspaceSwitcher = () => {
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
-          className={`w-full justify-start gap-3 h-auto bg-muted/50 hover:bg-muted ${
-            isCollapsed ? 'px-2 py-2' : 'px-3 py-2'
+          className={`w-full justify-start gap-2 h-auto bg-muted/50 hover:bg-muted ${
+            isCollapsed ? 'px-1.5 py-1.5' : 'px-2 py-1.5'
           }`}
         >
-          <Avatar className="h-8 w-8 rounded-lg flex-shrink-0">
+          <Avatar className="h-4 w-4 rounded-md flex-shrink-0">
             <AvatarImage src={branding?.logo_url || undefined} />
-            <AvatarFallback className="rounded-lg bg-background text-foreground">
+            <AvatarFallback className="rounded-md bg-background text-foreground text-[10px]">
               {currentOrg.name.charAt(0).toUpperCase()}
             </AvatarFallback>
           </Avatar>
