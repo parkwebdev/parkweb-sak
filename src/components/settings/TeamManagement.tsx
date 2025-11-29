@@ -83,6 +83,7 @@ export const TeamManagement = () => {
             </div>
             {canManageTeam && (
               <Button onClick={() => setIsInviteOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" />
                 Invite Member
               </Button>
             )}
@@ -148,6 +149,7 @@ export const TeamManagement = () => {
                           }}
                           className="text-destructive focus:text-destructive"
                         >
+                          <Trash02 className="h-4 w-4 mr-2" />
                           Remove
                         </DropdownMenuItem>
                       </DropdownMenuContent>

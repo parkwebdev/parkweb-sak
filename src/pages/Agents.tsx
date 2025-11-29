@@ -57,6 +57,7 @@ const Agents: React.FC<AgentsProps> = ({ onMenuClick }) => {
               </div>
             </div>
             <Button onClick={() => setCreateDialogOpen(true)}>
+              <Plus className="w-4 h-4 mr-2" />
               Create Agent
             </Button>
           </div>
@@ -101,6 +102,7 @@ const Agents: React.FC<AgentsProps> = ({ onMenuClick }) => {
             </p>
             {!searchQuery && statusFilter === 'all' && (
               <Button onClick={() => setCreateDialogOpen(true)}>
+                <Plus className="w-4 h-4 mr-2" />
                 Create Your First Agent
               </Button>
             )}

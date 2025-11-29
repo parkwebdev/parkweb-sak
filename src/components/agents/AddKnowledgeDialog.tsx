@@ -128,12 +128,15 @@ export const AddKnowledgeDialog: React.FC<AddKnowledgeDialogProps> = ({
         <Tabs defaultValue="upload" className="w-full">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="upload">
+              <Upload01 className="h-4 w-4 mr-2" />
               Upload
             </TabsTrigger>
             <TabsTrigger value="url">
+              <Link03 className="h-4 w-4 mr-2" />
               URL
             </TabsTrigger>
             <TabsTrigger value="text">
+              <File01 className="h-4 w-4 mr-2" />
               Text
             </TabsTrigger>
           </TabsList>

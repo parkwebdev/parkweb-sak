@@ -57,6 +57,7 @@ export const LeadCard = ({ lead, onView }: LeadCardProps) => {
           className="w-full mt-2"
           onClick={() => onView(lead)}
         >
+          <Eye className="h-4 w-4 mr-2" />
           View Details
         </Button>
       </CardContent>

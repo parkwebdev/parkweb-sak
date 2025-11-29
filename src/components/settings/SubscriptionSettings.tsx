@@ -72,6 +72,7 @@ export const SubscriptionSettings = () => {
               </CardDescription>
             </div>
             <Button>
+              <ArrowUpRight className="h-4 w-4 mr-2" />
               Upgrade Plan
             </Button>
           </div>

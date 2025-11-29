@@ -222,6 +222,7 @@ export const OrganizationSettings = () => {
                 onClick={handleSaveProfile} 
                 disabled={isSaving || isCheckingSlug || !!slugError}
               >
+                <Save01 className="h-4 w-4 mr-2" />
                 {isSaving ? 'Saving...' : 'Save Changes'}
               </Button>
             </CardContent>
@@ -257,6 +258,7 @@ export const OrganizationSettings = () => {
                     <Label htmlFor="logo-upload" className="cursor-pointer">
                       <Button variant="outline" size="sm" asChild>
                         <span>
+                          <Upload01 className="h-4 w-4 mr-2" />
                           Upload Logo
                         </span>
                       </Button>
@@ -331,6 +333,7 @@ export const OrganizationSettings = () => {
               </div>
 
               <Button onClick={handleSaveBranding} disabled={isSaving}>
+                <Save01 className="h-4 w-4 mr-2" />
                 Save Branding
               </Button>
             </CardContent>

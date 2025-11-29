@@ -49,12 +49,15 @@ export const WidgetConfigurator = ({ agentId }: WidgetConfiguratorProps) => {
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="configure">
+            <Settings01 className="h-4 w-4 mr-2" />
             Configure
           </TabsTrigger>
           <TabsTrigger value="preview">
+            <Eye className="h-4 w-4 mr-2" />
             Preview
           </TabsTrigger>
           <TabsTrigger value="embed">
+            <Code02 className="h-4 w-4 mr-2" />
             Embed Code
           </TabsTrigger>
         </TabsList>
@@ -183,6 +186,7 @@ export const WidgetConfigurator = ({ agentId }: WidgetConfiguratorProps) => {
           </Card>
 
           <Button onClick={handleSave} className="w-full">
+            <Save01 className="h-4 w-4 mr-2" />
             Save Configuration
           </Button>
         </TabsContent>

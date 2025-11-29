@@ -153,6 +153,7 @@ export const ConversationDetailsSheet = ({
                   variant="outline"
                   onClick={() => setTakeoverDialogOpen(true)}
                 >
+                  <UserCheck01 className="h-4 w-4 mr-2" />
                   Take Over
                 </Button>
               )}
@@ -163,6 +164,7 @@ export const ConversationDetailsSheet = ({
                   variant="outline"
                   onClick={handleReturnToAI}
                 >
+                  <RefreshCcw01 className="h-4 w-4 mr-2" />
                   Return to AI
                 </Button>
               )}
@@ -173,6 +175,7 @@ export const ConversationDetailsSheet = ({
                   variant="outline"
                   onClick={handleCloseConversation}
                 >
+                  <XCircle className="h-4 w-4 mr-2" />
                   Close
                 </Button>
               )}

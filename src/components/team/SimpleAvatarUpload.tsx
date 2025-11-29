@@ -144,6 +144,7 @@ export const SimpleAvatarUpload: React.FC<SimpleAvatarUploadProps> = ({
             asChild
           >
             <span>
+              <Upload className="h-4 w-4 mr-2" />
               {uploading ? 'Uploading...' : 'Upload Avatar'}
             </span>
           </Button>

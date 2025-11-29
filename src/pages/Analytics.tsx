@@ -89,7 +89,7 @@ const Analytics: React.FC<AnalyticsProps> = ({ onMenuClick }) => {
                   <TabsTrigger value="90">90 days</TabsTrigger>
                 </TabsList>
               </Tabs>
-              <Button variant="outline" size="icon" onClick={refetch} disabled={loading} aria-label="Refresh">
+              <Button variant="outline" size="icon" onClick={refetch} disabled={loading}>
                 <RefreshCcw01 className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
               </Button>
             </div>
