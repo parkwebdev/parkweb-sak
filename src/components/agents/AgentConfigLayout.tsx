@@ -1,8 +1,8 @@
 import React from 'react';
-import { Settings01 as Settings, Database01, Tool01, Rocket01 } from '@untitledui/icons';
+import { Settings01 as Settings, Database01, Tool01, Rocket01, MessageCircle02 } from '@untitledui/icons';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-export type AgentConfigTab = 'settings' | 'knowledge' | 'tools' | 'deployment';
+export type AgentConfigTab = 'configure' | 'behavior' | 'knowledge' | 'tools' | 'channels';
 
 interface AgentConfigLayoutProps {
   activeTab: AgentConfigTab;
@@ -22,12 +22,20 @@ export const AgentConfigLayout: React.FC<AgentConfigLayoutProps> = ({
         <div className="px-4 lg:px-8">
           <TabsList className="h-12 bg-transparent border-0 p-0 gap-6">
             <TabsTrigger
-              value="settings"
+              value="configure"
               className="h-12 px-0 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none"
             >
               <Settings size={16} className="mr-2" />
               <span className="hidden sm:inline">Configure</span>
               <span className="sm:hidden">Config</span>
+            </TabsTrigger>
+            
+            <TabsTrigger
+              value="behavior"
+              className="h-12 px-0 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+            >
+              <MessageCircle02 size={16} className="mr-2" />
+              Behavior
             </TabsTrigger>
             
             <TabsTrigger
@@ -47,11 +55,11 @@ export const AgentConfigLayout: React.FC<AgentConfigLayoutProps> = ({
             </TabsTrigger>
             
             <TabsTrigger
-              value="deployment"
+              value="channels"
               className="h-12 px-0 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none"
             >
               <Rocket01 size={16} className="mr-2" />
-              Deploy
+              Channels
             </TabsTrigger>
           </TabsList>
         </div>

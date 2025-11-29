@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AgentSettingsTab } from './tabs/AgentSettingsTab';
+import { AgentConfigureTab } from './tabs/AgentConfigureTab';
+import { AgentBehaviorTab } from './tabs/AgentBehaviorTab';
 import { AgentToolsTab } from './tabs/AgentToolsTab';
 import { AgentKnowledgeTab } from './tabs/AgentKnowledgeTab';
-import { AgentDeploymentTab } from './tabs/AgentDeploymentTab';
+import { AgentChannelsTab } from './tabs/AgentChannelsTab';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Agent = Tables<'agents'>;
@@ -17,11 +18,11 @@ interface EditAgentDialogProps {
 }
 
 export const EditAgentDialog = ({ agent, open, onOpenChange, onUpdate }: EditAgentDialogProps) => {
-  const [activeTab, setActiveTab] = useState('settings');
+  const [activeTab, setActiveTab] = useState('configure');
 
   useEffect(() => {
     if (open) {
-      setActiveTab('settings');
+      setActiveTab('configure');
     }
   }, [open]);
 
@@ -38,28 +39,33 @@ export const EditAgentDialog = ({ agent, open, onOpenChange, onUpdate }: EditAge
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="settings">Settings</TabsTrigger>
-            <TabsTrigger value="tools">Tools</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="configure">Configure</TabsTrigger>
+            <TabsTrigger value="behavior">Behavior</TabsTrigger>
             <TabsTrigger value="knowledge">Knowledge</TabsTrigger>
-            <TabsTrigger value="deployment">Deployment</TabsTrigger>
+            <TabsTrigger value="tools">Tools</TabsTrigger>
+            <TabsTrigger value="channels">Channels</TabsTrigger>
           </TabsList>
 
           <div className="flex-1 overflow-y-auto mt-4">
-            <TabsContent value="settings" className="mt-0">
-              <AgentSettingsTab agent={agent} onUpdate={onUpdate} />
+            <TabsContent value="configure" className="mt-0">
+              <AgentConfigureTab agent={agent} onUpdate={onUpdate} />
             </TabsContent>
 
-            <TabsContent value="tools" className="mt-0">
-              <AgentToolsTab agentId={agent.id} />
+            <TabsContent value="behavior" className="mt-0">
+              <AgentBehaviorTab agent={agent} onUpdate={onUpdate} />
             </TabsContent>
 
             <TabsContent value="knowledge" className="mt-0">
               <AgentKnowledgeTab agentId={agent.id} orgId={agent.org_id} />
             </TabsContent>
 
-            <TabsContent value="deployment" className="mt-0">
-              <AgentDeploymentTab agent={agent} onUpdate={onUpdate} />
+            <TabsContent value="tools" className="mt-0">
+              <AgentToolsTab agentId={agent.id} />
+            </TabsContent>
+
+            <TabsContent value="channels" className="mt-0">
+              <AgentChannelsTab agent={agent} onUpdate={onUpdate} />
             </TabsContent>
           </div>
         </Tabs>
