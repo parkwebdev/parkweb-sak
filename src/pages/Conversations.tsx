@@ -93,9 +93,9 @@ const Conversations: React.FC<ConversationsProps> = ({ onMenuClick }) => {
   };
 
   return (
-    <main className="flex-1 bg-background min-h-screen">
+    <main className="flex-1 bg-muted/30 min-h-screen pt-4 lg:pt-8">
       {/* Mobile header */}
-      <header className="lg:hidden border-b bg-card px-4 py-3">
+      <header className="lg:hidden mb-4 px-4">
         <div className="flex items-center gap-3">
           <Button
             variant="ghost"
@@ -108,9 +108,10 @@ const Conversations: React.FC<ConversationsProps> = ({ onMenuClick }) => {
         </div>
       </header>
 
-      <div className="flex h-[calc(100vh-57px)] lg:h-screen">
-        {/* Conversations List Sidebar */}
-        <div className="hidden lg:flex lg:w-80 xl:w-96 border-r bg-card flex-col">
+      <div className="px-4 lg:px-8 pb-8">
+        <div className="flex h-[calc(100vh-180px)] lg:h-[calc(100vh-120px)] rounded-lg border bg-card overflow-hidden">
+          {/* Conversations List Sidebar */}
+          <div className="hidden lg:flex lg:w-80 xl:w-96 border-r flex-col">
           {/* Header */}
           <div className="p-4 border-b">
             <h2 className="text-base font-semibold text-foreground mb-3">Conversations</h2>
@@ -179,12 +180,12 @@ const Conversations: React.FC<ConversationsProps> = ({ onMenuClick }) => {
           </ScrollArea>
         </div>
 
-        {/* Chat Area */}
-        <div className="flex-1 flex flex-col bg-background">
+          {/* Chat Area */}
+          <div className="flex-1 flex flex-col">
           {selectedConversation ? (
             <>
               {/* Chat Header */}
-              <div className="px-6 py-4 border-b bg-card flex items-center justify-between">
+              <div className="px-6 py-4 border-b flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
                     <User01 size={20} className="text-primary" />
@@ -277,7 +278,7 @@ const Conversations: React.FC<ConversationsProps> = ({ onMenuClick }) => {
 
               {/* Message Input (disabled for now) */}
               {selectedConversation.status === 'human_takeover' && (
-                <div className="px-6 py-4 border-t bg-card">
+                <div className="px-6 py-4 border-t">
                   <div className="flex gap-3 max-w-4xl mx-auto">
                     <Input 
                       placeholder="Type a message..." 
@@ -304,6 +305,7 @@ const Conversations: React.FC<ConversationsProps> = ({ onMenuClick }) => {
               </div>
             </div>
           )}
+          </div>
         </div>
       </div>
 
