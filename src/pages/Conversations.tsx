@@ -104,7 +104,7 @@ const Conversations: React.FC<ConversationsProps> = ({ onMenuClick }) => {
           >
             <Menu size={16} />
           </Button>
-          <h1 className="text-sm font-semibold text-foreground">Conversations</h1>
+          <h1 className="text-2xl font-bold text-foreground">Conversations</h1>
         </div>
       </header>
 
@@ -114,7 +114,7 @@ const Conversations: React.FC<ConversationsProps> = ({ onMenuClick }) => {
           <div className="hidden lg:flex lg:w-80 xl:w-96 border-r flex-col">
           {/* Header */}
           <div className="p-4 border-b">
-            <h2 className="text-base font-semibold text-foreground mb-3">Conversations</h2>
+            <h2 className="text-lg font-semibold text-foreground mb-3">Conversations</h2>
             <div className="relative">
               <SearchMd className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input

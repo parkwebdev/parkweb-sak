@@ -85,8 +85,8 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
                 <Menu size={16} />
               </Button>
               <div className="flex-1 sm:flex-none">
-                <h1 className="text-sm font-semibold text-foreground">Leads</h1>
-                <p className="text-xs text-muted-foreground mt-1">
+                <h1 className="text-2xl font-bold text-foreground">Leads</h1>
+                <p className="text-sm text-muted-foreground mt-1">
                   Track and manage leads captured from conversations
                 </p>
               </div>
