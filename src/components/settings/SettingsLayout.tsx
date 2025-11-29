@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { Settings01 as Settings, User01 as User, Users01 as Users, Menu01 as Menu, Bell02 as Bell, Building02, CreditCard01, Palette, BarChart02 } from '@untitledui/icons';
+import { Settings01 as Settings, User01 as User, Users01 as Users, Menu01 as Menu, Bell02 as Bell, Building02, CreditCard01, BarChart02 } from '@untitledui/icons';
 import { cn } from '@/lib/utils';
 
 interface SettingsLayoutProps {
   children: React.ReactNode;
 }
 
-export type SettingsTab = 'general' | 'profile' | 'team' | 'notifications' | 'organization' | 'subscription' | 'usage' | 'webhooks' | 'api-keys' | 'branding';
+export type SettingsTab = 'general' | 'profile' | 'team' | 'notifications' | 'organization' | 'billing' | 'usage' | 'webhooks' | 'api-keys';
 
 interface SettingsMenuItemProps {
   id: SettingsTab;
@@ -57,9 +57,8 @@ export const SettingsLayout: React.FC<SettingsLayoutContentProps> = ({
     { id: 'profile' as SettingsTab, label: 'Profile', icon: User },
     { id: 'organization' as SettingsTab, label: 'Workspace', icon: Building02 },
     { id: 'team' as SettingsTab, label: 'Team', icon: Users },
-    { id: 'subscription' as SettingsTab, label: 'Subscription', icon: CreditCard01 },
+    { id: 'billing' as SettingsTab, label: 'Billing', icon: CreditCard01 },
     { id: 'usage' as SettingsTab, label: 'Usage', icon: BarChart02 },
-    { id: 'branding' as SettingsTab, label: 'Branding', icon: Palette },
     { id: 'notifications' as SettingsTab, label: 'Notifications', icon: Bell },
     { id: 'webhooks' as SettingsTab, label: 'Webhooks', icon: Settings },
     { id: 'api-keys' as SettingsTab, label: 'API Keys', icon: Settings },

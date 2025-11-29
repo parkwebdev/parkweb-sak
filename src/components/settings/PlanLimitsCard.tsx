@@ -88,7 +88,7 @@ export const PlanLimitsCard = () => {
           <Button 
             variant="outline" 
             className="w-full"
-            onClick={() => navigate('/settings?tab=subscription')}
+            onClick={() => navigate('/settings?tab=billing')}
           >
             Upgrade Plan
             <ArrowRight className="ml-2 h-4 w-4" />
