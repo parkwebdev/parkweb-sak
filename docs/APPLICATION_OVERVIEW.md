@@ -59,7 +59,8 @@ ChatPad is a comprehensive multi-tenant AI agent platform that enables organizat
 **Location**: `src/contexts/AuthContext.tsx`, `src/pages/Auth.tsx`
 
 - Supabase authentication integration
-- Role-based access control (Super Admin, Admin, Manager, Member, Client)
+- Organization-based multi-tenancy
+- Role-based access control (Owner, Admin, Member)
 - Protected routes with `ProtectedRoute` component
 - User profiles with avatar support
 - Team invitation system
@@ -67,177 +68,206 @@ ChatPad is a comprehensive multi-tenant AI agent platform that enables organizat
 **Key Files**:
 - `src/hooks/useAuth.ts` - Authentication state management
 - `src/components/ProtectedRoute.tsx` - Route protection
-- `src/types/team.ts` - User role definitions
+- `src/contexts/OrganizationContext.tsx` - Organization management
 
 ### 2. Dashboard & Analytics
 **Location**: `src/pages/Dashboard.tsx`, `src/pages/DashboardWrapper.tsx`
 
 - Main application entry point
-- Performance monitoring integration
-- Real-time notifications
-- Quick navigation and global search
-- Metric cards and data visualization
+- Real-time metrics and KPIs
+- Quick navigation to key features
+- Organization switcher
+- Activity feed
 
 **Key Components**:
 - `src/components/MetricCard.tsx` - Dashboard metrics display
 - `src/components/notifications/NotificationCenter.tsx` - Real-time notifications
+- `src/components/OrganizationSwitcher.tsx` - Multi-org navigation
 
-### 3. Client Onboarding System
-**Location**: `src/pages/ClientOnboarding.tsx`, `src/components/onboarding/`
+### 3. AI Agents Management
+**Location**: `src/pages/Agents.tsx`, `src/components/agents/`
 
-Multi-step onboarding process with:
-- Company information capture
-- Contact details collection
-- Project goals and requirements
-- Target audience definition
-- File uploads (branding, content)
-- Form validation and auto-save
+- Create and configure AI agents
+- Model selection (Google Gemini, GPT-4, Claude, etc.)
+- System prompt customization
+- Temperature and token controls
+- Deployment configuration (widget, hosted page, API)
+- Agent status management (draft, active, paused)
 
 **Key Components**:
-- `src/components/onboarding/OnboardingTypes.tsx` - Type definitions
-- `src/components/onboarding/OnboardingValidation.tsx` - Form validation logic
-- `src/components/onboarding/OnboardingStorage.tsx` - Data persistence
-- `src/components/onboarding/ScopeOfWorkGenerator.tsx` - SOW generation
+- `src/components/agents/AgentCard.tsx` - Agent overview card
+- `src/components/agents/CreateAgentDialog.tsx` - Agent creation
+- `src/components/agents/EditAgentDialog.tsx` - Agent editing
+- `src/components/agents/AgentSettingsTab.tsx` - Configuration
+- `src/components/agents/AgentKnowledgeTab.tsx` - Knowledge management
+- `src/components/agents/AgentToolsTab.tsx` - Tool configuration
+- `src/components/agents/AgentDeploymentTab.tsx` - Deployment options
 
-**Features**:
-- Token-based anonymous submissions
-- Progress tracking
-- Auto-save functionality
-- File upload with cloud storage
-- Industry-specific templates
+### 4. Knowledge Base & RAG
+**Location**: `src/components/agents/`, `src/hooks/useKnowledgeSources.ts`
 
-### 4. Scope of Work (SOW) Management
-**Location**: `src/pages/ScopeOfWorks.tsx`, `src/lib/document-generator.ts`
+- Upload and manage knowledge sources
+- Support for multiple formats (PDF, URL, JSON, XML, CSV)
+- Vector embeddings for semantic search
+- RAG (Retrieval Augmented Generation) integration
+- Knowledge source status tracking
 
-- Generate professional SOW documents
-- PDF and DOC format support
-- Template customization
-- Client approval workflow
-- Version tracking
+**Key Components**:
+- `src/components/agents/AddKnowledgeDialog.tsx` - Add knowledge sources
+- `src/components/agents/KnowledgeSourceCard.tsx` - Source display
 
-**Document Generation**:
-- Uses jsPDF for PDF generation
-- HTML-to-DOC conversion for Word documents
-- Branded templates with company information
-- Automated content population from onboarding data
+**Edge Functions**:
+- `process-knowledge-source` - Process and embed knowledge
+- `search-knowledge` - Semantic search across knowledge base
 
-### 5. Request Management System
-**Location**: `src/pages/Requests.tsx`, `src/components/requests/`
+### 5. Conversations Management
+**Location**: `src/pages/Conversations.tsx`, `src/hooks/useConversations.ts`
 
-Dual-view system for managing client change requests:
+- View all agent conversations
+- Real-time conversation updates
+- Human takeover capability
+- Conversation status management (active, human_takeover, closed)
+- Message history viewing
+- Return to AI functionality
 
-**Table View** (`RequestsTable.tsx`):
-- Sortable columns (title, status, priority, client, due date)
-- Bulk actions (status updates, assignments)
-- Search and filtering
-- Inline status and priority updates
+**Key Components**:
+- `src/components/conversations/ConversationCard.tsx` - Conversation display
+- `src/components/conversations/ConversationsTable.tsx` - List view
+- `src/components/conversations/ConversationDetailsSheet.tsx` - Details
+- `src/components/conversations/TakeoverDialog.tsx` - Takeover interface
 
-**Kanban View** (`RequestKanbanView.tsx`):
-- Drag-and-drop functionality using @dnd-kit
-- Status-based columns (To Do, In Progress, On Hold, Completed)
-- Visual priority indicators
-- Quick status updates
+### 6. Lead Management
+**Location**: `src/pages/Leads.tsx`, `src/hooks/useLeads.ts`
 
-**Request Link System**:
-- Generate shareable links for clients to submit requests
-- Anonymous request submission capability
-- Form validation and security measures
+- Capture leads from conversations
+- Lead status tracking (new, contacted, qualified, converted)
+- Lead enrichment data
+- Export capabilities
+- Lead assignment
 
-**Key Files**:
-- `src/hooks/useRequests.ts` - Request data management
-- `src/components/requests/RequestDetailsSheet.tsx` - Request details modal
-- `src/components/requests/CreateRequestLinkDialog.tsx` - Link generation
+**Key Components**:
+- `src/components/leads/LeadCard.tsx` - Lead overview
+- `src/components/leads/LeadsTable.tsx` - List view
+- `src/components/leads/LeadDetailsSheet.tsx` - Lead details
+- `src/components/leads/CreateLeadDialog.tsx` - Manual lead creation
 
-### 6. Team Management
+### 7. Analytics & Monitoring
+**Location**: `src/pages/Analytics.tsx`, `src/components/analytics/`
+
+- Agent performance metrics
+- Conversation analytics
+- Lead conversion tracking
+- Usage metrics
+- Time-series data visualization
+
+**Key Components**:
+- `src/components/analytics/AnalyticsKPIs.tsx` - Key metrics
+- `src/components/analytics/AgentPerformanceChart.tsx` - Performance tracking
+- `src/components/analytics/ConversationChart.tsx` - Conversation analytics
+- `src/components/analytics/LeadConversionChart.tsx` - Lead funnel
+- `src/components/analytics/UsageMetricsChart.tsx` - Usage tracking
+
+### 8. Hosted Chat Interface
+**Location**: `src/pages/HostedChat.tsx`, `src/components/chat/HostedChatInterface.tsx`
+
+- Public-facing chat interface
+- Organization and agent slug-based routing
+- Branding customization
+- Widget embedding
+- Conversation persistence
+
+### 9. Settings & Configuration
+**Location**: `src/pages/Settings.tsx`, `src/components/settings/`
+
+Comprehensive settings system:
+- **General Settings** - Application preferences
+- **Profile Settings** - User profile management
+- **Team Settings** - Team member management
+- **Organization Settings** - Multi-org configuration
+- **Branding Settings** - White-label customization
+- **Subscription Settings** - Plan and billing
+- **API Keys** - API authentication
+- **Webhooks** - Event notifications
+- **Custom Domains** - Domain management
+- **Notification Settings** - Notification preferences
+
+**Key Components**:
+- `src/components/settings/GeneralSettings.tsx`
+- `src/components/settings/ProfileSettings.tsx`
+- `src/components/settings/TeamSettings.tsx`
+- `src/components/settings/OrganizationSettings.tsx`
+- `src/components/settings/BrandingSettings.tsx`
+- `src/components/settings/SubscriptionSettings.tsx`
+- `src/components/settings/ApiKeySettings.tsx`
+- `src/components/settings/WebhookSettings.tsx`
+- `src/components/settings/CustomDomainManager.tsx`
+
+### 10. Team Management
 **Location**: `src/components/team/`, `src/hooks/useTeam.ts`
 
 - Team member profiles and roles
-- Permission-based access control
+- Organization-level permissions
 - Avatar upload and management
 - Member invitation system
-- Role assignment and management
+- Role assignment (owner, admin, member)
 
 **Key Components**:
 - `src/components/team/TeamMemberCard.tsx` - Member profile display
 - `src/components/team/InviteMemberDialog.tsx` - Team invitations
 - `src/components/team/ProfileEditDialog.tsx` - Profile management
-
-### 7. Settings & Configuration
-**Location**: `src/pages/Settings.tsx`, `src/components/settings/`
-
-Modular settings system with:
-- General application settings
-- Profile management
-- Team settings and permissions
-- Notification preferences
-- Role management (admin-only)
-
-**Settings Modules**:
-- `GeneralSettings.tsx` - App-wide configuration
-- `ProfileSettings.tsx` - User profile management
-- `TeamSettings.tsx` - Team-wide settings
-- `NotificationSettings.tsx` - Notification preferences
-- `RoleManagementDialog.tsx` - User role administration
-
-### 8. File Management
-**Location**: `src/lib/file-upload.ts`, `src/components/FileUploadArea.tsx`
-
-- Secure file upload to Supabase storage
-- Multiple file format support
-- Progress tracking
-- Error handling and validation
-- Organized storage buckets (avatars, client-uploads, email-assets, logos)
-
-### 9. Global Search
-**Location**: `src/hooks/useGlobalSearch.ts`, `src/hooks/useSearchData.ts`
-
-- Unified search across all application data
-- Real-time search results
-- Category-based filtering
-- Quick navigation actions
+- `src/components/team/TeamMembersTable.tsx` - Team overview
 
 ## Database Architecture
 
 ### Core Tables
 
+#### Multi-Tenancy & Organizations
+- **organizations** - Organization/workspace management
+- **org_members** - Organization membership and roles
+- **org_branding** - White-label branding configuration
+- **subscriptions** - Plan and billing information
+- **plans** - Available subscription plans
+
 #### User Management
-- **profiles** - Extended user information beyond Supabase auth
-- **user_roles** - Role assignments and permissions
+- **profiles** - Extended user information
+- **user_roles** - Platform-level role assignments
 - **user_preferences** - User-specific settings
-- **pending_invitations** - Team invitation tracking
 
-#### Client Management
-- **client_onboarding_links** - Client onboarding session tracking
-- **onboarding_submissions** - Completed onboarding forms
-- **onboarding_tokens** - Secure token-based access
-- **onboarding_templates** - Industry-specific form templates
+#### AI Agent System
+- **agents** - AI agent configurations
+- **agent_tools** - Tools available to agents
+- **knowledge_sources** - RAG knowledge base
+- **conversations** - Agent conversations
+- **messages** - Conversation messages
+- **conversation_takeovers** - Human takeover tracking
+- **leads** - Captured leads from conversations
 
-#### Project Management
-- **scope_of_works** - Generated SOW documents
-- **scope_work_approvals** - Client approval tracking
-- **requests** - Client change requests
-- **request_links** - Shareable request submission links
-
-#### System Management
-- **notifications** - In-app notification system
+#### Integration & Monitoring
+- **api_keys** - API authentication keys
+- **webhooks** - Webhook configurations
+- **webhook_logs** - Webhook delivery logs
+- **custom_domains** - Custom domain management
+- **usage_metrics** - Usage tracking and analytics
+- **notifications** - In-app notifications
 - **notification_preferences** - User notification settings
-- **security_logs** - Security event tracking
-- **email_templates** - Email template management
-- **draft_submissions** - Auto-saved form drafts
 
-### Custom Types
-- **app_role** - Enum for user roles (super_admin, admin, manager, member, client)
-- **app_permission** - Enum for granular permissions
-- **request_status** - Enum for request statuses (to_do, in_progress, on_hold, completed)
-- **request_priority** - Enum for request priorities (low, medium, high, urgent)
+### Custom Types (Enums)
+- **agent_status** - Agent states (draft, active, paused)
+- **conversation_status** - Conversation states (active, human_takeover, closed)
+- **knowledge_type** - Knowledge source types (pdf, url, api, json, xml, csv)
+- **lead_status** - Lead lifecycle (new, contacted, qualified, converted)
+- **org_role** - Organization roles (owner, admin, member)
+- **app_role** - Platform roles (admin, manager, member, super_admin, client)
+- **app_permission** - Granular permissions
 
 ### Database Functions
-- `validate_onboarding_token()` - Token validation
-- `mark_token_used()` - Token usage tracking
-- `log_security_event()` - Security logging
-- `get_user_role()` - Role retrieval
-- `has_permission()` - Permission checking
-- `is_admin()` - Admin status verification
+- `is_org_admin()` - Check organization admin status
+- `is_org_member()` - Check organization membership
+- `get_user_org_role()` - Get user's org role
+- `is_super_admin()` - Check super admin status
+- `search_knowledge_sources()` - Vector search for RAG
+- `log_security_event()` - Security event logging
+- `generate_unique_slug()` - Generate unique org slugs
 
 ## Security & Authentication
 
@@ -353,16 +383,23 @@ src/
 ### Edge Functions
 **Location**: `supabase/functions/`
 
-- `generate-scope-of-work` - SOW document generation
+- `widget-chat` - Embedded widget chat handler
+- `search-knowledge` - RAG semantic search
+- `process-knowledge-source` - Process and embed knowledge
+- `validate-api-key` - API authentication
+- `trigger-webhook` - Webhook event dispatcher
+- `dispatch-webhook-event` - Webhook delivery
 - `handle-signup` - User registration processing
 - `send-notification-email` - Email notifications
 - `send-team-invitation` - Team member invitations
-- `send-stage-email` - Onboarding stage notifications
+- `verify-custom-domain` - Domain verification
+- `cleanup-expired-conversations` - Automated data retention
 
 ### External APIs
 - **Resend** - Email delivery service
-- **OpenAI** - AI-powered content generation (SOW)
-- **Google Maps** - Address autocomplete functionality
+- **OpenAI** - AI model provider for embeddings and chat
+- **Google Gemini** - Default AI model for agents
+- **Anthropic Claude** - Alternative AI model option
 
 ## Performance & Monitoring
 

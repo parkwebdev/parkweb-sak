@@ -1,73 +1,169 @@
-# Welcome to your Lovable project
+# ChatPad - AI Agent Platform
 
-## Project info
+A comprehensive multi-tenant AI agent platform that enables organizations to build, deploy, and manage conversational AI agents with RAG (Retrieval Augmented Generation) capabilities.
+
+## Project Info
 
 **URL**: https://lovable.dev/projects/28cc9f18-cb6b-496b-b8a6-8c8f349e3c54
 
-## How can I edit this code?
+## Features
 
-There are several ways of editing your application.
+- 🤖 **AI Agents** - Create and configure AI agents with custom system prompts
+- 💬 **Conversations** - Manage agent conversations with human takeover
+- 📚 **Knowledge Base** - RAG-powered knowledge management
+- 👥 **Leads** - Capture and track leads from conversations
+- 📊 **Analytics** - Monitor agent performance and usage
+- 🏢 **Multi-Tenancy** - Organization-based multi-tenant architecture
+- 🎨 **White Label** - Custom branding and domain support
+- 🔌 **Integrations** - Webhooks and API access
+- 🚀 **Deployment** - Widget, hosted page, and API deployment options
 
-**Use Lovable**
+## Technology Stack
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/28cc9f18-cb6b-496b-b8a6-8c8f349e3c54) and start prompting.
+### Frontend
+- **React 18** with TypeScript
+- **Vite** - Fast build tool
+- **Tailwind CSS** - Utility-first styling
+- **Radix UI** & **shadcn/ui** - Accessible components
+- **TanStack Query** - Data fetching and caching
+- **React Router** - Client-side routing
 
-Changes made via Lovable will be committed automatically to this repo.
+### Backend
+- **Supabase** - Backend-as-a-Service
+  - PostgreSQL with Row Level Security
+  - Real-time subscriptions
+  - Edge Functions (Deno)
+  - File storage
+  - Built-in authentication
 
-**Use your preferred IDE**
+### AI Integration
+- **Google Gemini** - Default AI model
+- **OpenAI GPT-4** - Alternative model
+- **Anthropic Claude** - Alternative model
+- **Vector Embeddings** - RAG knowledge search
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## Getting Started
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### Prerequisites
+- Node.js & npm ([install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating))
 
-Follow these steps:
+### Installation
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
+# Clone the repository
 git clone <YOUR_GIT_URL>
 
-# Step 2: Navigate to the project directory.
+# Navigate to the project
 cd <YOUR_PROJECT_NAME>
 
-# Step 3: Install the necessary dependencies.
+# Install dependencies
 npm i
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Start development server
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+## Project Structure
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+```
+src/
+├── components/        # Reusable UI components
+│   ├── agents/       # Agent management
+│   ├── analytics/    # Analytics & charts
+│   ├── chat/         # Chat interfaces
+│   ├── conversations/# Conversation management
+│   ├── leads/        # Lead management
+│   ├── settings/     # Settings & configuration
+│   ├── team/         # Team management
+│   └── ui/           # Base UI components
+├── hooks/            # Custom React hooks
+├── pages/            # Route components
+├── contexts/         # React contexts
+├── lib/              # Utility functions
+└── integrations/     # External integrations
 
-**Use GitHub Codespaces**
+supabase/
+├── functions/        # Edge functions
+└── migrations/       # Database migrations
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Core Concepts
 
-## What technologies are used for this project?
+### Organizations
+Multi-tenant workspace system where each organization has:
+- Team members with roles (owner, admin, member)
+- Custom branding
+- Subscription plans
+- Usage limits
 
-This project is built with:
+### Agents
+AI agents with:
+- Configurable system prompts
+- Model selection
+- Knowledge bases
+- Tool integrations
+- Multiple deployment methods
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+### Knowledge Base
+RAG (Retrieval Augmented Generation) system:
+- Upload documents (PDF, URLs, etc.)
+- Vector embeddings for semantic search
+- Context injection into agent responses
 
-## How can I deploy this project?
+### Conversations
+Agent chat sessions with:
+- Real-time messaging
+- Human takeover capability
+- Lead capture
+- Conversation history
 
-Simply open [Lovable](https://lovable.dev/projects/28cc9f18-cb6b-496b-b8a6-8c8f349e3c54) and click on Share -> Publish.
+## Deployment
 
-## Can I connect a custom domain to my Lovable project?
+### Using Lovable
+1. Open your [Lovable Project](https://lovable.dev/projects/28cc9f18-cb6b-496b-b8a6-8c8f349e3c54)
+2. Click **Share** → **Publish**
+3. Your app will be deployed automatically
 
-Yes, you can!
+### Custom Domain
+1. Navigate to **Project** → **Settings** → **Domains**
+2. Click **Connect Domain**
+3. Follow the DNS configuration instructions
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+Read more: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain)
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+## Development
+
+### Code Editing Options
+
+**Via Lovable**
+Visit the [Lovable Project](https://lovable.dev/projects/28cc9f18-cb6b-496b-b8a6-8c8f349e3c54) and start prompting. Changes are committed automatically.
+
+**Local IDE**
+Clone the repo and push changes. They'll sync with Lovable automatically.
+
+**GitHub Codespaces**
+Click **Code** → **Codespaces** → **New codespace** to launch a cloud development environment.
+
+### Environment Variables
+
+Required secrets (managed in Supabase):
+- `OPENAI_API_KEY` - OpenAI API access
+- `RESEND_API_KEY` - Email delivery
+- `SUPABASE_URL` - Supabase project URL
+- `SUPABASE_ANON_KEY` - Public Supabase key
+- `SUPABASE_SERVICE_ROLE_KEY` - Admin Supabase key
+
+## Documentation
+
+- [Lovable Docs](https://docs.lovable.dev/)
+- [ChatPad Architecture](docs/CHATPAD_ARCHITECTURE.md)
+- [Application Overview](docs/APPLICATION_OVERVIEW.md)
+
+## Support
+
+- [Lovable Discord](https://discord.com/channels/1119885301872070706/1280461670979993613)
+- [Lovable Documentation](https://docs.lovable.dev/)
+
+## License
+
+This project is built with Lovable.

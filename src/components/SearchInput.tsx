@@ -68,16 +68,14 @@ export const SearchInput: React.FC<SearchInputProps> = ({
     switch (category) {
       case 'Navigation':
         return ChevronRight;
-      case 'Requests':
+      case 'Agents':
+        return FileText;
+      case 'Conversations':
         return Mail;
+      case 'Leads':
+        return User;
       case 'Team':
         return User;
-      case 'Onboarding':
-        return FileText;
-      case 'Scope of Work':
-        return FileText;
-      case 'Request Links':
-        return Mail;
       case 'Notifications':
         return Bell;
       case 'Quick Actions':
@@ -87,7 +85,7 @@ export const SearchInput: React.FC<SearchInputProps> = ({
     }
   };
 
-  const priorityOrder = ['Navigation', 'Quick Actions', 'Requests', 'Team', 'Onboarding', 'Scope of Work', 'Request Links', 'Notifications'];
+  const priorityOrder = ['Navigation', 'Quick Actions', 'Agents', 'Conversations', 'Leads', 'Team', 'Notifications'];
   const sortedCategories = Object.keys(groupedResults).sort((a, b) => {
     const aIndex = priorityOrder.indexOf(a);
     const bIndex = priorityOrder.indexOf(b);
