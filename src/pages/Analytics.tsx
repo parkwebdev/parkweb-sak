@@ -13,6 +13,7 @@ import { ReportFiltersPanel, ReportFilters } from '@/components/analytics/Report
 import { ReportBuilder } from '@/components/analytics/ReportBuilder';
 import { DataTables } from '@/components/analytics/DataTables';
 import { ExportButtons } from '@/components/analytics/ExportButtons';
+import { ScheduledReportsManager } from '@/components/analytics/ScheduledReportsManager';
 import { useOrganization } from '@/contexts/OrganizationContext';
 
 interface AnalyticsProps {
@@ -155,6 +156,7 @@ const Analytics: React.FC<AnalyticsProps> = ({ onMenuClick }) => {
           <TabsList className="mb-6">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="reports">Reports</TabsTrigger>
+            <TabsTrigger value="scheduled">Scheduled</TabsTrigger>
             <TabsTrigger value="data">Data</TabsTrigger>
           </TabsList>
 
@@ -194,6 +196,11 @@ const Analytics: React.FC<AnalyticsProps> = ({ onMenuClick }) => {
               startDate={startDate}
               endDate={endDate}
             />
+          </TabsContent>
+
+          {/* Scheduled Reports Tab */}
+          <TabsContent value="scheduled">
+            <ScheduledReportsManager />
           </TabsContent>
 
           {/* Data Tab */}
