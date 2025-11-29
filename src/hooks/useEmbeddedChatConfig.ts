@@ -82,6 +82,12 @@ export interface EmbeddedChatConfig {
   
   // View Transitions
   viewTransition: 'slide' | 'fade' | 'none';
+  
+  // Chat Settings
+  enableChatSettings: boolean;
+  defaultSoundEnabled: boolean;
+  defaultAutoScroll: boolean;
+  defaultCompactMode: boolean;
 }
 
 export const useEmbeddedChatConfig = (agentId: string) => {
@@ -173,6 +179,12 @@ export const useEmbeddedChatConfig = (agentId: string) => {
     
     // View Transitions
     viewTransition: 'slide',
+    
+    // Chat Settings
+    enableChatSettings: true,
+    defaultSoundEnabled: true,
+    defaultAutoScroll: true,
+    defaultCompactMode: false,
   });
 
   const [config, setConfig] = useState<EmbeddedChatConfig>(getDefaultConfig());

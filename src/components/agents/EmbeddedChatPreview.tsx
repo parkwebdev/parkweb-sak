@@ -6,7 +6,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { X, Send01, Minimize02, Home05, MessageChatCircle, HelpCircle, ChevronRight, Zap, BookOpen01, Check, Microphone01, Attachment01 } from '@untitledui/icons';
+import { X, Send01, Minimize02, Home05, MessageChatCircle, HelpCircle, ChevronRight, Zap, BookOpen01, Check, Microphone01, Attachment01, Settings01, Image03, FileCheck02 } from '@untitledui/icons';
 import type { EmbeddedChatConfig } from '@/hooks/useEmbeddedChatConfig';
 import { ChatBubbleIcon } from './ChatBubbleIcon';
 import { AudioRecorder } from '@/components/chat/AudioRecorder';
@@ -15,6 +15,7 @@ import { FileDropZone } from '@/components/chat/FileDropZone';
 import { MessageFileAttachment } from '@/components/chat/FileAttachment';
 import { MessageReactions, Reaction } from '@/components/chat/MessageReactions';
 import { BubbleBackground } from '@/components/ui/bubble-background';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from '@/components/ui/dropdown-menu';
 import { z } from 'zod';
 import { toast } from 'sonner';
 
@@ -35,6 +36,7 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
   const [isAttachingFiles, setIsAttachingFiles] = useState(false);
   const [messageInput, setMessageInput] = useState('');
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [pendingFiles, setPendingFiles] = useState<Array<{ file: File; preview: string }>>([]);
   const [messages, setMessages] = useState<Array<{ 
     role: 'user' | 'assistant'; 
     content: string;
@@ -52,6 +54,59 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
   }>>([
     { role: 'assistant', content: config.greeting, read: true, timestamp: new Date(), type: 'text', reactions: [] },
   ]);
+
+  // Chat settings state with localStorage persistence
+  const [chatSettings, setChatSettings] = useState(() => {
+    const saved = localStorage.getItem(`chatpad_settings_${config.agentId}`);
+    if (saved) {
+      return JSON.parse(saved);
+    }
+    return {
+      soundEnabled: config.defaultSoundEnabled ?? true,
+      autoScroll: config.defaultAutoScroll ?? true,
+      compactMode: config.defaultCompactMode ?? false,
+    };
+  });
+
+  // Save settings to localStorage when they change
+  useEffect(() => {
+    localStorage.setItem(`chatpad_settings_${config.agentId}`, JSON.stringify(chatSettings));
+  }, [chatSettings, config.agentId]);
+
+  // Load messages from localStorage on mount
+  useEffect(() => {
+    const stored = localStorage.getItem(`chatpad_messages_${config.agentId}`);
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        // Convert timestamp strings back to Date objects
+        const messagesWithDates = parsed.map((msg: any) => ({
+          ...msg,
+          timestamp: new Date(msg.timestamp),
+        }));
+        setMessages(messagesWithDates);
+      } catch (error) {
+        console.error('Error loading messages:', error);
+      }
+    }
+  }, [config.agentId]);
+
+  // Save messages to localStorage when they change
+  useEffect(() => {
+    if (messages.length > 1) { // Don't save just the greeting
+      localStorage.setItem(`chatpad_messages_${config.agentId}`, JSON.stringify(messages));
+    }
+  }, [messages, config.agentId]);
+
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    if (chatSettings.autoScroll && currentView === 'messages' && activeConversationId) {
+      const messagesContainer = document.querySelector('.messages-container');
+      if (messagesContainer) {
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      }
+    }
+  }, [messages, chatSettings.autoScroll, currentView, activeConversationId]);
   
   const formatTimestamp = (date: Date) => {
     const now = new Date();
@@ -112,19 +167,59 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
   };
 
   const handleSendMessage = () => {
-    if (!messageInput.trim()) return;
+    if (!messageInput.trim() && pendingFiles.length === 0) return;
 
-    const newMessage = {
-      role: 'user' as const,
-      content: messageInput,
-      read: false,
-      timestamp: new Date(),
-      type: 'text' as const,
-      reactions: [],
-    };
-
-    setMessages(prev => [...prev, newMessage]);
+    if (pendingFiles.length > 0) {
+      // Send message with files
+      const newMessage = {
+        role: 'user' as const,
+        content: messageInput || 'Sent files',
+        read: false,
+        timestamp: new Date(),
+        type: 'file' as const,
+        files: pendingFiles.map(pf => ({
+          name: pf.file.name,
+          url: pf.preview,
+          type: pf.file.type,
+          size: pf.file.size,
+        })),
+        reactions: [],
+      };
+      setMessages(prev => [...prev, newMessage]);
+      setPendingFiles([]);
+    } else {
+      // Send text message
+      const newMessage = {
+        role: 'user' as const,
+        content: messageInput,
+        read: false,
+        timestamp: new Date(),
+        type: 'text' as const,
+        reactions: [],
+      };
+      setMessages(prev => [...prev, newMessage]);
+    }
+    
     setMessageInput('');
+
+    // Play sound if enabled
+    if (chatSettings.soundEnabled) {
+      // Simple beep sound using Web Audio API
+      try {
+        const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        oscillator.frequency.value = 800;
+        oscillator.type = 'sine';
+        gainNode.gain.value = 0.1;
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.1);
+      } catch (error) {
+        console.error('Error playing sound:', error);
+      }
+    }
 
     // Simulate AI response
     setIsTyping(true);
@@ -139,6 +234,36 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
       }]);
       setIsTyping(false);
     }, 2000);
+  };
+
+  // Handle file selection for preview
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    files.forEach(file => {
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          setPendingFiles(prev => [...prev, { file, preview: event.target?.result as string }]);
+        };
+        reader.readAsDataURL(file);
+      } else {
+        setPendingFiles(prev => [...prev, { file, preview: '' }]);
+      }
+    });
+    e.target.value = ''; // Reset input
+  };
+
+  // Remove file from preview
+  const removeFile = (index: number) => {
+    setPendingFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Helper to convert hex to RGB string for BubbleBackground
+  const hexToRgb = (hex: string): string => {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result 
+      ? `${parseInt(result[1], 16)},${parseInt(result[2], 16)},${parseInt(result[3], 16)}`
+      : '0,0,0';
   };
 
   useEffect(() => {
@@ -271,9 +396,15 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
                 <div className="relative h-[180px] overflow-hidden">
                   {/* Animated Background */}
                   <BubbleBackground 
-                    interactive 
-                    primaryColor={config.primaryColor}
-                    gradientEndColor={config.gradientEndColor}
+                    interactive
+                    colors={{
+                      first: hexToRgb(config.primaryColor),
+                      second: hexToRgb(config.gradientEndColor),
+                      third: hexToRgb(config.primaryColor),
+                      fourth: hexToRgb(config.gradientEndColor),
+                      fifth: hexToRgb(config.primaryColor),
+                      sixth: hexToRgb(config.gradientEndColor),
+                    }}
                     className="absolute inset-0"
                   />
                   
@@ -304,8 +435,63 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
                     </div>
                   </div>
                   
-                  {/* Close button overlay */}
+                  {/* Close and Settings buttons overlay */}
                   <div className="absolute top-3 right-3 z-20 flex gap-1">
+                    {config.enableChatSettings && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-white hover:bg-white/10 h-8 w-8"
+                          >
+                            <Settings01 className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-56">
+                          <DropdownMenuLabel>Chat Settings</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() => setChatSettings(prev => ({ ...prev, soundEnabled: !prev.soundEnabled }))}
+                            className="flex items-center justify-between"
+                          >
+                            <span>Sound Notifications</span>
+                            <div className={`w-9 h-5 rounded-full transition-colors ${chatSettings.soundEnabled ? 'bg-primary' : 'bg-muted'}`}>
+                              <div className={`w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${chatSettings.soundEnabled ? 'translate-x-5' : 'translate-x-0.5'} mt-0.5`} />
+                            </div>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => setChatSettings(prev => ({ ...prev, autoScroll: !prev.autoScroll }))}
+                            className="flex items-center justify-between"
+                          >
+                            <span>Auto-Scroll</span>
+                            <div className={`w-9 h-5 rounded-full transition-colors ${chatSettings.autoScroll ? 'bg-primary' : 'bg-muted'}`}>
+                              <div className={`w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${chatSettings.autoScroll ? 'translate-x-5' : 'translate-x-0.5'} mt-0.5`} />
+                            </div>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => setChatSettings(prev => ({ ...prev, compactMode: !prev.compactMode }))}
+                            className="flex items-center justify-between"
+                          >
+                            <span>Compact Mode</span>
+                            <div className={`w-9 h-5 rounded-full transition-colors ${chatSettings.compactMode ? 'bg-primary' : 'bg-muted'}`}>
+                              <div className={`w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${chatSettings.compactMode ? 'translate-x-5' : 'translate-x-0.5'} mt-0.5`} />
+                            </div>
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() => {
+                              localStorage.removeItem(`chatpad_messages_${config.agentId}`);
+                              setMessages([{ role: 'assistant', content: config.greeting, read: true, timestamp: new Date(), type: 'text', reactions: [] }]);
+                              toast.success('Chat history cleared');
+                            }}
+                            className="text-destructive"
+                          >
+                            Clear Chat History
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
                     <Button
                       variant="ghost"
                       size="icon"
@@ -575,7 +761,7 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
                     {activeConversationId ? (
                       <>
                         {/* Active Conversation */}
-                        <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                        <div className={`flex-1 overflow-y-auto messages-container ${chatSettings.compactMode ? 'p-3 space-y-2' : 'p-4 space-y-3'}`}>
                           <Button
                             variant="ghost"
                             size="sm"
@@ -801,45 +987,95 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
                             primaryColor={config.primaryColor}
                           />
                         ) : (
-                          <div className="p-4 border-t">
-                            <div className="flex gap-2">
-                              <Input
-                                placeholder={config.placeholder}
-                                className="flex-1"
-                                value={messageInput}
-                                onChange={(e) => setMessageInput(e.target.value)}
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter' && !e.shiftKey) {
-                                    e.preventDefault();
-                                    handleSendMessage();
-                                  }
-                                }}
-                              />
-                              {config.enableFileAttachments && (
-                                <Button
-                                  size="icon"
-                                  variant="outline"
-                                  onClick={() => setIsAttachingFiles(true)}
+                          <div className="border-t">
+                            {/* File Preview Thumbnails */}
+                            {pendingFiles.length > 0 && (
+                              <div className="p-3 bg-muted/30 border-b flex gap-2 overflow-x-auto">
+                                {pendingFiles.map((pf, idx) => (
+                                  <div key={idx} className="relative group flex-shrink-0">
+                                    {pf.file.type.startsWith('image/') ? (
+                                      <div className="relative w-16 h-16 rounded-lg overflow-hidden border">
+                                        <img src={pf.preview} alt={pf.file.name} className="w-full h-full object-cover" />
+                                        <Button
+                                          size="icon"
+                                          variant="destructive"
+                                          className="absolute -top-1 -right-1 h-5 w-5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                          onClick={() => removeFile(idx)}
+                                        >
+                                          <X className="h-3 w-3" />
+                                        </Button>
+                                      </div>
+                                    ) : (
+                                      <div className="relative w-16 h-16 rounded-lg border bg-muted flex flex-col items-center justify-center p-1">
+                                        <FileCheck02 className="h-6 w-6 text-muted-foreground" />
+                                        <span className="text-[8px] text-muted-foreground truncate w-full text-center mt-0.5">
+                                          {pf.file.name}
+                                        </span>
+                                        <Button
+                                          size="icon"
+                                          variant="destructive"
+                                          className="absolute -top-1 -right-1 h-5 w-5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                          onClick={() => removeFile(idx)}
+                                        >
+                                          <X className="h-3 w-3" />
+                                        </Button>
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                            
+                            <div className="p-4">
+                              <div className="flex gap-2">
+                                <Input
+                                  placeholder={config.placeholder}
+                                  className="flex-1"
+                                  value={messageInput}
+                                  onChange={(e) => setMessageInput(e.target.value)}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter' && !e.shiftKey) {
+                                      e.preventDefault();
+                                      handleSendMessage();
+                                    }
+                                  }}
+                                />
+                                {config.enableFileAttachments && (
+                                  <>
+                                    <input
+                                      type="file"
+                                      id="file-upload"
+                                      multiple
+                                      className="hidden"
+                                      accept={config.allowedFileTypes.includes('image') ? 'image/*' : ''}
+                                      onChange={handleFileSelect}
+                                    />
+                                    <Button
+                                      size="icon"
+                                      variant="outline"
+                                      onClick={() => document.getElementById('file-upload')?.click()}
+                                    >
+                                      <Attachment01 className="h-4 w-4" />
+                                    </Button>
+                                  </>
+                                )}
+                                {config.enableAudioMessages && (
+                                  <Button
+                                    size="icon"
+                                    variant="outline"
+                                    onClick={() => setIsRecordingAudio(true)}
+                                  >
+                                    <Microphone01 className="h-4 w-4" />
+                                  </Button>
+                                )}
+                                <Button 
+                                  size="icon" 
+                                  style={{ backgroundColor: config.primaryColor }}
+                                  onClick={handleSendMessage}
                                 >
-                                  <Attachment01 className="h-4 w-4" />
+                                  <Send01 className="h-4 w-4 text-white" />
                                 </Button>
-                              )}
-                              {config.enableAudioMessages && (
-                                <Button
-                                  size="icon"
-                                  variant="outline"
-                                  onClick={() => setIsRecordingAudio(true)}
-                                >
-                                  <Microphone01 className="h-4 w-4" />
-                                </Button>
-                              )}
-                              <Button 
-                                size="icon" 
-                                style={{ backgroundColor: config.primaryColor }}
-                                onClick={handleSendMessage}
-                              >
-                                <Send01 className="h-4 w-4 text-white" />
-                              </Button>
+                              </div>
                             </div>
                           </div>
                         )}

@@ -575,6 +575,47 @@ export const EmbedSettingsPanel = ({ config, onConfigChange, embedCode }: EmbedS
                 onCheckedChange={(checked) => onConfigChange({ showReadReceipts: checked })}
               />
             </div>
+
+            <div className="flex items-center justify-between">
+              <div>
+                <Label htmlFor="chat-settings" className="text-sm">Chat Settings</Label>
+                <p className="text-xs text-muted-foreground">User controls</p>
+              </div>
+              <Switch
+                id="chat-settings"
+                checked={config.enableChatSettings}
+                onCheckedChange={(checked) => onConfigChange({ enableChatSettings: checked })}
+              />
+            </div>
+
+            {config.enableChatSettings && (
+              <div className="space-y-3 pl-4 border-l-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="default-sound" className="text-sm">Sound by Default</Label>
+                  <Switch
+                    id="default-sound"
+                    checked={config.defaultSoundEnabled}
+                    onCheckedChange={(checked) => onConfigChange({ defaultSoundEnabled: checked })}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="default-scroll" className="text-sm">Auto-Scroll by Default</Label>
+                  <Switch
+                    id="default-scroll"
+                    checked={config.defaultAutoScroll}
+                    onCheckedChange={(checked) => onConfigChange({ defaultAutoScroll: checked })}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="default-compact" className="text-sm">Compact Mode by Default</Label>
+                  <Switch
+                    id="default-compact"
+                    checked={config.defaultCompactMode}
+                    onCheckedChange={(checked) => onConfigChange({ defaultCompactMode: checked })}
+                  />
+                </div>
+              </div>
+            )}
           </AccordionContent>
         </AccordionItem>
 
