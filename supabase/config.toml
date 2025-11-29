@@ -39,3 +39,6 @@ verify_jwt = true
 
 [functions.handle-signup]
 verify_jwt = false
+
+[functions.get-invoices]
+verify_jwt = true
