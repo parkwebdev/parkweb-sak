@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { X, Send01, Minimize02, Home05, MessageChatCircle, HelpCircle, ChevronRight, Zap, BookOpen01 } from '@untitledui/icons';
+import { X, Send01, Minimize02, Home05, MessageChatCircle, HelpCircle, ChevronRight, Zap, BookOpen01, Check } from '@untitledui/icons';
 import type { EmbeddedChatConfig } from '@/hooks/useEmbeddedChatConfig';
 import { ChatBubbleIcon } from './ChatBubbleIcon';
 
@@ -18,8 +18,14 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
   const [isVisible, setIsVisible] = useState(config.displayTiming === 'immediate');
   const [showTeaser, setShowTeaser] = useState(false);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
-  const [messages, setMessages] = useState<Array<{ role: 'user' | 'assistant'; content: string }>>([
-    { role: 'assistant', content: config.greeting },
+  const [isTyping, setIsTyping] = useState(false);
+  const [messages, setMessages] = useState<Array<{ 
+    role: 'user' | 'assistant'; 
+    content: string;
+    read?: boolean;
+    timestamp: Date;
+  }>>([
+    { role: 'assistant', content: config.greeting, read: true, timestamp: new Date() },
   ]);
   
   // Mock conversation history
@@ -125,10 +131,27 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
   const handleQuickActionClick = (actionType: string) => {
     if (actionType === 'start_chat') {
       setCurrentView('messages');
+      // Simulate agent typing after a moment
+      setTimeout(() => {
+        setIsTyping(true);
+        setTimeout(() => {
+          setIsTyping(false);
+        }, 2000);
+      }, 500);
     } else if (actionType === 'open_help') {
       setCurrentView('help');
     }
   };
+  
+  // Simulate read receipts - mark messages as read after viewing
+  useEffect(() => {
+    if (currentView === 'messages' && activeConversationId) {
+      const timer = setTimeout(() => {
+        setMessages(prev => prev.map(msg => ({ ...msg, read: true })));
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [currentView, activeConversationId]);
 
   // Calculate gradient end color (lighter version of primary)
   const getGradientStyle = () => {
@@ -265,7 +288,7 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
                           {messages.map((msg, idx) => (
                             <div
                               key={idx}
-                              className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in`}
+                              className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'} animate-fade-in`}
                             >
                               <div
                                 className={`max-w-[80%] rounded-lg px-4 py-2 ${
@@ -277,8 +300,47 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
                               >
                                 <p className="text-sm">{msg.content}</p>
                               </div>
+                              
+                              {/* Read Receipt */}
+                              {config.showReadReceipts && msg.role === 'user' && (
+                                <div className="flex items-center gap-1 mt-1 px-1">
+                                  {msg.read ? (
+                                    <div className="flex">
+                                      <Check className="h-3 w-3 text-primary -mr-1.5" />
+                                      <Check className="h-3 w-3 text-primary" />
+                                    </div>
+                                  ) : (
+                                    <Check className="h-3 w-3 text-muted-foreground" />
+                                  )}
+                                  <span className="text-xs text-muted-foreground">
+                                    {msg.read ? 'Read' : 'Sent'}
+                                  </span>
+                                </div>
+                              )}
                             </div>
                           ))}
+                          
+                          {/* Typing Indicator */}
+                          {config.showTypingIndicator && isTyping && (
+                            <div className="flex items-start animate-fade-in">
+                              <div className="bg-muted rounded-lg px-4 py-3">
+                                <div className="flex gap-1">
+                                  <div 
+                                    className="w-2 h-2 rounded-full bg-muted-foreground/60 animate-bounce"
+                                    style={{ animationDelay: '0ms', animationDuration: '1s' }}
+                                  />
+                                  <div 
+                                    className="w-2 h-2 rounded-full bg-muted-foreground/60 animate-bounce"
+                                    style={{ animationDelay: '200ms', animationDuration: '1s' }}
+                                  />
+                                  <div 
+                                    className="w-2 h-2 rounded-full bg-muted-foreground/60 animate-bounce"
+                                    style={{ animationDelay: '400ms', animationDuration: '1s' }}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          )}
                         </div>
 
                         {/* Input */}
@@ -339,7 +401,7 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
                               style={{ backgroundColor: config.primaryColor }}
                               onClick={() => {
                                 setActiveConversationId('new');
-                                setMessages([{ role: 'assistant', content: config.greeting }]);
+                                setMessages([{ role: 'assistant', content: config.greeting, read: true, timestamp: new Date() }]);
                               }}
                             >
                               <MessageChatCircle className="h-4 w-4 mr-2" />

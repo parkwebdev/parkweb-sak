@@ -393,6 +393,41 @@ export const EmbeddedChatDesigner = ({ agentId }: EmbeddedChatDesignerProps) => 
 
       <Separator />
 
+      {/* Real-time Indicators Section */}
+      <div className="space-y-3">
+        <h3 className="text-sm font-medium">Real-time Indicators</h3>
+        
+        <div className="flex items-center justify-between">
+          <div className="space-y-0.5">
+            <Label htmlFor="typing">Typing Indicator</Label>
+            <p className="text-xs text-muted-foreground">
+              Show animated dots when agent is responding
+            </p>
+          </div>
+          <Switch
+            id="typing"
+            checked={config.showTypingIndicator}
+            onCheckedChange={(checked) => saveConfig({ showTypingIndicator: checked })}
+          />
+        </div>
+
+        <div className="flex items-center justify-between">
+          <div className="space-y-0.5">
+            <Label htmlFor="read-receipts">Read Receipts</Label>
+            <p className="text-xs text-muted-foreground">
+              Show checkmarks when messages are read
+            </p>
+          </div>
+          <Switch
+            id="read-receipts"
+            checked={config.showReadReceipts}
+            onCheckedChange={(checked) => saveConfig({ showReadReceipts: checked })}
+          />
+        </div>
+      </div>
+
+      <Separator />
+
       {/* Branding Section */}
       <div className="space-y-3">
         <h3 className="text-sm font-medium">Branding</h3>

@@ -49,6 +49,10 @@ export interface EmbeddedChatConfig {
   // Team Avatars
   showTeamAvatars: boolean;
   teamAvatarUrls: string[];
+  
+  // Real-time Indicators
+  showTypingIndicator: boolean;
+  showReadReceipts: boolean;
 }
 
 export const useEmbeddedChatConfig = (agentId: string) => {
@@ -105,6 +109,10 @@ export const useEmbeddedChatConfig = (agentId: string) => {
     // Team Avatars
     showTeamAvatars: false,
     teamAvatarUrls: [],
+    
+    // Real-time Indicators
+    showTypingIndicator: true,
+    showReadReceipts: true,
   });
 
   const [config, setConfig] = useState<EmbeddedChatConfig>(getDefaultConfig());
@@ -230,6 +238,8 @@ export const useEmbeddedChatConfig = (agentId: string) => {
     script.setAttribute('data-welcome-subtitle', '${config.welcomeSubtitle}');
     script.setAttribute('data-use-gradient-header', '${config.useGradientHeader}');
     script.setAttribute('data-gradient-end-color', '${config.gradientEndColor}');
+    script.setAttribute('data-show-typing-indicator', '${config.showTypingIndicator}');
+    script.setAttribute('data-show-read-receipts', '${config.showReadReceipts}');
     ${config.avatarUrl ? `script.setAttribute('data-avatar-url', '${config.avatarUrl}');` : ''}
     document.head.appendChild(script);
   })();
