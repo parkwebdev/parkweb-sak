@@ -60,6 +60,16 @@ export const WorkspaceSwitcher = () => {
     }
   }, [organizations]);
 
+  // Update current org logo when branding changes
+  useEffect(() => {
+    if (currentOrg?.id && branding?.logo_url !== undefined) {
+      setOrgLogos(prev => ({
+        ...prev,
+        [currentOrg.id]: branding.logo_url
+      }));
+    }
+  }, [currentOrg?.id, branding?.logo_url]);
+
   if (!currentOrg) {
     return null;
   }

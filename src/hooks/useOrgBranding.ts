@@ -66,7 +66,7 @@ export const useOrgBranding = () => {
     }
   };
 
-  const updateBranding = async (updates: Partial<OrgBranding>) => {
+  const updateBranding = async (updates: Partial<OrgBranding>, silent = false) => {
     if (!currentOrg?.id) return;
 
     try {
@@ -90,7 +90,9 @@ export const useOrgBranding = () => {
         if (error) throw error;
       }
 
-      toast.success('Branding updated successfully');
+      if (!silent) {
+        toast.success('Branding updated successfully');
+      }
       await fetchBranding();
     } catch (error) {
       console.error('Error updating branding:', error);
