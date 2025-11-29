@@ -53,6 +53,9 @@ export interface EmbeddedChatConfig {
   // Real-time Indicators
   showTypingIndicator: boolean;
   showReadReceipts: boolean;
+  
+  // Audio Messages
+  enableAudioMessages: boolean;
 }
 
 export const useEmbeddedChatConfig = (agentId: string) => {
@@ -113,6 +116,9 @@ export const useEmbeddedChatConfig = (agentId: string) => {
     // Real-time Indicators
     showTypingIndicator: true,
     showReadReceipts: true,
+    
+    // Audio Messages
+    enableAudioMessages: true,
   });
 
   const [config, setConfig] = useState<EmbeddedChatConfig>(getDefaultConfig());
@@ -240,6 +246,7 @@ export const useEmbeddedChatConfig = (agentId: string) => {
     script.setAttribute('data-gradient-end-color', '${config.gradientEndColor}');
     script.setAttribute('data-show-typing-indicator', '${config.showTypingIndicator}');
     script.setAttribute('data-show-read-receipts', '${config.showReadReceipts}');
+    script.setAttribute('data-enable-audio-messages', '${config.enableAudioMessages}');
     ${config.avatarUrl ? `script.setAttribute('data-avatar-url', '${config.avatarUrl}');` : ''}
     document.head.appendChild(script);
   })();
