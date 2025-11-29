@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Sidebar } from '@/components/Sidebar';
+import { Button } from '@/components/ui/button';
+import { Menu01 as Menu } from '@untitledui/icons';
 import { SettingsLayout } from '@/components/settings/SettingsLayout';
 import { GeneralSettings } from '@/components/settings/GeneralSettings';
 import { ProfileSettings } from '@/components/settings/ProfileSettings';
@@ -11,12 +12,14 @@ import { OrganizationSettings } from '@/components/settings/OrganizationSettings
 import { SubscriptionSettings } from '@/components/settings/SubscriptionSettings';
 import { WebhookSettings } from '@/components/settings/WebhookSettings';
 import { ApiKeySettings } from '@/components/settings/ApiKeySettings';
-import { useSidebar } from '@/hooks/use-sidebar';
 
 export type SettingsTab = 'general' | 'profile' | 'team' | 'notifications' | 'organization' | 'subscription' | 'webhooks' | 'api-keys';
 
-const Settings = () => {
-  const { isCollapsed } = useSidebar();
+interface SettingsProps {
+  onMenuClick?: () => void;
+}
+
+const Settings: React.FC<SettingsProps> = ({ onMenuClick }) => {
   const [activeTab, setActiveTab] = useState<SettingsTab>('general');
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -75,28 +78,28 @@ const Settings = () => {
   };
 
   return (
-    <div className="flex h-screen bg-muted/30">
-      <div className="fixed left-0 top-0 h-full z-30 transition-transform duration-300 lg:translate-x-0">
-        <Sidebar />
-      </div>
-      
-      <div className={`flex-1 overflow-auto min-h-screen transition-all duration-300 ${
-        isCollapsed ? 'lg:ml-[72px]' : 'lg:ml-[280px]'
-      }`}>
-        <main className="flex-1 bg-muted/30 min-h-screen pt-4 lg:pt-8 pb-12">
-          <header className="w-full font-medium">
-            <div className="items-stretch flex w-full flex-col gap-6 px-4 lg:px-8 py-0">
-              <SettingsLayout 
-                activeTab={activeTab} 
-                onTabChange={setActiveTab}
-              >
-                {renderTabContent()}
-              </SettingsLayout>
-            </div>
-          </header>
-        </main>
-      </div>
-    </div>
+    <main className="flex-1 bg-muted/30 min-h-screen pt-4 lg:pt-8 pb-12">
+      <header className="w-full font-medium">
+        <div className="items-stretch flex w-full flex-col gap-6 px-4 lg:px-8 py-0">
+          <div className="flex items-center gap-4 mb-6">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="lg:hidden flex items-center gap-2"
+              onClick={onMenuClick}
+            >
+              <Menu size={16} />
+            </Button>
+          </div>
+          <SettingsLayout 
+            activeTab={activeTab} 
+            onTabChange={setActiveTab}
+          >
+            {renderTabContent()}
+          </SettingsLayout>
+        </div>
+      </header>
+    </main>
   );
 };
 

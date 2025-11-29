@@ -2,14 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { useOrganization } from '@/contexts/OrganizationContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users01 as Users, MessageChatSquare, UserPlus01 as UserPlus, TrendUp01 as TrendUp, Cube01 as Bot, Zap } from '@untitledui/icons';
+import { Users01 as Users, MessageChatSquare, UserPlus01 as UserPlus, TrendUp01 as TrendUp, Cube01 as Bot, Zap, Menu01 as Menu } from '@untitledui/icons';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
 
 interface DashboardProps {
   onMenuClick?: () => void;
 }
 
-export const Dashboard: React.FC<DashboardProps> = () => {
+export const Dashboard: React.FC<DashboardProps> = ({ onMenuClick }) => {
   const { currentOrg, loading: orgLoading } = useOrganization();
   const [stats, setStats] = useState({
     totalAgents: 0,
@@ -106,13 +107,29 @@ export const Dashboard: React.FC<DashboardProps> = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Dashboard</h1>
-          <p className="text-muted-foreground">{currentOrg.name}</p>
+    <main className="flex-1 bg-muted/30 min-h-screen pt-4 lg:pt-8">
+      <header className="w-full font-medium">
+        <div className="items-stretch flex w-full flex-col gap-6 px-4 lg:px-8 py-0">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-4 w-full sm:w-auto">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="lg:hidden flex items-center gap-2"
+                onClick={onMenuClick}
+              >
+                <Menu size={16} />
+              </Button>
+              <div className="flex-1 sm:flex-none">
+                <h1 className="text-xl lg:text-2xl font-semibold text-foreground">Dashboard</h1>
+                <p className="text-sm text-muted-foreground mt-1">{currentOrg.name}</p>
+              </div>
+            </div>
+          </div>
         </div>
+      </header>
+
+      <div className="px-4 lg:px-8 mt-6">
 
         {/* Stats Grid */}
         {loading ? (
@@ -220,6 +237,6 @@ export const Dashboard: React.FC<DashboardProps> = () => {
           </div>
         )}
       </div>
-    </div>
+    </main>
   );
 };
