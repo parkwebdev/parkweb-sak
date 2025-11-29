@@ -12,6 +12,7 @@ import NotFound from "./pages/NotFound";
 import HostedChat from "./pages/HostedChat";
 import DashboardWrapper from "./pages/DashboardWrapper";
 import AgentsWrapper from "./pages/AgentsWrapper";
+import AgentConfigWrapper from "./pages/AgentConfigWrapper";
 import ConversationsWrapper from "./pages/ConversationsWrapper";
 import LeadsWrapper from "./pages/LeadsWrapper";
 import AnalyticsWrapper from "./pages/AnalyticsWrapper";
@@ -39,6 +40,11 @@ const App = () => (
                 <Route path="/agents" element={
                   <ProtectedRoute>
                     <AgentsWrapper />
+                  </ProtectedRoute>
+                } />
+                <Route path="/agents/:agentId" element={
+                  <ProtectedRoute>
+                    <AgentConfigWrapper />
                   </ProtectedRoute>
                 } />
                 <Route path="/conversations" element={

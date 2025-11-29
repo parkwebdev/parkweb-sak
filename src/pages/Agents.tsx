@@ -3,10 +3,9 @@ import { useOrganization } from '@/contexts/OrganizationContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, SearchLg, Menu01 as Menu } from '@untitledui/icons';
+import { SearchLg, Menu01 as Menu } from '@untitledui/icons';
 import { useAgents } from '@/hooks/useAgents';
 import { CreateAgentDialog } from '@/components/agents/CreateAgentDialog';
-import { EditAgentDialog } from '@/components/agents/EditAgentDialog';
 import { AgentCard } from '@/components/agents/AgentCard';
 import type { Tables } from '@/integrations/supabase/types';
 
@@ -20,7 +19,6 @@ const Agents: React.FC<AgentsProps> = ({ onMenuClick }) => {
   const { currentOrg } = useOrganization();
   const { agents, loading, createAgent, updateAgent, deleteAgent } = useAgents();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [editingAgent, setEditingAgent] = useState<Agent | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
@@ -57,7 +55,6 @@ const Agents: React.FC<AgentsProps> = ({ onMenuClick }) => {
               </div>
             </div>
             <Button onClick={() => setCreateDialogOpen(true)}>
-              <Plus className="w-4 h-4 mr-2" />
               Create Agent
             </Button>
           </div>
@@ -102,7 +99,6 @@ const Agents: React.FC<AgentsProps> = ({ onMenuClick }) => {
             </p>
             {!searchQuery && statusFilter === 'all' && (
               <Button onClick={() => setCreateDialogOpen(true)}>
-                <Plus className="w-4 h-4 mr-2" />
                 Create Your First Agent
               </Button>
             )}
@@ -113,7 +109,7 @@ const Agents: React.FC<AgentsProps> = ({ onMenuClick }) => {
               <AgentCard
                 key={agent.id}
                 agent={agent}
-                onEdit={setEditingAgent}
+                onEdit={() => {}}
                 onDelete={deleteAgent}
                 onStatusChange={handleStatusChange}
               />
@@ -125,13 +121,6 @@ const Agents: React.FC<AgentsProps> = ({ onMenuClick }) => {
           open={createDialogOpen}
           onOpenChange={setCreateDialogOpen}
           onSubmit={createAgent}
-        />
-
-        <EditAgentDialog
-          agent={editingAgent}
-          open={!!editingAgent}
-          onOpenChange={(open) => !open && setEditingAgent(null)}
-          onUpdate={updateAgent}
         />
       </div>
     </main>

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Download01, Grid01, List, SearchLg, Menu01 as Menu } from '@untitledui/icons';
+import { Download01, Grid01, List, SearchLg, Menu01 as Menu } from '@untitledui/icons';
 import { useLeads } from '@/hooks/useLeads';
 import { LeadCard } from '@/components/leads/LeadCard';
 import { LeadsTable } from '@/components/leads/LeadsTable';
@@ -93,11 +93,9 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
             </div>
             <div className="flex gap-2">
               <Button variant="outline" onClick={handleExport} disabled={filteredLeads.length === 0}>
-                <Download01 className="h-4 w-4 mr-2" />
                 Export
               </Button>
               <Button onClick={() => setIsCreateOpen(true)}>
-                <Plus className="h-4 w-4 mr-2" />
                 Add Lead
               </Button>
             </div>

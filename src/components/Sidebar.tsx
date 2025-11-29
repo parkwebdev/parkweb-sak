@@ -7,6 +7,7 @@ import { ThemeToggle } from './ThemeToggle';
 import { NotificationCenter } from './notifications/NotificationCenter';
 import { OrganizationSwitcher } from './OrganizationSwitcher';
 import { useSidebar } from '@/hooks/use-sidebar';
+import { useConversations } from '@/hooks/useConversations';
 import chatpadLogo from '@/assets/chatpad-logo.png';
 
 interface NavigationItem {
@@ -66,6 +67,13 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
   const location = useLocation();
   const { isCollapsed, toggle } = useSidebar();
+  const { conversations } = useConversations();
+  
+  // Count new conversations (active status, created in last 24 hours)
+  const newConversationsCount = conversations.filter(conv => {
+    const isRecent = new Date(conv.created_at).getTime() > Date.now() - 24 * 60 * 60 * 1000;
+    return conv.status === 'active' && isRecent;
+  }).length;
 
   return (
     <aside className={`items-stretch flex ${isCollapsed ? 'w-[72px]' : 'w-[280px]'} h-screen bg-muted/30 p-1 transition-all duration-300`}>
@@ -127,10 +135,17 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
                           <item.icon size={14} className="self-stretch my-auto" />
                         </div>
                         {!isCollapsed && (
-                          <div className={`text-sm font-normal leading-4 self-stretch my-auto ${
-                            isActive ? 'text-accent-foreground font-medium' : ''
-                          }`}>
-                            {item.label}
+                          <div className="flex items-center justify-between flex-1">
+                            <div className={`text-sm font-normal leading-4 self-stretch my-auto ${
+                              isActive ? 'text-accent-foreground font-medium' : ''
+                            }`}>
+                              {item.label}
+                            </div>
+                            {item.id === 'conversations' && newConversationsCount > 0 && (
+                              <div className="bg-primary text-primary-foreground text-[10px] font-semibold rounded-full h-5 min-w-[20px] px-1.5 flex items-center justify-center">
+                                {newConversationsCount}
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
