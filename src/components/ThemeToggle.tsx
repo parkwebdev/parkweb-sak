@@ -24,19 +24,28 @@ export function ThemeToggle({ isCollapsed = false }: ThemeToggleProps) {
   const isCurrentlyDark = theme === 'dark' || (theme === 'system' && isDarkMode);
 
   return (
-    <Button 
-      ref={ref}
-      variant="outline" 
-      size="sm" 
-      className={`relative z-[9999] p-0 ${isCollapsed ? 'h-6 w-6' : 'h-7 w-7'}`}
-      onClick={handleToggle}
-    >
-      {isCurrentlyDark ? (
-        <Moon className={isCollapsed ? 'h-2.5 w-2.5' : 'h-3 w-3'} />
-      ) : (
-        <Sun className={isCollapsed ? 'h-2.5 w-2.5' : 'h-3 w-3'} />
-      )}
-      <span className="sr-only">Toggle theme</span>
-    </Button>
+    <>
+      {/* Hidden element in screen center for animation origin */}
+      <div 
+        ref={ref as any}
+        className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-[9999]"
+        aria-hidden="true"
+      />
+      
+      {/* Visible button */}
+      <Button 
+        variant="outline" 
+        size="sm" 
+        className={`relative p-0 ${isCollapsed ? 'h-6 w-6' : 'h-7 w-7'}`}
+        onClick={handleToggle}
+      >
+        {isCurrentlyDark ? (
+          <Moon className={isCollapsed ? 'h-2.5 w-2.5' : 'h-3 w-3'} />
+        ) : (
+          <Sun className={isCollapsed ? 'h-2.5 w-2.5' : 'h-3 w-3'} />
+        )}
+        <span className="sr-only">Toggle theme</span>
+      </Button>
+    </>
   );
 }
