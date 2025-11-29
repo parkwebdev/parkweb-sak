@@ -93,10 +93,10 @@ export const WorkspaceSwitcher = () => {
           </Avatar>
           {!isCollapsed && (
             <>
-              <span className="flex-1 text-left font-medium truncate text-sm">
+              <span className="flex-1 text-left font-medium truncate text-xs">
                 {currentOrg.name}
               </span>
-              <ChevronSelectorVertical className="h-4 w-4 shrink-0 text-muted-foreground" />
+              <ChevronSelectorVertical className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
             </>
           )}
         </Button>
