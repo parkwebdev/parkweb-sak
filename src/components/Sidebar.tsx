@@ -80,7 +80,7 @@ export const Sidebar: React.FC = () => {
   const isCollapsed = !open;
 
   return (
-    <SidebarRoot className="border-r" collapsible="icon">
+    <SidebarRoot className="border-r bg-background" collapsible="icon">
       <SidebarHeader className="border-b p-4">
         <div className="space-y-3">
           {!isCollapsed && (
@@ -104,7 +104,14 @@ export const Sidebar: React.FC = () => {
                 return (
                   <SidebarMenuItem key={item.id}>
                     <SidebarMenuButton asChild isActive={isActive} tooltip={item.label}>
-                      <Link to={item.path} className="flex items-center gap-2">
+                      <Link 
+                        to={item.path} 
+                        className={`flex items-center gap-2 transition-colors ${
+                          isActive 
+                            ? 'bg-accent text-accent-foreground' 
+                            : 'hover:bg-accent/50 hover:text-foreground'
+                        }`}
+                      >
                         <item.icon size={18} />
                         {!isCollapsed && (
                           <span className="flex-1">{item.label}</span>
@@ -131,7 +138,14 @@ export const Sidebar: React.FC = () => {
                 return (
                   <SidebarMenuItem key={item.id}>
                     <SidebarMenuButton asChild isActive={isActive} tooltip={item.label}>
-                      <Link to={item.path} className="flex items-center gap-2">
+                      <Link 
+                        to={item.path} 
+                        className={`flex items-center gap-2 transition-colors ${
+                          isActive 
+                            ? 'bg-accent text-accent-foreground' 
+                            : 'hover:bg-accent/50 hover:text-foreground'
+                        }`}
+                      >
                         <item.icon size={18} />
                         {!isCollapsed && <span>{item.label}</span>}
                       </Link>

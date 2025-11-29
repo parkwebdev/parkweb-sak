@@ -39,7 +39,7 @@ const AgentConfig: React.FC = () => {
   }
 
   return (
-    <main className="flex-1 bg-muted/30 min-h-screen pt-4 lg:pt-8">
+    <div className="h-full overflow-auto pt-4 lg:pt-8">
       <div className="px-4 lg:px-8 pb-8">
         <AgentConfigLayout
           activeTab={activeTab}
@@ -60,7 +60,7 @@ const AgentConfig: React.FC = () => {
           )}
         </AgentConfigLayout>
       </div>
-    </main>
+    </div>
   );
 };
 

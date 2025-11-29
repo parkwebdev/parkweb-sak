@@ -77,8 +77,8 @@ const Settings: React.FC = () => {
   };
 
   return (
-    <main className="flex-1 bg-muted/30 min-h-screen pt-4 lg:pt-8 pb-12">
-      <header className="w-full font-medium">
+    <div className="h-full overflow-auto pt-4 lg:pt-8 pb-12">
+      <div className="w-full font-medium">
         <div className="items-stretch flex w-full flex-col gap-6 px-4 lg:px-8 py-0">
           <SettingsLayout 
             activeTab={activeTab} 
@@ -87,8 +87,8 @@ const Settings: React.FC = () => {
             {renderTabContent()}
           </SettingsLayout>
         </div>
-      </header>
-    </main>
+      </div>
+    </div>
   );
 };
 
