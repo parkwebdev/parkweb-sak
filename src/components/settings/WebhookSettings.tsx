@@ -52,18 +52,6 @@ export const WebhookSettings = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold">Webhooks</h2>
-          <p className="text-muted-foreground mt-1">
-            Configure webhooks to send real-time events to external systems
-          </p>
-        </div>
-        <Button onClick={() => setCreateDialogOpen(true)}>
-          Create Webhook
-        </Button>
-      </div>
-
       <div className="grid gap-4">
         {webhooks.length === 0 ? (
           <Card>
