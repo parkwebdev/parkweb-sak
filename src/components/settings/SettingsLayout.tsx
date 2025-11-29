@@ -6,7 +6,7 @@ interface SettingsLayoutProps {
   children: React.ReactNode;
 }
 
-export type SettingsTab = 'general' | 'profile' | 'team' | 'notifications' | 'organization' | 'subscription';
+export type SettingsTab = 'general' | 'profile' | 'team' | 'notifications' | 'organization' | 'subscription' | 'webhooks';
 
 interface SettingsMenuItemProps {
   id: SettingsTab;
@@ -59,6 +59,7 @@ export const SettingsLayout: React.FC<SettingsLayoutContentProps> = ({
     { id: 'team' as SettingsTab, label: 'Team', icon: Users },
     { id: 'subscription' as SettingsTab, label: 'Subscription', icon: CreditCard01 },
     { id: 'notifications' as SettingsTab, label: 'Notifications', icon: Bell },
+    { id: 'webhooks' as SettingsTab, label: 'Webhooks', icon: Settings },
   ];
 
   return (
