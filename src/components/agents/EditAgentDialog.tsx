@@ -5,7 +5,7 @@ import { AgentConfigureTab } from './tabs/AgentConfigureTab';
 import { AgentBehaviorTab } from './tabs/AgentBehaviorTab';
 import { AgentToolsTab } from './tabs/AgentToolsTab';
 import { AgentKnowledgeTab } from './tabs/AgentKnowledgeTab';
-import { AgentChannelsTab } from './tabs/AgentChannelsTab';
+import { AgentDeployTab } from './tabs/AgentDeployTab';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Agent = Tables<'agents'>;
@@ -44,7 +44,7 @@ export const EditAgentDialog = ({ agent, open, onOpenChange, onUpdate }: EditAge
             <TabsTrigger value="behavior">Behavior</TabsTrigger>
             <TabsTrigger value="knowledge">Knowledge</TabsTrigger>
             <TabsTrigger value="tools">Tools</TabsTrigger>
-            <TabsTrigger value="channels">Channels</TabsTrigger>
+            <TabsTrigger value="deploy">Deploy</TabsTrigger>
           </TabsList>
 
           <div className="flex-1 overflow-y-auto mt-4">
@@ -64,8 +64,8 @@ export const EditAgentDialog = ({ agent, open, onOpenChange, onUpdate }: EditAge
               <AgentToolsTab agentId={agent.id} />
             </TabsContent>
 
-            <TabsContent value="channels" className="mt-0">
-              <AgentChannelsTab agent={agent} onUpdate={onUpdate} />
+            <TabsContent value="deploy" className="mt-0">
+              <AgentDeployTab agent={agent} onUpdate={onUpdate} />
             </TabsContent>
           </div>
         </Tabs>

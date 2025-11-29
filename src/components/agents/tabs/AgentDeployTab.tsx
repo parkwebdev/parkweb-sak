@@ -5,26 +5,23 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Link03, Settings01 } from '@untitledui/icons';
+import { Settings01 } from '@untitledui/icons';
 import { toast } from 'sonner';
 import type { Tables } from '@/integrations/supabase/types';
 import { EmbeddedChatDesigner } from '../EmbeddedChatDesigner';
-import { useOrganization } from '@/contexts/OrganizationContext';
 
 type Agent = Tables<'agents'>;
 
-interface AgentChannelsTabProps {
+interface AgentDeployTabProps {
   agent: Agent;
   onUpdate: (id: string, updates: any) => Promise<any>;
   onFormChange?: (hasChanges: boolean) => void;
 }
 
-export const AgentChannelsTab = ({ agent, onUpdate, onFormChange }: AgentChannelsTabProps) => {
-  const { currentOrg } = useOrganization();
+export const AgentDeployTab = ({ agent, onUpdate, onFormChange }: AgentDeployTabProps) => {
   const deploymentConfig = (agent.deployment_config as any) || {
     api_enabled: false,
     embedded_chat_enabled: false,
-    hosted_page_enabled: false,
   };
 
   const [config, setConfig] = useState(deploymentConfig);
@@ -34,9 +31,7 @@ export const AgentChannelsTab = ({ agent, onUpdate, onFormChange }: AgentChannel
     toast.success(`${label} copied to clipboard`);
   };
 
-  const agentSlug = agent.name.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-');
   const apiEndpoint = `https://mvaimvwdukpgvkifkfpa.supabase.co/functions/v1/widget-chat`;
-  const hostedUrl = currentOrg ? `${window.location.origin}/${currentOrg.slug}/${agentSlug}` : `Loading...`;
 
   const hasChanges = JSON.stringify(config) !== JSON.stringify(deploymentConfig);
 
@@ -45,7 +40,7 @@ export const AgentChannelsTab = ({ agent, onUpdate, onFormChange }: AgentChannel
   }, [hasChanges, onFormChange]);
 
   // Export save function for parent
-  (AgentChannelsTab as any).handleSave = async () => {
+  (AgentDeployTab as any).handleSave = async () => {
     if (hasChanges) {
       await onUpdate(agent.id, { deployment_config: config });
     }
@@ -109,44 +104,6 @@ export const AgentChannelsTab = ({ agent, onUpdate, onFormChange }: AgentChannel
                 <EmbeddedChatDesigner agentId={agent.id} />
               </SheetContent>
             </Sheet>
-          </div>
-        )}
-      </div>
-
-      <Separator />
-
-      {/* Hosted Chat Page */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-sm font-medium">Hosted Chat Page</h3>
-            <p className="text-xs text-muted-foreground">Standalone chat page hosted by us</p>
-          </div>
-          <Switch
-            checked={config.hosted_page_enabled}
-            onCheckedChange={(checked) => setConfig({ ...config, hosted_page_enabled: checked })}
-          />
-        </div>
-        {config.hosted_page_enabled && (
-          <div className="pl-4 space-y-2">
-            <Label className="text-xs text-muted-foreground">Hosted Page URL</Label>
-            <div className="flex gap-2">
-              <Input value={hostedUrl} readOnly className="font-mono text-xs h-9" />
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => copyToClipboard(hostedUrl, 'Hosted URL')}
-              >
-                Copy
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => window.open(hostedUrl, '_blank')}
-              >
-                <Link03 className="h-4 w-4" />
-              </Button>
-            </div>
           </div>
         )}
       </div>

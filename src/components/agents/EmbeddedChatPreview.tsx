@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { X, Send01, MessageChatCircle, Minimize02 } from '@untitledui/icons';
+import { X, Send01, Minimize02 } from '@untitledui/icons';
 import type { EmbeddedChatConfig } from '@/hooks/useEmbeddedChatConfig';
+import { ChatBubbleIcon } from './ChatBubbleIcon';
 
 interface EmbeddedChatPreviewProps {
   config: EmbeddedChatConfig;
@@ -121,7 +122,7 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
             style={{ backgroundColor: config.primaryColor }}
             onClick={() => setIsOpen(true)}
           >
-            <MessageChatCircle className="h-6 w-6 text-white" />
+            <ChatBubbleIcon className="h-6 w-6 text-white" />
           </Button>
         )}
       </div>
