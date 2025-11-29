@@ -10,11 +10,12 @@ import { TeamManagement } from '@/components/settings/TeamManagement';
 import { NotificationSettings } from '@/components/settings/NotificationSettings';
 import { OrganizationSettings } from '@/components/settings/OrganizationSettings';
 import { SubscriptionSettings } from '@/components/settings/SubscriptionSettings';
+import { UsageSettings } from '@/components/settings/UsageSettings';
 import { WebhookSettings } from '@/components/settings/WebhookSettings';
 import { ApiKeySettings } from '@/components/settings/ApiKeySettings';
 import { BrandingSettings } from '@/components/settings/BrandingSettings';
 
-export type SettingsTab = 'general' | 'profile' | 'team' | 'notifications' | 'organization' | 'subscription' | 'webhooks' | 'api-keys' | 'branding';
+export type SettingsTab = 'general' | 'profile' | 'team' | 'notifications' | 'organization' | 'subscription' | 'usage' | 'webhooks' | 'api-keys' | 'branding';
 
 interface SettingsProps {
   onMenuClick?: () => void;
@@ -30,7 +31,7 @@ const Settings: React.FC<SettingsProps> = ({ onMenuClick }) => {
 
   // Set active tab from URL parameter
   useEffect(() => {
-    if (tabParam && ['general', 'profile', 'team', 'notifications', 'organization', 'subscription', 'webhooks', 'api-keys', 'branding'].includes(tabParam)) {
+    if (tabParam && ['general', 'profile', 'team', 'notifications', 'organization', 'subscription', 'usage', 'webhooks', 'api-keys', 'branding'].includes(tabParam)) {
       setActiveTab(tabParam);
     }
   }, [tabParam]);
@@ -67,6 +68,8 @@ const Settings: React.FC<SettingsProps> = ({ onMenuClick }) => {
         return <TeamManagement />;
       case 'subscription':
         return <SubscriptionSettings />;
+      case 'usage':
+        return <UsageSettings />;
       case 'branding':
         return <BrandingSettings />;
       case 'notifications':
