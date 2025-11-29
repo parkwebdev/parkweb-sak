@@ -18,7 +18,7 @@ export const AgentConfigLayout: React.FC<AgentConfigLayoutProps> = ({
   return (
     <Tabs value={activeTab} onValueChange={(value) => onTabChange(value as AgentConfigTab)}>
       {/* Horizontal Tab Navigation */}
-      <div className="border-b bg-background sticky top-0 z-10">
+      <div className="border-b sticky top-0 z-10 bg-card">
         <div className="px-4 lg:px-8">
           <TabsList className="h-12 bg-transparent border-0 p-0 gap-6">
             <TabsTrigger

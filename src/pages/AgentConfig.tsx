@@ -77,40 +77,44 @@ const AgentConfig: React.FC<AgentConfigProps> = ({ onMenuClick }) => {
   }
 
   return (
-    <main className="flex-1 bg-muted/30 min-h-screen">
-      <AgentConfigHeader
-        agent={agent}
-        hasUnsavedChanges={hasUnsavedChanges}
-        showSaved={showSaved}
-        onSave={handleSave}
-        isSaving={isSaving}
-      />
-      
-      <AgentConfigLayout
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-      >
-        {activeTab === 'settings' && (
-          <AgentSettingsTab
+    <main className="flex-1 bg-muted/30 min-h-screen p-1">
+      <div className="h-full">
+        <div className="rounded-xl border bg-card overflow-hidden shadow-sm">
+          <AgentConfigHeader
             agent={agent}
-            onUpdate={handleUpdate}
-            onFormChange={setHasUnsavedChanges}
+            hasUnsavedChanges={hasUnsavedChanges}
+            showSaved={showSaved}
+            onSave={handleSave}
+            isSaving={isSaving}
           />
-        )}
-        {activeTab === 'knowledge' && (
-          <AgentKnowledgeTab agentId={agent.id} orgId={agent.org_id} />
-        )}
-        {activeTab === 'tools' && (
-          <AgentToolsTab agentId={agent.id} />
-        )}
-        {activeTab === 'deployment' && (
-          <AgentDeploymentTab
-            agent={agent}
-            onUpdate={handleUpdate}
-            onFormChange={setHasUnsavedChanges}
-          />
-        )}
-      </AgentConfigLayout>
+          
+          <AgentConfigLayout
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+          >
+            {activeTab === 'settings' && (
+              <AgentSettingsTab
+                agent={agent}
+                onUpdate={handleUpdate}
+                onFormChange={setHasUnsavedChanges}
+              />
+            )}
+            {activeTab === 'knowledge' && (
+              <AgentKnowledgeTab agentId={agent.id} orgId={agent.org_id} />
+            )}
+            {activeTab === 'tools' && (
+              <AgentToolsTab agentId={agent.id} />
+            )}
+            {activeTab === 'deployment' && (
+              <AgentDeploymentTab
+                agent={agent}
+                onUpdate={handleUpdate}
+                onFormChange={setHasUnsavedChanges}
+              />
+            )}
+          </AgentConfigLayout>
+        </div>
+      </div>
     </main>
   );
 };

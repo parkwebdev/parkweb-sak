@@ -32,7 +32,7 @@ export const AgentConfigHeader = ({
   const navigate = useNavigate();
 
   return (
-    <div className="border-b bg-background">
+    <div className="border-b">
       <div className="px-4 lg:px-8 py-4">
         <div className="flex items-start justify-between gap-4">
           {/* Left: Back button + Agent info */}
