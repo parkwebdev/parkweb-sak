@@ -748,7 +748,7 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
                           {/* Show inline form for new users */}
                           {!chatUser && (
                             <div className="flex items-start animate-fade-in">
-                              <div className="bg-muted rounded-lg p-3 max-w-[85%]">
+                              <div className="bg-muted rounded-lg p-3 w-full">
                                 <p className="text-sm font-medium mb-3">Quick intro before we chat 👋</p>
                                 <form 
                                   className="space-y-2"
