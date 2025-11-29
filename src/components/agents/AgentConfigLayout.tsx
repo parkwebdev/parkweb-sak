@@ -2,7 +2,7 @@ import React from 'react';
 import { Settings01 as Settings, Database01, Tool01, Rocket01, MessageCircle02 } from '@untitledui/icons';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-export type AgentConfigTab = 'configure' | 'behavior' | 'knowledge' | 'tools' | 'channels';
+export type AgentConfigTab = 'configure' | 'behavior' | 'knowledge' | 'tools' | 'deploy';
 
 interface AgentConfigLayoutProps {
   activeTab: AgentConfigTab;
@@ -55,11 +55,11 @@ export const AgentConfigLayout: React.FC<AgentConfigLayoutProps> = ({
             </TabsTrigger>
             
             <TabsTrigger
-              value="channels"
+              value="deploy"
               className="h-12 px-0 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none"
             >
               <Rocket01 size={16} className="mr-2" />
-              Channels
+              Deploy
             </TabsTrigger>
           </TabsList>
         </div>
