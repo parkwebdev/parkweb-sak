@@ -23,12 +23,15 @@ export const WorkspaceSwitcher = () => {
   const { isCollapsed } = useSidebar();
   const navigate = useNavigate();
   const [memberCounts, setMemberCounts] = useState<Record<string, number>>({});
+  const [orgLogos, setOrgLogos] = useState<Record<string, string | null>>({});
 
   useEffect(() => {
-    const fetchMemberCounts = async () => {
+    const fetchOrgData = async () => {
       const counts: Record<string, number> = {};
+      const logos: Record<string, string | null> = {};
       
       for (const org of organizations) {
+        // Fetch member count
         const { count, error } = await supabase
           .from('org_members')
           .select('*', { count: 'exact', head: true })
@@ -37,13 +40,23 @@ export const WorkspaceSwitcher = () => {
         if (!error && count !== null) {
           counts[org.id] = count;
         }
+
+        // Fetch branding/logo
+        const { data: brandingData } = await supabase
+          .from('org_branding')
+          .select('logo_url')
+          .eq('org_id', org.id)
+          .maybeSingle();
+        
+        logos[org.id] = brandingData?.logo_url || null;
       }
       
       setMemberCounts(counts);
+      setOrgLogos(logos);
     };
 
     if (organizations.length > 0) {
-      fetchMemberCounts();
+      fetchOrgData();
     }
   }, [organizations]);
 
@@ -95,6 +108,7 @@ export const WorkspaceSwitcher = () => {
               >
                 <div className="flex items-center gap-3 truncate flex-1">
                   <Avatar className="h-7 w-7 rounded-md flex-shrink-0">
+                    <AvatarImage src={orgLogos[org.id] || undefined} />
                     <AvatarFallback className="rounded-md bg-muted text-foreground text-xs">
                       {org.name.charAt(0).toUpperCase()}
                     </AvatarFallback>
