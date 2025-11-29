@@ -920,6 +920,24 @@ export type Database = {
         Args: { p_email: string; p_token: string }
         Returns: undefined
       }
+      search_knowledge_sources: {
+        Args: {
+          p_agent_id: string
+          p_match_count?: number
+          p_match_threshold?: number
+          p_query_embedding: string
+        }
+        Returns: {
+          agent_id: string
+          content: string
+          id: string
+          metadata: Json
+          org_id: string
+          similarity: number
+          source: string
+          type: string
+        }[]
+      }
       validate_onboarding_token: { Args: { p_token: string }; Returns: boolean }
       validate_submission_token: { Args: { p_email: string }; Returns: boolean }
     }
