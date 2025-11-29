@@ -9,6 +9,7 @@ import { AudioRecorder } from '@/components/chat/AudioRecorder';
 import { AudioPlayer } from '@/components/chat/AudioPlayer';
 import { FileDropZone } from '@/components/chat/FileDropZone';
 import { MessageFileAttachment } from '@/components/chat/FileAttachment';
+import { MessageReactions, Reaction } from '@/components/chat/MessageReactions';
 
 interface EmbeddedChatPreviewProps {
   config: EmbeddedChatConfig;
@@ -38,8 +39,9 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
       type: string;
       size: number;
     }>;
+    reactions?: Reaction[];
   }>>([
-    { role: 'assistant', content: config.greeting, read: true, timestamp: new Date(), type: 'text' },
+    { role: 'assistant', content: config.greeting, read: true, timestamp: new Date(), type: 'text', reactions: [] },
   ]);
   
   // Mock conversation history
@@ -333,24 +335,98 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
                                  )}
                                </div>
                               
-                              {/* Read Receipt */}
-                              {config.showReadReceipts && msg.role === 'user' && (
-                                <div className="flex items-center gap-1 mt-1 px-1">
-                                  {msg.read ? (
-                                    <div className="flex">
-                                      <Check className="h-3 w-3 text-primary -mr-1.5" />
-                                      <Check className="h-3 w-3 text-primary" />
-                                    </div>
-                                  ) : (
-                                    <Check className="h-3 w-3 text-muted-foreground" />
-                                  )}
-                                  <span className="text-xs text-muted-foreground">
-                                    {msg.read ? 'Read' : 'Sent'}
-                                  </span>
-                                </div>
-                              )}
-                            </div>
-                          ))}
+                               {/* Read Receipt */}
+                               {config.showReadReceipts && msg.role === 'user' && (
+                                 <div className="flex items-center gap-1 mt-1 px-1">
+                                   {msg.read ? (
+                                     <div className="flex">
+                                       <Check className="h-3 w-3 text-primary -mr-1.5" />
+                                       <Check className="h-3 w-3 text-primary" />
+                                     </div>
+                                   ) : (
+                                     <Check className="h-3 w-3 text-muted-foreground" />
+                                   )}
+                                   <span className="text-xs text-muted-foreground">
+                                     {msg.read ? 'Read' : 'Sent'}
+                                   </span>
+                                 </div>
+                               )}
+                               
+                               {/* Emoji Reactions */}
+                               {config.enableEmojiReactions && msg.reactions && msg.reactions.length > 0 && (
+                                 <MessageReactions
+                                   reactions={msg.reactions}
+                                   onAddReaction={(emoji) => {
+                                     setMessages(prev => prev.map((m, i) => {
+                                       if (i === idx) {
+                                         const existingReaction = m.reactions?.find(r => r.emoji === emoji);
+                                         if (existingReaction) {
+                                           return {
+                                             ...m,
+                                             reactions: m.reactions?.map(r =>
+                                               r.emoji === emoji
+                                                 ? { ...r, count: r.count + 1, userReacted: true }
+                                                 : r
+                                             ),
+                                           };
+                                         } else {
+                                           return {
+                                             ...m,
+                                             reactions: [
+                                               ...(m.reactions || []),
+                                               { emoji, count: 1, userReacted: true },
+                                             ],
+                                           };
+                                         }
+                                       }
+                                       return m;
+                                     }));
+                                   }}
+                                   onRemoveReaction={(emoji) => {
+                                     setMessages(prev => prev.map((m, i) => {
+                                       if (i === idx) {
+                                         return {
+                                           ...m,
+                                           reactions: m.reactions
+                                             ?.map(r =>
+                                               r.emoji === emoji
+                                                 ? { ...r, count: r.count - 1, userReacted: false }
+                                                 : r
+                                             )
+                                             .filter(r => r.count > 0),
+                                         };
+                                       }
+                                       return m;
+                                     }));
+                                   }}
+                                   primaryColor={config.primaryColor}
+                                   compact={true}
+                                 />
+                               )}
+                               
+                               {config.enableEmojiReactions && (!msg.reactions || msg.reactions.length === 0) && (
+                                 <MessageReactions
+                                   reactions={[]}
+                                   onAddReaction={(emoji) => {
+                                     setMessages(prev => prev.map((m, i) => {
+                                       if (i === idx) {
+                                         return {
+                                           ...m,
+                                           reactions: [
+                                             { emoji, count: 1, userReacted: true },
+                                           ],
+                                         };
+                                       }
+                                       return m;
+                                     }));
+                                   }}
+                                   onRemoveReaction={() => {}}
+                                   primaryColor={config.primaryColor}
+                                   compact={true}
+                                 />
+                               )}
+                             </div>
+                           ))}
                           
                           {/* Typing Indicator */}
                           {config.showTypingIndicator && isTyping && (

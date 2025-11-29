@@ -61,6 +61,9 @@ export interface EmbeddedChatConfig {
   enableFileAttachments: boolean;
   maxFileSize: number;
   allowedFileTypes: string[];
+  
+  // Emoji Reactions
+  enableEmojiReactions: boolean;
 }
 
 export const useEmbeddedChatConfig = (agentId: string) => {
@@ -129,6 +132,9 @@ export const useEmbeddedChatConfig = (agentId: string) => {
     enableFileAttachments: true,
     maxFileSize: 10,
     allowedFileTypes: ['image', 'document'],
+    
+    // Emoji Reactions
+    enableEmojiReactions: true,
   });
 
   const [config, setConfig] = useState<EmbeddedChatConfig>(getDefaultConfig());
@@ -260,6 +266,7 @@ export const useEmbeddedChatConfig = (agentId: string) => {
     script.setAttribute('data-enable-file-attachments', '${config.enableFileAttachments}');
     script.setAttribute('data-max-file-size', '${config.maxFileSize}');
     script.setAttribute('data-allowed-file-types', '${config.allowedFileTypes.join(',')}');
+    script.setAttribute('data-enable-emoji-reactions', '${config.enableEmojiReactions}');
     ${config.avatarUrl ? `script.setAttribute('data-avatar-url', '${config.avatarUrl}');` : ''}
     document.head.appendChild(script);
   })();
