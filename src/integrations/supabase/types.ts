@@ -672,6 +672,65 @@ export type Database = {
         }
         Relationships: []
       }
+      scheduled_reports: {
+        Row: {
+          active: boolean
+          created_at: string
+          created_by: string
+          day_of_month: number | null
+          day_of_week: number | null
+          frequency: string
+          id: string
+          last_sent_at: string | null
+          name: string
+          org_id: string
+          recipients: Json
+          report_config: Json
+          time_of_day: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          created_by: string
+          day_of_month?: number | null
+          day_of_week?: number | null
+          frequency: string
+          id?: string
+          last_sent_at?: string | null
+          name: string
+          org_id: string
+          recipients?: Json
+          report_config?: Json
+          time_of_day?: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          created_by?: string
+          day_of_month?: number | null
+          day_of_week?: number | null
+          frequency?: string
+          id?: string
+          last_sent_at?: string | null
+          name?: string
+          org_id?: string
+          recipients?: Json
+          report_config?: Json
+          time_of_day?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scheduled_reports_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscriptions: {
         Row: {
           created_at: string
