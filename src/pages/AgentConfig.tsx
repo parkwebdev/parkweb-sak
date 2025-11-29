@@ -2,10 +2,11 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAgents } from '@/hooks/useAgents';
 import { AgentConfigHeader } from '@/components/agents/AgentConfigHeader';
-import { AgentSettingsTab } from '@/components/agents/tabs/AgentSettingsTab';
+import { AgentConfigureTab } from '@/components/agents/tabs/AgentConfigureTab';
+import { AgentBehaviorTab } from '@/components/agents/tabs/AgentBehaviorTab';
 import { AgentKnowledgeTab } from '@/components/agents/tabs/AgentKnowledgeTab';
 import { AgentToolsTab } from '@/components/agents/tabs/AgentToolsTab';
-import { AgentDeploymentTab } from '@/components/agents/tabs/AgentDeploymentTab';
+import { AgentChannelsTab } from '@/components/agents/tabs/AgentChannelsTab';
 import { AgentConfigLayout, type AgentConfigTab } from '@/components/agents/AgentConfigLayout';
 import type { Tables } from '@/integrations/supabase/types';
 
@@ -19,7 +20,7 @@ const AgentConfig: React.FC<AgentConfigProps> = ({ onMenuClick }) => {
   const { agentId } = useParams<{ agentId: string }>();
   const { agents, updateAgent } = useAgents();
   const [agent, setAgent] = useState<Agent | null>(null);
-  const [activeTab, setActiveTab] = useState<AgentConfigTab>('settings');
+  const [activeTab, setActiveTab] = useState<AgentConfigTab>('configure');
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [showSaved, setShowSaved] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -43,10 +44,12 @@ const AgentConfig: React.FC<AgentConfigProps> = ({ onMenuClick }) => {
     setIsSaving(true);
     try {
       // Call the appropriate tab's save function
-      if (activeTab === 'settings') {
-        await (AgentSettingsTab as any).handleSave?.();
-      } else if (activeTab === 'deployment') {
-        await (AgentDeploymentTab as any).handleSave?.();
+      if (activeTab === 'configure') {
+        await (AgentConfigureTab as any).handleSave?.();
+      } else if (activeTab === 'behavior') {
+        await (AgentBehaviorTab as any).handleSave?.();
+      } else if (activeTab === 'channels') {
+        await (AgentChannelsTab as any).handleSave?.();
       }
       
       setHasUnsavedChanges(false);
@@ -92,8 +95,15 @@ const AgentConfig: React.FC<AgentConfigProps> = ({ onMenuClick }) => {
             activeTab={activeTab}
             onTabChange={setActiveTab}
           >
-            {activeTab === 'settings' && (
-              <AgentSettingsTab
+            {activeTab === 'configure' && (
+              <AgentConfigureTab
+                agent={agent}
+                onUpdate={handleUpdate}
+                onFormChange={setHasUnsavedChanges}
+              />
+            )}
+            {activeTab === 'behavior' && (
+              <AgentBehaviorTab
                 agent={agent}
                 onUpdate={handleUpdate}
                 onFormChange={setHasUnsavedChanges}
@@ -105,8 +115,8 @@ const AgentConfig: React.FC<AgentConfigProps> = ({ onMenuClick }) => {
             {activeTab === 'tools' && (
               <AgentToolsTab agentId={agent.id} />
             )}
-            {activeTab === 'deployment' && (
-              <AgentDeploymentTab
+            {activeTab === 'channels' && (
+              <AgentChannelsTab
                 agent={agent}
                 onUpdate={handleUpdate}
                 onFormChange={setHasUnsavedChanges}
