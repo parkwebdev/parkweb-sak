@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -279,10 +280,8 @@ const Auth = () => {
                 {/* Remember me & Forgot password */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
+                    <Checkbox
                       id="remember"
-                      className="w-4 h-4 rounded border-border"
                     />
                     <Label htmlFor="remember" className="text-sm text-muted-foreground">
                       Remember for 30 days
