@@ -12,7 +12,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   const { isCollapsed } = useSidebar();
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex h-screen bg-app-background">
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div 
