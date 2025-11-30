@@ -3,7 +3,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useApiKeys } from '@/hooks/useApiKeys';
-import { Plus, Key01, Trash01, RefreshCcw01, Copy01, Eye, EyeOff } from '@untitledui/icons';
+import { Plus, Key01, Trash01, RefreshCcw01, Eye, EyeOff } from '@untitledui/icons';
+import { CopyButton } from '@/components/ui/copy-button';
 import { CreateApiKeyDialog } from './CreateApiKeyDialog';
 import { formatDistanceToNow } from 'date-fns';
 import {
@@ -215,13 +216,7 @@ export const ApiKeySettings = () => {
                 >
                   {showKey ? 'Hide' : 'Show'}
                 </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => newGeneratedKey && copyToClipboard(newGeneratedKey)}
-                >
-                  Copy
-                </Button>
+                <CopyButton content={newGeneratedKey || ''} showToast={true} toastMessage="API key copied to clipboard" />
               </div>
             </div>
           </div>

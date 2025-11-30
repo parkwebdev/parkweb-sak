@@ -6,7 +6,8 @@ import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Copy01, Plus, Trash01 } from '@untitledui/icons';
+import { Plus, Trash01 } from '@untitledui/icons';
+import { CopyButton } from '@/components/ui/copy-button';
 import type { EmbeddedChatConfig, CustomField } from '@/hooks/useEmbeddedChatConfig';
 import { toast } from 'sonner';
 
@@ -523,14 +524,12 @@ export const EmbedSettingsPanel = ({ config, onConfigChange, embedCode }: EmbedS
                   rows={8}
                   className="font-mono text-xs pr-10"
                 />
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={copyEmbedCode}
+                <CopyButton 
+                  content={embedCode} 
+                  showToast={true} 
+                  toastMessage="Embed code copied to clipboard"
                   className="absolute top-2 right-2"
-                >
-                  <Copy01 className="h-3 w-3" />
-                </Button>
+                />
               </div>
             </div>
 

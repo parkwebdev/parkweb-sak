@@ -7,7 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNotifications } from '@/hooks/useNotifications';
 import { supabase } from '@/integrations/supabase/client';
-import { MessageSquare02 as MessageSquare, Users01 as Users, Zap as Bot, UserEdit as Team, BarChart11 as BarChart } from '@untitledui/icons';
+
 
 interface NotificationPreferences {
   id: string;
@@ -256,7 +256,7 @@ export const NotificationSettings: React.FC = () => {
     <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm font-semibold">
+          <CardTitle className="text-lg font-medium">
             General Notifications
           </CardTitle>
           <CardDescription className="text-xs">
@@ -307,7 +307,7 @@ export const NotificationSettings: React.FC = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm font-semibold">Notification Types</CardTitle>
+          <CardTitle className="text-lg font-medium">Notification Types</CardTitle>
           <CardDescription className="text-xs">
             Choose which types of activities you want to be notified about
           </CardDescription>
@@ -315,12 +315,9 @@ export const NotificationSettings: React.FC = () => {
         <CardContent className="space-y-6">
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <div className="flex items-center gap-2">
-                <MessageSquare className="h-4 w-4 text-muted-foreground" />
-                <Label htmlFor="conversation-notifications" className="text-sm font-medium">
-                  Conversation Activity
-                </Label>
-              </div>
+              <Label htmlFor="conversation-notifications" className="text-sm font-medium">
+                Conversation Activity
+              </Label>
               <p className="text-xs text-muted-foreground">
                 New conversations, escalations, and takeover requests
               </p>
@@ -335,12 +332,9 @@ export const NotificationSettings: React.FC = () => {
 
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <div className="flex items-center gap-2">
-                <Users className="h-4 w-4 text-muted-foreground" />
-                <Label htmlFor="lead-notifications" className="text-sm font-medium">
-                  Lead Notifications
-                </Label>
-              </div>
+              <Label htmlFor="lead-notifications" className="text-sm font-medium">
+                Lead Notifications
+              </Label>
               <p className="text-xs text-muted-foreground">
                 New leads captured and lead status changes
               </p>
@@ -355,12 +349,9 @@ export const NotificationSettings: React.FC = () => {
 
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <div className="flex items-center gap-2">
-                <Bot className="h-4 w-4 text-muted-foreground" />
-                <Label htmlFor="agent-notifications" className="text-sm font-medium">
-                  Agent Alerts
-                </Label>
-              </div>
+              <Label htmlFor="agent-notifications" className="text-sm font-medium">
+                Agent Alerts
+              </Label>
               <p className="text-xs text-muted-foreground">
                 Agent errors and knowledge source updates
               </p>
@@ -375,12 +366,9 @@ export const NotificationSettings: React.FC = () => {
 
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <div className="flex items-center gap-2">
-                <Team className="h-4 w-4 text-muted-foreground" />
-                <Label htmlFor="team-notifications" className="text-sm font-medium">
-                  Team Activity
-                </Label>
-              </div>
+              <Label htmlFor="team-notifications" className="text-sm font-medium">
+                Team Activity
+              </Label>
               <p className="text-xs text-muted-foreground">
                 Team invitations and member updates
               </p>
@@ -395,12 +383,9 @@ export const NotificationSettings: React.FC = () => {
 
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <div className="flex items-center gap-2">
-                <BarChart className="h-4 w-4 text-muted-foreground" />
-                <Label htmlFor="report-notifications" className="text-sm font-medium">
-                  Report Notifications
-                </Label>
-              </div>
+              <Label htmlFor="report-notifications" className="text-sm font-medium">
+                Report Notifications
+              </Label>
               <p className="text-xs text-muted-foreground">
                 Scheduled reports and analytics alerts
               </p>
@@ -417,7 +402,7 @@ export const NotificationSettings: React.FC = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm font-semibold">Notification Status</CardTitle>
+          <CardTitle className="text-lg font-medium">Notification Status</CardTitle>
           <CardDescription className="text-xs">
             Current browser notification permission status
           </CardDescription>

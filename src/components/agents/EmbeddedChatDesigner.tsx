@@ -12,7 +12,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Copy01, Save01 } from '@untitledui/icons';
+import { Save01 } from '@untitledui/icons';
+import { CopyButton } from '@/components/ui/copy-button';
 import { useEmbeddedChatConfig } from '@/hooks/useEmbeddedChatConfig';
 import { EmbeddedChatPreview } from './EmbeddedChatPreview';
 import { useToast } from '@/hooks/use-toast';
@@ -407,14 +408,12 @@ export const EmbeddedChatDesigner = ({ agentId }: EmbeddedChatDesignerProps) => 
           <pre className="p-3 bg-muted rounded-lg overflow-x-auto text-xs">
             <code>{generateEmbedCode()}</code>
           </pre>
-          <Button
-            variant="ghost"
-            size="sm"
+          <CopyButton 
+            content={generateEmbedCode()} 
+            showToast={true} 
+            toastMessage="Embed code copied to clipboard"
             className="absolute top-2 right-2"
-            onClick={copyEmbedCode}
-          >
-            <Copy01 className="h-4 w-4" />
-          </Button>
+          />
         </div>
 
         <div className="p-3 border rounded-lg bg-accent/30">
