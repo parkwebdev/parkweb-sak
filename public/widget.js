@@ -241,6 +241,25 @@
         margin: 0;
       }
 
+      .chatpad-team-avatars {
+        display: flex;
+        margin-bottom: 12px;
+        justify-content: center;
+      }
+
+      .chatpad-team-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        border: 2px solid white;
+        object-fit: cover;
+        margin-left: -8px;
+      }
+
+      .chatpad-team-avatar:first-child {
+        margin-left: 0;
+      }
+
       .chatpad-hero-buttons {
         position: absolute;
         top: 16px;
@@ -483,9 +502,10 @@
       }
 
       .chatpad-quick-action-icon {
-        width: 24px;
-        height: 24px;
-        color: ${primaryColor};
+        font-size: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
 
       .chatpad-quick-action-content {
@@ -840,8 +860,19 @@
   // Render Hero Header (Home View)
   function renderHeroHeader() {
     const welcomeTitle = config.welcomeTitle || 'Welcome!';
-    const welcomeMessage = config.welcomeMessage || 'How can we help you today?';
+    const welcomeSubtitle = config.welcomeSubtitle || 'How can we help you today?';
     const welcomeEmoji = config.welcomeEmoji || '👋';
+    const showTeamAvatars = config.showTeamAvatars !== false;
+    const teamAvatarUrls = config.teamAvatarUrls || [];
+
+    // Render team avatars
+    const teamAvatarsHtml = showTeamAvatars && teamAvatarUrls.length > 0 
+      ? `<div class="chatpad-team-avatars">
+          ${teamAvatarUrls.slice(0, 3).map((url, idx) => 
+            `<img src="${url}" alt="Team member ${idx + 1}" class="chatpad-team-avatar" style="z-index: ${3 - idx};" />`
+          ).join('')}
+         </div>`
+      : '';
 
     return `
       <div class="chatpad-hero-header">
@@ -857,9 +888,10 @@
           </button>
         </div>
         <div class="chatpad-hero-content">
+          ${teamAvatarsHtml}
           <span class="chatpad-hero-emoji">${welcomeEmoji}</span>
           <h1 class="chatpad-hero-title">${escapeHtml(welcomeTitle)}</h1>
-          <p class="chatpad-hero-subtitle">${escapeHtml(welcomeMessage)}</p>
+          <p class="chatpad-hero-subtitle">${escapeHtml(welcomeSubtitle)}</p>
         </div>
       </div>
     `;
@@ -867,11 +899,10 @@
 
   // Render Compact Header (Messages/Help Views)
   function renderCompactHeader() {
-    const agent = config.agent || {};
-    const avatarUrl = agent.avatar_url;
-    const agentName = agent.name || 'Assistant';
-    const agentEmoji = config.agentEmoji || '🤖';
-    const onlineStatus = config.showOnlineStatus ? 'Online now' : '';
+    const avatarUrl = config.avatarUrl;
+    const agentName = config.agentName || 'Assistant';
+    const agentEmoji = '🤖';
+    const showBadge = config.showBadge !== false;
 
     return `
       <div class="chatpad-compact-header">
@@ -881,7 +912,7 @@
           </div>
           <div>
             <div class="chatpad-compact-title">${escapeHtml(agentName)}</div>
-            ${onlineStatus ? `<div class="chatpad-compact-status">${onlineStatus}</div>` : ''}
+            ${showBadge ? `<div class="chatpad-compact-status">Online now</div>` : ''}
           </div>
         </div>
         <div style="display: flex; gap: 8px;">
@@ -948,14 +979,14 @@
     if (quickActions.length > 0) {
       html += '<div class="chatpad-quick-actions">';
       quickActions.forEach(action => {
-        const iconSvg = action.icon === 'chat' ? icons.chat : icons.help;
+        const icon = action.icon || '📋';
         html += `
-          <div class="chatpad-quick-action" onclick="window.chatpadWidget.handleQuickAction('${action.type}')">
+          <div class="chatpad-quick-action" onclick="window.chatpadWidget.handleQuickAction('${action.action}')">
             <div class="chatpad-quick-action-icon-wrapper">
-              <div class="chatpad-quick-action-icon">${iconSvg}</div>
+              <div class="chatpad-quick-action-icon">${icon}</div>
             </div>
             <div class="chatpad-quick-action-content">
-              <div class="chatpad-quick-action-title">${escapeHtml(action.label)}</div>
+              <div class="chatpad-quick-action-title">${escapeHtml(action.title)}</div>
               ${action.subtitle ? `<div class="chatpad-quick-action-subtitle">${escapeHtml(action.subtitle)}</div>` : ''}
             </div>
             <span class="chatpad-quick-action-arrow">${icons.chevron}</span>
@@ -975,9 +1006,8 @@
 
     messages.forEach(msg => {
       const isUser = msg.role === 'user';
-      const agent = config.agent || {};
-      const avatarUrl = agent.avatar_url;
-      const agentEmoji = config.agentEmoji || '🤖';
+      const avatarUrl = config.avatarUrl;
+      const agentEmoji = '🤖';
 
       html += `
         <div class="chatpad-message ${isUser ? 'user' : ''}">
@@ -996,7 +1026,7 @@
     if (isTyping) {
       html += `
         <div class="chatpad-message">
-          <div class="chatpad-message-avatar">${config.agentEmoji || '🤖'}</div>
+          <div class="chatpad-message-avatar">${agentEmoji}</div>
           <div class="chatpad-message-content">
             <div class="chatpad-message-bubble">
               <div class="chatpad-typing">
@@ -1237,7 +1267,7 @@
             <input 
               type="text" 
               class="chatpad-input" 
-              placeholder="${config.inputPlaceholder || 'Type your message...'}"
+              placeholder="${config.placeholder || 'Type your message...'}"
               onkeypress="if(event.key==='Enter') window.chatpadWidget.sendMessage()"
             />
             <button class="chatpad-send-button" onclick="window.chatpadWidget.sendMessage()">
@@ -1334,29 +1364,38 @@
   async function fetchConfig() {
     try {
       const response = await fetch(`${API_URL}/get-widget-config?agent_id=${agentId}`);
-      config = await response.json();
-      return config;
+      if (!response.ok) throw new Error('Failed to fetch config');
+      const data = await response.json();
+      
+      // Config is now flat, return it directly
+      return data;
     } catch (error) {
       console.error('ChatPad Agent: Failed to load config:', error);
       // Return minimal default config
       return {
-        agent: { name: 'Assistant', avatar_url: null },
+        agentName: 'Assistant',
+        avatarUrl: null,
         welcomeTitle: 'Welcome!',
-        welcomeMessage: 'How can we help you today?',
+        welcomeSubtitle: 'How can we help you today?',
         welcomeEmoji: '👋',
-        agentEmoji: '🤖',
+        primaryColor: '#6366f1',
+        gradientStartColor: '#6366f1',
+        gradientEndColor: '#8b5cf6',
         quickActions: [
-          { type: 'start_chat', label: 'Start Chat', subtitle: 'Begin a conversation', icon: 'chat' },
-          { type: 'open_help', label: 'Help Center', subtitle: 'Browse articles', icon: 'help' }
+          { id: 'start_chat', title: 'Start Chat', subtitle: 'Begin a conversation', icon: '💬', action: 'open_messages' },
+          { id: 'open_help', title: 'Help Center', subtitle: 'Browse articles', icon: '📚', action: 'open_help' }
         ],
         announcements: [],
         helpCategories: [],
+        helpArticles: [],
         showBottomNav: true,
         showBranding: true,
-        showOnlineBadge: true,
-        showOnlineStatus: true,
+        showBadge: true,
+        showTeamAvatars: true,
+        teamAvatarUrls: [],
         showTeaser: false,
-        inputPlaceholder: 'Type your message...'
+        placeholder: 'Type your message...',
+        greeting: 'Hello! How can I help you today?'
       };
     }
   }
@@ -1364,8 +1403,32 @@
   // Initialize
   async function init() {
     loadSettings();
-    injectStyles();
+    
+    // Fetch config first, THEN inject styles with actual gradient colors
     config = await fetchConfig();
+    
+    if (!config) {
+      console.error('Failed to load widget configuration');
+      return;
+    }
+
+    // Now inject styles with actual config values
+    injectStyles();
+
+    // Set initial greeting message
+    if (config.greeting) {
+      messages.push({
+        id: Date.now(),
+        content: config.greeting,
+        sender: 'agent',
+        timestamp: new Date().toISOString(),
+        read: false,
+        reactions: []
+      });
+    }
+
+    createWidget();
+  }
     
     if (!config) {
       console.error('ChatPad Agent: Failed to initialize');

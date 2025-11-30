@@ -12,11 +12,11 @@ Deno.serve(async (req) => {
 
   try {
     const url = new URL(req.url);
-    const agentId = url.searchParams.get('agentId');
+    const agentId = url.searchParams.get('agent_id') || url.searchParams.get('agentId');
 
     if (!agentId) {
       return new Response(
-        JSON.stringify({ error: 'agentId parameter is required' }),
+        JSON.stringify({ error: 'agent_id parameter is required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -77,63 +77,82 @@ Deno.serve(async (req) => {
     const deploymentConfig = (agent.deployment_config as any) || {};
     const embeddedChatConfig = deploymentConfig.embedded_chat || {};
 
+    // Transform quick actions to match widget format
+    const quickActions = (embeddedChatConfig.quickActions || [
+      { icon: '💬', label: 'Start a Chat', action: 'open_messages' },
+      { icon: '📚', label: 'Help Articles', action: 'open_help' }
+    ]).map((qa: any) => ({
+      id: qa.action || qa.id,
+      title: qa.label || qa.title,
+      subtitle: qa.subtitle || '',
+      icon: qa.icon,
+      action: qa.action
+    }));
+
+    // Return flat config structure
     const response = {
-      agent: {
-        name: agent.name,
-        avatar_url: embeddedChatConfig.avatarUrl || null,
-      },
-      config: {
-        // Appearance
-        primaryColor: embeddedChatConfig.primaryColor || '#6366f1',
-        position: embeddedChatConfig.position || 'bottom-right',
-        animation: embeddedChatConfig.animation || 'bounce',
-        showBadge: embeddedChatConfig.showBadge !== false,
-        useGradientHeader: embeddedChatConfig.useGradientHeader || false,
-        
-        // Timing
-        displayTiming: embeddedChatConfig.displayTiming || 'immediate',
-        delaySeconds: embeddedChatConfig.delaySeconds || 3,
-        scrollDepth: embeddedChatConfig.scrollDepth || 50,
-        
-        // Teaser
-        showTeaser: embeddedChatConfig.showTeaser || false,
-        teaserText: embeddedChatConfig.teaserText || 'Need help?',
-        
-        // Welcome
-        welcomeEmoji: embeddedChatConfig.welcomeEmoji || '👋',
-        welcomeTitle: embeddedChatConfig.welcomeTitle || 'Hi there!',
-        welcomeSubtitle: embeddedChatConfig.welcomeSubtitle || 'How can we help you today?',
-        
-        // Messages
-        greeting: embeddedChatConfig.greeting || 'Hello! How can I help you today?',
-        placeholder: embeddedChatConfig.placeholder || 'Type your message...',
-        showTypingIndicator: embeddedChatConfig.showTypingIndicator !== false,
-        showReadReceipts: embeddedChatConfig.showReadReceipts || false,
-        showTimestamps: embeddedChatConfig.showTimestamps !== false,
-        
-        // Features
-        enableContactForm: embeddedChatConfig.enableContactForm || false,
-        contactFormTitle: embeddedChatConfig.contactFormTitle || 'Get in touch',
-        contactFormSubtitle: embeddedChatConfig.contactFormSubtitle || 'Fill out the form below to start chatting',
-        customFields: embeddedChatConfig.customFields || [],
-        
-        enableFileUpload: embeddedChatConfig.enableFileUpload || false,
-        allowedFileTypes: embeddedChatConfig.allowedFileTypes || ['image/*', 'application/pdf'],
-        maxFileSize: embeddedChatConfig.maxFileSize || 10,
-        
-        showBottomNav: embeddedChatConfig.showBottomNav !== false,
-        quickActions: embeddedChatConfig.quickActions || [
-          { icon: '💬', label: 'Start a Chat', action: 'open_messages' },
-          { icon: '📚', label: 'Help Articles', action: 'open_help' }
-        ],
-        
-        // Effects
-        viewTransition: embeddedChatConfig.viewTransition || 'slide',
-        defaultSoundEnabled: embeddedChatConfig.defaultSoundEnabled || false,
-        
-        // Branding
-        showBranding: embeddedChatConfig.showBranding !== false,
-      },
+      // Agent info
+      agentName: agent.name,
+      avatarUrl: embeddedChatConfig.avatarUrl || null,
+      
+      // Appearance
+      primaryColor: embeddedChatConfig.primaryColor || '#6366f1',
+      gradientStartColor: embeddedChatConfig.gradientStartColor || '#6366f1',
+      gradientEndColor: embeddedChatConfig.gradientEndColor || '#8b5cf6',
+      position: embeddedChatConfig.position || 'bottom-right',
+      animation: embeddedChatConfig.animation || 'bounce',
+      showBadge: embeddedChatConfig.showBadge !== false,
+      useGradientHeader: embeddedChatConfig.useGradientHeader !== false,
+      
+      // Team avatars
+      showTeamAvatars: embeddedChatConfig.showTeamAvatars !== false,
+      teamAvatarUrls: embeddedChatConfig.teamAvatarUrls || [],
+      
+      // Timing
+      displayTiming: embeddedChatConfig.displayTiming || 'immediate',
+      delaySeconds: embeddedChatConfig.delaySeconds || 3,
+      scrollDepth: embeddedChatConfig.scrollDepth || 50,
+      
+      // Teaser
+      showTeaser: embeddedChatConfig.showTeaser || false,
+      teaserText: embeddedChatConfig.teaserText || 'Need help?',
+      
+      // Welcome
+      welcomeEmoji: embeddedChatConfig.welcomeEmoji || '👋',
+      welcomeTitle: embeddedChatConfig.welcomeTitle || 'Hi there!',
+      welcomeSubtitle: embeddedChatConfig.welcomeSubtitle || 'How can we help you today?',
+      
+      // Messages
+      greeting: embeddedChatConfig.greeting || 'Hello! How can I help you today?',
+      placeholder: embeddedChatConfig.placeholder || 'Type your message...',
+      showTypingIndicator: embeddedChatConfig.showTypingIndicator !== false,
+      showReadReceipts: embeddedChatConfig.showReadReceipts || false,
+      showTimestamps: embeddedChatConfig.showTimestamps !== false,
+      
+      // Features
+      enableContactForm: embeddedChatConfig.enableContactForm || false,
+      contactFormTitle: embeddedChatConfig.contactFormTitle || 'Get in touch',
+      contactFormSubtitle: embeddedChatConfig.contactFormSubtitle || 'Fill out the form below to start chatting',
+      customFields: embeddedChatConfig.customFields || [],
+      
+      enableFileUpload: embeddedChatConfig.enableFileUpload || false,
+      allowedFileTypes: embeddedChatConfig.allowedFileTypes || ['image/*', 'application/pdf'],
+      maxFileSize: embeddedChatConfig.maxFileSize || 10,
+      
+      // Navigation
+      showBottomNav: embeddedChatConfig.showBottomNav !== false,
+      enableMessagesTab: embeddedChatConfig.enableMessagesTab !== false,
+      enableHelpTab: embeddedChatConfig.enableHelpTab !== false,
+      quickActions: quickActions,
+      
+      // Effects
+      viewTransition: embeddedChatConfig.viewTransition || 'slide',
+      defaultSoundEnabled: embeddedChatConfig.defaultSoundEnabled || false,
+      
+      // Branding
+      showBranding: embeddedChatConfig.showBranding !== false,
+      
+      // Data
       announcements: announcements || [],
       helpArticles: articles || [],
       helpCategories: categories || [],
