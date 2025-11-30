@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Download01 } from '@untitledui/icons';
+import { AnimatedTableRow } from '@/components/ui/animated-table-row';
 
 interface DataTablesProps {
   activeTab: 'conversations' | 'leads' | 'agents' | 'usage';
@@ -53,7 +54,7 @@ export const DataTables = ({ activeTab, data }: DataTablesProps) => {
             </TableHeader>
             <TableBody>
               {data.conversations?.map((conv: any, index: number) => (
-                <TableRow key={index}>
+                <AnimatedTableRow key={index} index={index}>
                   <TableCell>{format(new Date(conv.created_at), 'MMM d, yyyy HH:mm')}</TableCell>
                   <TableCell>{conv.agent_name || 'Unknown'}</TableCell>
                   <TableCell>
@@ -63,7 +64,7 @@ export const DataTables = ({ activeTab, data }: DataTablesProps) => {
                   </TableCell>
                   <TableCell>{conv.message_count || 0}</TableCell>
                   <TableCell>{conv.duration || '-'}</TableCell>
-                </TableRow>
+                </AnimatedTableRow>
               ))}
             </TableBody>
           </Table>
@@ -82,7 +83,7 @@ export const DataTables = ({ activeTab, data }: DataTablesProps) => {
             </TableHeader>
             <TableBody>
               {data.leads?.map((lead: any, index: number) => (
-                <TableRow key={index}>
+                <AnimatedTableRow key={index} index={index}>
                   <TableCell>{format(new Date(lead.created_at), 'MMM d, yyyy HH:mm')}</TableCell>
                   <TableCell>{lead.name || '-'}</TableCell>
                   <TableCell>{lead.email || '-'}</TableCell>
@@ -90,7 +91,7 @@ export const DataTables = ({ activeTab, data }: DataTablesProps) => {
                   <TableCell>
                     <Badge>{lead.status}</Badge>
                   </TableCell>
-                </TableRow>
+                </AnimatedTableRow>
               ))}
             </TableBody>
           </Table>
@@ -108,12 +109,12 @@ export const DataTables = ({ activeTab, data }: DataTablesProps) => {
             </TableHeader>
             <TableBody>
               {data.agentPerformance?.map((agent: any, index: number) => (
-                <TableRow key={index}>
+                <AnimatedTableRow key={index} index={index}>
                   <TableCell>{agent.agent_name}</TableCell>
                   <TableCell>{agent.total_conversations}</TableCell>
                   <TableCell>{agent.avg_response_time}s</TableCell>
                   <TableCell>{agent.satisfaction_score?.toFixed(1) || '-'}</TableCell>
-                </TableRow>
+                </AnimatedTableRow>
               ))}
             </TableBody>
           </Table>
@@ -131,12 +132,12 @@ export const DataTables = ({ activeTab, data }: DataTablesProps) => {
             </TableHeader>
             <TableBody>
               {data.usageMetrics?.map((usage: any, index: number) => (
-                <TableRow key={index}>
+                <AnimatedTableRow key={index} index={index}>
                   <TableCell>{usage.date}</TableCell>
                   <TableCell>{usage.conversations}</TableCell>
                   <TableCell>{usage.messages}</TableCell>
                   <TableCell>{usage.api_calls}</TableCell>
-                </TableRow>
+                </AnimatedTableRow>
               ))}
             </TableBody>
           </Table>

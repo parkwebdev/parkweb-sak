@@ -5,6 +5,7 @@ import { Eye } from '@untitledui/icons';
 import { formatDistanceToNow } from 'date-fns';
 import type { Tables } from '@/integrations/supabase/types';
 import { LeadStatusDropdown } from './LeadStatusDropdown';
+import { AnimatedTableRow } from '@/components/ui/animated-table-row';
 
 interface LeadsTableProps {
   leads: Tables<'leads'>[];
@@ -43,8 +44,8 @@ export const LeadsTable = ({ leads, onView, onStatusChange }: LeadsTableProps) =
               </TableCell>
             </TableRow>
           ) : (
-            leads.map((lead) => (
-              <TableRow key={lead.id}>
+            leads.map((lead, index) => (
+              <AnimatedTableRow key={lead.id} index={index}>
                 <TableCell className="font-medium">{lead.name || '-'}</TableCell>
                 <TableCell>{lead.email || '-'}</TableCell>
                 <TableCell>{lead.phone || '-'}</TableCell>
@@ -67,7 +68,7 @@ export const LeadsTable = ({ leads, onView, onStatusChange }: LeadsTableProps) =
                     <Eye className="h-4 w-4" />
                   </Button>
                 </TableCell>
-              </TableRow>
+              </AnimatedTableRow>
             ))
           )}
         </TableBody>

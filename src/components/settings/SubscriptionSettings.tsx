@@ -10,6 +10,7 @@ import type { Tables } from '@/integrations/supabase/types';
 import { formatDate } from '@/lib/formatting';
 import { CheckCircle, Download01, LinkExternal01, RefreshCw01 } from '@untitledui/icons';
 import { toast } from 'sonner';
+import { AnimatedTableRow } from '@/components/ui/animated-table-row';
 
 type Subscription = Tables<'subscriptions'> & {
   plans?: Tables<'plans'>;
@@ -253,8 +254,8 @@ export const SubscriptionSettings = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {invoices.map((invoice) => (
-                    <TableRow key={invoice.id}>
+                  {invoices.map((invoice, index) => (
+                    <AnimatedTableRow key={invoice.id} index={index}>
                       <TableCell className="font-medium">
                         {invoice.number || invoice.id.substring(0, 8)}
                       </TableCell>
@@ -298,7 +299,7 @@ export const SubscriptionSettings = () => {
                           )}
                         </div>
                       </TableCell>
-                    </TableRow>
+                    </AnimatedTableRow>
                   ))}
                 </TableBody>
               </Table>

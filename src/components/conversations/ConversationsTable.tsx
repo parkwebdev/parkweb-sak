@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Eye } from '@untitledui/icons';
 import { formatDistanceToNow } from 'date-fns';
 import type { Tables } from '@/integrations/supabase/types';
+import { AnimatedTableRow } from '@/components/ui/animated-table-row';
 
 type Conversation = Tables<'conversations'> & {
   agents?: { name: string };
@@ -42,10 +43,10 @@ export const ConversationsTable = ({ conversations, onView }: ConversationsTable
               </TableCell>
             </TableRow>
           ) : (
-            conversations.map((conversation) => {
+            conversations.map((conversation, index) => {
               const metadata = conversation.metadata as any;
               return (
-                <TableRow key={conversation.id}>
+                <AnimatedTableRow key={conversation.id} index={index}>
                   <TableCell className="font-medium">
                     {conversation.agents?.name || 'Unknown'}
                   </TableCell>
@@ -72,7 +73,7 @@ export const ConversationsTable = ({ conversations, onView }: ConversationsTable
                       <Eye className="h-4 w-4" />
                     </Button>
                   </TableCell>
-                </TableRow>
+                </AnimatedTableRow>
               );
             })
           )}
