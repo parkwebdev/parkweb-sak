@@ -115,9 +115,19 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ onMenuClick }) => {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => navigate('/settings?tab=profile')}>
+              Profile
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate('/settings?tab=billing')}>
+              Billing
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate('/settings?tab=team')}>
+              Team
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={() => navigate('/settings')}>
               Settings
             </DropdownMenuItem>
+            <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleSignOut}>
               Sign out
             </DropdownMenuItem>
