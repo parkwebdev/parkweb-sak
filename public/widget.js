@@ -831,6 +831,24 @@
     return div.innerHTML;
   }
 
+  // Map icon names to emojis
+  function getIconEmoji(icon) {
+    if (typeof icon === 'string' && icon.length <= 2) {
+      return icon; // Already an emoji
+    }
+    
+    const iconMap = {
+      'chat': '💬',
+      'help': '📚',
+      'bug': '🐛',
+      'feature': '✨',
+      'contact': '📝',
+      'custom': '⚙️'
+    };
+    
+    return iconMap[icon] || '💬';
+  }
+
   // Render functions
   function renderHome() {
     const { welcomeEmoji, welcomeTitle, welcomeSubtitle, quickActions } = config.config;
@@ -867,10 +885,12 @@
     // Quick actions
     html += '<div class="chatpad-quick-actions">';
     quickActions.forEach(action => {
+      const iconEmoji = getIconEmoji(action.icon);
+      const label = action.title || action.label || 'Action';
       html += `
         <div class="chatpad-quick-action" data-action="${action.action}">
-          <div class="chatpad-quick-action-icon">${action.icon}</div>
-          <div class="chatpad-quick-action-label">${escapeHtml(action.label)}</div>
+          <div class="chatpad-quick-action-icon">${iconEmoji}</div>
+          <div class="chatpad-quick-action-label">${escapeHtml(label)}</div>
         </div>
       `;
     });
