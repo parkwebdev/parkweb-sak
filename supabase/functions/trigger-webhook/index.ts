@@ -171,7 +171,7 @@ Deno.serve(async (req) => {
                   .from('leads')
                   .update(action.action.updates)
                   .eq('id', eventData.id)
-                  .eq('org_id', webhook.org_id);
+                  .eq('user_id', webhook.user_id);
 
                 if (updateError) {
                   console.error('Error updating lead:', updateError);
@@ -183,7 +183,7 @@ Deno.serve(async (req) => {
                   .from('conversations')
                   .update(action.action.updates)
                   .eq('id', eventData.id)
-                  .eq('org_id', webhook.org_id);
+                  .eq('user_id', webhook.user_id);
 
                 if (updateError) {
                   console.error('Error updating conversation:', updateError);

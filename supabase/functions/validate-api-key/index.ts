@@ -81,7 +81,7 @@ Deno.serve(async (req) => {
     // Look up API key in database
     const { data: apiKeyData, error: apiKeyError } = await supabase
       .from('api_keys')
-      .select('id, org_id, permissions, name')
+      .select('id, user_id, permissions, name')
       .eq('key', apiKey)
       .single();
 
@@ -143,7 +143,7 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({
         valid: true,
-        org_id: apiKeyData.org_id,
+        user_id: apiKeyData.user_id,
         permissions: apiKeyData.permissions,
         key_name: apiKeyData.name,
       }),
