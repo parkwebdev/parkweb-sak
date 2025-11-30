@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { Bell02 as Bell, X, Check, Clock, AlertTriangle as AlertCircle, CheckCircle, InfoCircle as Info } from '@untitledui/icons';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Bell02 as Bell, X, Clock, AlertTriangle as AlertCircle, MessageChatSquare, Users01 as Users, Zap, Users03 as Team, BarChart01 as BarChart, SearchSm } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Separator } from '@/components/ui/separator';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -35,6 +37,8 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNotifi
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterType, setFilterType] = useState<string>('all');
 
   useEffect(() => {
     if (user) {
@@ -210,18 +214,34 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNotifi
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
-      case 'scope_work':
-        return <CheckCircle size={16} className="text-blue-500" />;
-      case 'onboarding':
-        return <Info size={16} className="text-green-500" />;
+      case 'conversation':
+        return <MessageChatSquare size={16} className="text-blue-500" />;
+      case 'lead':
+        return <Users size={16} className="text-green-500" />;
+      case 'agent':
+        return <Zap size={16} className="text-purple-500" />;
+      case 'team':
+        return <Team size={16} className="text-orange-500" />;
+      case 'report':
+        return <BarChart size={16} className="text-cyan-500" />;
       case 'system':
         return <AlertCircle size={16} className="text-yellow-500" />;
-      case 'team':
-        return <Info size={16} className="text-purple-500" />;
       default:
-        return <Bell size={16} className="text-gray-500" />;
+        return <Bell size={16} className="text-muted-foreground" />;
     }
   };
+
+  const filteredNotifications = useMemo(() => {
+    return notifications.filter(notification => {
+      const matchesSearch = searchQuery === '' || 
+        notification.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        notification.message.toLowerCase().includes(searchQuery.toLowerCase());
+      
+      const matchesType = filterType === 'all' || notification.type === filterType;
+      
+      return matchesSearch && matchesType;
+    });
+  }, [notifications, searchQuery, filterType]);
 
   const handleNotificationClick = (notification: Notification) => {
     if (!notification.read) {
@@ -256,7 +276,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNotifi
       </PopoverTrigger>
       <PopoverContent className="w-80 p-0" align="end">
         <Card className="border-0 shadow-none">
-          <CardHeader className="pb-3">
+          <CardHeader className="pb-3 space-y-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-base">Notifications</CardTitle>
               {unreadCount > 0 && (
@@ -275,6 +295,34 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNotifi
                 {unreadCount === 0 ? "You're all caught up!" : `${unreadCount} unread notification${unreadCount === 1 ? '' : 's'}`}
               </CardDescription>
             )}
+            
+            {notifications.length > 0 && (
+              <div className="space-y-2">
+                <div className="relative">
+                  <SearchSm size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    placeholder="Search notifications..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-9 h-9 text-sm"
+                  />
+                </div>
+                <Select value={filterType} onValueChange={setFilterType}>
+                  <SelectTrigger className="h-9 text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Types</SelectItem>
+                    <SelectItem value="conversation">Conversations</SelectItem>
+                    <SelectItem value="lead">Leads</SelectItem>
+                    <SelectItem value="agent">Agents</SelectItem>
+                    <SelectItem value="team">Team</SelectItem>
+                    <SelectItem value="report">Reports</SelectItem>
+                    <SelectItem value="system">System</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </CardHeader>
           
           {loading ? (
@@ -286,10 +334,15 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNotifi
               <Bell size={32} className="mx-auto mb-2 text-muted-foreground" />
               <p className="text-sm text-muted-foreground">No notifications yet</p>
             </CardContent>
+          ) : filteredNotifications.length === 0 ? (
+            <CardContent className="text-center py-8">
+              <SearchSm size={32} className="mx-auto mb-2 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">No notifications match your filters</p>
+            </CardContent>
           ) : (
             <ScrollArea className="h-96">
               <CardContent className="p-0">
-                {notifications.map((notification, index) => (
+                {filteredNotifications.map((notification, index) => (
                   <div key={notification.id}>
                     <div
                       className={`p-4 cursor-pointer hover:bg-accent/50 transition-colors ${
@@ -335,7 +388,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNotifi
                         </div>
                       </div>
                     </div>
-                    {index < notifications.length - 1 && <Separator />}
+                    {index < filteredNotifications.length - 1 && <Separator />}
                   </div>
                 ))}
               </CardContent>
