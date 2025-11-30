@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useOrganization } from '@/contexts/OrganizationContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import type { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
 
@@ -9,19 +9,19 @@ type AgentInsert = TablesInsert<'agents'>;
 type AgentUpdate = TablesUpdate<'agents'>;
 
 export const useAgents = () => {
-  const { currentOrg } = useOrganization();
+  const { user } = useAuth();
   const [agents, setAgents] = useState<Agent[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchAgents = async () => {
-    if (!currentOrg?.id) return;
+    if (!user?.id) return;
     
     setLoading(true);
     try {
       const { data, error } = await supabase
         .from('agents')
         .select('*')
-        .eq('org_id', currentOrg.id)
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -36,15 +36,15 @@ export const useAgents = () => {
 
   useEffect(() => {
     fetchAgents();
-  }, [currentOrg?.id]);
+  }, [user?.id]);
 
-  const createAgent = async (agentData: Omit<AgentInsert, 'org_id'>) => {
-    if (!currentOrg?.id) return null;
+  const createAgent = async (agentData: Omit<AgentInsert, 'user_id'>) => {
+    if (!user?.id) return null;
 
     try {
       const { data, error } = await supabase
         .from('agents')
-        .insert({ ...agentData, org_id: currentOrg.id })
+        .insert({ ...agentData, user_id: user.id })
         .select()
         .single();
 

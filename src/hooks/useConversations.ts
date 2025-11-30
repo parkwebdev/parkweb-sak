@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useOrganization } from '@/contexts/OrganizationContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import type { Tables } from '@/integrations/supabase/types';
@@ -13,13 +12,12 @@ type Conversation = Tables<'conversations'> & {
 type Message = Tables<'messages'>;
 
 export const useConversations = () => {
-  const { currentOrg } = useOrganization();
   const { user } = useAuth();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchConversations = async () => {
-    if (!currentOrg?.id) return;
+    if (!user?.id) return;
     
     setLoading(true);
     try {
@@ -29,7 +27,7 @@ export const useConversations = () => {
           *,
           agents(name)
         `)
-        .eq('org_id', currentOrg.id)
+        .eq('user_id', user.id)
         .order('updated_at', { ascending: false });
 
       if (error) throw error;
@@ -46,7 +44,7 @@ export const useConversations = () => {
     fetchConversations();
 
     // Set up real-time subscription
-    if (!currentOrg?.id) return;
+    if (!user?.id) return;
 
     const channel = supabase
       .channel('conversations-changes')
@@ -56,7 +54,7 @@ export const useConversations = () => {
           event: '*',
           schema: 'public',
           table: 'conversations',
-          filter: `org_id=eq.${currentOrg.id}`
+          filter: `user_id=eq.${user.id}`
         },
         () => {
           fetchConversations();
@@ -67,7 +65,7 @@ export const useConversations = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [currentOrg?.id]);
+  }, [user?.id]);
 
   const fetchMessages = async (conversationId: string): Promise<Message[]> => {
     try {

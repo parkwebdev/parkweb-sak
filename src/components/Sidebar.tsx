@@ -5,7 +5,6 @@ import { SearchInput } from './SearchInput';
 import { UserAccountCard } from './UserAccountCard';
 import { ThemeToggle } from './ThemeToggle';
 import { NotificationCenter } from './notifications/NotificationCenter';
-import { WorkspaceSwitcher } from './WorkspaceSwitcher';
 import { useSidebar } from '@/hooks/use-sidebar';
 import { useConversations } from '@/hooks/useConversations';
 import chatpadLogo from '@/assets/chatpad-logo.png';
@@ -88,8 +87,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
                   className="h-6 w-6 object-contain"
                 />
               )}
-              
-              <WorkspaceSwitcher />
               
               <div className="flex items-center justify-between">
                 {!isCollapsed && <NotificationCenter />}

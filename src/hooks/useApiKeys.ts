@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useOrganization } from '@/contexts/OrganizationContext';
+import { useAuth } from '@/contexts/AuthContext';
 import type { Tables } from '@/integrations/supabase/types';
 
 type ApiKey = Tables<'api_keys'>;
@@ -10,17 +10,17 @@ export const useApiKeys = () => {
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
-  const { currentOrg } = useOrganization();
+  const { user } = useAuth();
 
   const fetchApiKeys = async () => {
-    if (!currentOrg) return;
+    if (!user?.id) return;
     
     try {
       setLoading(true);
       const { data, error } = await supabase
         .from('api_keys')
         .select('*')
-        .eq('org_id', currentOrg.id)
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -47,7 +47,7 @@ export const useApiKeys = () => {
     name: string,
     permissions: string[] = []
   ): Promise<{ key: string; keyPreview: string } | null> => {
-    if (!currentOrg) return null;
+    if (!user?.id) return null;
 
     try {
       const key = generateApiKey();
@@ -59,7 +59,7 @@ export const useApiKeys = () => {
           name,
           key,
           key_preview: keyPreview,
-          org_id: currentOrg.id,
+          user_id: user.id,
           permissions,
         }])
         .select()
@@ -179,7 +179,7 @@ export const useApiKeys = () => {
           event: '*',
           schema: 'public',
           table: 'api_keys',
-          filter: `org_id=eq.${currentOrg?.id}`,
+          filter: `user_id=eq.${user?.id}`,
         },
         () => {
           fetchApiKeys();
@@ -190,7 +190,7 @@ export const useApiKeys = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [currentOrg?.id]);
+  }, [user?.id]);
 
   return {
     apiKeys,
