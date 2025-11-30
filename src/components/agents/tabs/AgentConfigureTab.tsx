@@ -180,14 +180,17 @@ export const AgentConfigureTab = ({ agent, onUpdate, onFormChange }: AgentConfig
                   <Label htmlFor="temperature" className="text-sm">Temperature</Label>
                   <span className="text-sm font-mono text-muted-foreground">{formData.temperature}</span>
                 </div>
-                <Slider
-                  id="temperature"
-                  value={[formData.temperature]}
-                  onValueChange={([value]) => handleUpdate({ temperature: value })}
-                  min={0}
-                  max={2}
-                  step={0.1}
-                />
+                <div className="relative">
+                  <Slider
+                    id="temperature"
+                    value={[formData.temperature]}
+                    onValueChange={([value]) => handleUpdate({ temperature: value })}
+                    min={0}
+                    max={2}
+                    step={0.1}
+                    className="[&_[role=slider]]:border-primary [&_[role=slider]]:ring-offset-background [&_.bg-primary]:bg-gradient-to-r [&_.bg-primary]:from-indigo-500 [&_.bg-primary]:to-purple-500"
+                  />
+                </div>
                 <p className="text-xs text-muted-foreground">
                   Higher = more creative, Lower = more focused
                 </p>
@@ -198,14 +201,17 @@ export const AgentConfigureTab = ({ agent, onUpdate, onFormChange }: AgentConfig
                   <Label htmlFor="top_p" className="text-sm">Top P</Label>
                   <span className="text-sm font-mono text-muted-foreground">{formData.top_p}</span>
                 </div>
-                <Slider
-                  id="top_p"
-                  value={[formData.top_p]}
-                  onValueChange={([value]) => handleUpdate({ top_p: value })}
-                  min={0}
-                  max={1}
-                  step={0.05}
-                />
+                <div className="relative">
+                  <Slider
+                    id="top_p"
+                    value={[formData.top_p]}
+                    onValueChange={([value]) => handleUpdate({ top_p: value })}
+                    min={0}
+                    max={1}
+                    step={0.05}
+                    className="[&_[role=slider]]:border-primary [&_[role=slider]]:ring-offset-background [&_.bg-primary]:bg-gradient-to-r [&_.bg-primary]:from-indigo-500 [&_.bg-primary]:to-purple-500"
+                  />
+                </div>
                 <p className="text-xs text-muted-foreground">
                   Controls response diversity
                 </p>
