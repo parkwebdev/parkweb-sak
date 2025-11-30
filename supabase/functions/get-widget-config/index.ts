@@ -79,14 +79,16 @@ Deno.serve(async (req) => {
 
     // Transform quick actions to match widget format
     const quickActions = (embeddedChatConfig.quickActions || [
-      { icon: '💬', label: 'Start a Chat', action: 'open_messages' },
-      { icon: '📚', label: 'Help Articles', action: 'open_help' }
+      { icon: 'chat', title: 'Start a Chat', subtitle: 'Chat with our AI assistant', action: 'start_chat' },
+      { icon: 'help', title: 'Help Articles', subtitle: 'Browse our knowledge base', action: 'open_help' }
     ]).map((qa: any) => ({
-      id: qa.action || qa.id,
-      title: qa.label || qa.title,
+      id: qa.id || qa.action,
+      label: qa.title || qa.label, // Support both label and title
+      title: qa.title || qa.label, // Support both label and title
       subtitle: qa.subtitle || '',
       icon: qa.icon,
-      action: qa.action
+      action: qa.action,
+      actionType: qa.action
     }));
 
     // Return flat config structure
