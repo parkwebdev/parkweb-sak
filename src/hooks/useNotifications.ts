@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 interface CreateNotificationParams {
-  type: 'scope_work' | 'onboarding' | 'system' | 'team';
+  type: 'conversation' | 'lead' | 'agent' | 'team' | 'report' | 'system';
   title: string;
   message: string;
   data?: any;
@@ -54,32 +54,62 @@ export const useNotifications = () => {
     }
   };
 
-  const createScopeWorkNotification = async (
+  const createConversationNotification = async (
     title: string,
     message: string,
-    sowData?: any,
+    conversationData?: any,
     userId?: string
   ) => {
     return createNotification({
-      type: 'scope_work',
+      type: 'conversation',
       title,
       message,
-      data: sowData,
+      data: conversationData,
       userId
     });
   };
 
-  const createOnboardingNotification = async (
+  const createLeadNotification = async (
     title: string,
     message: string,
-    onboardingData?: any,
+    leadData?: any,
     userId?: string
   ) => {
     return createNotification({
-      type: 'onboarding',
+      type: 'lead',
       title,
       message,
-      data: onboardingData,
+      data: leadData,
+      userId
+    });
+  };
+
+  const createAgentNotification = async (
+    title: string,
+    message: string,
+    agentData?: any,
+    userId?: string
+  ) => {
+    return createNotification({
+      type: 'agent',
+      title,
+      message,
+      data: agentData,
+      userId
+    });
+  };
+
+  const createReportNotification = async (
+    title: string,
+    message: string,
+    reportData?: any,
+    userId?: string
+  ) => {
+    return createNotification({
+      type: 'report',
+      title,
+      message,
+      data: reportData,
       userId
     });
   };
@@ -139,8 +169,10 @@ export const useNotifications = () => {
 
   return {
     createNotification,
-    createScopeWorkNotification,
-    createOnboardingNotification,
+    createConversationNotification,
+    createLeadNotification,
+    createAgentNotification,
+    createReportNotification,
     createSystemNotification,
     createTeamNotification,
     requestBrowserNotificationPermission,
