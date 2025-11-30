@@ -112,11 +112,13 @@ serve(async (req) => {
       var widgetFrame = document.createElement('iframe');
       widgetFrame.id = 'chatpad-widget-frame';
       
-      // Start with small size for bubble only
+      // Start with small size for bubble only with fade-in animation
       widgetFrame.style.cssText = 'position: fixed; bottom: 20px; ' + 
         (position.includes('right') ? 'right: 20px;' : 'left: 20px;') + 
         ' width: 60px; height: 60px; border: none; z-index: 999999; ' +
-        'background: transparent; display: none; transition: all 0.3s ease;';
+        'background: transparent; display: none; opacity: 0; ' +
+        'transition: opacity 0.3s ease-in-out, width 0.3s ease, height 0.3s ease, ' +
+        'border-radius 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;';
       
       // Listen for widget state messages to resize iframe
       window.addEventListener('message', function(event) {
@@ -145,19 +147,38 @@ serve(async (req) => {
       // Load widget UI from the app using the /widget route
       widgetFrame.src = '${appUrl}/widget?agentId=' + agentId + '&position=' + position;
       
-      // Handle display timing
+      // Handle display timing with smooth fade-in animation
       function showWidget() {
+        // Set initial opacity to 0 for fade-in effect
+        widgetFrame.style.opacity = '0';
+        widgetFrame.style.display = 'block';
+        
+        // Trigger fade-in animation
+        setTimeout(function() {
+          widgetFrame.style.opacity = '1';
+        }, 50);
+        
         if (widgetConfig.displayTiming === 'immediate') {
-          widgetFrame.style.display = 'block';
+          // Already handled above
         } else if (widgetConfig.displayTiming === 'delayed') {
+          widgetFrame.style.display = 'none';
+          widgetFrame.style.opacity = '0';
           setTimeout(function() {
             widgetFrame.style.display = 'block';
+            setTimeout(function() {
+              widgetFrame.style.opacity = '1';
+            }, 50);
           }, (widgetConfig.delaySeconds || 3) * 1000);
         } else if (widgetConfig.displayTiming === 'scroll') {
+          widgetFrame.style.display = 'none';
+          widgetFrame.style.opacity = '0';
           var scrollHandler = function() {
             var scrolled = (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100;
             if (scrolled >= (widgetConfig.scrollDepth || 50)) {
               widgetFrame.style.display = 'block';
+              setTimeout(function() {
+                widgetFrame.style.opacity = '1';
+              }, 50);
               window.removeEventListener('scroll', scrollHandler);
             }
           };
