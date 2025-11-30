@@ -478,6 +478,7 @@ export type Database = {
           agent_id: string
           content: string | null
           created_at: string
+          embedding: string | null
           id: string
           metadata: Json | null
           source: string
@@ -490,6 +491,7 @@ export type Database = {
           agent_id: string
           content?: string | null
           created_at?: string
+          embedding?: string | null
           id?: string
           metadata?: Json | null
           source: string
@@ -502,6 +504,7 @@ export type Database = {
           agent_id?: string
           content?: string | null
           created_at?: string
+          embedding?: string | null
           id?: string
           metadata?: Json | null
           source?: string
@@ -1176,6 +1179,21 @@ export type Database = {
       mark_token_used: {
         Args: { p_email: string; p_token: string }
         Returns: undefined
+      }
+      search_knowledge_sources: {
+        Args: {
+          p_agent_id: string
+          p_match_count?: number
+          p_match_threshold?: number
+          p_query_embedding: string
+        }
+        Returns: {
+          content: string
+          id: string
+          similarity: number
+          source: string
+          type: string
+        }[]
       }
       validate_onboarding_token: { Args: { p_token: string }; Returns: boolean }
       validate_submission_token: { Args: { p_email: string }; Returns: boolean }

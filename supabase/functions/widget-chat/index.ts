@@ -70,10 +70,10 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Get agent configuration and org_id
+    // Get agent configuration and user_id
     const { data: agent, error: agentError } = await supabase
       .from('agents')
-      .select('system_prompt, model, org_id, temperature, max_tokens, deployment_config')
+      .select('system_prompt, model, user_id, temperature, max_tokens, deployment_config')
       .eq('id', agentId)
       .single();
 
@@ -85,7 +85,7 @@ serve(async (req) => {
     const { data: subscription } = await supabase
       .from('subscriptions')
       .select('plan_id, plans(limits)')
-      .eq('org_id', agent.org_id)
+      .eq('user_id', agent.user_id)
       .eq('status', 'active')
       .maybeSingle();
 
@@ -105,7 +105,7 @@ serve(async (req) => {
     const { data: usageMetrics } = await supabase
       .from('usage_metrics')
       .select('api_calls_count')
-      .eq('org_id', agent.org_id)
+      .eq('user_id', agent.user_id)
       .gte('period_start', firstDayOfMonth.toISOString())
       .order('created_at', { ascending: false })
       .limit(1)
@@ -262,12 +262,12 @@ When answering, you can naturally reference the information from the knowledge b
     supabase
       .from('usage_metrics')
       .upsert({
-        org_id: agent.org_id,
+        user_id: agent.user_id,
         period_start: firstDayOfMonth.toISOString(),
         period_end: lastDayOfMonth.toISOString(),
         api_calls_count: currentApiCalls + 1,
       }, {
-        onConflict: 'org_id,period_start',
+        onConflict: 'user_id,period_start',
       })
       .then(() => console.log('API usage tracked'))
       .catch(err => console.error('Failed to track usage:', err));

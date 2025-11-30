@@ -9,6 +9,7 @@ export interface PlanLimits {
   max_api_calls_per_month: number;
   max_knowledge_sources: number;
   max_team_members: number;
+  max_webhooks: number;
 }
 
 export interface CurrentUsage {
@@ -63,6 +64,7 @@ export const usePlanLimits = () => {
         max_api_calls_per_month: 1000,
         max_knowledge_sources: 10,
         max_team_members: 1,
+        max_webhooks: 0,
       };
 
       let currentPlanName = 'Free';
@@ -78,6 +80,7 @@ export const usePlanLimits = () => {
             max_api_calls_per_month: storedLimits.max_api_calls_per_month || 1000,
             max_knowledge_sources: storedLimits.max_knowledge_sources || 10,
             max_team_members: storedLimits.max_team_members || 1,
+            max_webhooks: storedLimits.max_webhooks || 0,
           };
         }
       }
@@ -154,7 +157,7 @@ export const usePlanLimits = () => {
       };
     }
 
-    const limitMap = {
+    const limitMap: Record<keyof CurrentUsage, number> = {
       agents: limits.max_agents,
       conversations_this_month: limits.max_conversations_per_month,
       api_calls_this_month: limits.max_api_calls_per_month,

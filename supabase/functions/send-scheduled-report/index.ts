@@ -13,11 +13,14 @@ const corsHeaders = {
 
 interface ScheduledReport {
   id: string;
-  org_id: string;
+  user_id: string;
   name: string;
   recipients: string[];
   frequency: string;
   report_config: any;
+  profiles?: {
+    display_name: string | null;
+  };
 }
 
 serve(async (req: Request): Promise<Response> => {
@@ -37,16 +40,13 @@ serve(async (req: Request): Promise<Response> => {
     console.log('Checking for scheduled reports at:', currentTime);
 
     // Query for reports that should run now
-    let query = supabase
+    const { data: reports, error } = await supabase
       .from('scheduled_reports')
       .select(`
         *,
-        organizations!inner(name)
+        profiles!scheduled_reports_user_id_fkey(display_name)
       `)
       .eq('active', true);
-
-    // Filter by frequency and time
-    const { data: reports, error } = await query;
 
     if (error) {
       console.error('Error fetching scheduled reports:', error);
@@ -66,14 +66,15 @@ serve(async (req: Request): Promise<Response> => {
         continue;
       }
 
-      console.log(`Processing report: ${report.name} for org: ${report.organizations.name}`);
+      const userName = report.profiles?.display_name || 'User';
+      console.log(`Processing report: ${report.name} for user: ${userName}`);
 
       try {
         // Fetch analytics data based on report config
         const analyticsData = await fetchAnalyticsData(supabase, report);
         
         // Generate report content
-        const reportContent = generateReportHTML(report, analyticsData);
+        const reportContent = generateReportHTML(report, analyticsData, userName);
 
         // Send email to all recipients
         for (const recipient of report.recipients) {
@@ -158,7 +159,7 @@ async function fetchAnalyticsData(supabase: any, report: ScheduledReport) {
   let convQuery = supabase
     .from('conversations')
     .select('created_at, status')
-    .eq('org_id', report.org_id)
+    .eq('user_id', report.user_id)
     .gte('created_at', startDate)
     .lte('created_at', endDate);
 
@@ -172,7 +173,7 @@ async function fetchAnalyticsData(supabase: any, report: ScheduledReport) {
   let leadQuery = supabase
     .from('leads')
     .select('created_at, status')
-    .eq('org_id', report.org_id)
+    .eq('user_id', report.user_id)
     .gte('created_at', startDate)
     .lte('created_at', endDate);
 
@@ -191,7 +192,7 @@ async function fetchAnalyticsData(supabase: any, report: ScheduledReport) {
   };
 }
 
-function generateReportHTML(report: ScheduledReport, data: any): string {
+function generateReportHTML(report: ScheduledReport, data: any, userName: string): string {
   const conversionRate = data.totalLeads > 0 
     ? ((data.convertedLeads / data.totalLeads) * 100).toFixed(1) 
     : '0';
@@ -260,7 +261,7 @@ function generateReportHTML(report: ScheduledReport, data: any): string {
       <body>
         <div class="header">
           <h1>${report.name}</h1>
-          <p>${report.frequency.charAt(0).toUpperCase() + report.frequency.slice(1)} Analytics Report</p>
+          <p>${report.frequency.charAt(0).toUpperCase() + report.frequency.slice(1)} Analytics Report for ${userName}</p>
         </div>
 
         <div class="metrics">
