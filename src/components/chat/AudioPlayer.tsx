@@ -21,6 +21,12 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl, primaryColor
   const analyserRef = useRef<AnalyserNode | null>(null);
   const sourceNodeRef = useRef<MediaElementAudioSourceNode | null>(null);
   const animationIdRef = useRef<number | null>(null);
+  const isPlayingRef = useRef(false);
+
+  // Keep ref in sync with state
+  useEffect(() => {
+    isPlayingRef.current = isPlaying;
+  }, [isPlaying]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -36,6 +42,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl, primaryColor
     };
 
     const handleEnded = () => {
+      isPlayingRef.current = false;
       setIsPlaying(false);
       setCurrentTime(0);
     };
@@ -117,7 +124,8 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl, primaryColor
     const bars = Array.from(dataArray.slice(0, 64)).map(value => value / 255);
     setFrequencyData(bars);
 
-    if (isPlaying) {
+    // Use ref instead of state to avoid stale closure
+    if (isPlayingRef.current) {
       animationIdRef.current = requestAnimationFrame(analyzeFrequency);
     }
   };
@@ -182,12 +190,14 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl, primaryColor
 
     if (isPlaying) {
       audio.pause();
+      isPlayingRef.current = false;
       setIsPlaying(false);
     } else {
       // Resume audio context if suspended
       if (audioContextRef.current && audioContextRef.current.state === 'suspended') {
         await audioContextRef.current.resume();
       }
+      isPlayingRef.current = true;
       audio.play();
       setIsPlaying(true);
     }
