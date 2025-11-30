@@ -89,7 +89,7 @@ const Conversations: React.FC = () => {
   };
 
   return (
-    <div className="h-full bg-muted/30 flex overflow-hidden">
+    <div className="h-screen bg-muted/30 flex overflow-hidden">
           {/* Conversations List Sidebar */}
           <div className="hidden lg:flex lg:w-80 xl:w-96 border-r flex-col">
           {/* Header */}
