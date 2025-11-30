@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useOrganization } from '@/contexts/OrganizationContext';
+import { useAuth } from '@/hooks/useAuth';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Webhook = Tables<'webhooks'>;
@@ -24,10 +24,10 @@ export const useWebhooks = () => {
   const [logs, setLogs] = useState<WebhookLog[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
-  const { currentOrg } = useOrganization();
+  const { user } = useAuth();
 
   const fetchWebhooks = async () => {
-    if (!currentOrg) return;
+    if (!user) return;
     
     try {
       setLoading(true);
@@ -51,7 +51,7 @@ export const useWebhooks = () => {
   };
 
   const fetchLogs = async (webhookId?: string) => {
-    if (!currentOrg) return;
+    if (!user) return;
     
     try {
       let query = supabase
@@ -77,13 +77,13 @@ export const useWebhooks = () => {
     }
   };
 
-  const createWebhook = async (webhookData: Omit<Webhook, 'id' | 'created_at' | 'updated_at' | 'org_id'>) => {
-    if (!currentOrg) return;
+  const createWebhook = async (webhookData: Omit<Webhook, 'id' | 'created_at' | 'updated_at'>) => {
+    if (!user) return;
 
     try {
       const { data, error } = await supabase
         .from('webhooks')
-        .insert([{ ...webhookData, org_id: currentOrg.id }])
+        .insert([{ ...webhookData, user_id: user.id }])
         .select()
         .single();
 
@@ -106,7 +106,7 @@ export const useWebhooks = () => {
     }
   };
 
-  const updateWebhook = async (id: string, updates: Partial<Omit<Webhook, 'id' | 'created_at' | 'updated_at' | 'org_id'>>) => {
+  const updateWebhook = async (id: string, updates: Partial<Omit<Webhook, 'id' | 'created_at' | 'updated_at'>>) => {
     try {
       const { error } = await supabase
         .from('webhooks')

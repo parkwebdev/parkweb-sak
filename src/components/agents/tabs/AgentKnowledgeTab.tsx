@@ -13,7 +13,7 @@ interface AgentKnowledgeTabProps {
   userId: string;
 }
 
-export const AgentKnowledgeTab = ({ agentId, orgId }: AgentKnowledgeTabProps) => {
+export const AgentKnowledgeTab = ({ agentId, userId }: AgentKnowledgeTabProps) => {
   const { sources, loading, deleteSource, reprocessSource } = useKnowledgeSources(agentId);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
 
