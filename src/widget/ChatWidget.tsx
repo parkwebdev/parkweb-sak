@@ -7,10 +7,16 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 import { X, Send01, Minimize02, Home05, MessageChatCircle, HelpCircle, ChevronRight, Zap, BookOpen01, Settings01, Microphone01, Attachment01, Image03, FileCheck02, ThumbsUp, ThumbsDown } from '@untitledui/icons';
 import { ChatBubbleIcon } from '@/components/agents/ChatBubbleIcon';
 import { BubbleBackground } from '@/components/ui/bubble-background';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from '@/components/ui/dropdown-menu';
+import { VoiceInput } from '@/components/molecule-ui/voice-input';
+import { FileDropZone } from '@/components/chat/FileDropZone';
+import { MessageReactions } from '@/components/chat/MessageReactions';
+import { AudioPlayer } from '@/components/chat/AudioPlayer';
+import { toast, Toaster } from 'sonner';
 import { z } from 'zod';
 
 interface ChatWidgetProps {
@@ -345,10 +351,13 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
       const sessionId = getSessionId();
       await submitArticleFeedback(selectedArticle.id, { sessionId, isHelpful: articleFeedback === 'helpful', comment: feedbackComment });
       setFeedbackSubmitted(true);
+      toast.success('Thank you for your feedback!');
     } catch (error: any) {
       console.error('Error submitting feedback:', error);
       if (error.message?.includes('unique')) {
-        alert('You have already provided feedback for this article');
+        toast.error('You have already provided feedback for this article');
+      } else {
+        toast.error('Failed to submit feedback. Please try again.');
       }
     }
   };
@@ -557,6 +566,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                                 const userData = { firstName, lastName, email, leadId };
                                 localStorage.setItem(`chatpad_user_${config.agentId}`, JSON.stringify(userData));
                                 setChatUser(userData);
+                                toast.success(`Welcome, ${firstName}!`);
                               } catch (error) {
                                 if (error instanceof z.ZodError) {
                                   const errors: Record<string, string> = {};
@@ -564,9 +574,10 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                                     if (err.path[0]) errors[err.path[0] as string] = err.message;
                                   });
                                   setFormErrors(errors);
-                                }
-                              }
-                            }}
+                                 }
+                                 toast.error('Failed to start chat. Please try again.');
+                               }
+                             }}
                           >
                             <Input name="firstName" placeholder="First name" className="h-8 text-sm" required />
                             {formErrors.firstName && <p className="text-xs text-destructive">{formErrors.firstName}</p>}
@@ -608,7 +619,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                       <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                         <div className={`max-w-[80%] rounded-lg p-3 ${msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
                           {msg.type === 'audio' && msg.audioUrl && (
-                            <audio controls src={msg.audioUrl} className="w-full" />
+                            <AudioPlayer audioUrl={msg.audioUrl} primaryColor={config.primaryColor} />
                           )}
                           {msg.type === 'file' && msg.files && (
                             <div className="space-y-2">
@@ -621,10 +632,42 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                               {msg.content && <p className="text-sm mt-2">{msg.content}</p>}
                             </div>
                           )}
-                          {msg.type === 'text' && <p className="text-sm">{msg.content}</p>}
+                          {msg.type === 'text' && <p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p>}
+                          
+                          {config.enableMessageReactions && msg.reactions && msg.reactions.length > 0 && (
+                            <MessageReactions
+                              reactions={msg.reactions}
+                              onAddReaction={(emoji) => {
+                                const newMessages = [...messages];
+                                const reaction = newMessages[idx].reactions?.find(r => r.emoji === emoji);
+                                if (reaction) {
+                                  reaction.count += 1;
+                                  reaction.userReacted = true;
+                                } else {
+                                  newMessages[idx].reactions = [...(newMessages[idx].reactions || []), { emoji, count: 1, userReacted: true }];
+                                }
+                                setMessages(newMessages);
+                              }}
+                              onRemoveReaction={(emoji) => {
+                                const newMessages = [...messages];
+                                const reaction = newMessages[idx].reactions?.find(r => r.emoji === emoji);
+                                if (reaction) {
+                                  reaction.count -= 1;
+                                  reaction.userReacted = false;
+                                  if (reaction.count === 0) {
+                                    newMessages[idx].reactions = newMessages[idx].reactions?.filter(r => r.emoji !== emoji);
+                                  }
+                                }
+                                setMessages(newMessages);
+                              }}
+                              primaryColor={config.primaryColor}
+                              compact
+                            />
+                          )}
+                          
                           <div className="flex items-center justify-between gap-2 mt-1">
                             <span className="text-xs opacity-70">{formatTimestamp(msg.timestamp)}</span>
-                            {msg.role === 'user' && msg.read && <span className="text-xs opacity-70">Read</span>}
+                            {msg.role === 'user' && config.showReadReceipts && msg.read && <span className="text-xs opacity-70">Read</span>}
                           </div>
                         </div>
                       </div>
@@ -646,49 +689,82 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                   {pendingFiles.length > 0 && (
                     <div className="p-2 border-t flex gap-2 overflow-x-auto">
                       {pendingFiles.map((pf, i) => (
-                        <div key={i} className="relative">
-                          {pf.preview ? (
-                            <img src={pf.preview} className="h-16 w-16 object-cover rounded" />
-                          ) : (
-                            <div className="h-16 w-16 bg-muted rounded flex items-center justify-center">
-                              <FileCheck02 className="h-6 w-6" />
-                            </div>
-                          )}
-                          <button onClick={() => removeFile(i)} className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full p-0.5">
-                            <X className="h-3 w-3" />
-                          </button>
+                        <div key={i} className="relative group flex-shrink-0">
+                          <div className="relative w-16 h-16 rounded-lg overflow-hidden border">
+                            {pf.preview ? (
+                              <img src={pf.preview} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full bg-muted flex items-center justify-center">
+                                <FileCheck02 className="h-6 w-6 text-muted-foreground" />
+                              </div>
+                            )}
+                            <Button 
+                              size="icon"
+                              variant="destructive"
+                              onClick={() => removeFile(i)} 
+                              className="absolute -top-1 -right-1 h-5 w-5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
                         </div>
                       ))}
                     </div>
                   )}
 
                   <div className="p-3 border-t">
-                    {isRecordingAudio ? (
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1 flex items-center gap-2">
-                          <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-                          <span className="text-sm">{Math.floor(recordingTime / 60)}:{(recordingTime % 60).toString().padStart(2, '0')}</span>
-                        </div>
-                        <Button size="sm" onClick={stopAudioRecording} style={{ backgroundColor: config.primaryColor }}>Send</Button>
-                        <Button size="sm" variant="ghost" onClick={() => { stopAudioRecording(); setRecordingTime(0); }}>Cancel</Button>
-                      </div>
+                    {isAttachingFiles ? (
+                      <FileDropZone
+                        onFilesSelected={(files, urls) => {
+                          files.forEach((file, i) => {
+                            setPendingFiles(prev => [...prev, { file, preview: urls[i] || '' }]);
+                          });
+                          setIsAttachingFiles(false);
+                          toast.success(`${files.length} file(s) attached`);
+                        }}
+                        onCancel={() => setIsAttachingFiles(false)}
+                        primaryColor={config.primaryColor}
+                      />
+                    ) : isRecordingAudio ? (
+                      <VoiceInput
+                        onStart={startAudioRecording}
+                        onStop={stopAudioRecording}
+                      />
                     ) : (
                       <div className="flex items-center gap-2">
                         <Input
                           value={messageInput}
                           onChange={(e) => setMessageInput(e.target.value)}
                           onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                          placeholder={config.greeting || 'Type a message...'}
+                          placeholder={config.placeholder || 'Type a message...'}
                           className="flex-1 h-9"
                         />
-                        <input type="file" multiple onChange={handleFileSelect} className="hidden" id="file-input" />
-                        <Button size="icon" variant="ghost" className="h-9 w-9" onClick={() => document.getElementById('file-input')?.click()}>
-                          <Attachment01 className="h-4 w-4" />
-                        </Button>
-                        <Button size="icon" variant="ghost" className="h-9 w-9" onClick={startAudioRecording}>
-                          <Microphone01 className="h-4 w-4" />
-                        </Button>
-                        <Button size="icon" className="h-9 w-9" onClick={handleSendMessage} style={{ backgroundColor: config.primaryColor }}>
+                        {config.enableFileAttachments && (
+                          <Button 
+                            size="icon" 
+                            variant="ghost" 
+                            className="h-9 w-9" 
+                            onClick={() => setIsAttachingFiles(true)}
+                          >
+                            <Attachment01 className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {config.enableVoiceMessages && (
+                          <Button 
+                            size="icon" 
+                            variant="ghost" 
+                            className="h-9 w-9" 
+                            onClick={() => setIsRecordingAudio(true)}
+                          >
+                            <Microphone01 className="h-4 w-4" />
+                          </Button>
+                        )}
+                        <Button 
+                          size="icon" 
+                          className="h-9 w-9" 
+                          onClick={handleSendMessage} 
+                          style={{ backgroundColor: config.primaryColor }}
+                        >
                           <Send01 className="h-4 w-4" />
                         </Button>
                       </div>
@@ -734,7 +810,12 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                                 className="p-3 border rounded-lg hover:bg-accent cursor-pointer transition-colors"
                                 onClick={() => setSelectedArticle(article)}
                               >
-                                <h4 className="font-medium text-sm">{article.title}</h4>
+                                <div className="flex items-start justify-between gap-2">
+                                  <h4 className="font-medium text-sm flex-1">{article.title}</h4>
+                                  {helpSearchQuery && article.category && (
+                                    <Badge variant="secondary" className="text-xs">{article.category}</Badge>
+                                  )}
+                                </div>
                               </div>
                             ))}
                           </div>
@@ -884,6 +965,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
           </div>
         )}
       </div>
+      <Toaster position="top-center" richColors />
     </div>
   );
 };
