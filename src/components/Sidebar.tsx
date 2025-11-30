@@ -72,7 +72,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
   }).length;
 
   return (
-    <aside className={`flex ${isCollapsed ? 'w-[72px]' : 'w-[220px]'} h-screen bg-background transition-all duration-300`}>
+    <aside className={`flex ${isCollapsed ? 'w-[72px]' : 'w-[220px]'} h-screen bg-sidebar transition-all duration-300`}>
       <nav className="w-full flex flex-col pt-6 px-3 pb-4">
         <header className="w-full px-2 mb-6">
           <div className="flex items-center justify-between">
