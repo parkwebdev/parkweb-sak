@@ -32,7 +32,7 @@ export const AgentEmbedTab = ({ agent, onUpdate, onFormChange }: AgentEmbedTabPr
         },
       });
     }
-  }, []);
+  }, [agent.id, agent.deployment_config, onUpdate]);
 
   const handleConfigChange = (updates: Partial<typeof config>) => {
     const newConfig = { ...localConfig, ...updates };
