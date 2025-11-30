@@ -21,6 +21,26 @@
   let isTyping = false;
   let selectedFiles = [];
   let leadCaptured = false;
+  let showSettingsDropdown = false;
+
+  // Settings state with localStorage
+  let chatSettings = {
+    soundEnabled: true,
+    autoScroll: true
+  };
+
+  // Load settings from localStorage
+  function loadSettings() {
+    const saved = localStorage.getItem(`chatpad_settings_${agentId}`);
+    if (saved) {
+      chatSettings = JSON.parse(saved);
+    }
+  }
+
+  // Save settings to localStorage
+  function saveSettings() {
+    localStorage.setItem(`chatpad_settings_${agentId}`, JSON.stringify(chatSettings));
+  }
 
   // Check localStorage for returning user
   const storedLead = localStorage.getItem(`chatpad_lead_${agentId}`);
@@ -70,6 +90,10 @@
       @keyframes chatpad-typing {
         0%, 60%, 100% { transform: translateY(0); }
         30% { transform: translateY(-4px); }
+      }
+      @keyframes chatpad-gradient-shift {
+        0%, 100% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
       }
     `;
 
@@ -165,75 +189,197 @@
         animation: chatpad-slide-up 0.3s ease-out;
       }
 
-      .chatpad-header {
+      /* Hero Header for Home View */
+      .chatpad-hero-header {
+        position: relative;
+        height: 180px;
+        background: linear-gradient(135deg, ${config?.gradientStartColor || primaryColor} 0%, ${config?.gradientEndColor || primaryColor} 100%);
+        background-size: 200% 200%;
+        animation: chatpad-gradient-shift 8s ease infinite;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        overflow: hidden;
+      }
+
+      .chatpad-hero-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: radial-gradient(circle at 30% 50%, rgba(255,255,255,0.1) 0%, transparent 60%);
+        pointer-events: none;
+      }
+
+      .chatpad-hero-content {
+        position: relative;
+        z-index: 2;
+        text-align: center;
         padding: 20px;
+      }
+
+      .chatpad-hero-emoji {
+        font-size: 48px;
+        margin-bottom: 12px;
+        display: block;
+      }
+
+      .chatpad-hero-title {
+        font-size: 24px;
+        font-weight: 600;
+        margin: 0 0 8px;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
+
+      .chatpad-hero-subtitle {
+        font-size: 14px;
+        opacity: 0.95;
+        margin: 0;
+      }
+
+      .chatpad-hero-buttons {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        display: flex;
+        gap: 8px;
+        z-index: 3;
+      }
+
+      .chatpad-header-button {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.2);
+        backdrop-filter: blur(8px);
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        transition: background 0.2s;
+      }
+
+      .chatpad-header-button:hover {
+        background: rgba(255,255,255,0.3);
+      }
+
+      .chatpad-header-button svg {
+        width: 20px;
+        height: 20px;
+      }
+
+      /* Compact Header for Messages/Help Views */
+      .chatpad-compact-header {
+        padding: 16px 20px;
+        background: ${primaryColor};
         color: white;
         display: flex;
         align-items: center;
         justify-content: space-between;
       }
 
-      .chatpad-header.gradient {
-        background: linear-gradient(135deg, ${primaryColor} 0%, ${primaryColor}dd 100%);
-      }
-
-      .chatpad-header.solid {
-        background: ${primaryColor};
-      }
-
-      .chatpad-header-info {
+      .chatpad-compact-header-info {
         display: flex;
         align-items: center;
         gap: 12px;
       }
 
-      .chatpad-avatar {
-        width: 40px;
-        height: 40px;
+      .chatpad-compact-avatar {
+        width: 36px;
+        height: 36px;
         border-radius: 50%;
-        background: white;
+        background: rgba(255,255,255,0.2);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 20px;
+        font-size: 18px;
       }
 
-      .chatpad-avatar img {
+      .chatpad-compact-avatar img {
         width: 100%;
         height: 100%;
         border-radius: 50%;
         object-fit: cover;
       }
 
-      .chatpad-header-text h3 {
-        margin: 0;
+      .chatpad-compact-title {
         font-size: 16px;
         font-weight: 600;
+        margin: 0;
       }
 
-      .chatpad-header-text p {
-        margin: 4px 0 0;
+      .chatpad-compact-status {
         font-size: 12px;
         opacity: 0.9;
+        margin: 2px 0 0;
       }
 
-      .chatpad-close {
-        background: rgba(255,255,255,0.2);
-        border: none;
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        cursor: pointer;
+      /* Settings Dropdown */
+      .chatpad-settings-dropdown {
+        position: absolute;
+        top: 60px;
+        right: 16px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+        padding: 8px;
+        min-width: 200px;
+        z-index: 10;
+        animation: chatpad-fade-in 0.2s ease-out;
+      }
+
+      .chatpad-settings-item {
         display: flex;
         align-items: center;
-        justify-content: center;
-        color: white;
-        font-size: 20px;
+        justify-content: space-between;
+        padding: 10px 12px;
+        border-radius: 8px;
+        cursor: pointer;
         transition: background 0.2s;
       }
 
-      .chatpad-close:hover {
-        background: rgba(255,255,255,0.3);
+      .chatpad-settings-item:hover {
+        background: #f3f4f6;
+      }
+
+      .chatpad-settings-label {
+        font-size: 14px;
+        color: #1f2937;
+        font-weight: 500;
+      }
+
+      .chatpad-toggle {
+        position: relative;
+        width: 40px;
+        height: 22px;
+        background: #d1d5db;
+        border-radius: 11px;
+        transition: background 0.2s;
+      }
+
+      .chatpad-toggle.active {
+        background: ${primaryColor};
+      }
+
+      .chatpad-toggle-handle {
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        width: 18px;
+        height: 18px;
+        background: white;
+        border-radius: 50%;
+        transition: transform 0.2s;
+      }
+
+      .chatpad-toggle.active .chatpad-toggle-handle {
+        transform: translateX(18px);
       }
 
       .chatpad-content {
@@ -243,6 +389,7 @@
         flex-direction: column;
       }
 
+      /* Home View */
       .chatpad-home {
         padding: 24px;
         display: flex;
@@ -250,28 +397,7 @@
         gap: 20px;
       }
 
-      .chatpad-welcome {
-        text-align: center;
-        padding: 20px 0;
-      }
-
-      .chatpad-welcome-emoji {
-        font-size: 48px;
-        margin-bottom: 12px;
-      }
-
-      .chatpad-welcome h2 {
-        margin: 0 0 8px;
-        font-size: 24px;
-        color: #1f2937;
-      }
-
-      .chatpad-welcome p {
-        margin: 0;
-        font-size: 14px;
-        color: #6b7280;
-      }
-
+      /* Announcements */
       .chatpad-announcement {
         background: linear-gradient(135deg, ${primaryColor}15 0%, ${primaryColor}08 100%);
         border: 1px solid ${primaryColor}30;
@@ -279,7 +405,15 @@
         padding: 16px;
         display: flex;
         gap: 12px;
+        align-items: center;
+        cursor: pointer;
+        transition: all 0.2s;
         animation: chatpad-fade-in 0.3s ease-out;
+      }
+
+      .chatpad-announcement:hover {
+        transform: translateX(4px);
+        border-color: ${primaryColor}50;
       }
 
       .chatpad-announcement-image {
@@ -302,53 +436,86 @@
       }
 
       .chatpad-announcement p {
-        margin: 0 0 8px;
+        margin: 0;
         font-size: 13px;
         color: #4b5563;
       }
 
-      .chatpad-announcement-action {
-        display: inline-block;
-        color: ${primaryColor};
-        font-size: 13px;
-        font-weight: 500;
-        text-decoration: none;
-        cursor: pointer;
+      .chatpad-announcement-arrow {
+        color: #9ca3af;
+        font-size: 20px;
       }
 
+      /* Quick Actions - List Style */
       .chatpad-quick-actions {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
+        display: flex;
+        flex-direction: column;
         gap: 12px;
       }
 
       .chatpad-quick-action {
-        background: #f9fafb;
+        background: #ffffff;
         border: 1px solid #e5e7eb;
         border-radius: 12px;
-        padding: 20px 16px;
-        text-align: center;
+        padding: 16px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
         cursor: pointer;
         transition: all 0.2s;
       }
 
       .chatpad-quick-action:hover {
-        background: #f3f4f6;
+        background: #f9fafb;
         border-color: ${primaryColor};
-        transform: translateY(-2px);
+        transform: translateX(4px);
+      }
+
+      .chatpad-quick-action-icon-wrapper {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        background: ${primaryColor}15;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
       }
 
       .chatpad-quick-action-icon {
-        font-size: 32px;
-        margin-bottom: 8px;
+        width: 24px;
+        height: 24px;
+        color: ${primaryColor};
       }
 
-      .chatpad-quick-action-label {
-        font-size: 14px;
-        font-weight: 500;
+      .chatpad-quick-action-content {
+        flex: 1;
+      }
+
+      .chatpad-quick-action-title {
+        font-size: 15px;
+        font-weight: 600;
         color: #1f2937;
+        margin: 0 0 4px;
       }
 
+      .chatpad-quick-action-subtitle {
+        font-size: 13px;
+        color: #6b7280;
+        margin: 0;
+      }
+
+      .chatpad-quick-action-arrow {
+        color: #9ca3af;
+        font-size: 20px;
+        transition: transform 0.2s;
+      }
+
+      .chatpad-quick-action:hover .chatpad-quick-action-arrow {
+        transform: translateX(4px);
+      }
+
+      /* Messages View */
       .chatpad-messages {
         flex: 1;
         padding: 20px;
@@ -433,6 +600,7 @@
         animation-delay: 0.4s;
       }
 
+      /* Help View */
       .chatpad-help {
         padding: 20px;
         overflow-y: auto;
@@ -495,159 +663,17 @@
         color: #1f2937;
       }
 
-      .chatpad-article-view {
-        padding: 20px;
-        overflow-y: auto;
-      }
-
-      .chatpad-article-back {
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        color: ${primaryColor};
-        font-size: 14px;
-        font-weight: 500;
-        cursor: pointer;
-        margin-bottom: 16px;
-      }
-
-      .chatpad-article-title {
-        font-size: 20px;
-        font-weight: 600;
-        color: #1f2937;
-        margin: 0 0 16px;
-      }
-
-      .chatpad-article-content {
-        font-size: 14px;
-        line-height: 1.6;
-        color: #4b5563;
-      }
-
-      .chatpad-contact-form {
-        padding: 20px;
-        overflow-y: auto;
-      }
-
-      .chatpad-contact-form h3 {
-        margin: 0 0 8px;
-        font-size: 20px;
-        font-weight: 600;
-        color: #1f2937;
-      }
-
-      .chatpad-contact-form p {
-        margin: 0 0 20px;
-        font-size: 14px;
-        color: #6b7280;
-      }
-
-      .chatpad-form-group {
-        margin-bottom: 16px;
-      }
-
-      .chatpad-form-label {
-        display: block;
-        font-size: 14px;
-        font-weight: 500;
-        color: #374151;
-        margin-bottom: 6px;
-      }
-
-      .chatpad-form-input {
-        width: 100%;
-        padding: 10px 12px;
-        border: 1px solid #e5e7eb;
-        border-radius: 6px;
-        font-size: 14px;
-        outline: none;
-        box-sizing: border-box;
-      }
-
-      .chatpad-form-input:focus {
-        border-color: ${primaryColor};
-      }
-
-      .chatpad-form-textarea {
-        resize: vertical;
-        min-height: 80px;
-      }
-
-      .chatpad-form-error {
-        color: #ef4444;
-        font-size: 12px;
-        margin-top: 4px;
-      }
-
-      .chatpad-form-submit {
-        width: 100%;
-        padding: 12px;
-        background: ${primaryColor};
-        color: white;
-        border: none;
-        border-radius: 8px;
-        font-size: 14px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: opacity 0.2s;
-      }
-
-      .chatpad-form-submit:hover {
-        opacity: 0.9;
-      }
-
-      .chatpad-form-submit:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-      }
-
-      .chatpad-input-area {
-        padding: 16px;
+      /* Input Area */
+      .chatpad-input-container {
+        padding: 16px 20px;
         border-top: 1px solid #e5e7eb;
-      }
-
-      .chatpad-file-preview {
-        display: flex;
-        gap: 8px;
-        margin-bottom: 12px;
-        flex-wrap: wrap;
-      }
-
-      .chatpad-file-item {
-        position: relative;
-        width: 60px;
-        height: 60px;
-        border-radius: 8px;
-        overflow: hidden;
-        border: 1px solid #e5e7eb;
-      }
-
-      .chatpad-file-item img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-      }
-
-      .chatpad-file-remove {
-        position: absolute;
-        top: 4px;
-        right: 4px;
-        width: 20px;
-        height: 20px;
-        border-radius: 50%;
-        background: rgba(0,0,0,0.6);
-        color: white;
-        border: none;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 12px;
+        background: white;
       }
 
       .chatpad-input-wrapper {
         display: flex;
         gap: 8px;
+        align-items: center;
       }
 
       .chatpad-input {
@@ -657,48 +683,29 @@
         border-radius: 24px;
         font-size: 14px;
         outline: none;
-        resize: none;
-        max-height: 120px;
+        font-family: inherit;
       }
 
       .chatpad-input:focus {
         border-color: ${primaryColor};
       }
 
-      .chatpad-input-actions {
-        display: flex;
-        gap: 8px;
-      }
-
-      .chatpad-attach-button,
       .chatpad-send-button {
         width: 40px;
         height: 40px;
         border-radius: 50%;
+        background: ${primaryColor};
         border: none;
         cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
-        transition: all 0.2s;
-      }
-
-      .chatpad-attach-button {
-        background: #f3f4f6;
-        color: #6b7280;
-      }
-
-      .chatpad-attach-button:hover {
-        background: #e5e7eb;
-      }
-
-      .chatpad-send-button {
-        background: ${primaryColor};
         color: white;
+        transition: transform 0.2s;
       }
 
       .chatpad-send-button:hover {
-        opacity: 0.9;
+        transform: scale(1.05);
       }
 
       .chatpad-send-button:disabled {
@@ -706,6 +713,7 @@
         cursor: not-allowed;
       }
 
+      /* Bottom Navigation */
       .chatpad-bottom-nav {
         display: flex;
         border-top: 1px solid #e5e7eb;
@@ -715,26 +723,28 @@
       .chatpad-nav-item {
         flex: 1;
         padding: 12px;
-        background: none;
         border: none;
+        background: none;
         cursor: pointer;
         display: flex;
         flex-direction: column;
         align-items: center;
         gap: 4px;
-        transition: all 0.2s;
-      }
-
-      .chatpad-nav-item:hover {
-        background: #f9fafb;
+        color: #9ca3af;
+        transition: color 0.2s;
       }
 
       .chatpad-nav-item.active {
         color: ${primaryColor};
       }
 
+      .chatpad-nav-item:hover {
+        color: ${primaryColor};
+      }
+
       .chatpad-nav-icon {
-        font-size: 20px;
+        width: 24px;
+        height: 24px;
       }
 
       .chatpad-nav-label {
@@ -742,6 +752,7 @@
         font-weight: 500;
       }
 
+      /* Branding */
       .chatpad-branding {
         text-align: center;
         padding: 12px;
@@ -761,14 +772,10 @@
           height: 100vh;
           border-radius: 0;
           top: 0 !important;
-          left: 0 !important;
           right: 0 !important;
           bottom: 0 !important;
+          left: 0 !important;
         }
-      }
-
-      .hidden {
-        display: none !important;
       }
     `;
 
@@ -777,51 +784,36 @@
     document.head.appendChild(styleSheet);
   }
 
-  // Fetch widget configuration
-  async function fetchConfig() {
-    try {
-      const response = await fetch(`${API_URL}/get-widget-config?agentId=${agentId}`);
-      if (!response.ok) throw new Error('Failed to fetch widget config');
-      config = await response.json();
-      return config;
-    } catch (error) {
-      console.error('ChatPad Agent: Failed to load config:', error);
-      // Return minimal default config
-      return {
-        agent: { name: 'Assistant', avatar_url: null },
-        config: {
-          primaryColor: primaryColor,
-          position: position,
-          animation: 'bounce',
-          showBadge: true,
-          greeting: 'Hello! How can I help you today?',
-          placeholder: 'Type your message...',
-          showBranding: true,
-          showBottomNav: true,
-          quickActions: [
-            { icon: '💬', label: 'Start a Chat', action: 'open_messages' },
-            { icon: '📚', label: 'Help Articles', action: 'open_help' }
-          ]
-        },
-        announcements: [],
-        helpArticles: [],
-        helpCategories: []
-      };
-    }
-  }
+  // SVG Icons
+  const icons = {
+    chat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>',
+    help: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>',
+    home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>',
+    send: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>',
+    close: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>',
+    minimize: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 14 10 14 10 20"></polyline><polyline points="20 10 14 10 14 4"></polyline><line x1="14" y1="10" x2="21" y2="3"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>',
+    settings: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 1v6m0 6v6m5.66-14.66L14 8m-4 4-3.66 3.66M23 12h-6m-6 0H1m14.66 5.66L14 16m-4-4-3.66-3.66"></path></svg>',
+    chevron: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>'
+  };
 
-  // Format time
-  function formatTime(date) {
+  // Format timestamp
+  function formatTime(timestamp) {
+    if (!timestamp) return '';
+    const date = new Date(timestamp);
     const now = new Date();
-    const diff = now - date;
-    const seconds = Math.floor(diff / 1000);
-    const minutes = Math.floor(seconds / 60);
-    const hours = Math.floor(minutes / 60);
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
     
-    if (seconds < 60) return 'Just now';
-    if (minutes < 60) return `${minutes}m ago`;
-    if (hours < 24) return `${hours}h ago`;
-    return date.toLocaleDateString();
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) return `${diffHours}h ago`;
+    
+    const diffDays = Math.floor(diffHours / 24);
+    if (diffDays < 7) return `${diffDays}d ago`;
+    
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   }
 
   // Escape HTML
@@ -831,109 +823,180 @@
     return div.innerHTML;
   }
 
-  // Map icon names to emojis
+  // Get icon emoji
   function getIconEmoji(icon) {
-    if (typeof icon === 'string' && icon.length <= 2) {
-      return icon; // Already an emoji
-    }
-    
-    const iconMap = {
+    const emojiMap = {
       'chat': '💬',
       'help': '📚',
       'bug': '🐛',
       'feature': '✨',
-      'contact': '📝',
-      'custom': '⚙️'
+      'contact': '📧',
+      'question': '❓',
+      'feedback': '💭'
     };
-    
-    return iconMap[icon] || '💬';
+    return emojiMap[icon] || '💬';
   }
 
-  // Render functions
-  function renderHome() {
-    const { welcomeEmoji, welcomeTitle, welcomeSubtitle, quickActions } = config.config;
-    const announcements = config.announcements || [];
+  // Render Hero Header (Home View)
+  function renderHeroHeader() {
+    const welcomeTitle = config.welcomeTitle || 'Welcome!';
+    const welcomeMessage = config.welcomeMessage || 'How can we help you today?';
+    const welcomeEmoji = config.welcomeEmoji || '👋';
 
-    let html = '<div class="chatpad-home">';
-    
-    // Welcome section
-    html += `
-      <div class="chatpad-welcome">
-        <div class="chatpad-welcome-emoji">${welcomeEmoji}</div>
-        <h2>${escapeHtml(welcomeTitle)}</h2>
-        <p>${escapeHtml(welcomeSubtitle)}</p>
+    return `
+      <div class="chatpad-hero-header">
+        <div class="chatpad-hero-buttons">
+          <button class="chatpad-header-button" onclick="window.chatpadWidget.toggleSettings()" title="Settings">
+            ${icons.settings}
+          </button>
+          <button class="chatpad-header-button" onclick="window.chatpadWidget.minimize()" title="Minimize">
+            ${icons.minimize}
+          </button>
+          <button class="chatpad-header-button" onclick="window.chatpadWidget.close()" title="Close">
+            ${icons.close}
+          </button>
+        </div>
+        <div class="chatpad-hero-content">
+          <span class="chatpad-hero-emoji">${welcomeEmoji}</span>
+          <h1 class="chatpad-hero-title">${escapeHtml(welcomeTitle)}</h1>
+          <p class="chatpad-hero-subtitle">${escapeHtml(welcomeMessage)}</p>
+        </div>
       </div>
     `;
+  }
 
-    // Announcements
-    announcements.forEach(announcement => {
-      const bgColor = announcement.background_color || `${config.config.primaryColor}15`;
-      const titleColor = announcement.title_color || '#1f2937';
-      
-      html += `
-        <div class="chatpad-announcement" style="background: ${bgColor};">
-          ${announcement.image_url ? `<img src="${announcement.image_url}" alt="" class="chatpad-announcement-image">` : ''}
-          <div class="chatpad-announcement-content">
-            <h4 style="color: ${titleColor};">${escapeHtml(announcement.title)}</h4>
-            ${announcement.subtitle ? `<p>${escapeHtml(announcement.subtitle)}</p>` : ''}
-            ${announcement.action_url ? `<a href="${announcement.action_url}" class="chatpad-announcement-action" target="_blank">${announcement.action_type === 'link' ? 'Learn more' : 'Open'} →</a>` : ''}
+  // Render Compact Header (Messages/Help Views)
+  function renderCompactHeader() {
+    const agent = config.agent || {};
+    const avatarUrl = agent.avatar_url;
+    const agentName = agent.name || 'Assistant';
+    const agentEmoji = config.agentEmoji || '🤖';
+    const onlineStatus = config.showOnlineStatus ? 'Online now' : '';
+
+    return `
+      <div class="chatpad-compact-header">
+        <div class="chatpad-compact-header-info">
+          <div class="chatpad-compact-avatar">
+            ${avatarUrl ? `<img src="${avatarUrl}" alt="${agentName}" />` : agentEmoji}
+          </div>
+          <div>
+            <div class="chatpad-compact-title">${escapeHtml(agentName)}</div>
+            ${onlineStatus ? `<div class="chatpad-compact-status">${onlineStatus}</div>` : ''}
           </div>
         </div>
-      `;
-    });
-
-    // Quick actions
-    html += '<div class="chatpad-quick-actions">';
-    quickActions.forEach(action => {
-      const iconEmoji = getIconEmoji(action.icon);
-      const label = action.title || action.label || 'Action';
-      html += `
-        <div class="chatpad-quick-action" data-action="${action.action}">
-          <div class="chatpad-quick-action-icon">${iconEmoji}</div>
-          <div class="chatpad-quick-action-label">${escapeHtml(label)}</div>
+        <div style="display: flex; gap: 8px;">
+          <button class="chatpad-header-button" onclick="window.chatpadWidget.toggleSettings()" title="Settings">
+            ${icons.settings}
+          </button>
+          <button class="chatpad-header-button" onclick="window.chatpadWidget.minimize()" title="Minimize">
+            ${icons.minimize}
+          </button>
+          <button class="chatpad-header-button" onclick="window.chatpadWidget.close()" title="Close">
+            ${icons.close}
+          </button>
         </div>
-      `;
-    });
-    html += '</div>';
+      </div>
+    `;
+  }
+
+  // Render Settings Dropdown
+  function renderSettingsDropdown() {
+    if (!showSettingsDropdown) return '';
+
+    return `
+      <div class="chatpad-settings-dropdown">
+        <div class="chatpad-settings-item" onclick="window.chatpadWidget.toggleSound()">
+          <span class="chatpad-settings-label">Sound notifications</span>
+          <div class="chatpad-toggle ${chatSettings.soundEnabled ? 'active' : ''}">
+            <div class="chatpad-toggle-handle"></div>
+          </div>
+        </div>
+        <div class="chatpad-settings-item" onclick="window.chatpadWidget.toggleAutoScroll()">
+          <span class="chatpad-settings-label">Auto-scroll</span>
+          <div class="chatpad-toggle ${chatSettings.autoScroll ? 'active' : ''}">
+            <div class="chatpad-toggle-handle"></div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  // Render Home View
+  function renderHome() {
+    const announcements = config.announcements || [];
+    const quickActions = config.quickActions || [];
+
+    let html = '<div class="chatpad-home">';
+
+    // Announcements
+    if (announcements.length > 0) {
+      announcements.forEach(announcement => {
+        html += `
+          <div class="chatpad-announcement" onclick="window.chatpadWidget.handleAnnouncementClick('${announcement.action_url || '#'}')">
+            ${announcement.image_url ? `<img src="${announcement.image_url}" alt="" class="chatpad-announcement-image" />` : ''}
+            <div class="chatpad-announcement-content">
+              <h4>${escapeHtml(announcement.title)}</h4>
+              ${announcement.subtitle ? `<p>${escapeHtml(announcement.subtitle)}</p>` : ''}
+            </div>
+            <span class="chatpad-announcement-arrow">${icons.chevron}</span>
+          </div>
+        `;
+      });
+    }
+
+    // Quick Actions - List Style
+    if (quickActions.length > 0) {
+      html += '<div class="chatpad-quick-actions">';
+      quickActions.forEach(action => {
+        const iconSvg = action.icon === 'chat' ? icons.chat : icons.help;
+        html += `
+          <div class="chatpad-quick-action" onclick="window.chatpadWidget.handleQuickAction('${action.type}')">
+            <div class="chatpad-quick-action-icon-wrapper">
+              <div class="chatpad-quick-action-icon">${iconSvg}</div>
+            </div>
+            <div class="chatpad-quick-action-content">
+              <div class="chatpad-quick-action-title">${escapeHtml(action.label)}</div>
+              ${action.subtitle ? `<div class="chatpad-quick-action-subtitle">${escapeHtml(action.subtitle)}</div>` : ''}
+            </div>
+            <span class="chatpad-quick-action-arrow">${icons.chevron}</span>
+          </div>
+        `;
+      });
+      html += '</div>';
+    }
 
     html += '</div>';
     return html;
   }
 
+  // Render Messages View
   function renderMessages() {
-    let html = '<div class="chatpad-messages" id="chatpad-messages-list">';
-    
+    let html = '<div class="chatpad-messages">';
+
     messages.forEach(msg => {
       const isUser = msg.role === 'user';
-      const time = formatTime(new Date(msg.created_at || Date.now()));
-      
+      const agent = config.agent || {};
+      const avatarUrl = agent.avatar_url;
+      const agentEmoji = config.agentEmoji || '🤖';
+
       html += `
-        <div class="chatpad-message ${isUser ? 'user' : 'assistant'}">
-          ${!isUser ? `
-            <div class="chatpad-message-avatar">
-              ${config.agent.avatar_url ? 
-                `<img src="${config.agent.avatar_url}" alt="${config.agent.name}">` : 
-                '🤖'
-              }
-            </div>
-          ` : ''}
+        <div class="chatpad-message ${isUser ? 'user' : ''}">
+          <div class="chatpad-message-avatar">
+            ${!isUser && avatarUrl ? `<img src="${avatarUrl}" alt="" />` : 
+              !isUser ? agentEmoji : '👤'}
+          </div>
           <div class="chatpad-message-content">
             <div class="chatpad-message-bubble">${escapeHtml(msg.content)}</div>
-            ${config.config.showTimestamps ? `<div class="chatpad-message-time">${time}</div>` : ''}
+            <div class="chatpad-message-time">${formatTime(msg.timestamp)}</div>
           </div>
         </div>
       `;
     });
 
-    if (isTyping && config.config.showTypingIndicator) {
+    if (isTyping) {
       html += `
-        <div class="chatpad-message assistant">
-          <div class="chatpad-message-avatar">
-            ${config.agent.avatar_url ? 
-              `<img src="${config.agent.avatar_url}" alt="${config.agent.name}">` : 
-              '🤖'
-            }
-          </div>
+        <div class="chatpad-message">
+          <div class="chatpad-message-avatar">${config.agentEmoji || '🤖'}</div>
           <div class="chatpad-message-content">
             <div class="chatpad-message-bubble">
               <div class="chatpad-typing">
@@ -951,157 +1014,59 @@
     return html;
   }
 
+  // Render Help View
   function renderHelp() {
-    const categories = config.helpCategories || [];
-    const articles = config.helpArticles || [];
-
+    const helpCategories = config.helpCategories || [];
+    
     let html = '<div class="chatpad-help">';
     
-    // Search (placeholder for now)
+    // Search
     html += `
       <div class="chatpad-help-search">
-        <input type="text" placeholder="Search articles..." id="chatpad-help-search">
+        <input type="text" placeholder="Search help articles..." />
       </div>
     `;
 
-    if (categories.length === 0 && articles.length === 0) {
-      html += '<p style="text-align: center; color: #9ca3af; padding: 40px 0;">No help articles available yet.</p>';
-    } else {
-      categories.forEach(category => {
-        const categoryArticles = articles.filter(a => a.category_id === category.id);
-        if (categoryArticles.length === 0) return;
+    // Categories and Articles
+    helpCategories.forEach(category => {
+      html += `
+        <div class="chatpad-help-category">
+          <h3 class="chatpad-help-category-title">${escapeHtml(category.name)}</h3>
+      `;
 
+      (category.articles || []).forEach(article => {
         html += `
-          <div class="chatpad-help-category">
-            <h3 class="chatpad-help-category-title">${escapeHtml(category.name)}</h3>
+          <div class="chatpad-help-article" onclick="window.chatpadWidget.openArticle('${article.id}')">
+            <span class="chatpad-help-article-icon">${getIconEmoji(article.icon)}</span>
+            <span class="chatpad-help-article-title">${escapeHtml(article.title)}</span>
+          </div>
         `;
-
-        categoryArticles.forEach(article => {
-          html += `
-            <div class="chatpad-help-article" data-article-id="${article.id}">
-              ${article.icon ? `<span class="chatpad-help-article-icon">${article.icon}</span>` : ''}
-              <span class="chatpad-help-article-title">${escapeHtml(article.title)}</span>
-            </div>
-          `;
-        });
-
-        html += '</div>';
       });
-    }
+
+      html += '</div>';
+    });
 
     html += '</div>';
     return html;
   }
 
-  function renderArticle(articleId) {
-    const article = config.helpArticles.find(a => a.id === articleId);
-    if (!article) return '<div>Article not found</div>';
-
-    return `
-      <div class="chatpad-article-view">
-        <div class="chatpad-article-back" id="chatpad-article-back">
-          ← Back to Help
-        </div>
-        <h1 class="chatpad-article-title">${escapeHtml(article.title)}</h1>
-        <div class="chatpad-article-content">${article.content}</div>
-      </div>
-    `;
-  }
-
-  function renderContactForm() {
-    const { contactFormTitle, contactFormSubtitle, customFields } = config.config;
-
-    let html = `
-      <div class="chatpad-contact-form">
-        <h3>${escapeHtml(contactFormTitle)}</h3>
-        <p>${escapeHtml(contactFormSubtitle)}</p>
-        <form id="chatpad-contact-form">
-          <div class="chatpad-form-group">
-            <label class="chatpad-form-label">First Name *</label>
-            <input type="text" name="firstName" class="chatpad-form-input" required>
-          </div>
-          <div class="chatpad-form-group">
-            <label class="chatpad-form-label">Last Name *</label>
-            <input type="text" name="lastName" class="chatpad-form-input" required>
-          </div>
-          <div class="chatpad-form-group">
-            <label class="chatpad-form-label">Email *</label>
-            <input type="email" name="email" class="chatpad-form-input" required>
-          </div>
-    `;
-
-    // Custom fields
-    customFields.forEach(field => {
-      html += `<div class="chatpad-form-group">`;
-      html += `<label class="chatpad-form-label">${escapeHtml(field.label)}${field.required ? ' *' : ''}</label>`;
-      
-      if (field.type === 'textarea') {
-        html += `<textarea name="${field.name}" class="chatpad-form-input chatpad-form-textarea" ${field.required ? 'required' : ''}></textarea>`;
-      } else if (field.type === 'select') {
-        html += `<select name="${field.name}" class="chatpad-form-input" ${field.required ? 'required' : ''}>`;
-        html += `<option value="">Select...</option>`;
-        field.options.forEach(opt => {
-          html += `<option value="${escapeHtml(opt)}">${escapeHtml(opt)}</option>`;
-        });
-        html += `</select>`;
-      } else {
-        html += `<input type="${field.type}" name="${field.name}" class="chatpad-form-input" ${field.required ? 'required' : ''}>`;
-      }
-      
-      html += `</div>`;
-    });
-
-    html += `
-          <button type="submit" class="chatpad-form-submit">Start Chatting</button>
-        </form>
-      </div>
-    `;
-
-    return html;
-  }
-
-  // View management
-  function switchView(view, data = null) {
+  // Switch view
+  function switchView(view) {
     currentView = view;
-    const content = document.getElementById('chatpad-content');
-    
-    if (view === 'home') {
-      content.innerHTML = renderHome();
-      attachHomeListeners();
-    } else if (view === 'messages') {
-      if (!leadCaptured && config.config.enableContactForm) {
-        content.innerHTML = renderContactForm();
-        attachContactFormListeners();
-      } else {
-        content.innerHTML = renderMessages();
-        if (!conversationId) {
-          // Add greeting message
-          messages.push({
-            role: 'assistant',
-            content: config.config.greeting,
-            created_at: new Date().toISOString()
-          });
-          content.innerHTML = renderMessages();
-        }
-        attachMessagesListeners();
-        scrollToBottom();
-      }
-    } else if (view === 'help') {
-      content.innerHTML = renderHelp();
-      attachHelpListeners();
-    } else if (view === 'article') {
-      content.innerHTML = renderArticle(data);
-      attachArticleListeners();
-    }
-
     updateBottomNav();
+    render();
+    
+    if (view === 'messages' && chatSettings.autoScroll) {
+      scrollToBottom();
+    }
   }
 
+  // Update bottom navigation
   function updateBottomNav() {
     const navItems = document.querySelectorAll('.chatpad-nav-item');
     navItems.forEach(item => {
       const view = item.getAttribute('data-view');
-      if (view === currentView || (currentView === 'article' && view === 'help')) {
+      if (view === currentView) {
         item.classList.add('active');
       } else {
         item.classList.remove('active');
@@ -1109,341 +1074,312 @@
     });
   }
 
+  // Scroll to bottom
   function scrollToBottom() {
     setTimeout(() => {
-      const messagesList = document.getElementById('chatpad-messages-list');
-      if (messagesList) {
-        messagesList.scrollTop = messagesList.scrollHeight;
+      const messagesContainer = document.querySelector('.chatpad-messages');
+      if (messagesContainer) {
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
       }
     }, 100);
   }
 
-  // Event listeners
-  function attachHomeListeners() {
-    document.querySelectorAll('.chatpad-quick-action').forEach(action => {
-      action.addEventListener('click', () => {
-        const actionType = action.getAttribute('data-action');
-        if (actionType === 'open_messages') {
-          switchView('messages');
-        } else if (actionType === 'open_help') {
-          switchView('help');
-        }
-      });
-    });
-  }
-
-  function attachMessagesListeners() {
-    const input = document.getElementById('chatpad-input');
-    const sendBtn = document.getElementById('chatpad-send');
-    const attachBtn = document.getElementById('chatpad-attach');
-
-    if (sendBtn) {
-      sendBtn.addEventListener('click', sendMessage);
-    }
-
-    if (input) {
-      input.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-          e.preventDefault();
-          sendMessage();
-        }
-      });
-    }
-
-    if (attachBtn && config.config.enableFileUpload) {
-      attachBtn.addEventListener('click', () => {
-        const fileInput = document.createElement('input');
-        fileInput.type = 'file';
-        fileInput.accept = config.config.allowedFileTypes.join(',');
-        fileInput.multiple = false;
-        fileInput.onchange = (e) => {
-          const file = e.target.files[0];
-          if (file) {
-            if (file.size > config.config.maxFileSize * 1024 * 1024) {
-              alert(`File size exceeds ${config.config.maxFileSize}MB limit`);
-              return;
-            }
-            selectedFiles.push(file);
-            updateFilePreview();
-          }
-        };
-        fileInput.click();
-      });
-    }
-  }
-
-  function attachHelpListeners() {
-    document.querySelectorAll('.chatpad-help-article').forEach(article => {
-      article.addEventListener('click', () => {
-        const articleId = article.getAttribute('data-article-id');
-        switchView('article', articleId);
-      });
-    });
-  }
-
-  function attachArticleListeners() {
-    const backBtn = document.getElementById('chatpad-article-back');
-    if (backBtn) {
-      backBtn.addEventListener('click', () => {
-        switchView('help');
-      });
-    }
-  }
-
-  function attachContactFormListeners() {
-    const form = document.getElementById('chatpad-contact-form');
-    if (form) {
-      form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const formData = new FormData(form);
-        const data = Object.fromEntries(formData);
-
-        // Store lead in localStorage
-        localStorage.setItem(`chatpad_lead_${agentId}`, JSON.stringify(data));
-        leadCaptured = true;
-
-        // Create lead in database (optional - could be done server-side)
-        // For now, just switch to messages
-        switchView('messages');
-      });
-    }
-  }
-
-  function updateFilePreview() {
-    // File preview implementation
-    const preview = document.getElementById('chatpad-file-preview');
-    if (!preview) return;
-
-    preview.innerHTML = '';
-    selectedFiles.forEach((file, index) => {
-      const item = document.createElement('div');
-      item.className = 'chatpad-file-item';
-      
-      if (file.type.startsWith('image/')) {
-        const img = document.createElement('img');
-        img.src = URL.createObjectURL(file);
-        item.appendChild(img);
-      }
-
-      const removeBtn = document.createElement('button');
-      removeBtn.className = 'chatpad-file-remove';
-      removeBtn.textContent = '×';
-      removeBtn.onclick = () => {
-        selectedFiles.splice(index, 1);
-        updateFilePreview();
-      };
-      item.appendChild(removeBtn);
-
-      preview.appendChild(item);
-    });
-  }
-
+  // Send message
   async function sendMessage() {
-    const input = document.getElementById('chatpad-input');
+    const input = document.querySelector('.chatpad-input');
     const message = input.value.trim();
     
     if (!message) return;
 
-    // Add user message
     messages.push({
       role: 'user',
       content: message,
-      created_at: new Date().toISOString()
+      timestamp: Date.now()
     });
 
     input.value = '';
-    
-    // Re-render messages
-    const content = document.getElementById('chatpad-content');
-    content.innerHTML = renderMessages();
-    attachMessagesListeners();
-    scrollToBottom();
 
-    // Show typing indicator
-    isTyping = true;
-    content.innerHTML = renderMessages();
-    attachMessagesListeners();
-    scrollToBottom();
-
-    try {
-      const response = await fetch(`${API_URL}/widget-chat`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          agentId,
-          conversationId,
-          messages: messages.map(m => ({ role: m.role, content: m.content }))
-        })
-      });
-
-      if (!response.ok) throw new Error('Failed to send message');
-
-      const data = await response.json();
-      conversationId = data.conversationId;
-
-      // Add assistant response
-      messages.push({
-        role: 'assistant',
-        content: data.response,
-        created_at: new Date().toISOString()
-      });
-
-    } catch (error) {
-      console.error('Error sending message:', error);
-      messages.push({
-        role: 'assistant',
-        content: 'Sorry, I encountered an error. Please try again.',
-        created_at: new Date().toISOString()
-      });
-    } finally {
-      isTyping = false;
-      content.innerHTML = renderMessages();
-      attachMessagesListeners();
-      scrollToBottom();
+    // Play sound if enabled
+    if (chatSettings.soundEnabled) {
+      try {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        oscillator.frequency.value = 800;
+        oscillator.type = 'sine';
+        gainNode.gain.value = 0.1;
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.1);
+      } catch (error) {
+        console.error('Error playing sound:', error);
+      }
     }
+
+    render();
+    scrollToBottom();
+
+    // Simulate typing
+    isTyping = true;
+    render();
+
+    // Simulate AI response
+    setTimeout(() => {
+      isTyping = false;
+      messages.push({
+        role: 'assistant',
+        content: 'Thank you for your message! This is a demo response.',
+        timestamp: Date.now()
+      });
+      render();
+      scrollToBottom();
+    }, 2000);
   }
 
-  // Create widget UI
+  // Create widget
   function createWidget() {
     const container = document.createElement('div');
     container.className = 'chatpad-widget-container';
-    container.innerHTML = `
-      <div id="chatpad-button" class="chatpad-button animate-${config.config.animation}">
-        <svg class="chatpad-button-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path>
-        </svg>
-        ${config.config.showBadge ? '<div class="chatpad-badge"></div>' : ''}
-      </div>
-      ${config.config.showTeaser ? `<div id="chatpad-teaser" class="chatpad-teaser"><p class="chatpad-teaser-text">${escapeHtml(config.config.teaserText)}</p></div>` : ''}
-      <div id="chatpad-window" class="chatpad-window hidden">
-        <div class="chatpad-header ${config.config.useGradientHeader ? 'gradient' : 'solid'}">
-          <div class="chatpad-header-info">
-            <div class="chatpad-avatar">
-              ${config.agent.avatar_url ? 
-                `<img src="${config.agent.avatar_url}" alt="${config.agent.name}">` : 
-                '🤖'
-              }
-            </div>
-            <div class="chatpad-header-text">
-              <h3>${escapeHtml(config.agent.name)}</h3>
-              <p>Online now</p>
-            </div>
-          </div>
-          <button id="chatpad-close" class="chatpad-close">×</button>
-        </div>
-        <div id="chatpad-content" class="chatpad-content"></div>
-        ${config.config.showBottomNav ? `
-          <div class="chatpad-bottom-nav">
-            <button class="chatpad-nav-item active" data-view="home">
-              <span class="chatpad-nav-icon">🏠</span>
-              <span class="chatpad-nav-label">Home</span>
-            </button>
-            <button class="chatpad-nav-item" data-view="messages">
-              <span class="chatpad-nav-icon">💬</span>
-              <span class="chatpad-nav-label">Messages</span>
-            </button>
-            <button class="chatpad-nav-item" data-view="help">
-              <span class="chatpad-nav-icon">📚</span>
-              <span class="chatpad-nav-label">Help</span>
-            </button>
-          </div>
-        ` : ''}
-        <div class="chatpad-input-area ${!config.config.showBottomNav ? '' : 'hidden'}">
-          ${config.config.enableFileUpload ? '<div id="chatpad-file-preview" class="chatpad-file-preview"></div>' : ''}
-          <div class="chatpad-input-wrapper">
-            <textarea id="chatpad-input" class="chatpad-input" placeholder="${escapeHtml(config.config.placeholder)}" rows="1"></textarea>
-            <div class="chatpad-input-actions">
-              ${config.config.enableFileUpload ? `
-                <button id="chatpad-attach" class="chatpad-attach-button">
-                  <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
-                  </svg>
-                </button>
-              ` : ''}
-              <button id="chatpad-send" class="chatpad-send-button">
-                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
-                </svg>
-              </button>
-            </div>
-          </div>
-        </div>
-        ${config.config.showBranding ? `
-          <div class="chatpad-branding">
-            Powered by <a href="https://chatpad.app" target="_blank">ChatPad</a>
-          </div>
-        ` : ''}
-      </div>
+    container.id = 'chatpad-widget';
+
+    // Widget button
+    const button = document.createElement('button');
+    button.className = `chatpad-button ${config.buttonAnimation || ''}`;
+    button.innerHTML = `
+      ${icons.chat}
+      ${config.showOnlineBadge ? '<span class="chatpad-badge"></span>' : ''}
     `;
+    button.onclick = () => {
+      const window = document.getElementById('chatpad-window');
+      const teaser = document.getElementById('chatpad-teaser');
+      
+      if (window.style.display === 'none') {
+        window.style.display = 'flex';
+        button.style.display = 'none';
+        if (teaser) teaser.style.display = 'none';
+      }
+    };
 
-    document.body.appendChild(container);
-
-    // Event listeners
-    const button = document.getElementById('chatpad-button');
-    const window = document.getElementById('chatpad-window');
-    const closeBtn = document.getElementById('chatpad-close');
-    const teaser = document.getElementById('chatpad-teaser');
-
-    button.addEventListener('click', () => {
-      window.classList.remove('hidden');
-      button.style.display = 'none';
-      if (teaser) teaser.style.display = 'none';
-      if (!currentView) switchView('home');
-    });
-
-    if (teaser) {
-      teaser.addEventListener('click', () => {
-        window.classList.remove('hidden');
+    // Teaser
+    let teaser = null;
+    if (config.showTeaser && config.teaserText) {
+      teaser = document.createElement('div');
+      teaser.className = 'chatpad-teaser';
+      teaser.id = 'chatpad-teaser';
+      teaser.innerHTML = `<p class="chatpad-teaser-text">${escapeHtml(config.teaserText)}</p>`;
+      teaser.style.display = 'none';
+      teaser.onclick = () => {
+        const window = document.getElementById('chatpad-window');
+        window.style.display = 'flex';
         button.style.display = 'none';
         teaser.style.display = 'none';
-        if (!currentView) switchView('home');
-      });
-
-      // Auto-dismiss teaser after 5 seconds
-      setTimeout(() => {
-        if (teaser && window.classList.contains('hidden')) {
-          teaser.style.display = 'none';
-        }
-      }, 5000);
+      };
     }
 
-    closeBtn.addEventListener('click', () => {
-      window.classList.add('hidden');
+    // Chat window
+    const chatWindow = document.createElement('div');
+    chatWindow.className = 'chatpad-window';
+    chatWindow.id = 'chatpad-window';
+    chatWindow.style.display = 'none';
+
+    container.appendChild(button);
+    if (teaser) container.appendChild(teaser);
+    container.appendChild(chatWindow);
+    document.body.appendChild(container);
+
+    // Show teaser after delay
+    if (teaser && config.showTeaser) {
+      setTimeout(() => {
+        teaser.style.display = 'block';
+      }, config.teaserDelay || 3000);
+    }
+
+    render();
+  }
+
+  // Render widget content
+  function render() {
+    const chatWindow = document.getElementById('chatpad-window');
+    if (!chatWindow) return;
+
+    const showBottomNav = config.showBottomNav !== false;
+    const showBranding = config.showBranding !== false && !showBottomNav;
+
+    let content = '';
+
+    // Header
+    if (currentView === 'home') {
+      content += renderHeroHeader();
+    } else {
+      content += renderCompactHeader();
+    }
+
+    // Settings Dropdown
+    content += renderSettingsDropdown();
+
+    // Main Content
+    content += '<div class="chatpad-content">';
+    if (currentView === 'home') {
+      content += renderHome();
+    } else if (currentView === 'messages') {
+      content += renderMessages();
+    } else if (currentView === 'help') {
+      content += renderHelp();
+    }
+    content += '</div>';
+
+    // Input (for messages view)
+    if (currentView === 'messages') {
+      content += `
+        <div class="chatpad-input-container">
+          <div class="chatpad-input-wrapper">
+            <input 
+              type="text" 
+              class="chatpad-input" 
+              placeholder="${config.inputPlaceholder || 'Type your message...'}"
+              onkeypress="if(event.key==='Enter') window.chatpadWidget.sendMessage()"
+            />
+            <button class="chatpad-send-button" onclick="window.chatpadWidget.sendMessage()">
+              ${icons.send}
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    // Bottom Navigation
+    if (showBottomNav) {
+      content += `
+        <div class="chatpad-bottom-nav">
+          <button class="chatpad-nav-item ${currentView === 'home' ? 'active' : ''}" data-view="home" onclick="window.chatpadWidget.switchView('home')">
+            <div class="chatpad-nav-icon">${icons.home}</div>
+            <div class="chatpad-nav-label">Home</div>
+          </button>
+          <button class="chatpad-nav-item ${currentView === 'messages' ? 'active' : ''}" data-view="messages" onclick="window.chatpadWidget.switchView('messages')">
+            <div class="chatpad-nav-icon">${icons.chat}</div>
+            <div class="chatpad-nav-label">Messages</div>
+          </button>
+          <button class="chatpad-nav-item ${currentView === 'help' ? 'active' : ''}" data-view="help" onclick="window.chatpadWidget.switchView('help')">
+            <div class="chatpad-nav-icon">${icons.help}</div>
+            <div class="chatpad-nav-label">Help</div>
+          </button>
+        </div>
+      `;
+    }
+
+    // Branding
+    if (showBranding) {
+      content += `
+        <div class="chatpad-branding">
+          Powered by <a href="https://chatpad.com" target="_blank">ChatPad</a>
+        </div>
+      `;
+    }
+
+    chatWindow.innerHTML = content;
+  }
+
+  // Public API
+  window.chatpadWidget = {
+    switchView,
+    sendMessage,
+    close: () => {
+      const chatWindow = document.getElementById('chatpad-window');
+      const button = document.querySelector('.chatpad-button');
+      chatWindow.style.display = 'none';
       button.style.display = 'flex';
-    });
-
-    // Bottom nav listeners
-    if (config.config.showBottomNav) {
-      document.querySelectorAll('.chatpad-nav-item').forEach(item => {
-        item.addEventListener('click', () => {
-          const view = item.getAttribute('data-view');
-          switchView(view);
-        });
-      });
+      showSettingsDropdown = false;
+    },
+    minimize: () => {
+      const chatWindow = document.getElementById('chatpad-window');
+      const button = document.querySelector('.chatpad-button');
+      chatWindow.style.display = 'none';
+      button.style.display = 'flex';
+      showSettingsDropdown = false;
+    },
+    toggleSettings: () => {
+      showSettingsDropdown = !showSettingsDropdown;
+      render();
+    },
+    toggleSound: () => {
+      chatSettings.soundEnabled = !chatSettings.soundEnabled;
+      saveSettings();
+      render();
+    },
+    toggleAutoScroll: () => {
+      chatSettings.autoScroll = !chatSettings.autoScroll;
+      saveSettings();
+      render();
+    },
+    handleQuickAction: (type) => {
+      if (type === 'start_chat') {
+        switchView('messages');
+      } else if (type === 'open_help') {
+        switchView('help');
+      }
+    },
+    handleAnnouncementClick: (url) => {
+      if (url && url !== '#') {
+        window.open(url, '_blank');
+      }
+    },
+    openArticle: (articleId) => {
+      console.log('Open article:', articleId);
+      // Could implement article detail view here
     }
+  };
 
-    // Handle display timing
-    if (config.config.displayTiming === 'delayed') {
-      button.style.display = 'none';
-      setTimeout(() => {
-        button.style.display = 'flex';
-      }, config.config.delaySeconds * 1000);
-    } else if (config.config.displayTiming === 'scroll') {
-      button.style.display = 'none';
-      window.addEventListener('scroll', () => {
-        const scrollPercent = (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100;
-        if (scrollPercent >= config.config.scrollDepth) {
-          button.style.display = 'flex';
-        }
-      });
+  // Fetch config
+  async function fetchConfig() {
+    try {
+      const response = await fetch(`${API_URL}/get-widget-config?agent_id=${agentId}`);
+      config = await response.json();
+      return config;
+    } catch (error) {
+      console.error('ChatPad Agent: Failed to load config:', error);
+      // Return minimal default config
+      return {
+        agent: { name: 'Assistant', avatar_url: null },
+        welcomeTitle: 'Welcome!',
+        welcomeMessage: 'How can we help you today?',
+        welcomeEmoji: '👋',
+        agentEmoji: '🤖',
+        quickActions: [
+          { type: 'start_chat', label: 'Start Chat', subtitle: 'Begin a conversation', icon: 'chat' },
+          { type: 'open_help', label: 'Help Center', subtitle: 'Browse articles', icon: 'help' }
+        ],
+        announcements: [],
+        helpCategories: [],
+        showBottomNav: true,
+        showBranding: true,
+        showOnlineBadge: true,
+        showOnlineStatus: true,
+        showTeaser: false,
+        inputPlaceholder: 'Type your message...'
+      };
     }
   }
 
   // Initialize
   async function init() {
+    loadSettings();
     injectStyles();
-    await fetchConfig();
+    config = await fetchConfig();
+    
+    if (!config) {
+      console.error('ChatPad Agent: Failed to initialize');
+      return;
+    }
+
+    messages = [
+      {
+        role: 'assistant',
+        content: config.greeting || 'Hello! How can I help you today?',
+        timestamp: Date.now()
+      }
+    ];
+
     createWidget();
   }
 
