@@ -73,8 +73,8 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
   };
 
   return (
-    <main className="flex-1 bg-muted/30 min-h-screen pt-4 lg:pt-8">
-      <header className="w-full font-medium">
+    <main className="flex-1 bg-muted/30 h-full overflow-auto">
+      <header className="w-full font-medium pt-4 lg:pt-8">
         <div className="items-stretch flex w-full flex-col gap-6 px-4 lg:px-8 py-0">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center gap-4 w-full sm:w-auto">
