@@ -45,3 +45,6 @@ verify_jwt = false
 
 [functions.get-invoices]
 verify_jwt = true
+
+[functions.send-scheduled-report]
+verify_jwt = false
