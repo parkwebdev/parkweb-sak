@@ -91,6 +91,10 @@ Deno.serve(async (req) => {
 
     // Return flat config structure
     const response = {
+      // Core IDs
+      agentId: agentId,
+      userId: '', // Empty for public widget access
+      
       // Agent info
       agentName: agent.name,
       avatarUrl: embeddedChatConfig.avatarUrl || null,
@@ -101,6 +105,7 @@ Deno.serve(async (req) => {
       gradientEndColor: embeddedChatConfig.gradientEndColor || '#8b5cf6',
       position: embeddedChatConfig.position || 'bottom-right',
       animation: embeddedChatConfig.animation || 'bounce',
+      buttonAnimation: embeddedChatConfig.animation || 'bounce', // Alias for animation
       showBadge: embeddedChatConfig.showBadge !== false,
       useGradientHeader: embeddedChatConfig.useGradientHeader !== false,
       
@@ -116,6 +121,7 @@ Deno.serve(async (req) => {
       // Teaser
       showTeaser: embeddedChatConfig.showTeaser || false,
       teaserText: embeddedChatConfig.teaserText || 'Need help?',
+      teaserMessage: embeddedChatConfig.teaserText || 'Need help?', // Alias for teaserText
       
       // Welcome
       welcomeEmoji: embeddedChatConfig.welcomeEmoji || '👋',
@@ -136,11 +142,16 @@ Deno.serve(async (req) => {
       customFields: embeddedChatConfig.customFields || [],
       
       enableFileUpload: embeddedChatConfig.enableFileUpload || false,
+      enableFileAttachments: true, // Always enabled for widget
       allowedFileTypes: embeddedChatConfig.allowedFileTypes || ['image/*', 'application/pdf'],
       maxFileSize: embeddedChatConfig.maxFileSize || 10,
       
+      enableVoiceMessages: true, // Always enabled for widget
+      enableMessageReactions: true, // Always enabled for widget
+      
       // Navigation
       showBottomNav: embeddedChatConfig.showBottomNav !== false,
+      enableHomeTab: true, // Always enabled for widget
       enableMessagesTab: embeddedChatConfig.enableMessagesTab !== false,
       enableHelpTab: embeddedChatConfig.enableHelpTab !== false,
       quickActions: quickActions,
@@ -148,6 +159,7 @@ Deno.serve(async (req) => {
       // Effects
       viewTransition: embeddedChatConfig.viewTransition || 'slide',
       defaultSoundEnabled: embeddedChatConfig.defaultSoundEnabled || false,
+      defaultAutoScroll: embeddedChatConfig.defaultAutoScroll !== false,
       
       // Branding
       showBranding: embeddedChatConfig.showBranding !== false,
