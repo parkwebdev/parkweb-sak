@@ -419,7 +419,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
       )}
 
       {isOpen ? (
-          <Card className="w-[380px] max-h-[650px] flex flex-col shadow-xl overflow-hidden border-0">
+          <Card className={isIframeMode ? "w-full h-full flex flex-col shadow-xl overflow-hidden border-0" : "w-[380px] max-h-[650px] flex flex-col shadow-xl overflow-hidden border-0"}>
             {/* Header */}
             {currentView === 'home' ? (
               <div className="relative h-[180px] overflow-hidden">
