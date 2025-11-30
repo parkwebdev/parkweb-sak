@@ -1,5 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from '@/components/ui/chart';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
 
 interface ConversationChartProps {
   data: Array<{
@@ -10,6 +11,21 @@ interface ConversationChartProps {
   }>;
 }
 
+const chartConfig = {
+  total: {
+    label: "Total",
+    color: "hsl(var(--chart-1))",
+  },
+  active: {
+    label: "Active",
+    color: "hsl(var(--chart-2))",
+  },
+  closed: {
+    label: "Closed",
+    color: "hsl(var(--chart-3))",
+  },
+} satisfies ChartConfig;
+
 export const ConversationChart = ({ data }: ConversationChartProps) => {
   return (
     <Card>
@@ -18,49 +34,49 @@ export const ConversationChart = ({ data }: ConversationChartProps) => {
         <CardDescription>Track conversation trends over time</CardDescription>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-            <XAxis 
-              dataKey="date" 
-              className="text-xs"
-              tick={{ fill: 'hsl(var(--muted-foreground))' }}
-            />
-            <YAxis 
-              className="text-xs"
-              tick={{ fill: 'hsl(var(--muted-foreground))' }}
-            />
-            <Tooltip 
-              contentStyle={{ 
-                backgroundColor: 'hsl(var(--background))',
-                border: '1px solid hsl(var(--border))',
-                borderRadius: '6px',
-              }}
-            />
-            <Legend />
-            <Line 
-              type="monotone" 
-              dataKey="total" 
-              stroke="hsl(var(--primary))" 
-              strokeWidth={2}
-              name="Total"
-            />
-            <Line 
-              type="monotone" 
-              dataKey="active" 
-              stroke="#10b981" 
-              strokeWidth={2}
-              name="Active"
-            />
-            <Line 
-              type="monotone" 
-              dataKey="closed" 
-              stroke="#6b7280" 
-              strokeWidth={2}
-              name="Closed"
-            />
-          </LineChart>
-        </ResponsiveContainer>
+        <ChartContainer config={chartConfig} className="h-[300px] w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={data}>
+              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+              <XAxis 
+                dataKey="date" 
+                className="text-xs"
+                tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                tickLine={{ stroke: 'hsl(var(--muted-foreground))' }}
+              />
+              <YAxis 
+                className="text-xs"
+                tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                tickLine={{ stroke: 'hsl(var(--muted-foreground))' }}
+              />
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <Line 
+                type="monotone" 
+                dataKey="total" 
+                stroke="var(--color-total)"
+                strokeWidth={2.5}
+                dot={{ fill: "var(--color-total)", r: 4 }}
+                activeDot={{ r: 6 }}
+              />
+              <Line 
+                type="monotone" 
+                dataKey="active" 
+                stroke="var(--color-active)"
+                strokeWidth={2.5}
+                dot={{ fill: "var(--color-active)", r: 4 }}
+                activeDot={{ r: 6 }}
+              />
+              <Line 
+                type="monotone" 
+                dataKey="closed" 
+                stroke="var(--color-closed)"
+                strokeWidth={2.5}
+                dot={{ fill: "var(--color-closed)", r: 4 }}
+                activeDot={{ r: 6 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </ChartContainer>
       </CardContent>
     </Card>
   );

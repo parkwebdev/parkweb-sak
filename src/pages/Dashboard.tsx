@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users01 as Users, MessageChatSquare, UserPlus01 as UserPlus, TrendUp01 as TrendUp, Cube01 as Bot, Zap } from '@untitledui/icons';
 import { Skeleton } from '@/components/ui/skeleton';
 
-import { PlanLimitsCard } from '@/components/settings/PlanLimitsCard';
 import { AnimatedList } from '@/components/ui/animated-list';
 import { AnimatedItem } from '@/components/ui/animated-item';
 
@@ -117,15 +116,96 @@ export const Dashboard: React.FC = () => {
         </div>
       ) : (
         <AnimatedList className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" staggerDelay={0.08}>
-...
-        </AnimatedList>
-      )}
+          <AnimatedItem>
+            <Card className="border-border/50 hover:border-border transition-colors">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Active Agents</CardTitle>
+                <div className="flex items-center justify-center w-10 h-10 rounded-full border border-border bg-muted/50">
+                  <Bot className="w-5 h-5 text-primary" />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.totalAgents}</div>
+                <p className="text-xs text-muted-foreground mt-1">Ready to respond</p>
+              </CardContent>
+            </Card>
+          </AnimatedItem>
 
-      {/* Plan Limits */}
-      {!loading && (
-        <div className="mt-6">
-          <PlanLimitsCard />
-        </div>
+          <AnimatedItem>
+            <Card className="border-border/50 hover:border-border transition-colors">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Active Conversations</CardTitle>
+                <div className="flex items-center justify-center w-10 h-10 rounded-full border border-border bg-muted/50">
+                  <MessageChatSquare className="w-5 h-5 text-primary" />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.activeConversations}</div>
+                <p className="text-xs text-muted-foreground mt-1">Currently ongoing</p>
+              </CardContent>
+            </Card>
+          </AnimatedItem>
+
+          <AnimatedItem>
+            <Card className="border-border/50 hover:border-border transition-colors">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Total Leads</CardTitle>
+                <div className="flex items-center justify-center w-10 h-10 rounded-full border border-border bg-muted/50">
+                  <Users className="w-5 h-5 text-primary" />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.totalLeads}</div>
+                <p className="text-xs text-muted-foreground mt-1">All time</p>
+              </CardContent>
+            </Card>
+          </AnimatedItem>
+
+          <AnimatedItem>
+            <Card className="border-border/50 hover:border-border transition-colors">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">New Leads (7d)</CardTitle>
+                <div className="flex items-center justify-center w-10 h-10 rounded-full border border-border bg-muted/50">
+                  <UserPlus className="w-5 h-5 text-primary" />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.newLeads}</div>
+                <p className="text-xs text-muted-foreground mt-1">Last 7 days</p>
+              </CardContent>
+            </Card>
+          </AnimatedItem>
+
+          <AnimatedItem>
+            <Card className="border-border/50 hover:border-border transition-colors">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Total Conversations</CardTitle>
+                <div className="flex items-center justify-center w-10 h-10 rounded-full border border-border bg-muted/50">
+                  <Zap className="w-5 h-5 text-primary" />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.totalConversations}</div>
+                <p className="text-xs text-muted-foreground mt-1">All time</p>
+              </CardContent>
+            </Card>
+          </AnimatedItem>
+
+          <AnimatedItem>
+            <Card className="border-border/50 hover:border-border transition-colors">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Conversion Rate</CardTitle>
+                <div className="flex items-center justify-center w-10 h-10 rounded-full border border-border bg-muted/50">
+                  <TrendUp className="w-5 h-5 text-primary" />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.conversionRate}%</div>
+                <p className="text-xs text-muted-foreground mt-1">Lead to customer</p>
+              </CardContent>
+            </Card>
+          </AnimatedItem>
+        </AnimatedList>
       )}
       </div>
     </main>
