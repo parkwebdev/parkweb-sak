@@ -14,8 +14,12 @@ serve(async (req) => {
   }
 
   try {
-    // Get the app URL from environment or construct from Supabase project
-    const appUrl = Deno.env.get('APP_URL') || 'https://lovable.dev/projects/81974e51-1cb1-411b-9c10-6f09ea30e1b6';
+    // Get the app URL from environment or dynamically from request origin
+    const referer = req.headers.get('referer');
+    const appUrl = Deno.env.get('APP_URL') || 
+                   (referer ? new URL(referer).origin : 'https://28cc9f18-cb6b-496b-b8a6-8c8f349e3c54.lovableproject.com');
+    
+    console.log('[Serve Widget] App URL:', appUrl);
     
     // Serve a loader script that loads the widget from the deployed app
     const loaderScript = `
@@ -116,8 +120,8 @@ serve(async (req) => {
       // Store config for widget access
       window.chatpadWidgetConfig = widgetConfig;
       
-      // Load widget UI from the app
-      widgetFrame.src = '${appUrl}/widget.html?agentId=' + agentId;
+      // Load widget UI from the app using the /widget route
+      widgetFrame.src = '${appUrl}/widget?agentId=' + agentId + '&position=' + position;
       
       // Handle display timing
       function showWidget() {
