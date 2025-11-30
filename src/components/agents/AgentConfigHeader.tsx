@@ -1,8 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ChevronLeft } from '@untitledui/icons';
-import { SavedIndicator } from '@/components/settings/SavedIndicator';
+import { ChevronLeft, CheckCircle } from '@untitledui/icons';
 import { BubbleBackground } from '@/components/ui/bubble-background';
 import { hexToRgb } from '@/lib/color-utils';
 import type { Tables } from '@/integrations/supabase/types';
@@ -44,28 +43,6 @@ export const AgentConfigHeader = ({
 
   return (
     <div className="border-b">
-      {/* Top Row: Back button + Save controls */}
-      <div className="px-4 lg:px-8 py-3 flex items-center justify-between">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => navigate('/agents')}
-          className="h-8"
-        >
-          <ChevronLeft size={16} />
-          Back
-        </Button>
-
-        <div className="flex items-center gap-2">
-          <SavedIndicator show={showSaved} />
-          {hasUnsavedChanges && onSave && (
-            <Button onClick={onSave} disabled={isSaving} size="sm">
-              {isSaving ? 'Saving...' : 'Save Changes'}
-            </Button>
-          )}
-        </div>
-      </div>
-
       {/* Hero Section with Animated Gradient */}
       <div className="relative overflow-hidden">
         <BubbleBackground
@@ -78,28 +55,59 @@ export const AgentConfigHeader = ({
             sixth: endRgb,
           }}
           interactive={false}
-          className="h-32"
+          className="h-40"
         >
-          <div className="relative z-10 px-4 lg:px-8 h-full flex items-center">
-            <div className="flex items-center gap-3 w-full">
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <h1 className="text-xl font-semibold text-white drop-shadow-md">
-                    {agent.name}
-                  </h1>
-                  <Badge 
-                    variant="secondary" 
-                    className={`${statusColors[agent.status]} shadow-sm`}
+          <div className="relative z-10 px-4 lg:px-8 py-4 h-full flex flex-col">
+            {/* Top Row: Back button + Save controls */}
+            <div className="flex items-center justify-between mb-auto">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate('/agents')}
+                className="h-8 text-white/90 hover:text-white hover:bg-white/10"
+              >
+                <ChevronLeft size={16} />
+                Back
+              </Button>
+
+              <div className="flex items-center gap-2">
+                {showSaved && (
+                  <div className="flex items-center gap-1.5 text-xs text-white/90 animate-fade-in">
+                    <CheckCircle className="h-3 w-3" />
+                    <span>Saved</span>
+                  </div>
+                )}
+                {hasUnsavedChanges && onSave && (
+                  <Button 
+                    onClick={onSave} 
+                    disabled={isSaving} 
+                    size="sm"
+                    className="bg-white/20 text-white hover:bg-white/30 border-white/20"
                   >
-                    {agent.status.charAt(0).toUpperCase() + agent.status.slice(1)}
-                  </Badge>
-                </div>
-                {agent.description && (
-                  <p className="text-sm text-white/90 line-clamp-1 drop-shadow">
-                    {agent.description}
-                  </p>
+                    {isSaving ? 'Saving...' : 'Save Changes'}
+                  </Button>
                 )}
               </div>
+            </div>
+
+            {/* Bottom: Agent info */}
+            <div className="mt-auto">
+              <div className="flex items-center gap-2 mb-1">
+                <h1 className="text-xl font-semibold text-white drop-shadow-md">
+                  {agent.name}
+                </h1>
+                <Badge 
+                  variant="secondary" 
+                  className={`${statusColors[agent.status]} shadow-sm`}
+                >
+                  {agent.status.charAt(0).toUpperCase() + agent.status.slice(1)}
+                </Badge>
+              </div>
+              {agent.description && (
+                <p className="text-sm text-white/90 line-clamp-1 drop-shadow">
+                  {agent.description}
+                </p>
+              )}
             </div>
           </div>
         </BubbleBackground>
