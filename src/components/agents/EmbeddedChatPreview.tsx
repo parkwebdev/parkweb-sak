@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { X, Send01, Minimize02, Home05, MessageChatCircle, HelpCircle, ChevronRight, Zap, BookOpen01, Check, Microphone01, Attachment01, Settings01, Image03, FileCheck02, ThumbsUp, ThumbsDown } from '@untitledui/icons';
 import type { EmbeddedChatConfig, HelpArticle } from '@/hooks/useEmbeddedChatConfig';
 import { ChatBubbleIcon } from './ChatBubbleIcon';
-import { AudioRecorder } from '@/components/chat/AudioRecorder';
+import { VoiceInput } from '@/components/ui/voice-input';
 import { AudioPlayer } from '@/components/chat/AudioPlayer';
 import { FileDropZone } from '@/components/chat/FileDropZone';
 import { MessageFileAttachment } from '@/components/chat/FileAttachment';
@@ -1012,7 +1012,7 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
 
                         {/* Input */}
                         {isRecordingAudio ? (
-                          <AudioRecorder
+                          <VoiceInput
                             onRecordingComplete={(audioBlob: Blob) => {
                               const audioUrl = URL.createObjectURL(audioBlob);
                               const newMessage = {
@@ -1039,7 +1039,6 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
                               }, 2000);
                             }}
                             onCancel={() => setIsRecordingAudio(false)}
-                            primaryColor={config.primaryColor}
                           />
                         ) : isAttachingFiles ? (
                           <FileDropZone
