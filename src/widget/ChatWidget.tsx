@@ -402,45 +402,23 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
   });
 
   const position = (config.position || 'bottom-right') as keyof typeof positionClasses;
+  
+  // Detect iframe mode (embedded widget)
+  const isIframeMode = !previewMode;
 
-  return (
-    <div 
-      className="fixed inset-0 pointer-events-none z-[9999] light" 
-      style={{
-        colorScheme: 'light',
-        '--background': '0 0% 100%',
-        '--foreground': '0 0% 3.9%',
-        '--card': '0 0% 100%',
-        '--card-foreground': '0 0% 3.9%',
-        '--popover': '0 0% 100%',
-        '--popover-foreground': '0 0% 3.9%',
-        '--primary': '221.2 83.2% 53.3%',
-        '--primary-foreground': '210 40% 98%',
-        '--secondary': '210 40% 96.1%',
-        '--secondary-foreground': '222.2 47.4% 11.2%',
-        '--muted': '210 40% 96.1%',
-        '--muted-foreground': '215.4 16.3% 46.9%',
-        '--accent': '210 40% 96.1%',
-        '--accent-foreground': '222.2 47.4% 11.2%',
-        '--destructive': '0 84.2% 60.2%',
-        '--destructive-foreground': '210 40% 98%',
-        '--border': '214.3 31.8% 91.4%',
-        '--input': '214.3 31.8% 91.4%',
-        '--ring': '221.2 83.2% 53.3%',
-        '--radius': '0.5rem',
-      } as React.CSSProperties}
-    >
-      <div className={`absolute ${positionClasses[position]} pointer-events-auto`}>
-        {/* Teaser Message */}
-        {showTeaser && !isOpen && config.showTeaser && (
-          <div className="absolute mb-20 mr-2 max-w-xs">
-            <div className="bg-card border shadow-lg rounded-lg p-3 animate-in slide-in-from-bottom-2">
-              <p className="text-sm">{config.teaserText || config.teaserMessage}</p>
-            </div>
+  // Shared widget content
+  const widgetContent = (
+    <>
+      {/* Teaser Message */}
+      {showTeaser && !isOpen && config.showTeaser && !isIframeMode && (
+        <div className="absolute mb-20 mr-2 max-w-xs">
+          <div className="bg-card border shadow-lg rounded-lg p-3 animate-in slide-in-from-bottom-2">
+            <p className="text-sm">{config.teaserText || config.teaserMessage}</p>
           </div>
-        )}
+        </div>
+      )}
 
-        {isOpen ? (
+      {isOpen ? (
           <Card className="w-[380px] max-h-[650px] flex flex-col shadow-xl overflow-hidden border-0">
             {/* Header */}
             {currentView === 'home' ? (
@@ -1153,14 +1131,6 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
           </Card>
         ) : (
           <div className="relative">
-            {/* Teaser Arrow Pointer */}
-            {showTeaser && config.showTeaser && config.teaserText && (
-              <div 
-                className="absolute right-full mr-1 top-1/2 -translate-y-1/2 w-0 h-0 border-t-[6px] border-t-transparent border-b-[6px] border-b-transparent border-l-[8px]"
-                style={{ borderLeftColor: config.primaryColor }}
-              />
-            )}
-            
             {/* Widget Button */}
             <Button
               size="icon"
@@ -1178,6 +1148,74 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
             </Button>
           </div>
         )}
+      </>
+  );
+
+  // In iframe mode, render directly without fixed positioning
+  if (isIframeMode) {
+    return (
+      <div 
+        className="w-full h-full light" 
+        style={{
+          colorScheme: 'light',
+          '--background': '0 0% 100%',
+          '--foreground': '0 0% 3.9%',
+          '--card': '0 0% 100%',
+          '--card-foreground': '0 0% 3.9%',
+          '--popover': '0 0% 100%',
+          '--popover-foreground': '0 0% 3.9%',
+          '--primary': '221.2 83.2% 53.3%',
+          '--primary-foreground': '210 40% 98%',
+          '--secondary': '210 40% 96.1%',
+          '--secondary-foreground': '222.2 47.4% 11.2%',
+          '--muted': '210 40% 96.1%',
+          '--muted-foreground': '215.4 16.3% 46.9%',
+          '--accent': '210 40% 96.1%',
+          '--accent-foreground': '222.2 47.4% 11.2%',
+          '--destructive': '0 84.2% 60.2%',
+          '--destructive-foreground': '210 40% 98%',
+          '--border': '214.3 31.8% 91.4%',
+          '--input': '214.3 31.8% 91.4%',
+          '--ring': '221.2 83.2% 53.3%',
+          '--radius': '0.5rem',
+        } as React.CSSProperties}
+      >
+        {widgetContent}
+        <Toaster position="top-center" richColors />
+      </div>
+    );
+  }
+
+  // Preview mode: Use fixed positioning with position classes
+  return (
+    <div 
+      className="fixed inset-0 pointer-events-none z-[9999] light" 
+      style={{
+        colorScheme: 'light',
+        '--background': '0 0% 100%',
+        '--foreground': '0 0% 3.9%',
+        '--card': '0 0% 100%',
+        '--card-foreground': '0 0% 3.9%',
+        '--popover': '0 0% 100%',
+        '--popover-foreground': '0 0% 3.9%',
+        '--primary': '221.2 83.2% 53.3%',
+        '--primary-foreground': '210 40% 98%',
+        '--secondary': '210 40% 96.1%',
+        '--secondary-foreground': '222.2 47.4% 11.2%',
+        '--muted': '210 40% 96.1%',
+        '--muted-foreground': '215.4 16.3% 46.9%',
+        '--accent': '210 40% 96.1%',
+        '--accent-foreground': '222.2 47.4% 11.2%',
+        '--destructive': '0 84.2% 60.2%',
+        '--destructive-foreground': '210 40% 98%',
+        '--border': '214.3 31.8% 91.4%',
+        '--input': '214.3 31.8% 91.4%',
+        '--ring': '221.2 83.2% 53.3%',
+        '--radius': '0.5rem',
+      } as React.CSSProperties}
+    >
+      <div className={`absolute ${positionClasses[position]} pointer-events-auto`}>
+        {widgetContent}
       </div>
       <Toaster position="top-center" richColors />
     </div>
