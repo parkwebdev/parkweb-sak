@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { ChatWidget } from '@/widget/ChatWidget';
 import type { WidgetConfig } from '@/widget/api';
-import { supabase } from '@/integrations/supabase/client';
+import { fetchWidgetConfig } from '@/widget/api';
 
 const WidgetPage = () => {
   const [searchParams] = useSearchParams();
@@ -21,15 +21,7 @@ const WidgetPage = () => {
       }
 
       try {
-        const { data, error } = await supabase.functions.invoke('get-widget-config', {
-          body: { agentId }
-        });
-
-        if (error) throw error;
-        
-        if (!data) {
-          throw new Error('No configuration found');
-        }
+        const data = await fetchWidgetConfig(agentId);
 
         // Transform the config data to WidgetConfig format
         const widgetConfig: WidgetConfig = {
