@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChatPad Widget</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      overflow: hidden;
+      background: transparent;
+    }
+    
+    #widget-root {
+      width: 100%;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .widget-loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      font-size: 14px;
+    }
+    
+    .widget-error {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      background: #fee;
+      color: #c33;
+      padding: 20px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div id="widget-root">
+    <div class="widget-loading">
+      <div>Loading widget...</div>
+    </div>
+  </div>
+
+  <script type="module">
+    console.log('[ChatPad Widget] Initializing widget iframe...');
+    
+    // Get config from parent window or URL params
+    function getConfig() {
+      try {
+        // Try to get config from parent window
+        if (window.parent && window.parent.chatpadWidgetConfig) {
+          console.log('[ChatPad Widget] Config loaded from parent window');
+          return window.parent.chatpadWidgetConfig;
+        }
+        
+        // Fallback: get from URL params
+        const urlParams = new URLSearchParams(window.location.search);
+        const agentId = urlParams.get('agentId');
+        
+        if (!agentId) {
+          throw new Error('No agentId found in config or URL');
+        }
+        
+        console.log('[ChatPad Widget] Config loaded from URL params');
+        return { agentId };
+      } catch (error) {
+        console.error('[ChatPad Widget] Failed to get config:', error);
+        return null;
+      }
+    }
+    
+    // Fetch widget config from API
+    async function loadWidgetConfig(agentId) {
+      try {
+        const response = await fetch(
+          `https://mvaimvwdukpgvkifkfpa.supabase.co/functions/v1/get-widget-config?agentId=${agentId}`
+        );
+        
+        if (!response.ok) {
+          throw new Error('Failed to load widget configuration');
+        }
+        
+        const config = await response.json();
+        console.log('[ChatPad Widget] Configuration loaded:', config);
+        return config;
+      } catch (error) {
+        console.error('[ChatPad Widget] Error loading config:', error);
+        throw error;
+      }
+    }
+    
+    // Initialize widget with React from CDN
+    async function initWidget() {
+      const config = getConfig();
+      
+      if (!config || !config.agentId) {
+        document.getElementById('widget-root').innerHTML = `
+          <div class="widget-error">
+            <h3>Configuration Error</h3>
+            <p>Unable to load widget configuration. Please check your setup.</p>
+          </div>
+        `;
+        return;
+      }
+      
+      try {
+        // Load full widget configuration
+        const fullConfig = await loadWidgetConfig(config.agentId);
+        
+        // Merge with any config from parent
+        const mergedConfig = { ...fullConfig, ...config };
+        
+        console.log('[ChatPad Widget] Final config:', mergedConfig);
+        
+        // Load React dependencies
+        const loadScript = (src) => {
+          return new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = src;
+            script.onload = resolve;
+            script.onerror = reject;
+            document.head.appendChild(script);
+          });
+        };
+        
+        // Load React and ReactDOM from CDN
+        await loadScript('https://unpkg.com/react@18/umd/react.production.min.js');
+        await loadScript('https://unpkg.com/react-dom@18/umd/react-dom.production.min.js');
+        
+        console.log('[ChatPad Widget] React loaded, initializing UI...');
+        
+        // For now, render a simple widget UI
+        // TODO: In production, this would load the bundled ChatWidget component
+        renderSimpleWidget(mergedConfig);
+        
+      } catch (error) {
+        console.error('[ChatPad Widget] Initialization error:', error);
+        document.getElementById('widget-root').innerHTML = `
+          <div class="widget-error">
+            <h3>Initialization Error</h3>
+            <p>${error.message}</p>
+          </div>
+        `;
+      }
+    }
+    
+    // Render a simple widget UI (temporary implementation)
+    function renderSimpleWidget(config) {
+      const root = document.getElementById('widget-root');
+      
+      root.innerHTML = `
+        <div style="display: flex; flex-direction: column; height: 100vh; background: white;">
+          <!-- Header -->
+          <div style="background: linear-gradient(135deg, ${config.gradientStartColor || '#667eea'} 0%, ${config.gradientEndColor || '#764ba2'} 100%); 
+                      color: white; padding: 16px; display: flex; align-items: center; gap: 12px;">
+            ${config.showTeamAvatars && config.teamAvatarUrls?.length > 0 ? `
+              <div style="display: flex; margin-right: 8px;">
+                ${config.teamAvatarUrls.slice(0, 3).map((url, i) => `
+                  <img src="${url}" alt="Avatar" style="width: 32px; height: 32px; border-radius: 50%; 
+                       border: 2px solid white; margin-left: ${i > 0 ? '-8px' : '0'};" />
+                `).join('')}
+              </div>
+            ` : ''}
+            <div style="flex: 1;">
+              <div style="font-weight: 600; font-size: 16px;">${config.agentName || 'Chat Support'}</div>
+              <div style="font-size: 12px; opacity: 0.9;">Online</div>
+            </div>
+          </div>
+          
+          <!-- Welcome Screen -->
+          <div style="flex: 1; padding: 24px; overflow-y: auto; display: flex; flex-direction: column; justify-content: center;">
+            <div style="text-align: center; margin-bottom: 32px;">
+              <div style="font-size: 48px; margin-bottom: 16px;">${config.welcomeEmoji || '👋'}</div>
+              <h2 style="font-size: 24px; font-weight: 700; margin-bottom: 8px; color: #1a1a1a;">
+                ${config.welcomeTitle || 'Hi there!'}
+              </h2>
+              <p style="font-size: 14px; color: #666;">
+                ${config.welcomeSubtitle || 'How can we help you today?'}
+              </p>
+            </div>
+            
+            <!-- Quick Actions -->
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+              ${(config.quickActions || []).map(action => `
+                <button onclick="alert('Action: ${action.action}')" 
+                        style="padding: 16px; border: 1px solid #e5e5e5; border-radius: 12px; 
+                               background: white; cursor: pointer; text-align: left; transition: all 0.2s;
+                               display: flex; align-items: center; gap: 12px;"
+                        onmouseover="this.style.borderColor='${config.primaryColor || '#667eea'}'; this.style.transform='translateY(-2px)'"
+                        onmouseout="this.style.borderColor='#e5e5e5'; this.style.transform='translateY(0)'">
+                  <span style="font-size: 24px;">${action.icon || '💬'}</span>
+                  <div style="flex: 1;">
+                    <div style="font-weight: 600; color: #1a1a1a; margin-bottom: 4px;">
+                      ${action.title || action.label}
+                    </div>
+                    ${action.subtitle ? `
+                      <div style="font-size: 13px; color: #666;">
+                        ${action.subtitle}
+                      </div>
+                    ` : ''}
+                  </div>
+                </button>
+              `).join('')}
+            </div>
+            
+            ${config.announcements && config.announcements.length > 0 ? `
+              <!-- Announcements -->
+              <div style="margin-top: 24px;">
+                ${config.announcements.map(announcement => `
+                  <div style="padding: 16px; border-radius: 12px; margin-bottom: 12px;
+                              background: ${announcement.background_color || '#f3f4f6'};">
+                    ${announcement.image_url ? `
+                      <img src="${announcement.image_url}" alt="${announcement.title}" 
+                           style="width: 100%; height: 120px; object-fit: cover; border-radius: 8px; margin-bottom: 12px;" />
+                    ` : ''}
+                    <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 4px;
+                               color: ${announcement.title_color || '#1a1a1a'};">
+                      ${announcement.title}
+                    </h3>
+                    ${announcement.subtitle ? `
+                      <p style="font-size: 14px; color: #666;">
+                        ${announcement.subtitle}
+                      </p>
+                    ` : ''}
+                  </div>
+                `).join('')}
+              </div>
+            ` : ''}
+          </div>
+          
+          <!-- Footer Branding -->
+          ${config.showBranding !== false ? `
+            <div style="padding: 12px; text-align: center; border-top: 1px solid #e5e5e5; 
+                        font-size: 12px; color: #999;">
+              Powered by ChatPad
+            </div>
+          ` : ''}
+        </div>
+      `;
+      
+      console.log('[ChatPad Widget] Widget rendered successfully');
+    }
+    
+    // Start initialization
+    initWidget();
+  </script>
+</body>
+</html>
