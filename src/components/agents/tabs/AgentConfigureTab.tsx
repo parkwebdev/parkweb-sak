@@ -159,7 +159,9 @@ export const AgentConfigureTab = ({ agent, onUpdate, onFormChange }: AgentConfig
                 <Label htmlFor="model">AI Model</Label>
                 <Select value={formData.model} onValueChange={(value) => handleUpdate({ model: value })}>
                   <SelectTrigger id="model">
-                    <SelectValue />
+                    <SelectValue>
+                      {MODELS.find(m => m.value === formData.model)?.label || 'Select model'}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {MODELS.map((model) => (
