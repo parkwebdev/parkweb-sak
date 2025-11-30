@@ -1,0 +1,3 @@
+/* Widget styles - will be injected into shadow DOM */
+/* Import Tailwind and other dependencies */
+@import '../index.css';
