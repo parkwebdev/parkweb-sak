@@ -111,11 +111,33 @@ serve(async (req) => {
       // Initialize the widget by loading it from the main app
       var widgetFrame = document.createElement('iframe');
       widgetFrame.id = 'chatpad-widget-frame';
+      
+      // Start with small size for bubble only
       widgetFrame.style.cssText = 'position: fixed; bottom: 20px; ' + 
         (position.includes('right') ? 'right: 20px;' : 'left: 20px;') + 
-        ' width: 400px; height: 600px; border: none; border-radius: 16px; ' +
-        'box-shadow: 0 8px 24px rgba(0,0,0,0.15); z-index: 999999; ' +
-        'display: none; transition: all 0.3s ease;';
+        ' width: 60px; height: 60px; border: none; z-index: 999999; ' +
+        'background: transparent; display: none; transition: all 0.3s ease;';
+      
+      // Listen for widget state messages to resize iframe
+      window.addEventListener('message', function(event) {
+        if (event.data.type === 'chatpad-widget-state') {
+          if (event.data.isOpen) {
+            // Widget opened - expand to full size
+            widgetFrame.style.width = '400px';
+            widgetFrame.style.height = '650px';
+            widgetFrame.style.borderRadius = '16px';
+            widgetFrame.style.boxShadow = '0 8px 24px rgba(0,0,0,0.15)';
+            widgetFrame.style.background = 'white';
+          } else {
+            // Widget closed - shrink to bubble size
+            widgetFrame.style.width = '60px';
+            widgetFrame.style.height = '60px';
+            widgetFrame.style.borderRadius = '50%';
+            widgetFrame.style.boxShadow = 'none';
+            widgetFrame.style.background = 'transparent';
+          }
+        }
+      });
       
       // Store config for widget access
       window.chatpadWidgetConfig = widgetConfig;
