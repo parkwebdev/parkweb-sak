@@ -10,6 +10,7 @@ import { GlobalSearch } from "@/components/GlobalSearch";
 import { AnimatePresence } from "motion/react";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
+import WidgetPage from "./pages/WidgetPage";
 import DashboardWrapper from "./pages/DashboardWrapper";
 import AgentsWrapper from "./pages/AgentsWrapper";
 import AgentConfigWrapper from "./pages/AgentConfigWrapper";
@@ -27,6 +28,7 @@ const AnimatedRoutes = () => {
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
         <Route path="/login" element={<Auth />} />
+        <Route path="/widget" element={<WidgetPage />} />
         <Route path="/" element={
           <ProtectedRoute>
             <DashboardWrapper />
