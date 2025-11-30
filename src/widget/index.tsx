@@ -1,6 +1,7 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { ChatWidget } from './ChatWidget';
+import { WIDGET_STYLES } from './widget-styles';
 import './styles.css';
 
 // Global widget interface
@@ -49,8 +50,8 @@ class ChatPadWidget {
   }
 
   private getStyles(): string {
-    // Return all widget styles (will be injected from bundled CSS)
-    return '';
+    // Return all widget styles (injected into shadow DOM)
+    return WIDGET_STYLES;
   }
 
   destroy() {
