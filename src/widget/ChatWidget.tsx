@@ -401,17 +401,6 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                 />
                 
                 <div className="relative z-10 h-full flex flex-col items-start justify-center p-6 text-left">
-                  {config.showTeamAvatars && config.teamAvatarUrls && config.teamAvatarUrls.length > 0 && (
-                    <div className="flex -space-x-2 mb-4">
-                      {config.teamAvatarUrls.slice(0, 3).map((avatarUrl, idx) => (
-                        <Avatar key={idx} className="w-10 h-10 border-2 border-white ring-2 ring-white/20">
-                          <AvatarImage src={avatarUrl} />
-                          <AvatarFallback className="bg-white/20 text-white text-xs">{String.fromCharCode(65 + idx)}</AvatarFallback>
-                        </Avatar>
-                      ))}
-                    </div>
-                  )}
-                  
                   <div className="space-y-2">
                     <h2 className="text-3xl font-bold text-white">
                       {config.welcomeTitle} {config.welcomeEmoji}
