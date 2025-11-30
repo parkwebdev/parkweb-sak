@@ -566,6 +566,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                                 const userData = { firstName, lastName, email, leadId };
                                 localStorage.setItem(`chatpad_user_${config.agentId}`, JSON.stringify(userData));
                                 setChatUser(userData);
+                                setActiveConversationId('new');
                                 toast.success(`Welcome, ${firstName}!`);
                               } catch (error) {
                                 if (error instanceof z.ZodError) {
@@ -611,6 +612,31 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                               Start Chat
                             </Button>
                           </form>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Empty Conversation State */}
+                    {chatUser && !activeConversationId && messages.length <= 1 && (
+                      <div className="flex-1 flex items-center justify-center p-8">
+                        <div className="text-center space-y-4 max-w-sm">
+                          <div className="w-16 h-16 mx-auto rounded-full bg-muted flex items-center justify-center">
+                            <MessageChatCircle className="h-8 w-8 text-muted-foreground" />
+                          </div>
+                          <div className="space-y-2">
+                            <h4 className="font-semibold text-base">No conversations yet</h4>
+                            <p className="text-sm text-muted-foreground">
+                              Start a conversation with us and we'll be happy to help you.
+                            </p>
+                          </div>
+                          <Button
+                            onClick={() => setActiveConversationId('new')}
+                            style={{ backgroundColor: config.primaryColor }}
+                            className="w-full"
+                          >
+                            <MessageChatCircle className="h-4 w-4 mr-2" />
+                            Start New Conversation
+                          </Button>
                         </div>
                       </div>
                     )}
