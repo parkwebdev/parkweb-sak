@@ -2,81 +2,129 @@ const SUPABASE_URL = 'https://mvaimvwdukpgvkifkfpa.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im12YWltdndkdWtwZ3ZraWZrZnBhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcxNzI3MTYsImV4cCI6MjA3Mjc0ODcxNn0.DmeecDZcGids_IjJQQepFVQK5wdEdV0eNXDCTRzQtQo';
 
 export interface WidgetConfig {
+  // Agent info
   agentId: string;
   agentName: string;
-  greeting: string;
+  userId: string;
+  
+  // Display settings
+  position: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
   primaryColor: string;
-  position: string;
-  welcomeTitle: string;
-  welcomeSubtitle: string;
-  teamAvatarUrl: string | null;
   useGradientHeader: boolean;
   gradientStartColor: string;
   gradientEndColor: string;
-  showBottomNav: boolean;
-  showHomeTab: boolean;
-  showMessagesTab: boolean;
-  showHelpTab: boolean;
-  displayTiming: string;
+  
+  // Hero section
+  welcomeTitle: string;
+  welcomeSubtitle: string;
+  welcomeEmoji?: string;
+  showTeamAvatars: boolean;
+  teamAvatarUrls: string[];
+  teamAvatarUrl?: string;
+  
+  // Greetings and messages
+  greeting: string;
+  placeholder: string;
+  
+  // Display timing
+  displayTiming: 'immediate' | 'delayed' | 'scroll';
   delaySeconds: number;
   showTeaser: boolean;
   teaserMessage: string;
-  buttonAnimation: string;
-  viewTransition: string;
-  defaultSoundEnabled: boolean;
-  defaultAutoScroll: boolean;
+  teaserText?: string;
+  
+  // Widget button
+  showBadge: boolean;
+  animation: 'none' | 'pulse' | 'bounce' | 'fade' | 'ring';
+  buttonAnimation?: 'none' | 'pulse' | 'bounce' | 'fade' | 'ring';
+  
+  // Navigation
+  enableHomeTab: boolean;
+  enableMessagesTab: boolean;
+  enableHelpTab: boolean;
+  showBottomNav: boolean;
+  showMessagesTab?: boolean;
+  showHelpTab?: boolean;
+  viewTransition: 'none' | 'slide' | 'fade';
+  
+  // Contact form
   customFields: Array<{
     id: string;
     label: string;
-    fieldType: string;
+    fieldType: 'text' | 'email' | 'phone' | 'textarea' | 'select';
     required: boolean;
     options?: string[];
   }>;
+  
+  // Quick actions
   quickActions: Array<{
     id: string;
-    icon: string;
     label: string;
+    subtitle?: string;
+    icon: string;
     actionType: string;
+    action?: string;
   }>;
+  
+  // Announcements
   announcements: Array<{
     id: string;
     title: string;
-    subtitle: string;
-    image_url: string | null;
+    subtitle?: string;
+    image_url?: string;
     background_color: string;
     title_color: string;
-    action_type: string;
-    action_url: string | null;
+    action_type?: string;
+    action_url?: string;
   }>;
+  
+  // Help center
   helpCategories: Array<{
     id: string;
     name: string;
-    description: string | null;
-    order_index: number;
+    description?: string;
+    icon?: string;
   }>;
   helpArticles: Array<{
     id: string;
     category_id: string;
+    category?: string;
     title: string;
     content: string;
-    icon: string | null;
-    order_index: number;
+    icon?: string;
+    order?: number;
   }>;
+  
+  // Features
+  enableVoiceMessages: boolean;
+  enableFileAttachments: boolean;
+  allowedFileTypes: string[];
+  enableMessageReactions: boolean;
+  showReadReceipts: boolean;
+  defaultSoundEnabled: boolean;
+  defaultAutoScroll: boolean;
+  
+  // Branding
+  showBranding: boolean;
 }
 
-export async function fetchWidgetConfig(agentId: string): Promise<WidgetConfig> {
-  const response = await fetch(`${SUPABASE_URL}/functions/v1/get-widget-config?agent_id=${agentId}`, {
-    headers: {
-      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-    },
-  });
+export const fetchWidgetConfig = async (agentId: string): Promise<WidgetConfig> => {
+  const response = await fetch(
+    `${SUPABASE_URL}/functions/v1/get-widget-config?agentId=${agentId}`,
+    {
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: SUPABASE_ANON_KEY,
+      },
+    }
+  );
 
   if (!response.ok) {
     throw new Error('Failed to fetch widget config');
   }
 
   return response.json();
-}
+};
 
 export async function createLead(agentId: string, data: {
   firstName: string;

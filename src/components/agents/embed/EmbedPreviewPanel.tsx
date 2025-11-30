@@ -27,64 +27,83 @@ export const EmbedPreviewPanel = ({ config }: EmbedPreviewPanelProps) => {
   const widgetConfig: WidgetConfig = {
     agentId: config.agentId,
     agentName: config.agentName,
-    greeting: config.greeting,
-    primaryColor: config.primaryColor,
+    userId: config.userId || '',
     position: config.position,
-    welcomeTitle: config.welcomeTitle,
-    welcomeSubtitle: config.welcomeSubtitle,
-    teamAvatarUrl: config.teamAvatarUrls[0] || null,
+    primaryColor: config.primaryColor,
     useGradientHeader: config.useGradientHeader,
     gradientStartColor: config.gradientStartColor,
     gradientEndColor: config.gradientEndColor,
-    showBottomNav: config.showBottomNav,
-    showHomeTab: true,
-    showMessagesTab: config.enableMessagesTab,
-    showHelpTab: config.enableHelpTab,
+    welcomeTitle: config.welcomeTitle,
+    welcomeSubtitle: config.welcomeSubtitle,
+    welcomeEmoji: config.welcomeEmoji,
+    showTeamAvatars: config.showTeamAvatars,
+    teamAvatarUrls: config.teamAvatarUrls,
+    teamAvatarUrl: config.teamAvatarUrls[0],
+    greeting: config.greeting,
+    placeholder: config.placeholder,
     displayTiming: config.displayTiming,
     delaySeconds: config.delaySeconds,
     showTeaser: config.showTeaser,
     teaserMessage: config.teaserText,
+    teaserText: config.teaserText,
+    showBadge: config.showBadge,
+    animation: config.animation,
     buttonAnimation: config.animation,
+    enableHomeTab: true,
+    enableMessagesTab: config.enableMessagesTab,
+    enableHelpTab: config.enableHelpTab,
+    showBottomNav: config.showBottomNav,
+    showMessagesTab: config.enableMessagesTab,
+    showHelpTab: config.enableHelpTab,
     viewTransition: config.viewTransition,
-    defaultSoundEnabled: config.defaultSoundEnabled,
-    defaultAutoScroll: config.defaultAutoScroll,
-    customFields: config.customFields.map(cf => ({
-      id: cf.id,
-      label: cf.label,
-      fieldType: cf.fieldType,
-      required: cf.required,
-      options: cf.options,
-    })),
+    customFields: config.customFields,
     quickActions: config.quickActions.map(qa => ({
       id: qa.id,
-      icon: qa.icon,
       label: qa.title,
+      subtitle: qa.subtitle,
+      icon: qa.icon,
       actionType: qa.action,
+      action: qa.action,
     })),
-    announcements: activeAnnouncements,
-    helpCategories: helpCategories.map(c => ({
-      id: c.name,
-      name: c.name,
-      description: c.description,
-      order_index: 0,
-    })),
-    helpArticles: helpArticles.map(a => ({
+    announcements: activeAnnouncements.map(a => ({
       id: a.id,
-      category_id: a.category,
       title: a.title,
-      content: a.content,
-      icon: a.icon || null,
-      order_index: a.order || 0,
+      subtitle: a.subtitle || undefined,
+      image_url: a.image_url || undefined,
+      background_color: a.background_color || '#ffffff',
+      title_color: a.title_color || '#000000',
+      action_type: a.action_type || undefined,
+      action_url: a.action_url || undefined,
     })),
+    helpCategories: helpCategories.map((cat, idx) => ({
+      id: cat.id,
+      name: cat.name,
+      description: cat.description || undefined,
+      icon: undefined,
+    })),
+    helpArticles: helpArticles.map(art => ({
+      id: art.id,
+      category_id: art.category_id,
+      category: helpCategories.find(c => c.id === art.category_id)?.name,
+      title: art.title,
+      content: art.content,
+      icon: art.icon || undefined,
+      order: art.order_index || 0,
+    })),
+    enableVoiceMessages: true,
+    enableFileAttachments: true,
+    allowedFileTypes: ['image', 'document'],
+    enableMessageReactions: true,
+    showReadReceipts: true,
+    defaultSoundEnabled: config.defaultSoundEnabled,
+    defaultAutoScroll: config.defaultAutoScroll,
+    showBranding: config.showBranding,
   };
 
   return (
-    <div className="sticky top-6 min-h-[700px] h-[calc(100vh-120px)]">
-      <div className="h-full rounded-lg border bg-background overflow-hidden relative">
-        <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
-          <p>Website Preview Area</p>
-        </div>
-        <ChatWidget config={widgetConfig} previewMode />
+    <div className="sticky top-0 h-screen p-4 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+      <div className="h-full flex items-center justify-center">
+        <ChatWidget config={widgetConfig} previewMode={true} />
       </div>
     </div>
   );
