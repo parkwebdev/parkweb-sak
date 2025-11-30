@@ -81,54 +81,50 @@ const AgentConfig: React.FC<AgentConfigProps> = ({ onMenuClick }) => {
   }
 
   return (
-    <main className="flex-1 bg-muted/30 min-h-screen p-1">
-      <div className="h-full">
-        <div className="rounded-xl border bg-card overflow-hidden shadow-sm">
-          <AgentConfigHeader
+    <main className="flex-1 bg-muted/30 min-h-screen p-6">
+      <AgentConfigHeader
+        agent={agent}
+        hasUnsavedChanges={hasUnsavedChanges}
+        showSaved={showSaved}
+        onSave={handleSave}
+        isSaving={isSaving}
+      />
+      
+      <AgentConfigLayout
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+      >
+        {activeTab === 'configure' && (
+          <AgentConfigureTab
             agent={agent}
-            hasUnsavedChanges={hasUnsavedChanges}
-            showSaved={showSaved}
-            onSave={handleSave}
-            isSaving={isSaving}
+            onUpdate={handleUpdate}
+            onFormChange={setHasUnsavedChanges}
           />
-          
-          <AgentConfigLayout
-            activeTab={activeTab}
-            onTabChange={setActiveTab}
-          >
-            {activeTab === 'configure' && (
-              <AgentConfigureTab
-                agent={agent}
-                onUpdate={handleUpdate}
-                onFormChange={setHasUnsavedChanges}
-              />
-            )}
-            {activeTab === 'behavior' && (
-              <AgentBehaviorTab
-                agent={agent}
-                onUpdate={handleUpdate}
-                onFormChange={setHasUnsavedChanges}
-              />
-            )}
-            {activeTab === 'knowledge' && (
-              <AgentKnowledgeTab agentId={agent.id} userId={agent.user_id} />
-            )}
-            {activeTab === 'tools' && (
-              <AgentToolsTab agentId={agent.id} agent={agent} onUpdate={handleUpdate} />
-            )}
-            {activeTab === 'embed' && (
-              <AgentEmbedTab
-                agent={agent}
-                onUpdate={handleUpdate}
-                onFormChange={setHasUnsavedChanges}
-              />
-            )}
-            {activeTab === 'announcements' && (
-              <AgentAnnouncementsTab />
-            )}
-          </AgentConfigLayout>
-        </div>
-      </div>
+        )}
+        {activeTab === 'behavior' && (
+          <AgentBehaviorTab
+            agent={agent}
+            onUpdate={handleUpdate}
+            onFormChange={setHasUnsavedChanges}
+          />
+        )}
+        {activeTab === 'knowledge' && (
+          <AgentKnowledgeTab agentId={agent.id} userId={agent.user_id} />
+        )}
+        {activeTab === 'tools' && (
+          <AgentToolsTab agentId={agent.id} agent={agent} onUpdate={handleUpdate} />
+        )}
+        {activeTab === 'embed' && (
+          <AgentEmbedTab
+            agent={agent}
+            onUpdate={handleUpdate}
+            onFormChange={setHasUnsavedChanges}
+          />
+        )}
+        {activeTab === 'announcements' && (
+          <AgentAnnouncementsTab />
+        )}
+      </AgentConfigLayout>
     </main>
   );
 };

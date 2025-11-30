@@ -1,10 +1,7 @@
 import React from 'react';
 import { X, ChevronLeft, ChevronRight, Settings01 as Settings, Grid01 as Grid, MessageChatSquare, Users01 as Users, Cube01 as Bot, BarChart03 } from '@untitledui/icons';
 import { Link, useLocation } from 'react-router-dom';
-import { SearchInput } from './SearchInput';
 import { UserAccountCard } from './UserAccountCard';
-import { ThemeToggle } from './ThemeToggle';
-import { NotificationCenter } from './notifications/NotificationCenter';
 import { useSidebar } from '@/hooks/use-sidebar';
 import { useConversations } from '@/hooks/useConversations';
 import chatpadLogo from '@/assets/chatpad-logo.png';
@@ -75,8 +72,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
   }).length;
 
   return (
-    <aside className={`flex ${isCollapsed ? 'w-[72px]' : 'w-[280px]'} h-screen bg-background transition-all duration-300`}>
-      <nav className="w-full flex flex-col pt-6 px-3">
+    <aside className={`flex ${isCollapsed ? 'w-[72px]' : 'w-[220px]'} h-screen bg-background transition-all duration-300`}>
+      <nav className="w-full flex flex-col pt-6 px-3 pb-4">
         <header className="w-full px-2 mb-6">
           <div className="flex items-center justify-between">
             {!isCollapsed && (
@@ -181,6 +178,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
               })}
             </section>
           )}
+        </div>
+
+        {/* Footer with UserAccountCard */}
+        <div className="pt-4 border-t border-border">
+          <UserAccountCard isCollapsed={isCollapsed} />
         </div>
       </nav>
     </aside>
