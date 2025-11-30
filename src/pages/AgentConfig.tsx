@@ -81,14 +81,16 @@ const AgentConfig: React.FC<AgentConfigProps> = ({ onMenuClick }) => {
   }
 
   return (
-    <main className="flex-1 bg-muted/30 min-h-screen p-6">
-      <AgentConfigHeader
-        agent={agent}
-        hasUnsavedChanges={hasUnsavedChanges}
-        showSaved={showSaved}
-        onSave={handleSave}
-        isSaving={isSaving}
-      />
+    <main className="flex-1 bg-muted/30 min-h-screen">
+      <div className="p-6">
+        <AgentConfigHeader
+          agent={agent}
+          hasUnsavedChanges={hasUnsavedChanges}
+          showSaved={showSaved}
+          onSave={handleSave}
+          isSaving={isSaving}
+        />
+      </div>
       
       <AgentConfigLayout
         activeTab={activeTab}

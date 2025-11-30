@@ -41,25 +41,27 @@ const SortableAnnouncementCard = ({ announcement, onEdit, onDelete }: {
   };
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+    <div ref={setNodeRef} style={style}>
       <Card className="cursor-move hover:shadow-md transition-shadow">
         <CardContent className="p-4">
           <div className="flex gap-4">
-            {announcement.image_url ? (
-              <img 
-                src={announcement.image_url} 
-                alt="" 
-                className="w-24 h-24 rounded-lg object-cover flex-shrink-0"
-              />
-            ) : (
-              <div className="w-24 h-24 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
-                <Image03 className="h-8 w-8 text-muted-foreground" />
-              </div>
-            )}
+            <div {...attributes} {...listeners} className="flex-shrink-0">
+              {announcement.image_url ? (
+                <img 
+                  src={announcement.image_url} 
+                  alt="" 
+                  className="w-24 h-24 rounded-lg object-cover"
+                />
+              ) : (
+                <div className="w-24 h-24 rounded-lg bg-muted flex items-center justify-center">
+                  <Image03 className="h-8 w-8 text-muted-foreground" />
+                </div>
+              )}
+            </div>
             
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-2">
-                <div className="flex-1 min-w-0">
+                <div className="flex-1 min-w-0" {...attributes} {...listeners}>
                   <h3 
                     className="font-semibold text-base truncate"
                     style={{ color: announcement.title_color }}
@@ -86,10 +88,24 @@ const SortableAnnouncementCard = ({ announcement, onEdit, onDelete }: {
                 </div>
                 
                 <div className="flex gap-1 flex-shrink-0">
-                  <Button variant="ghost" size="icon" onClick={onEdit}>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEdit();
+                    }}
+                  >
                     <Edit02 className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="icon" onClick={onDelete}>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDelete();
+                    }}
+                  >
                     <Trash01 className="h-4 w-4 text-destructive" />
                   </Button>
                 </div>
@@ -349,7 +365,6 @@ export const AgentAnnouncementsTab = () => {
   const handleSave = async (formData: AnnouncementFormData) => {
     if (editingAnnouncement) {
       await updateAnnouncement(editingAnnouncement.id, formData);
-      setEditingAnnouncement(null);
     } else {
       const newAnnouncement: AnnouncementInsert = {
         ...formData,
@@ -358,8 +373,10 @@ export const AgentAnnouncementsTab = () => {
         order_index: announcements.length,
       };
       await addAnnouncement(newAnnouncement);
-      setIsCreateDialogOpen(false);
     }
+    // Reset state after save
+    setEditingAnnouncement(null);
+    setIsCreateDialogOpen(false);
   };
 
   if (loading) {
@@ -367,7 +384,7 @@ export const AgentAnnouncementsTab = () => {
   }
 
   return (
-    <div className="p-6 max-w-4xl mx-auto space-y-6">
+    <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold">Announcements</h2>
@@ -410,7 +427,10 @@ export const AgentAnnouncementsTab = () => {
       <AnnouncementDialog
         announcement={editingAnnouncement || undefined}
         onSave={handleSave}
-        onClose={() => setEditingAnnouncement(null)}
+        onClose={() => {
+          setEditingAnnouncement(null);
+          setIsCreateDialogOpen(false);
+        }}
         open={!!editingAnnouncement || isCreateDialogOpen}
       />
 
