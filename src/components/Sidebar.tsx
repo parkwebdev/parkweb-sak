@@ -1,9 +1,11 @@
-import React from 'react';
-import { X, ChevronLeft, ChevronRight, Settings01 as Settings, Grid01 as Grid, MessageChatSquare, Users01 as Users, Cube01 as Bot, BarChart03 } from '@untitledui/icons';
+import React, { useState } from 'react';
+import { X, ChevronLeft, ChevronRight, Settings01 as Settings, Grid01 as Grid, MessageChatSquare, Users01 as Users, Cube01 as Bot, BarChart03, ChevronDown } from '@untitledui/icons';
 import { Link, useLocation } from 'react-router-dom';
 import { UserAccountCard } from './UserAccountCard';
 import { useSidebar } from '@/hooks/use-sidebar';
 import { useConversations } from '@/hooks/useConversations';
+import { useAgents } from '@/hooks/useAgents';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import ChatPadLogo from './ChatPadLogo';
 
 interface NavigationItem {
@@ -64,6 +66,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
   const location = useLocation();
   const { isCollapsed, toggle } = useSidebar();
   const { conversations } = useConversations();
+  const { agents } = useAgents();
   
   // Count new conversations (active status, created in last 24 hours)
   const newConversationsCount = conversations.filter(conv => {
@@ -71,8 +74,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
     return conv.status === 'active' && isRecent;
   }).length;
 
+  // Check if we're on an agents page to keep accordion open
+  const isOnAgentsPage = location.pathname.startsWith('/agents');
+  const [agentsOpen, setAgentsOpen] = useState(isOnAgentsPage);
+
   return (
-    <aside className={`flex ${isCollapsed ? 'w-[72px]' : 'w-[220px]'} h-screen bg-sidebar transition-all duration-300`}>
+    <aside className={`flex ${isCollapsed ? 'w-[72px]' : 'w-[240px]'} h-screen bg-sidebar transition-all duration-300`}>
       <nav className="w-full flex flex-col pt-6 px-3 pb-4">
         <header className="w-full px-2 mb-6">
           <div className="flex items-center justify-between">
@@ -104,6 +111,67 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
           <section className="w-full">
               {navigationItems.map((item) => {
                 const isActive = location.pathname === item.path;
+                
+                // Special handling for Agents with accordion
+                if (item.id === 'agents' && !isCollapsed) {
+                  const activeAgents = agents.filter(a => a.status === 'active');
+                  return (
+                    <Collapsible
+                      key={item.id}
+                      open={agentsOpen}
+                      onOpenChange={setAgentsOpen}
+                      className="w-full"
+                    >
+                      <div className="items-center flex w-full overflow-hidden px-0 py-0.5">
+                        <CollapsibleTrigger className={`items-center flex w-full gap-2.5 flex-1 shrink basis-[0%] my-auto transition-colors text-sm px-2.5 py-1.5 rounded-md ${
+                          isOnAgentsPage ? 'bg-accent text-accent-foreground' : 'bg-transparent hover:bg-accent/50 text-muted-foreground hover:text-foreground'
+                        }`}>
+                          <div className="items-center flex gap-2 my-auto w-full flex-1 shrink basis-[0%]">
+                            <div className="items-center flex my-auto w-[18px] pr-0.5">
+                              <item.icon size={14} className="self-stretch my-auto" />
+                            </div>
+                            <div className="flex items-center justify-between flex-1">
+                              <div className={`text-sm font-normal leading-4 self-stretch my-auto ${
+                                isOnAgentsPage ? 'text-accent-foreground font-medium' : ''
+                              }`}>
+                                {item.label}
+                              </div>
+                              <ChevronDown 
+                                size={14} 
+                                className={`transition-transform ${agentsOpen ? 'rotate-180' : ''}`}
+                              />
+                            </div>
+                          </div>
+                        </CollapsibleTrigger>
+                      </div>
+                      <CollapsibleContent>
+                        {activeAgents.length > 0 ? (
+                          <div className="ml-6 mt-1 space-y-0.5">
+                            {activeAgents.map((agent) => {
+                              const isAgentActive = location.pathname === `/agents/${agent.id}`;
+                              return (
+                                <Link
+                                  key={agent.id}
+                                  to={`/agents/${agent.id}`}
+                                  className={`flex items-center gap-2 px-2.5 py-1.5 rounded-md text-sm transition-colors ${
+                                    isAgentActive 
+                                      ? 'bg-accent/50 text-accent-foreground font-medium' 
+                                      : 'text-muted-foreground hover:bg-accent/30 hover:text-foreground'
+                                  }`}
+                                >
+                                  <div className="w-1.5 h-1.5 rounded-full bg-current opacity-50" />
+                                  <span className="truncate">{agent.name}</span>
+                                </Link>
+                              );
+                            })}
+                          </div>
+                        ) : null}
+                      </CollapsibleContent>
+                    </Collapsible>
+                  );
+                }
+                
+                // Regular navigation items
                 return (
                   <div key={item.id} className="items-center flex w-full overflow-hidden px-0 py-0.5">
                     <Link 

@@ -81,7 +81,7 @@ export const UserAccountCard: React.FC<UserAccountCardProps> = ({ isCollapsed = 
         isCollapsed ? 'p-1.5 justify-center' : 'border shadow-sm p-3 border-border'
       }`}>
         <div className="animate-pulse">
-          <div className={`bg-muted rounded-full ${isCollapsed ? 'h-7 w-7' : 'h-9 w-9'}`} />
+          <div className={`bg-muted rounded-full ${isCollapsed ? 'h-6 w-6' : 'h-8 w-8'}`} />
         </div>
       </div>
     );
@@ -102,22 +102,22 @@ export const UserAccountCard: React.FC<UserAccountCardProps> = ({ isCollapsed = 
             isCollapsed ? 'p-1 -m-1' : 'gap-3 flex-1 min-w-0 p-1 -m-1'
           }`}>
             <div className="relative">
-              <Avatar className={isCollapsed ? "h-7 w-7" : "h-9 w-9"}>
+              <Avatar className={isCollapsed ? "h-6 w-6" : "h-8 w-8"}>
                 <AvatarImage src={avatarUrl} alt={displayName} />
-                <AvatarFallback className={`font-medium ${isCollapsed ? 'text-xs' : 'text-sm'}`}>
+                <AvatarFallback className={`font-medium ${isCollapsed ? 'text-[10px]' : 'text-xs'}`}>
                   {initials}
                 </AvatarFallback>
               </Avatar>
               <div className={`bg-green-500 absolute rounded-full border-2 border-background ${
-                isCollapsed ? 'w-2.5 h-2.5 -bottom-0 -right-0' : 'w-3 h-3 -bottom-0.5 -right-0.5'
+                isCollapsed ? 'w-2 h-2 -bottom-0 -right-0' : 'w-2.5 h-2.5 -bottom-0.5 -right-0.5'
               }`} />
             </div>
             {!isCollapsed && (
               <div className="text-left min-w-0 flex-1">
-                <div className="text-foreground text-sm font-semibold leading-5 truncate">
+                <div className="text-foreground text-xs font-semibold leading-5 truncate">
                   {displayName}
                 </div>
-                <div className="text-muted-foreground text-sm font-normal leading-5 truncate">
+                <div className="text-muted-foreground text-[11px] font-normal leading-5 truncate">
                   {email}
                 </div>
               </div>
