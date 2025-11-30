@@ -7,8 +7,8 @@ const corsHeaders = {
   'Cache-Control': 'public, max-age=3600', // Cache for 1 hour
 };
 
-// Read the widget.js file content
-const widgetContent = await Deno.readTextFile('./public/widget.js');
+// Read the built widget bundle
+const widgetContent = await Deno.readTextFile('./dist-widget/chatpad-widget.min.js');
 
 serve(async (req) => {
   // Handle CORS preflight requests
