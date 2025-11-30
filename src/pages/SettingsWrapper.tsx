@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Settings from './Settings';
 import { Sidebar } from '@/components/Sidebar';
 import { useSidebar } from '@/hooks/use-sidebar';
+import { PageTransition } from '@/components/ui/page-transition';
 
 const SettingsWrapper = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -30,7 +31,9 @@ const SettingsWrapper = () => {
       <div className={`flex-1 overflow-auto min-h-screen transition-all duration-300 ${
         isCollapsed ? 'lg:ml-[72px]' : 'lg:ml-[280px]'
       }`}>
-        <Settings onMenuClick={() => setSidebarOpen(true)} />
+        <PageTransition>
+          <Settings onMenuClick={() => setSidebarOpen(true)} />
+        </PageTransition>
       </div>
     </div>
   );

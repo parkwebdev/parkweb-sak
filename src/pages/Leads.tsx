@@ -9,6 +9,8 @@ import { LeadsTable } from '@/components/leads/LeadsTable';
 import { LeadDetailsSheet } from '@/components/leads/LeadDetailsSheet';
 import { CreateLeadDialog } from '@/components/leads/CreateLeadDialog';
 import type { Tables } from '@/integrations/supabase/types';
+import { AnimatedList } from '@/components/ui/animated-list';
+import { AnimatedItem } from '@/components/ui/animated-item';
 
 interface LeadsProps {
   onMenuClick?: () => void;
@@ -175,11 +177,13 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
         {loading ? (
           <div className="text-center py-12 text-muted-foreground">Loading leads...</div>
         ) : viewMode === 'grid' ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <AnimatedList className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" staggerDelay={0.06}>
             {filteredLeads.map((lead) => (
-              <LeadCard key={lead.id} lead={lead} onView={handleViewLead} />
+              <AnimatedItem key={lead.id}>
+                <LeadCard lead={lead} onView={handleViewLead} />
+              </AnimatedItem>
             ))}
-          </div>
+          </AnimatedList>
         ) : (
           <LeadsTable
             leads={filteredLeads}

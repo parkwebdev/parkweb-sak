@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import AgentConfig from './AgentConfig';
 import { Sidebar } from '@/components/Sidebar';
 import { useSidebar } from '@/hooks/use-sidebar';
+import { PageTransition } from '@/components/ui/page-transition';
 
 const AgentConfigWrapper = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -27,7 +28,9 @@ const AgentConfigWrapper = () => {
       <div className={`flex-1 overflow-auto min-h-screen transition-all duration-300 ${
         isCollapsed ? 'lg:ml-[72px]' : 'lg:ml-[280px]'
       }`}>
-        <AgentConfig onMenuClick={() => setSidebarOpen(true)} />
+        <PageTransition>
+          <AgentConfig onMenuClick={() => setSidebarOpen(true)} />
+        </PageTransition>
       </div>
     </div>
   );

@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { DotsHorizontal as MoreHorizontal, Settings01 as Settings, Trash01 as Trash, X } from '@untitledui/icons';
 import { TeamMember } from '@/types/team';
+import { AnimatedTableRow } from '@/components/ui/animated-table-row';
 
 interface TeamMembersTableProps {
   teamMembers: TeamMember[];
@@ -130,8 +131,8 @@ export const TeamMembersTable: React.FC<TeamMembersTableProps> = ({
               </TableRow>
             </TableHeader>
           <TableBody>
-            {teamMembers.map((member) => (
-              <TableRow key={member.id}>
+            {teamMembers.map((member, index) => (
+              <AnimatedTableRow key={member.id} index={index}>
                 <TableCell className="py-3">
                   <div className="flex items-center space-x-3 min-w-0">
                     <Avatar className="h-8 w-8 flex-shrink-0">
@@ -187,7 +188,7 @@ export const TeamMembersTable: React.FC<TeamMembersTableProps> = ({
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>
-              </TableRow>
+              </AnimatedTableRow>
             ))}
           </TableBody>
         </Table>

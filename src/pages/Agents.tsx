@@ -8,6 +8,8 @@ import { useAgents } from '@/hooks/useAgents';
 import { CreateAgentDialog } from '@/components/agents/CreateAgentDialog';
 import { AgentCard } from '@/components/agents/AgentCard';
 import type { Tables } from '@/integrations/supabase/types';
+import { AnimatedList } from '@/components/ui/animated-list';
+import { AnimatedItem } from '@/components/ui/animated-item';
 
 type Agent = Tables<'agents'>;
 
@@ -104,17 +106,18 @@ const Agents: React.FC<AgentsProps> = ({ onMenuClick }) => {
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <AnimatedList className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" staggerDelay={0.08}>
             {filteredAgents.map((agent) => (
-              <AgentCard
-                key={agent.id}
-                agent={agent}
-                onEdit={() => {}}
-                onDelete={deleteAgent}
-                onStatusChange={handleStatusChange}
-              />
+              <AnimatedItem key={agent.id}>
+                <AgentCard
+                  agent={agent}
+                  onEdit={() => {}}
+                  onDelete={deleteAgent}
+                  onStatusChange={handleStatusChange}
+                />
+              </AnimatedItem>
             ))}
-          </div>
+          </AnimatedList>
         )}
 
         <CreateAgentDialog
