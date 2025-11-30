@@ -81,15 +81,19 @@ export const EmbedPreviewPanel = ({ config }: EmbedPreviewPanelProps) => {
       description: cat.description || undefined,
       icon: undefined,
     })),
-    helpArticles: helpArticles.map(art => ({
-      id: art.id,
-      category_id: art.category, // HelpArticle has 'category' string, not 'category_id'
-      category: art.category,
-      title: art.title,
-      content: art.content,
-      icon: art.icon || undefined,
-      order: art.order || 0, // HelpArticle has 'order', not 'order_index'
-    })),
+    helpArticles: helpArticles.map(art => {
+      // Find the category UUID by name
+      const category = helpCategories.find(c => c.name === art.category);
+      return {
+        id: art.id,
+        category_id: category?.id || '', // Use actual UUID
+        category: art.category,
+        title: art.title,
+        content: art.content,
+        icon: art.icon || undefined,
+        order: art.order || 0,
+      };
+    }),
     enableVoiceMessages: true,
     enableFileAttachments: true,
     allowedFileTypes: ['image', 'document'],
