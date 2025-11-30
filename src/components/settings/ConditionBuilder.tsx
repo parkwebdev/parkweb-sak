@@ -149,18 +149,12 @@ export const ConditionBuilder = ({ conditions, onChange, eventType }: ConditionB
                 onValueChange={setLogic}
                 className="flex gap-4"
               >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="AND" id="logic-and" />
-                  <Label htmlFor="logic-and" className="font-normal cursor-pointer text-xs">
-                    All conditions (AND)
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="OR" id="logic-or" />
-                  <Label htmlFor="logic-or" className="font-normal cursor-pointer text-xs">
-                    Any condition (OR)
-                  </Label>
-                </div>
+                <RadioGroupItem value="AND">
+                  <span className="text-xs">All conditions (AND)</span>
+                </RadioGroupItem>
+                <RadioGroupItem value="OR">
+                  <span className="text-xs">Any condition (OR)</span>
+                </RadioGroupItem>
               </RadioGroup>
             </div>
           )}

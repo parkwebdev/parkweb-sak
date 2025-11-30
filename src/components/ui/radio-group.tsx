@@ -1,5 +1,6 @@
 import * as React from "react"
 import * as RadioGroupPrimitive from "@radix-ui/react-radio-group"
+import { motion } from "motion/react"
 
 import { cn } from "@/lib/utils"
 
@@ -20,22 +21,46 @@ RadioGroup.displayName = RadioGroupPrimitive.Root.displayName
 const RadioGroupItem = React.forwardRef<
   React.ElementRef<typeof RadioGroupPrimitive.Item>,
   React.ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Item>
->(({ className, ...props }, ref) => {
+>(({ className, children, ...props }, ref) => {
   return (
-    <RadioGroupPrimitive.Item
-      ref={ref}
-      className={cn(
-        "aspect-square h-4 w-4 rounded-full border border-primary text-primary disabled:cursor-not-allowed disabled:opacity-50",
-        className
+    <div className="flex items-center space-x-2">
+      <RadioGroupPrimitive.Item
+        ref={ref}
+        className={cn(
+          "aspect-square h-4 w-4 rounded-full border border-primary text-primary ring-offset-background focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+          className
+        )}
+        {...props}
+      >
+        <RadioGroupPrimitive.Indicator className="flex items-center justify-center">
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            exit={{ scale: 0 }}
+            transition={{
+              type: "spring",
+              stiffness: 500,
+              damping: 30,
+            }}
+          >
+            <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor">
+              <circle cx="4" cy="4" r="4" />
+            </svg>
+          </motion.div>
+        </RadioGroupPrimitive.Indicator>
+      </RadioGroupPrimitive.Item>
+      {children && (
+        <label
+          className="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+          onClick={() => {
+            const item = document.querySelector(`[value="${props.value}"]`) as HTMLElement;
+            item?.click();
+          }}
+        >
+          {children}
+        </label>
       )}
-      {...props}
-    >
-      <RadioGroupPrimitive.Indicator className="flex items-center justify-center">
-        <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor">
-          <circle cx="4" cy="4" r="4" />
-        </svg>
-      </RadioGroupPrimitive.Indicator>
-    </RadioGroupPrimitive.Item>
+    </div>
   )
 })
 RadioGroupItem.displayName = RadioGroupPrimitive.Item.displayName
