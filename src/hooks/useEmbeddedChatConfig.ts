@@ -290,39 +290,17 @@ export const useEmbeddedChatConfig = (agentId: string) => {
     }
   }, [agentId]);
 
-  const generateEmbedCode = () => {
-    const baseUrl = window.location.origin;
-    return `<!-- AI Chat -->
-<script>
-  (function() {
-    var script = document.createElement('script');
-    script.src = '${baseUrl}/widget.js';
-    script.setAttribute('data-agent-id', '${agentId}');
-    script.setAttribute('data-primary-color', '${config.primaryColor}');
-    script.setAttribute('data-position', '${config.position}');
-    script.setAttribute('data-greeting', '${config.greeting}');
-    script.setAttribute('data-placeholder', '${config.placeholder}');
-    script.setAttribute('data-show-branding', '${config.showBranding}');
-    script.setAttribute('data-agent-name', '${config.agentName}');
-    script.setAttribute('data-animation', '${config.animation}');
-    script.setAttribute('data-show-badge', '${config.showBadge}');
-    script.setAttribute('data-display-timing', '${config.displayTiming}');
-    script.setAttribute('data-delay-seconds', '${config.delaySeconds}');
-    script.setAttribute('data-scroll-depth', '${config.scrollDepth}');
-    script.setAttribute('data-show-teaser', '${config.showTeaser}');
-    script.setAttribute('data-teaser-text', '${config.teaserText}');
-    script.setAttribute('data-welcome-emoji', '${config.welcomeEmoji}');
-    script.setAttribute('data-welcome-title', '${config.welcomeTitle}');
-    script.setAttribute('data-welcome-subtitle', '${config.welcomeSubtitle}');
-    script.setAttribute('data-use-gradient-header', '${config.useGradientHeader}');
-    script.setAttribute('data-gradient-start-color', '${config.gradientStartColor}');
-    script.setAttribute('data-gradient-end-color', '${config.gradientEndColor}');
-    script.setAttribute('data-max-file-size', '${config.maxFileSize}');
-    script.setAttribute('data-allowed-file-types', '${config.allowedFileTypes.join(',')}');
-    ${config.avatarUrl ? `script.setAttribute('data-avatar-url', '${config.avatarUrl}');` : ''}
-    document.head.appendChild(script);
-  })();
-</script>`;
+  const generateEmbedCode = (): string => {
+    const scriptUrl = window.location.origin + '/widget.js';
+    
+    // Simplified embed code - config loaded dynamically from edge function
+    return `<!-- ChatPad Widget -->
+<script
+  src="${scriptUrl}"
+  data-agent-id="${agentId}"
+  data-primary-color="${config.primaryColor}"
+  data-position="${config.position}"
+></script>`;
   };
 
   return {
