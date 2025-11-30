@@ -5,15 +5,14 @@ import { Menu01 as Menu } from '@untitledui/icons';
 import { SettingsLayout } from '@/components/settings/SettingsLayout';
 import { GeneralSettings } from '@/components/settings/GeneralSettings';
 import { ProfileSettings } from '@/components/settings/ProfileSettings';
-import { TeamManagement } from '@/components/settings/TeamManagement';
 import { NotificationSettings } from '@/components/settings/NotificationSettings';
-import { OrganizationSettings } from '@/components/settings/OrganizationSettings';
 import { SubscriptionSettings } from '@/components/settings/SubscriptionSettings';
 import { UsageSettings } from '@/components/settings/UsageSettings';
 import { WebhookSettings } from '@/components/settings/WebhookSettings';
 import { ApiKeySettings } from '@/components/settings/ApiKeySettings';
+import { TeamSettings } from '@/components/settings/TeamSettings';
 
-export type SettingsTab = 'general' | 'profile' | 'team' | 'notifications' | 'organization' | 'billing' | 'usage' | 'webhooks' | 'api-keys';
+export type SettingsTab = 'general' | 'profile' | 'team' | 'notifications' | 'billing' | 'usage' | 'webhooks' | 'api-keys';
 
 interface SettingsProps {
   onMenuClick?: () => void;
@@ -35,7 +34,7 @@ const Settings: React.FC<SettingsProps> = ({ onMenuClick }) => {
       return;
     }
     
-    if (tabParam && ['general', 'profile', 'team', 'notifications', 'organization', 'billing', 'usage', 'webhooks', 'api-keys'].includes(tabParam)) {
+    if (tabParam && ['general', 'profile', 'team', 'notifications', 'billing', 'usage', 'webhooks', 'api-keys'].includes(tabParam)) {
       setActiveTab(tabParam as SettingsTab);
     }
   }, [tabParam]);
@@ -66,10 +65,8 @@ const Settings: React.FC<SettingsProps> = ({ onMenuClick }) => {
         return <GeneralSettings />;
       case 'profile':
         return <ProfileSettings />;
-      case 'organization':
-        return <OrganizationSettings />;
       case 'team':
-        return <TeamManagement />;
+        return <TeamSettings />;
       case 'billing':
         return <SubscriptionSettings />;
       case 'usage':

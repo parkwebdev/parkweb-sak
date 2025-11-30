@@ -9,7 +9,6 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { GlobalSearch } from "@/components/GlobalSearch";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
-import HostedChat from "./pages/HostedChat";
 import DashboardWrapper from "./pages/DashboardWrapper";
 import AgentsWrapper from "./pages/AgentsWrapper";
 import AgentConfigWrapper from "./pages/AgentConfigWrapper";
@@ -31,7 +30,6 @@ const App = () => (
               <GlobalSearch />
               <Routes>
                 <Route path="/login" element={<Auth />} />
-                <Route path="/chat/:agentId" element={<HostedChat />} />
                 <Route path="/" element={
                   <ProtectedRoute>
                     <DashboardWrapper />

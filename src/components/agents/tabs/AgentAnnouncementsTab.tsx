@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAnnouncements, type Announcement, type AnnouncementInsert } from '@/hooks/useAnnouncements';
-import { useOrganization } from '@/contexts/OrganizationContext';
+import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -323,7 +323,7 @@ const AnnouncementDialog = ({
 
 export const AgentAnnouncementsTab = () => {
   const { agentId } = useParams();
-  const { currentOrg } = useOrganization();
+  const { user } = useAuth();
   const { announcements, loading, addAnnouncement, updateAnnouncement, deleteAnnouncement, reorderAnnouncements } = useAnnouncements(agentId!);
   const [editingAnnouncement, setEditingAnnouncement] = useState<Announcement | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -354,7 +354,7 @@ export const AgentAnnouncementsTab = () => {
       const newAnnouncement: AnnouncementInsert = {
         ...formData,
         agent_id: agentId!,
-        org_id: currentOrg!.id,
+        user_id: user!.id,
         order_index: announcements.length,
       };
       await addAnnouncement(newAnnouncement);

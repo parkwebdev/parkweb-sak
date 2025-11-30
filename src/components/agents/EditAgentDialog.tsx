@@ -57,7 +57,7 @@ export const EditAgentDialog = ({ agent, open, onOpenChange, onUpdate }: EditAge
             </TabsContent>
 
             <TabsContent value="knowledge" className="mt-0">
-              <AgentKnowledgeTab agentId={agent.id} orgId={agent.org_id} />
+              <AgentKnowledgeTab agentId={agent.id} userId={agent.user_id} />
             </TabsContent>
 
             <TabsContent value="tools" className="mt-0">
