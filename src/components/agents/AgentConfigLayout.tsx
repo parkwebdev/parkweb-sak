@@ -20,61 +20,61 @@ export const AgentConfigLayout: React.FC<AgentConfigLayoutProps> = ({
       {/* Horizontal Tab Navigation - Full Width */}
       <div className="border-b sticky top-0 z-20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
         <div className="px-6">
-          <TabsList className="h-12 w-full bg-transparent border-0 p-0 gap-6 justify-start">
+          <TabsList className="h-11 w-full bg-transparent border-0 p-0 gap-5 justify-start">
             <TabsTrigger
               value="configure"
-              className="h-12 px-0 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+              className="h-11 px-0 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none text-sm"
             >
-              <Settings size={16} className="mr-2" />
+              <Settings size={14} className="mr-1.5" />
               <span className="hidden sm:inline">Configure</span>
               <span className="sm:hidden">Config</span>
             </TabsTrigger>
             
             <TabsTrigger
               value="behavior"
-              className="h-12 px-0 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+              className="h-11 px-0 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none text-sm"
             >
-              <MessageCircle02 size={16} className="mr-2" />
+              <MessageCircle02 size={14} className="mr-1.5" />
               Behavior
             </TabsTrigger>
             
             <TabsTrigger
               value="knowledge"
-              className="h-12 px-0 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+              className="h-11 px-0 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none text-sm"
             >
-              <Database01 size={16} className="mr-2" />
+              <Database01 size={14} className="mr-1.5" />
               Knowledge
             </TabsTrigger>
             
             <TabsTrigger
               value="help"
-              className="h-12 px-0 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+              className="h-11 px-0 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none text-sm"
             >
-              <BookOpen01 size={16} className="mr-2" />
+              <BookOpen01 size={14} className="mr-1.5" />
               Help Articles
             </TabsTrigger>
             
             <TabsTrigger
               value="tools"
-              className="h-12 px-0 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+              className="h-11 px-0 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none text-sm"
             >
-              <Tool01 size={16} className="mr-2" />
+              <Tool01 size={14} className="mr-1.5" />
               Tools
             </TabsTrigger>
             
             <TabsTrigger
               value="embed"
-              className="h-12 px-0 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+              className="h-11 px-0 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none text-sm"
             >
-              <Code01 size={16} className="mr-2" />
+              <Code01 size={14} className="mr-1.5" />
               Embed
             </TabsTrigger>
             
             <TabsTrigger
               value="announcements"
-              className="h-12 px-0 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+              className="h-11 px-0 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none text-sm"
             >
-              <Announcement01 size={16} className="mr-2" />
+              <Announcement01 size={14} className="mr-1.5" />
               <span className="hidden sm:inline">Announcements</span>
               <span className="sm:hidden">News</span>
             </TabsTrigger>
