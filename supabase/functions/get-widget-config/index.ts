@@ -40,10 +40,10 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Fetch active announcements
+    // Fetch active announcements (exclude user_id for security)
     const { data: announcements, error: announcementsError } = await supabase
       .from('announcements')
-      .select('*')
+      .select('id, agent_id, title, subtitle, image_url, title_color, background_color, action_type, action_url, order_index, is_active')
       .eq('agent_id', agentId)
       .eq('is_active', true)
       .order('order_index', { ascending: true });
@@ -52,10 +52,10 @@ Deno.serve(async (req) => {
       console.error('Announcements fetch error:', announcementsError);
     }
 
-    // Fetch help categories
+    // Fetch help categories (exclude user_id for security)
     const { data: categories, error: categoriesError } = await supabase
       .from('help_categories')
-      .select('*')
+      .select('id, agent_id, name, description, order_index')
       .eq('agent_id', agentId)
       .order('order_index', { ascending: true });
 
@@ -63,10 +63,10 @@ Deno.serve(async (req) => {
       console.error('Categories fetch error:', categoriesError);
     }
 
-    // Fetch help articles
+    // Fetch help articles (exclude user_id for security)
     const { data: articles, error: articlesError } = await supabase
       .from('help_articles')
-      .select('*')
+      .select('id, agent_id, category_id, title, content, icon, order_index')
       .eq('agent_id', agentId)
       .order('order_index', { ascending: true });
 
