@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useOrganization } from '@/contexts/OrganizationContext';
+import { useAuth } from '@/contexts/AuthContext';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Lead = Tables<'leads'> & {
@@ -12,17 +12,17 @@ export const useLeads = () => {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
-  const { currentOrg } = useOrganization();
+  const { user } = useAuth();
 
   const fetchLeads = async () => {
-    if (!currentOrg) return;
+    if (!user?.id) return;
     
     try {
       setLoading(true);
       const { data, error } = await supabase
         .from('leads')
         .select('*, conversations(id, created_at)')
-        .eq('org_id', currentOrg.id)
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -39,12 +39,12 @@ export const useLeads = () => {
   };
 
   const createLead = async (leadData: Partial<Tables<'leads'>>) => {
-    if (!currentOrg) return;
+    if (!user?.id) return;
 
     try {
-      const { data, error } = await supabase
+      const { data, error} = await supabase
         .from('leads')
-        .insert([{ ...leadData, org_id: currentOrg.id }])
+        .insert([{ ...leadData, user_id: user.id }])
         .select()
         .single();
 
@@ -129,7 +129,7 @@ export const useLeads = () => {
           event: '*',
           schema: 'public',
           table: 'leads',
-          filter: `org_id=eq.${currentOrg?.id}`,
+          filter: `user_id=eq.${user?.id}`,
         },
         () => {
           fetchLeads();
@@ -140,7 +140,7 @@ export const useLeads = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [currentOrg?.id]);
+  }, [user?.id]);
 
   return {
     leads,

@@ -5,7 +5,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { OrganizationProvider } from "@/contexts/OrganizationContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { GlobalSearch } from "@/components/GlobalSearch";
 import Auth from "./pages/Auth";
@@ -29,11 +28,10 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <AuthProvider>
-            <OrganizationProvider>
               <GlobalSearch />
               <Routes>
                 <Route path="/login" element={<Auth />} />
-                <Route path="/:orgSlug/:agentSlug" element={<HostedChat />} />
+                <Route path="/chat/:agentId" element={<HostedChat />} />
                 <Route path="/" element={
                   <ProtectedRoute>
                     <DashboardWrapper />
@@ -72,7 +70,6 @@ const App = () => (
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
-            </OrganizationProvider>
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
