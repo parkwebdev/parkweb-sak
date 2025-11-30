@@ -5,7 +5,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Plus, Trash01, Copy01, ChevronDown, XClose } from '@untitledui/icons';
+import { Plus, Trash01, ChevronDown, XClose } from '@untitledui/icons';
+import { CopyButton } from '@/components/ui/copy-button';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import type { Tables } from '@/integrations/supabase/types';
@@ -174,13 +175,7 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
               <code className="flex-1 text-xs font-mono break-all text-muted-foreground">
                 {getAgentApiUrl()}
               </code>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => copyToClipboard(getAgentApiUrl(), 'API endpoint copied')}
-              >
-                <Copy01 className="h-4 w-4" />
-              </Button>
+              <CopyButton content={getAgentApiUrl()} showToast={true} toastMessage="API endpoint copied" />
             </div>
           )}
         </div>

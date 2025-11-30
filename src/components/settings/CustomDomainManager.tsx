@@ -5,7 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
-import { Plus, Globe01, CheckCircle, AlertCircle, Trash02, Star01, Copy03, RefreshCw01, Link03 } from '@untitledui/icons';
+import { Plus, Globe01, CheckCircle, AlertCircle, Trash02, Star01, RefreshCw01, Link03 } from '@untitledui/icons';
+import { CopyButton } from '@/components/ui/copy-button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useCustomDomains } from '@/hooks/useCustomDomains';
 import { Separator } from '@/components/ui/separator';
@@ -255,13 +256,7 @@ export const CustomDomainManager = () => {
                                   <div key={idx} className="bg-muted/50 rounded-lg p-3 space-y-2">
                                     <div className="flex items-center justify-between">
                                       <span className="font-semibold text-sm">{record.type} Record</span>
-                                      <Button
-                                        size="sm"
-                                        variant="ghost"
-                                        onClick={() => copyToClipboard(record.value, record.type)}
-                                      >
-                                        <Copy03 className="w-3 h-3" />
-                                      </Button>
+                                      <CopyButton content={record.value} showToast={true} toastMessage={`${record.type} record copied to clipboard`} />
                                     </div>
                                     <div className="grid grid-cols-[80px_1fr] gap-2 text-sm font-mono">
                                       <span className="text-muted-foreground">Type:</span>
