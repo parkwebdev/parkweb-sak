@@ -21,7 +21,7 @@ export const useScheduledReports = () => {
       const { data, error } = await supabase
         .from('scheduled_reports')
         .select('*')
-        .eq('org_id', currentOrg.id)
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -68,16 +68,17 @@ export const useScheduledReports = () => {
         description: error.message,
         variant: 'destructive',
       });
-      throw error;
     }
   };
 
-  const updateReport = async (id: string, updates: Partial<ScheduledReportInsert>) => {
+  const updateReport = async (id: string, updates: Partial<Omit<ScheduledReportInsert, 'created_by'>>) => {
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('scheduled_reports')
         .update(updates)
-        .eq('id', id);
+        .eq('id', id)
+        .select()
+        .single();
 
       if (error) throw error;
 
@@ -87,6 +88,7 @@ export const useScheduledReports = () => {
       });
 
       await fetchReports();
+      return data;
     } catch (error: any) {
       console.error('Error updating scheduled report:', error);
       toast({
@@ -94,7 +96,6 @@ export const useScheduledReports = () => {
         description: error.message,
         variant: 'destructive',
       });
-      throw error;
     }
   };
 
@@ -120,18 +121,41 @@ export const useScheduledReports = () => {
         description: error.message,
         variant: 'destructive',
       });
-      throw error;
     }
   };
 
-  const toggleActive = async (id: string, active: boolean) => {
-    await updateReport(id, { active });
+  const toggleReportStatus = async (id: string, active: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('scheduled_reports')
+        .update({ active })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast({
+        title: active ? 'Report activated' : 'Report paused',
+        description: `Your scheduled report has been ${active ? 'activated' : 'paused'}.`,
+      });
+
+      await fetchReports();
+    } catch (error: any) {
+      console.error('Error toggling report status:', error);
+      toast({
+        title: 'Error updating status',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
   };
 
   useEffect(() => {
     fetchReports();
+  }, [user?.id]);
 
-    // Set up real-time subscription
+  useEffect(() => {
+    if (!user) return;
+
     const channel = supabase
       .channel('scheduled_reports_changes')
       .on(
@@ -140,7 +164,7 @@ export const useScheduledReports = () => {
           event: '*',
           schema: 'public',
           table: 'scheduled_reports',
-          filter: `org_id=eq.${currentOrg?.id}`,
+          filter: `user_id=eq.${user.id}`,
         },
         () => {
           fetchReports();
@@ -151,7 +175,7 @@ export const useScheduledReports = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [currentOrg?.id]);
+  }, [user?.id]);
 
   return {
     reports,
@@ -159,7 +183,7 @@ export const useScheduledReports = () => {
     createReport,
     updateReport,
     deleteReport,
-    toggleActive,
+    toggleReportStatus,
     refetch: fetchReports,
   };
 };

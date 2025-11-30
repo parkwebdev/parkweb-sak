@@ -111,7 +111,7 @@ const AgentConfig: React.FC<AgentConfigProps> = ({ onMenuClick }) => {
               />
             )}
             {activeTab === 'knowledge' && (
-              <AgentKnowledgeTab agentId={agent.id} orgId={agent.org_id} />
+              <AgentKnowledgeTab agentId={agent.id} userId={agent.user_id} />
             )}
             {activeTab === 'tools' && (
               <AgentToolsTab agentId={agent.id} agent={agent} onUpdate={handleUpdate} />

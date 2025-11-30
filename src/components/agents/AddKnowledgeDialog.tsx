@@ -20,14 +20,14 @@ interface AddKnowledgeDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   agentId: string;
-  orgId: string;
+  userId: string;
 }
 
 export const AddKnowledgeDialog: React.FC<AddKnowledgeDialogProps> = ({
   open,
   onOpenChange,
   agentId,
-  orgId,
+  userId,
 }) => {
   const { uploadDocument, addUrlSource, addTextSource } = useKnowledgeSources(agentId);
   const { canAddKnowledgeSource, showLimitWarning } = usePlanLimits();
@@ -49,7 +49,7 @@ export const AddKnowledgeDialog: React.FC<AddKnowledgeDialogProps> = ({
 
     setUploading(true);
     try {
-      await uploadDocument(file, agentId, orgId);
+      await uploadDocument(file, agentId, userId);
       onOpenChange(false);
     } finally {
       setUploading(false);
@@ -67,7 +67,7 @@ export const AddKnowledgeDialog: React.FC<AddKnowledgeDialogProps> = ({
 
     setUploading(true);
     try {
-      await addUrlSource(url, agentId, orgId);
+      await addUrlSource(url, agentId, userId);
       setUrl('');
       onOpenChange(false);
     } finally {
@@ -86,7 +86,7 @@ export const AddKnowledgeDialog: React.FC<AddKnowledgeDialogProps> = ({
 
     setUploading(true);
     try {
-      await addTextSource(textContent, 'json', agentId, orgId, {
+      await addTextSource(textContent, agentId, userId, 'json' as any, {
         name: textName || 'Custom Text',
       });
       setTextContent('');
