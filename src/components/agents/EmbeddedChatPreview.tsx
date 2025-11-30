@@ -491,7 +491,7 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
   }, [chatUser, config.greeting]);
 
   return (
-    <div className="relative min-h-[700px] bg-muted/30 rounded-lg p-4 overflow-hidden">
+    <div className="relative min-h-[700px] bg-background rounded-lg p-4 overflow-hidden">
       <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
         <p>Website Preview Area</p>
       </div>

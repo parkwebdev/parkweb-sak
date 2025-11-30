@@ -1,7 +1,7 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Button } from '@/components/ui/button';
-import { Edit05, Trash01, GridDotsVerticalCenter } from '@untitledui/icons';
+import { Edit05, Trash01, DotsGrid } from '@untitledui/icons';
 import type { HelpArticle } from '@/hooks/useEmbeddedChatConfig';
 
 interface SortableArticleItemProps {
@@ -38,7 +38,7 @@ export const SortableArticleItem = ({ article, onEdit, onDelete }: SortableArtic
         className="touch-none cursor-grab active:cursor-grabbing mt-1 text-muted-foreground hover:text-foreground transition-colors"
         aria-label="Drag to reorder"
       >
-        <GridDotsVerticalCenter className="h-4 w-4" />
+        <DotsGrid className="h-4 w-4" />
       </button>
       
       {article.icon && (
