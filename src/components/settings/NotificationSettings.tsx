@@ -7,15 +7,18 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNotifications } from '@/hooks/useNotifications';
 import { supabase } from '@/integrations/supabase/client';
-import { Bell02 as Bell, Mail01 as Mail, Monitor01 as Browser, File02 as FileText, Users01 as Users } from '@untitledui/icons';
+import { MessageSquare02 as MessageSquare, Users01 as Users, Zap as Bot, UserEdit as Team, BarChart11 as BarChart } from '@untitledui/icons';
 
 interface NotificationPreferences {
   id: string;
   user_id: string;
   email_notifications: boolean;
   browser_notifications: boolean;
-  onboarding_notifications: boolean;
-  scope_work_notifications: boolean;
+  conversation_notifications: boolean;
+  lead_notifications: boolean;
+  agent_notifications: boolean;
+  team_notifications: boolean;
+  report_notifications: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -72,8 +75,11 @@ export const NotificationSettings: React.FC = () => {
           user_id: user.id,
           email_notifications: true,
           browser_notifications: true,
-          onboarding_notifications: true,
-          scope_work_notifications: true,
+          conversation_notifications: true,
+          lead_notifications: true,
+          agent_notifications: true,
+          team_notifications: true,
+          report_notifications: true,
         })
         .select()
         .single();
@@ -310,18 +316,19 @@ export const NotificationSettings: React.FC = () => {
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <div className="flex items-center gap-2">
-                <Label htmlFor="scope-work-notifications" className="text-sm font-medium">
-                  Scope of Work Updates
+                <MessageSquare className="h-4 w-4 text-muted-foreground" />
+                <Label htmlFor="conversation-notifications" className="text-sm font-medium">
+                  Conversation Activity
                 </Label>
               </div>
               <p className="text-xs text-muted-foreground">
-                Get notified when scope of work status changes
+                New conversations, escalations, and takeover requests
               </p>
             </div>
             <Switch
-              id="scope-work-notifications"
-              checked={preferences.scope_work_notifications}
-              onCheckedChange={(checked) => updatePreference('scope_work_notifications', checked)}
+              id="conversation-notifications"
+              checked={preferences.conversation_notifications}
+              onCheckedChange={(checked) => updatePreference('conversation_notifications', checked)}
               disabled={updating}
             />
           </div>
@@ -329,18 +336,79 @@ export const NotificationSettings: React.FC = () => {
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <div className="flex items-center gap-2">
-                <Label htmlFor="onboarding-notifications" className="text-sm font-medium">
-                  Client Onboarding
+                <Users className="h-4 w-4 text-muted-foreground" />
+                <Label htmlFor="lead-notifications" className="text-sm font-medium">
+                  Lead Notifications
                 </Label>
               </div>
               <p className="text-xs text-muted-foreground">
-                Get notified about new client onboarding submissions
+                New leads captured and lead status changes
               </p>
             </div>
             <Switch
-              id="onboarding-notifications"
-              checked={preferences.onboarding_notifications}
-              onCheckedChange={(checked) => updatePreference('onboarding_notifications', checked)}
+              id="lead-notifications"
+              checked={preferences.lead_notifications}
+              onCheckedChange={(checked) => updatePreference('lead_notifications', checked)}
+              disabled={updating}
+            />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <div className="flex items-center gap-2">
+                <Bot className="h-4 w-4 text-muted-foreground" />
+                <Label htmlFor="agent-notifications" className="text-sm font-medium">
+                  Agent Alerts
+                </Label>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Agent errors and knowledge source updates
+              </p>
+            </div>
+            <Switch
+              id="agent-notifications"
+              checked={preferences.agent_notifications}
+              onCheckedChange={(checked) => updatePreference('agent_notifications', checked)}
+              disabled={updating}
+            />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <div className="flex items-center gap-2">
+                <Team className="h-4 w-4 text-muted-foreground" />
+                <Label htmlFor="team-notifications" className="text-sm font-medium">
+                  Team Activity
+                </Label>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Team invitations and member updates
+              </p>
+            </div>
+            <Switch
+              id="team-notifications"
+              checked={preferences.team_notifications}
+              onCheckedChange={(checked) => updatePreference('team_notifications', checked)}
+              disabled={updating}
+            />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <div className="flex items-center gap-2">
+                <BarChart className="h-4 w-4 text-muted-foreground" />
+                <Label htmlFor="report-notifications" className="text-sm font-medium">
+                  Report Notifications
+                </Label>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Scheduled reports and analytics alerts
+              </p>
+            </div>
+            <Switch
+              id="report-notifications"
+              checked={preferences.report_notifications}
+              onCheckedChange={(checked) => updatePreference('report_notifications', checked)}
               disabled={updating}
             />
           </div>
