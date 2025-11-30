@@ -67,24 +67,24 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ onMenuClick }) => {
   };
 
   return (
-    <header className="flex items-center gap-4 px-4 lg:px-6 py-3 border-b border-border bg-card/50 backdrop-blur-sm">
-      {/* Mobile menu button */}
-      <Button
-        variant="ghost"
-        size="sm"
-        className="lg:hidden"
-        onClick={onMenuClick}
-      >
-        <Menu size={18} />
-      </Button>
+    <header className="flex items-center justify-between px-4 lg:px-6 py-3 border-b border-border bg-card/50 backdrop-blur-sm">
+      {/* Left side - Menu and Search */}
+      <div className="flex items-center gap-4 flex-1">
+        {/* Mobile menu button */}
+        <Button
+          variant="ghost"
+          size="sm"
+          className="lg:hidden"
+          onClick={onMenuClick}
+        >
+          <Menu size={18} />
+        </Button>
 
-      {/* Search - hidden on mobile */}
-      <div className="hidden md:block flex-1 max-w-md">
-        <SearchInput placeholder="Search everything..." />
+        {/* Search - hidden on mobile */}
+        <div className="hidden md:block flex-1 max-w-md">
+          <SearchInput placeholder="Search everything..." />
+        </div>
       </div>
-
-      {/* Spacer for mobile */}
-      <div className="flex-1 md:hidden" />
 
       {/* Right side actions */}
       <div className="flex items-center gap-2">

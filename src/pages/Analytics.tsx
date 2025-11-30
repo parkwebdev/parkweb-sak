@@ -14,6 +14,8 @@ import { AnalyticsToolbar } from '@/components/analytics/AnalyticsToolbar';
 import { generateCSVReport, generatePDFReport } from '@/lib/report-export';
 import { toast } from 'sonner';
 import { subDays } from 'date-fns';
+import { AnimatedList } from '@/components/ui/animated-list';
+import { AnimatedItem } from '@/components/ui/animated-item';
 
 const Analytics: React.FC = () => {
   const { user } = useAuth();
@@ -228,12 +230,20 @@ const Analytics: React.FC = () => {
               Loading analytics data...
             </div>
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <ConversationChart data={conversationStats} />
-              <LeadConversionChart data={leadStats} />
-              <AgentPerformanceChart data={agentPerformance} />
-              <UsageMetricsChart data={usageMetrics} />
-            </div>
+            <AnimatedList className="grid grid-cols-1 lg:grid-cols-2 gap-6" staggerDelay={0.1}>
+              <AnimatedItem>
+                <ConversationChart data={conversationStats} />
+              </AnimatedItem>
+              <AnimatedItem>
+                <LeadConversionChart data={leadStats} />
+              </AnimatedItem>
+              <AnimatedItem>
+                <AgentPerformanceChart data={agentPerformance} />
+              </AnimatedItem>
+              <AnimatedItem>
+                <UsageMetricsChart data={usageMetrics} />
+              </AnimatedItem>
+            </AnimatedList>
           )}
         </TabsContent>
 
