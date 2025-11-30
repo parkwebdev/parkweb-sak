@@ -114,6 +114,13 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
     }
   }, []);
 
+  // Sync config state when configProp changes (for preview mode)
+  useEffect(() => {
+    if (!isSimpleConfig && previewMode) {
+      setConfig(configProp as WidgetConfig);
+    }
+  }, [configProp, isSimpleConfig, previewMode]);
+
   // Save settings
   useEffect(() => {
     if (config) {
@@ -151,12 +158,14 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
     }
   }, [messages, chatSettings.autoScroll, currentView, activeConversationId]);
 
-  // Update greeting based on user status
+  // Update greeting based on user status (only on initial load)
   useEffect(() => {
-    if (chatUser && config) {
-      setMessages([{ role: 'assistant', content: `Welcome back, ${chatUser.firstName}! 👋 How can I help you today?`, read: true, timestamp: new Date(), type: 'text', reactions: [] }]);
-    } else if (config) {
-      setMessages([{ role: 'assistant', content: config.greeting, read: true, timestamp: new Date(), type: 'text', reactions: [] }]);
+    if (messages.length === 0 && config) {
+      if (chatUser) {
+        setMessages([{ role: 'assistant', content: `Welcome back, ${chatUser.firstName}! 👋 How can I help you today?`, read: true, timestamp: new Date(), type: 'text', reactions: [] }]);
+      } else {
+        setMessages([{ role: 'assistant', content: config.greeting, read: true, timestamp: new Date(), type: 'text', reactions: [] }]);
+      }
     }
   }, [chatUser, config]);
 
