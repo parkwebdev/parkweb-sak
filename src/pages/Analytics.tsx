@@ -176,14 +176,15 @@ const Analytics: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 p-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold">Analytics</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Track performance and insights across your organization
-        </p>
-      </div>
+    <main className="flex-1 bg-muted/30 min-h-screen pt-4 lg:pt-8">
+      <div className="px-4 lg:px-8 space-y-6">
+        {/* Header */}
+        <div>
+          <h1 className="text-2xl font-bold">Analytics</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Track performance and insights across your organization
+          </p>
+        </div>
 
       {/* Unified Toolbar */}
       <AnalyticsToolbar
@@ -246,7 +247,8 @@ const Analytics: React.FC = () => {
           <ScheduledReportsManager />
         </TabsContent>
       </Tabs>
-    </div>
+      </div>
+    </main>
   );
 };
 
