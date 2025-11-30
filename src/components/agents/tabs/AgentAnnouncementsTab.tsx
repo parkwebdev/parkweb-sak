@@ -384,11 +384,11 @@ export const AgentAnnouncementsTab = () => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-5xl space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Announcements</h2>
-          <p className="text-muted-foreground mt-1">
+          <h2 className="text-lg font-semibold">Announcements</h2>
+          <p className="text-sm text-muted-foreground mt-1">
             Create and manage announcements displayed in your chat widget
           </p>
         </div>

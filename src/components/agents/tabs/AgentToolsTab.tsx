@@ -3,10 +3,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
-import { Separator } from '@/components/ui/separator';
-import { Plus, Trash01 } from '@untitledui/icons';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Plus, Trash01, Copy01, ChevronDown, XClose } from '@untitledui/icons';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import type { Tables } from '@/integrations/supabase/types';
@@ -30,6 +29,7 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
   });
 
   const apiEndpoint = `https://mvaimvwdukpgvkifkfpa.supabase.co/functions/v1/widget-chat`;
+  const deploymentConfig = (agent?.deployment_config as any) || {};
 
   useEffect(() => {
     fetchTools();
@@ -38,7 +38,6 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
   useEffect(() => {
     // Enable API by default
     if (agent && onUpdate) {
-      const deploymentConfig = (agent.deployment_config as any) || {};
       if (!deploymentConfig.api_enabled) {
         onUpdate(agent.id, {
           deployment_config: {
@@ -128,79 +127,87 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
     }
   };
 
+  const getAgentApiUrl = () => {
+    return `${apiEndpoint}?agent_id=${agentId}`;
+  };
+
+  const handleToggleApi = async (enabled: boolean) => {
+    if (!agent || !onUpdate) return;
+    
+    await onUpdate(agent.id, {
+      deployment_config: {
+        ...deploymentConfig,
+        api_enabled: enabled,
+      },
+    });
+    toast.success(`API ${enabled ? 'enabled' : 'disabled'}`);
+  };
+
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
-    toast.success(`${label} copied to clipboard`);
+    toast.success(label);
   };
 
   if (loading) {
-    return <div className="text-center py-8 text-muted-foreground">Loading tools...</div>;
+    return <div className="text-muted-foreground">Loading tools...</div>;
   }
 
   return (
-    <div className="space-y-4">
-      {/* API Access Section */}
+    <div className="max-w-5xl space-y-4">
+      {/* API Access - Inline Banner */}
       {agent && onUpdate && (
-        <>
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">API Access</CardTitle>
-              <CardDescription className="text-sm">REST API endpoint for your agent</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <div className="space-y-2">
-                <Label className="text-sm">API Endpoint</Label>
-                <div className="flex gap-2">
-                  <Input value={apiEndpoint} readOnly className="font-mono text-sm" />
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => copyToClipboard(apiEndpoint, 'API endpoint')}
-                  >
-                    Copy
-                  </Button>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Use this endpoint to integrate your agent via REST API
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+        <div className="p-4 rounded-lg border bg-muted/30 space-y-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-semibold">API Access</h3>
+              <p className="text-xs text-muted-foreground">Enable API access to interact programmatically</p>
+            </div>
+            <Switch
+              id="api-enabled"
+              checked={deploymentConfig?.api_enabled || false}
+              onCheckedChange={handleToggleApi}
+            />
+          </div>
 
-          <Separator />
-        </>
+          {deploymentConfig?.api_enabled && (
+            <div className="flex items-center gap-2 p-3 bg-background rounded-md border">
+              <code className="flex-1 text-xs font-mono break-all text-muted-foreground">
+                {getAgentApiUrl()}
+              </code>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => copyToClipboard(getAgentApiUrl(), 'API endpoint copied')}
+              >
+                <Copy01 className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+        </div>
       )}
 
-      {/* Tools Section */}
+      {/* Tools List */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-base font-semibold">Agent Tools</h3>
-            <p className="text-sm text-muted-foreground">
-              Extend agent capabilities with custom tools
-            </p>
+            <h3 className="text-base font-semibold">Tools</h3>
+            <p className="text-sm text-muted-foreground">Add custom tools and functions for your agent</p>
           </div>
-          <Button size="sm" onClick={() => setShowAddForm(!showAddForm)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Tool
+          <Button onClick={() => setShowAddForm(!showAddForm)} size="sm">
+            {showAddForm ? <XClose className="h-4 w-4 mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
+            {showAddForm ? 'Cancel' : 'Add Tool'}
           </Button>
         </div>
 
-      {showAddForm && (
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Add New Tool</CardTitle>
-            <CardDescription className="text-sm">Define a custom tool for your agent</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
+        {showAddForm && (
+          <div className="space-y-3 p-4 border rounded-lg bg-muted/50">
             <div className="space-y-2">
               <Label htmlFor="tool-name" className="text-sm">Tool Name</Label>
               <Input
                 id="tool-name"
                 value={newTool.name}
                 onChange={(e) => setNewTool({ ...newTool, name: e.target.value })}
-                placeholder="get_weather"
-                className="text-sm"
+                placeholder="weather_lookup"
               />
             </div>
 
@@ -210,9 +217,8 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
                 id="tool-description"
                 value={newTool.description}
                 onChange={(e) => setNewTool({ ...newTool, description: e.target.value })}
-                placeholder="Gets the current weather for a location"
+                placeholder="Fetches current weather data for a location"
                 rows={2}
-                className="text-sm"
               />
             </div>
 
@@ -222,69 +228,69 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
                 id="tool-parameters"
                 value={newTool.parameters}
                 onChange={(e) => setNewTool({ ...newTool, parameters: e.target.value })}
-                placeholder='{"type": "object", "properties": {"location": {"type": "string"}}}'
+                placeholder='{"location": "string", "units": "celsius|fahrenheit"}'
                 rows={4}
-                className="font-mono text-xs"
+                className="font-mono text-sm"
               />
             </div>
 
-            <div className="flex gap-2">
-              <Button onClick={addTool} disabled={!newTool.name || !newTool.description}>
-                Add Tool
-              </Button>
-              <Button variant="outline" onClick={() => setShowAddForm(false)}>
-                Cancel
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+            <Button onClick={addTool} className="w-full" size="sm">
+              Add Tool
+            </Button>
+          </div>
+        )}
 
-      {tools.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center text-sm text-muted-foreground">
-            No tools configured yet. Add your first tool to extend agent capabilities.
-          </CardContent>
-        </Card>
+        {tools.length === 0 ? (
+          <div className="text-center py-12 border rounded-lg border-dashed">
+            <p className="text-sm text-muted-foreground">
+              No tools configured yet. Add your first tool to get started.
+            </p>
+          </div>
         ) : (
-        <div className="space-y-2">
-          {tools.map((tool) => (
-            <Card key={tool.id}>
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <CardTitle className="text-base">{tool.name}</CardTitle>
-                    <CardDescription className="text-sm">{tool.description}</CardDescription>
+          <div className="space-y-2">
+            {tools.map((tool) => (
+              <div key={tool.id} className="border rounded-lg p-4 hover:bg-muted/30 transition-colors">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h4 className="text-sm font-mono font-semibold">{tool.name}</h4>
+                    </div>
+                    <p className="text-xs text-muted-foreground mb-3">{tool.description}</p>
+                    
+                    <Collapsible>
+                      <CollapsibleTrigger asChild>
+                        <Button variant="ghost" size="sm" className="h-7 text-xs px-2 -ml-2">
+                          <ChevronDown className="h-3 w-3 mr-1" />
+                          View Parameters
+                        </Button>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="mt-2">
+                        <pre className="text-xs bg-muted p-3 rounded overflow-auto border">
+                          {JSON.stringify(tool.parameters, null, 2)}
+                        </pre>
+                      </CollapsibleContent>
+                    </Collapsible>
                   </div>
-                  <div className="flex items-center gap-2">
+                  
+                  <div className="flex items-center gap-2 flex-shrink-0">
                     <Switch
                       checked={tool.enabled ?? true}
                       onCheckedChange={(checked) => toggleTool(tool.id, checked)}
                     />
                     <Button
                       variant="ghost"
-                      size="sm"
+                      size="icon"
+                      className="h-8 w-8"
                       onClick={() => deleteTool(tool.id)}
                     >
                       <Trash01 className="h-4 w-4 text-destructive" />
                     </Button>
                   </div>
                 </div>
-              </CardHeader>
-              <CardContent>
-                <details className="text-sm">
-                  <summary className="cursor-pointer text-muted-foreground mb-2">
-                    View Parameters
-                  </summary>
-                  <pre className="bg-muted p-3 rounded-md overflow-x-auto text-xs font-mono">
-                    {JSON.stringify(tool.parameters, null, 2)}
-                  </pre>
-                </details>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

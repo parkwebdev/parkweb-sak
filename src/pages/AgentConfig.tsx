@@ -81,16 +81,14 @@ const AgentConfig: React.FC<AgentConfigProps> = ({ onMenuClick }) => {
   }
 
   return (
-    <div className="h-full">
-      <div className="px-6 pt-6 pb-4">
-        <AgentConfigHeader
+    <div className="flex-1 overflow-y-auto bg-muted/30">
+      <AgentConfigHeader
           agent={agent}
           hasUnsavedChanges={hasUnsavedChanges}
           showSaved={showSaved}
           onSave={handleSave}
           isSaving={isSaving}
         />
-      </div>
       
       <AgentConfigLayout
         activeTab={activeTab}
