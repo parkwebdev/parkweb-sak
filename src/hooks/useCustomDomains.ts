@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useOrganization } from '@/contexts/OrganizationContext';
+import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 
 export interface CustomDomain {
@@ -16,19 +16,19 @@ export interface CustomDomain {
 }
 
 export const useCustomDomains = () => {
-  const { currentOrg } = useOrganization();
+  const { user } = useAuth();
   const [domains, setDomains] = useState<CustomDomain[]>([]);
   const [loading, setLoading] = useState(true);
   const [verifying, setVerifying] = useState<string | null>(null);
 
   const fetchDomains = async () => {
-    if (!currentOrg?.id) return;
+    if (!user?.id) return;
 
     try {
       const { data, error } = await supabase
         .from('custom_domains')
         .select('*')
-        .eq('org_id', currentOrg.id)
+        .eq('user_id', user.id)
         .order('is_primary', { ascending: false })
         .order('created_at', { ascending: false });
 
@@ -44,19 +44,19 @@ export const useCustomDomains = () => {
 
   useEffect(() => {
     fetchDomains();
-  }, [currentOrg?.id]);
+  }, [user?.id]);
 
   const addDomain = async (domain: string) => {
-    if (!currentOrg?.id) return;
+    if (!user?.id) return;
 
     // Generate verification token
-    const verificationToken = `${currentOrg.id.substring(0, 8)}-${Date.now()}`;
+    const verificationToken = `${user.id.substring(0, 8)}-${Date.now()}`;
 
     try {
       const { error } = await supabase
         .from('custom_domains')
         .insert({
-          org_id: currentOrg.id,
+          user_id: user.id,
           domain: domain.toLowerCase().trim(),
           verification_token: verificationToken,
           verified: false,
@@ -83,12 +83,12 @@ export const useCustomDomains = () => {
   };
 
   const verifyDomain = async (domainId: string, domain: string) => {
-    if (!currentOrg?.id) return;
+    if (!user?.id) return;
 
     setVerifying(domainId);
     try {
       const { data, error } = await supabase.functions.invoke('verify-custom-domain', {
-        body: { domain, orgId: currentOrg.id },
+        body: { domain, userId: user.id },
       });
 
       if (error) throw error;
@@ -129,14 +129,14 @@ export const useCustomDomains = () => {
   };
 
   const setPrimaryDomain = async (domainId: string) => {
-    if (!currentOrg?.id) return;
+    if (!user?.id) return;
 
     try {
       // First, unset all primary domains
       await supabase
         .from('custom_domains')
         .update({ is_primary: false })
-        .eq('org_id', currentOrg.id);
+        .eq('user_id', user.id);
 
       // Then set the new primary
       const { error } = await supabase

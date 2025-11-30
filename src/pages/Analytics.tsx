@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAnalytics } from '@/hooks/useAnalytics';
-import { useOrganization } from '@/contexts/OrganizationContext';
+import { useAuth } from '@/hooks/useAuth';
 import { AnalyticsKPIs } from '@/components/analytics/AnalyticsKPIs';
 import { ComparisonView } from '@/components/analytics/ComparisonView';
 import { ConversationChart } from '@/components/analytics/ConversationChart';
@@ -20,7 +20,7 @@ interface AnalyticsProps {
 }
 
 const Analytics: React.FC<AnalyticsProps> = ({ onMenuClick }) => {
-  const { currentOrg } = useOrganization();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('dashboard');
 
   // Date state
@@ -161,7 +161,7 @@ const Analytics: React.FC<AnalyticsProps> = ({ onMenuClick }) => {
 
   const handleExportCSV = async () => {
     try {
-      await generateCSVReport(analyticsData, reportConfig, startDate, endDate, currentOrg?.name || 'Organization');
+      await generateCSVReport(analyticsData, reportConfig, startDate, endDate, user?.email || 'User');
       toast.success('CSV exported successfully');
     } catch (error) {
       console.error('Export error:', error);
@@ -171,7 +171,7 @@ const Analytics: React.FC<AnalyticsProps> = ({ onMenuClick }) => {
 
   const handleExportPDF = async () => {
     try {
-      await generatePDFReport(analyticsData, reportConfig, startDate, endDate, currentOrg?.name || 'Organization');
+      await generatePDFReport(analyticsData, reportConfig, startDate, endDate, user?.email || 'User');
       toast.success('PDF exported successfully');
     } catch (error) {
       console.error('Export error:', error);

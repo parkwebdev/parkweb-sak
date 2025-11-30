@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { useOrganization } from '@/contexts/OrganizationContext';
+import { useAuth } from '@/hooks/useAuth';
 import type { Tables } from '@/integrations/supabase/types';
 
 export interface SearchResult {
@@ -20,18 +20,18 @@ type Lead = Tables<'leads'>;
 
 export const useSearchData = () => {
   const navigate = useNavigate();
-  const { currentOrg } = useOrganization();
+  const { user } = useAuth();
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (currentOrg) {
+    if (user) {
       fetchAllData();
     }
-  }, [currentOrg]);
+  }, [user]);
 
   const fetchAllData = async () => {
-    if (!currentOrg) return;
+    if (!user) return;
 
     setLoading(true);
     try {
@@ -40,17 +40,17 @@ export const useSearchData = () => {
         supabase
           .from('agents')
           .select('*')
-          .eq('org_id', currentOrg.id),
+          .eq('user_id', user.id),
         supabase
           .from('conversations')
           .select('*, agents(name)')
-          .eq('org_id', currentOrg.id)
+          .eq('user_id', user.id)
           .order('updated_at', { ascending: false })
           .limit(50),
         supabase
           .from('leads')
           .select('*')
-          .eq('org_id', currentOrg.id)
+          .eq('user_id', user.id)
           .order('created_at', { ascending: false })
           .limit(50),
       ]);

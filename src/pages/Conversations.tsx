@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useOrganization } from '@/contexts/OrganizationContext';
+import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/Badge';
@@ -21,8 +21,8 @@ interface ConversationsProps {
 }
 
 const Conversations: React.FC<ConversationsProps> = ({ onMenuClick }) => {
-  const { currentOrg } = useOrganization();
-  const { 
+  const { user } = useAuth();
+  const {
     conversations, 
     loading, 
     fetchMessages, 

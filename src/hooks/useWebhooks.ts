@@ -77,7 +77,7 @@ export const useWebhooks = () => {
     }
   };
 
-  const createWebhook = async (webhookData: Omit<Webhook, 'id' | 'created_at' | 'updated_at'>) => {
+  const createWebhook = async (webhookData: Omit<Webhook, 'id' | 'created_at' | 'updated_at' | 'user_id'>) => {
     if (!user) return;
 
     try {
@@ -106,7 +106,7 @@ export const useWebhooks = () => {
     }
   };
 
-  const updateWebhook = async (id: string, updates: Partial<Omit<Webhook, 'id' | 'created_at' | 'updated_at'>>) => {
+  const updateWebhook = async (id: string, updates: Partial<Omit<Webhook, 'id' | 'created_at' | 'updated_at' | 'user_id'>>) => {
     try {
       const { error } = await supabase
         .from('webhooks')
