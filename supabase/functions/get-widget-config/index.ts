@@ -112,7 +112,7 @@ Deno.serve(async (req) => {
       useGradientHeader: embeddedChatConfig.useGradientHeader !== false,
       
       // Team avatars
-      showTeamAvatars: embeddedChatConfig.showTeamAvatars !== false,
+      showTeamAvatars: embeddedChatConfig.showTeamAvatars || false,
       teamAvatarUrls: embeddedChatConfig.teamAvatarUrls || [],
       
       // Timing
