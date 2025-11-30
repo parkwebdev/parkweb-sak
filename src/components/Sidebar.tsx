@@ -4,7 +4,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { UserAccountCard } from './UserAccountCard';
 import { useSidebar } from '@/hooks/use-sidebar';
 import { useConversations } from '@/hooks/useConversations';
-import chatpadLogo from '@/assets/chatpad-logo.png';
+import ChatPadLogo from './ChatPadLogo';
 
 interface NavigationItem {
   id: string;
@@ -77,11 +77,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
         <header className="w-full px-2 mb-6">
           <div className="flex items-center justify-between">
             {!isCollapsed && (
-              <img 
-                src={chatpadLogo} 
-                alt="ChatPad Logo" 
-                className="h-6 w-6 object-contain"
-              />
+              <ChatPadLogo className="h-6 w-6 text-foreground" />
             )}
             
             <div className={`flex items-center gap-2 ${isCollapsed ? 'mx-auto' : 'ml-auto'}`}>
