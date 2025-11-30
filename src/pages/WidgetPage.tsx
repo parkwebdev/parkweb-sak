@@ -12,6 +12,31 @@ const WidgetPage = () => {
   
   const agentId = searchParams.get('agentId');
   
+  // Force light mode for widget
+  useEffect(() => {
+    const html = document.documentElement;
+    const body = document.body;
+    const root = document.getElementById('root');
+    const originalHtmlClass = html.className;
+    const originalBodyStyle = body.style.cssText;
+    
+    // Force light mode
+    html.classList.remove('dark');
+    html.classList.add('light');
+    body.style.background = 'transparent';
+    body.style.backgroundColor = 'transparent';
+    body.style.height = '100%';
+    body.style.margin = '0';
+    html.style.height = '100%';
+    if (root) root.style.height = '100%';
+    
+    return () => {
+      // Restore original state on unmount
+      html.className = originalHtmlClass;
+      body.style.cssText = originalBodyStyle;
+    };
+  }, []);
+  
   useEffect(() => {
     const fetchConfig = async () => {
       if (!agentId) {
