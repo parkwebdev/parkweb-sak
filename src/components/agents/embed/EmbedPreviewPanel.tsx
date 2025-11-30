@@ -75,8 +75,8 @@ export const EmbedPreviewPanel = ({ config }: EmbedPreviewPanelProps) => {
       action_type: a.action_type || undefined,
       action_url: a.action_url || undefined,
     })),
-    helpCategories: helpCategories.map((cat, idx) => ({
-      id: cat.name, // Use name as ID since HelpCategory doesn't have an id property
+    helpCategories: helpCategories.map((cat) => ({
+      id: cat.id,
       name: cat.name,
       description: cat.description || undefined,
       icon: undefined,

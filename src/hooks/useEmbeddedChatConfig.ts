@@ -29,6 +29,7 @@ export interface HelpArticle {
 }
 
 export interface HelpCategory {
+  id: string;
   name: string;
   description: string;
 }

@@ -44,6 +44,7 @@ export const useHelpArticles = (agentId: string) => {
         if (artError) throw artError;
 
         const mappedCategories: HelpCategory[] = (categoriesData || []).map(cat => ({
+          id: cat.id,
           name: cat.name,
           description: cat.description || '',
         }));
@@ -264,7 +265,7 @@ export const useHelpArticles = (agentId: string) => {
 
       if (error) throw error;
 
-      setCategories([...categories, { name, description }]);
+      setCategories([...categories, { id: data.id, name, description }]);
       return data.id;
     } catch (error) {
       console.error('Error adding category:', error);
@@ -283,7 +284,7 @@ export const useHelpArticles = (agentId: string) => {
       if (error) throw error;
 
       setCategories(categories.map(c =>
-        c.name === oldName ? { name: newName, description } : c
+        c.name === oldName ? { id: c.id, name: newName, description } : c
       ));
 
       setArticles(articles.map(a =>
@@ -403,12 +404,16 @@ export const useHelpArticles = (agentId: string) => {
       setArticles([...articles, ...newArticles]);
 
       // Update categories if new ones were added
-      const newCategories = uniqueCategories
+      const newCategoriesData = uniqueCategories
         .filter(name => !categories.some(c => c.name === name))
-        .map(name => ({ name, description: '' }));
+        .map(name => ({
+          id: categoryMap.get(name)!,
+          name,
+          description: '',
+        }));
 
-      if (newCategories.length > 0) {
-        setCategories([...categories, ...newCategories]);
+      if (newCategoriesData.length > 0) {
+        setCategories([...categories, ...newCategoriesData]);
       }
 
       return insertedArticles.length;
