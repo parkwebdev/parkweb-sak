@@ -286,12 +286,9 @@ export const CreateWebhookDialog = ({ open, onOpenChange }: CreateWebhookDialogP
               }}>
                 <div className="flex flex-wrap gap-4">
                   {AUTH_TYPES.map((type) => (
-                    <div key={type.value} className="flex items-center space-x-2">
-                      <RadioGroupItem value={type.value} id={`auth-${type.value}`} />
-                      <Label htmlFor={`auth-${type.value}`} className="font-normal cursor-pointer">
-                        {type.label}
-                      </Label>
-                    </div>
+                    <RadioGroupItem key={type.value} value={type.value}>
+                      {type.label}
+                    </RadioGroupItem>
                   ))}
                 </div>
               </RadioGroup>

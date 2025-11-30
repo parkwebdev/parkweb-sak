@@ -38,18 +38,9 @@ export const ReportBuilder = ({ config, onConfigChange }: ReportBuilderProps) =>
           <div className="space-y-3">
             <Label className="text-base">Report Type</Label>
             <RadioGroup value={config.type} onValueChange={(v) => updateConfig('type', v as any)}>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="summary" id="summary" />
-                <Label htmlFor="summary" className="font-normal">Summary - High-level overview</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="detailed" id="detailed" />
-                <Label htmlFor="detailed" className="font-normal">Detailed - Complete data analysis</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="comparison" id="comparison" />
-                <Label htmlFor="comparison" className="font-normal">Comparison - Period over period</Label>
-              </div>
+              <RadioGroupItem value="summary">Summary - High-level overview</RadioGroupItem>
+              <RadioGroupItem value="detailed">Detailed - Complete data analysis</RadioGroupItem>
+              <RadioGroupItem value="comparison">Comparison - Period over period</RadioGroupItem>
             </RadioGroup>
           </div>
 
