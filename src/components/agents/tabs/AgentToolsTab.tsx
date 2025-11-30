@@ -138,16 +138,16 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* API Access Section */}
       {agent && onUpdate && (
         <>
           <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">API Access</CardTitle>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">API Access</CardTitle>
               <CardDescription className="text-sm">REST API endpoint for your agent</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-2">
               <div className="space-y-2">
                 <Label className="text-sm">API Endpoint</Label>
                 <div className="flex gap-2">
@@ -172,12 +172,12 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
       )}
 
       {/* Tools Section */}
-      <div className="space-y-4">
+      <div className="space-y-3">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-semibold">Agent Tools</h3>
+            <h3 className="text-base font-semibold">Agent Tools</h3>
             <p className="text-sm text-muted-foreground">
-              Extend agent capabilities with custom tools and integrations
+              Extend agent capabilities with custom tools
             </p>
           </div>
           <Button size="sm" onClick={() => setShowAddForm(!showAddForm)}>
@@ -188,11 +188,11 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
 
       {showAddForm && (
         <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Add New Tool</CardTitle>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Add New Tool</CardTitle>
             <CardDescription className="text-sm">Define a custom tool for your agent</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-3">
             <div className="space-y-2">
               <Label htmlFor="tool-name" className="text-sm">Tool Name</Label>
               <Input
@@ -246,11 +246,11 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
             No tools configured yet. Add your first tool to extend agent capabilities.
           </CardContent>
         </Card>
-      ) : (
-        <div className="space-y-3">
+        ) : (
+        <div className="space-y-2">
           {tools.map((tool) => (
             <Card key={tool.id}>
-              <CardHeader>
+              <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <CardTitle className="text-base">{tool.name}</CardTitle>

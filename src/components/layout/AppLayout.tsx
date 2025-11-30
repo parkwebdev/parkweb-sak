@@ -37,7 +37,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
           <AppHeader onMenuClick={() => setSidebarOpen(true)} />
           
           {/* Scrollable Page Content */}
-          <main className="flex-1 overflow-hidden">
+          <main className="flex-1 overflow-y-auto">
             {children}
           </main>
         </div>

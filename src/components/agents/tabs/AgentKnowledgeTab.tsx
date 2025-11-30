@@ -28,10 +28,10 @@ export const AgentKnowledgeTab = ({ agentId, userId }: AgentKnowledgeTabProps) =
         <TabsTrigger value="articles">Help Articles</TabsTrigger>
       </TabsList>
 
-      <TabsContent value="sources" className="space-y-4 mt-4">
-        <div className="flex items-center justify-between">
+      <TabsContent value="sources" className="space-y-3 mt-3">
+        <div className="flex items-center justify-between gap-4">
           <p className="text-sm text-muted-foreground">
-            Add knowledge sources to give your agent access to specific information through vector search.
+            Add knowledge sources to give your agent access to specific information.
           </p>
           <Button size="sm" onClick={() => setAddDialogOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />
@@ -56,7 +56,7 @@ export const AgentKnowledgeTab = ({ agentId, userId }: AgentKnowledgeTabProps) =
             </CardContent>
           </Card>
         ) : (
-          <div className="grid gap-4">
+          <div className="grid gap-3">
             {sources.map((source) => (
               <KnowledgeSourceCard
                 key={source.id}
@@ -76,7 +76,7 @@ export const AgentKnowledgeTab = ({ agentId, userId }: AgentKnowledgeTabProps) =
         />
       </TabsContent>
 
-      <TabsContent value="articles" className="mt-4">
+      <TabsContent value="articles" className="mt-3">
         <HelpArticlesManager agentId={agentId} />
       </TabsContent>
     </Tabs>

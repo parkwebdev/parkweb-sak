@@ -28,10 +28,10 @@ export const AgentBehaviorTab = ({ agent, onUpdate, onFormChange }: AgentBehavio
   };
 
   return (
-    <div className="max-w-4xl space-y-4">
+    <div className="max-w-4xl space-y-3">
       <div>
         <h3 className="text-sm font-medium mb-1">System Prompt</h3>
-        <p className="text-xs text-muted-foreground mb-3">
+        <p className="text-xs text-muted-foreground mb-2">
           Define how your agent should behave, respond, and interact with users
         </p>
       </div>
