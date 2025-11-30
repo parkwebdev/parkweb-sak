@@ -94,137 +94,162 @@ export const AgentConfigureTab = ({ agent, onUpdate, onFormChange }: AgentConfig
   };
 
   return (
-    <div className="max-w-4xl space-y-4">
-      {/* Basic Info */}
-      <div className="space-y-3">
-        <h3 className="text-sm font-medium">Basic Information</h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="name" className="text-sm">Agent Name</Label>
-            <Input
-              id="name"
-              value={formData.name}
-              onChange={(e) => handleUpdate({ name: e.target.value })}
-              placeholder="My Assistant"
-              required
-            />
+    <div className="max-w-5xl space-y-6">
+      {/* Two-Column Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Left Column: Identity */}
+        <div className="space-y-4 p-5 rounded-lg bg-muted/30 border">
+          <div>
+            <h3 className="text-sm font-semibold mb-1">Identity</h3>
+            <p className="text-xs text-muted-foreground">Define your agent's basic information</p>
           </div>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="status" className="text-sm">Status</Label>
-            <div className="flex items-center space-x-2 h-9">
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Name</Label>
+              <Input
+                id="name"
+                value={formData.name}
+                onChange={(e) => handleUpdate({ name: e.target.value })}
+                placeholder="My Agent"
+                required
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div>
+                <Label htmlFor="status" className="text-sm">Status</Label>
+                <p className="text-xs text-muted-foreground">
+                  {formData.status === 'active' ? 'Agent is live' : 'Agent is inactive'}
+                </p>
+              </div>
               <Switch
                 id="status"
                 checked={formData.status === 'active'}
-                onCheckedChange={(checked) => handleUpdate({ status: checked ? 'active' : 'draft' })}
+                onCheckedChange={(checked) => 
+                  handleUpdate({ status: checked ? 'active' : 'draft' })
+                }
               />
-              <Label htmlFor="status" className="text-sm font-normal">
-                {formData.status === 'active' ? 'Active' : 'Draft'}
-              </Label>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                value={formData.description || ''}
+                onChange={(e) => handleUpdate({ description: e.target.value })}
+                placeholder="A brief description of what this agent does"
+                rows={4}
+              />
             </div>
           </div>
         </div>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="description" className="text-sm">Description</Label>
-          <Textarea
-            id="description"
-            value={formData.description}
-            onChange={(e) => handleUpdate({ description: e.target.value })}
-            placeholder="A helpful AI assistant that..."
-            rows={2}
-          />
-        </div>
-      </div>
+        {/* Right Column: Model & Generation */}
+        <div className="space-y-4">
+          {/* Model Settings */}
+          <div className="p-5 rounded-lg bg-muted/30 border space-y-4">
+            <div>
+              <h3 className="text-sm font-semibold mb-1">Model Settings</h3>
+              <p className="text-xs text-muted-foreground">Configure AI model and output format</p>
+            </div>
 
-      <Separator />
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="model">AI Model</Label>
+                <Select value={formData.model} onValueChange={(value) => handleUpdate({ model: value })}>
+                  <SelectTrigger id="model">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {MODELS.map((model) => (
+                      <SelectItem key={model.value} value={model.value}>
+                        <div className="flex flex-col items-start">
+                          <span className="font-medium">{model.label}</span>
+                          <span className="text-xs text-muted-foreground">{model.description}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-      {/* Model Settings */}
-      <div className="space-y-3">
-        <h3 className="text-sm font-medium">Model Settings</h3>
-
-        <div className="space-y-1.5">
-          <Label htmlFor="model" className="text-sm">AI Model</Label>
-          <Select value={formData.model} onValueChange={(value) => handleUpdate({ model: value })}>
-            <SelectTrigger id="model">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {MODELS.map((model) => (
-                <SelectItem key={model.value} value={model.value}>
-                  <div className="flex flex-col">
-                    <span className="font-medium">{model.label}</span>
-                    <span className="text-xs text-muted-foreground">{model.description}</span>
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="flex items-center space-x-2">
-          <Switch
-            id="json_mode"
-            checked={formData.json_mode}
-            onCheckedChange={(checked) => handleUpdate({ json_mode: checked })}
-          />
-          <Label htmlFor="json_mode" className="text-sm font-normal">
-            JSON Response Mode
-          </Label>
-        </div>
-      </div>
-
-      <Separator />
-
-      {/* Generation Settings */}
-      <div className="space-y-3">
-        <h3 className="text-sm font-medium">Generation Settings</h3>
-
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="temperature" className="text-sm">Temperature</Label>
-            <span className="text-sm text-muted-foreground">{formData.temperature.toFixed(1)}</span>
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label htmlFor="json_mode" className="text-sm">JSON Response Mode</Label>
+                  <p className="text-xs text-muted-foreground">Enforce structured output</p>
+                </div>
+                <Switch
+                  id="json_mode"
+                  checked={formData.model?.includes('json') || false}
+                  onCheckedChange={(checked) => {
+                    const baseModel = formData.model?.replace('-json', '') || 'google/gemini-2.5-flash';
+                    handleUpdate({ model: checked ? `${baseModel}-json` : baseModel });
+                  }}
+                />
+              </div>
+            </div>
           </div>
-          <Slider
-            id="temperature"
-            min={0}
-            max={2}
-            step={0.1}
-            value={[formData.temperature]}
-            onValueChange={([value]) => handleUpdate({ temperature: value })}
-          />
-          <p className="text-xs text-muted-foreground">Lower = focused, higher = creative</p>
-        </div>
 
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="top_p" className="text-sm">Top P</Label>
-            <span className="text-sm text-muted-foreground">{formData.top_p.toFixed(2)}</span>
-          </div>
-          <Slider
-            id="top_p"
-            min={0}
-            max={1}
-            step={0.01}
-            value={[formData.top_p]}
-            onValueChange={([value]) => handleUpdate({ top_p: value })}
-          />
-          <p className="text-xs text-muted-foreground">Nucleus sampling (1.0 = no filtering)</p>
-        </div>
+          {/* Generation Settings */}
+          <div className="p-5 rounded-lg bg-muted/30 border space-y-4">
+            <div>
+              <h3 className="text-sm font-semibold mb-1">Generation</h3>
+              <p className="text-xs text-muted-foreground">Fine-tune response behavior</p>
+            </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="max_tokens" className="text-sm">Max Tokens</Label>
-            <Input
-              id="max_tokens"
-              type="number"
-              min="100"
-              max="8000"
-              step="100"
-              value={formData.max_tokens}
-              onChange={(e) => handleUpdate({ max_tokens: parseInt(e.target.value) })}
-            />
+            <div className="space-y-4">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="temperature" className="text-sm">Temperature</Label>
+                  <span className="text-sm font-mono text-muted-foreground">{formData.temperature}</span>
+                </div>
+                <Slider
+                  id="temperature"
+                  value={[formData.temperature]}
+                  onValueChange={([value]) => handleUpdate({ temperature: value })}
+                  min={0}
+                  max={2}
+                  step={0.1}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Higher = more creative, Lower = more focused
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="top_p" className="text-sm">Top P</Label>
+                  <span className="text-sm font-mono text-muted-foreground">{formData.top_p}</span>
+                </div>
+                <Slider
+                  id="top_p"
+                  value={[formData.top_p]}
+                  onValueChange={([value]) => handleUpdate({ top_p: value })}
+                  min={0}
+                  max={1}
+                  step={0.05}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Controls response diversity
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="max_tokens" className="text-sm">Max Tokens</Label>
+                <Input
+                  id="max_tokens"
+                  type="number"
+                  value={formData.max_tokens}
+                  onChange={(e) => handleUpdate({ max_tokens: parseInt(e.target.value) })}
+                  min={1}
+                  max={8000}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Maximum response length
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
