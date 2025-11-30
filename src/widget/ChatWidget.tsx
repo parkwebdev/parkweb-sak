@@ -775,29 +775,78 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
 
               {currentView === 'help' && (
                 <div className="flex-1 flex flex-col">
-                  {!selectedArticle ? (
+                  {/* Level 1: Categories List (No category selected, no search query) */}
+                  {!selectedCategory && !selectedArticle && !helpSearchQuery && (
                     <>
-                      <div className="p-3 border-b">
+                      <div className="p-4 border-b">
+                        <h3 className="text-lg font-semibold mb-3">Help Center</h3>
                         <Input
                           value={helpSearchQuery}
                           onChange={(e) => setHelpSearchQuery(e.target.value)}
-                          placeholder="Search articles..."
+                          placeholder="Search help articles..."
                           className="h-9"
                         />
                       </div>
 
-                      {config.helpCategories.length > 0 && (
-                        <div className="p-3 border-b flex gap-2 overflow-x-auto">
-                          <Button size="sm" variant={!selectedCategory ? 'default' : 'outline'} onClick={() => setSelectedCategory(null)}>
-                            All
+                      <div className="flex-1 overflow-y-auto p-4">
+                        {config.helpCategories.length === 0 ? (
+                          <p className="text-center text-muted-foreground text-sm py-8">No categories available</p>
+                        ) : (
+                          <div className="space-y-3">
+                            {config.helpCategories.map((category) => {
+                              const articlesInCategory = config.helpArticles.filter(
+                                a => a.category_id === category.id || a.category === category.name
+                              ).length;
+                              
+                              return (
+                                <button
+                                  key={category.id}
+                                  className="w-full p-4 border rounded-lg bg-card hover:bg-accent/50 cursor-pointer transition-all text-left"
+                                  onClick={() => setSelectedCategory(category.id)}
+                                >
+                                  <div className="flex items-start justify-between gap-3">
+                                    <div className="flex-1">
+                                      <h4 className="font-medium text-sm mb-1">{category.name}</h4>
+                                      {category.description && (
+                                        <p className="text-xs text-muted-foreground">{category.description}</p>
+                                      )}
+                                      <p className="text-xs text-muted-foreground mt-2">
+                                        {articlesInCategory} {articlesInCategory === 1 ? 'article' : 'articles'}
+                                      </p>
+                                    </div>
+                                    <ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                                  </div>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  )}
+
+                  {/* Level 1b: Search Results (When user searches) */}
+                  {!selectedCategory && !selectedArticle && helpSearchQuery && (
+                    <>
+                      <div className="p-4 border-b">
+                        <div className="flex items-center gap-2 mb-3">
+                          <Button 
+                            size="sm" 
+                            variant="ghost" 
+                            onClick={() => setHelpSearchQuery('')}
+                            className="h-8"
+                          >
+                            <ChevronRight className="h-4 w-4 rotate-180" />
                           </Button>
-                          {config.helpCategories.map((cat) => (
-                            <Button key={cat.id} size="sm" variant={selectedCategory === cat.id ? 'default' : 'outline'} onClick={() => setSelectedCategory(cat.id)}>
-                              {cat.name}
-                            </Button>
-                          ))}
+                          <h3 className="text-lg font-semibold">Search Results</h3>
                         </div>
-                      )}
+                        <Input
+                          value={helpSearchQuery}
+                          onChange={(e) => setHelpSearchQuery(e.target.value)}
+                          placeholder="Search help articles..."
+                          className="h-9"
+                        />
+                      </div>
 
                       <div className="flex-1 overflow-y-auto p-4">
                         {filteredArticles.length === 0 ? (
@@ -808,12 +857,17 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                               <div
                                 key={article.id}
                                 className="p-3 border rounded-lg hover:bg-accent cursor-pointer transition-colors"
-                                onClick={() => setSelectedArticle(article)}
+                                onClick={() => {
+                                  setSelectedArticle(article);
+                                  setHelpSearchQuery('');
+                                }}
                               >
                                 <div className="flex items-start justify-between gap-2">
                                   <h4 className="font-medium text-sm flex-1">{article.title}</h4>
-                                  {helpSearchQuery && article.category && (
-                                    <Badge variant="secondary" className="text-xs">{article.category}</Badge>
+                                  {article.category && (
+                                    <Badge variant="secondary" className="text-xs flex-shrink-0">
+                                      {article.category}
+                                    </Badge>
                                   )}
                                 </div>
                               </div>
@@ -822,16 +876,87 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                         )}
                       </div>
                     </>
-                  ) : (
-                    <div className="flex-1 overflow-y-auto">
-                      <div className="p-4">
-                        <Button size="sm" variant="ghost" onClick={() => setSelectedArticle(null)} className="mb-3">
-                          ← Back
-                        </Button>
-                        <h2 className="text-xl font-bold mb-4">{selectedArticle.title}</h2>
-                        <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: selectedArticle.content }} />
+                  )}
+
+                  {/* Level 2: Articles in Category (Category selected, no article) */}
+                  {selectedCategory && !selectedArticle && (
+                    <>
+                      <div className="p-4 border-b">
+                        <div className="flex items-center gap-2 mb-3">
+                          <Button 
+                            size="sm" 
+                            variant="ghost" 
+                            onClick={() => {
+                              setSelectedCategory(null);
+                              setHelpSearchQuery('');
+                            }}
+                            className="h-8"
+                          >
+                            <ChevronRight className="h-4 w-4 rotate-180" />
+                          </Button>
+                          <h3 className="text-lg font-semibold">
+                            {config.helpCategories.find(c => c.id === selectedCategory)?.name || 'Articles'}
+                          </h3>
+                        </div>
+                        <Input
+                          value={helpSearchQuery}
+                          onChange={(e) => setHelpSearchQuery(e.target.value)}
+                          placeholder="Search in this category..."
+                          className="h-9"
+                        />
                       </div>
 
+                      <div className="flex-1 overflow-y-auto p-4">
+                        {filteredArticles.length === 0 ? (
+                          <p className="text-center text-muted-foreground text-sm py-8">No articles in this category</p>
+                        ) : (
+                          <div className="space-y-2">
+                            {filteredArticles.map((article) => (
+                              <button
+                                key={article.id}
+                                className="w-full p-3 border rounded-lg hover:bg-accent cursor-pointer transition-colors text-left"
+                                onClick={() => setSelectedArticle(article)}
+                              >
+                                <div className="flex items-center justify-between gap-2">
+                                  <h4 className="font-medium text-sm flex-1">{article.title}</h4>
+                                  <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                                </div>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  )}
+
+                  {/* Level 3: Article Content with Feedback */}
+                  {selectedArticle && (
+                    <div className="flex-1 overflow-y-auto">
+                      <div className="p-4">
+                        <Button 
+                          size="sm" 
+                          variant="ghost" 
+                          onClick={() => {
+                            setSelectedArticle(null);
+                            setArticleFeedback(null);
+                            setShowFeedbackComment(false);
+                            setFeedbackComment('');
+                            setFeedbackSubmitted(false);
+                          }}
+                          className="mb-3"
+                        >
+                          <ChevronRight className="h-4 w-4 rotate-180 mr-1" />
+                          Back
+                        </Button>
+                        
+                        <h2 className="text-xl font-bold mb-4">{selectedArticle.title}</h2>
+                        <div 
+                          className="prose prose-sm max-w-none text-sm whitespace-pre-wrap break-words" 
+                          dangerouslySetInnerHTML={{ __html: selectedArticle.content }} 
+                        />
+                      </div>
+
+                      {/* Feedback Section */}
                       <div className="p-4 border-t bg-muted/30">
                         <p className="text-sm font-medium mb-3">Was this article helpful?</p>
                         {!feedbackSubmitted ? (
@@ -840,8 +965,12 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                               <Button
                                 size="sm"
                                 variant={articleFeedback === 'helpful' ? 'default' : 'outline'}
-                                onClick={() => { setArticleFeedback('helpful'); setShowFeedbackComment(true); }}
+                                onClick={() => { 
+                                  setArticleFeedback('helpful'); 
+                                  setShowFeedbackComment(true); 
+                                }}
                                 className="flex-1"
+                                style={articleFeedback === 'helpful' ? { backgroundColor: config.primaryColor } : {}}
                               >
                                 <ThumbsUp className="h-4 w-4 mr-2" />
                                 Yes
@@ -849,7 +978,10 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                               <Button
                                 size="sm"
                                 variant={articleFeedback === 'not_helpful' ? 'default' : 'outline'}
-                                onClick={() => { setArticleFeedback('not_helpful'); setShowFeedbackComment(true); }}
+                                onClick={() => { 
+                                  setArticleFeedback('not_helpful'); 
+                                  setShowFeedbackComment(true); 
+                                }}
                                 className="flex-1"
                               >
                                 <ThumbsDown className="h-4 w-4 mr-2" />
@@ -863,9 +995,14 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                                   value={feedbackComment}
                                   onChange={(e) => setFeedbackComment(e.target.value)}
                                   placeholder="Tell us more (optional)"
-                                  className="text-sm"
+                                  className="text-sm min-h-[80px]"
                                 />
-                                <Button size="sm" onClick={handleSubmitFeedback} style={{ backgroundColor: config.primaryColor }} className="w-full">
+                                <Button 
+                                  size="sm" 
+                                  onClick={handleSubmitFeedback} 
+                                  style={{ backgroundColor: config.primaryColor }} 
+                                  className="w-full"
+                                >
                                   Submit Feedback
                                 </Button>
                               </div>
@@ -873,9 +1010,27 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                           </div>
                         ) : (
                           <div className="text-center py-2">
-                            <p className="text-sm text-muted-foreground">Thank you for your feedback!</p>
+                            <p className="text-sm text-muted-foreground mb-2">Thank you for your feedback!</p>
                           </div>
                         )}
+                      </div>
+
+                      {/* Still Need Help Button */}
+                      <div className="p-4 border-t">
+                        <Button
+                          className="w-full"
+                          variant="outline"
+                          onClick={() => {
+                            setCurrentView('messages');
+                            if (!chatUser) {
+                              setActiveConversationId('new');
+                            }
+                            toast.success('Starting a new conversation...');
+                          }}
+                        >
+                          <MessageChatCircle className="h-4 w-4 mr-2" />
+                          Still need help? Start Chat
+                        </Button>
                       </div>
                     </div>
                   )}
