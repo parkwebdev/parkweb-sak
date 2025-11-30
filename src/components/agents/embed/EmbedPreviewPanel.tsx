@@ -76,19 +76,19 @@ export const EmbedPreviewPanel = ({ config }: EmbedPreviewPanelProps) => {
       action_url: a.action_url || undefined,
     })),
     helpCategories: helpCategories.map((cat, idx) => ({
-      id: cat.id,
+      id: cat.name, // Use name as ID since HelpCategory doesn't have an id property
       name: cat.name,
       description: cat.description || undefined,
       icon: undefined,
     })),
     helpArticles: helpArticles.map(art => ({
       id: art.id,
-      category_id: art.category_id,
-      category: helpCategories.find(c => c.id === art.category_id)?.name,
+      category_id: art.category, // HelpArticle has 'category' string, not 'category_id'
+      category: art.category,
       title: art.title,
       content: art.content,
       icon: art.icon || undefined,
-      order: art.order_index || 0,
+      order: art.order || 0, // HelpArticle has 'order', not 'order_index'
     })),
     enableVoiceMessages: true,
     enableFileAttachments: true,
