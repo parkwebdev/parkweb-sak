@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { X, Send01, Minimize02, Home05, MessageChatCircle, HelpCircle, ChevronRight, Zap, BookOpen01, Check, Microphone01, Attachment01, Settings01, Image03, FileCheck02, ThumbsUp, ThumbsDown } from '@untitledui/icons';
 import type { EmbeddedChatConfig, HelpArticle } from '@/hooks/useEmbeddedChatConfig';
 import { ChatBubbleIcon } from './ChatBubbleIcon';
-import { VoiceInput } from '@/components/ui/voice-input';
+import { VoiceInput } from '@/components/molecule-ui/voice-input';
 import { AudioPlayer } from '@/components/chat/AudioPlayer';
 import { FileDropZone } from '@/components/chat/FileDropZone';
 import { MessageFileAttachment } from '@/components/chat/FileAttachment';
@@ -70,6 +70,8 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
   const [isTyping, setIsTyping] = useState(false);
   const [isRecordingAudio, setIsRecordingAudio] = useState(false);
   const [isAttachingFiles, setIsAttachingFiles] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
   const [messageInput, setMessageInput] = useState('');
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [pendingFiles, setPendingFiles] = useState<Array<{ file: File; preview: string }>>([]);
@@ -1013,32 +1015,64 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
                         {/* Input */}
                         {isRecordingAudio ? (
                           <VoiceInput
-                            onRecordingComplete={(audioBlob: Blob) => {
-                              const audioUrl = URL.createObjectURL(audioBlob);
-                              const newMessage = {
-                                role: 'user' as const,
-                                content: 'Voice message',
-                                audioUrl,
-                                read: false,
-                                timestamp: new Date(),
-                                type: 'audio' as const,
-                              };
-                              setMessages(prev => [...prev, newMessage]);
-                              setIsRecordingAudio(false);
-                              
-                              // Simulate AI response
-                              setIsTyping(true);
-                              setTimeout(() => {
-                                setMessages(prev => [...prev, {
-                                  role: 'assistant' as const,
-                                  content: 'I received your voice message!',
-                                  timestamp: new Date(),
-                                  type: 'text' as const,
-                                }]);
-                                setIsTyping(false);
-                              }, 2000);
+                            onStart={async () => {
+                              try {
+                                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                                const mediaRecorder = new MediaRecorder(stream);
+                                mediaRecorderRef.current = mediaRecorder;
+                                chunksRef.current = [];
+
+                                mediaRecorder.ondataavailable = (e) => {
+                                  if (e.data.size > 0) {
+                                    chunksRef.current.push(e.data);
+                                  }
+                                };
+
+                                mediaRecorder.start();
+                              } catch (error) {
+                                console.error("Error accessing microphone:", error);
+                                setIsRecordingAudio(false);
+                              }
                             }}
-                            onCancel={() => setIsRecordingAudio(false)}
+                            onStop={() => {
+                              if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+                                mediaRecorderRef.current.stop();
+                                
+                                mediaRecorderRef.current.onstop = () => {
+                                  const audioBlob = new Blob(chunksRef.current, { type: "audio/webm" });
+                                  const audioUrl = URL.createObjectURL(audioBlob);
+                                  
+                                  const newMessage = {
+                                    role: 'user' as const,
+                                    content: 'Voice message',
+                                    audioUrl,
+                                    read: false,
+                                    timestamp: new Date(),
+                                    type: 'audio' as const,
+                                  };
+                                  setMessages(prev => [...prev, newMessage]);
+                                  
+                                  // Clean up stream
+                                  if (mediaRecorderRef.current?.stream) {
+                                    mediaRecorderRef.current.stream.getTracks().forEach((track) => track.stop());
+                                  }
+                                  
+                                  setIsRecordingAudio(false);
+                                  
+                                  // Simulate AI response
+                                  setIsTyping(true);
+                                  setTimeout(() => {
+                                    setMessages(prev => [...prev, {
+                                      role: 'assistant' as const,
+                                      content: 'I received your voice message!',
+                                      timestamp: new Date(),
+                                      type: 'text' as const,
+                                    }]);
+                                    setIsTyping(false);
+                                  }, 2000);
+                                };
+                              }
+                            }}
                           />
                         ) : isAttachingFiles ? (
                           <FileDropZone
