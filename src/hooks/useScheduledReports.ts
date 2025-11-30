@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useOrganization } from '@/contexts/OrganizationContext';
+import { useAuth } from '@/hooks/useAuth';
 import type { Tables, TablesInsert } from '@/integrations/supabase/types';
 
 type ScheduledReport = Tables<'scheduled_reports'>;
@@ -11,10 +11,10 @@ export const useScheduledReports = () => {
   const [reports, setReports] = useState<ScheduledReport[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
-  const { currentOrg } = useOrganization();
+  const { user } = useAuth();
 
   const fetchReports = async () => {
-    if (!currentOrg) return;
+    if (!user) return;
 
     try {
       setLoading(true);
@@ -38,19 +38,16 @@ export const useScheduledReports = () => {
     }
   };
 
-  const createReport = async (report: Omit<ScheduledReportInsert, 'org_id' | 'created_by'>) => {
-    if (!currentOrg) return;
+  const createReport = async (report: Omit<ScheduledReportInsert, 'created_by'>) => {
+    if (!user) return;
 
     try {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) throw new Error('User not authenticated');
-
       const { data, error } = await supabase
         .from('scheduled_reports')
         .insert({
           ...report,
-          org_id: currentOrg.id,
-          created_by: userData.user.id,
+          user_id: user.id,
+          created_by: user.id,
         })
         .select()
         .single();

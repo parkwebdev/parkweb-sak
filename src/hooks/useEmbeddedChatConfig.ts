@@ -35,7 +35,7 @@ export interface HelpCategory {
 
 export interface EmbeddedChatConfig {
   agentId: string;
-  orgId: string;
+  userId: string;
   primaryColor: string;
   position: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
   greeting: string;
@@ -98,7 +98,7 @@ export interface EmbeddedChatConfig {
 export const useEmbeddedChatConfig = (agentId: string) => {
   const getDefaultConfig = (): EmbeddedChatConfig => ({
     agentId,
-    orgId: '',
+    userId: '',
     primaryColor: '#000000',
     position: 'bottom-right',
     greeting: 'Hi! How can I help you today?',
@@ -192,7 +192,7 @@ export const useEmbeddedChatConfig = (agentId: string) => {
       setLoading(true);
       const { data: agent, error } = await supabase
         .from('agents')
-        .select('name, org_id, deployment_config')
+        .select('name, user_id, deployment_config')
         .eq('id', agentId)
         .single();
 
@@ -206,7 +206,7 @@ export const useEmbeddedChatConfig = (agentId: string) => {
           ...defaultConfig,
           ...deploymentConfig.embedded_chat,
           agentId,
-          orgId: agent.org_id,
+          userId: agent.user_id,
           agentName: agent.name,
         });
       } else if (deploymentConfig?.widget) {
@@ -215,14 +215,14 @@ export const useEmbeddedChatConfig = (agentId: string) => {
           ...defaultConfig,
           ...deploymentConfig.widget,
           agentId,
-          orgId: agent.org_id,
+          userId: agent.user_id,
           agentName: agent.name,
         });
       } else {
         setConfig({
           ...defaultConfig,
           agentId,
-          orgId: agent.org_id,
+          userId: agent.user_id,
           agentName: agent.name,
         });
       }
