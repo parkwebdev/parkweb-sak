@@ -390,19 +390,14 @@ export const HelpArticlesManager = ({ agentId }: HelpArticlesManagerProps) => {
                         <p className="text-xs text-muted-foreground mt-0.5">{category.description}</p>
                       )}
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handleEditCategory(category.name)}
-                        className="h-7 px-2"
-                      >
-                        Edit
-                      </Button>
-                      <p className="text-xs text-muted-foreground">
-                        Drag to reorder
-                      </p>
-                    </div>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => handleEditCategory(category.name)}
+                      className="h-7 px-2"
+                    >
+                      Edit
+                    </Button>
                   </div>
                   <DndContext
                     sensors={sensors}
