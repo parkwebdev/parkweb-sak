@@ -80,13 +80,13 @@ serve(async (req) => {
   }
 
   try {
-    const { domain, orgId } = await req.json();
+    const { domain, userId } = await req.json();
 
-    if (!domain || !orgId) {
-      throw new Error('Domain and organization ID are required');
+    if (!domain || !userId) {
+      throw new Error('Domain and user ID are required');
     }
 
-    console.log(`Verifying domain: ${domain} for org: ${orgId}`);
+    console.log(`Verifying domain: ${domain} for user: ${userId}`);
 
     // Initialize Supabase client
     const supabaseClient = createClient(
@@ -99,7 +99,7 @@ serve(async (req) => {
       .from('custom_domains')
       .select('verification_token')
       .eq('domain', domain)
-      .eq('org_id', orgId)
+      .eq('user_id', userId)
       .single();
 
     if (domainError || !domainRecord) {
@@ -124,7 +124,7 @@ serve(async (req) => {
           ssl_status: 'active' // In production, would check actual SSL
         })
         .eq('domain', domain)
-        .eq('org_id', orgId);
+        .eq('user_id', userId);
     } else {
       // Update with failed verification
       await supabaseClient
@@ -134,7 +134,7 @@ serve(async (req) => {
           ssl_status: dnsCheck.dnsConfigured ? 'pending' : 'failed'
         })
         .eq('domain', domain)
-        .eq('org_id', orgId);
+        .eq('user_id', userId);
     }
 
     return new Response(

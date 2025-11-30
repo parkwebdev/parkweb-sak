@@ -48,6 +48,21 @@ const handler = async (req: Request): Promise<Response> => {
         console.error('Error updating invitation status:', updateError);
       }
 
+      // Add user to team_members table
+      const { error: teamError } = await supabase
+        .from('team_members')
+        .insert({
+          owner_id: invitation.invited_by,
+          member_id: user_id,
+          role: 'member'
+        });
+
+      if (teamError) {
+        console.error('Error adding team member:', teamError);
+      } else {
+        console.log(`Added user ${user_id} to team of ${invitation.invited_by}`);
+      }
+
       console.log(`Marked invitation as accepted for: ${email}`);
 
       // Log the successful signup from invitation
@@ -60,7 +75,8 @@ const handler = async (req: Request): Promise<Response> => {
         p_details: {
           email: email,
           invitation_id: invitation.id,
-          invited_by: invitation.invited_by_name
+          invited_by: invitation.invited_by_name,
+          owner_id: invitation.invited_by
         }
       });
     }
