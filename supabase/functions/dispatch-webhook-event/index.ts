@@ -52,18 +52,18 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ message: 'Event not mapped' }), { status: 200 });
     }
 
-    // Get org_id from the record
-    const orgId = payload.record?.org_id;
-    if (!orgId) {
-      console.log('No org_id in record, skipping webhook dispatch');
-      return new Response(JSON.stringify({ message: 'No org_id' }), { status: 200 });
+    // Get user_id from the record
+    const userId = payload.record?.user_id;
+    if (!userId) {
+      console.log('No user_id in record, skipping webhook dispatch');
+      return new Response(JSON.stringify({ message: 'No user_id' }), { status: 200 });
     }
 
-    // Get all active webhooks for this organization that listen to this event
+    // Get all active webhooks for this user that listen to this event
     const { data: webhooks, error: webhooksError } = await supabase
       .from('webhooks')
       .select('*')
-      .eq('org_id', orgId)
+      .eq('user_id', userId)
       .eq('active', true);
 
     if (webhooksError) {
@@ -71,7 +71,7 @@ Deno.serve(async (req) => {
     }
 
     if (!webhooks || webhooks.length === 0) {
-      console.log('No active webhooks found for this organization');
+      console.log('No active webhooks found for this user');
       return new Response(JSON.stringify({ message: 'No webhooks' }), { status: 200 });
     }
 
