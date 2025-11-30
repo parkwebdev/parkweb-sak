@@ -16,15 +16,17 @@ export default defineConfig({
       output: {
         inlineDynamicImports: true,
         manualChunks: undefined,
+        assetFileNames: 'chatpad-widget.css',
       },
     },
     minify: 'terser',
     terserOptions: {
       compress: {
-        drop_console: true,
+        drop_console: false, // Keep console for debugging widget
         drop_debugger: true,
       },
     },
+    cssCodeSplit: false,
   },
   resolve: {
     alias: {

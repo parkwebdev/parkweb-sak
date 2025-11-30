@@ -1,21 +1,21 @@
 import { useState, useEffect, useRef } from 'react';
-import { fetchWidgetConfig, createLead, type WidgetConfig } from './api';
+import { fetchWidgetConfig, createLead, submitArticleFeedback, type WidgetConfig } from './api';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { X, Send01, Minimize02, Home05, MessageChatCircle, HelpCircle, ChevronRight, Zap, BookOpen01, Settings01 } from '@untitledui/icons';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { X, Send01, Minimize02, Home05, MessageChatCircle, HelpCircle, ChevronRight, Zap, BookOpen01, Settings01, Microphone01, Attachment01, Image03, FileCheck02, ThumbsUp, ThumbsDown } from '@untitledui/icons';
 import { ChatBubbleIcon } from '@/components/agents/ChatBubbleIcon';
 import { BubbleBackground } from '@/components/ui/bubble-background';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from '@/components/ui/dropdown-menu';
 import { z } from 'zod';
 
 interface ChatWidgetProps {
-  config: {
-    agentId: string;
-    position?: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
-    primaryColor?: string;
-  };
+  config: WidgetConfig | { agentId: string; position?: string; primaryColor?: string };
+  previewMode?: boolean;
 }
 
 type ViewType = 'home' | 'messages' | 'help';
@@ -27,91 +27,144 @@ interface ChatUser {
   leadId: string;
 }
 
-export const ChatWidget = ({ config: initialConfig }: ChatWidgetProps) => {
-  const [config, setConfig] = useState<WidgetConfig | null>(null);
-  const [loading, setLoading] = useState(true);
+interface Message {
+  role: 'user' | 'assistant';
+  content: string;
+  read?: boolean;
+  timestamp: Date;
+  type?: 'text' | 'audio' | 'file';
+  audioUrl?: string;
+  files?: Array<{
+    name: string;
+    url: string;
+    type: string;
+    size: number;
+  }>;
+  reactions?: Array<{ emoji: string; count: number; userReacted: boolean }>;
+}
+
+export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidgetProps) => {
+  const isSimpleConfig = 'agentId' in configProp && !('greeting' in configProp);
+  const [config, setConfig] = useState<WidgetConfig | null>(
+    isSimpleConfig ? null : (configProp as WidgetConfig)
+  );
+  const [loading, setLoading] = useState(isSimpleConfig);
   const [isOpen, setIsOpen] = useState(false);
   const [currentView, setCurrentView] = useState<ViewType>('home');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedArticle, setSelectedArticle] = useState<any | null>(null);
+  
+  const agentId = isSimpleConfig ? (configProp as any).agentId : (configProp as WidgetConfig).agentId;
+  
   const [chatUser, setChatUser] = useState<ChatUser | null>(() => {
-    const stored = localStorage.getItem(`chatpad_user_${initialConfig.agentId}`);
+    const stored = localStorage.getItem(`chatpad_user_${agentId}`);
     return stored ? JSON.parse(stored) : null;
   });
+  
+  const [isVisible, setIsVisible] = useState(true);
+  const [showTeaser, setShowTeaser] = useState(false);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [isTyping, setIsTyping] = useState(false);
+  const [isRecordingAudio, setIsRecordingAudio] = useState(false);
+  const [isAttachingFiles, setIsAttachingFiles] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const recordingIntervalRef = useRef<any>(null);
   const [messageInput, setMessageInput] = useState('');
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
-  const [messages, setMessages] = useState<Array<{ 
-    role: 'user' | 'assistant'; 
-    content: string;
-    read?: boolean;
-    timestamp: Date;
-    type?: 'text';
-    reactions?: any[];
-  }>>([]);
+  const [pendingFiles, setPendingFiles] = useState<Array<{ file: File; preview: string }>>([]);
+  
+  const [helpSearchQuery, setHelpSearchQuery] = useState('');
+  const [articleFeedback, setArticleFeedback] = useState<'helpful' | 'not_helpful' | null>(null);
+  const [feedbackComment, setFeedbackComment] = useState('');
+  const [showFeedbackComment, setShowFeedbackComment] = useState(false);
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
+  
+  const [messages, setMessages] = useState<Message[]>([]);
 
   const [chatSettings, setChatSettings] = useState(() => {
-    const saved = localStorage.getItem(`chatpad_settings_${initialConfig.agentId}`);
-    if (saved) {
-      return JSON.parse(saved);
-    }
-    return {
-      soundEnabled: true,
-      autoScroll: true,
-    };
+    const saved = localStorage.getItem(`chatpad_settings_${agentId}`);
+    if (saved) return JSON.parse(saved);
+    return { soundEnabled: config?.defaultSoundEnabled ?? true, autoScroll: config?.defaultAutoScroll ?? true };
   });
 
-  // Load config on mount
+  // Load config on mount if simple config
   useEffect(() => {
-    fetchWidgetConfig(initialConfig.agentId)
-      .then(cfg => {
-        setConfig(cfg);
-        setMessages([{ 
-          role: 'assistant', 
-          content: cfg.greeting, 
-          read: true, 
-          timestamp: new Date(),
-          type: 'text',
-          reactions: []
-        }]);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error('Failed to load config:', err);
-        setLoading(false);
-      });
-  }, [initialConfig.agentId]);
+    if (isSimpleConfig) {
+      fetchWidgetConfig((configProp as any).agentId)
+        .then(cfg => {
+          setConfig(cfg);
+          setMessages([{ role: 'assistant', content: cfg.greeting, read: true, timestamp: new Date(), type: 'text', reactions: [] }]);
+          setLoading(false);
+        })
+        .catch(err => {
+          console.error('Failed to load config:', err);
+          setLoading(false);
+        });
+    } else {
+      const fullConfig = configProp as WidgetConfig;
+      setMessages([{ role: 'assistant', content: fullConfig.greeting, read: true, timestamp: new Date(), type: 'text', reactions: [] }]);
+    }
+  }, []);
 
-  // Save settings to localStorage
+  // Save settings
   useEffect(() => {
-    localStorage.setItem(`chatpad_settings_${initialConfig.agentId}`, JSON.stringify(chatSettings));
-  }, [chatSettings, initialConfig.agentId]);
+    if (config) {
+      localStorage.setItem(`chatpad_settings_${agentId}`, JSON.stringify(chatSettings));
+    }
+  }, [chatSettings, agentId, config]);
+
+  // Load/save messages from localStorage
+  useEffect(() => {
+    const stored = localStorage.getItem(`chatpad_messages_${agentId}`);
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        const messagesWithDates = parsed.map((msg: any) => ({ ...msg, timestamp: new Date(msg.timestamp) }));
+        setMessages(messagesWithDates);
+      } catch (error) {
+        console.error('Error loading messages:', error);
+      }
+    }
+  }, [agentId]);
+
+  useEffect(() => {
+    if (messages.length > 1) {
+      localStorage.setItem(`chatpad_messages_${agentId}`, JSON.stringify(messages));
+    }
+  }, [messages, agentId]);
+
+  // Auto-scroll
+  useEffect(() => {
+    if (chatSettings.autoScroll && currentView === 'messages' && activeConversationId) {
+      const messagesContainer = document.querySelector('.messages-container');
+      if (messagesContainer) {
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      }
+    }
+  }, [messages, chatSettings.autoScroll, currentView, activeConversationId]);
 
   // Update greeting based on user status
   useEffect(() => {
     if (chatUser && config) {
-      setMessages([{ 
-        role: 'assistant', 
-        content: `Welcome back, ${chatUser.firstName}! 👋 How can I help you today?`, 
-        read: true, 
-        timestamp: new Date(),
-        type: 'text',
-        reactions: []
-      }]);
+      setMessages([{ role: 'assistant', content: `Welcome back, ${chatUser.firstName}! 👋 How can I help you today?`, read: true, timestamp: new Date(), type: 'text', reactions: [] }]);
     } else if (config) {
-      setMessages([{ 
-        role: 'assistant', 
-        content: config.greeting, 
-        read: true, 
-        timestamp: new Date(), 
-        type: 'text', 
-        reactions: [] 
-      }]);
+      setMessages([{ role: 'assistant', content: config.greeting, read: true, timestamp: new Date(), type: 'text', reactions: [] }]);
     }
   }, [chatUser, config]);
 
-  if (loading || !config) {
-    return null;
-  }
+  // Mark messages as read
+  useEffect(() => {
+    if (currentView === 'messages' && activeConversationId) {
+      const timer = setTimeout(() => {
+        setMessages(prev => prev.map(msg => ({ ...msg, read: true })));
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [currentView, activeConversationId]);
+
+  if (loading || !config) return null;
 
   const positionClasses = {
     'bottom-right': 'bottom-4 right-4',
@@ -120,20 +173,22 @@ export const ChatWidget = ({ config: initialConfig }: ChatWidgetProps) => {
     'top-left': 'top-4 left-4',
   };
 
+  const animationClasses = {
+    'none': '',
+    'pulse': 'animate-pulse',
+    'bounce': 'animate-bounce',
+    'fade': 'animate-pulse opacity-75',
+    'ring': '',
+  };
+
   const hexToRgb = (hex: string): string => {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result 
-      ? `${parseInt(result[1], 16)},${parseInt(result[2], 16)},${parseInt(result[3], 16)}`
-      : '0,0,0';
+    return result ? `${parseInt(result[1], 16)},${parseInt(result[2], 16)},${parseInt(result[3], 16)}` : '0,0,0';
   };
 
   const getGradientStyle = () => {
-    if (!config.useGradientHeader) {
-      return { backgroundColor: config.primaryColor };
-    }
-    return {
-      background: `linear-gradient(135deg, ${config.gradientStartColor} 0%, ${config.gradientEndColor} 100%)`,
-    };
+    if (!config.useGradientHeader) return { backgroundColor: config.primaryColor };
+    return { background: `linear-gradient(135deg, ${config.gradientStartColor} 0%, ${config.gradientEndColor} 100%)` };
   };
 
   const getQuickActionIcon = (icon: string) => {
@@ -150,48 +205,174 @@ export const ChatWidget = ({ config: initialConfig }: ChatWidgetProps) => {
   const handleQuickActionClick = (actionType: string) => {
     if (actionType === 'start_chat') {
       setCurrentView('messages');
-      if (!chatUser) {
-        setActiveConversationId('new');
-      }
+      if (!chatUser) setActiveConversationId('new');
     } else if (actionType === 'open_help') {
       setCurrentView('help');
     }
   };
 
-  const handleSendMessage = () => {
-    if (!messageInput.trim()) return;
+  const formatTimestamp = (date: Date) => {
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    
+    if (diffMins < 60) return `${diffMins}m ago`;
+    else if (diffHours < 24) return `${diffHours}h ago`;
+    else if (diffDays < 7) return `${diffDays}d ago`;
+    else return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
 
-    const newMessage = {
-      role: 'user' as const,
-      content: messageInput,
-      read: false,
-      timestamp: new Date(),
-      type: 'text' as const,
-      reactions: [],
-    };
-    setMessages(prev => [...prev, newMessage]);
+  const handleSendMessage = () => {
+    if (!messageInput.trim() && pendingFiles.length === 0) return;
+
+    if (pendingFiles.length > 0) {
+      const newMessage: Message = {
+        role: 'user',
+        content: messageInput || 'Sent files',
+        read: false,
+        timestamp: new Date(),
+        type: 'file',
+        files: pendingFiles.map(pf => ({ name: pf.file.name, url: pf.preview, type: pf.file.type, size: pf.file.size })),
+        reactions: [],
+      };
+      setMessages(prev => [...prev, newMessage]);
+      setPendingFiles([]);
+    } else {
+      const newMessage: Message = { role: 'user', content: messageInput, read: false, timestamp: new Date(), type: 'text', reactions: [] };
+      setMessages(prev => [...prev, newMessage]);
+    }
+    
     setMessageInput('');
 
-    // Simulate AI response
+    if (chatSettings.soundEnabled) {
+      try {
+        const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        oscillator.frequency.value = 800;
+        oscillator.type = 'sine';
+        gainNode.gain.value = 0.1;
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.1);
+      } catch (error) {
+        console.error('Error playing sound:', error);
+      }
+    }
+
     setIsTyping(true);
     setTimeout(() => {
-      setMessages(prev => [...prev, {
-        role: 'assistant' as const,
-        content: 'Thanks for your message! This is a demo response.',
-        read: true,
-        timestamp: new Date(),
-        type: 'text' as const,
-        reactions: [],
-      }]);
+      setMessages(prev => [...prev, { role: 'assistant', content: 'Thanks for your message! This is a demo response.', read: true, timestamp: new Date(), type: 'text', reactions: [] }]);
       setIsTyping(false);
     }, 2000);
   };
 
-  const position = (initialConfig.position || 'bottom-right') as keyof typeof positionClasses;
+  const startAudioRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      chunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) chunksRef.current.push(e.data);
+      };
+
+      mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(chunksRef.current, { type: 'audio/webm' });
+        const audioUrl = URL.createObjectURL(audioBlob);
+        setMessages(prev => [...prev, { role: 'user', content: 'Voice message', read: false, timestamp: new Date(), type: 'audio', audioUrl, reactions: [] }]);
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      mediaRecorder.start();
+      setIsRecordingAudio(true);
+      setRecordingTime(0);
+      recordingIntervalRef.current = setInterval(() => {
+        setRecordingTime(prev => prev + 1);
+      }, 1000);
+    } catch (error) {
+      console.error('Error starting recording:', error);
+    }
+  };
+
+  const stopAudioRecording = () => {
+    if (mediaRecorderRef.current && isRecordingAudio) {
+      mediaRecorderRef.current.stop();
+      setIsRecordingAudio(false);
+      if (recordingIntervalRef.current) {
+        clearInterval(recordingIntervalRef.current);
+        recordingIntervalRef.current = null;
+      }
+    }
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    files.forEach(file => {
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          setPendingFiles(prev => [...prev, { file, preview: event.target?.result as string }]);
+        };
+        reader.readAsDataURL(file);
+      } else {
+        setPendingFiles(prev => [...prev, { file, preview: '' }]);
+      }
+    });
+    e.target.value = '';
+  };
+
+  const removeFile = (index: number) => {
+    setPendingFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const getSessionId = () => {
+    let sessionId = localStorage.getItem('chatpad_session_id');
+    if (!sessionId) {
+      sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      localStorage.setItem('chatpad_session_id', sessionId);
+    }
+    return sessionId;
+  };
+
+  const handleSubmitFeedback = async () => {
+    if (!selectedArticle || articleFeedback === null) return;
+    try {
+      const sessionId = getSessionId();
+      await submitArticleFeedback(selectedArticle.id, { sessionId, isHelpful: articleFeedback === 'helpful', comment: feedbackComment });
+      setFeedbackSubmitted(true);
+    } catch (error: any) {
+      console.error('Error submitting feedback:', error);
+      if (error.message?.includes('unique')) {
+        alert('You have already provided feedback for this article');
+      }
+    }
+  };
+
+  const filteredArticles = config.helpArticles.filter(article => {
+    const matchesSearch = !helpSearchQuery || article.title.toLowerCase().includes(helpSearchQuery.toLowerCase()) || article.content.toLowerCase().includes(helpSearchQuery.toLowerCase());
+    const matchesCategory = !selectedCategory || article.category_id === selectedCategory;
+    return matchesSearch && matchesCategory;
+  });
+
+  const position = (config.position || 'bottom-right') as keyof typeof positionClasses;
 
   return (
     <div className="fixed inset-0 pointer-events-none z-[9999]">
       <div className={`absolute ${positionClasses[position]} pointer-events-auto`}>
+        {/* Teaser Message */}
+        {showTeaser && !isOpen && config.showTeaser && (
+          <div className="absolute mb-20 mr-2 max-w-xs">
+            <div className="bg-card border shadow-lg rounded-lg p-3 animate-in slide-in-from-bottom-2">
+              <p className="text-sm">{config.teaserMessage}</p>
+            </div>
+          </div>
+        )}
+
         {isOpen ? (
           <Card className="w-[380px] max-h-[650px] flex flex-col shadow-xl overflow-hidden border-0">
             {/* Header */}
@@ -221,12 +402,8 @@ export const ChatWidget = ({ config: initialConfig }: ChatWidgetProps) => {
                   )}
                   
                   <div className="space-y-2">
-                    <h2 className="text-3xl font-bold text-white">
-                      {config.welcomeTitle}
-                    </h2>
-                    <p className="text-white/90 text-base">
-                      {config.welcomeSubtitle}
-                    </p>
+                    <h2 className="text-3xl font-bold text-white">{config.welcomeTitle}</h2>
+                    <p className="text-white/90 text-base">{config.welcomeSubtitle}</p>
                   </div>
                 </div>
                 
@@ -249,6 +426,15 @@ export const ChatWidget = ({ config: initialConfig }: ChatWidgetProps) => {
                           <div className={`w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${chatSettings.soundEnabled ? 'translate-x-5' : 'translate-x-0.5'} mt-0.5`} />
                         </div>
                       </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => setChatSettings((prev: any) => ({ ...prev, autoScroll: !prev.autoScroll }))}
+                        className="flex items-center justify-between"
+                      >
+                        <span>Auto-scroll</span>
+                        <div className={`w-9 h-5 rounded-full transition-colors ${chatSettings.autoScroll ? 'bg-primary' : 'bg-muted'}`}>
+                          <div className={`w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${chatSettings.autoScroll ? 'translate-x-5' : 'translate-x-0.5'} mt-0.5`} />
+                        </div>
+                      </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                   <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 h-8 w-8" onClick={() => setIsOpen(false)}>
@@ -263,9 +449,7 @@ export const ChatWidget = ({ config: initialConfig }: ChatWidgetProps) => {
                     <ChatBubbleIcon className="h-6 w-6 text-white" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-white">
-                      {currentView === 'messages' ? config.agentName : 'Help Center'}
-                    </h3>
+                    <h3 className="font-semibold text-white">{currentView === 'messages' ? config.agentName : 'Help Center'}</h3>
                     <p className="text-xs text-white/80">Online</p>
                   </div>
                 </div>
@@ -287,11 +471,8 @@ export const ChatWidget = ({ config: initialConfig }: ChatWidgetProps) => {
                           className="rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
                           style={{ backgroundColor: announcement.background_color }}
                           onClick={() => {
-                            if (announcement.action_type === 'start_chat') {
-                              setCurrentView('messages');
-                            } else if (announcement.action_type === 'open_help') {
-                              setCurrentView('help');
-                            }
+                            if (announcement.action_type === 'start_chat') setCurrentView('messages');
+                            else if (announcement.action_type === 'open_help') setCurrentView('help');
                           }}
                         >
                           {announcement.image_url && (
@@ -301,12 +482,8 @@ export const ChatWidget = ({ config: initialConfig }: ChatWidgetProps) => {
                           )}
                           <div className="p-4 flex items-center justify-between">
                             <div className="flex-1">
-                              <h3 className="font-semibold text-base" style={{ color: announcement.title_color }}>
-                                {announcement.title}
-                              </h3>
-                              {announcement.subtitle && (
-                                <p className="text-sm text-muted-foreground mt-1">{announcement.subtitle}</p>
-                              )}
+                              <h3 className="font-semibold text-base" style={{ color: announcement.title_color }}>{announcement.title}</h3>
+                              {announcement.subtitle && <p className="text-sm text-muted-foreground mt-1">{announcement.subtitle}</p>}
                             </div>
                             <ChevronRight className="h-5 w-5 text-muted-foreground" />
                           </div>
@@ -324,9 +501,7 @@ export const ChatWidget = ({ config: initialConfig }: ChatWidgetProps) => {
                       >
                         <div className="flex items-start gap-3">
                           <div className="p-2 rounded-lg" style={{ backgroundColor: `${config.primaryColor}15` }}>
-                            <div style={{ color: config.primaryColor }}>
-                              {getQuickActionIcon(action.icon)}
-                            </div>
+                            <div style={{ color: config.primaryColor }}>{getQuickActionIcon(action.icon)}</div>
                           </div>
                           <div className="flex-1">
                             <div className="flex items-center justify-between gap-2">
@@ -343,7 +518,7 @@ export const ChatWidget = ({ config: initialConfig }: ChatWidgetProps) => {
 
               {currentView === 'messages' && (
                 <div className="flex-1 flex flex-col">
-                  <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                  <div className="flex-1 overflow-y-auto p-4 space-y-3 messages-container">
                     {!chatUser && (
                       <div className="flex items-start">
                         <div className="bg-muted rounded-lg p-3 w-full">
@@ -356,6 +531,11 @@ export const ChatWidget = ({ config: initialConfig }: ChatWidgetProps) => {
                               const firstName = formData.get('firstName') as string;
                               const lastName = formData.get('lastName') as string;
                               const email = formData.get('email') as string;
+                              const customFieldData: Record<string, any> = {};
+
+                              config.customFields.forEach(field => {
+                                customFieldData[field.id] = formData.get(field.id);
+                              });
 
                               try {
                                 const schema = z.object({
@@ -366,13 +546,7 @@ export const ChatWidget = ({ config: initialConfig }: ChatWidgetProps) => {
                                 schema.parse({ firstName, lastName, email });
                                 setFormErrors({});
 
-                                const { leadId } = await createLead(config.agentId, {
-                                  firstName,
-                                  lastName,
-                                  email,
-                                  customFields: {}
-                                });
-
+                                const { leadId } = await createLead(config.agentId, { firstName, lastName, email, customFields: customFieldData });
                                 const userData = { firstName, lastName, email, leadId };
                                 localStorage.setItem(`chatpad_user_${config.agentId}`, JSON.stringify(userData));
                                 setChatUser(userData);
@@ -393,6 +567,28 @@ export const ChatWidget = ({ config: initialConfig }: ChatWidgetProps) => {
                             {formErrors.lastName && <p className="text-xs text-destructive">{formErrors.lastName}</p>}
                             <Input name="email" type="email" placeholder="Email" className="h-8 text-sm" required />
                             {formErrors.email && <p className="text-xs text-destructive">{formErrors.email}</p>}
+                            
+                            {config.customFields.map(field => (
+                              <div key={field.id}>
+                                {field.fieldType === 'select' ? (
+                                  <Select name={field.id} required={field.required}>
+                                    <SelectTrigger className="h-8 text-sm">
+                                      <SelectValue placeholder={field.label} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {field.options?.map(opt => (
+                                        <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                ) : field.fieldType === 'textarea' ? (
+                                  <Textarea name={field.id} placeholder={field.label} className="text-sm" required={field.required} />
+                                ) : (
+                                  <Input name={field.id} type={field.fieldType} placeholder={field.label} className="h-8 text-sm" required={field.required} />
+                                )}
+                              </div>
+                            ))}
+                            
                             <Button type="submit" size="sm" className="w-full h-8" style={{ backgroundColor: config.primaryColor }}>
                               Start Chat
                             </Button>
@@ -403,15 +599,26 @@ export const ChatWidget = ({ config: initialConfig }: ChatWidgetProps) => {
 
                     {messages.map((msg, idx) => (
                       <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                        <div 
-                          className={`max-w-[80%] rounded-lg p-3 ${
-                            msg.role === 'user' 
-                              ? 'text-white' 
-                              : 'bg-muted'
-                          }`}
-                          style={msg.role === 'user' ? { backgroundColor: config.primaryColor } : undefined}
-                        >
-                          <p className="text-sm">{msg.content}</p>
+                        <div className={`max-w-[80%] rounded-lg p-3 ${msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
+                          {msg.type === 'audio' && msg.audioUrl && (
+                            <audio controls src={msg.audioUrl} className="w-full" />
+                          )}
+                          {msg.type === 'file' && msg.files && (
+                            <div className="space-y-2">
+                              {msg.files.map((file, i) => (
+                                <div key={i} className="flex items-center gap-2 text-xs">
+                                  {file.type.startsWith('image/') ? <Image03 className="h-4 w-4" /> : <FileCheck02 className="h-4 w-4" />}
+                                  <span>{file.name}</span>
+                                </div>
+                              ))}
+                              {msg.content && <p className="text-sm mt-2">{msg.content}</p>}
+                            </div>
+                          )}
+                          {msg.type === 'text' && <p className="text-sm">{msg.content}</p>}
+                          <div className="flex items-center justify-between gap-2 mt-1">
+                            <span className="text-xs opacity-70">{formatTimestamp(msg.timestamp)}</span>
+                            {msg.role === 'user' && msg.read && <span className="text-xs opacity-70">Read</span>}
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -420,77 +627,190 @@ export const ChatWidget = ({ config: initialConfig }: ChatWidgetProps) => {
                       <div className="flex justify-start">
                         <div className="bg-muted rounded-lg p-3">
                           <div className="flex gap-1">
-                            <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" />
-                            <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
-                            <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+                            <div className="w-2 h-2 bg-foreground/40 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                            <div className="w-2 h-2 bg-foreground/40 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                            <div className="w-2 h-2 bg-foreground/40 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                           </div>
                         </div>
                       </div>
                     )}
                   </div>
 
-                  {chatUser && (
-                    <div className="p-4 border-t">
-                      <div className="flex gap-2">
+                  {pendingFiles.length > 0 && (
+                    <div className="p-2 border-t flex gap-2 overflow-x-auto">
+                      {pendingFiles.map((pf, i) => (
+                        <div key={i} className="relative">
+                          {pf.preview ? (
+                            <img src={pf.preview} className="h-16 w-16 object-cover rounded" />
+                          ) : (
+                            <div className="h-16 w-16 bg-muted rounded flex items-center justify-center">
+                              <FileCheck02 className="h-6 w-6" />
+                            </div>
+                          )}
+                          <button onClick={() => removeFile(i)} className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full p-0.5">
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="p-3 border-t">
+                    {isRecordingAudio ? (
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 flex items-center gap-2">
+                          <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                          <span className="text-sm">{Math.floor(recordingTime / 60)}:{(recordingTime % 60).toString().padStart(2, '0')}</span>
+                        </div>
+                        <Button size="sm" onClick={stopAudioRecording} style={{ backgroundColor: config.primaryColor }}>Send</Button>
+                        <Button size="sm" variant="ghost" onClick={() => { stopAudioRecording(); setRecordingTime(0); }}>Cancel</Button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
                         <Input
                           value={messageInput}
                           onChange={(e) => setMessageInput(e.target.value)}
                           onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                          placeholder="Type a message..."
-                          className="flex-1"
+                          placeholder={config.greeting || 'Type a message...'}
+                          className="flex-1 h-9"
                         />
-                        <Button size="icon" onClick={handleSendMessage} style={{ backgroundColor: config.primaryColor }}>
+                        <input type="file" multiple onChange={handleFileSelect} className="hidden" id="file-input" />
+                        <Button size="icon" variant="ghost" className="h-9 w-9" onClick={() => document.getElementById('file-input')?.click()}>
+                          <Attachment01 className="h-4 w-4" />
+                        </Button>
+                        <Button size="icon" variant="ghost" className="h-9 w-9" onClick={startAudioRecording}>
+                          <Microphone01 className="h-4 w-4" />
+                        </Button>
+                        <Button size="icon" className="h-9 w-9" onClick={handleSendMessage} style={{ backgroundColor: config.primaryColor }}>
                           <Send01 className="h-4 w-4" />
                         </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {currentView === 'help' && (
+                <div className="flex-1 flex flex-col">
+                  {!selectedArticle ? (
+                    <>
+                      <div className="p-3 border-b">
+                        <Input
+                          value={helpSearchQuery}
+                          onChange={(e) => setHelpSearchQuery(e.target.value)}
+                          placeholder="Search articles..."
+                          className="h-9"
+                        />
+                      </div>
+
+                      {config.helpCategories.length > 0 && (
+                        <div className="p-3 border-b flex gap-2 overflow-x-auto">
+                          <Button size="sm" variant={!selectedCategory ? 'default' : 'outline'} onClick={() => setSelectedCategory(null)}>
+                            All
+                          </Button>
+                          {config.helpCategories.map((cat) => (
+                            <Button key={cat.id} size="sm" variant={selectedCategory === cat.id ? 'default' : 'outline'} onClick={() => setSelectedCategory(cat.id)}>
+                              {cat.name}
+                            </Button>
+                          ))}
+                        </div>
+                      )}
+
+                      <div className="flex-1 overflow-y-auto p-4">
+                        {filteredArticles.length === 0 ? (
+                          <p className="text-center text-muted-foreground text-sm py-8">No articles found</p>
+                        ) : (
+                          <div className="space-y-2">
+                            {filteredArticles.map((article) => (
+                              <div
+                                key={article.id}
+                                className="p-3 border rounded-lg hover:bg-accent cursor-pointer transition-colors"
+                                onClick={() => setSelectedArticle(article)}
+                              >
+                                <h4 className="font-medium text-sm">{article.title}</h4>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex-1 overflow-y-auto">
+                      <div className="p-4">
+                        <Button size="sm" variant="ghost" onClick={() => setSelectedArticle(null)} className="mb-3">
+                          ← Back
+                        </Button>
+                        <h2 className="text-xl font-bold mb-4">{selectedArticle.title}</h2>
+                        <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: selectedArticle.content }} />
+                      </div>
+
+                      <div className="p-4 border-t bg-muted/30">
+                        <p className="text-sm font-medium mb-3">Was this article helpful?</p>
+                        {!feedbackSubmitted ? (
+                          <div className="space-y-3">
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                variant={articleFeedback === 'helpful' ? 'default' : 'outline'}
+                                onClick={() => { setArticleFeedback('helpful'); setShowFeedbackComment(true); }}
+                                className="flex-1"
+                              >
+                                <ThumbsUp className="h-4 w-4 mr-2" />
+                                Yes
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant={articleFeedback === 'not_helpful' ? 'default' : 'outline'}
+                                onClick={() => { setArticleFeedback('not_helpful'); setShowFeedbackComment(true); }}
+                                className="flex-1"
+                              >
+                                <ThumbsDown className="h-4 w-4 mr-2" />
+                                No
+                              </Button>
+                            </div>
+
+                            {showFeedbackComment && (
+                              <div className="space-y-2">
+                                <Textarea
+                                  value={feedbackComment}
+                                  onChange={(e) => setFeedbackComment(e.target.value)}
+                                  placeholder="Tell us more (optional)"
+                                  className="text-sm"
+                                />
+                                <Button size="sm" onClick={handleSubmitFeedback} style={{ backgroundColor: config.primaryColor }} className="w-full">
+                                  Submit Feedback
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="text-center py-2">
+                            <p className="text-sm text-muted-foreground">Thank you for your feedback!</p>
+                          </div>
+                        )}
                       </div>
                     </div>
                   )}
                 </div>
               )}
-
-              {currentView === 'help' && (
-                <div className="flex-1 overflow-y-auto p-4">
-                  <p className="text-sm text-muted-foreground">Help articles will appear here</p>
-                </div>
-              )}
             </div>
 
-            {/* Bottom Nav */}
+            {/* Bottom Navigation */}
             {config.showBottomNav && (
-              <div className="border-t p-2 grid grid-cols-3 gap-1">
-                {config.showHomeTab && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className={currentView === 'home' ? 'bg-accent' : ''}
-                    onClick={() => setCurrentView('home')}
-                  >
-                    <Home05 className="h-4 w-4 mr-1" />
-                    Home
-                  </Button>
-                )}
+              <div className="border-t p-2 flex justify-around">
+                <Button variant={currentView === 'home' ? 'default' : 'ghost'} size="sm" onClick={() => setCurrentView('home')} className="flex-1">
+                  <Home05 className="h-4 w-4 mr-2" />
+                  Home
+                </Button>
                 {config.showMessagesTab && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className={currentView === 'messages' ? 'bg-accent' : ''}
-                    onClick={() => {
-                      setCurrentView('messages');
-                      if (!chatUser) setActiveConversationId('new');
-                    }}
-                  >
-                    <MessageChatCircle className="h-4 w-4 mr-1" />
-                    Messages
+                  <Button variant={currentView === 'messages' ? 'default' : 'ghost'} size="sm" onClick={() => setCurrentView('messages')} className="flex-1">
+                    <MessageChatCircle className="h-4 w-4 mr-2" />
+                    Chat
                   </Button>
                 )}
-                {config.showHelpTab && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className={currentView === 'help' ? 'bg-accent' : ''}
-                    onClick={() => setCurrentView('help')}
-                  >
-                    <HelpCircle className="h-4 w-4 mr-1" />
+                {config.showHelpTab && config.helpArticles.length > 0 && (
+                  <Button variant={currentView === 'help' ? 'default' : 'ghost'} size="sm" onClick={() => setCurrentView('help')} className="flex-1">
+                    <HelpCircle className="h-4 w-4 mr-2" />
                     Help
                   </Button>
                 )}
@@ -500,11 +820,11 @@ export const ChatWidget = ({ config: initialConfig }: ChatWidgetProps) => {
         ) : (
           <Button
             size="icon"
-            className="h-14 w-14 rounded-full shadow-xl"
-            style={{ backgroundColor: initialConfig.primaryColor || config.primaryColor }}
+            className={`h-14 w-14 rounded-full shadow-lg ${animationClasses[config.buttonAnimation || 'none']}`}
+            style={{ backgroundColor: config.primaryColor }}
             onClick={() => setIsOpen(true)}
           >
-            <ChatBubbleIcon className="h-6 w-6 text-white" />
+            <ChatBubbleIcon className="h-7 w-7" />
           </Button>
         )}
       </div>

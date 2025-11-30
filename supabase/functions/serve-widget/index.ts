@@ -4,11 +4,18 @@ const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Content-Type': 'application/javascript',
-  'Cache-Control': 'public, max-age=3600', // Cache for 1 hour
+  'Cache-Control': 'public, max-age=3600',
 };
 
-// Read the built widget bundle
-const widgetContent = await Deno.readTextFile('./dist-widget/chatpad-widget.min.js');
+// Dynamically import the widget content
+let widgetContent: string;
+
+try {
+  widgetContent = await Deno.readTextFile(new URL('./chatpad-widget.min.js', import.meta.url));
+} catch (error) {
+  console.error('Error reading widget file:', error);
+  widgetContent = `console.error('Widget failed to load');`;
+}
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -17,7 +24,6 @@ serve(async (req) => {
   }
 
   try {
-    // Serve the widget.js file
     return new Response(widgetContent, {
       status: 200,
       headers: corsHeaders,
