@@ -106,7 +106,8 @@ export const Dashboard: React.FC = () => {
   }
 
   return (
-    <div className="p-4 lg:p-8 space-y-6">
+    <main className="flex-1 bg-muted/30 min-h-screen pt-4 lg:pt-8">
+      <div className="px-4 lg:px-8 space-y-6">
       {/* Stats Grid */}
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -126,6 +127,7 @@ export const Dashboard: React.FC = () => {
           <PlanLimitsCard />
         </div>
       )}
-    </div>
+      </div>
+    </main>
   );
 };
