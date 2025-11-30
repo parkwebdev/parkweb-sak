@@ -442,7 +442,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                     </DropdownMenuContent>
                   </DropdownMenu>
                   <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 h-8 w-8" onClick={() => setIsOpen(false)}>
-                    <X className="h-4 w-4" />
+                    <Minimize02 className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
@@ -805,34 +805,83 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
             {/* Bottom Navigation */}
             {config.showBottomNav && (
               <div className="border-t p-2 flex justify-around">
-                <Button variant={currentView === 'home' ? 'default' : 'ghost'} size="sm" onClick={() => setCurrentView('home')} className="flex-1">
-                  <Home05 className="h-4 w-4 mr-2" />
-                  Home
+                <Button 
+                  variant={currentView === 'home' ? 'default' : 'ghost'} 
+                  size="sm" 
+                  onClick={() => setCurrentView('home')} 
+                  className="flex-1 flex flex-col items-center gap-1 h-auto py-2"
+                >
+                  <Home05 className="h-5 w-5" />
+                  <span className="text-xs">Home</span>
                 </Button>
                 {config.enableMessagesTab && (
-                  <Button variant={currentView === 'messages' ? 'default' : 'ghost'} size="sm" onClick={() => setCurrentView('messages')} className="flex-1">
-                    <MessageChatCircle className="h-4 w-4 mr-2" />
-                    Chat
+                  <Button 
+                    variant={currentView === 'messages' ? 'default' : 'ghost'} 
+                    size="sm" 
+                    onClick={() => setCurrentView('messages')} 
+                    className="flex-1 flex flex-col items-center gap-1 h-auto py-2 relative"
+                  >
+                    <MessageChatCircle className="h-5 w-5" />
+                    <span className="text-xs">Chat</span>
+                    {messages.some(m => !m.read && m.role === 'assistant') && (
+                      <div className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+                    )}
                   </Button>
                 )}
                 {config.enableHelpTab && config.helpArticles.length > 0 && (
-                  <Button variant={currentView === 'help' ? 'default' : 'ghost'} size="sm" onClick={() => setCurrentView('help')} className="flex-1">
-                    <HelpCircle className="h-4 w-4 mr-2" />
-                    Help
+                  <Button 
+                    variant={currentView === 'help' ? 'default' : 'ghost'} 
+                    size="sm" 
+                    onClick={() => setCurrentView('help')} 
+                    className="flex-1 flex flex-col items-center gap-1 h-auto py-2"
+                  >
+                    <HelpCircle className="h-5 w-5" />
+                    <span className="text-xs">Help</span>
                   </Button>
                 )}
               </div>
             )}
           </Card>
         ) : (
-          <Button
-            size="icon"
-            className={`h-14 w-14 rounded-full shadow-lg ${animationClasses[config.animation || 'none']}`}
-            style={{ backgroundColor: config.primaryColor }}
-            onClick={() => setIsOpen(true)}
-          >
-            <ChatBubbleIcon className="h-7 w-7" />
-          </Button>
+          <div className="relative">
+            {/* Teaser Arrow Pointer */}
+            {showTeaser && config.showTeaser && config.teaserText && (
+              <div 
+                className="absolute right-full mr-1 top-1/2 -translate-y-1/2 w-0 h-0 border-t-[6px] border-t-transparent border-b-[6px] border-b-transparent border-l-[8px]"
+                style={{ borderLeftColor: config.primaryColor }}
+              />
+            )}
+            
+            {/* Widget Button */}
+            <Button
+              size="icon"
+              className={`h-11 w-11 rounded-full shadow-lg hover:scale-110 transition-transform relative ${animationClasses[config.animation || 'none']}`}
+              style={{ backgroundColor: config.primaryColor }}
+              onClick={() => setIsOpen(true)}
+            >
+              {/* Ring Animation */}
+              {config.animation === 'ring' && (
+                <>
+                  <div 
+                    className="absolute inset-0 rounded-full animate-subtle-ring pointer-events-none" 
+                    style={{ backgroundColor: config.primaryColor }} 
+                  />
+                  <div 
+                    className="absolute inset-0 rounded-full animate-slow-pulse pointer-events-none" 
+                    style={{ backgroundColor: config.primaryColor, opacity: 0.4 }} 
+                  />
+                </>
+              )}
+              
+              {/* Chat Icon */}
+              <ChatBubbleIcon className="h-6 w-6 relative z-10" />
+              
+              {/* Notification Badge */}
+              {config.showBadge && (
+                <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-background z-10" />
+              )}
+            </Button>
+          </div>
         )}
       </div>
     </div>
