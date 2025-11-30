@@ -106,7 +106,7 @@ export const Dashboard: React.FC = () => {
   }
 
   return (
-    <main className="flex-1 bg-muted/30 h-full overflow-auto">
+    <main className="flex-1 bg-muted/30 h-screen overflow-auto">
       <div className="px-4 lg:px-8 pt-4 lg:pt-8 space-y-6">
       {/* Stats Grid */}
       {loading ? (
