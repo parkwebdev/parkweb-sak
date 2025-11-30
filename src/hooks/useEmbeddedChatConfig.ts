@@ -155,12 +155,8 @@ export const useEmbeddedChatConfig = (agentId: string) => {
     gradientEndColor: '#1e40af',
     
     // Team Avatars
-    showTeamAvatars: true,
-    teamAvatarUrls: [
-      'https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah',
-      'https://api.dicebear.com/7.x/avataaars/svg?seed=John',
-      'https://api.dicebear.com/7.x/avataaars/svg?seed=Emma',
-    ],
+    showTeamAvatars: false,
+    teamAvatarUrls: [],
     
     // File Attachments (always enabled)
     maxFileSize: 10,
