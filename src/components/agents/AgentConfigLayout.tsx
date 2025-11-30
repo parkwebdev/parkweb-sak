@@ -83,8 +83,10 @@ export const AgentConfigLayout: React.FC<AgentConfigLayoutProps> = ({
       </div>
 
       {/* Content Area */}
-      <div className="px-6 py-4">
-        {children}
+      <div className="px-6 py-4 flex-1 min-h-0">
+        <div className="h-full">
+          {children}
+        </div>
       </div>
     </Tabs>
   );

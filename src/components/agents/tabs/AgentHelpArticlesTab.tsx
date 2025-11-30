@@ -6,7 +6,7 @@ interface AgentHelpArticlesTabProps {
 
 export const AgentHelpArticlesTab = ({ agentId }: AgentHelpArticlesTabProps) => {
   return (
-    <div className="max-w-5xl space-y-6">
+    <div className="max-w-5xl space-y-6 min-h-full pb-8">
       <HelpArticlesManager agentId={agentId} />
     </div>
   );
