@@ -1164,24 +1164,10 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
             {/* Widget Button */}
             <Button
               size="icon"
-              className={`h-11 w-11 rounded-full shadow-lg hover:scale-110 transition-transform relative ${animationClasses[config.animation || 'none']}`}
+              className="h-11 w-11 rounded-full shadow-lg hover:scale-110 transition-transform relative"
               style={{ backgroundColor: config.primaryColor }}
               onClick={() => setIsOpen(true)}
             >
-              {/* Ring Animation */}
-              {config.animation === 'ring' && (
-                <>
-                  <div 
-                    className="absolute inset-0 rounded-full animate-subtle-ring pointer-events-none" 
-                    style={{ backgroundColor: config.primaryColor }} 
-                  />
-                  <div 
-                    className="absolute inset-0 rounded-full animate-slow-pulse pointer-events-none" 
-                    style={{ backgroundColor: config.primaryColor, opacity: 0.4 }} 
-                  />
-                </>
-              )}
-              
               {/* Chat Icon */}
               <ChatBubbleIcon className="h-6 w-6 relative z-10" />
               
