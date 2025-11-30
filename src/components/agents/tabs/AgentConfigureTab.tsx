@@ -55,7 +55,6 @@ export const AgentConfigureTab = ({ agent, onUpdate, onFormChange }: AgentConfig
     max_tokens: agent.max_tokens || 2000,
     status: agent.status,
     top_p: deploymentConfig.top_p || 1.0,
-    json_mode: deploymentConfig.json_mode || false,
   });
 
   const hasChanges = JSON.stringify(formData) !== JSON.stringify({
@@ -66,7 +65,6 @@ export const AgentConfigureTab = ({ agent, onUpdate, onFormChange }: AgentConfig
     max_tokens: agent.max_tokens || 2000,
     status: agent.status,
     top_p: deploymentConfig.top_p || 1.0,
-    json_mode: deploymentConfig.json_mode || false,
   });
 
   useEffect(() => {
@@ -81,13 +79,12 @@ export const AgentConfigureTab = ({ agent, onUpdate, onFormChange }: AgentConfig
   // Export save function for parent
   (AgentConfigureTab as any).handleSave = async () => {
     if (hasChanges) {
-      const { top_p, json_mode, ...coreFields } = formData;
+      const { top_p, ...coreFields } = formData;
       await onUpdate(agent.id, {
         ...coreFields,
         deployment_config: {
           ...deploymentConfig,
           top_p,
-          json_mode,
         },
       });
     }
@@ -147,11 +144,11 @@ export const AgentConfigureTab = ({ agent, onUpdate, onFormChange }: AgentConfig
 
         {/* Right Column: Model & Generation */}
         <div className="space-y-4">
-          {/* Model Settings */}
+          {/* Model & Generation Settings */}
           <div className="p-5 rounded-lg bg-muted/30 border space-y-4">
             <div>
-              <h3 className="text-sm font-semibold mb-1">Model Settings</h3>
-              <p className="text-xs text-muted-foreground">Configure AI model and output format</p>
+              <h3 className="text-sm font-semibold mb-1">Model & Generation</h3>
+              <p className="text-xs text-muted-foreground">Configure AI model and response parameters</p>
             </div>
 
             <div className="space-y-4">
@@ -176,31 +173,8 @@ export const AgentConfigureTab = ({ agent, onUpdate, onFormChange }: AgentConfig
                 </Select>
               </div>
 
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label htmlFor="json_mode" className="text-sm">JSON Response Mode</Label>
-                  <p className="text-xs text-muted-foreground">Enforce structured output</p>
-                </div>
-                <Switch
-                  id="json_mode"
-                  checked={formData.model?.includes('json') || false}
-                  onCheckedChange={(checked) => {
-                    const baseModel = formData.model?.replace('-json', '') || 'google/gemini-2.5-flash';
-                    handleUpdate({ model: checked ? `${baseModel}-json` : baseModel });
-                  }}
-                />
-              </div>
-            </div>
-          </div>
+              <Separator />
 
-          {/* Generation Settings */}
-          <div className="p-5 rounded-lg bg-muted/30 border space-y-4">
-            <div>
-              <h3 className="text-sm font-semibold mb-1">Generation</h3>
-              <p className="text-xs text-muted-foreground">Fine-tune response behavior</p>
-            </div>
-
-            <div className="space-y-4">
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="temperature" className="text-sm">Temperature</Label>

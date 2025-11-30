@@ -73,11 +73,13 @@ serve(async (req) => {
     // Get agent configuration and org_id
     const { data: agent, error: agentError } = await supabase
       .from('agents')
-      .select('system_prompt, model, org_id')
+      .select('system_prompt, model, org_id, temperature, max_tokens, deployment_config')
       .eq('id', agentId)
       .single();
 
     if (agentError) throw agentError;
+
+    const deploymentConfig = (agent.deployment_config as any) || {};
 
     // Check plan limits - get subscription and limits
     const { data: subscription } = await supabase
@@ -213,6 +215,9 @@ When answering, you can naturally reference the information from the knowledge b
           ...messages,
         ],
         stream: true,
+        temperature: agent.temperature || 0.7,
+        max_tokens: agent.max_tokens || 2000,
+        top_p: deploymentConfig.top_p || 1.0,
       }),
     });
 
