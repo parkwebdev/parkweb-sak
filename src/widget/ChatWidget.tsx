@@ -121,6 +121,19 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
     }
   }, [configProp, isSimpleConfig, previewMode]);
 
+  // Update greeting when config changes in preview mode
+  useEffect(() => {
+    if (previewMode && config && messages.length > 0) {
+      const firstMsg = messages[0];
+      if (firstMsg && firstMsg.role === 'assistant') {
+        setMessages(prev => [
+          { ...firstMsg, content: config.greeting },
+          ...prev.slice(1)
+        ]);
+      }
+    }
+  }, [config?.greeting, previewMode]);
+
   // Save settings
   useEffect(() => {
     if (config) {
