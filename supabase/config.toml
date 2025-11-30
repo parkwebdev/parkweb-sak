@@ -36,6 +36,7 @@ verify_jwt = true
 
 [functions.cleanup-expired-conversations]
 verify_jwt = false
+schedule = "0 3 * * *"
 
 [functions.send-team-invitation]
 verify_jwt = true
@@ -48,3 +49,4 @@ verify_jwt = true
 
 [functions.send-scheduled-report]
 verify_jwt = false
+schedule = "0 * * * *"

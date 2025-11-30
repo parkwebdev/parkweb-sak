@@ -20,7 +20,7 @@ Deno.serve(async (req) => {
     // Find expired conversations
     const { data: expiredConversations, error: fetchError } = await supabase
       .from('conversations')
-      .select('id, org_id, agent_id, created_at, expires_at')
+      .select('id, user_id, agent_id, created_at, expires_at')
       .lt('expires_at', new Date().toISOString());
 
     if (fetchError) {
@@ -90,7 +90,7 @@ Deno.serve(async (req) => {
         deleted: conversationIds.length,
         conversations: expiredConversations.map(c => ({
           id: c.id,
-          org_id: c.org_id,
+          user_id: c.user_id,
           expired_at: c.expires_at
         }))
       }),
