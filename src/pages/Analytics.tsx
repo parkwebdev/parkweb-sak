@@ -15,11 +15,7 @@ import { generateCSVReport, generatePDFReport } from '@/lib/report-export';
 import { toast } from 'sonner';
 import { subDays } from 'date-fns';
 
-interface AnalyticsProps {
-  onMenuClick?: () => void;
-}
-
-const Analytics: React.FC<AnalyticsProps> = ({ onMenuClick }) => {
+const Analytics: React.FC = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('dashboard');
 

@@ -75,48 +75,40 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
   }).length;
 
   return (
-    <aside className={`items-stretch flex ${isCollapsed ? 'w-[72px]' : 'w-[280px]'} h-screen bg-muted/30 p-1 transition-all duration-300 overflow-visible`}>
-      <div className="border shadow-sm w-full flex-1 bg-card rounded-xl border-border overflow-visible">
-        <nav className="w-full gap-4 pt-4">
-          <header className="w-full whitespace-nowrap gap-4 px-4 py-0">
-            <div className="w-full space-y-3">
-              {!isCollapsed && (
-                <img 
-                  src={chatpadLogo} 
-                  alt="ChatPad Logo" 
-                  className="h-6 w-6 object-contain"
-                />
-              )}
-              
-              <div className="flex items-center justify-between">
-                {!isCollapsed && <NotificationCenter />}
-                <div className="flex items-center gap-2 ml-auto">
-                  <button
-                    onClick={toggle}
-                    className="p-1 rounded-md hover:bg-accent/50 text-muted-foreground hover:text-foreground"
-                    title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-                  >
-                    {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
-                  </button>
-                  {onClose && (
-                    <button
-                      onClick={onClose}
-                      className="lg:hidden p-1 rounded-md hover:bg-accent/50 text-muted-foreground hover:text-foreground"
-                    >
-                      <X size={16} />
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {!isCollapsed && (
-                <SearchInput placeholder="Search everything..." />
+    <aside className={`flex ${isCollapsed ? 'w-[72px]' : 'w-[280px]'} h-screen bg-background transition-all duration-300`}>
+      <nav className="w-full flex flex-col pt-6 px-3">
+        <header className="w-full px-2 mb-6">
+          <div className="flex items-center justify-between">
+            {!isCollapsed && (
+              <img 
+                src={chatpadLogo} 
+                alt="ChatPad Logo" 
+                className="h-6 w-6 object-contain"
+              />
+            )}
+            
+            <div className={`flex items-center gap-2 ${isCollapsed ? 'mx-auto' : 'ml-auto'}`}>
+              <button
+                onClick={toggle}
+                className="p-1 rounded-md hover:bg-accent/50 text-muted-foreground hover:text-foreground"
+                title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+              >
+                {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+              </button>
+              {onClose && (
+                <button
+                  onClick={onClose}
+                  className="lg:hidden p-1 rounded-md hover:bg-accent/50 text-muted-foreground hover:text-foreground"
+                >
+                  <X size={16} />
+                </button>
               )}
             </div>
-          </header>
+          </div>
+        </header>
 
-          <div className="w-full mt-4 flex-1">
-            <section className="w-full px-3 py-0">
+        <div className="flex-1 overflow-auto">
+          <section className="w-full">
               {navigationItems.map((item) => {
                 const isActive = location.pathname === item.path;
                 return (
@@ -155,9 +147,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
               })}
             </section>
 
-            {/* Bottom Navigation Items */}
-            {bottomItems.length > 0 && (
-              <section className="w-full px-3 py-0 mt-4 pt-4 border-t border-border">
+          {/* Bottom Navigation Items */}
+          {bottomItems.length > 0 && (
+            <section className="w-full mt-4 pt-4 border-t border-border">
                 {bottomItems.map((item) => {
                   const isActive = location.pathname === item.path;
                   return (
@@ -186,31 +178,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
                       </Link>
                     </div>
                   );
-                })}
-              </section>
-            )}
-          </div>
-        </nav>
-
-        <footer className="absolute bottom-0 left-0 right-0 gap-3 pt-0 pb-3 px-3">
-          {!isCollapsed && (
-            <>
-              <div className="mb-3 px-2.5 flex items-center justify-between">
-                <span className="text-sm font-medium text-foreground">Theme</span>
-                <ThemeToggle isCollapsed={isCollapsed} />
-              </div>
-            </>
+              })}
+            </section>
           )}
-          {isCollapsed && (
-            <>
-              <div className="mb-3 flex justify-center">
-                <ThemeToggle isCollapsed={isCollapsed} />
-              </div>
-            </>
-          )}
-          <UserAccountCard isCollapsed={isCollapsed} />
-        </footer>
-      </div>
+        </div>
+      </nav>
     </aside>
   );
 };

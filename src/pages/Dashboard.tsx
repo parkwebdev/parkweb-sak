@@ -2,18 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users01 as Users, MessageChatSquare, UserPlus01 as UserPlus, TrendUp01 as TrendUp, Cube01 as Bot, Zap, Menu01 as Menu } from '@untitledui/icons';
+import { Users01 as Users, MessageChatSquare, UserPlus01 as UserPlus, TrendUp01 as TrendUp, Cube01 as Bot, Zap } from '@untitledui/icons';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Button } from '@/components/ui/button';
+
 import { PlanLimitsCard } from '@/components/settings/PlanLimitsCard';
 import { AnimatedList } from '@/components/ui/animated-list';
 import { AnimatedItem } from '@/components/ui/animated-item';
 
-interface DashboardProps {
-  onMenuClick?: () => void;
-}
-
-export const Dashboard: React.FC<DashboardProps> = ({ onMenuClick }) => {
+export const Dashboard: React.FC = () => {
   const { user, loading: authLoading } = useAuth();
   const [stats, setStats] = useState({
     totalAgents: 0,
@@ -110,155 +106,26 @@ export const Dashboard: React.FC<DashboardProps> = ({ onMenuClick }) => {
   }
 
   return (
-    <main className="flex-1 bg-muted/30 min-h-screen pt-4 lg:pt-8">
-      <header className="w-full font-medium">
-        <div className="items-stretch flex w-full flex-col gap-6 px-4 lg:px-8 py-0">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-4 w-full sm:w-auto">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="lg:hidden flex items-center gap-2"
-                onClick={onMenuClick}
-              >
-                <Menu size={16} />
-              </Button>
-              <div className="flex-1 sm:flex-none">
-                <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
-                <p className="text-sm text-muted-foreground mt-1">{user.email}</p>
-              </div>
-            </div>
-          </div>
+    <div className="p-4 lg:p-8 space-y-6">
+      {/* Stats Grid */}
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-32" />
+          ))}
         </div>
-      </header>
+      ) : (
+        <AnimatedList className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" staggerDelay={0.08}>
+...
+        </AnimatedList>
+      )}
 
-      <div className="px-4 lg:px-8 mt-6">
-
-        {/* Stats Grid */}
-        {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <Skeleton key={i} className="h-32" />
-            ))}
-          </div>
-        ) : (
-          <AnimatedList className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" staggerDelay={0.08}>
-            {/* Active Agents */}
-            <AnimatedItem>
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
-                    Active Agents
-                  </CardTitle>
-                  <Bot className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-xl font-bold">{stats.totalAgents}</div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    AI agents ready to assist
-                  </p>
-                </CardContent>
-              </Card>
-            </AnimatedItem>
-
-            {/* Active Conversations */}
-            <AnimatedItem>
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
-                    Active Conversations
-                  </CardTitle>
-                  <MessageChatSquare size={16} className="text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-xl font-bold">{stats.activeConversations}</div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Out of {stats.totalConversations} total
-                  </p>
-                </CardContent>
-              </Card>
-            </AnimatedItem>
-
-            {/* Total Leads */}
-            <AnimatedItem>
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
-                    Total Leads
-                  </CardTitle>
-                  <Users className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-xl font-bold">{stats.totalLeads}</div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Leads captured
-                  </p>
-                </CardContent>
-              </Card>
-            </AnimatedItem>
-
-            {/* New Leads (Last 7 Days) */}
-            <AnimatedItem>
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
-                    New Leads (7d)
-                  </CardTitle>
-                  <UserPlus className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-xl font-bold">{stats.newLeads}</div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Recent leads
-                  </p>
-                </CardContent>
-              </Card>
-            </AnimatedItem>
-
-            {/* Conversion Rate */}
-            <AnimatedItem>
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
-                    Conversion Rate
-                  </CardTitle>
-                  <TrendUp size={16} className="text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-xl font-bold">{stats.conversionRate}%</div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Lead to conversion
-                  </p>
-                </CardContent>
-              </Card>
-            </AnimatedItem>
-
-            {/* Quick Action */}
-            <AnimatedItem>
-              <Card className="border-primary/20 bg-primary/5">
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium text-primary">
-                    Quick Start
-                  </CardTitle>
-                  <Zap className="h-4 w-4 text-primary" />
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground">
-                    Create your first agent to start capturing leads
-                  </p>
-                </CardContent>
-              </Card>
-            </AnimatedItem>
-          </AnimatedList>
-        )}
-
-        {/* Plan Limits */}
-        {!loading && (
-          <div className="mt-6">
-            <PlanLimitsCard />
-          </div>
-        )}
-      </div>
-    </main>
+      {/* Plan Limits */}
+      {!loading && (
+        <div className="mt-6">
+          <PlanLimitsCard />
+        </div>
+      )}
+    </div>
   );
 };
