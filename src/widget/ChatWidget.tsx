@@ -203,10 +203,10 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
   };
 
   const handleQuickActionClick = (actionType: string) => {
-    if (actionType === 'start_chat') {
+    if (actionType === 'start_chat' || actionType === 'chat') {
       setCurrentView('messages');
       if (!chatUser) setActiveConversationId('new');
-    } else if (actionType === 'open_help') {
+    } else if (actionType === 'open_help' || actionType === 'help') {
       setCurrentView('help');
     }
   };
@@ -355,7 +355,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
 
   const filteredArticles = config.helpArticles.filter(article => {
     const matchesSearch = !helpSearchQuery || article.title.toLowerCase().includes(helpSearchQuery.toLowerCase()) || article.content.toLowerCase().includes(helpSearchQuery.toLowerCase());
-    const matchesCategory = !selectedCategory || article.category_id === selectedCategory;
+    const matchesCategory = !selectedCategory || article.category_id === selectedCategory || article.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
 
@@ -368,7 +368,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
         {showTeaser && !isOpen && config.showTeaser && (
           <div className="absolute mb-20 mr-2 max-w-xs">
             <div className="bg-card border shadow-lg rounded-lg p-3 animate-in slide-in-from-bottom-2">
-              <p className="text-sm">{config.teaserMessage}</p>
+              <p className="text-sm">{config.teaserText || config.teaserMessage}</p>
             </div>
           </div>
         )}
@@ -392,17 +392,21 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                 />
                 
                 <div className="relative z-10 h-full flex flex-col items-start justify-center p-6 text-left">
-                  {config.teamAvatarUrl && (
+                  {config.showTeamAvatars && config.teamAvatarUrls && config.teamAvatarUrls.length > 0 && (
                     <div className="flex -space-x-2 mb-4">
-                      <Avatar className="w-10 h-10 border-2 border-white ring-2 ring-white/20">
-                        <AvatarImage src={config.teamAvatarUrl} />
-                        <AvatarFallback className="bg-white/20 text-white text-xs">A</AvatarFallback>
-                      </Avatar>
+                      {config.teamAvatarUrls.slice(0, 3).map((avatarUrl, idx) => (
+                        <Avatar key={idx} className="w-10 h-10 border-2 border-white ring-2 ring-white/20">
+                          <AvatarImage src={avatarUrl} />
+                          <AvatarFallback className="bg-white/20 text-white text-xs">{String.fromCharCode(65 + idx)}</AvatarFallback>
+                        </Avatar>
+                      ))}
                     </div>
                   )}
                   
                   <div className="space-y-2">
-                    <h2 className="text-3xl font-bold text-white">{config.welcomeTitle}</h2>
+                    <h2 className="text-3xl font-bold text-white">
+                      {config.welcomeTitle} {config.welcomeEmoji}
+                    </h2>
                     <p className="text-white/90 text-base">{config.welcomeSubtitle}</p>
                   </div>
                 </div>
@@ -497,7 +501,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                       <div
                         key={action.id}
                         className="p-4 border rounded-lg bg-card hover:bg-accent/50 cursor-pointer transition-all"
-                        onClick={() => handleQuickActionClick(action.actionType)}
+                        onClick={() => handleQuickActionClick(action.action || action.actionType)}
                       >
                         <div className="flex items-start gap-3">
                           <div className="p-2 rounded-lg" style={{ backgroundColor: `${config.primaryColor}15` }}>
@@ -505,9 +509,12 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                           </div>
                           <div className="flex-1">
                             <div className="flex items-center justify-between gap-2">
-                              <h4 className="font-medium text-sm">{action.label}</h4>
+                              <h4 className="font-medium text-sm">{action.title || action.label}</h4>
                               <ChevronRight className="h-4 w-4 text-muted-foreground" />
                             </div>
+                            {action.subtitle && (
+                              <p className="text-xs text-muted-foreground mt-0.5">{action.subtitle}</p>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -802,13 +809,13 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                   <Home05 className="h-4 w-4 mr-2" />
                   Home
                 </Button>
-                {config.showMessagesTab && (
+                {config.enableMessagesTab && (
                   <Button variant={currentView === 'messages' ? 'default' : 'ghost'} size="sm" onClick={() => setCurrentView('messages')} className="flex-1">
                     <MessageChatCircle className="h-4 w-4 mr-2" />
                     Chat
                   </Button>
                 )}
-                {config.showHelpTab && config.helpArticles.length > 0 && (
+                {config.enableHelpTab && config.helpArticles.length > 0 && (
                   <Button variant={currentView === 'help' ? 'default' : 'ghost'} size="sm" onClick={() => setCurrentView('help')} className="flex-1">
                     <HelpCircle className="h-4 w-4 mr-2" />
                     Help
@@ -820,7 +827,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
         ) : (
           <Button
             size="icon"
-            className={`h-14 w-14 rounded-full shadow-lg ${animationClasses[config.buttonAnimation || 'none']}`}
+            className={`h-14 w-14 rounded-full shadow-lg ${animationClasses[config.animation || 'none']}`}
             style={{ backgroundColor: config.primaryColor }}
             onClick={() => setIsOpen(true)}
           >

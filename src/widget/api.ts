@@ -60,6 +60,7 @@ export interface WidgetConfig {
   quickActions: Array<{
     id: string;
     label: string;
+    title?: string;
     subtitle?: string;
     icon: string;
     actionType: string;
