@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useOrganization } from '@/contexts/OrganizationContext';
+import { useAuth } from '@/hooks/useAuth';
 import { format } from 'date-fns';
 
 interface ConversationStats {
@@ -54,16 +54,16 @@ export const useAnalytics = (
   const [leads, setLeads] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
-  const { currentOrg } = useOrganization();
+  const { user } = useAuth();
 
   const fetchConversationStats = async () => {
-    if (!currentOrg) return;
+    if (!user) return;
 
     try {
       let query = supabase
         .from('conversations')
         .select('created_at, status, agent_id, metadata')
-        .eq('org_id', currentOrg.id)
+        .eq('user_id', user.id)
         .gte('created_at', startDate.toISOString())
         .lte('created_at', endDate.toISOString());
 
@@ -103,13 +103,13 @@ export const useAnalytics = (
   };
 
   const fetchLeadStats = async () => {
-    if (!currentOrg) return;
+    if (!user) return;
 
     try {
       let query = supabase
         .from('leads')
         .select('created_at, status, name, email, company')
-        .eq('org_id', currentOrg.id)
+        .eq('user_id', user.id)
         .gte('created_at', startDate.toISOString())
         .lte('created_at', endDate.toISOString());
 
@@ -155,13 +155,13 @@ export const useAnalytics = (
   };
 
   const fetchAgentPerformance = async () => {
-    if (!currentOrg) return;
+    if (!user) return;
 
     try {
       const { data: agents, error: agentsError } = await supabase
         .from('agents')
         .select('id, name')
-        .eq('org_id', currentOrg.id);
+        .eq('user_id', user.id);
 
       if (agentsError) throw agentsError;
 
@@ -172,7 +172,7 @@ export const useAnalytics = (
           .from('conversations')
           .select('*', { count: 'exact', head: true })
           .eq('agent_id', agent.id)
-          .eq('org_id', currentOrg.id)
+          .eq('user_id', user.id)
           .gte('created_at', startDate.toISOString())
           .lte('created_at', endDate.toISOString());
 
@@ -198,13 +198,13 @@ export const useAnalytics = (
   };
 
   const fetchUsageMetrics = async () => {
-    if (!currentOrg) return;
+    if (!user) return;
 
     try {
       const { data, error } = await supabase
         .from('usage_metrics')
         .select('*')
-        .eq('org_id', currentOrg.id)
+        .eq('user_id', user.id)
         .gte('period_start', startDate.toISOString())
         .lte('period_end', endDate.toISOString())
         .order('period_start', { ascending: true });
@@ -256,7 +256,7 @@ export const useAnalytics = (
           event: '*',
           schema: 'public',
           table: 'conversations',
-          filter: `org_id=eq.${currentOrg?.id}`,
+          filter: `user_id=eq.${user?.id}`,
         },
         () => {
           fetchConversationStats();
@@ -272,7 +272,7 @@ export const useAnalytics = (
           event: '*',
           schema: 'public',
           table: 'leads',
-          filter: `org_id=eq.${currentOrg?.id}`,
+          filter: `user_id=eq.${user?.id}`,
         },
         () => {
           fetchLeadStats();
@@ -284,7 +284,7 @@ export const useAnalytics = (
       supabase.removeChannel(conversationsChannel);
       supabase.removeChannel(leadsChannel);
     };
-  }, [currentOrg?.id, startDate, endDate, filters]);
+  }, [user?.id, startDate, endDate, filters]);
 
   return {
     conversationStats,

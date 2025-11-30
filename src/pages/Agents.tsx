@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useOrganization } from '@/contexts/OrganizationContext';
+import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -16,7 +16,7 @@ interface AgentsProps {
 }
 
 const Agents: React.FC<AgentsProps> = ({ onMenuClick }) => {
-  const { currentOrg } = useOrganization();
+  const { user } = useAuth();
   const { agents, loading, createAgent, updateAgent, deleteAgent } = useAgents();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -50,7 +50,7 @@ const Agents: React.FC<AgentsProps> = ({ onMenuClick }) => {
               <div className="flex-1 sm:flex-none">
                 <h1 className="text-2xl font-bold text-foreground">Agents</h1>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Manage AI agents for {currentOrg?.name || 'your organization'}
+                  Manage AI agents
                 </p>
               </div>
             </div>

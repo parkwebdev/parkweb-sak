@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
-import { useOrganization } from '@/contexts/OrganizationContext';
+import { useAuth } from '@/hooks/useAuth';
 import type { Tables } from '@/integrations/supabase/types';
 import { formatDate } from '@/lib/formatting';
 import { CheckCircle, Download01, LinkExternal01, RefreshCw01 } from '@untitledui/icons';
@@ -29,7 +29,7 @@ type Invoice = {
 };
 
 export const SubscriptionSettings = () => {
-  const { currentOrg } = useOrganization();
+  const { user } = useAuth();
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(true);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -37,13 +37,13 @@ export const SubscriptionSettings = () => {
 
   useEffect(() => {
     const fetchSubscription = async () => {
-      if (!currentOrg) return;
+      if (!user) return;
 
       try {
         const { data, error } = await supabase
           .from('subscriptions')
           .select('*, plans(*)')
-          .eq('org_id', currentOrg.id)
+          .eq('user_id', user.id)
           .maybeSingle();
 
         if (error && error.code !== 'PGRST116') throw error;
@@ -56,10 +56,10 @@ export const SubscriptionSettings = () => {
     };
 
     fetchSubscription();
-  }, [currentOrg]);
+  }, [user]);
 
   const fetchInvoices = async () => {
-    if (!currentOrg) return;
+    if (!user) return;
 
     setInvoicesLoading(true);
     try {
@@ -79,7 +79,7 @@ export const SubscriptionSettings = () => {
 
   useEffect(() => {
     fetchInvoices();
-  }, [currentOrg]);
+  }, [user]);
 
   if (loading) {
     return <div className="text-center py-8">Loading subscription...</div>;

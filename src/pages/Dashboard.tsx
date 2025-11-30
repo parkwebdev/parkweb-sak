@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useOrganization } from '@/contexts/OrganizationContext';
+import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users01 as Users, MessageChatSquare, UserPlus01 as UserPlus, TrendUp01 as TrendUp, Cube01 as Bot, Zap, Menu01 as Menu } from '@untitledui/icons';
@@ -12,7 +12,7 @@ interface DashboardProps {
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({ onMenuClick }) => {
-  const { currentOrg, loading: orgLoading } = useOrganization();
+  const { user, loading: authLoading } = useAuth();
   const [stats, setStats] = useState({
     totalAgents: 0,
     activeConversations: 0,
@@ -24,13 +24,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ onMenuClick }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (currentOrg && !orgLoading) {
+    if (user && !authLoading) {
       fetchStats();
     }
-  }, [currentOrg, orgLoading]);
+  }, [user, authLoading]);
 
   const fetchStats = async () => {
-    if (!currentOrg) return;
+    if (!user) return;
 
     setLoading(true);
     try {
@@ -38,15 +38,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ onMenuClick }) => {
         supabase
           .from('agents')
           .select('id, status')
-          .eq('org_id', currentOrg.id),
+          .eq('user_id', user.id),
         supabase
           .from('conversations')
           .select('id, status, created_at')
-          .eq('org_id', currentOrg.id),
+          .eq('user_id', user.id),
         supabase
           .from('leads')
           .select('id, status, created_at')
-          .eq('org_id', currentOrg.id)
+          .eq('user_id', user.id)
       ]);
 
       const agents = agentsRes.data || [];
@@ -82,7 +82,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onMenuClick }) => {
     }
   };
 
-  if (orgLoading) {
+  if (authLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -93,14 +93,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ onMenuClick }) => {
     );
   }
 
-  if (!currentOrg) {
+  if (!user) {
     return (
       <div className="flex items-center justify-center min-h-screen p-8">
         <div className="text-center max-w-md">
           <Bot className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-          <h2 className="text-base font-bold mb-2">No Organization</h2>
+          <h2 className="text-base font-bold mb-2">Not Authenticated</h2>
           <p className="text-sm text-muted-foreground">
-            You don't belong to any organization yet. Contact your administrator to get access.
+            Please sign in to access the dashboard.
           </p>
         </div>
       </div>
@@ -123,7 +123,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onMenuClick }) => {
               </Button>
               <div className="flex-1 sm:flex-none">
                 <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
-                <p className="text-sm text-muted-foreground mt-1">{currentOrg.name}</p>
+                <p className="text-sm text-muted-foreground mt-1">{user.email}</p>
               </div>
             </div>
           </div>

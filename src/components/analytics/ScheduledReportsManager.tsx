@@ -27,7 +27,7 @@ import {
 } from '@/components/ui/alert-dialog';
 
 export const ScheduledReportsManager = () => {
-  const { reports, loading, toggleActive, deleteReport } = useScheduledReports();
+  const { reports, loading, toggleReportStatus, deleteReport } = useScheduledReports();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
@@ -117,10 +117,10 @@ export const ScheduledReportsManager = () => {
                       )}
                     </TableCell>
                     <TableCell>
-                      <Switch
-                        checked={report.active}
-                        onCheckedChange={(checked) => toggleActive(report.id, checked)}
-                      />
+                    <Switch
+                      checked={report.active}
+                      onCheckedChange={(checked) => toggleReportStatus(report.id, checked)}
+                    />
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">

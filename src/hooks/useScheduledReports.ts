@@ -38,7 +38,7 @@ export const useScheduledReports = () => {
     }
   };
 
-  const createReport = async (report: Omit<ScheduledReportInsert, 'created_by'>) => {
+  const createReport = async (report: Omit<ScheduledReportInsert, 'created_by' | 'user_id'>) => {
     if (!user) return;
 
     try {

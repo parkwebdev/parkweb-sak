@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useOrganization } from '@/contexts/OrganizationContext';
+import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 
 export interface PlanLimits {
@@ -29,20 +29,20 @@ export interface LimitCheck {
 }
 
 export const usePlanLimits = () => {
-  const { currentOrg } = useOrganization();
+  const { user } = useAuth();
   const [limits, setLimits] = useState<PlanLimits | null>(null);
   const [usage, setUsage] = useState<CurrentUsage | null>(null);
   const [loading, setLoading] = useState(true);
   const [planName, setPlanName] = useState<string>('Free');
 
   useEffect(() => {
-    if (currentOrg?.id) {
+    if (user?.id) {
       fetchLimitsAndUsage();
     }
-  }, [currentOrg?.id]);
+  }, [user?.id]);
 
   const fetchLimitsAndUsage = async () => {
-    if (!currentOrg?.id) return;
+    if (!user?.id) return;
 
     setLoading(true);
     try {
@@ -50,7 +50,7 @@ export const usePlanLimits = () => {
       const { data: subscription, error: subError } = await supabase
         .from('subscriptions')
         .select('plan_id, plans(name, limits)')
-        .eq('org_id', currentOrg.id)
+        .eq('user_id', user.id)
         .eq('status', 'active')
         .maybeSingle();
 
@@ -93,32 +93,32 @@ export const usePlanLimits = () => {
       const { count: agentsCount } = await supabase
         .from('agents')
         .select('*', { count: 'exact', head: true })
-        .eq('org_id', currentOrg.id);
+        .eq('user_id', user.id);
 
       // Count conversations this month
       const { count: conversationsCount } = await supabase
         .from('conversations')
         .select('*', { count: 'exact', head: true })
-        .eq('org_id', currentOrg.id)
+        .eq('user_id', user.id)
         .gte('created_at', firstDayOfMonth.toISOString());
 
       // Count knowledge sources
       const { count: knowledgeCount } = await supabase
         .from('knowledge_sources')
         .select('*', { count: 'exact', head: true })
-        .eq('org_id', currentOrg.id);
+        .eq('user_id', user.id);
 
-      // Count team members
+      // Count team members (where current user is the owner)
       const { count: teamCount } = await supabase
-        .from('org_members')
+        .from('team_members')
         .select('*', { count: 'exact', head: true })
-        .eq('org_id', currentOrg.id);
+        .eq('owner_id', user.id);
 
       // Get API calls from usage metrics
       const { data: usageMetrics } = await supabase
         .from('usage_metrics')
         .select('api_calls_count')
-        .eq('org_id', currentOrg.id)
+        .eq('user_id', user.id)
         .gte('period_start', firstDayOfMonth.toISOString())
         .order('created_at', { ascending: false })
         .limit(1)
