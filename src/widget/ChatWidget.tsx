@@ -393,7 +393,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
   const position = (config.position || 'bottom-right') as keyof typeof positionClasses;
 
   return (
-    <div className="fixed inset-0 pointer-events-none z-[9999]">
+    <div className="fixed inset-0 pointer-events-none z-[9999] light" style={{ colorScheme: 'light' }}>
       <div className={`absolute ${positionClasses[position]} pointer-events-auto`}>
         {/* Teaser Message */}
         {showTeaser && !isOpen && config.showTeaser && (
