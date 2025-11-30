@@ -83,8 +83,8 @@ const Settings: React.FC<SettingsProps> = ({ onMenuClick }) => {
   };
 
   return (
-    <main className="flex-1 bg-muted/30 min-h-screen pt-4 lg:pt-8 pb-12">
-      <header className="w-full font-medium">
+    <main className="flex-1 bg-muted/30 h-full overflow-auto pb-12">
+      <header className="w-full font-medium pt-4 lg:pt-8">
         <div className="items-stretch flex w-full flex-col gap-6 px-4 lg:px-8 py-0">
           <div className="flex items-center gap-4 mb-6">
             <Button

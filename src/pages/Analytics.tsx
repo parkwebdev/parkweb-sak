@@ -176,8 +176,8 @@ const Analytics: React.FC = () => {
   };
 
   return (
-    <main className="flex-1 bg-muted/30 min-h-screen pt-4 lg:pt-8">
-      <div className="px-4 lg:px-8 space-y-6">
+    <main className="flex-1 bg-muted/30 h-full overflow-auto">
+      <div className="px-4 lg:px-8 pt-4 lg:pt-8 space-y-6">
         {/* Header */}
         <div>
           <h1 className="text-2xl font-bold">Analytics</h1>
