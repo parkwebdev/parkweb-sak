@@ -8,7 +8,7 @@
   const primaryColor = script.getAttribute('data-primary-color') || '#6366f1';
 
   if (!agentId) {
-    console.error('ChatPad Widget: data-agent-id is required');
+    console.error('ChatPad Agent: data-agent-id is required');
     return;
   }
 
@@ -785,7 +785,7 @@
       config = await response.json();
       return config;
     } catch (error) {
-      console.error('ChatPad Widget: Failed to load config:', error);
+      console.error('ChatPad Agent: Failed to load config:', error);
       // Return minimal default config
       return {
         agent: { name: 'Assistant', avatar_url: null },
