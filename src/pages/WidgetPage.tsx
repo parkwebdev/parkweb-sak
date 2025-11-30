@@ -82,7 +82,7 @@ const WidgetPage = () => {
   
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-screen flex items-center justify-center bg-transparent light" style={{ colorScheme: 'light' }}>
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-muted-foreground">Loading widget...</p>
@@ -93,7 +93,7 @@ const WidgetPage = () => {
 
   if (error || !config) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-screen flex items-center justify-center bg-transparent light" style={{ colorScheme: 'light' }}>
         <div className="text-center max-w-md p-6">
           <div className="text-red-500 text-5xl mb-4">⚠️</div>
           <h2 className="text-xl font-semibold mb-2">Unable to Load Widget</h2>
@@ -104,7 +104,7 @@ const WidgetPage = () => {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-transparent light" style={{ colorScheme: 'light' }}>
       <ChatWidget config={config} previewMode={false} />
     </div>
   );
