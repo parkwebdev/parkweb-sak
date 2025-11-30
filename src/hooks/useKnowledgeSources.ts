@@ -12,12 +12,8 @@ export const useKnowledgeSources = (agentId?: string) => {
   const { toast } = useToast();
 
   const fetchSources = async () => {
-    if (!agentId) {
-      setSources([]);
-      setLoading(false);
-      return;
-    }
-    
+    if (!agentId) return;
+
     try {
       setLoading(true);
       const { data, error } = await supabase
@@ -29,8 +25,9 @@ export const useKnowledgeSources = (agentId?: string) => {
       if (error) throw error;
       setSources(data || []);
     } catch (error: any) {
+      console.error('Error fetching knowledge sources:', error);
       toast({
-        title: 'Error fetching knowledge sources',
+        title: 'Error loading knowledge sources',
         description: error.message,
         variant: 'destructive',
       });
@@ -39,16 +36,18 @@ export const useKnowledgeSources = (agentId?: string) => {
     }
   };
 
+  useEffect(() => {
+    fetchSources();
+  }, [agentId]);
+
   const uploadDocument = async (
     file: File,
     agentId: string,
-    orgId: string
+    userId: string
   ): Promise<string | null> => {
     try {
-      // Upload file to storage
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${agentId}/${Date.now()}.${fileExt}`;
-      
+      // Upload file to Supabase Storage
+      const fileName = `${agentId}/${Date.now()}-${file.name}`;
       const { error: uploadError } = await supabase.storage
         .from('client-uploads')
         .upload(fileName, file);
@@ -65,7 +64,7 @@ export const useKnowledgeSources = (agentId?: string) => {
         .from('knowledge_sources')
         .insert({
           agent_id: agentId,
-          org_id: orgId,
+          user_id: userId,
           type: 'pdf' as KnowledgeType,
           source: publicUrl,
           status: 'processing',
@@ -82,19 +81,20 @@ export const useKnowledgeSources = (agentId?: string) => {
 
       // Trigger processing
       await supabase.functions.invoke('process-knowledge-source', {
-        body: { sourceId: data.id },
+        body: { sourceId: data.id, agentId },
       });
 
       toast({
         title: 'Document uploaded',
-        description: 'Processing and generating embeddings...',
+        description: 'Processing document...',
       });
 
-      fetchSources();
+      await fetchSources();
       return data.id;
     } catch (error: any) {
+      console.error('Error uploading document:', error);
       toast({
-        title: 'Error uploading document',
+        title: 'Upload failed',
         description: error.message,
         variant: 'destructive',
       });
@@ -105,14 +105,14 @@ export const useKnowledgeSources = (agentId?: string) => {
   const addUrlSource = async (
     url: string,
     agentId: string,
-    orgId: string
+    userId: string
   ): Promise<string | null> => {
     try {
       const { data, error } = await supabase
         .from('knowledge_sources')
         .insert({
           agent_id: agentId,
-          org_id: orgId,
+          user_id: userId,
           type: 'url' as KnowledgeType,
           source: url,
           status: 'processing',
@@ -127,19 +127,20 @@ export const useKnowledgeSources = (agentId?: string) => {
 
       // Trigger processing
       await supabase.functions.invoke('process-knowledge-source', {
-        body: { sourceId: data.id },
+        body: { sourceId: data.id, agentId },
       });
 
       toast({
         title: 'URL added',
-        description: 'Fetching content and generating embeddings...',
+        description: 'Processing content...',
       });
 
-      fetchSources();
+      await fetchSources();
       return data.id;
     } catch (error: any) {
+      console.error('Error adding URL source:', error);
       toast({
-        title: 'Error adding URL',
+        title: 'Failed to add URL',
         description: error.message,
         variant: 'destructive',
       });
@@ -149,9 +150,9 @@ export const useKnowledgeSources = (agentId?: string) => {
 
   const addTextSource = async (
     content: string,
-    type: KnowledgeType,
     agentId: string,
-    orgId: string,
+    userId: string,
+    type: KnowledgeType = 'api',
     metadata?: Record<string, any>
   ): Promise<string | null> => {
     try {
@@ -159,7 +160,7 @@ export const useKnowledgeSources = (agentId?: string) => {
         .from('knowledge_sources')
         .insert({
           agent_id: agentId,
-          org_id: orgId,
+          user_id: userId,
           type,
           source: 'text',
           content,
@@ -176,19 +177,20 @@ export const useKnowledgeSources = (agentId?: string) => {
 
       // Trigger processing
       await supabase.functions.invoke('process-knowledge-source', {
-        body: { sourceId: data.id },
+        body: { sourceId: data.id, agentId },
       });
 
       toast({
         title: 'Content added',
-        description: 'Generating embeddings...',
+        description: 'Processing content...',
       });
 
-      fetchSources();
+      await fetchSources();
       return data.id;
     } catch (error: any) {
+      console.error('Error adding text source:', error);
       toast({
-        title: 'Error adding content',
+        title: 'Failed to add content',
         description: error.message,
         variant: 'destructive',
       });
@@ -196,77 +198,63 @@ export const useKnowledgeSources = (agentId?: string) => {
     }
   };
 
-  const deleteSource = async (id: string) => {
+  const deleteSource = async (sourceId: string) => {
     try {
       const { error } = await supabase
         .from('knowledge_sources')
         .delete()
-        .eq('id', id);
+        .eq('id', sourceId);
 
       if (error) throw error;
 
       toast({
-        title: 'Knowledge source deleted',
-        description: 'Source has been removed from the knowledge base',
+        title: 'Source deleted',
+        description: 'Knowledge source has been removed.',
       });
 
-      fetchSources();
+      await fetchSources();
     } catch (error: any) {
+      console.error('Error deleting source:', error);
       toast({
-        title: 'Error deleting source',
+        title: 'Delete failed',
         description: error.message,
         variant: 'destructive',
       });
     }
   };
 
-  const reprocessSource = async (id: string) => {
+  const reprocessSource = async (sourceId: string) => {
     try {
-      await supabase.functions.invoke('process-knowledge-source', {
-        body: { sourceId: id },
+      // Update status to processing
+      const { error: updateError } = await supabase
+        .from('knowledge_sources')
+        .update({ status: 'processing' })
+        .eq('id', sourceId);
+
+      if (updateError) throw updateError;
+
+      // Trigger reprocessing
+      const { error: invokeError } = await supabase.functions.invoke('process-knowledge-source', {
+        body: { sourceId, agentId },
       });
+
+      if (invokeError) throw invokeError;
 
       toast({
-        title: 'Reprocessing started',
-        description: 'Generating new embeddings...',
+        title: 'Reprocessing',
+        description: 'Knowledge source is being reprocessed.',
       });
 
-      fetchSources();
+      await fetchSources();
     } catch (error: any) {
+      console.error('Error reprocessing source:', error);
       toast({
-        title: 'Error reprocessing source',
+        title: 'Reprocess failed',
         description: error.message,
         variant: 'destructive',
       });
     }
   };
-
-  useEffect(() => {
-    fetchSources();
-
-    if (!agentId) return;
-
-    // Subscribe to real-time updates
-    const channel = supabase
-      .channel('knowledge-sources-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'knowledge_sources',
-          filter: `agent_id=eq.${agentId}`,
-        },
-        () => {
-          fetchSources();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [agentId]);
 
   return {
     sources,

@@ -72,7 +72,7 @@ export const AgentKnowledgeTab = ({ agentId, userId }: AgentKnowledgeTabProps) =
           open={addDialogOpen}
           onOpenChange={setAddDialogOpen}
           agentId={agentId}
-          orgId={orgId}
+          userId={userId}
         />
       </TabsContent>
 

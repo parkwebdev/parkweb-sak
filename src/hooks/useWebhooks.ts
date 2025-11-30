@@ -34,7 +34,7 @@ export const useWebhooks = () => {
       const { data, error } = await supabase
         .from('webhooks')
         .select('*')
-        .eq('org_id', currentOrg.id)
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -196,7 +196,7 @@ export const useWebhooks = () => {
           event: '*',
           schema: 'public',
           table: 'webhooks',
-          filter: `org_id=eq.${currentOrg?.id}`,
+          filter: `user_id=eq.${user?.id}`,
         },
         () => {
           fetchWebhooks();
@@ -218,7 +218,7 @@ export const useWebhooks = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [currentOrg?.id]);
+  }, [user?.id]);
 
   return {
     webhooks,

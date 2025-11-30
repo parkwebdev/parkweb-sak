@@ -10,33 +10,45 @@ export const useHelpArticles = (agentId: string) => {
   // Load articles and categories from Supabase
   useEffect(() => {
     const fetchData = async () => {
-      setLoading(true);
       try {
+        setLoading(true);
+
+        // Get agent's user_id first
+        const { data: agent } = await supabase
+          .from('agents')
+          .select('user_id')
+          .eq('id', agentId)
+          .single();
+
+        if (!agent) {
+          console.error('Agent not found');
+          return;
+        }
+
         // Fetch categories
-        const { data: categoriesData, error: categoriesError } = await supabase
+        const { data: categoriesData, error: catError } = await supabase
           .from('help_categories')
           .select('*')
           .eq('agent_id', agentId)
           .order('order_index');
 
-        if (categoriesError) throw categoriesError;
+        if (catError) throw catError;
 
         // Fetch articles
-        const { data: articlesData, error: articlesError } = await supabase
+        const { data: articlesData, error: artError } = await supabase
           .from('help_articles')
           .select('*')
           .eq('agent_id', agentId)
           .order('order_index');
 
-        if (articlesError) throw articlesError;
+        if (artError) throw artError;
 
-        // Map database format to app format
         const mappedCategories: HelpCategory[] = (categoriesData || []).map(cat => ({
           name: cat.name,
           description: cat.description || '',
         }));
 
-        const mappedArticles: HelpArticle[] = (articlesData || []).map((article, index) => ({
+        const mappedArticles: HelpArticle[] = (articlesData || []).map((article) => ({
           id: article.id,
           title: article.title,
           content: article.content,
@@ -48,7 +60,7 @@ export const useHelpArticles = (agentId: string) => {
         setCategories(mappedCategories);
         setArticles(mappedArticles);
       } catch (error) {
-        console.error('Error loading help data:', error);
+        console.error('Error fetching help articles:', error);
       } finally {
         setLoading(false);
       }
@@ -59,17 +71,17 @@ export const useHelpArticles = (agentId: string) => {
 
   const addArticle = async (article: Omit<HelpArticle, 'id' | 'order'>) => {
     try {
-      // Get org_id from agent
+      // Get user_id from agent
       const { data: agent } = await supabase
         .from('agents')
-        .select('org_id')
+        .select('user_id')
         .eq('id', agentId)
         .single();
 
       if (!agent) throw new Error('Agent not found');
 
-      // Get or create category
-      let categoryId: string;
+      // Find or create category
+      let categoryId = '';
       const existingCategory = await supabase
         .from('help_categories')
         .select('id')
@@ -84,7 +96,7 @@ export const useHelpArticles = (agentId: string) => {
           .from('help_categories')
           .insert({
             agent_id: agentId,
-            org_id: agent.org_id,
+            user_id: agent.user_id,
             name: article.category,
             description: '',
             order_index: categories.length,
@@ -94,9 +106,6 @@ export const useHelpArticles = (agentId: string) => {
 
         if (catError) throw catError;
         categoryId = newCategory.id;
-
-        // Update local categories
-        setCategories(prev => [...prev, { name: article.category, description: '' }]);
       }
 
       // Insert article
@@ -104,7 +113,7 @@ export const useHelpArticles = (agentId: string) => {
         .from('help_articles')
         .insert({
           agent_id: agentId,
-          org_id: agent.org_id,
+          user_id: agent.user_id,
           category_id: categoryId,
           title: article.title,
           content: article.content,
@@ -117,14 +126,16 @@ export const useHelpArticles = (agentId: string) => {
       if (error) throw error;
 
       // Update local state
-      setArticles(prev => [...prev, {
+      setArticles([...articles, {
         id: newArticle.id,
         title: newArticle.title,
         content: newArticle.content,
         category: article.category,
-        icon: newArticle.icon || undefined,
+        icon: article.icon,
         order: newArticle.order_index,
       }]);
+
+      return newArticle.id;
     } catch (error) {
       console.error('Error adding article:', error);
       throw error;
@@ -133,42 +144,61 @@ export const useHelpArticles = (agentId: string) => {
 
   const updateArticle = async (id: string, updates: Partial<HelpArticle>) => {
     try {
-      const dbUpdates: any = {
-        title: updates.title,
-        content: updates.content,
-        icon: updates.icon,
-      };
+      // Get agent's user_id
+      const { data: agent } = await supabase
+        .from('agents')
+        .select('user_id')
+        .eq('id', agentId)
+        .single();
 
-      // Handle category change
+      if (!agent) throw new Error('Agent not found');
+
+      let categoryId: string | undefined;
+
+      // If category changed, find or create it
       if (updates.category) {
-        const { data: categoryData } = await supabase
+        const existingCategory = await supabase
           .from('help_categories')
           .select('id')
           .eq('agent_id', agentId)
           .eq('name', updates.category)
           .single();
 
-        if (categoryData) {
-          dbUpdates.category_id = categoryData.id;
+        if (existingCategory.data) {
+          categoryId = existingCategory.data.id;
+        } else {
+          const { data: newCategory } = await supabase
+            .from('help_categories')
+            .insert({
+              agent_id: agentId,
+              user_id: agent.user_id,
+              name: updates.category,
+              description: '',
+              order_index: categories.length,
+            })
+            .select()
+            .single();
+
+          if (newCategory) categoryId = newCategory.id;
         }
       }
 
       const { error } = await supabase
         .from('help_articles')
-        .update(dbUpdates)
+        .update({
+          ...(updates.title && { title: updates.title }),
+          ...(updates.content && { content: updates.content }),
+          ...(updates.icon !== undefined && { icon: updates.icon }),
+          ...(categoryId && { category_id: categoryId }),
+        })
         .eq('id', id);
 
       if (error) throw error;
 
       // Update local state
-      setArticles(prev => prev.map(article => 
-        article.id === id ? { ...article, ...updates } : article
+      setArticles(articles.map(a =>
+        a.id === id ? { ...a, ...updates } : a
       ));
-
-      // Add category if it doesn't exist
-      if (updates.category && !categories.some(cat => cat.name === updates.category)) {
-        setCategories(prev => [...prev, { name: updates.category, description: '' }]);
-      }
     } catch (error) {
       console.error('Error updating article:', error);
       throw error;
@@ -184,7 +214,7 @@ export const useHelpArticles = (agentId: string) => {
 
       if (error) throw error;
 
-      setArticles(prev => prev.filter(article => article.id !== id));
+      setArticles(articles.filter(a => a.id !== id));
     } catch (error) {
       console.error('Error deleting article:', error);
       throw error;
@@ -193,24 +223,16 @@ export const useHelpArticles = (agentId: string) => {
 
   const reorderArticles = async (reorderedArticles: HelpArticle[]) => {
     try {
-      // Update order in database
-      const updates = reorderedArticles.map((article, index) => ({
-        id: article.id,
-        order_index: index,
-      }));
-
-      for (const update of updates) {
-        await supabase
+      // Update order_index for each article
+      const updates = reorderedArticles.map((article, index) =>
+        supabase
           .from('help_articles')
-          .update({ order_index: update.order_index })
-          .eq('id', update.id);
-      }
+          .update({ order_index: index })
+          .eq('id', article.id)
+      );
 
-      // Update local state
-      setArticles(reorderedArticles.map((article, index) => ({
-        ...article,
-        order: index,
-      })));
+      await Promise.all(updates);
+      setArticles(reorderedArticles);
     } catch (error) {
       console.error('Error reordering articles:', error);
       throw error;
@@ -218,39 +240,39 @@ export const useHelpArticles = (agentId: string) => {
   };
 
   const addCategory = async (name: string, description: string = '') => {
-    if (categories.some(cat => cat.name === name)) {
-      return; // Category already exists
-    }
-
     try {
+      // Get agent's user_id
       const { data: agent } = await supabase
         .from('agents')
-        .select('org_id')
+        .select('user_id')
         .eq('id', agentId)
         .single();
 
       if (!agent) throw new Error('Agent not found');
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('help_categories')
         .insert({
           agent_id: agentId,
-          org_id: agent.org_id,
+          user_id: agent.user_id,
           name,
           description,
           order_index: categories.length,
-        });
+        })
+        .select()
+        .single();
 
       if (error) throw error;
 
-      setCategories(prev => [...prev, { name, description }]);
+      setCategories([...categories, { name, description }]);
+      return data.id;
     } catch (error) {
       console.error('Error adding category:', error);
       throw error;
     }
   };
 
-  const updateCategory = async (oldName: string, newName: string, description: string) => {
+  const updateCategory = async (oldName: string, newName: string, description: string = '') => {
     try {
       const { error } = await supabase
         .from('help_categories')
@@ -260,19 +282,13 @@ export const useHelpArticles = (agentId: string) => {
 
       if (error) throw error;
 
-      // Update local state
-      const updatedCategories = categories.map(cat =>
-        cat.name === oldName ? { name: newName, description } : cat
-      );
-      setCategories(updatedCategories);
+      setCategories(categories.map(c =>
+        c.name === oldName ? { name: newName, description } : c
+      ));
 
-      // Update articles that use this category
-      if (oldName !== newName) {
-        const updatedArticles = articles.map(article =>
-          article.category === oldName ? { ...article, category: newName } : article
-        );
-        setArticles(updatedArticles);
-      }
+      setArticles(articles.map(a =>
+        a.category === oldName ? { ...a, category: newName } : a
+      ));
     } catch (error) {
       console.error('Error updating category:', error);
       throw error;
@@ -280,11 +296,13 @@ export const useHelpArticles = (agentId: string) => {
   };
 
   const removeCategory = async (name: string) => {
-    // Only remove if no articles use this category
-    const hasArticles = articles.some(article => article.category === name);
-    if (hasArticles) return;
-
     try {
+      // Check if any articles use this category
+      const articlesInCategory = articles.filter(a => a.category === name);
+      if (articlesInCategory.length > 0) {
+        throw new Error('Cannot delete category with existing articles');
+      }
+
       const { error } = await supabase
         .from('help_categories')
         .delete()
@@ -293,56 +311,56 @@ export const useHelpArticles = (agentId: string) => {
 
       if (error) throw error;
 
-      setCategories(prev => prev.filter(cat => cat.name !== name));
+      setCategories(categories.filter(c => c.name !== name));
     } catch (error) {
       console.error('Error removing category:', error);
       throw error;
     }
   };
 
-  const importFromKnowledge = async (knowledgeSourceId: string) => {
-    // TODO: Implement importing from knowledge sources
-    // This would fetch content from a knowledge source and create articles
-    setLoading(true);
-    try {
-      // Placeholder for future implementation
-      console.log('Importing from knowledge source:', knowledgeSourceId);
-    } finally {
-      setLoading(false);
-    }
+  const importFromKnowledge = async (knowledgeSourceIds: string[]) => {
+    // Placeholder for importing from knowledge sources
+    console.log('Importing from knowledge sources:', knowledgeSourceIds);
   };
 
-  const bulkImport = async (importedArticles: Array<Omit<HelpArticle, 'id' | 'order'>>) => {
+  const bulkImport = async (importData: Array<{
+    title: string;
+    content: string;
+    category: string;
+    icon?: string;
+  }>) => {
     try {
+      // Get agent's user_id
       const { data: agent } = await supabase
         .from('agents')
-        .select('org_id')
+        .select('user_id')
         .eq('id', agentId)
         .single();
 
       if (!agent) throw new Error('Agent not found');
 
       // Get unique categories
-      const uniqueCategories = [...new Set(importedArticles.map(a => a.category))];
+      const uniqueCategories = [...new Set(importData.map(item => item.category))];
+
+      // Create or find categories
       const categoryMap = new Map<string, string>();
 
-      // Create categories
       for (const catName of uniqueCategories) {
-        const existing = await supabase
+        const existingCat = await supabase
           .from('help_categories')
           .select('id')
           .eq('agent_id', agentId)
           .eq('name', catName)
           .single();
 
-        if (existing.data) {
-          categoryMap.set(catName, existing.data.id);
+        if (existingCat.data) {
+          categoryMap.set(catName, existingCat.data.id);
         } else {
           const { data: newCat } = await supabase
             .from('help_categories')
             .insert({
               agent_id: agentId,
-              org_id: agent.org_id,
+              user_id: agent.user_id,
               name: catName,
               description: '',
               order_index: categories.length + categoryMap.size,
@@ -354,47 +372,48 @@ export const useHelpArticles = (agentId: string) => {
         }
       }
 
-      // Insert articles
-      const articleInserts = importedArticles.map((article, index) => ({
+      // Prepare articles for bulk insert
+      const articlesToInsert = importData.map((item, index) => ({
         agent_id: agentId,
-        org_id: agent.org_id,
-        category_id: categoryMap.get(article.category)!,
-        title: article.title,
-        content: article.content,
-        icon: article.icon,
+        user_id: agent.user_id,
+        category_id: categoryMap.get(item.category)!,
+        title: item.title,
+        content: item.content,
+        icon: item.icon || null,
         order_index: articles.length + index,
       }));
 
-      const { data: newArticles } = await supabase
+      const { data: insertedArticles, error } = await supabase
         .from('help_articles')
-        .insert(articleInserts)
+        .insert(articlesToInsert)
         .select();
 
-      // Refresh data
-      const { data: categoriesData } = await supabase
-        .from('help_categories')
-        .select('*')
-        .eq('agent_id', agentId);
+      if (error) throw error;
 
-      const mappedArticles: HelpArticle[] = (newArticles || []).map(article => ({
+      // Update local state
+      const newArticles = insertedArticles.map((article, index) => ({
         id: article.id,
         title: article.title,
         content: article.content,
-        category: categoriesData?.find(c => c.id === article.category_id)?.name || '',
+        category: importData[index].category,
         icon: article.icon || undefined,
         order: article.order_index,
       }));
 
-      setArticles(prev => [...prev, ...mappedArticles]);
+      setArticles([...articles, ...newArticles]);
 
-      // Update categories
-      uniqueCategories.forEach(cat => {
-        if (!categories.some(c => c.name === cat)) {
-          setCategories(prev => [...prev, { name: cat, description: '' }]);
-        }
-      });
+      // Update categories if new ones were added
+      const newCategories = uniqueCategories
+        .filter(name => !categories.some(c => c.name === name))
+        .map(name => ({ name, description: '' }));
+
+      if (newCategories.length > 0) {
+        setCategories([...categories, ...newCategories]);
+      }
+
+      return insertedArticles.length;
     } catch (error) {
-      console.error('Error bulk importing:', error);
+      console.error('Error bulk importing articles:', error);
       throw error;
     }
   };
