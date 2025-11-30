@@ -10,7 +10,7 @@ import { HelpArticlesManager } from '@/components/agents/HelpArticlesManager';
 
 interface AgentKnowledgeTabProps {
   agentId: string;
-  orgId: string;
+  userId: string;
 }
 
 export const AgentKnowledgeTab = ({ agentId, orgId }: AgentKnowledgeTabProps) => {

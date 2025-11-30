@@ -773,7 +773,7 @@ export const EmbeddedChatPreview = ({ config }: EmbeddedChatPreviewProps) => {
                                       const { data: lead, error } = await supabase
                                         .from('leads')
                                         .insert({
-                                          org_id: config.orgId,
+                                          user_id: config.userId,
                                           name: `${firstName} ${lastName}`,
                                           email: email,
                                           data: { firstName, lastName },
