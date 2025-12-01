@@ -17,7 +17,7 @@ import { HomeNavIcon, ChatNavIcon, HelpNavIcon } from './NavIcons';
 import { ChatBubbleIcon } from '@/components/agents/ChatBubbleIcon';
 import ChatPadLogo from '@/components/ChatPadLogo';
 import { BubbleBackground } from '@/components/ui/bubble-background';
-import { generateGradientPalette } from '@/lib/color-utils';
+import { generateGradientPalette, darkenColor } from '@/lib/color-utils';
 
 import { VoiceInput } from '@/components/molecule-ui/voice-input';
 import { FileDropZone } from '@/components/chat/FileDropZone';
@@ -522,6 +522,10 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                   <BubbleBackground 
                     interactive
                     colors={generateGradientPalette(config.gradientStartColor, config.gradientEndColor)}
+                    baseGradient={{
+                      from: darkenColor(config.gradientStartColor, 40),
+                      to: darkenColor(config.gradientEndColor, 50)
+                    }}
                     className="absolute inset-0"
                   />
                   
