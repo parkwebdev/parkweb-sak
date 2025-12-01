@@ -118,7 +118,6 @@ ChatPad is a comprehensive multi-tenant AI agent platform that enables organizat
 
 **Edge Functions**:
 - `process-knowledge-source` - Process and embed knowledge
-- `search-knowledge` - Semantic search across knowledge base
 
 ### 5. Conversations Management
 **Location**: `src/pages/Conversations.tsx`, `src/hooks/useConversations.ts`
@@ -384,7 +383,6 @@ src/
 **Location**: `supabase/functions/`
 
 - `widget-chat` - Embedded widget chat handler
-- `search-knowledge` - RAG semantic search
 - `process-knowledge-source` - Process and embed knowledge
 - `validate-api-key` - API authentication
 - `trigger-webhook` - Webhook event dispatcher
