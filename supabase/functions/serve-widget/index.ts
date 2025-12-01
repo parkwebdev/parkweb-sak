@@ -1,85 +1,93 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Content-Type': 'application/javascript',
   'Cache-Control': 'public, max-age=3600',
-};
+}
 
 serve(async (req) => {
-  // Handle CORS preflight requests
+  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers: corsHeaders })
   }
 
   try {
-    // Get the app URL from environment or dynamically from request origin
-    const referer = req.headers.get('referer');
-    const appUrl = Deno.env.get('APP_URL') || 
-                   (referer ? new URL(referer).origin : 'https://28cc9f18-cb6b-496b-b8a6-8c8f349e3c54.lovableproject.com');
+    // Determine the app URL dynamically
+    let appUrl = Deno.env.get('APP_URL') || '';
     
+    // If no APP_URL, try to get from referer or use production URL
+    if (!appUrl) {
+      const referer = req.headers.get('referer');
+      if (referer) {
+        const url = new URL(referer);
+        appUrl = `${url.protocol}//${url.host}`;
+      } else {
+        // Default to Supabase project URL
+        appUrl = 'https://mvaimvwdukpgvkifkfpa.supabase.co';
+      }
+    }
+
     console.log('[Serve Widget] App URL:', appUrl);
-    
-    // Serve a loader script that loads the standalone widget bundle
+
+    // Generate the loader script that creates iframe-based widget
     const loaderScript = `
 (function() {
-  console.log('[ChatPad Widget] Loading standalone widget bundle...');
+  'use strict';
   
-  // Get config from script tag
-  var script = document.currentScript;
-  if (!script) {
-    console.error('[ChatPad Widget] Failed to find script tag');
+  // Get configuration from script tag
+  var currentScript = document.currentScript;
+  if (!currentScript || !currentScript.hasAttribute('data-agent-id')) {
+    console.error('[ChatPad Widget] data-agent-id attribute is required');
     return;
   }
   
-  var agentId = script.getAttribute('data-agent-id');
-  var primaryColor = script.getAttribute('data-primary-color');
-  var position = script.getAttribute('data-position') || 'bottom-right';
-  
-  if (!agentId) {
-    console.error('[ChatPad Widget] data-agent-id is required');
-    return;
-  }
-  
-  console.log('[ChatPad Widget] Agent ID:', agentId);
-  console.log('[ChatPad Widget] Loading widget bundle from:', '${appUrl}/chatpad-widget.js');
-  
-  // Load the standalone widget bundle
-  var widgetScript = document.createElement('script');
-  widgetScript.src = '${appUrl}/chatpad-widget.js';
-  widgetScript.setAttribute('data-agent-id', agentId);
-  if (primaryColor) {
-    widgetScript.setAttribute('data-primary-color', primaryColor);
-  }
-  widgetScript.setAttribute('data-position', position);
-  
-  widgetScript.onload = function() {
-    console.log('[ChatPad Widget] Standalone bundle loaded successfully');
+  var config = {
+    agentId: currentScript.getAttribute('data-agent-id'),
+    position: currentScript.getAttribute('data-position') || 'bottom-right',
+    primaryColor: currentScript.getAttribute('data-primary-color') || '#3b82f6',
+    appUrl: '${appUrl}',
   };
   
-  widgetScript.onerror = function() {
-    console.error('[ChatPad Widget] Failed to load widget bundle');
+  console.log('[ChatPad Widget] Loading widget with config:', config);
+  
+  // Dynamically load the full widget bundle
+  var script = document.createElement('script');
+  script.src = config.appUrl + '/chatpad-widget.js';
+  script.async = true;
+  script.setAttribute('data-agent-id', config.agentId);
+  script.setAttribute('data-position', config.position);
+  script.setAttribute('data-primary-color', config.primaryColor);
+  script.setAttribute('data-app-url', config.appUrl);
+  
+  script.onload = function() {
+    console.log('[ChatPad Widget] Widget bundle loaded successfully');
   };
   
-  document.head.appendChild(widgetScript);
+  script.onerror = function() {
+    console.error('[ChatPad Widget] Failed to load widget bundle from ' + config.appUrl);
+  };
   
-  console.log('[ChatPad Widget] Widget script injected');
+  document.head.appendChild(script);
 })();
 `;
 
-    return new Response(loaderScript, {
-      status: 200,
-      headers: corsHeaders,
-    });
-  } catch (error) {
-    console.error('Error serving widget:', error);
     return new Response(
-      `console.error('[ChatPad Widget] Server error: ${error.message}');`,
-      {
-        status: 500,
+      loaderScript,
+      { 
         headers: corsHeaders,
+        status: 200,
       }
-    );
+    )
+  } catch (error) {
+    console.error('[Serve Widget] Error:', error);
+    return new Response(
+      JSON.stringify({ error: 'Failed to serve widget loader' }),
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500,
+      }
+    )
   }
-});
+})
