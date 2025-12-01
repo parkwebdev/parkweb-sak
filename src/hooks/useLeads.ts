@@ -75,11 +75,7 @@ export const useLeads = () => {
 
       if (error) throw error;
 
-      toast({
-        title: 'Lead updated',
-        description: 'Lead has been updated successfully',
-      });
-
+      // Success - no toast needed (SavedIndicator shows feedback for status changes)
       fetchLeads();
     } catch (error: any) {
       toast({

@@ -1,3 +1,4 @@
+import { useState, useRef } from 'react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -6,6 +7,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import { ChevronDown } from '@untitledui/icons';
+import { SavedIndicator } from '@/components/settings/SavedIndicator';
 
 interface LeadStatusDropdownProps {
   status: string;
@@ -22,29 +24,49 @@ const statusOptions = [
 
 export const LeadStatusDropdown = ({ status, onStatusChange }: LeadStatusDropdownProps) => {
   const currentStatus = statusOptions.find((s) => s.value === status) || statusOptions[0];
+  const [showSaved, setShowSaved] = useState(false);
+  const saveTimerRef = useRef<NodeJS.Timeout>();
+
+  const handleStatusChange = (newStatus: string) => {
+    onStatusChange(newStatus);
+    
+    // Clear existing timer
+    if (saveTimerRef.current) {
+      clearTimeout(saveTimerRef.current);
+    }
+    
+    // Show saved indicator after a brief delay
+    saveTimerRef.current = setTimeout(() => {
+      setShowSaved(true);
+      setTimeout(() => setShowSaved(false), 2000);
+    }, 500);
+  };
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <button className="flex items-center gap-1">
-          <Badge variant="outline" className={currentStatus.color}>
-            {currentStatus.label}
-          </Badge>
-          <ChevronDown className="h-3 w-3 text-muted-foreground" />
-        </button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="start">
-        {statusOptions.map((option) => (
-          <DropdownMenuItem
-            key={option.value}
-            onClick={() => onStatusChange(option.value)}
-          >
-            <Badge variant="outline" className={option.color}>
-              {option.label}
+    <div className="flex items-center gap-2">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button className="flex items-center gap-1">
+            <Badge variant="outline" className={currentStatus.color}>
+              {currentStatus.label}
             </Badge>
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+            <ChevronDown className="h-3 w-3 text-muted-foreground" />
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" className="bg-background z-50">
+          {statusOptions.map((option) => (
+            <DropdownMenuItem
+              key={option.value}
+              onClick={() => handleStatusChange(option.value)}
+            >
+              <Badge variant="outline" className={option.color}>
+                {option.label}
+              </Badge>
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <SavedIndicator show={showSaved} />
+    </div>
   );
 };
