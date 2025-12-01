@@ -10,7 +10,7 @@ export default defineConfig({
       entry: path.resolve(__dirname, 'src/widget/index.tsx'),
       name: 'ChatPadWidget',
       formats: ['iife'],
-      fileName: () => 'chatpad-widget.min.js',
+      fileName: () => 'chatpad-widget.js',
     },
     rollupOptions: {
       output: {
