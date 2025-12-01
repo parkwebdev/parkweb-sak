@@ -2,6 +2,7 @@ import * as React from "react"
 import * as SwitchPrimitives from "@radix-ui/react-switch"
 import { motion, useSpring, useTransform } from "motion/react"
 import { cn } from "@/lib/utils"
+import { useControlledState } from "@/hooks/use-controlled-state"
 
 interface SwitchProps extends React.ComponentPropsWithoutRef<typeof SwitchPrimitives.Root> {
   startIcon?: React.ReactNode
@@ -14,7 +15,11 @@ const Switch = React.forwardRef<
   React.ElementRef<typeof SwitchPrimitives.Root>,
   SwitchProps
 >(({ className, startIcon, endIcon, thumbIcon, pressedWidth = 1.3, ...props }, ref) => {
-  const [checked, setChecked] = React.useState(props.defaultChecked || false)
+  const [checked, setChecked] = useControlledState({
+    value: props.checked,
+    defaultValue: props.defaultChecked ?? false,
+    onChange: props.onCheckedChange,
+  })
   const [isPressed, setIsPressed] = React.useState(false)
 
   const spring = useSpring(checked ? 1 : 0, {
@@ -39,7 +44,6 @@ const Switch = React.forwardRef<
 
   const handleCheckedChange = (value: boolean) => {
     setChecked(value)
-    props.onCheckedChange?.(value)
   }
 
   return (
