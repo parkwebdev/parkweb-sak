@@ -43,7 +43,7 @@
       z-index: 999998;
       background: transparent;
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      border-radius: 16px;
+      border-radius: 24px;
       overflow: hidden;
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
     }
