@@ -34,8 +34,8 @@ export const AgentConfigHeader = ({
       {/* Hero Section with Dotted Grid */}
       <div className="relative overflow-hidden">
         <div className="relative h-40 bg-neutral-950" style={{
-          backgroundImage: 'radial-gradient(circle, rgba(255, 255, 255, 0.15) 1px, transparent 1px)',
-          backgroundSize: '24px 24px'
+          backgroundImage: 'radial-gradient(circle, rgba(255, 255, 255, 0.1) 0.5px, transparent 0.5px)',
+          backgroundSize: '12px 12px'
         }}>
           <div className="relative z-10 px-4 lg:px-8 py-4 h-full flex flex-col">
             {/* Top Row: Back button + Save controls */}
