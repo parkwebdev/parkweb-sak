@@ -105,7 +105,7 @@ export const EmbedPreviewPanel = ({ config }: EmbedPreviewPanelProps) => {
   };
 
   return (
-    <div className="sticky top-11 h-[calc(100vh-44px)] p-4 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+    <div className="sticky top-0 h-screen p-4 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
       <div className="h-full flex items-center justify-center">
         <ChatWidget 
           key={`${config.agentId}-${config.position}`}
