@@ -40,8 +40,8 @@ export const AgentConfigHeader = ({
             glowColor="rgba(0, 170, 255, 0.85)"
             color="rgba(255, 255, 255, 0.5)"
             darkColor="rgba(255, 255, 255, 0.7)"
-            gap={14}
-            radius={1.5}
+            gap={24}
+            radius={1}
             opacity={0.8}
           />
           <div className="relative z-10 px-4 lg:px-8 py-4 h-full flex flex-col">
