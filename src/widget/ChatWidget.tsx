@@ -17,6 +17,7 @@ import { HomeNavIcon, ChatNavIcon, HelpNavIcon } from './NavIcons';
 import { ChatBubbleIcon } from '@/components/agents/ChatBubbleIcon';
 import ChatPadLogo from '@/components/ChatPadLogo';
 import { BubbleBackground } from '@/components/ui/bubble-background';
+import { generateGradientPalette } from '@/lib/color-utils';
 
 import { VoiceInput } from '@/components/molecule-ui/voice-input';
 import { FileDropZone } from '@/components/chat/FileDropZone';
@@ -278,10 +279,6 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
     'ring': '',
   };
 
-  const hexToRgb = (hex: string): string => {
-    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result ? `${parseInt(result[1], 16)},${parseInt(result[2], 16)},${parseInt(result[3], 16)}` : '0,0,0';
-  };
 
   // Calculate logo opacity based on scroll (graceful fade over 120px with easing)
   const logoOpacity = Math.max(0, 1 - Math.pow(headerScrollY / 120, 1.5));
@@ -524,14 +521,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                 <div className="absolute inset-0">
                   <BubbleBackground 
                     interactive
-                    colors={{
-                      first: hexToRgb(config.gradientStartColor),
-                      second: hexToRgb(config.gradientEndColor),
-                      third: hexToRgb(config.gradientStartColor),
-                      fourth: hexToRgb(config.gradientEndColor),
-                      fifth: hexToRgb(config.gradientStartColor),
-                      sixth: hexToRgb(config.gradientEndColor),
-                    }}
+                    colors={generateGradientPalette(config.gradientStartColor, config.gradientEndColor)}
                     className="absolute inset-0"
                   />
                   
