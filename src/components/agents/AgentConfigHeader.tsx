@@ -2,8 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ChevronLeft, CheckCircle } from '@untitledui/icons';
-import { BubbleBackground } from '@/components/ui/bubble-background';
-import { hexToRgb } from '@/lib/color-utils';
+import { BackgroundBeams } from '@/components/ui/background-beams';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Agent = Tables<'agents'>;
@@ -31,32 +30,12 @@ export const AgentConfigHeader = ({
 }: AgentConfigHeaderProps) => {
   const navigate = useNavigate();
 
-  // Extract gradient colors from deployment config
-  const deploymentConfig = agent.deployment_config as any;
-  const embeddedChat = deploymentConfig?.embedded_chat || {};
-  const gradientStartColor = embeddedChat.gradientStartColor || '#000000';
-  const gradientEndColor = embeddedChat.gradientEndColor || '#1e40af';
-
-  // Convert hex to RGB for BubbleBackground
-  const startRgb = hexToRgb(gradientStartColor, '0,0,0');
-  const endRgb = hexToRgb(gradientEndColor, '30,64,175');
-
   return (
     <div className="border-b">
-      {/* Hero Section with Animated Gradient */}
+      {/* Hero Section with Background Beams */}
       <div className="relative overflow-hidden">
-        <BubbleBackground
-          colors={{
-            first: startRgb,
-            second: endRgb,
-            third: startRgb,
-            fourth: endRgb,
-            fifth: startRgb,
-            sixth: endRgb,
-          }}
-          interactive={false}
-          className="h-40"
-        >
+        <div className="relative h-40 bg-neutral-950">
+          <BackgroundBeams className="absolute inset-0" />
           <div className="relative z-10 px-4 lg:px-8 py-4 h-full flex flex-col">
             {/* Top Row: Back button + Save controls */}
             <div className="flex items-center justify-between mb-auto">
@@ -110,7 +89,7 @@ export const AgentConfigHeader = ({
               )}
             </div>
           </div>
-        </BubbleBackground>
+        </div>
       </div>
     </div>
   );
