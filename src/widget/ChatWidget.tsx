@@ -502,7 +502,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
 
   // Shared widget content
   const widgetContent = (
-    <div id="chatpad-widget-root" className="h-full">
+    <div id="chatpad-widget-root" className="h-full bg-transparent">
       {/* Teaser Message */}
       {showTeaser && !isOpen && config.showTeaser && !isIframeMode && (
         <div className="absolute mb-20 mr-2 max-w-xs">
@@ -513,7 +513,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
       )}
 
       {isOpen || isIframeMode ? (
-          <Card className={isIframeMode ? "w-full h-full flex flex-col shadow-none overflow-hidden border-0 rounded-3xl" : "w-[380px] h-[650px] flex flex-col shadow-xl overflow-hidden border-0 rounded-3xl"}>
+          <Card className={isIframeMode ? "w-full h-full flex flex-col shadow-none overflow-hidden border-0 rounded-3xl bg-background" : "w-[380px] h-[650px] flex flex-col shadow-xl overflow-hidden border-0 rounded-3xl bg-background"}>
             {/* Header */}
             {currentView === 'home' ? (
               <div className="flex-1 relative overflow-hidden">
