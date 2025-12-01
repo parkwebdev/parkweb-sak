@@ -203,6 +203,27 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
     }
   }, [isOpen, previewMode]);
 
+  // Listen for messages from parent window (iframe mode)
+  useEffect(() => {
+    if (previewMode) return;
+
+    const handleParentMessage = (event: MessageEvent) => {
+      if (!event.data || typeof event.data !== 'object') return;
+
+      switch (event.data.type) {
+        case 'chatpad-widget-opened':
+          setIsOpen(true);
+          break;
+        case 'chatpad-widget-closed':
+          setIsOpen(false);
+          break;
+      }
+    };
+
+    window.addEventListener('message', handleParentMessage);
+    return () => window.removeEventListener('message', handleParentMessage);
+  }, [previewMode]);
+
   if (loading || !config) return null;
 
   const positionClasses = {
@@ -404,7 +425,15 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
   const position = (config.position || 'bottom-right') as keyof typeof positionClasses;
   
   // Detect iframe mode (embedded widget)
-  const isIframeMode = !previewMode;
+  const isIframeMode = !previewMode && window.parent !== window;
+
+  // Close button handler for iframe mode
+  const handleClose = () => {
+    setIsOpen(false);
+    if (isIframeMode) {
+      window.parent.postMessage({ type: 'chatpad-widget-close' }, '*');
+    }
+  };
 
   // Shared widget content
   const widgetContent = (
@@ -418,8 +447,8 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
         </div>
       )}
 
-      {isOpen ? (
-          <Card className={isIframeMode ? "w-full h-full flex flex-col shadow-xl overflow-hidden border-0" : "w-[380px] max-h-[650px] flex flex-col shadow-xl overflow-hidden border-0"}>
+      {isOpen || isIframeMode ? (
+          <Card className={isIframeMode ? "w-full h-full flex flex-col shadow-none overflow-hidden border-0" : "w-[380px] max-h-[650px] flex flex-col shadow-xl overflow-hidden border-0"}>
             {/* Header */}
             {currentView === 'home' ? (
               <div className="relative h-[180px] overflow-hidden">
@@ -475,7 +504,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
-                  <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 h-8 w-8" onClick={() => setIsOpen(false)}>
+                  <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 h-8 w-8" onClick={handleClose}>
                     <Minimize02 className="h-4 w-4" />
                   </Button>
                 </div>
@@ -491,7 +520,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                     <p className="text-xs text-white/80">Online</p>
                   </div>
                 </div>
-                <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 h-8 w-8" onClick={() => setIsOpen(false)}>
+                <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 h-8 w-8" onClick={handleClose}>
                   <X className="h-4 w-4" />
                 </Button>
               </div>

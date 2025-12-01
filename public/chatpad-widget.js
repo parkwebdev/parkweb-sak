@@ -1,179 +1,166 @@
 /**
- * ChatPad Widget Bundle
- * This is a pre-built development version. Production builds will be auto-generated.
+ * ChatPad Widget - Iframe-Based Loader
+ * This script creates a chat button and loads the full widget in an iframe
  */
 (function() {
   'use strict';
   
-  // Widget styles
   const WIDGET_STYLES = `
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-    
-    :host {
-      --primary: 222.2 47.4% 11.2%;
-      --primary-foreground: 210 40% 98%;
-      --secondary: 210 40% 96.1%;
-      --secondary-foreground: 222.2 47.4% 11.2%;
-      --muted: 210 40% 96.1%;
-      --muted-foreground: 215.4 16.3% 46.9%;
-      --accent: 210 40% 96.1%;
-      --accent-foreground: 222.2 47.4% 11.2%;
-      --destructive: 0 84.2% 60.2%;
-      --destructive-foreground: 210 40% 98%;
-      --border: 214.3 31.8% 91.4%;
-      --input: 214.3 31.8% 91.4%;
-      --ring: 222.2 84% 4.9%;
-      --radius: 0.5rem;
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    }
-    
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    
-    .widget-container {
+    .chatpad-widget-container {
       position: fixed;
-      bottom: 20px;
-      right: 20px;
       z-index: 999999;
-      font-family: 'Inter', sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     }
     
-    .widget-button {
+    .chatpad-widget-button {
       width: 60px;
       height: 60px;
       border-radius: 50%;
-      background: hsl(var(--primary));
-      color: hsl(var(--primary-foreground));
       border: none;
       cursor: pointer;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: transform 0.2s, box-shadow 0.2s;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      background: var(--chatpad-primary-color);
+      color: white;
     }
     
-    .widget-button:hover {
-      transform: scale(1.05);
-      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+    .chatpad-widget-button:hover {
+      transform: scale(1.1);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
     }
     
-    .widget-window {
+    .chatpad-widget-button svg {
+      width: 28px;
+      height: 28px;
+    }
+    
+    .chatpad-widget-iframe-container {
       position: fixed;
-      bottom: 100px;
-      right: 20px;
-      width: 400px;
-      height: 600px;
-      max-height: calc(100vh - 120px);
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      animation: slideIn 0.3s ease-out;
-    }
-    
-    @keyframes slideIn {
-      from {
-        opacity: 0;
-        transform: translateY(20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-    
-    .widget-header {
-      padding: 16px;
-      background: hsl(var(--primary));
-      color: hsl(var(--primary-foreground));
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    
-    .widget-title {
-      font-size: 16px;
-      font-weight: 600;
-    }
-    
-    .widget-close {
+      z-index: 999998;
       background: transparent;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    }
+    
+    .chatpad-widget-iframe-container.hidden {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(20px) scale(0.95);
+    }
+    
+    .chatpad-widget-iframe-container.visible {
+      opacity: 1;
+      pointer-events: all;
+      transform: translateY(0) scale(1);
+    }
+    
+    .chatpad-widget-iframe {
+      width: 100%;
+      height: 100%;
       border: none;
-      color: inherit;
-      cursor: pointer;
-      padding: 4px;
+      background: white;
+    }
+    
+    /* Position variants */
+    .chatpad-position-bottom-right .chatpad-widget-button {
+      bottom: 24px;
+      right: 24px;
+    }
+    
+    .chatpad-position-bottom-right .chatpad-widget-iframe-container {
+      bottom: 100px;
+      right: 24px;
+      width: 400px;
+      height: 650px;
+      max-height: calc(100vh - 120px);
+    }
+    
+    .chatpad-position-bottom-left .chatpad-widget-button {
+      bottom: 24px;
+      left: 24px;
+    }
+    
+    .chatpad-position-bottom-left .chatpad-widget-iframe-container {
+      bottom: 100px;
+      left: 24px;
+      width: 400px;
+      height: 650px;
+      max-height: calc(100vh - 120px);
+    }
+    
+    .chatpad-position-top-right .chatpad-widget-button {
+      top: 24px;
+      right: 24px;
+    }
+    
+    .chatpad-position-top-right .chatpad-widget-iframe-container {
+      top: 100px;
+      right: 24px;
+      width: 400px;
+      height: 650px;
+      max-height: calc(100vh - 120px);
+    }
+    
+    .chatpad-position-top-left .chatpad-widget-button {
+      top: 24px;
+      left: 24px;
+    }
+    
+    .chatpad-position-top-left .chatpad-widget-iframe-container {
+      top: 100px;
+      left: 24px;
+      width: 400px;
+      height: 650px;
+      max-height: calc(100vh - 120px);
+    }
+    
+    /* Mobile responsive */
+    @media (max-width: 480px) {
+      .chatpad-widget-iframe-container {
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        max-height: 100vh !important;
+        border-radius: 0 !important;
+      }
+      
+      .chatpad-widget-button {
+        bottom: 20px !important;
+        right: 20px !important;
+        top: auto !important;
+        left: auto !important;
+      }
+    }
+    
+    /* Badge animation */
+    .chatpad-badge {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background: #ef4444;
+      color: white;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      font-size: 11px;
+      font-weight: 600;
       display: flex;
       align-items: center;
       justify-content: center;
+      animation: chatpad-pulse 2s infinite;
     }
     
-    .widget-content {
-      flex: 1;
-      overflow-y: auto;
-      padding: 16px;
-      background: hsl(var(--secondary));
-    }
-    
-    .widget-input-area {
-      padding: 16px;
-      border-top: 1px solid hsl(var(--border));
-      background: white;
-    }
-    
-    .widget-input {
-      width: 100%;
-      padding: 12px;
-      border: 1px solid hsl(var(--border));
-      border-radius: 8px;
-      font-size: 14px;
-      font-family: inherit;
-    }
-    
-    .widget-input:focus {
-      outline: none;
-      border-color: hsl(var(--ring));
-    }
-    
-    .message {
-      margin-bottom: 12px;
-      display: flex;
-      flex-direction: column;
-    }
-    
-    .message-user {
-      align-items: flex-end;
-    }
-    
-    .message-assistant {
-      align-items: flex-start;
-    }
-    
-    .message-bubble {
-      padding: 10px 14px;
-      border-radius: 12px;
-      max-width: 80%;
-      word-wrap: break-word;
-    }
-    
-    .message-user .message-bubble {
-      background: hsl(var(--primary));
-      color: hsl(var(--primary-foreground));
-    }
-    
-    .message-assistant .message-bubble {
-      background: white;
-      color: hsl(var(--primary));
-    }
-    
-    @media (max-width: 480px) {
-      .widget-window {
-        width: calc(100vw - 40px);
-        height: calc(100vh - 120px);
-        right: 20px;
-        left: 20px;
-      }
+    @keyframes chatpad-pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
     }
   `;
   
@@ -182,112 +169,144 @@
       this.config = {
         agentId: config.agentId,
         position: config.position || 'bottom-right',
-        primaryColor: config.primaryColor || '#000000',
+        primaryColor: config.primaryColor || '#3b82f6',
+        appUrl: config.appUrl || 'https://mvaimvwdukpgvkifkfpa.supabase.co',
       };
+      this.isOpen = false;
       this.container = null;
-      this.shadowRoot = null;
+      this.button = null;
+      this.iframeContainer = null;
+      this.iframe = null;
     }
     
     init() {
+      // Inject styles
+      this.injectStyles();
+      
       // Create container
       this.container = document.createElement('div');
-      this.container.id = 'chatpad-widget-root';
+      this.container.className = `chatpad-widget-container chatpad-position-${this.config.position}`;
+      this.container.style.setProperty('--chatpad-primary-color', this.config.primaryColor);
       document.body.appendChild(this.container);
       
-      // Create shadow DOM for style isolation
-      this.shadowRoot = this.container.attachShadow({ mode: 'open' });
+      // Create button
+      this.createButton();
       
-      // Inject styles
-      const styleEl = document.createElement('style');
-      styleEl.textContent = WIDGET_STYLES;
-      this.shadowRoot.appendChild(styleEl);
+      // Create iframe container
+      this.createIframeContainer();
       
-      // Create widget mount point
-      const mountPoint = document.createElement('div');
-      this.shadowRoot.appendChild(mountPoint);
-      
-      // Render widget
-      this.render(mountPoint);
+      // Listen for messages from iframe
+      window.addEventListener('message', this.handleMessage.bind(this));
     }
     
-    render(mountPoint) {
-      // Simple widget implementation
-      const widgetHTML = `
-        <div class="widget-container">
-          <button class="widget-button" id="widget-toggle">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-            </svg>
-          </button>
-          <div class="widget-window" id="widget-window" style="display: none;">
-            <div class="widget-header">
-              <div class="widget-title">Chat Support</div>
-              <button class="widget-close" id="widget-close">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                  <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-              </button>
-            </div>
-            <div class="widget-content" id="widget-messages">
-              <div class="message message-assistant">
-                <div class="message-bubble">Hello! How can I help you today?</div>
-              </div>
-            </div>
-            <div class="widget-input-area">
-              <input type="text" class="widget-input" id="widget-input" placeholder="Type your message..." />
-            </div>
-          </div>
-        </div>
+    injectStyles() {
+      const styleEl = document.createElement('style');
+      styleEl.textContent = WIDGET_STYLES;
+      document.head.appendChild(styleEl);
+    }
+    
+    createButton() {
+      this.button = document.createElement('button');
+      this.button.className = 'chatpad-widget-button';
+      this.button.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+        </svg>
       `;
+      this.button.addEventListener('click', () => this.toggle());
+      this.container.appendChild(this.button);
+    }
+    
+    createIframeContainer() {
+      this.iframeContainer = document.createElement('div');
+      this.iframeContainer.className = 'chatpad-widget-iframe-container hidden';
       
-      mountPoint.innerHTML = widgetHTML;
-      
-      // Add event listeners
-      const toggleBtn = mountPoint.querySelector('#widget-toggle');
-      const closeBtn = mountPoint.querySelector('#widget-close');
-      const widgetWindow = mountPoint.querySelector('#widget-window');
-      const input = mountPoint.querySelector('#widget-input');
-      const messagesContainer = mountPoint.querySelector('#widget-messages');
-      
-      toggleBtn.addEventListener('click', () => {
-        widgetWindow.style.display = widgetWindow.style.display === 'none' ? 'flex' : 'none';
+      // Build iframe URL with config params
+      const params = new URLSearchParams({
+        agentId: this.config.agentId,
+        position: this.config.position,
+        primaryColor: this.config.primaryColor,
       });
       
-      closeBtn.addEventListener('click', () => {
-        widgetWindow.style.display = 'none';
-      });
+      this.iframe = document.createElement('iframe');
+      this.iframe.className = 'chatpad-widget-iframe';
+      this.iframe.src = `${this.config.appUrl}/widget?${params.toString()}`;
+      this.iframe.allow = 'microphone; camera';
+      this.iframe.title = 'Chat Widget';
       
-      input.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter' && input.value.trim()) {
-          const message = input.value.trim();
+      this.iframeContainer.appendChild(this.iframe);
+      this.container.appendChild(this.iframeContainer);
+    }
+    
+    toggle() {
+      this.isOpen = !this.isOpen;
+      
+      if (this.isOpen) {
+        this.open();
+      } else {
+        this.close();
+      }
+    }
+    
+    open() {
+      this.isOpen = true;
+      this.iframeContainer.classList.remove('hidden');
+      this.iframeContainer.classList.add('visible');
+      this.button.style.display = 'none';
+      
+      // Notify iframe
+      this.iframe.contentWindow?.postMessage({
+        type: 'chatpad-widget-opened',
+      }, '*');
+    }
+    
+    close() {
+      this.isOpen = false;
+      this.iframeContainer.classList.remove('visible');
+      this.iframeContainer.classList.add('hidden');
+      this.button.style.display = 'flex';
+      
+      // Notify iframe
+      this.iframe.contentWindow?.postMessage({
+        type: 'chatpad-widget-closed',
+      }, '*');
+    }
+    
+    handleMessage(event) {
+      // Verify message is from our iframe
+      if (!event.data || typeof event.data !== 'object') return;
+      
+      switch (event.data.type) {
+        case 'chatpad-widget-close':
+          this.close();
+          break;
+        
+        case 'chatpad-widget-open':
+          this.open();
+          break;
           
-          // Add user message
-          const userMsg = document.createElement('div');
-          userMsg.className = 'message message-user';
-          userMsg.innerHTML = `<div class="message-bubble">${message}</div>`;
-          messagesContainer.appendChild(userMsg);
+        case 'chatpad-widget-state':
+          if (event.data.isOpen !== undefined) {
+            if (event.data.isOpen && !this.isOpen) {
+              this.open();
+            } else if (!event.data.isOpen && this.isOpen) {
+              this.close();
+            }
+          }
+          break;
           
-          input.value = '';
-          messagesContainer.scrollTop = messagesContainer.scrollHeight;
-          
-          // Simulate response
-          setTimeout(() => {
-            const botMsg = document.createElement('div');
-            botMsg.className = 'message message-assistant';
-            botMsg.innerHTML = `<div class="message-bubble">Thanks for your message! This is a demo response.</div>`;
-            messagesContainer.appendChild(botMsg);
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-          }, 1000);
-        }
-      });
+        case 'chatpad-widget-resize':
+          if (event.data.height) {
+            this.iframeContainer.style.height = `${Math.min(event.data.height, window.innerHeight - 120)}px`;
+          }
+          break;
+      }
     }
     
     destroy() {
+      window.removeEventListener('message', this.handleMessage.bind(this));
       if (this.container) {
         this.container.remove();
-        this.container = null;
-        this.shadowRoot = null;
       }
     }
   }
@@ -298,7 +317,8 @@
     const config = {
       agentId: currentScript.getAttribute('data-agent-id'),
       position: currentScript.getAttribute('data-position') || 'bottom-right',
-      primaryColor: currentScript.getAttribute('data-primary-color') || '#000000',
+      primaryColor: currentScript.getAttribute('data-primary-color') || '#3b82f6',
+      appUrl: currentScript.getAttribute('data-app-url') || 'https://mvaimvwdukpgvkifkfpa.supabase.co',
     };
     
     const widget = new ChatPadWidget(config);
