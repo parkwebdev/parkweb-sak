@@ -38,6 +38,18 @@
       height: 28px;
     }
     
+    .chatpad-widget-button .chatpad-icon-close {
+      display: none;
+    }
+    
+    .chatpad-widget-button.chatpad-widget-button-open .chatpad-icon-open {
+      display: none;
+    }
+    
+    .chatpad-widget-button.chatpad-widget-button-open .chatpad-icon-close {
+      display: block;
+    }
+    
     .chatpad-widget-iframe-container {
       position: fixed;
       z-index: 999998;
@@ -210,11 +222,14 @@
       this.button = document.createElement('button');
       this.button.className = 'chatpad-widget-button';
       this.button.innerHTML = `
-        <svg viewBox="0 0 270.69 270.02" fill="currentColor">
+        <svg class="chatpad-icon-open" viewBox="0 0 270.69 270.02" fill="currentColor">
           <g>
             <path d="M135.35,0C60.59,0,0,60.44,0,135.02s60.59,135,135.35,135,135.35-60.44,135.35-135S210.1,0,135.35,0ZM135.35,241.44c-58.96,0-106.7-47.62-106.7-106.43S76.38,28.57,135.35,28.57s106.7,47.63,106.7,106.44-47.74,106.43-106.7,106.43Z" />
             <path d="M86.78,166.62c9.45,48.43,79.49,46.38,94.14,9.97,3.46-8.6,8.57-27.67-15.49-17.93-22.19,9.02-53.36,37.06-78.66,7.96h.01Z" />
           </g>
+        </svg>
+        <svg class="chatpad-icon-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 6L6 18M6 6l12 12"/>
         </svg>
       `;
       this.button.addEventListener('click', () => this.toggle());
@@ -256,7 +271,7 @@
       this.isOpen = true;
       this.iframeContainer.classList.remove('hidden');
       this.iframeContainer.classList.add('visible');
-      this.button.style.display = 'none';
+      this.button.classList.add('chatpad-widget-button-open');
       
       // Notify iframe
       this.iframe.contentWindow?.postMessage({
@@ -268,7 +283,7 @@
       this.isOpen = false;
       this.iframeContainer.classList.remove('visible');
       this.iframeContainer.classList.add('hidden');
-      this.button.style.display = 'flex';
+      this.button.classList.remove('chatpad-widget-button-open');
       
       // Notify iframe
       this.iframe.contentWindow?.postMessage({
