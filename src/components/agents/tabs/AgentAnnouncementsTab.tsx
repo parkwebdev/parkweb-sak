@@ -16,6 +16,7 @@ import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSo
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog';
+import { SavedIndicator } from '@/components/settings/SavedIndicator';
 
 interface AnnouncementFormData {
   title: string;
@@ -344,6 +345,7 @@ export const AgentAnnouncementsTab = () => {
   const [editingAnnouncement, setEditingAnnouncement] = useState<Announcement | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [showSaved, setShowSaved] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -352,13 +354,15 @@ export const AgentAnnouncementsTab = () => {
     })
   );
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
     if (over && active.id !== over.id) {
       const oldIndex = announcements.findIndex((a) => a.id === active.id);
       const newIndex = announcements.findIndex((a) => a.id === over.id);
       const reordered = arrayMove(announcements, oldIndex, newIndex);
-      reorderAnnouncements(reordered);
+      await reorderAnnouncements(reordered);
+      setShowSaved(true);
+      setTimeout(() => setShowSaved(false), 2000);
     }
   };
 
@@ -386,11 +390,14 @@ export const AgentAnnouncementsTab = () => {
   return (
     <div className="max-w-5xl space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-lg font-semibold">Announcements</h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            Create and manage announcements displayed in your chat widget
-          </p>
+        <div className="flex items-center gap-3">
+          <div>
+            <h2 className="text-lg font-semibold">Announcements</h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              Create and manage announcements displayed in your chat widget
+            </p>
+          </div>
+          <SavedIndicator show={showSaved} message="Order saved" />
         </div>
         <Button onClick={() => setIsCreateDialogOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />

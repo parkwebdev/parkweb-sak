@@ -3,7 +3,7 @@ import { Upload01, XClose } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import { validateFiles } from '@/lib/file-validation';
 import { FileAttachment } from './FileAttachment';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/lib/toast';
 
 interface FileDropZoneProps {
   onFilesSelected: (files: File[], fileUrls: string[]) => void;
@@ -20,7 +20,6 @@ export const FileDropZone: React.FC<FileDropZoneProps> = ({
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [fileUrls, setFileUrls] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { toast } = useToast();
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();

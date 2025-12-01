@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/lib/toast';
 import { useAuth } from '@/hooks/useAuth';
 import type { Tables, TablesInsert } from '@/integrations/supabase/types';
 
@@ -10,7 +10,6 @@ type ScheduledReportInsert = TablesInsert<'scheduled_reports'>;
 export const useScheduledReports = () => {
   const [reports, setReports] = useState<ScheduledReport[]>([]);
   const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
   const { user } = useAuth();
 
   const fetchReports = async () => {
@@ -133,10 +132,7 @@ export const useScheduledReports = () => {
 
       if (error) throw error;
 
-      toast({
-        title: active ? 'Report activated' : 'Report paused',
-        description: `Your scheduled report has been ${active ? 'activated' : 'paused'}.`,
-      });
+      // Success - no toast needed (SavedIndicator shows feedback per row)
 
       await fetchReports();
     } catch (error: any) {

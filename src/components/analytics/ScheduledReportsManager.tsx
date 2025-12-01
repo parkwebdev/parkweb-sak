@@ -6,6 +6,7 @@ import { Switch } from '@/components/ui/switch';
 import { Edit02, Trash01, Clock } from '@untitledui/icons';
 import { useScheduledReports } from '@/hooks/useScheduledReports';
 import { CreateScheduledReportDialog } from './CreateScheduledReportDialog';
+import { SavedIndicator } from '@/components/settings/SavedIndicator';
 import { format } from 'date-fns';
 import {
   Table,
@@ -30,6 +31,7 @@ export const ScheduledReportsManager = () => {
   const { reports, loading, toggleReportStatus, deleteReport } = useScheduledReports();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [savedReportIds, setSavedReportIds] = useState<Set<string>>(new Set());
 
   const getFrequencyDisplay = (report: any) => {
     const time = report.time_of_day?.substring(0, 5) || '09:00';
@@ -45,6 +47,18 @@ export const ScheduledReportsManager = () => {
       default:
         return report.frequency;
     }
+  };
+
+  const handleToggle = async (id: string, checked: boolean) => {
+    await toggleReportStatus(id, checked);
+    setSavedReportIds(prev => new Set(prev).add(id));
+    setTimeout(() => {
+      setSavedReportIds(prev => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+    }, 2000);
   };
 
   const handleDelete = async () => {
@@ -117,10 +131,13 @@ export const ScheduledReportsManager = () => {
                       )}
                     </TableCell>
                     <TableCell>
-                    <Switch
-                      checked={report.active}
-                      onCheckedChange={(checked) => toggleReportStatus(report.id, checked)}
-                    />
+                      <div className="flex items-center gap-2">
+                        <Switch
+                          checked={report.active}
+                          onCheckedChange={(checked) => handleToggle(report.id, checked)}
+                        />
+                        <SavedIndicator show={savedReportIds.has(report.id)} />
+                      </div>
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
