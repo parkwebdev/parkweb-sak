@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/lib/toast';
 import { useAuth } from '@/hooks/useAuth';
 import type { Tables } from '@/integrations/supabase/types';
 
@@ -23,7 +23,6 @@ export const useWebhooks = () => {
   const [webhooks, setWebhooks] = useState<Webhook[]>([]);
   const [logs, setLogs] = useState<WebhookLog[]>([]);
   const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
   const { user } = useAuth();
 
   const fetchWebhooks = async () => {
@@ -115,11 +114,7 @@ export const useWebhooks = () => {
 
       if (error) throw error;
 
-      toast({
-        title: 'Webhook updated',
-        description: 'Webhook has been updated successfully',
-      });
-
+      // Success - no toast needed (SavedIndicator shows feedback)
       fetchWebhooks();
     } catch (error: any) {
       toast({

@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
 import { useWebhooks } from '@/hooks/useWebhooks';
 import { Plus, Settings02, Trash01, PlayCircle, CheckCircle, XCircle } from '@untitledui/icons';
 import { CreateWebhookDialog } from './CreateWebhookDialog';
 import { WebhookLogsDialog } from './WebhookLogsDialog';
+import { SavedIndicator } from './SavedIndicator';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,6 +26,7 @@ export const WebhookSettings = () => {
   const [selectedWebhook, setSelectedWebhook] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [webhookToDelete, setWebhookToDelete] = useState<string | null>(null);
+  const [savedWebhookIds, setSavedWebhookIds] = useState<Set<string>>(new Set());
 
   const handleDelete = async () => {
     if (webhookToDelete) {
@@ -35,6 +38,16 @@ export const WebhookSettings = () => {
 
   const handleToggleActive = async (id: string, currentActive: boolean) => {
     await updateWebhook(id, { active: !currentActive });
+    
+    // Show saved indicator
+    setSavedWebhookIds(prev => new Set(prev).add(id));
+    setTimeout(() => {
+      setSavedWebhookIds(prev => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+    }, 2000);
   };
 
   const handleTest = async (id: string) => {
@@ -98,71 +111,76 @@ export const WebhookSettings = () => {
                           {webhook.auth_type === 'basic_auth' && 'Basic Auth'}
                         </Badge>
                       )}
-                      <Badge variant={webhook.active ? 'default' : 'secondary'}>
-                        {webhook.active ? 'Active' : 'Inactive'}
-                      </Badge>
-                    </div>
-                    <CardDescription className="mt-2">
-                      {webhook.url}
-                    </CardDescription>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleTest(webhook.id)}
-                    >
-                      Test
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleViewLogs(webhook.id)}
-                    >
-                      View Logs
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleToggleActive(webhook.id, webhook.active || false)}
-                    >
-                      {webhook.active ? 'Disable' : 'Enable'}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      onClick={() => {
-                        setWebhookToDelete(webhook.id);
-                        setDeleteDialogOpen(true);
-                      }}
-                    >
-                      Delete
-                    </Button>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <div>
-                    <span className="text-sm font-medium">Events:</span>
-                    <div className="flex flex-wrap gap-2 mt-1">
-                      {webhook.events?.map((event) => (
-                        <Badge key={event} variant="outline">
-                          {event}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                  {webhook.headers && Object.keys(webhook.headers as object).length > 0 && (
-                    <div>
-                      <span className="text-sm font-medium">Custom Headers:</span>
-                      <div className="text-sm text-muted-foreground mt-1">
-                        {Object.keys(webhook.headers as object).length} header(s) configured
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
+                       <Badge variant={webhook.active ? 'default' : 'secondary'}>
+                         {webhook.active ? 'Active' : 'Inactive'}
+                       </Badge>
+                     </div>
+                     <CardDescription className="mt-2">
+                       {webhook.url}
+                     </CardDescription>
+                   </div>
+                 </div>
+               </CardHeader>
+               <CardContent>
+                 <div className="space-y-4">
+                   <div className="flex items-center justify-between">
+                     <div className="flex items-center gap-3">
+                       <span className="text-sm font-medium">Status</span>
+                       <Switch
+                         checked={webhook.active || false}
+                         onCheckedChange={(checked) => handleToggleActive(webhook.id, webhook.active || false)}
+                       />
+                       <SavedIndicator show={savedWebhookIds.has(webhook.id)} />
+                     </div>
+                     <div className="flex gap-2">
+                       <Button
+                         size="sm"
+                         variant="outline"
+                         onClick={() => handleTest(webhook.id)}
+                       >
+                         Test
+                       </Button>
+                       <Button
+                         size="sm"
+                         variant="outline"
+                         onClick={() => handleViewLogs(webhook.id)}
+                       >
+                         View Logs
+                       </Button>
+                       <Button
+                         size="sm"
+                         variant="destructive"
+                         onClick={() => {
+                           setWebhookToDelete(webhook.id);
+                           setDeleteDialogOpen(true);
+                         }}
+                       >
+                         Delete
+                       </Button>
+                     </div>
+                   </div>
+                   <div className="space-y-2">
+                     <div>
+                       <span className="text-sm font-medium">Events:</span>
+                       <div className="flex flex-wrap gap-2 mt-1">
+                         {webhook.events?.map((event) => (
+                           <Badge key={event} variant="outline">
+                             {event}
+                           </Badge>
+                         ))}
+                       </div>
+                     </div>
+                     {webhook.headers && Object.keys(webhook.headers as object).length > 0 && (
+                       <div>
+                         <span className="text-sm font-medium">Custom Headers:</span>
+                         <div className="text-sm text-muted-foreground mt-1">
+                           {Object.keys(webhook.headers as object).length} header(s) configured
+                         </div>
+                       </div>
+                     )}
+                   </div>
+                 </div>
+               </CardContent>
             </Card>
           ))
         )}
