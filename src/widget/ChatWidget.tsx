@@ -102,13 +102,16 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
     return { soundEnabled: config?.defaultSoundEnabled ?? true };
   });
 
+  // Calculate unread messages (assistant messages that haven't been read)
+  const unreadCount = messages.filter(msg => msg.role === 'assistant' && msg.read === false).length;
+
   // Load config on mount if simple config
   useEffect(() => {
     if (isSimpleConfig) {
       fetchWidgetConfig((configProp as any).agentId)
         .then(cfg => {
           setConfig(cfg);
-          setMessages([{ role: 'assistant', content: cfg.greeting, read: true, timestamp: new Date(), type: 'text', reactions: [] }]);
+          setMessages([{ role: 'assistant', content: cfg.greeting, read: false, timestamp: new Date(), type: 'text', reactions: [] }]);
           setLoading(false);
         })
         .catch(err => {
@@ -117,7 +120,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
         });
     } else {
       const fullConfig = configProp as WidgetConfig;
-      setMessages([{ role: 'assistant', content: fullConfig.greeting, read: true, timestamp: new Date(), type: 'text', reactions: [] }]);
+      setMessages([{ role: 'assistant', content: fullConfig.greeting, read: false, timestamp: new Date(), type: 'text', reactions: [] }]);
     }
   }, []);
 
@@ -365,7 +368,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
 
     setIsTyping(true);
     setTimeout(() => {
-      setMessages(prev => [...prev, { role: 'assistant', content: 'Thanks for your message! This is a demo response.', read: true, timestamp: new Date(), type: 'text', reactions: [] }]);
+      setMessages(prev => [...prev, { role: 'assistant', content: 'Thanks for your message! This is a demo response.', read: isOpen && currentView === 'messages', timestamp: new Date(), type: 'text', reactions: [] }]);
       setIsTyping(false);
     }, 2000);
   };
@@ -1225,10 +1228,14 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
               {/* Chat Icon */}
               <ChatBubbleIcon className="h-6 w-6 relative z-10" />
               
-              {/* Notification Badge */}
-              {config.showBadge && (
-                <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-background z-10" />
-              )}
+            {/* Notification Badge - shows unread message count */}
+            {unreadCount > 0 && (
+              <div className="absolute -top-1 -right-1 min-w-5 h-5 bg-red-500 rounded-full border-2 border-white flex items-center justify-center z-20">
+                <span className="text-white text-xs font-semibold px-1">
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </span>
+              </div>
+            )}
             </Button>
           </div>
         )}
