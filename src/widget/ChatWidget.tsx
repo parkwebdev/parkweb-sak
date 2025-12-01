@@ -505,7 +505,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                   />
                   
                   {/* Gradient fade to white at bottom */}
-                  <div className="absolute bottom-0 left-0 right-0 h-48 bg-gradient-to-b from-transparent to-background pointer-events-none z-10" />
+                  <div className="absolute bottom-0 left-0 right-0 h-64 bg-gradient-to-b from-transparent via-background/30 to-background pointer-events-none z-10" />
                   
                   {/* Logo in top left - aligned with content text */}
                   <ChatPadLogo 
@@ -557,10 +557,10 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                   className="absolute inset-0 overflow-y-auto z-10"
                 >
                   {/* Spacer to push content down initially - shows gradient */}
-                  <div className="h-[240px]" />
+                  <div className="h-[320px]" />
                   
                   {/* Welcome text - visible over gradient */}
-                  <div className="px-6 pb-8">
+                  <div className="px-6 pb-12">
                     <h2 className="text-3xl font-bold text-white drop-shadow-sm">
                       {config.welcomeTitle} {config.welcomeEmoji}
                     </h2>
