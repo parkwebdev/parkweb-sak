@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/lib/toast';
 
 export interface CustomField {
   id: string;
@@ -182,7 +182,6 @@ export const useEmbeddedChatConfig = (agentId: string) => {
 
   const [config, setConfig] = useState<EmbeddedChatConfig>(getDefaultConfig());
   const [loading, setLoading] = useState(false);
-  const { toast } = useToast();
 
   const loadConfig = async () => {
     try {

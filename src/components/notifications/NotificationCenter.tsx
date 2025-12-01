@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/lib/toast';
 import { formatDistanceToNow } from 'date-fns';
 import { logger } from '@/utils/logger';
 
@@ -32,7 +32,6 @@ interface NotificationCenterProps {
 
 export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNotificationClick }) => {
   const { user } = useAuth();
-  const { toast } = useToast();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);

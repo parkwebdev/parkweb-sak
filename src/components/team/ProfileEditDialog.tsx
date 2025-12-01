@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/lib/toast';
 import { supabase } from '@/integrations/supabase/client';
 import { TeamMember } from '@/types/team';
 import { SimpleAvatarUpload } from './SimpleAvatarUpload';
@@ -24,7 +24,6 @@ export const ProfileEditDialog: React.FC<ProfileEditDialogProps> = ({
   const [displayName, setDisplayName] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
   const [loading, setLoading] = useState(false);
-  const { toast } = useToast();
 
   useEffect(() => {
     if (member) {

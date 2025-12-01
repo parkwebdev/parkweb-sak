@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/lib/toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Upload01 as Upload } from '@untitledui/icons';
 
@@ -21,7 +21,6 @@ export const SimpleAvatarUpload: React.FC<SimpleAvatarUploadProps> = ({
   onAvatarChange,
 }) => {
   const [uploading, setUploading] = useState(false);
-  const { toast } = useToast();
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     console.log('🖼️ Starting simple avatar upload...');
