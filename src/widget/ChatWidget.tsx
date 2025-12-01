@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { fetchWidgetConfig, createLead, submitArticleFeedback, type WidgetConfig } from './api';
+import { AnimatedList } from '@/components/ui/animated-list';
+import { AnimatedItem } from '@/components/ui/animated-item';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -582,79 +584,42 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                   <div className="bg-gradient-to-b from-transparent via-background via-30% to-background min-h-full relative z-20">
                     <div className="px-6 py-4 space-y-3">
                       {config.announcements.length > 0 && (
-                        <motion.div 
-                          className="space-y-3 mb-6"
-                          initial="hidden"
-                          animate="visible"
-                          variants={{
-                            hidden: { opacity: 0 },
-                            visible: { opacity: 1, transition: { staggerChildren: 0.08 } }
-                          }}
-                        >
+                        <AnimatedList className="space-y-3 mb-6" staggerDelay={0.1}>
                           {config.announcements.map((announcement) => (
-                            <motion.div
-                              key={announcement.id}
-              variants={{
-                hidden: { opacity: 0, y: 20 },
-                visible: { 
-                  opacity: 1, 
-                  y: 0, 
-                  transition: { 
-                    duration: 0.3,
-                    ease: [0.4, 0, 0.2, 1]
-                  }
-                }
-              }}
-                              className="rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
-                              style={{ backgroundColor: announcement.background_color }}
-                              onClick={() => {
-                                if (announcement.action_type === 'start_chat') setCurrentView('messages');
-                                else if (announcement.action_type === 'open_help') setCurrentView('help');
-                              }}
-                            >
+                            <AnimatedItem key={announcement.id}>
+                              <div
+                                className="rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
+                                style={{ backgroundColor: announcement.background_color }}
+                                onClick={() => {
+                                  if (announcement.action_type === 'start_chat') setCurrentView('messages');
+                                  else if (announcement.action_type === 'open_help') setCurrentView('help');
+                                }}
+                              >
                               {announcement.image_url && (
                                 <div className="h-32 overflow-hidden">
                                   <img src={announcement.image_url} alt="" className="w-full h-full object-cover" />
                                 </div>
                               )}
-                              <div className="p-4 flex items-center justify-between">
-                                <div className="flex-1">
-                                  <h3 className="font-semibold text-base" style={{ color: announcement.title_color }}>{announcement.title}</h3>
-                                  {announcement.subtitle && <p className="text-sm text-muted-foreground mt-1">{announcement.subtitle}</p>}
-                                </div>
-                                <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                               <div className="p-4 flex items-center justify-between">
+                                 <div className="flex-1">
+                                   <h3 className="font-semibold text-base" style={{ color: announcement.title_color }}>{announcement.title}</h3>
+                                   {announcement.subtitle && <p className="text-sm text-muted-foreground mt-1">{announcement.subtitle}</p>}
+                                 </div>
+                                 <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                               </div>
                               </div>
-                            </motion.div>
+                             </AnimatedItem>
                           ))}
-                        </motion.div>
+                        </AnimatedList>
                       )}
 
-                      <motion.div 
-                        className="space-y-3"
-                        initial="hidden"
-                        animate="visible"
-                        variants={{
-                          hidden: { opacity: 0 },
-                          visible: { opacity: 1, transition: { staggerChildren: 0.08 } }
-                        }}
-                      >
+                      <AnimatedList className="space-y-3" staggerDelay={0.1}>
                         {config.quickActions.map((action) => (
-                          <motion.div
-                            key={action.id}
-              variants={{
-                hidden: { opacity: 0, y: 20 },
-                visible: { 
-                  opacity: 1, 
-                  y: 0, 
-                  transition: { 
-                    duration: 0.3,
-                    ease: [0.4, 0, 0.2, 1]
-                  }
-                }
-              }}
-                            className="p-4 border rounded-lg bg-card hover:bg-accent/50 cursor-pointer transition-all"
-                            onClick={() => handleQuickActionClick(action.action || action.actionType)}
-                          >
+                          <AnimatedItem key={action.id}>
+                            <div
+                              className="p-4 border rounded-lg bg-card hover:bg-accent/50 cursor-pointer transition-all"
+                              onClick={() => handleQuickActionClick(action.action || action.actionType)}
+                            >
                             <div className="flex items-start gap-3">
                               <div className="p-2 rounded-lg" style={{ backgroundColor: `${config.primaryColor}15` }}>
                                 <div style={{ color: config.primaryColor }}>{getQuickActionIcon(action.icon)}</div>
@@ -668,10 +633,11 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                                   <p className="text-xs text-muted-foreground mt-0.5">{action.subtitle}</p>
                                 )}
                               </div>
+                             </div>
                             </div>
-                          </motion.div>
+                          </AnimatedItem>
                         ))}
-                      </motion.div>
+                      </AnimatedList>
                     </div>
                   </div>
                 </div>
@@ -1016,52 +982,28 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                               No articles found
                             </motion.p>
                           ) : (
-                            <motion.div 
-                              className="space-y-2"
-                              initial="hidden"
-                              animate="visible"
-                              variants={{
-                                hidden: { opacity: 0 },
-                                visible: { 
-                                  opacity: 1, 
-                                  transition: { 
-                                    staggerChildren: 0.05,
-                                    delayChildren: 0.1
-                                  } 
-                                }
-                              }}
-                            >
+                            <AnimatedList className="space-y-2" staggerDelay={0.1}>
                               {filteredArticles.map((article) => (
-                                <motion.div
-                                  key={article.id}
-                                  variants={{
-                                    hidden: { opacity: 0, y: 20 },
-                                    visible: { 
-                                      opacity: 1, 
-                                      y: 0,
-                                      transition: { 
-                                        duration: 0.3,
-                                        ease: [0.4, 0, 0.2, 1]
-                                      }
-                                    }
-                                  }}
-                                  className="p-3 border rounded-lg hover:bg-accent cursor-pointer transition-colors"
-                                  onClick={() => {
-                                    setSelectedArticle(article);
-                                    setHelpSearchQuery('');
-                                  }}
-                                >
-                                  <div className="flex items-start justify-between gap-2">
-                                    <h4 className="font-medium text-sm flex-1">{article.title}</h4>
-                                    {article.category && (
-                                      <Badge variant="secondary" className="text-xs flex-shrink-0">
-                                        {article.category}
-                                      </Badge>
-                                    )}
+                                <AnimatedItem key={article.id}>
+                                  <div
+                                    className="p-3 border rounded-lg hover:bg-accent cursor-pointer transition-colors"
+                                    onClick={() => {
+                                      setSelectedArticle(article);
+                                      setHelpSearchQuery('');
+                                    }}
+                                  >
+                                   <div className="flex items-start justify-between gap-2">
+                                     <h4 className="font-medium text-sm flex-1">{article.title}</h4>
+                                     {article.category && (
+                                       <Badge variant="secondary" className="text-xs flex-shrink-0">
+                                         {article.category}
+                                       </Badge>
+                                     )}
+                                   </div>
                                   </div>
-                                </motion.div>
+                                 </AnimatedItem>
                               ))}
-                            </motion.div>
+                            </AnimatedList>
                           )
                         ) : (
                           // Categories List
@@ -1075,43 +1017,18 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                               No categories available
                             </motion.p>
                           ) : (
-                            <motion.div 
-                              className="space-y-3"
-                              initial="hidden"
-                              animate="visible"
-                              variants={{
-                                hidden: { opacity: 0 },
-                                visible: { 
-                                  opacity: 1, 
-                                  transition: { 
-                                    staggerChildren: 0.05,
-                                    delayChildren: 0.1
-                                  } 
-                                }
-                              }}
-                            >
+                            <AnimatedList className="space-y-3" staggerDelay={0.1}>
                               {config.helpCategories.map((category) => {
                                 const articlesInCategory = config.helpArticles.filter(
                                   a => a.category_id === category.id || a.category === category.name
                                 ).length;
                                 
                                 return (
-                                  <motion.button
-                                    key={category.id}
-                                    variants={{
-                                      hidden: { opacity: 0, y: 20 },
-                                      visible: { 
-                                        opacity: 1, 
-                                        y: 0,
-                                        transition: { 
-                                          duration: 0.3,
-                                          ease: [0.4, 0, 0.2, 1]
-                                        }
-                                      }
-                                    }}
-                                    className="w-full p-4 border rounded-lg bg-card hover:bg-accent/50 cursor-pointer transition-all text-left"
-                                    onClick={() => setSelectedCategory(category.id)}
-                                  >
+                                  <AnimatedItem key={category.id}>
+                                    <button
+                                      className="w-full p-4 border rounded-lg bg-card hover:bg-accent/50 cursor-pointer transition-all text-left"
+                                      onClick={() => setSelectedCategory(category.id)}
+                                    >
                                     <div className="flex items-start justify-between gap-3">
                                       <div className="flex-1">
                                         <h4 className="font-medium text-sm mb-1">{category.name}</h4>
@@ -1124,10 +1041,11 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                                       </div>
                                       <ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
                                     </div>
-                                  </motion.button>
+                                    </button>
+                                  </AnimatedItem>
                                 );
                               })}
-                            </motion.div>
+                            </AnimatedList>
                           )
                         )}
                       </div>
@@ -1173,45 +1091,21 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                             No articles in this category
                           </motion.p>
                         ) : (
-                          <motion.div 
-                            className="space-y-2"
-                            initial="hidden"
-                            animate="visible"
-                            variants={{
-                              hidden: { opacity: 0 },
-                              visible: { 
-                                opacity: 1, 
-                                transition: { 
-                                  staggerChildren: 0.05,
-                                  delayChildren: 0.1
-                                } 
-                              }
-                            }}
-                          >
+                          <AnimatedList className="space-y-2" staggerDelay={0.1}>
                             {filteredArticles.map((article) => (
-                              <motion.button
-                                key={article.id}
-                                variants={{
-                                  hidden: { opacity: 0, y: 20 },
-                                  visible: { 
-                                    opacity: 1, 
-                                    y: 0,
-                                    transition: { 
-                                      duration: 0.3,
-                                      ease: [0.4, 0, 0.2, 1]
-                                    }
-                                  }
-                                }}
-                                className="w-full p-3 border rounded-lg hover:bg-accent cursor-pointer transition-colors text-left"
-                                onClick={() => setSelectedArticle(article)}
-                              >
-                                <div className="flex items-center justify-between gap-2">
-                                  <h4 className="font-medium text-sm flex-1">{article.title}</h4>
-                                  <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                                </div>
-                              </motion.button>
+                              <AnimatedItem key={article.id}>
+                                <button
+                                  className="w-full p-3 border rounded-lg hover:bg-accent cursor-pointer transition-colors text-left"
+                                  onClick={() => setSelectedArticle(article)}
+                                >
+                                 <div className="flex items-center justify-between gap-2">
+                                   <h4 className="font-medium text-sm flex-1">{article.title}</h4>
+                                   <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                                 </div>
+                                </button>
+                              </AnimatedItem>
                             ))}
-                          </motion.div>
+                          </AnimatedList>
                         )}
                       </div>
                     </>
