@@ -1173,20 +1173,33 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
             {config.showBottomNav && (
               <div className="border-t p-2 flex justify-around">
                 <Button 
-                  variant={currentView === 'home' ? 'default' : 'ghost'} 
+                  variant="ghost"
                   size="sm" 
-                  onClick={() => setCurrentView('home')} 
-                  className="flex-1 flex flex-col items-center gap-1 h-auto py-2"
+                  onClick={() => {
+                    setCurrentView('home');
+                    setSelectedCategory(null);
+                    setSelectedArticle(null);
+                    setHelpSearchQuery('');
+                  }} 
+                  className={`flex-1 flex flex-col items-center gap-1 h-auto py-2 transition-colors ${
+                    currentView === 'home' 
+                      ? 'bg-foreground text-background hover:bg-foreground/90' 
+                      : 'text-muted-foreground hover:text-foreground hover:bg-transparent'
+                  }`}
                 >
                   <Home05 className="h-5 w-5" />
                   <span className="text-xs">Home</span>
                 </Button>
                 {config.enableMessagesTab && (
                   <Button 
-                    variant={currentView === 'messages' ? 'default' : 'ghost'} 
+                    variant="ghost"
                     size="sm" 
                     onClick={() => setCurrentView('messages')} 
-                    className="flex-1 flex flex-col items-center gap-1 h-auto py-2 relative"
+                    className={`flex-1 flex flex-col items-center gap-1 h-auto py-2 relative transition-colors ${
+                      currentView === 'messages' 
+                        ? 'bg-foreground text-background hover:bg-foreground/90' 
+                        : 'text-muted-foreground hover:text-foreground hover:bg-transparent'
+                    }`}
                   >
                     <MessageChatCircle className="h-5 w-5" />
                     <span className="text-xs">Chat</span>
@@ -1197,10 +1210,14 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                 )}
                 {config.enableHelpTab && config.helpArticles.length > 0 && (
                   <Button 
-                    variant={currentView === 'help' ? 'default' : 'ghost'} 
+                    variant="ghost"
                     size="sm" 
                     onClick={() => setCurrentView('help')} 
-                    className="flex-1 flex flex-col items-center gap-1 h-auto py-2"
+                    className={`flex-1 flex flex-col items-center gap-1 h-auto py-2 transition-colors ${
+                      currentView === 'help' 
+                        ? 'bg-foreground text-background hover:bg-foreground/90' 
+                        : 'text-muted-foreground hover:text-foreground hover:bg-transparent'
+                    }`}
                   >
                     <HelpCircle className="h-5 w-5" />
                     <span className="text-xs">Help</span>
