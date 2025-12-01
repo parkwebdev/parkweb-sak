@@ -595,13 +595,13 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                             <motion.div
                               key={announcement.id}
               variants={{
-                hidden: { opacity: 0, y: 8 },
+                hidden: { opacity: 0, y: 20 },
                 visible: { 
                   opacity: 1, 
                   y: 0, 
                   transition: { 
-                    duration: 0.4,
-                    ease: [0.25, 0.1, 0.25, 1.0]
+                    duration: 0.3,
+                    ease: [0.4, 0, 0.2, 1]
                   }
                 }
               }}
@@ -642,13 +642,13 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                           <motion.div
                             key={action.id}
               variants={{
-                hidden: { opacity: 0, y: 8 },
+                hidden: { opacity: 0, y: 20 },
                 visible: { 
                   opacity: 1, 
                   y: 0, 
                   transition: { 
-                    duration: 0.4,
-                    ease: [0.25, 0.1, 0.25, 1.0]
+                    duration: 0.3,
+                    ease: [0.4, 0, 0.2, 1]
                   }
                 }
               }}
@@ -976,11 +976,25 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                   transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1.0] }}
                   className="flex-1 flex flex-col"
                 >
-                  {/* Level 1: Categories List (No category selected, no search query) */}
-                  {!selectedCategory && !selectedArticle && !helpSearchQuery && (
+                  {/* Level 1: Categories List / Search Results (No category selected) */}
+                  {!selectedCategory && !selectedArticle && (
                     <>
                       <div className="p-4 border-b bg-muted/50">
-                        <h3 className="text-lg font-semibold mb-3">Help Center</h3>
+                        {helpSearchQuery ? (
+                          <div className="flex items-center gap-2 mb-3">
+                            <Button 
+                              size="sm" 
+                              variant="ghost" 
+                              onClick={() => setHelpSearchQuery('')}
+                              className="h-8"
+                            >
+                              <ChevronRight className="h-4 w-4 rotate-180" />
+                            </Button>
+                            <h3 className="text-lg font-semibold">Search Results</h3>
+                          </div>
+                        ) : (
+                          <h3 className="text-lg font-semibold mb-3">Help Center</h3>
+                        )}
                         <Input
                           value={helpSearchQuery}
                           onChange={(e) => setHelpSearchQuery(e.target.value)}
@@ -990,148 +1004,131 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                       </div>
 
                       <div className="flex-1 overflow-y-auto p-4">
-                        {config.helpCategories.length === 0 ? (
-                          <motion.p 
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ duration: 0.3 }}
-                            className="text-center text-muted-foreground text-sm py-8"
-                          >
-                            No categories available
-                          </motion.p>
-                        ) : (
-                          <motion.div 
-                            className="space-y-3"
-                            initial="hidden"
-                            animate="visible"
-                            variants={{
-                              hidden: { opacity: 0 },
-                              visible: { 
-                                opacity: 1, 
-                                transition: { 
-                                  staggerChildren: 0.05,
-                                  delayChildren: 0.1
-                                } 
-                              }
-                            }}
-                          >
-                            {config.helpCategories.map((category) => {
-                              const articlesInCategory = config.helpArticles.filter(
-                                a => a.category_id === category.id || a.category === category.name
-                              ).length;
-                              
-                              return (
-                                <motion.button
-                                  key={category.id}
+                        {helpSearchQuery ? (
+                          // Search Results
+                          filteredArticles.length === 0 ? (
+                            <motion.p 
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              transition={{ duration: 0.3 }}
+                              className="text-center text-muted-foreground text-sm py-8"
+                            >
+                              No articles found
+                            </motion.p>
+                          ) : (
+                            <motion.div 
+                              className="space-y-2"
+                              initial="hidden"
+                              animate="visible"
+                              variants={{
+                                hidden: { opacity: 0 },
+                                visible: { 
+                                  opacity: 1, 
+                                  transition: { 
+                                    staggerChildren: 0.05,
+                                    delayChildren: 0.1
+                                  } 
+                                }
+                              }}
+                            >
+                              {filteredArticles.map((article) => (
+                                <motion.div
+                                  key={article.id}
                                   variants={{
-                                    hidden: { opacity: 0, y: 8 },
+                                    hidden: { opacity: 0, y: 20 },
                                     visible: { 
                                       opacity: 1, 
                                       y: 0,
-                                      transition: { duration: 0.3 }
+                                      transition: { 
+                                        duration: 0.3,
+                                        ease: [0.4, 0, 0.2, 1]
+                                      }
                                     }
                                   }}
-                                  className="w-full p-4 border rounded-lg bg-card hover:bg-accent/50 cursor-pointer transition-all text-left"
-                                  onClick={() => setSelectedCategory(category.id)}
+                                  className="p-3 border rounded-lg hover:bg-accent cursor-pointer transition-colors"
+                                  onClick={() => {
+                                    setSelectedArticle(article);
+                                    setHelpSearchQuery('');
+                                  }}
                                 >
-                                  <div className="flex items-start justify-between gap-3">
-                                    <div className="flex-1">
-                                      <h4 className="font-medium text-sm mb-1">{category.name}</h4>
-                                      {category.description && (
-                                        <p className="text-xs text-muted-foreground">{category.description}</p>
-                                      )}
-                                      <p className="text-xs text-muted-foreground mt-2">
-                                        {articlesInCategory} {articlesInCategory === 1 ? 'article' : 'articles'}
-                                      </p>
-                                    </div>
-                                    <ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                                  <div className="flex items-start justify-between gap-2">
+                                    <h4 className="font-medium text-sm flex-1">{article.title}</h4>
+                                    {article.category && (
+                                      <Badge variant="secondary" className="text-xs flex-shrink-0">
+                                        {article.category}
+                                      </Badge>
+                                    )}
                                   </div>
-                                </motion.button>
-                              );
-                            })}
-                          </motion.div>
-                        )}
-                      </div>
-                    </>
-                  )}
-
-                  {/* Level 1b: Search Results (When user searches) */}
-                  {!selectedCategory && !selectedArticle && helpSearchQuery && (
-                    <>
-                      <div className="p-4 border-b bg-muted/50">
-                        <div className="flex items-center gap-2 mb-3">
-                          <Button 
-                            size="sm" 
-                            variant="ghost" 
-                            onClick={() => setHelpSearchQuery('')}
-                            className="h-8"
-                          >
-                            <ChevronRight className="h-4 w-4 rotate-180" />
-                          </Button>
-                          <h3 className="text-lg font-semibold">Search Results</h3>
-                        </div>
-                        <Input
-                          value={helpSearchQuery}
-                          onChange={(e) => setHelpSearchQuery(e.target.value)}
-                          placeholder="Search help articles..."
-                          className="h-9"
-                        />
-                      </div>
-
-                      <div className="flex-1 overflow-y-auto p-4">
-                        {filteredArticles.length === 0 ? (
-                          <motion.p 
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ duration: 0.3 }}
-                            className="text-center text-muted-foreground text-sm py-8"
-                          >
-                            No articles found
-                          </motion.p>
+                                </motion.div>
+                              ))}
+                            </motion.div>
+                          )
                         ) : (
-                          <motion.div 
-                            className="space-y-2"
-                            initial="hidden"
-                            animate="visible"
-                            variants={{
-                              hidden: { opacity: 0 },
-                              visible: { 
-                                opacity: 1, 
-                                transition: { 
-                                  staggerChildren: 0.05,
-                                  delayChildren: 0.1
-                                } 
-                              }
-                            }}
-                          >
-                            {filteredArticles.map((article) => (
-                              <motion.div
-                                key={article.id}
-                                variants={{
-                                  hidden: { opacity: 0, y: 8 },
-                                  visible: { 
-                                    opacity: 1, 
-                                    y: 0,
-                                    transition: { duration: 0.3 }
-                                  }
-                                }}
-                                className="p-3 border rounded-lg hover:bg-accent cursor-pointer transition-colors"
-                                onClick={() => {
-                                  setSelectedArticle(article);
-                                  setHelpSearchQuery('');
-                                }}
-                              >
-                                <div className="flex items-start justify-between gap-2">
-                                  <h4 className="font-medium text-sm flex-1">{article.title}</h4>
-                                  {article.category && (
-                                    <Badge variant="secondary" className="text-xs flex-shrink-0">
-                                      {article.category}
-                                    </Badge>
-                                  )}
-                                </div>
-                              </motion.div>
-                            ))}
-                          </motion.div>
+                          // Categories List
+                          config.helpCategories.length === 0 ? (
+                            <motion.p 
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              transition={{ duration: 0.3 }}
+                              className="text-center text-muted-foreground text-sm py-8"
+                            >
+                              No categories available
+                            </motion.p>
+                          ) : (
+                            <motion.div 
+                              className="space-y-3"
+                              initial="hidden"
+                              animate="visible"
+                              variants={{
+                                hidden: { opacity: 0 },
+                                visible: { 
+                                  opacity: 1, 
+                                  transition: { 
+                                    staggerChildren: 0.05,
+                                    delayChildren: 0.1
+                                  } 
+                                }
+                              }}
+                            >
+                              {config.helpCategories.map((category) => {
+                                const articlesInCategory = config.helpArticles.filter(
+                                  a => a.category_id === category.id || a.category === category.name
+                                ).length;
+                                
+                                return (
+                                  <motion.button
+                                    key={category.id}
+                                    variants={{
+                                      hidden: { opacity: 0, y: 20 },
+                                      visible: { 
+                                        opacity: 1, 
+                                        y: 0,
+                                        transition: { 
+                                          duration: 0.3,
+                                          ease: [0.4, 0, 0.2, 1]
+                                        }
+                                      }
+                                    }}
+                                    className="w-full p-4 border rounded-lg bg-card hover:bg-accent/50 cursor-pointer transition-all text-left"
+                                    onClick={() => setSelectedCategory(category.id)}
+                                  >
+                                    <div className="flex items-start justify-between gap-3">
+                                      <div className="flex-1">
+                                        <h4 className="font-medium text-sm mb-1">{category.name}</h4>
+                                        {category.description && (
+                                          <p className="text-xs text-muted-foreground">{category.description}</p>
+                                        )}
+                                        <p className="text-xs text-muted-foreground mt-2">
+                                          {articlesInCategory} {articlesInCategory === 1 ? 'article' : 'articles'}
+                                        </p>
+                                      </div>
+                                      <ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                                    </div>
+                                  </motion.button>
+                                );
+                              })}
+                            </motion.div>
+                          )
                         )}
                       </div>
                     </>
@@ -1195,11 +1192,14 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                               <motion.button
                                 key={article.id}
                                 variants={{
-                                  hidden: { opacity: 0, y: 8 },
+                                  hidden: { opacity: 0, y: 20 },
                                   visible: { 
                                     opacity: 1, 
                                     y: 0,
-                                    transition: { duration: 0.3 }
+                                    transition: { 
+                                      duration: 0.3,
+                                      ease: [0.4, 0, 0.2, 1]
+                                    }
                                   }
                                 }}
                                 className="w-full p-3 border rounded-lg hover:bg-accent cursor-pointer transition-colors text-left"
