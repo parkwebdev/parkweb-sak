@@ -18,7 +18,7 @@ export const AgentConfigLayout: React.FC<AgentConfigLayoutProps> = ({
   return (
     <Tabs value={activeTab} onValueChange={(value) => onTabChange(value as AgentConfigTab)}>
       {/* Horizontal Tab Navigation - Full Width */}
-      <div className="border-b sticky top-0 z-20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+      <div className="border-b sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
         <div className="px-6">
           <TabsList className="h-11 w-full bg-transparent border-0 p-0 gap-5 justify-start">
             <TabsTrigger

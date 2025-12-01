@@ -67,7 +67,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ onMenuClick }) => {
   };
 
   return (
-    <header className="flex items-center justify-between px-4 lg:px-6 py-3 border-b border-border bg-card/50 backdrop-blur-sm">
+    <header className="flex items-center justify-between px-4 lg:px-6 py-3 border-b border-border bg-card/50 backdrop-blur-sm z-30 relative">
       {/* Left side - Menu and Search */}
       <div className="flex items-center gap-4 flex-1">
         {/* Mobile menu button */}
