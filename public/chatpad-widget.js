@@ -76,7 +76,8 @@
       width: 100%;
       height: 100%;
       border: none;
-      background: white;
+      background: transparent;
+      border-radius: 24px;
     }
     
     /* Position variants */
