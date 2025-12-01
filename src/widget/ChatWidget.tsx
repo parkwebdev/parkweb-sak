@@ -641,8 +641,9 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
               </div>
             )}
 
-            {/* Content */}
-            <div className="flex-1 overflow-hidden bg-background flex flex-col">
+            {/* Content - Only for non-home views */}
+            {currentView !== 'home' && (
+              <div className="flex-1 overflow-hidden bg-background flex flex-col">
 
               {currentView === 'messages' && (
                 <div className="flex-1 flex flex-col">
@@ -1175,6 +1176,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                 </div>
               )}
             </div>
+            )}
 
             {/* Bottom Navigation */}
             {config.showBottomNav && (
