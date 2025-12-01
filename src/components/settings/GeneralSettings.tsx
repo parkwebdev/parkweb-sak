@@ -4,18 +4,16 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/lib/toast';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
 export const GeneralSettings: React.FC = () => {
-  const { toast } = useToast();
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [preferences, setPreferences] = useState({
-    auto_save: true,
     compact_mode: false,
     default_project_view: 'dashboard',
   });
@@ -43,7 +41,6 @@ export const GeneralSettings: React.FC = () => {
 
       if (data) {
         setPreferences({
-          auto_save: data.auto_save ?? true,
           compact_mode: data.compact_mode ?? false,
           default_project_view: data.default_project_view ?? 'dashboard',
         });
@@ -112,7 +109,6 @@ export const GeneralSettings: React.FC = () => {
 
       // Show success toast with specific messaging
       const messages = {
-        auto_save: value ? "Auto-save enabled" : "Auto-save disabled",
         compact_mode: value ? "Compact mode enabled" : "Compact mode disabled", 
         default_project_view: `Default view set to ${value}`,
       };
@@ -213,18 +209,6 @@ export const GeneralSettings: React.FC = () => {
               <p className="text-xs text-muted-foreground">Choose your preferred color scheme</p>
             </div>
             <ThemeToggle />
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <label className="text-sm font-medium">Auto-save</label>
-              <p className="text-xs text-muted-foreground">Automatically save changes as you work (saves every 30 seconds)</p>
-            </div>
-            <Switch
-              checked={preferences.auto_save}
-              onCheckedChange={(checked) => updatePreference('auto_save', checked)}
-              disabled={updating}
-            />
           </div>
 
           <div className="flex items-center justify-between">
