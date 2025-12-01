@@ -36,12 +36,15 @@ export const AgentConfigHeader = ({
         <div 
           className="relative h-40 bg-neutral-100 dark:bg-neutral-950"
           style={{
-            backgroundImage: 'radial-gradient(circle, rgba(0, 0, 0, 0.08) 0.5px, transparent 0.5px)',
+            backgroundImage: 'radial-gradient(circle, rgba(0, 0, 0, 0.15) 0.5px, transparent 0.5px)',
             backgroundSize: '12px 12px'
           }}
         >
+          {/* Gradient Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-neutral-200/40 dark:to-neutral-950/60" />
+          
           <div 
-            className="relative z-10 px-4 lg:px-8 py-4 h-full flex flex-col [background-image:radial-gradient(circle,_rgba(0,_0,_0,_0.08)_0.5px,_transparent_0.5px)] dark:[background-image:radial-gradient(circle,_rgba(255,_255,_255,_0.1)_0.5px,_transparent_0.5px)]"
+            className="relative z-10 px-4 lg:px-8 py-4 h-full flex flex-col [background-image:radial-gradient(circle,_rgba(0,_0,_0,_0.15)_0.5px,_transparent_0.5px)] dark:[background-image:radial-gradient(circle,_rgba(255,_255,_255,_0.1)_0.5px,_transparent_0.5px)]"
             style={{ backgroundSize: '12px 12px' }}
           >
             {/* Top Row: Back button + Save controls */}
