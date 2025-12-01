@@ -506,12 +506,12 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                   
                   {/* Logo in top left - aligned with content text */}
                   <ChatPadLogo 
-                    className="absolute top-4 left-6 h-8 w-8 text-white transition-opacity duration-300"
+                    className="absolute top-4 left-6 h-8 w-8 text-white transition-opacity duration-300 z-10"
                     style={{ opacity: logoOpacity }}
                   />
                   
                   {/* Settings/Close buttons in top right */}
-                  <div className="absolute top-4 right-4 flex gap-1 z-20">
+                  <div className="absolute top-4 right-4 flex gap-1 z-30">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 h-8 w-8">
@@ -551,21 +551,21 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                 <div 
                   ref={homeContentRef}
                   onScroll={(e) => setHeaderScrollY(e.currentTarget.scrollTop)}
-                  className="absolute inset-0 overflow-y-auto"
+                  className="absolute inset-0 overflow-y-auto z-10"
                 >
-                  {/* Spacer to push content down initially */}
-                  <div className="h-[200px]" />
+                  {/* Spacer to push content down initially - shows gradient */}
+                  <div className="h-[240px]" />
                   
                   {/* Welcome text - visible over gradient */}
-                  <div className="px-6 pb-6">
-                    <h2 className="text-3xl font-bold text-white">
+                  <div className="px-6 pb-8">
+                    <h2 className="text-3xl font-bold text-white drop-shadow-sm">
                       {config.welcomeTitle} {config.welcomeEmoji}
                     </h2>
-                    <p className="text-white/90 text-base">{config.welcomeSubtitle}</p>
+                    <p className="text-white/90 text-base drop-shadow-sm">{config.welcomeSubtitle}</p>
                   </div>
                   
                   {/* Content wrapper with white background that scrolls over gradient */}
-                  <div className="bg-background rounded-t-2xl shadow-lg min-h-full">
+                  <div className="bg-background rounded-t-3xl shadow-[0_-8px_30px_-4px_rgba(0,0,0,0.15)] min-h-full relative z-20">
                     <div className="p-4 space-y-3">
                       {config.announcements.length > 0 && (
                         <div className="space-y-3 mb-6">
