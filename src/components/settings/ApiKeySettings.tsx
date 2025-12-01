@@ -70,6 +70,19 @@ export const ApiKeySettings = () => {
 
   return (
     <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-lg font-medium">API Keys</h3>
+          <p className="text-sm text-muted-foreground">
+            Manage API keys for programmatic access to your account
+          </p>
+        </div>
+        <Button onClick={() => setCreateDialogOpen(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          Create API Key
+        </Button>
+      </div>
+
       <AnimatedItem>
       <Card>
         <CardHeader>
