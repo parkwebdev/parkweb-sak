@@ -1,8 +1,7 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import { ChatWidget } from './ChatWidget';
+import { ChatWidgetStandalone } from './ChatWidgetStandalone';
 import { WIDGET_STYLES } from './widget-styles';
-import './styles.css';
 
 // Global widget interface
 interface ChatPadWidgetConfig {
@@ -44,7 +43,7 @@ class ChatPadWidget {
     this.root = createRoot(rootElement);
     this.root.render(
       <React.StrictMode>
-        <ChatWidget config={this.config} />
+        <ChatWidgetStandalone config={this.config} />
       </React.StrictMode>
     );
   }
