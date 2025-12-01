@@ -566,8 +566,8 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                   </div>
                   
                   {/* Content wrapper with gradient from transparent to white */}
-                  <div className="bg-gradient-to-b from-transparent to-background min-h-full relative z-20">
-                    <div className="p-4 space-y-3">
+                  <div className="bg-gradient-to-b from-transparent via-background via-30% to-background min-h-full relative z-20">
+                    <div className="px-6 py-4 space-y-3">
                       {config.announcements.length > 0 && (
                         <div className="space-y-3 mb-6">
                           {config.announcements.map((announcement) => (
