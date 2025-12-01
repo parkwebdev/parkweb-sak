@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/lib/toast';
 import { supabase } from '@/integrations/supabase/client';
 import { validatePasswordStrength } from '@/utils/input-validation';
 import { useSecurityLog } from '@/hooks/useSecurityLog';
@@ -21,7 +21,6 @@ const Auth = () => {
   const [displayName, setDisplayName] = useState('');
   const [activeTab, setActiveTab] = useState<'signin' | 'signup'>('signin');
   const navigate = useNavigate();
-  const { toast } = useToast();
   const { logAuthEvent } = useSecurityLog();
 
   useEffect(() => {

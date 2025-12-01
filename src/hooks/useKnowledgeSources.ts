@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/lib/toast';
 import type { Tables } from '@/integrations/supabase/types';
 
 type KnowledgeSource = Tables<'knowledge_sources'>;
@@ -9,7 +9,6 @@ type KnowledgeType = 'pdf' | 'url' | 'api' | 'json' | 'xml' | 'csv';
 export const useKnowledgeSources = (agentId?: string) => {
   const [sources, setSources] = useState<KnowledgeSource[]>([]);
   const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
 
   const fetchSources = async () => {
     if (!agentId) return;

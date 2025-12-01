@@ -1,6 +1,6 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/lib/toast';
 
 interface CreateNotificationParams {
   type: 'conversation' | 'lead' | 'agent' | 'team' | 'report' | 'system';
@@ -12,7 +12,6 @@ interface CreateNotificationParams {
 
 export const useNotifications = () => {
   const { user } = useAuth();
-  const { toast } = useToast();
 
   const createNotification = async ({
     type,

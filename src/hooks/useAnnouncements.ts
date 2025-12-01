@@ -110,7 +110,7 @@ export const useAnnouncements = (agentId: string) => {
       }
 
       setAnnouncements(reorderedAnnouncements);
-      toast.success('Order updated');
+      // Success - no toast needed (SavedIndicator shows feedback)
     } catch (error) {
       console.error('Error reordering announcements:', error);
       toast.error('Failed to update order');

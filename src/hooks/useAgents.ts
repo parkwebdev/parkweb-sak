@@ -72,7 +72,7 @@ export const useAgents = () => {
       if (error) throw error;
       
       setAgents(prev => prev.map(a => a.id === id ? data : a));
-      toast.success('Agent updated successfully');
+      // Success - no toast needed (SavedIndicator shows feedback in tabs)
       return data;
     } catch (error) {
       console.error('Error updating agent:', error);

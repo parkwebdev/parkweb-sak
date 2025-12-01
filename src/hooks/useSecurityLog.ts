@@ -1,6 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/lib/toast';
 
 interface SecurityLogParams {
   action: string;
@@ -12,7 +12,6 @@ interface SecurityLogParams {
 
 export const useSecurityLog = () => {
   const { user } = useAuth();
-  const { toast } = useToast();
 
   const logSecurityEvent = async (params: SecurityLogParams) => {
     try {

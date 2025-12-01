@@ -6,6 +6,7 @@ import { useApiKeys } from '@/hooks/useApiKeys';
 import { Plus, Key01, Trash01, RefreshCcw01, Eye, EyeOff } from '@untitledui/icons';
 import { CopyButton } from '@/components/ui/copy-button';
 import { CreateApiKeyDialog } from './CreateApiKeyDialog';
+import { SavedIndicator } from './SavedIndicator';
 import { formatDistanceToNow } from 'date-fns';
 import {
   AlertDialog,
