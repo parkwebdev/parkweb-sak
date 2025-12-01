@@ -3,14 +3,15 @@ import { motion, AnimatePresence } from "motion/react";
 
 interface NavIconProps {
   active: boolean;
+  hovered?: boolean;
   className?: string;
 }
 
-export const HomeNavIcon = ({ active, className }: NavIconProps) => {
+export const HomeNavIcon = ({ active, hovered, className }: NavIconProps) => {
   return (
     <div className={className}>
       <AnimatePresence mode="wait">
-        {active ? (
+        {(active || hovered) ? (
           <motion.svg
             key="home-filled"
             width={24}
@@ -61,11 +62,11 @@ export const HomeNavIcon = ({ active, className }: NavIconProps) => {
   );
 };
 
-export const ChatNavIcon = ({ active, className }: NavIconProps) => {
+export const ChatNavIcon = ({ active, hovered, className }: NavIconProps) => {
   return (
     <div className={className}>
       <AnimatePresence mode="wait">
-        {active ? (
+        {(active || hovered) ? (
           <motion.svg
             key="chat-filled"
             width={24}
@@ -116,11 +117,11 @@ export const ChatNavIcon = ({ active, className }: NavIconProps) => {
   );
 };
 
-export const HelpNavIcon = ({ active, className }: NavIconProps) => {
+export const HelpNavIcon = ({ active, hovered, className }: NavIconProps) => {
   return (
     <div className={className}>
       <AnimatePresence mode="wait">
-        {active ? (
+        {(active || hovered) ? (
           <motion.svg
             key="help-filled"
             width={24}
