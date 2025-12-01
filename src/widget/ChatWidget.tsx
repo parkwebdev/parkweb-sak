@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { fetchWidgetConfig, createLead, submitArticleFeedback, type WidgetConfig } from './api';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -522,9 +523,9 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                   
                   {/* Close button in top right */}
                   <div className="absolute top-4 right-4 z-30">
-                    <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 h-8 w-8" onClick={handleClose}>
-                      <X className="h-4 w-4" />
-                    </Button>
+              <Button variant="ghost" size="icon" className="text-white hover:bg-transparent hover:text-white h-8 w-8" onClick={handleClose}>
+                <X className="h-4 w-4" />
+              </Button>
                   </div>
                 </div>
                 
@@ -552,10 +553,22 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                   <div className="bg-gradient-to-b from-transparent via-background via-30% to-background min-h-full relative z-20">
                     <div className="px-6 py-4 space-y-3">
                       {config.announcements.length > 0 && (
-                        <div className="space-y-3 mb-6">
+                        <motion.div 
+                          className="space-y-3 mb-6"
+                          initial="hidden"
+                          animate="visible"
+                          variants={{
+                            hidden: { opacity: 0 },
+                            visible: { opacity: 1, transition: { staggerChildren: 0.08 } }
+                          }}
+                        >
                           {config.announcements.map((announcement) => (
-                            <div
+                            <motion.div
                               key={announcement.id}
+                              variants={{
+                                hidden: { opacity: 0, y: 20 },
+                                visible: { opacity: 1, y: 0, transition: { duration: 0.3 } }
+                              }}
                               className="rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
                               style={{ backgroundColor: announcement.background_color }}
                               onClick={() => {
@@ -575,15 +588,27 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                                 </div>
                                 <ChevronRight className="h-5 w-5 text-muted-foreground" />
                               </div>
-                            </div>
+                            </motion.div>
                           ))}
-                        </div>
+                        </motion.div>
                       )}
 
-                      <div className="space-y-3">
+                      <motion.div 
+                        className="space-y-3"
+                        initial="hidden"
+                        animate="visible"
+                        variants={{
+                          hidden: { opacity: 0 },
+                          visible: { opacity: 1, transition: { staggerChildren: 0.08 } }
+                        }}
+                      >
                         {config.quickActions.map((action) => (
-                          <div
+                          <motion.div
                             key={action.id}
+                            variants={{
+                              hidden: { opacity: 0, y: 20 },
+                              visible: { opacity: 1, y: 0, transition: { duration: 0.3 } }
+                            }}
                             className="p-4 border rounded-lg bg-card hover:bg-accent/50 cursor-pointer transition-all"
                             onClick={() => handleQuickActionClick(action.action || action.actionType)}
                           >
@@ -601,27 +626,27 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                                 )}
                               </div>
                             </div>
-                          </div>
+                          </motion.div>
                         ))}
-                      </div>
+                      </motion.div>
                     </div>
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="p-4 flex items-center justify-between relative" style={getGradientStyle()}>
+              <div className="p-4 flex items-center justify-between relative bg-background">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
-                    <ChatBubbleIcon className="h-6 w-6 text-white" />
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: `${config.primaryColor}15` }}>
+                    <ChatBubbleIcon className="h-6 w-6" style={{ color: config.primaryColor }} />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-white">{currentView === 'messages' ? config.agentName : 'Help Center'}</h3>
-                    <p className="text-xs text-white/80">Online</p>
+                    <h3 className="font-semibold text-foreground">{currentView === 'messages' ? config.agentName : 'Help Center'}</h3>
+                    <p className="text-xs text-muted-foreground">Online</p>
                   </div>
                 </div>
-                <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 h-8 w-8" onClick={handleClose}>
-                  <X className="h-4 w-4" />
-                </Button>
+              <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground hover:bg-transparent h-8 w-8" onClick={handleClose}>
+                <X className="h-4 w-4" />
+              </Button>
               </div>
             )}
 
@@ -1153,7 +1178,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
 
             {/* Bottom Navigation */}
             {config.showBottomNav && (
-              <div className="border-t p-2 flex justify-around">
+              <div className="border-t bg-background flex justify-around">
                 <button 
                   onMouseEnter={() => setHoveredNav('home')}
                   onMouseLeave={() => setHoveredNav(null)}
@@ -1163,28 +1188,28 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                     setSelectedArticle(null);
                     setHelpSearchQuery('');
                   }} 
-                  className={`flex-1 flex flex-col items-center gap-1 h-auto py-2 transition-colors bg-transparent hover:bg-transparent ${
+                  className={`flex-1 flex flex-col items-center justify-center h-auto py-2 transition-colors ${
                     currentView === 'home' 
                       ? 'text-foreground' 
-                      : 'text-muted-foreground hover:text-foreground'
+                      : 'text-muted-foreground'
                   }`}
                 >
-                  <HomeNavIcon active={currentView === 'home'} hovered={hoveredNav === 'home'} className="h-5 w-5" />
-                  <span className="text-xs text-center w-full">Home</span>
+                  <HomeNavIcon active={currentView === 'home'} hovered={hoveredNav === 'home'} className="h-5 w-5 mb-1" />
+                  <span className="text-[10px] leading-none">Home</span>
                 </button>
                 {config.enableMessagesTab && (
                   <button 
                     onMouseEnter={() => setHoveredNav('messages')}
                     onMouseLeave={() => setHoveredNav(null)}
                     onClick={() => setCurrentView('messages')} 
-                    className={`flex-1 flex flex-col items-center gap-1 h-auto py-2 relative transition-colors bg-transparent hover:bg-transparent ${
+                    className={`flex-1 flex flex-col items-center justify-center h-auto py-2 relative transition-colors ${
                       currentView === 'messages' 
                         ? 'text-foreground' 
-                        : 'text-muted-foreground hover:text-foreground'
+                        : 'text-muted-foreground'
                     }`}
                   >
-                    <ChatNavIcon active={currentView === 'messages'} hovered={hoveredNav === 'messages'} className="h-5 w-5" />
-                    <span className="text-xs text-center w-full">Chat</span>
+                    <ChatNavIcon active={currentView === 'messages'} hovered={hoveredNav === 'messages'} className="h-5 w-5 mb-1" />
+                    <span className="text-[10px] leading-none">Chat</span>
                     {messages.some(m => !m.read && m.role === 'assistant') && (
                       <div className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
                     )}
@@ -1195,14 +1220,14 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                     onMouseEnter={() => setHoveredNav('help')}
                     onMouseLeave={() => setHoveredNav(null)}
                     onClick={() => setCurrentView('help')} 
-                    className={`flex-1 flex flex-col items-center gap-1 h-auto py-2 transition-colors bg-transparent hover:bg-transparent ${
+                    className={`flex-1 flex flex-col items-center justify-center h-auto py-2 transition-colors ${
                       currentView === 'help' 
                         ? 'text-foreground' 
-                        : 'text-muted-foreground hover:text-foreground'
+                        : 'text-muted-foreground'
                     }`}
                   >
-                    <HelpNavIcon active={currentView === 'help'} hovered={hoveredNav === 'help'} className="h-5 w-5" />
-                    <span className="text-xs text-center w-full">Help</span>
+                    <HelpNavIcon active={currentView === 'help'} hovered={hoveredNav === 'help'} className="h-5 w-5 mb-1" />
+                    <span className="text-[10px] leading-none">Help</span>
                   </button>
                 )}
               </div>
@@ -1248,17 +1273,17 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
           '--popover': '0 0% 100%',
           '--popover-foreground': '0 0% 3.9%',
           '--primary': '221.2 83.2% 53.3%',
-          '--primary-foreground': '210 40% 98%',
-          '--secondary': '210 40% 96.1%',
-          '--secondary-foreground': '222.2 47.4% 11.2%',
-          '--muted': '210 40% 96.1%',
+          '--primary-foreground': '0 0% 98%',
+          '--secondary': '0 0% 96.1%',
+          '--secondary-foreground': '0 0% 9%',
+          '--muted': '0 0% 96.1%',
           '--muted-foreground': '0 0% 45.1%',
-          '--accent': '210 40% 96.1%',
-          '--accent-foreground': '222.2 47.4% 11.2%',
+          '--accent': '0 0% 96.1%',
+          '--accent-foreground': '0 0% 9%',
           '--destructive': '0 84.2% 60.2%',
-          '--destructive-foreground': '210 40% 98%',
-          '--border': '214.3 31.8% 91.4%',
-          '--input': '214.3 31.8% 91.4%',
+          '--destructive-foreground': '0 0% 98%',
+          '--border': '0 0% 89.8%',
+          '--input': '0 0% 89.8%',
           '--ring': '221.2 83.2% 53.3%',
           '--radius': '0.5rem',
         } as React.CSSProperties}
@@ -1275,26 +1300,26 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
       className="fixed inset-0 pointer-events-none z-[9999] light" 
       style={{
         colorScheme: 'light',
-        '--background': '0 0% 100%',
-        '--foreground': '0 0% 3.9%',
-        '--card': '0 0% 100%',
-        '--card-foreground': '0 0% 3.9%',
-        '--popover': '0 0% 100%',
-        '--popover-foreground': '0 0% 3.9%',
-        '--primary': '221.2 83.2% 53.3%',
-        '--primary-foreground': '210 40% 98%',
-        '--secondary': '210 40% 96.1%',
-        '--secondary-foreground': '222.2 47.4% 11.2%',
-        '--muted': '210 40% 96.1%',
-        '--muted-foreground': '0 0% 45.1%',
-        '--accent': '210 40% 96.1%',
-        '--accent-foreground': '222.2 47.4% 11.2%',
-        '--destructive': '0 84.2% 60.2%',
-        '--destructive-foreground': '210 40% 98%',
-        '--border': '214.3 31.8% 91.4%',
-        '--input': '214.3 31.8% 91.4%',
-        '--ring': '221.2 83.2% 53.3%',
-        '--radius': '0.5rem',
+          '--background': '0 0% 100%',
+          '--foreground': '0 0% 3.9%',
+          '--card': '0 0% 100%',
+          '--card-foreground': '0 0% 3.9%',
+          '--popover': '0 0% 100%',
+          '--popover-foreground': '0 0% 3.9%',
+          '--primary': '221.2 83.2% 53.3%',
+          '--primary-foreground': '0 0% 98%',
+          '--secondary': '0 0% 96.1%',
+          '--secondary-foreground': '0 0% 9%',
+          '--muted': '0 0% 96.1%',
+          '--muted-foreground': '0 0% 45.1%',
+          '--accent': '0 0% 96.1%',
+          '--accent-foreground': '0 0% 9%',
+          '--destructive': '0 84.2% 60.2%',
+          '--destructive-foreground': '0 0% 98%',
+          '--border': '0 0% 89.8%',
+          '--input': '0 0% 89.8%',
+          '--ring': '221.2 83.2% 53.3%',
+          '--radius': '0.5rem',
       } as React.CSSProperties}
     >
       <div className={`absolute ${positionClasses[position]} pointer-events-auto`}>
