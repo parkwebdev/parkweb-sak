@@ -515,7 +515,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
 
   // Shared widget content
   const widgetContent = (
-    <div id="chatpad-widget-root">
+    <div id="chatpad-widget-root" className="h-full">
       {/* Teaser Message */}
       {showTeaser && !isOpen && config.showTeaser && !isIframeMode && (
         <div className="absolute mb-20 mr-2 max-w-xs">
