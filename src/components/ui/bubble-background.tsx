@@ -21,6 +21,10 @@ type BubbleBackgroundProps = React.ComponentProps<'div'> & {
     fifth: string;
     sixth: string;
   };
+  baseGradient?: {
+    from: string;
+    to: string;
+  };
 };
 
 function BubbleBackground({
@@ -37,6 +41,7 @@ function BubbleBackground({
     fifth: '180,180,50',
     sixth: '140,100,255',
   },
+  baseGradient,
   ...props
 }: BubbleBackgroundProps) {
   const containerRef = React.useRef<HTMLDivElement>(null);
@@ -71,9 +76,12 @@ function BubbleBackground({
       ref={containerRef}
       data-slot="bubble-background"
       className={cn(
-        'relative size-full overflow-hidden bg-gradient-to-br from-violet-900 to-blue-900',
+        'relative size-full overflow-hidden',
         className,
       )}
+      style={{
+        background: `linear-gradient(to bottom right, rgb(${baseGradient?.from || colors.first}), rgb(${baseGradient?.to || colors.second}))`,
+      }}
       {...(props as any)}
     >
       <style>
