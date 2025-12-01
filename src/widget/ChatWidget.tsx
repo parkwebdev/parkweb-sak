@@ -504,6 +504,9 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                     className="absolute inset-0"
                   />
                   
+                  {/* Gradient fade to white at bottom */}
+                  <div className="absolute bottom-0 left-0 right-0 h-48 bg-gradient-to-b from-transparent to-background pointer-events-none z-10" />
+                  
                   {/* Logo in top left - aligned with content text */}
                   <ChatPadLogo 
                     className="absolute top-4 left-6 h-8 w-8 text-white transition-opacity duration-300 z-10"
@@ -566,10 +569,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                   
                   {/* Content wrapper with white background that scrolls over gradient */}
                   <div className="bg-background rounded-t-3xl shadow-[0_-8px_30px_-4px_rgba(0,0,0,0.15)] min-h-full relative z-20">
-                    {/* Gradient fade overlay at top of content */}
-                    <div className="absolute top-0 left-0 right-0 h-12 bg-gradient-to-b from-background/0 via-background/50 to-background rounded-t-3xl pointer-events-none z-10" />
-                    
-                    <div className="p-4 space-y-3 relative z-0">
+                    <div className="p-4 space-y-3">
                       {config.announcements.length > 0 && (
                         <div className="space-y-3 mb-6">
                           {config.announcements.map((announcement) => (
