@@ -2,7 +2,6 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ChevronLeft, CheckCircle } from '@untitledui/icons';
-import { DottedGlowBackground } from '@/components/ui/dotted-glow-background';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Agent = Tables<'agents'>;
@@ -32,18 +31,12 @@ export const AgentConfigHeader = ({
 
   return (
     <div className="border-b">
-      {/* Hero Section with Background Beams */}
+      {/* Hero Section with Dotted Grid */}
       <div className="relative overflow-hidden">
-        <div className="relative h-40 bg-neutral-950">
-          <DottedGlowBackground 
-            className="absolute inset-0"
-            glowColor="rgba(0, 170, 255, 0.85)"
-            color="rgba(255, 255, 255, 0.5)"
-            darkColor="rgba(255, 255, 255, 0.7)"
-            gap={24}
-            radius={1}
-            opacity={0.8}
-          />
+        <div className="relative h-40 bg-neutral-950" style={{
+          backgroundImage: 'radial-gradient(circle, rgba(255, 255, 255, 0.15) 1px, transparent 1px)',
+          backgroundSize: '24px 24px'
+        }}>
           <div className="relative z-10 px-4 lg:px-8 py-4 h-full flex flex-col">
             {/* Top Row: Back button + Save controls */}
             <div className="flex items-center justify-between mb-auto">
