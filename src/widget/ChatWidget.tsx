@@ -684,7 +684,13 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                   </div>
                   <div>
                     <h3 className="font-semibold text-foreground">{currentView === 'messages' ? config.agentName : 'Help Center'}</h3>
-                    <p className="text-xs text-muted-foreground">Online</p>
+                    <div className="flex items-center gap-1.5">
+                      <div className="relative flex items-center">
+                        <div className="w-2 h-2 bg-green-500 rounded-full" />
+                        <div className="absolute w-2 h-2 bg-green-500 rounded-full animate-ping opacity-75" />
+                      </div>
+                      <p className="text-xs text-muted-foreground">Online</p>
+                    </div>
                   </div>
                 </div>
               <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground hover:bg-transparent h-8 w-8" onClick={handleClose}>
@@ -973,7 +979,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                   {/* Level 1: Categories List (No category selected, no search query) */}
                   {!selectedCategory && !selectedArticle && !helpSearchQuery && (
                     <>
-                      <div className="p-4 border-b bg-muted/30">
+                      <div className="p-4 border-b bg-muted/50">
                         <h3 className="text-lg font-semibold mb-3">Help Center</h3>
                         <Input
                           value={helpSearchQuery}
@@ -1023,7 +1029,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                   {/* Level 1b: Search Results (When user searches) */}
                   {!selectedCategory && !selectedArticle && helpSearchQuery && (
                     <>
-                      <div className="p-4 border-b bg-muted/30">
+                      <div className="p-4 border-b bg-muted/50">
                         <div className="flex items-center gap-2 mb-3">
                           <Button 
                             size="sm" 
@@ -1076,7 +1082,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                   {/* Level 2: Articles in Category (Category selected, no article) */}
                   {selectedCategory && !selectedArticle && (
                     <>
-                      <div className="p-4 border-b bg-muted/30">
+                      <div className="p-4 border-b bg-muted/50">
                         <div className="flex items-center gap-2 mb-3">
                           <Button 
                             size="sm" 
