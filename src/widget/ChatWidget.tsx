@@ -715,26 +715,15 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
 
                     {/* Empty Conversation State */}
                     {chatUser && !activeConversationId && messages.length <= 1 && (
-                      <div className="flex-1 flex items-center justify-center p-8">
-                        <div className="text-center space-y-4 max-w-sm">
-                          <div className="w-16 h-16 mx-auto rounded-full bg-muted flex items-center justify-center">
-                            <MessageChatCircle className="h-8 w-8 text-muted-foreground" />
-                          </div>
-                          <div className="space-y-2">
-                            <h4 className="font-semibold text-base">No conversations yet</h4>
-                            <p className="text-sm text-muted-foreground">
-                              Start a conversation with us and we'll be happy to help you.
-                            </p>
-                          </div>
-                          <Button
-                            onClick={() => setActiveConversationId('new')}
-                            style={{ backgroundColor: config.primaryColor }}
-                            className="w-full"
-                          >
-                            <MessageChatCircle className="h-4 w-4 mr-2" />
-                            Start New Conversation
-                          </Button>
-                        </div>
+                      <div className="flex-1 flex flex-col justify-end p-4">
+                        <Button
+                          onClick={() => setActiveConversationId('new')}
+                          style={{ backgroundColor: config.primaryColor }}
+                          className="w-full rounded-full"
+                        >
+                          <MessageChatCircle className="h-4 w-4 mr-2" />
+                          Start New Conversation
+                        </Button>
                       </div>
                     )}
 
@@ -901,7 +890,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                   {/* Level 1: Categories List (No category selected, no search query) */}
                   {!selectedCategory && !selectedArticle && !helpSearchQuery && (
                     <>
-                      <div className="p-4 border-b">
+                      <div className="p-4 border-b bg-transparent">
                         <h3 className="text-lg font-semibold mb-3">Help Center</h3>
                         <Input
                           value={helpSearchQuery}
@@ -951,7 +940,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                   {/* Level 1b: Search Results (When user searches) */}
                   {!selectedCategory && !selectedArticle && helpSearchQuery && (
                     <>
-                      <div className="p-4 border-b">
+                      <div className="p-4 border-b bg-transparent">
                         <div className="flex items-center gap-2 mb-3">
                           <Button 
                             size="sm" 
@@ -1004,7 +993,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                   {/* Level 2: Articles in Category (Category selected, no article) */}
                   {selectedCategory && !selectedArticle && (
                     <>
-                      <div className="p-4 border-b">
+                      <div className="p-4 border-b bg-transparent">
                         <div className="flex items-center gap-2 mb-3">
                           <Button 
                             size="sm" 
@@ -1181,7 +1170,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                   }`}
                 >
                   <HomeNavIcon active={currentView === 'home'} hovered={hoveredNav === 'home'} className="h-5 w-5" />
-                  <span className="text-xs">Home</span>
+                  <span className="text-xs text-center w-full">Home</span>
                 </button>
                 {config.enableMessagesTab && (
                   <button 
@@ -1195,7 +1184,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                     }`}
                   >
                     <ChatNavIcon active={currentView === 'messages'} hovered={hoveredNav === 'messages'} className="h-5 w-5" />
-                    <span className="text-xs">Chat</span>
+                    <span className="text-xs text-center w-full">Chat</span>
                     {messages.some(m => !m.read && m.role === 'assistant') && (
                       <div className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
                     )}
@@ -1213,7 +1202,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                     }`}
                   >
                     <HelpNavIcon active={currentView === 'help'} hovered={hoveredNav === 'help'} className="h-5 w-5" />
-                    <span className="text-xs">Help</span>
+                    <span className="text-xs text-center w-full">Help</span>
                   </button>
                 )}
               </div>
@@ -1263,7 +1252,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
           '--secondary': '210 40% 96.1%',
           '--secondary-foreground': '222.2 47.4% 11.2%',
           '--muted': '210 40% 96.1%',
-          '--muted-foreground': '215.4 16.3% 46.9%',
+          '--muted-foreground': '0 0% 45.1%',
           '--accent': '210 40% 96.1%',
           '--accent-foreground': '222.2 47.4% 11.2%',
           '--destructive': '0 84.2% 60.2%',
@@ -1297,7 +1286,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
         '--secondary': '210 40% 96.1%',
         '--secondary-foreground': '222.2 47.4% 11.2%',
         '--muted': '210 40% 96.1%',
-        '--muted-foreground': '215.4 16.3% 46.9%',
+        '--muted-foreground': '0 0% 45.1%',
         '--accent': '210 40% 96.1%',
         '--accent-foreground': '222.2 47.4% 11.2%',
         '--destructive': '0 84.2% 60.2%',
