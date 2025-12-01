@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import { X, Send01, MessageChatCircle, ChevronRight, Zap, BookOpen01, Microphone01, Attachment01, Image03, FileCheck02, ThumbsUp, ThumbsDown } from '@untitledui/icons';
 import { HomeNavIcon, ChatNavIcon, HelpNavIcon } from './NavIcons';
 import { ChatBubbleIcon } from '@/components/agents/ChatBubbleIcon';
@@ -482,6 +483,34 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
     }
   };
 
+  // Loading skeleton
+  if (loading || !config) {
+    return (
+      <div className="w-full h-full flex flex-col bg-background p-4">
+        {/* Header skeleton */}
+        <div className="flex items-center gap-3 mb-6">
+          <Skeleton className="w-10 h-10 rounded-full" />
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-3 w-20" />
+          </div>
+        </div>
+        {/* Content skeletons */}
+        <div className="space-y-4 flex-1">
+          <Skeleton className="h-24 w-full rounded-lg" />
+          <Skeleton className="h-20 w-full rounded-lg" />
+          <Skeleton className="h-20 w-full rounded-lg" />
+        </div>
+        {/* Nav skeleton */}
+        <div className="flex justify-around pt-4 border-t mt-auto">
+          <Skeleton className="h-10 w-16" />
+          <Skeleton className="h-10 w-16" />
+          <Skeleton className="h-10 w-16" />
+        </div>
+      </div>
+    );
+  }
+
   // Shared widget content
   const widgetContent = (
     <div id="chatpad-widget-root">
@@ -523,7 +552,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                   
                   {/* Close button in top right */}
                   <div className="absolute top-4 right-4 z-30">
-              <Button variant="ghost" size="icon" className="text-white hover:bg-transparent hover:text-white h-8 w-8" onClick={handleClose}>
+              <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 hover:text-white h-8 w-8" onClick={handleClose}>
                 <X className="h-4 w-4" />
               </Button>
                   </div>
@@ -565,10 +594,17 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                           {config.announcements.map((announcement) => (
                             <motion.div
                               key={announcement.id}
-                              variants={{
-                                hidden: { opacity: 0, y: 20 },
-                                visible: { opacity: 1, y: 0, transition: { duration: 0.3 } }
-                              }}
+              variants={{
+                hidden: { opacity: 0, y: 8 },
+                visible: { 
+                  opacity: 1, 
+                  y: 0, 
+                  transition: { 
+                    duration: 0.4,
+                    ease: [0.25, 0.1, 0.25, 1.0]
+                  }
+                }
+              }}
                               className="rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
                               style={{ backgroundColor: announcement.background_color }}
                               onClick={() => {
@@ -605,10 +641,17 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                         {config.quickActions.map((action) => (
                           <motion.div
                             key={action.id}
-                            variants={{
-                              hidden: { opacity: 0, y: 20 },
-                              visible: { opacity: 1, y: 0, transition: { duration: 0.3 } }
-                            }}
+              variants={{
+                hidden: { opacity: 0, y: 8 },
+                visible: { 
+                  opacity: 1, 
+                  y: 0, 
+                  transition: { 
+                    duration: 0.4,
+                    ease: [0.25, 0.1, 0.25, 1.0]
+                  }
+                }
+              }}
                             className="p-4 border rounded-lg bg-card hover:bg-accent/50 cursor-pointer transition-all"
                             onClick={() => handleQuickActionClick(action.action || action.actionType)}
                           >
@@ -634,7 +677,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                 </div>
               </div>
             ) : (
-              <div className="p-4 flex items-center justify-between relative bg-background">
+              <div className="p-4 flex items-center justify-between relative bg-background border-b">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: `${config.primaryColor}15` }}>
                     <ChatBubbleIcon className="h-6 w-6" style={{ color: config.primaryColor }} />
@@ -1194,8 +1237,10 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                       : 'text-muted-foreground'
                   }`}
                 >
-                  <HomeNavIcon active={currentView === 'home'} hovered={hoveredNav === 'home'} className="h-5 w-5 mb-1" />
-                  <span className="text-[10px] leading-none">Home</span>
+                  <div className="flex items-center justify-center w-6 h-6 mb-0.5">
+                    <HomeNavIcon active={currentView === 'home'} hovered={hoveredNav === 'home'} className="h-5 w-5" />
+                  </div>
+                  <span className="text-xs">Home</span>
                 </button>
                 {config.enableMessagesTab && (
                   <button 
@@ -1208,8 +1253,10 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                         : 'text-muted-foreground'
                     }`}
                   >
-                    <ChatNavIcon active={currentView === 'messages'} hovered={hoveredNav === 'messages'} className="h-5 w-5 mb-1" />
-                    <span className="text-[10px] leading-none">Chat</span>
+                    <div className="flex items-center justify-center w-6 h-6 mb-0.5">
+                      <ChatNavIcon active={currentView === 'messages'} hovered={hoveredNav === 'messages'} className="h-5 w-5" />
+                    </div>
+                    <span className="text-xs">Chat</span>
                     {messages.some(m => !m.read && m.role === 'assistant') && (
                       <div className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
                     )}
@@ -1226,8 +1273,10 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                         : 'text-muted-foreground'
                     }`}
                   >
-                    <HelpNavIcon active={currentView === 'help'} hovered={hoveredNav === 'help'} className="h-5 w-5 mb-1" />
-                    <span className="text-[10px] leading-none">Help</span>
+                    <div className="flex items-center justify-center w-6 h-6 mb-0.5">
+                      <HelpNavIcon active={currentView === 'help'} hovered={hoveredNav === 'help'} className="h-5 w-5" />
+                    </div>
+                    <span className="text-xs">Help</span>
                   </button>
                 )}
               </div>
