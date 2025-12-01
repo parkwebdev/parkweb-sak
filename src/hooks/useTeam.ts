@@ -196,10 +196,7 @@ export const useTeam = () => {
       }
 
       console.log('✅ Role update successful');
-      toast({
-        title: "Role updated",
-        description: `${member.display_name || member.email}'s role has been updated.`,
-      });
+      // Success - no toast needed (SavedIndicator shows feedback in dialog)
 
       await fetchTeamMembers();
       await fetchCurrentUserRole();

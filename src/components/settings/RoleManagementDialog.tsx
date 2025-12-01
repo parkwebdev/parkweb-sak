@@ -7,6 +7,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useSecurityLog } from '@/hooks/useSecurityLog';
+import { SavedIndicator } from './SavedIndicator';
 import { TeamMember, PERMISSION_GROUPS, PERMISSION_LABELS } from '@/types/team';
 
 interface RoleManagementDialogProps {
@@ -26,6 +27,7 @@ export const RoleManagementDialog: React.FC<RoleManagementDialogProps> = ({
   const [role, setRole] = useState<string>('member');
   const [permissions, setPermissions] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const [showSaved, setShowSaved] = useState(false);
   const { user } = useAuth();
   const { logRoleChange } = useSecurityLog();
 
@@ -137,7 +139,12 @@ export const RoleManagementDialog: React.FC<RoleManagementDialogProps> = ({
         logRoleChange(member.user_id, oldRole, role, true);
       }
       
-      onClose();
+      // Show saved indicator briefly before closing
+      setShowSaved(true);
+      setTimeout(() => {
+        setShowSaved(false);
+        onClose();
+      }, 1500);
     } catch (error) {
       console.error('Error in handleSave:', error);
       
@@ -233,13 +240,16 @@ export const RoleManagementDialog: React.FC<RoleManagementDialogProps> = ({
             </div>
           </div>
 
-          <div className="flex justify-end space-x-2 pt-4">
-            <Button variant="outline" onClick={onClose} disabled={loading}>
-              Cancel
-            </Button>
-            <Button onClick={handleSave} disabled={loading}>
-              {loading ? "Saving..." : "Save Changes"}
-            </Button>
+          <div className="flex items-center justify-between pt-4">
+            <SavedIndicator show={showSaved} />
+            <div className="flex space-x-2">
+              <Button variant="outline" onClick={onClose} disabled={loading}>
+                Cancel
+              </Button>
+              <Button onClick={handleSave} disabled={loading}>
+                {loading ? "Saving..." : "Save Changes"}
+              </Button>
+            </div>
           </div>
         </div>
       </DialogContent>
