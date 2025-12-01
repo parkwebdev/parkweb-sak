@@ -513,7 +513,14 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
       )}
 
       {isOpen || isIframeMode ? (
-          <Card className={isIframeMode ? "w-full h-full flex flex-col shadow-none overflow-hidden border-0 rounded-3xl bg-background" : "w-[380px] h-[650px] flex flex-col shadow-xl overflow-hidden border-0 rounded-3xl bg-background"}>
+          <Card 
+            className={isIframeMode ? "w-full h-full flex flex-col shadow-none overflow-hidden border-0 rounded-3xl" : "w-[380px] h-[650px] flex flex-col shadow-xl overflow-hidden border-0 rounded-3xl"}
+            style={{
+              background: currentView === 'home' 
+                ? `linear-gradient(to bottom right, ${config.gradientStartColor}, ${config.gradientEndColor})`
+                : undefined
+            }}
+          >
             {/* Header */}
             {currentView === 'home' ? (
               <div className="flex-1 relative overflow-hidden">
