@@ -695,10 +695,18 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
 
             {/* Content - Only for non-home views */}
             {currentView !== 'home' && (
+              <AnimatePresence mode="wait">
               <div className="flex-1 overflow-hidden bg-background flex flex-col">
 
               {currentView === 'messages' && (
-                <div className="flex-1 flex flex-col">
+                <motion.div 
+                  key="messages"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1.0] }}
+                  className="flex-1 flex flex-col"
+                >
                   <div className="flex-1 overflow-y-auto p-4 space-y-3 messages-container">
                     {!chatUser && (
                       <div className="flex items-start">
@@ -950,15 +958,22 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                       </div>
                     )}
                   </div>
-                </div>
+                </motion.div>
               )}
 
               {currentView === 'help' && (
-                <div className="flex-1 flex flex-col">
+                <motion.div 
+                  key="help"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1.0] }}
+                  className="flex-1 flex flex-col"
+                >
                   {/* Level 1: Categories List (No category selected, no search query) */}
                   {!selectedCategory && !selectedArticle && !helpSearchQuery && (
                     <>
-                      <div className="p-4 border-b bg-transparent">
+                      <div className="p-4 border-b bg-muted/30">
                         <h3 className="text-lg font-semibold mb-3">Help Center</h3>
                         <Input
                           value={helpSearchQuery}
@@ -1008,7 +1023,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                   {/* Level 1b: Search Results (When user searches) */}
                   {!selectedCategory && !selectedArticle && helpSearchQuery && (
                     <>
-                      <div className="p-4 border-b bg-transparent">
+                      <div className="p-4 border-b bg-muted/30">
                         <div className="flex items-center gap-2 mb-3">
                           <Button 
                             size="sm" 
@@ -1061,7 +1076,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                   {/* Level 2: Articles in Category (Category selected, no article) */}
                   {selectedCategory && !selectedArticle && (
                     <>
-                      <div className="p-4 border-b bg-transparent">
+                      <div className="p-4 border-b bg-muted/30">
                         <div className="flex items-center gap-2 mb-3">
                           <Button 
                             size="sm" 
@@ -1213,11 +1228,12 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                         </Button>
                       </div>
                     </div>
-                  )}
-                </div>
-              )}
-            </div>
-            )}
+                   )}
+                 </motion.div>
+               )}
+             </div>
+             </AnimatePresence>
+             )}
 
             {/* Bottom Navigation */}
             {config.showBottomNav && (
