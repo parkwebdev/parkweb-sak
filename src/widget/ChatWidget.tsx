@@ -104,6 +104,9 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
 
   // Calculate unread messages (assistant messages that haven't been read)
   const unreadCount = messages.filter(msg => msg.role === 'assistant' && msg.read === false).length;
+  
+  // Track hover state for nav icons
+  const [hoveredNav, setHoveredNav] = useState<'home' | 'messages' | 'help' | null>(null);
 
   // Load config on mount if simple config
   useEffect(() => {
@@ -1162,56 +1165,56 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
             {/* Bottom Navigation */}
             {config.showBottomNav && (
               <div className="border-t p-2 flex justify-around">
-                <Button 
-                  variant="ghost"
-                  size="sm" 
+                <button 
+                  onMouseEnter={() => setHoveredNav('home')}
+                  onMouseLeave={() => setHoveredNav(null)}
                   onClick={() => {
                     setCurrentView('home');
                     setSelectedCategory(null);
                     setSelectedArticle(null);
                     setHelpSearchQuery('');
                   }} 
-                  className={`flex-1 flex flex-col items-center gap-1 h-auto py-2 transition-colors ${
+                  className={`flex-1 flex flex-col items-center gap-1 h-auto py-2 transition-colors bg-transparent hover:bg-transparent ${
                     currentView === 'home' 
                       ? 'text-foreground' 
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
-                  <HomeNavIcon active={currentView === 'home'} className="h-5 w-5" />
+                  <HomeNavIcon active={currentView === 'home'} hovered={hoveredNav === 'home'} className="h-5 w-5" />
                   <span className="text-xs">Home</span>
-                </Button>
+                </button>
                 {config.enableMessagesTab && (
-                  <Button 
-                    variant="ghost"
-                    size="sm" 
+                  <button 
+                    onMouseEnter={() => setHoveredNav('messages')}
+                    onMouseLeave={() => setHoveredNav(null)}
                     onClick={() => setCurrentView('messages')} 
-                    className={`flex-1 flex flex-col items-center gap-1 h-auto py-2 relative transition-colors ${
+                    className={`flex-1 flex flex-col items-center gap-1 h-auto py-2 relative transition-colors bg-transparent hover:bg-transparent ${
                       currentView === 'messages' 
                         ? 'text-foreground' 
                         : 'text-muted-foreground hover:text-foreground'
                     }`}
                   >
-                    <ChatNavIcon active={currentView === 'messages'} className="h-5 w-5" />
+                    <ChatNavIcon active={currentView === 'messages'} hovered={hoveredNav === 'messages'} className="h-5 w-5" />
                     <span className="text-xs">Chat</span>
                     {messages.some(m => !m.read && m.role === 'assistant') && (
                       <div className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
                     )}
-                  </Button>
+                  </button>
                 )}
                 {config.enableHelpTab && config.helpArticles.length > 0 && (
-                  <Button 
-                    variant="ghost"
-                    size="sm" 
+                  <button 
+                    onMouseEnter={() => setHoveredNav('help')}
+                    onMouseLeave={() => setHoveredNav(null)}
                     onClick={() => setCurrentView('help')} 
-                    className={`flex-1 flex flex-col items-center gap-1 h-auto py-2 transition-colors ${
+                    className={`flex-1 flex flex-col items-center gap-1 h-auto py-2 transition-colors bg-transparent hover:bg-transparent ${
                       currentView === 'help' 
                         ? 'text-foreground' 
                         : 'text-muted-foreground hover:text-foreground'
                     }`}
                   >
-                    <HelpNavIcon active={currentView === 'help'} className="h-5 w-5" />
+                    <HelpNavIcon active={currentView === 'help'} hovered={hoveredNav === 'help'} className="h-5 w-5" />
                     <span className="text-xs">Help</span>
-                  </Button>
+                  </button>
                 )}
               </div>
             )}
