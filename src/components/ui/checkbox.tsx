@@ -5,35 +5,21 @@ import * as CheckboxPrimitive from "@radix-ui/react-checkbox"
 import { motion } from "motion/react"
 
 import { cn } from "@/lib/utils"
+import { useControlledState } from "@/hooks/use-controlled-state"
 
 export function Checkbox({
   className,
   checked: checkedProp,
-  onCheckedChange: setCheckedProp,
+  onCheckedChange,
   disabled,
   defaultChecked,
   ...props
 }: React.ComponentProps<typeof CheckboxPrimitive.Root>) {
-  const [_checked, _setChecked] =
-    React.useState<CheckboxPrimitive.CheckedState>(defaultChecked ?? false)
-
-  const checked = checkedProp ?? _checked
-
-  const setChecked = React.useCallback(
-    (
-      value:
-        | CheckboxPrimitive.CheckedState
-        | ((value: CheckboxPrimitive.CheckedState) => boolean),
-    ) => {
-      const checkedState = typeof value === "function" ? value(checked) : value
-      if (setCheckedProp) {
-        setCheckedProp(checkedState)
-      } else {
-        _setChecked(checkedState)
-      }
-    },
-    [setCheckedProp, checked],
-  )
+  const [checked, setChecked] = useControlledState({
+    value: checkedProp,
+    defaultValue: defaultChecked ?? false,
+    onChange: onCheckedChange,
+  })
 
   return (
     <motion.div
@@ -47,7 +33,7 @@ export function Checkbox({
     >
       <CheckboxPrimitive.Root
         checked={checked}
-        onCheckedChange={(value) => setChecked(!!value)}
+        onCheckedChange={setChecked}
         disabled={disabled}
         className={cn(
           "border-input focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive hover:border-primary/20 flex size-4 shrink-0 items-center justify-center rounded-[4px] border transition-all duration-200 outline-none hover:shadow-sm focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50",
