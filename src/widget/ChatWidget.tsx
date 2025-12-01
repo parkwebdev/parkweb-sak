@@ -280,8 +280,8 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
     return result ? `${parseInt(result[1], 16)},${parseInt(result[2], 16)},${parseInt(result[3], 16)}` : '0,0,0';
   };
 
-  // Calculate logo opacity based on scroll (fades out in first 60px)
-  const logoOpacity = Math.max(0, 1 - headerScrollY / 60);
+  // Calculate logo opacity based on scroll (fades out gradually over 80px)
+  const logoOpacity = Math.max(0, 1 - headerScrollY / 80);
 
   const getGradientStyle = () => {
     if (!config.useGradientHeader) return { backgroundColor: config.primaryColor };
@@ -488,30 +488,30 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
           <Card className={isIframeMode ? "w-full h-full flex flex-col shadow-none overflow-hidden border-0" : "w-[380px] max-h-[650px] flex flex-col shadow-xl overflow-hidden border-0"}>
             {/* Header */}
             {currentView === 'home' ? (
-              <div className="relative h-[240px] overflow-visible">
-                <BubbleBackground 
-                  interactive
-                  colors={{
-                    first: hexToRgb(config.gradientStartColor),
-                    second: hexToRgb(config.gradientEndColor),
-                    third: hexToRgb(config.gradientStartColor),
-                    fourth: hexToRgb(config.gradientEndColor),
-                    fifth: hexToRgb(config.gradientStartColor),
-                    sixth: hexToRgb(config.gradientEndColor),
-                  }}
-                  className="absolute inset-0"
-                />
-                
-                {/* Bottom fade gradient overlay */}
-                <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-background to-transparent z-10 pointer-events-none" />
-                
-                {/* Top bar with logo + actions */}
-                <div className="absolute top-3 left-3 right-3 z-20 flex justify-between items-start">
+              <div className="flex-1 relative overflow-hidden">
+                {/* Fixed gradient background - extends full height */}
+                <div className="absolute inset-0">
+                  <BubbleBackground 
+                    interactive
+                    colors={{
+                      first: hexToRgb(config.gradientStartColor),
+                      second: hexToRgb(config.gradientEndColor),
+                      third: hexToRgb(config.gradientStartColor),
+                      fourth: hexToRgb(config.gradientEndColor),
+                      fifth: hexToRgb(config.gradientStartColor),
+                      sixth: hexToRgb(config.gradientEndColor),
+                    }}
+                    className="absolute inset-0"
+                  />
+                  
+                  {/* Logo in top left - aligned with content text */}
                   <ChatPadLogo 
-                    className="h-8 w-8 text-white transition-opacity duration-200"
+                    className="absolute top-4 left-6 h-8 w-8 text-white transition-opacity duration-300"
                     style={{ opacity: logoOpacity }}
                   />
-                  <div className="flex gap-1">
+                  
+                  {/* Settings/Close buttons in top right */}
+                  <div className="absolute top-4 right-4 flex gap-1 z-20">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 h-8 w-8">
@@ -547,13 +547,80 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                   </div>
                 </div>
                 
-                {/* Welcome content */}
-                <div className="relative z-10 h-full flex flex-col items-start justify-end p-6 pb-12">
-                  <div className="space-y-2">
+                {/* Scrollable content overlay */}
+                <div 
+                  ref={homeContentRef}
+                  onScroll={(e) => setHeaderScrollY(e.currentTarget.scrollTop)}
+                  className="absolute inset-0 overflow-y-auto"
+                >
+                  {/* Spacer to push content down initially */}
+                  <div className="h-[200px]" />
+                  
+                  {/* Welcome text - visible over gradient */}
+                  <div className="px-6 pb-6">
                     <h2 className="text-3xl font-bold text-white">
                       {config.welcomeTitle} {config.welcomeEmoji}
                     </h2>
                     <p className="text-white/90 text-base">{config.welcomeSubtitle}</p>
+                  </div>
+                  
+                  {/* Content wrapper with white background that scrolls over gradient */}
+                  <div className="bg-background rounded-t-2xl shadow-lg min-h-full">
+                    <div className="p-4 space-y-3">
+                      {config.announcements.length > 0 && (
+                        <div className="space-y-3 mb-6">
+                          {config.announcements.map((announcement) => (
+                            <div
+                              key={announcement.id}
+                              className="rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
+                              style={{ backgroundColor: announcement.background_color }}
+                              onClick={() => {
+                                if (announcement.action_type === 'start_chat') setCurrentView('messages');
+                                else if (announcement.action_type === 'open_help') setCurrentView('help');
+                              }}
+                            >
+                              {announcement.image_url && (
+                                <div className="h-32 overflow-hidden">
+                                  <img src={announcement.image_url} alt="" className="w-full h-full object-cover" />
+                                </div>
+                              )}
+                              <div className="p-4 flex items-center justify-between">
+                                <div className="flex-1">
+                                  <h3 className="font-semibold text-base" style={{ color: announcement.title_color }}>{announcement.title}</h3>
+                                  {announcement.subtitle && <p className="text-sm text-muted-foreground mt-1">{announcement.subtitle}</p>}
+                                </div>
+                                <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      <div className="space-y-3">
+                        {config.quickActions.map((action) => (
+                          <div
+                            key={action.id}
+                            className="p-4 border rounded-lg bg-card hover:bg-accent/50 cursor-pointer transition-all"
+                            onClick={() => handleQuickActionClick(action.action || action.actionType)}
+                          >
+                            <div className="flex items-start gap-3">
+                              <div className="p-2 rounded-lg" style={{ backgroundColor: `${config.primaryColor}15` }}>
+                                <div style={{ color: config.primaryColor }}>{getQuickActionIcon(action.icon)}</div>
+                              </div>
+                              <div className="flex-1">
+                                <div className="flex items-center justify-between gap-2">
+                                  <h4 className="font-medium text-sm">{action.title || action.label}</h4>
+                                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                                </div>
+                                {action.subtitle && (
+                                  <p className="text-xs text-muted-foreground mt-0.5">{action.subtitle}</p>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -576,67 +643,6 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
 
             {/* Content */}
             <div className="flex-1 overflow-hidden bg-background flex flex-col">
-              {currentView === 'home' && (
-                <div 
-                  ref={homeContentRef}
-                  onScroll={(e) => setHeaderScrollY(e.currentTarget.scrollTop)}
-                  className="flex-1 overflow-y-auto -mt-8 relative z-20 bg-background rounded-t-2xl shadow-lg p-4"
-                >
-                  {config.announcements.length > 0 && (
-                    <div className="space-y-3 mb-6">
-                      {config.announcements.map((announcement) => (
-                        <div
-                          key={announcement.id}
-                          className="rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
-                          style={{ backgroundColor: announcement.background_color }}
-                          onClick={() => {
-                            if (announcement.action_type === 'start_chat') setCurrentView('messages');
-                            else if (announcement.action_type === 'open_help') setCurrentView('help');
-                          }}
-                        >
-                          {announcement.image_url && (
-                            <div className="h-32 overflow-hidden">
-                              <img src={announcement.image_url} alt="" className="w-full h-full object-cover" />
-                            </div>
-                          )}
-                          <div className="p-4 flex items-center justify-between">
-                            <div className="flex-1">
-                              <h3 className="font-semibold text-base" style={{ color: announcement.title_color }}>{announcement.title}</h3>
-                              {announcement.subtitle && <p className="text-sm text-muted-foreground mt-1">{announcement.subtitle}</p>}
-                            </div>
-                            <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  <div className="space-y-3">
-                    {config.quickActions.map((action) => (
-                      <div
-                        key={action.id}
-                        className="p-4 border rounded-lg bg-card hover:bg-accent/50 cursor-pointer transition-all"
-                        onClick={() => handleQuickActionClick(action.action || action.actionType)}
-                      >
-                        <div className="flex items-start gap-3">
-                          <div className="p-2 rounded-lg" style={{ backgroundColor: `${config.primaryColor}15` }}>
-                            <div style={{ color: config.primaryColor }}>{getQuickActionIcon(action.icon)}</div>
-                          </div>
-                          <div className="flex-1">
-                            <div className="flex items-center justify-between gap-2">
-                              <h4 className="font-medium text-sm">{action.title || action.label}</h4>
-                              <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                            </div>
-                            {action.subtitle && (
-                              <p className="text-xs text-muted-foreground mt-0.5">{action.subtitle}</p>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
 
               {currentView === 'messages' && (
                 <div className="flex-1 flex flex-col">
