@@ -119,12 +119,23 @@ const config: Config = {
             opacity: "0"
           }
         },
+        "pulse-slow": {
+          "0%, 100%": {
+            transform: "scale(1)",
+            opacity: "0.75"
+          },
+          "50%": {
+            transform: "scale(1.5)",
+            opacity: "0"
+          }
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "fade-in": "fade-in 0.3s ease-out",
         "ping": "ping 1s cubic-bezier(0, 0, 0.2, 1) infinite",
+        "pulse-slow": "pulse-slow 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite",
       },
     },
   },
