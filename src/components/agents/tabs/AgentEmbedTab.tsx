@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useEmbeddedChatConfig } from '@/hooks/useEmbeddedChatConfig';
 import { EmbedSettingsPanel } from '../embed/EmbedSettingsPanel';
 import { EmbedPreviewPanel } from '../embed/EmbedPreviewPanel';
+import { SavedIndicator } from '@/components/settings/SavedIndicator';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Agent = Tables<'agents'>;
@@ -17,6 +18,9 @@ interface AgentEmbedTabProps {
 export const AgentEmbedTab = ({ agent, onUpdate, onFormChange }: AgentEmbedTabProps) => {
   const { config, loading, saveConfig, generateEmbedCode } = useEmbeddedChatConfig(agent.id);
   const [localConfig, setLocalConfig] = useState(config);
+  const [showSaved, setShowSaved] = useState(false);
+  const saveTimerRef = useRef<NodeJS.Timeout>();
+  
   useEffect(() => {
     setLocalConfig(config);
   }, [config]);
@@ -37,7 +41,22 @@ export const AgentEmbedTab = ({ agent, onUpdate, onFormChange }: AgentEmbedTabPr
   const handleConfigChange = (updates: Partial<typeof config>) => {
     const newConfig = { ...localConfig, ...updates };
     setLocalConfig(newConfig);
-    saveConfig(updates);
+    
+    // Clear existing timer
+    if (saveTimerRef.current) {
+      clearTimeout(saveTimerRef.current);
+    }
+    
+    // Debounce save by 1 second
+    saveTimerRef.current = setTimeout(async () => {
+      try {
+        await saveConfig(updates);
+        setShowSaved(true);
+        setTimeout(() => setShowSaved(false), 2000);
+      } catch (error) {
+        // Error toast already handled in saveConfig
+      }
+    }, 1000);
   };
 
   if (loading) {
@@ -52,6 +71,10 @@ export const AgentEmbedTab = ({ agent, onUpdate, onFormChange }: AgentEmbedTabPr
     <div className="grid grid-cols-1 lg:grid-cols-[400px_1fr] gap-6">
       {/* Left Panel - Settings */}
       <div className="space-y-4">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-medium text-muted-foreground">Embed Configuration</h3>
+          <SavedIndicator show={showSaved} />
+        </div>
         <EmbedSettingsPanel
           config={localConfig}
           onConfigChange={handleConfigChange}
