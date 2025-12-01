@@ -203,6 +203,36 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
     }
   }, [isOpen, previewMode]);
 
+  // Send resize notifications based on content
+  useEffect(() => {
+    if (!previewMode && window.parent !== window) {
+      const handleResize = () => {
+        const widgetElement = document.getElementById('chatpad-widget-root');
+        if (widgetElement) {
+          const height = widgetElement.scrollHeight;
+          window.parent.postMessage({
+            type: 'chatpad-widget-resize',
+            height: height
+          }, '*');
+        }
+      };
+
+      // Initial resize
+      handleResize();
+
+      // Observe content changes for resize
+      const resizeObserver = new ResizeObserver(handleResize);
+      const widgetElement = document.getElementById('chatpad-widget-root');
+      if (widgetElement) {
+        resizeObserver.observe(widgetElement);
+      }
+
+      return () => {
+        resizeObserver.disconnect();
+      };
+    }
+  }, [messages, currentView, selectedArticle, chatUser, previewMode]);
+
   // Listen for messages from parent window (iframe mode)
   useEffect(() => {
     if (previewMode) return;
@@ -437,7 +467,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
 
   // Shared widget content
   const widgetContent = (
-    <>
+    <div id="chatpad-widget-root">
       {/* Teaser Message */}
       {showTeaser && !isOpen && config.showTeaser && !isIframeMode && (
         <div className="absolute mb-20 mr-2 max-w-xs">
@@ -1177,7 +1207,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
             </Button>
           </div>
         )}
-      </>
+      </div>
   );
 
   // In iframe mode, render directly without fixed positioning
