@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Plus, Trash01 } from '@untitledui/icons';
 import { CopyButton } from '@/components/ui/copy-button';
 import type { EmbeddedChatConfig, CustomField } from '@/hooks/useEmbeddedChatConfig';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 
 interface EmbedSettingsPanelProps {
   config: EmbeddedChatConfig;

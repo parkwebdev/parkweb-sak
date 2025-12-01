@@ -8,6 +8,8 @@ import { SavedIndicator } from './SavedIndicator';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNotifications } from '@/hooks/useNotifications';
 import { supabase } from '@/integrations/supabase/client';
+import { AnimatedList } from '@/components/ui/animated-list';
+import { AnimatedItem } from '@/components/ui/animated-item';
 
 
 interface NotificationPreferences {
@@ -266,7 +268,8 @@ export const NotificationSettings: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <AnimatedList className="space-y-6" staggerDelay={0.1}>
+      <AnimatedItem>
       <Card>
         <CardHeader>
           <CardTitle className="text-lg font-medium">
@@ -317,7 +320,9 @@ export const NotificationSettings: React.FC = () => {
 
         </CardContent>
       </Card>
+      </AnimatedItem>
 
+      <AnimatedItem>
       <Card>
         <CardHeader>
           <CardTitle className="text-lg font-medium">Notification Types</CardTitle>
@@ -422,7 +427,9 @@ export const NotificationSettings: React.FC = () => {
           </div>
         </CardContent>
       </Card>
+      </AnimatedItem>
 
+      <AnimatedItem>
       <Card>
         <CardHeader>
           <CardTitle className="text-lg font-medium">Notification Status</CardTitle>
@@ -485,6 +492,7 @@ export const NotificationSettings: React.FC = () => {
           </div>
         </CardContent>
       </Card>
-    </div>
+      </AnimatedItem>
+    </AnimatedList>
   );
 };

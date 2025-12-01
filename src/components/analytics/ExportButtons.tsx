@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button';
 import { PdfIcon, CsvIcon } from './ExportIcons';
 import { generateCSVReport, generatePDFReport } from '@/lib/report-export';
 import { ReportConfig } from './ReportBuilder';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 
 interface ExportButtonsProps {
   data: any;

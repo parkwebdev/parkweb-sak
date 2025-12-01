@@ -8,6 +8,8 @@ import { Plus, Settings02, Trash01, PlayCircle, CheckCircle, XCircle } from '@un
 import { CreateWebhookDialog } from './CreateWebhookDialog';
 import { WebhookLogsDialog } from './WebhookLogsDialog';
 import { SavedIndicator } from './SavedIndicator';
+import { AnimatedList } from '@/components/ui/animated-list';
+import { AnimatedItem } from '@/components/ui/animated-item';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -78,8 +80,9 @@ export const WebhookSettings = () => {
         </Button>
       </div>
 
-      <div className="grid gap-4">
+      <AnimatedList className="grid gap-4" staggerDelay={0.05}>
         {webhooks.length === 0 ? (
+          <AnimatedItem>
           <Card>
             <CardContent className="py-12 text-center">
               <Settings02 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
@@ -93,9 +96,11 @@ export const WebhookSettings = () => {
               </Button>
             </CardContent>
           </Card>
+          </AnimatedItem>
         ) : (
           webhooks.map((webhook) => (
-            <Card key={webhook.id}>
+            <AnimatedItem key={webhook.id}>
+            <Card>
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -180,11 +185,12 @@ export const WebhookSettings = () => {
                      )}
                    </div>
                  </div>
-               </CardContent>
+                </CardContent>
             </Card>
+            </AnimatedItem>
           ))
         )}
-      </div>
+      </AnimatedList>
 
       <CreateWebhookDialog
         open={createDialogOpen}

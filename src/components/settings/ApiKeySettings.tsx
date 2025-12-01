@@ -8,6 +8,8 @@ import { CopyButton } from '@/components/ui/copy-button';
 import { CreateApiKeyDialog } from './CreateApiKeyDialog';
 import { SavedIndicator } from './SavedIndicator';
 import { formatDistanceToNow } from 'date-fns';
+import { AnimatedList } from '@/components/ui/animated-list';
+import { AnimatedItem } from '@/components/ui/animated-item';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -68,6 +70,7 @@ export const ApiKeySettings = () => {
 
   return (
     <div className="space-y-6">
+      <AnimatedItem>
       <Card>
         <CardHeader>
           <CardTitle>Security Best Practices</CardTitle>
@@ -94,9 +97,11 @@ export const ApiKeySettings = () => {
           </div>
         </CardContent>
       </Card>
+      </AnimatedItem>
 
-      <div className="grid gap-4">
+      <AnimatedList className="grid gap-4" staggerDelay={0.05}>
         {apiKeys.length === 0 ? (
+          <AnimatedItem>
           <Card>
             <CardContent className="py-12 text-center">
               <Key01 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
@@ -110,9 +115,11 @@ export const ApiKeySettings = () => {
               </Button>
             </CardContent>
           </Card>
+          </AnimatedItem>
         ) : (
           apiKeys.map((apiKey) => (
-            <Card key={apiKey.id}>
+            <AnimatedItem key={apiKey.id}>
+            <Card>
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -179,9 +186,10 @@ export const ApiKeySettings = () => {
                 </div>
               </CardContent>
             </Card>
+            </AnimatedItem>
           ))
         )}
-      </div>
+      </AnimatedList>
 
       <CreateApiKeyDialog
         open={createDialogOpen}
