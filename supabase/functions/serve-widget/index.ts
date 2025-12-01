@@ -21,10 +21,10 @@ serve(async (req) => {
     
     console.log('[Serve Widget] App URL:', appUrl);
     
-    // Serve a loader script that loads the widget from the deployed app
+    // Serve a loader script that loads the standalone widget bundle
     const loaderScript = `
 (function() {
-  console.log('[ChatPad Widget] Loading widget...');
+  console.log('[ChatPad Widget] Loading standalone widget bundle...');
   
   // Get config from script tag
   var script = document.currentScript;
@@ -43,162 +43,28 @@ serve(async (req) => {
   }
   
   console.log('[ChatPad Widget] Agent ID:', agentId);
+  console.log('[ChatPad Widget] Loading widget bundle from:', '${appUrl}/chatpad-widget.js');
   
-  // Fetch widget configuration
-  var configUrl = 'https://mvaimvwdukpgvkifkfpa.supabase.co/functions/v1/get-widget-config?agentId=' + agentId;
+  // Load the standalone widget bundle
+  var widgetScript = document.createElement('script');
+  widgetScript.src = '${appUrl}/chatpad-widget.js';
+  widgetScript.setAttribute('data-agent-id', agentId);
+  if (primaryColor) {
+    widgetScript.setAttribute('data-primary-color', primaryColor);
+  }
+  widgetScript.setAttribute('data-position', position);
   
-  fetch(configUrl)
-    .then(function(response) {
-      if (!response.ok) {
-        throw new Error('Failed to load widget config: ' + response.statusText);
-      }
-      return response.json();
-    })
-    .then(function(config) {
-      console.log('[ChatPad Widget] Config loaded, initializing widget...');
-      
-      // Merge config with script attributes
-      var widgetConfig = {
-        agentId: agentId,
-        userId: config.userId || '',
-        primaryColor: primaryColor || config.primaryColor || '#000000',
-        position: position,
-        greeting: config.greeting,
-        placeholder: config.placeholder,
-        agentName: config.agentName,
-        avatarUrl: config.avatarUrl,
-        showBranding: config.showBranding,
-        animation: config.animation,
-        buttonAnimation: config.buttonAnimation || config.animation,
-        showBadge: config.showBadge,
-        displayTiming: config.displayTiming,
-        delaySeconds: config.delaySeconds,
-        scrollDepth: config.scrollDepth,
-        showTeaser: config.showTeaser,
-        teaserText: config.teaserText,
-        teaserMessage: config.teaserMessage || config.teaserText,
-        welcomeEmoji: config.welcomeEmoji,
-        welcomeTitle: config.welcomeTitle,
-        welcomeSubtitle: config.welcomeSubtitle,
-        quickActions: config.quickActions,
-        showBottomNav: config.showBottomNav,
-        enableHomeTab: config.enableHomeTab,
-        enableMessagesTab: config.enableMessagesTab,
-        enableHelpTab: config.enableHelpTab,
-        useGradientHeader: config.useGradientHeader,
-        gradientStartColor: config.gradientStartColor,
-        gradientEndColor: config.gradientEndColor,
-        showTeamAvatars: config.showTeamAvatars,
-        teamAvatarUrls: config.teamAvatarUrls,
-        maxFileSize: config.maxFileSize,
-        allowedFileTypes: config.allowedFileTypes,
-        enableVoiceMessages: config.enableVoiceMessages,
-        enableFileAttachments: config.enableFileAttachments,
-        enableMessageReactions: config.enableMessageReactions,
-        showReadReceipts: config.showReadReceipts,
-        enableContactForm: config.enableContactForm,
-        contactFormTitle: config.contactFormTitle,
-        contactFormSubtitle: config.contactFormSubtitle,
-        customFields: config.customFields,
-        viewTransition: config.viewTransition,
-        defaultSoundEnabled: config.defaultSoundEnabled,
-        defaultAutoScroll: config.defaultAutoScroll,
-        announcements: config.announcements || [],
-        helpArticles: config.helpArticles,
-        helpCategories: config.helpCategories
-      };
-      
-      // Initialize the widget by loading it from the main app
-      var widgetFrame = document.createElement('iframe');
-      widgetFrame.id = 'chatpad-widget-frame';
-      
-      // Start with small size for bubble only with fade-in animation
-      widgetFrame.style.cssText = 'position: fixed; bottom: 20px; ' + 
-        (position.includes('right') ? 'right: 20px;' : 'left: 20px;') + 
-        ' width: 60px; height: 60px; border: none; z-index: 999999; ' +
-        'background: transparent; display: none; opacity: 0; ' +
-        'transition: opacity 0.3s ease-in-out, width 0.3s ease, height 0.3s ease, ' +
-        'border-radius 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;';
-      
-      // Listen for widget state messages to resize iframe
-      window.addEventListener('message', function(event) {
-        if (event.data.type === 'chatpad-widget-state') {
-          if (event.data.isOpen) {
-            // Widget opened - expand to full size
-            widgetFrame.style.width = '400px';
-            widgetFrame.style.height = '650px';
-            widgetFrame.style.borderRadius = '16px';
-            widgetFrame.style.boxShadow = '0 8px 24px rgba(0,0,0,0.15)';
-            widgetFrame.style.background = 'white';
-          } else {
-            // Widget closed - shrink to bubble size
-            widgetFrame.style.width = '60px';
-            widgetFrame.style.height = '60px';
-            widgetFrame.style.borderRadius = '50%';
-            widgetFrame.style.boxShadow = 'none';
-            widgetFrame.style.background = 'transparent';
-          }
-        }
-      });
-      
-      // Store config for widget access
-      window.chatpadWidgetConfig = widgetConfig;
-      
-      // Load widget UI from the app using the /widget route
-      widgetFrame.src = '${appUrl}/widget?agentId=' + agentId + '&position=' + position;
-      
-      // Handle display timing with smooth fade-in animation
-      function showWidget() {
-        // Set initial opacity to 0 for fade-in effect
-        widgetFrame.style.opacity = '0';
-        widgetFrame.style.display = 'block';
-        
-        // Trigger fade-in animation
-        setTimeout(function() {
-          widgetFrame.style.opacity = '1';
-        }, 50);
-        
-        if (widgetConfig.displayTiming === 'immediate') {
-          // Already handled above
-        } else if (widgetConfig.displayTiming === 'delayed') {
-          widgetFrame.style.display = 'none';
-          widgetFrame.style.opacity = '0';
-          setTimeout(function() {
-            widgetFrame.style.display = 'block';
-            setTimeout(function() {
-              widgetFrame.style.opacity = '1';
-            }, 50);
-          }, (widgetConfig.delaySeconds || 3) * 1000);
-        } else if (widgetConfig.displayTiming === 'scroll') {
-          widgetFrame.style.display = 'none';
-          widgetFrame.style.opacity = '0';
-          var scrollHandler = function() {
-            var scrolled = (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100;
-            if (scrolled >= (widgetConfig.scrollDepth || 50)) {
-              widgetFrame.style.display = 'block';
-              setTimeout(function() {
-                widgetFrame.style.opacity = '1';
-              }, 50);
-              window.removeEventListener('scroll', scrollHandler);
-            }
-          };
-          window.addEventListener('scroll', scrollHandler);
-        }
-      }
-      
-      document.body.appendChild(widgetFrame);
-      
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', showWidget);
-      } else {
-        showWidget();
-      }
-      
-      console.log('[ChatPad Widget] Widget initialized successfully');
-    })
-    .catch(function(error) {
-      console.error('[ChatPad Widget] Failed to initialize:', error);
-    });
+  widgetScript.onload = function() {
+    console.log('[ChatPad Widget] Standalone bundle loaded successfully');
+  };
+  
+  widgetScript.onerror = function() {
+    console.error('[ChatPad Widget] Failed to load widget bundle');
+  };
+  
+  document.head.appendChild(widgetScript);
+  
+  console.log('[ChatPad Widget] Widget script injected');
 })();
 `;
 
