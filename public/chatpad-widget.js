@@ -13,6 +13,7 @@
     }
     
     .chatpad-widget-button {
+      position: absolute;
       width: 60px;
       height: 60px;
       border-radius: 50%;
@@ -209,8 +210,11 @@
       this.button = document.createElement('button');
       this.button.className = 'chatpad-widget-button';
       this.button.innerHTML = `
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+        <svg viewBox="0 0 270.69 270.02" fill="currentColor">
+          <g>
+            <path d="M135.35,0C60.59,0,0,60.44,0,135.02s60.59,135,135.35,135,135.35-60.44,135.35-135S210.1,0,135.35,0ZM135.35,241.44c-58.96,0-106.7-47.62-106.7-106.43S76.38,28.57,135.35,28.57s106.7,47.63,106.7,106.44-47.74,106.43-106.7,106.43Z" />
+            <path d="M86.78,166.62c9.45,48.43,79.49,46.38,94.14,9.97,3.46-8.6,8.57-27.67-15.49-17.93-22.19,9.02-53.36,37.06-78.66,7.96h.01Z" />
+          </g>
         </svg>
       `;
       this.button.addEventListener('click', () => this.toggle());
