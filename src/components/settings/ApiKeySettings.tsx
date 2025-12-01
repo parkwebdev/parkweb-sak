@@ -17,13 +17,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/lib/toast';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 
 export const ApiKeySettings = () => {
   const { apiKeys, loading, deleteApiKey, rotateApiKey } = useApiKeys();
-  const { toast } = useToast();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [rotateDialogOpen, setRotateDialogOpen] = useState(false);

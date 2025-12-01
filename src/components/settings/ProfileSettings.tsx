@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/lib/toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { PasswordStrengthIndicator } from '@/components/PasswordStrengthIndicator';
@@ -27,7 +27,6 @@ export const ProfileSettings: React.FC = () => {
   const [savedFields, setSavedFields] = useState<Record<string, boolean>>({});
   const [initialProfile, setInitialProfile] = useState<typeof profile | null>(null);
   const { user } = useAuth();
-  const { toast } = useToast();
 
   useEffect(() => {
     if (user) {
@@ -43,9 +42,9 @@ export const ProfileSettings: React.FC = () => {
         .from('profiles')
         .select('*')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') {
+      if (error) {
         console.error('Error fetching profile:', error);
         return;
       }
