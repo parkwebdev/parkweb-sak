@@ -8,7 +8,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { X, Send01, Minimize02, Home05, MessageChatCircle, HelpCircle, ChevronRight, Zap, BookOpen01, Settings01, Microphone01, Attachment01, Image03, FileCheck02, ThumbsUp, ThumbsDown } from '@untitledui/icons';
+import { X, Send01, Minimize02, MessageChatCircle, ChevronRight, Zap, BookOpen01, Settings01, Microphone01, Attachment01, Image03, FileCheck02, ThumbsUp, ThumbsDown } from '@untitledui/icons';
+import { HomeNavIcon, ChatNavIcon, HelpNavIcon } from './NavIcons';
 import { ChatBubbleIcon } from '@/components/agents/ChatBubbleIcon';
 import ChatPadLogo from '@/components/ChatPadLogo';
 import { BubbleBackground } from '@/components/ui/bubble-background';
@@ -1183,11 +1184,11 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                   }} 
                   className={`flex-1 flex flex-col items-center gap-1 h-auto py-2 transition-colors ${
                     currentView === 'home' 
-                      ? 'bg-foreground text-background hover:bg-foreground/90' 
-                      : 'text-muted-foreground hover:text-foreground hover:bg-transparent'
+                      ? 'text-foreground' 
+                      : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
-                  <Home05 className="h-5 w-5" />
+                  <HomeNavIcon active={currentView === 'home'} className="h-5 w-5" />
                   <span className="text-xs">Home</span>
                 </Button>
                 {config.enableMessagesTab && (
@@ -1197,11 +1198,11 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                     onClick={() => setCurrentView('messages')} 
                     className={`flex-1 flex flex-col items-center gap-1 h-auto py-2 relative transition-colors ${
                       currentView === 'messages' 
-                        ? 'bg-foreground text-background hover:bg-foreground/90' 
-                        : 'text-muted-foreground hover:text-foreground hover:bg-transparent'
+                        ? 'text-foreground' 
+                        : 'text-muted-foreground hover:text-foreground'
                     }`}
                   >
-                    <MessageChatCircle className="h-5 w-5" />
+                    <ChatNavIcon active={currentView === 'messages'} className="h-5 w-5" />
                     <span className="text-xs">Chat</span>
                     {messages.some(m => !m.read && m.role === 'assistant') && (
                       <div className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
@@ -1215,11 +1216,11 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                     onClick={() => setCurrentView('help')} 
                     className={`flex-1 flex flex-col items-center gap-1 h-auto py-2 transition-colors ${
                       currentView === 'help' 
-                        ? 'bg-foreground text-background hover:bg-foreground/90' 
-                        : 'text-muted-foreground hover:text-foreground hover:bg-transparent'
+                        ? 'text-foreground' 
+                        : 'text-muted-foreground hover:text-foreground'
                     }`}
                   >
-                    <HelpCircle className="h-5 w-5" />
+                    <HelpNavIcon active={currentView === 'help'} className="h-5 w-5" />
                     <span className="text-xs">Help</span>
                   </Button>
                 )}
