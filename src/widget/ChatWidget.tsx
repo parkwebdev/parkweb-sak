@@ -687,7 +687,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                     <div className="flex items-center gap-1.5">
                       <div className="relative flex items-center">
                         <div className="w-2 h-2 bg-green-500 rounded-full" />
-                        <div className="absolute w-2 h-2 bg-green-500 rounded-full animate-ping opacity-75" />
+                        <div className="absolute w-2 h-2 bg-green-500 rounded-full animate-pulse-slow" />
                       </div>
                       <p className="text-xs text-muted-foreground">Online</p>
                     </div>
@@ -991,17 +991,46 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
 
                       <div className="flex-1 overflow-y-auto p-4">
                         {config.helpCategories.length === 0 ? (
-                          <p className="text-center text-muted-foreground text-sm py-8">No categories available</p>
+                          <motion.p 
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ duration: 0.3 }}
+                            className="text-center text-muted-foreground text-sm py-8"
+                          >
+                            No categories available
+                          </motion.p>
                         ) : (
-                          <div className="space-y-3">
+                          <motion.div 
+                            className="space-y-3"
+                            initial="hidden"
+                            animate="visible"
+                            variants={{
+                              hidden: { opacity: 0 },
+                              visible: { 
+                                opacity: 1, 
+                                transition: { 
+                                  staggerChildren: 0.05,
+                                  delayChildren: 0.1
+                                } 
+                              }
+                            }}
+                          >
                             {config.helpCategories.map((category) => {
                               const articlesInCategory = config.helpArticles.filter(
                                 a => a.category_id === category.id || a.category === category.name
                               ).length;
                               
                               return (
-                                <button
+                                <motion.button
                                   key={category.id}
+                                  variants={{
+                                    hidden: { opacity: 0, y: 8 },
+                                    visible: { 
+                                      opacity: 1, 
+                                      y: 0,
+                                      transition: { duration: 0.3 }
+                                    }
+                                  }}
                                   className="w-full p-4 border rounded-lg bg-card hover:bg-accent/50 cursor-pointer transition-all text-left"
                                   onClick={() => setSelectedCategory(category.id)}
                                 >
@@ -1017,10 +1046,10 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                                     </div>
                                     <ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
                                   </div>
-                                </button>
+                                </motion.button>
                               );
                             })}
-                          </div>
+                          </motion.div>
                         )}
                       </div>
                     </>
@@ -1051,12 +1080,41 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
 
                       <div className="flex-1 overflow-y-auto p-4">
                         {filteredArticles.length === 0 ? (
-                          <p className="text-center text-muted-foreground text-sm py-8">No articles found</p>
+                          <motion.p 
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ duration: 0.3 }}
+                            className="text-center text-muted-foreground text-sm py-8"
+                          >
+                            No articles found
+                          </motion.p>
                         ) : (
-                          <div className="space-y-2">
+                          <motion.div 
+                            className="space-y-2"
+                            initial="hidden"
+                            animate="visible"
+                            variants={{
+                              hidden: { opacity: 0 },
+                              visible: { 
+                                opacity: 1, 
+                                transition: { 
+                                  staggerChildren: 0.05,
+                                  delayChildren: 0.1
+                                } 
+                              }
+                            }}
+                          >
                             {filteredArticles.map((article) => (
-                              <div
+                              <motion.div
                                 key={article.id}
+                                variants={{
+                                  hidden: { opacity: 0, y: 8 },
+                                  visible: { 
+                                    opacity: 1, 
+                                    y: 0,
+                                    transition: { duration: 0.3 }
+                                  }
+                                }}
                                 className="p-3 border rounded-lg hover:bg-accent cursor-pointer transition-colors"
                                 onClick={() => {
                                   setSelectedArticle(article);
@@ -1071,9 +1129,9 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                                     </Badge>
                                   )}
                                 </div>
-                              </div>
+                              </motion.div>
                             ))}
-                          </div>
+                          </motion.div>
                         )}
                       </div>
                     </>
@@ -1109,12 +1167,41 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
 
                       <div className="flex-1 overflow-y-auto p-4">
                         {filteredArticles.length === 0 ? (
-                          <p className="text-center text-muted-foreground text-sm py-8">No articles in this category</p>
+                          <motion.p 
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ duration: 0.3 }}
+                            className="text-center text-muted-foreground text-sm py-8"
+                          >
+                            No articles in this category
+                          </motion.p>
                         ) : (
-                          <div className="space-y-2">
+                          <motion.div 
+                            className="space-y-2"
+                            initial="hidden"
+                            animate="visible"
+                            variants={{
+                              hidden: { opacity: 0 },
+                              visible: { 
+                                opacity: 1, 
+                                transition: { 
+                                  staggerChildren: 0.05,
+                                  delayChildren: 0.1
+                                } 
+                              }
+                            }}
+                          >
                             {filteredArticles.map((article) => (
-                              <button
+                              <motion.button
                                 key={article.id}
+                                variants={{
+                                  hidden: { opacity: 0, y: 8 },
+                                  visible: { 
+                                    opacity: 1, 
+                                    y: 0,
+                                    transition: { duration: 0.3 }
+                                  }
+                                }}
                                 className="w-full p-3 border rounded-lg hover:bg-accent cursor-pointer transition-colors text-left"
                                 onClick={() => setSelectedArticle(article)}
                               >
@@ -1122,9 +1209,9 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                                   <h4 className="font-medium text-sm flex-1">{article.title}</h4>
                                   <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                                 </div>
-                              </button>
+                              </motion.button>
                             ))}
-                          </div>
+                          </motion.div>
                         )}
                       </div>
                     </>
