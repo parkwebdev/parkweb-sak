@@ -18,9 +18,9 @@ export const HomeNavIcon = ({ active, hovered, className }: NavIconProps) => {
             height={24}
             viewBox="0 0 24 24"
             fill="none"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             transition={{ duration: 0.2, ease: "easeInOut" }}
           >
             <motion.path
@@ -40,9 +40,9 @@ export const HomeNavIcon = ({ active, hovered, className }: NavIconProps) => {
             height={24}
             viewBox="0 0 24 24"
             fill="none"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             transition={{ duration: 0.2, ease: "easeInOut" }}
           >
             <motion.path
@@ -73,9 +73,9 @@ export const ChatNavIcon = ({ active, hovered, className }: NavIconProps) => {
             height={24}
             viewBox="0 0 24 24"
             fill="none"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             transition={{ duration: 0.2, ease: "easeInOut" }}
           >
             <motion.path
@@ -95,9 +95,9 @@ export const ChatNavIcon = ({ active, hovered, className }: NavIconProps) => {
             height={24}
             viewBox="0 0 24 24"
             fill="none"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             transition={{ duration: 0.2, ease: "easeInOut" }}
           >
             <motion.path
@@ -128,9 +128,9 @@ export const HelpNavIcon = ({ active, hovered, className }: NavIconProps) => {
             height={24}
             viewBox="0 0 24 24"
             fill="none"
-            initial={{ opacity: 0, scale: 0.8, rotate: -15 }}
-            animate={{ opacity: 1, scale: 1, rotate: 0 }}
-            exit={{ opacity: 0, scale: 0.8, rotate: 15 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             transition={{ duration: 0.2, ease: "easeInOut" }}
           >
             <motion.path
@@ -169,9 +169,9 @@ export const HelpNavIcon = ({ active, hovered, className }: NavIconProps) => {
             height={24}
             viewBox="0 0 24 24"
             fill="none"
-            initial={{ opacity: 0, scale: 0.8, rotate: 15 }}
-            animate={{ opacity: 1, scale: 1, rotate: 0 }}
-            exit={{ opacity: 0, scale: 0.8, rotate: -15 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             transition={{ duration: 0.2, ease: "easeInOut" }}
           >
             <motion.path
