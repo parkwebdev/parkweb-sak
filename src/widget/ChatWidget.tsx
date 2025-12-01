@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { X, Send01, Minimize02, Home05, MessageChatCircle, HelpCircle, ChevronRight, Zap, BookOpen01, Settings01, Microphone01, Attachment01, Image03, FileCheck02, ThumbsUp, ThumbsDown } from '@untitledui/icons';
 import { ChatBubbleIcon } from '@/components/agents/ChatBubbleIcon';
+import ChatPadLogo from '@/components/ChatPadLogo';
 import { BubbleBackground } from '@/components/ui/bubble-background';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from '@/components/ui/dropdown-menu';
 import { VoiceInput } from '@/components/molecule-ui/voice-input';
@@ -88,6 +89,8 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
   
   const [messages, setMessages] = useState<Message[]>([]);
+  const [headerScrollY, setHeaderScrollY] = useState(0);
+  const homeContentRef = useRef<HTMLDivElement>(null);
 
   const [chatSettings, setChatSettings] = useState(() => {
     const saved = localStorage.getItem(`chatpad_settings_${agentId}`);
@@ -275,6 +278,9 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
     return result ? `${parseInt(result[1], 16)},${parseInt(result[2], 16)},${parseInt(result[3], 16)}` : '0,0,0';
   };
+
+  // Calculate logo opacity based on scroll (fades out in first 60px)
+  const logoOpacity = Math.max(0, 1 - headerScrollY / 60);
 
   const getGradientStyle = () => {
     if (!config.useGradientHeader) return { backgroundColor: config.primaryColor };
@@ -481,7 +487,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
           <Card className={isIframeMode ? "w-full h-full flex flex-col shadow-none overflow-hidden border-0" : "w-[380px] max-h-[650px] flex flex-col shadow-xl overflow-hidden border-0"}>
             {/* Header */}
             {currentView === 'home' ? (
-              <div className="relative h-[180px] overflow-hidden">
+              <div className="relative h-[240px] overflow-visible">
                 <BubbleBackground 
                   interactive
                   colors={{
@@ -495,48 +501,59 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                   className="absolute inset-0"
                 />
                 
-                <div className="relative z-10 h-full flex flex-col items-start justify-center p-6 text-left">
+                {/* Bottom fade gradient overlay */}
+                <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-background to-transparent z-10 pointer-events-none" />
+                
+                {/* Top bar with logo + actions */}
+                <div className="absolute top-3 left-3 right-3 z-20 flex justify-between items-start">
+                  <ChatPadLogo 
+                    className="h-8 w-8 text-white transition-opacity duration-200"
+                    style={{ opacity: logoOpacity }}
+                  />
+                  <div className="flex gap-1">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 h-8 w-8">
+                          <Settings01 className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-56">
+                        <DropdownMenuLabel>Chat Settings</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onClick={() => setChatSettings((prev: any) => ({ ...prev, soundEnabled: !prev.soundEnabled }))}
+                          className="flex items-center justify-between"
+                        >
+                          <span>Sound</span>
+                          <div className={`w-9 h-5 rounded-full transition-colors ${chatSettings.soundEnabled ? 'bg-primary' : 'bg-muted'}`}>
+                            <div className={`w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${chatSettings.soundEnabled ? 'translate-x-5' : 'translate-x-0.5'} mt-0.5`} />
+                          </div>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => setChatSettings((prev: any) => ({ ...prev, autoScroll: !prev.autoScroll }))}
+                          className="flex items-center justify-between"
+                        >
+                          <span>Auto-scroll</span>
+                          <div className={`w-9 h-5 rounded-full transition-colors ${chatSettings.autoScroll ? 'bg-primary' : 'bg-muted'}`}>
+                            <div className={`w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${chatSettings.autoScroll ? 'translate-x-5' : 'translate-x-0.5'} mt-0.5`} />
+                          </div>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                    <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 h-8 w-8" onClick={handleClose}>
+                      <Minimize02 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+                
+                {/* Welcome content */}
+                <div className="relative z-10 h-full flex flex-col items-start justify-end p-6 pb-12">
                   <div className="space-y-2">
                     <h2 className="text-3xl font-bold text-white">
                       {config.welcomeTitle} {config.welcomeEmoji}
                     </h2>
                     <p className="text-white/90 text-base">{config.welcomeSubtitle}</p>
                   </div>
-                </div>
-                
-                <div className="absolute top-3 right-3 z-20 flex gap-1">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 h-8 w-8">
-                        <Settings01 className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-56">
-                      <DropdownMenuLabel>Chat Settings</DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        onClick={() => setChatSettings((prev: any) => ({ ...prev, soundEnabled: !prev.soundEnabled }))}
-                        className="flex items-center justify-between"
-                      >
-                        <span>Sound</span>
-                        <div className={`w-9 h-5 rounded-full transition-colors ${chatSettings.soundEnabled ? 'bg-primary' : 'bg-muted'}`}>
-                          <div className={`w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${chatSettings.soundEnabled ? 'translate-x-5' : 'translate-x-0.5'} mt-0.5`} />
-                        </div>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => setChatSettings((prev: any) => ({ ...prev, autoScroll: !prev.autoScroll }))}
-                        className="flex items-center justify-between"
-                      >
-                        <span>Auto-scroll</span>
-                        <div className={`w-9 h-5 rounded-full transition-colors ${chatSettings.autoScroll ? 'bg-primary' : 'bg-muted'}`}>
-                          <div className={`w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${chatSettings.autoScroll ? 'translate-x-5' : 'translate-x-0.5'} mt-0.5`} />
-                        </div>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                  <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 h-8 w-8" onClick={handleClose}>
-                    <Minimize02 className="h-4 w-4" />
-                  </Button>
                 </div>
               </div>
             ) : (
@@ -559,7 +576,11 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
             {/* Content */}
             <div className="flex-1 overflow-hidden bg-background flex flex-col">
               {currentView === 'home' && (
-                <div className="flex-1 overflow-y-auto p-4">
+                <div 
+                  ref={homeContentRef}
+                  onScroll={(e) => setHeaderScrollY(e.currentTarget.scrollTop)}
+                  className="flex-1 overflow-y-auto -mt-8 relative z-20 bg-background rounded-t-2xl shadow-lg p-4"
+                >
                   {config.announcements.length > 0 && (
                     <div className="space-y-3 mb-6">
                       {config.announcements.map((announcement) => (
