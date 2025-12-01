@@ -8,7 +8,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { Plus, Trash01, ChevronDown, XClose } from '@untitledui/icons';
 import { CopyButton } from '@/components/ui/copy-button';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import type { Tables } from '@/integrations/supabase/types';
 
 type AgentTool = Tables<'agent_tools'>;

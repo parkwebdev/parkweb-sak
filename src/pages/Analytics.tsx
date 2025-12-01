@@ -12,7 +12,7 @@ import { ReportBuilder, ReportConfig } from '@/components/analytics/ReportBuilde
 import { ScheduledReportsManager } from '@/components/analytics/ScheduledReportsManager';
 import { AnalyticsToolbar } from '@/components/analytics/AnalyticsToolbar';
 import { generateCSVReport, generatePDFReport } from '@/lib/report-export';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import { subDays } from 'date-fns';
 import { AnimatedList } from '@/components/ui/animated-list';
 import { AnimatedItem } from '@/components/ui/animated-item';

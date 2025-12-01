@@ -10,6 +10,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { PasswordStrengthIndicator } from '@/components/PasswordStrengthIndicator';
 import { Button } from '@/components/ui/button';
 import { SavedIndicator } from './SavedIndicator';
+import { AnimatedList } from '@/components/ui/animated-list';
+import { AnimatedItem } from '@/components/ui/animated-item';
 
 export const ProfileSettings: React.FC = () => {
   const [profile, setProfile] = useState({
@@ -254,7 +256,8 @@ export const ProfileSettings: React.FC = () => {
   }
 
   return (
-    <div className="space-y-4">
+    <AnimatedList className="space-y-4" staggerDelay={0.1}>
+      <AnimatedItem>
       <Card>
         <CardHeader>
           <CardTitle className="text-sm font-semibold">Personal Information</CardTitle>
@@ -307,7 +310,9 @@ export const ProfileSettings: React.FC = () => {
           </div>
         </CardContent>
       </Card>
+      </AnimatedItem>
 
+      <AnimatedItem>
       <Card>
         <CardHeader>
           <CardTitle className="text-sm font-semibold">Account Security</CardTitle>
@@ -368,6 +373,7 @@ export const ProfileSettings: React.FC = () => {
           </div>
         </CardContent>
       </Card>
-    </div>
+      </AnimatedItem>
+    </AnimatedList>
   );
 };

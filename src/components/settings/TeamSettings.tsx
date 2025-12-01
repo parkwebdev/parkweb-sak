@@ -9,6 +9,8 @@ import { Users01 as Users } from '@untitledui/icons';
 import { useTeam } from '@/hooks/useTeam';
 import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
 import { TeamMember } from '@/types/team';
+import { AnimatedList } from '@/components/ui/animated-list';
+import { AnimatedItem } from '@/components/ui/animated-item';
 
 interface TeamSettingsProps {
   openMemberId?: string | null;
@@ -71,9 +73,10 @@ export const TeamSettings: React.FC<TeamSettingsProps> = ({ openMemberId }) => {
         <div className="flex justify-end mb-6">
           <InviteMemberDialog onInvite={handleInviteMember} />
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+        <AnimatedList className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4" staggerDelay={0.05}>
           {[1, 2, 3].map((i) => (
-            <div key={i} className="p-4 sm:p-6 border border-border rounded-xl bg-card shadow-sm">
+            <AnimatedItem key={i}>
+            <div className="p-4 sm:p-6 border border-border rounded-xl bg-card shadow-sm">
               <div className="flex flex-col space-y-4">
                 <div className="flex items-start space-x-3">
                   <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-muted animate-pulse flex-shrink-0" />
@@ -92,8 +95,9 @@ export const TeamSettings: React.FC<TeamSettingsProps> = ({ openMemberId }) => {
                 </div>
               </div>
             </div>
+            </AnimatedItem>
           ))}
-        </div>
+        </AnimatedList>
       </div>
     );
   }

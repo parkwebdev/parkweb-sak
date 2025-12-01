@@ -9,7 +9,7 @@ import { useAuth } from '@/hooks/useAuth';
 import type { Tables } from '@/integrations/supabase/types';
 import { formatDate } from '@/lib/formatting';
 import { CheckCircle, Download01, LinkExternal01, RefreshCw01 } from '@untitledui/icons';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import { AnimatedTableRow } from '@/components/ui/animated-table-row';
 
 type Subscription = Tables<'subscriptions'> & {

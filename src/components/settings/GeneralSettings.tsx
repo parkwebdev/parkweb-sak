@@ -8,6 +8,8 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import { SavedIndicator } from './SavedIndicator';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { AnimatedList } from '@/components/ui/animated-list';
+import { AnimatedItem } from '@/components/ui/animated-item';
 
 export const GeneralSettings: React.FC = () => {
   const { user } = useAuth();
@@ -176,8 +178,9 @@ export const GeneralSettings: React.FC = () => {
   }
 
   return (
-    <div className="space-y-4">
-      <Card>
+    <AnimatedList className="space-y-4" staggerDelay={0.1}>
+      <AnimatedItem>
+        <Card>
         <CardHeader>
           <CardTitle className="text-sm font-semibold">Application Preferences</CardTitle>
           <CardDescription className="text-xs">Customize your application experience</CardDescription>
@@ -208,7 +211,9 @@ export const GeneralSettings: React.FC = () => {
           </div>
         </CardContent>
       </Card>
+      </AnimatedItem>
 
+      <AnimatedItem>
       <Card>
         <CardHeader>
           <CardTitle className="text-sm font-semibold">Default Views</CardTitle>
@@ -242,12 +247,15 @@ export const GeneralSettings: React.FC = () => {
           </div>
         </CardContent>
       </Card>
+      </AnimatedItem>
 
+      <AnimatedItem>
       <div className="flex justify-end">
         <p className="text-xs text-muted-foreground">
           Changes are saved automatically
         </p>
       </div>
-    </div>
+      </AnimatedItem>
+    </AnimatedList>
   );
 };
