@@ -8,12 +8,12 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { X, Send01, Minimize02, MessageChatCircle, ChevronRight, Zap, BookOpen01, Settings01, Microphone01, Attachment01, Image03, FileCheck02, ThumbsUp, ThumbsDown } from '@untitledui/icons';
+import { X, Send01, MessageChatCircle, ChevronRight, Zap, BookOpen01, Microphone01, Attachment01, Image03, FileCheck02, ThumbsUp, ThumbsDown } from '@untitledui/icons';
 import { HomeNavIcon, ChatNavIcon, HelpNavIcon } from './NavIcons';
 import { ChatBubbleIcon } from '@/components/agents/ChatBubbleIcon';
 import ChatPadLogo from '@/components/ChatPadLogo';
 import { BubbleBackground } from '@/components/ui/bubble-background';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from '@/components/ui/dropdown-menu';
+
 import { VoiceInput } from '@/components/molecule-ui/voice-input';
 import { FileDropZone } from '@/components/chat/FileDropZone';
 import { MessageReactions } from '@/components/chat/MessageReactions';
@@ -95,8 +95,11 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
 
   const [chatSettings, setChatSettings] = useState(() => {
     const saved = localStorage.getItem(`chatpad_settings_${agentId}`);
-    if (saved) return JSON.parse(saved);
-    return { soundEnabled: config?.defaultSoundEnabled ?? true, autoScroll: config?.defaultAutoScroll ?? true };
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      return { soundEnabled: parsed.soundEnabled ?? config?.defaultSoundEnabled ?? true };
+    }
+    return { soundEnabled: config?.defaultSoundEnabled ?? true };
   });
 
   // Load config on mount if simple config
@@ -165,15 +168,15 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
     }
   }, [messages, agentId]);
 
-  // Auto-scroll
+  // Auto-scroll (always enabled)
   useEffect(() => {
-    if (chatSettings.autoScroll && currentView === 'messages' && activeConversationId) {
+    if (currentView === 'messages' && activeConversationId) {
       const messagesContainer = document.querySelector('.messages-container');
       if (messagesContainer) {
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
       }
     }
-  }, [messages, chatSettings.autoScroll, currentView, activeConversationId]);
+  }, [messages, currentView, activeConversationId]);
 
   // Update greeting based on user status (only on initial load)
   useEffect(() => {
@@ -280,8 +283,8 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
     return result ? `${parseInt(result[1], 16)},${parseInt(result[2], 16)},${parseInt(result[3], 16)}` : '0,0,0';
   };
 
-  // Calculate logo opacity based on scroll (fades out gradually over 80px)
-  const logoOpacity = Math.max(0, 1 - headerScrollY / 80);
+  // Calculate logo opacity based on scroll (graceful fade over 120px with easing)
+  const logoOpacity = Math.max(0, 1 - Math.pow(headerScrollY / 120, 1.5));
 
   const getGradientStyle = () => {
     if (!config.useGradientHeader) return { backgroundColor: config.primaryColor };
@@ -511,39 +514,10 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                     style={{ opacity: logoOpacity }}
                   />
                   
-                  {/* Settings/Close buttons in top right */}
-                  <div className="absolute top-4 right-4 flex gap-1 z-30">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 h-8 w-8">
-                          <Settings01 className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-56">
-                        <DropdownMenuLabel>Chat Settings</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          onClick={() => setChatSettings((prev: any) => ({ ...prev, soundEnabled: !prev.soundEnabled }))}
-                          className="flex items-center justify-between"
-                        >
-                          <span>Sound</span>
-                          <div className={`w-9 h-5 rounded-full transition-colors ${chatSettings.soundEnabled ? 'bg-primary' : 'bg-muted'}`}>
-                            <div className={`w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${chatSettings.soundEnabled ? 'translate-x-5' : 'translate-x-0.5'} mt-0.5`} />
-                          </div>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => setChatSettings((prev: any) => ({ ...prev, autoScroll: !prev.autoScroll }))}
-                          className="flex items-center justify-between"
-                        >
-                          <span>Auto-scroll</span>
-                          <div className={`w-9 h-5 rounded-full transition-colors ${chatSettings.autoScroll ? 'bg-primary' : 'bg-muted'}`}>
-                            <div className={`w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${chatSettings.autoScroll ? 'translate-x-5' : 'translate-x-0.5'} mt-0.5`} />
-                          </div>
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                  {/* Close button in top right */}
+                  <div className="absolute top-4 right-4 z-30">
                     <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 h-8 w-8" onClick={handleClose}>
-                      <Minimize02 className="h-4 w-4" />
+                      <X className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
@@ -557,8 +531,11 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                   {/* Spacer to push content down initially - shows gradient */}
                   <div className="h-[140px]" />
                   
-                  {/* Welcome text - visible over gradient */}
-                  <div className="px-6 pb-4">
+                  {/* Welcome text - visible over gradient, fades on scroll */}
+                  <div 
+                    className="px-6 pb-4 transition-opacity duration-200"
+                    style={{ opacity: Math.max(0, 1 - headerScrollY / 100) }}
+                  >
                     <h2 className="text-3xl font-bold text-white drop-shadow-sm">
                       {config.welcomeTitle} {config.welcomeEmoji}
                     </h2>
