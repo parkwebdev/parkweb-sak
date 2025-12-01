@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/lib/toast';
 import { supabase } from '@/integrations/supabase/client';
 import { TeamMember, InviteMemberData, UserRole } from '@/types/team';
 
@@ -8,7 +8,6 @@ export const useTeam = () => {
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentUserRole, setCurrentUserRole] = useState<UserRole>('member');
-  const { toast } = useToast();
   const { user } = useAuth();
 
   const canManageRoles = ['admin', 'super_admin'].includes(currentUserRole);
