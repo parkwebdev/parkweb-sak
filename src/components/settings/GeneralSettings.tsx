@@ -1,22 +1,27 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { toast } from '@/lib/toast';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { SavedIndicator } from './SavedIndicator';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
 export const GeneralSettings: React.FC = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
-  const [updating, setUpdating] = useState(false);
   const [preferences, setPreferences] = useState({
     compact_mode: false,
     default_project_view: 'dashboard',
   });
+  const [showSaved, setShowSaved] = useState({
+    compact_mode: false,
+    default_project_view: false,
+  });
+  
+  const saveTimers = useRef<{ [key: string]: NodeJS.Timeout }>({});
 
   useEffect(() => {
     if (user) {
@@ -56,6 +61,7 @@ export const GeneralSettings: React.FC = () => {
     if (!user) return;
 
     // Update local state immediately for responsive UI
+    const prevValue = preferences[key];
     const newPreferences = { ...preferences, [key]: value };
     setPreferences(newPreferences);
 
@@ -64,103 +70,79 @@ export const GeneralSettings: React.FC = () => {
       document.body.classList.toggle('compact-mode', value);
     }
 
-    setUpdating(true);
-    try {
-      // Use UPDATE instead of UPSERT to avoid duplicate key issues
-      const { data: existingData } = await supabase
-        .from('user_preferences')
-        .select('id')
-        .eq('user_id', user.id)
-        .single();
+    // Clear existing timer for this field
+    if (saveTimers.current[key]) {
+      clearTimeout(saveTimers.current[key]);
+    }
 
-      let error;
-      if (existingData) {
-        // Update existing record
-        const result = await supabase
+    // Debounce the save operation
+    saveTimers.current[key] = setTimeout(async () => {
+      try {
+        // Use UPDATE instead of UPSERT to avoid duplicate key issues
+        const { data: existingData } = await supabase
           .from('user_preferences')
-          .update({ [key]: value })
-          .eq('user_id', user.id);
-        error = result.error;
-      } else {
-        // Insert new record
-        const result = await supabase
-          .from('user_preferences')
-          .insert({
-            user_id: user.id,
-            [key]: value,
-          } as any);
-        error = result.error;
-      }
+          .select('id')
+          .eq('user_id', user.id)
+          .single();
 
-      if (error) {
-        console.error('Error updating preference:', error);
+        let error;
+        if (existingData) {
+          // Update existing record
+          const result = await supabase
+            .from('user_preferences')
+            .update({ [key]: value })
+            .eq('user_id', user.id);
+          error = result.error;
+        } else {
+          // Insert new record
+          const result = await supabase
+            .from('user_preferences')
+            .insert({
+              user_id: user.id,
+              [key]: value,
+            } as any);
+          error = result.error;
+        }
+
+        if (error) {
+          console.error('Error updating preference:', error);
+          // Revert local state on error
+          setPreferences({ ...preferences, [key]: prevValue });
+          if (key === 'compact_mode') {
+            document.body.classList.toggle('compact-mode', prevValue as boolean);
+          }
+          toast({
+            title: "Update failed",
+            description: "Failed to update preference.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        // Show saved indicator
+        setShowSaved({ ...showSaved, [key]: true });
+      } catch (error) {
+        console.error('Error in updatePreference:', error);
         // Revert local state on error
-        setPreferences(preferences);
+        setPreferences({ ...preferences, [key]: prevValue });
         if (key === 'compact_mode') {
-          document.body.classList.toggle('compact-mode', preferences.compact_mode);
+          document.body.classList.toggle('compact-mode', prevValue as boolean);
         }
         toast({
           title: "Update failed",
           description: "Failed to update preference.",
           variant: "destructive",
         });
-        return;
       }
-
-      // Show success toast with specific messaging
-      const messages = {
-        compact_mode: value ? "Compact mode enabled" : "Compact mode disabled", 
-        default_project_view: `Default view set to ${value}`,
-      };
-
-      toast({
-        title: messages[key as keyof typeof messages] || "Setting updated",
-        description: value ? "Your preference has been saved." : "Your preference has been updated.",
-      });
-    } catch (error) {
-      console.error('Error in updatePreference:', error);
-      // Revert local state on error
-      setPreferences(preferences);
-      if (key === 'compact_mode') {
-        document.body.classList.toggle('compact-mode', preferences.compact_mode);
-      }
-    } finally {
-      setUpdating(false);
-    }
+    }, 1000);
   };
 
-  const handleSave = async () => {
-    if (!user) return;
-    
-    setUpdating(true);
-    try {
-      const { error } = await supabase
-        .from('user_preferences')
-        .upsert({
-          user_id: user.id,
-          ...preferences,
-        } as any);
-
-      if (error) {
-        console.error('Error saving preferences:', error);
-        toast({
-          title: "Save failed",
-          description: "Failed to save your preferences.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      toast({
-        title: "Settings saved",
-        description: "Your general settings have been updated.",
-      });
-    } catch (error) {
-      console.error('Error in handleSave:', error);
-    } finally {
-      setUpdating(false);
-    }
-  };
+  // Cleanup timers on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(saveTimers.current).forEach(timer => clearTimeout(timer));
+    };
+  }, []);
 
   // Apply compact mode on load
   useEffect(() => {
@@ -212,14 +194,16 @@ export const GeneralSettings: React.FC = () => {
           </div>
 
           <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <label className="text-sm font-medium">Compact Mode</label>
+            <div className="space-y-0.5 flex-1">
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium">Compact Mode</label>
+                <SavedIndicator show={showSaved.compact_mode} />
+              </div>
               <p className="text-xs text-muted-foreground">Reduce spacing and padding for more content on screen</p>
             </div>
             <Switch
               checked={preferences.compact_mode}
               onCheckedChange={(checked) => updatePreference('compact_mode', checked)}
-              disabled={updating}
             />
           </div>
         </CardContent>
@@ -232,14 +216,16 @@ export const GeneralSettings: React.FC = () => {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label className="text-sm font-medium">Default View</Label>
+            <div className="space-y-0.5 flex-1">
+              <div className="flex items-center gap-2">
+                <Label className="text-sm font-medium">Default View</Label>
+                <SavedIndicator show={showSaved.default_project_view} />
+              </div>
               <p className="text-xs text-muted-foreground">Choose which page loads first when opening the application</p>
             </div>
             <Select 
               value={preferences.default_project_view} 
               onValueChange={(value) => updatePreference('default_project_view', value)}
-              disabled={updating}
             >
               <SelectTrigger className="w-48">
                 <SelectValue />
