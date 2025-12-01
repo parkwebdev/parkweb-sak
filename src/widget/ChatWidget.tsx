@@ -209,16 +209,6 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
     }
   }, [currentView, activeConversationId]);
 
-  // Notify parent window of widget state changes
-  useEffect(() => {
-    // Only send messages if we're in an iframe (not preview mode)
-    if (!previewMode && window.parent !== window) {
-      window.parent.postMessage({
-        type: 'chatpad-widget-state',
-        isOpen: isOpen
-      }, '*');
-    }
-  }, [isOpen, previewMode]);
 
   // Send resize notifications based on content
   useEffect(() => {
