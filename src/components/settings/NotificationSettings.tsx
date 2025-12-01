@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/lib/toast';
+import { SavedIndicator } from './SavedIndicator';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNotifications } from '@/hooks/useNotifications';
 import { supabase } from '@/integrations/supabase/client';
@@ -25,11 +26,12 @@ interface NotificationPreferences {
 
 export const NotificationSettings: React.FC = () => {
   const { user } = useAuth();
-  const { toast } = useToast();
   const { requestBrowserNotificationPermission } = useNotifications();
   const [preferences, setPreferences] = useState<NotificationPreferences | null>(null);
   const [loading, setLoading] = useState(true);
-  const [updating, setUpdating] = useState(false);
+  const [showSaved, setShowSaved] = useState<{ [key: string]: boolean }>({});
+  
+  const saveTimers = useRef<{ [key: string]: NodeJS.Timeout }>({});
 
   useEffect(() => {
     if (user) {
@@ -98,89 +100,100 @@ export const NotificationSettings: React.FC = () => {
   const updatePreference = async (key: keyof NotificationPreferences, value: boolean) => {
     if (!user || !preferences) return;
 
-    setUpdating(true);
-    try {
-      // If enabling browser notifications, request permission first
-      if (key === 'browser_notifications' && value) {
-        if (!('Notification' in window)) {
-          toast({
-            title: "Not supported",
-            description: "Browser notifications are not supported in this environment.",
-            variant: "destructive",
-          });
-          setUpdating(false);
-          return;
-        }
-        
-        // Check current permission state
-        const currentPermission = Notification.permission;
-        
-        if (currentPermission === 'denied') {
-          toast({
-            title: "Permission blocked",
-            description: "Browser notifications are blocked. Please enable them in your browser settings and refresh the page.",
-            variant: "destructive",
-          });
-          setUpdating(false);
-          return;
-        }
-        
-        if (currentPermission === 'default') {
-          try {
-            const permission = await Notification.requestPermission();
-            if (permission !== 'granted') {
-              let description = "Browser notifications require permission to be enabled.";
-              if (permission === 'denied') {
-                description = "Notifications were denied. Please enable them in your browser settings and refresh the page.";
-              }
-              toast({
-                title: "Permission not granted",
-                description,
-                variant: "destructive",
-              });
-              setUpdating(false);
-              return;
+    // Update local state immediately
+    setPreferences(prev => prev ? { ...prev, [key]: value } : null);
+
+    // Handle browser notification permission requests
+    if (key === 'browser_notifications' && value) {
+      if (!('Notification' in window)) {
+        toast({
+          title: "Not supported",
+          description: "Browser notifications are not supported in this environment.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      const currentPermission = Notification.permission;
+      
+      if (currentPermission === 'denied') {
+        toast({
+          title: "Permission blocked",
+          description: "Browser notifications are blocked. Please enable them in your browser settings and refresh the page.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      if (currentPermission === 'default') {
+        try {
+          const permission = await Notification.requestPermission();
+          if (permission !== 'granted') {
+            let description = "Browser notifications require permission to be enabled.";
+            if (permission === 'denied') {
+              description = "Notifications were denied. Please enable them in your browser settings and refresh the page.";
             }
-          } catch (error) {
-            console.error('Error requesting notification permission:', error);
             toast({
-              title: "Permission request failed",
-              description: "Unable to request notification permission. Please enable notifications manually in your browser settings.",
+              title: "Permission not granted",
+              description,
               variant: "destructive",
             });
-            setUpdating(false);
             return;
           }
+        } catch (error) {
+          console.error('Error requesting notification permission:', error);
+          toast({
+            title: "Permission request failed",
+            description: "Unable to request notification permission. Please enable notifications manually in your browser settings.",
+            variant: "destructive",
+          });
+          return;
         }
       }
+    }
 
-      const { error } = await supabase
-        .from('notification_preferences')
-        .update({ [key]: value })
-        .eq('user_id', user.id);
+    // Clear existing timer for this field
+    if (saveTimers.current[key]) {
+      clearTimeout(saveTimers.current[key]);
+    }
 
-      if (error) {
-        console.error('Error updating preference:', error);
+    // Debounce the save operation
+    saveTimers.current[key] = setTimeout(async () => {
+      try {
+        const { error } = await supabase
+          .from('notification_preferences')
+          .update({ [key]: value })
+          .eq('user_id', user.id);
+
+        if (error) {
+          console.error('Error updating preference:', error);
+          toast({
+            title: "Update failed",
+            description: "Failed to update notification preference.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        // Show saved indicator
+        setShowSaved(prev => ({ ...prev, [key]: true }));
+      } catch (error) {
+        console.error('Error in updatePreference:', error);
         toast({
           title: "Update failed",
           description: "Failed to update notification preference.",
           variant: "destructive",
         });
-        return;
       }
-
-      setPreferences(prev => prev ? { ...prev, [key]: value } : null);
-
-      toast({
-        title: "Preferences updated",
-        description: "Your notification preferences have been saved.",
-      });
-    } catch (error) {
-      console.error('Error in updatePreference:', error);
-    } finally {
-      setUpdating(false);
-    }
+    }, 1000);
   };
+
+  // Cleanup timers on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(saveTimers.current).forEach(timer => clearTimeout(timer));
+    };
+  }, []);
 
   const testNotification = async () => {
     if (!('Notification' in window)) {
@@ -265,11 +278,12 @@ export const NotificationSettings: React.FC = () => {
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
+            <div className="space-y-0.5 flex-1">
               <div className="flex items-center gap-2">
                 <Label htmlFor="email-notifications" className="text-sm font-medium">
                   Email Notifications
                 </Label>
+                <SavedIndicator show={showSaved.email_notifications} />
               </div>
               <p className="text-xs text-muted-foreground">
                 Receive notifications via email
@@ -279,16 +293,16 @@ export const NotificationSettings: React.FC = () => {
               id="email-notifications"
               checked={preferences.email_notifications}
               onCheckedChange={(checked) => updatePreference('email_notifications', checked)}
-              disabled={updating}
             />
           </div>
 
           <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
+            <div className="space-y-0.5 flex-1">
               <div className="flex items-center gap-2">
                 <Label htmlFor="browser-notifications" className="text-sm font-medium">
                   Browser Notifications
                 </Label>
+                <SavedIndicator show={showSaved.browser_notifications} />
               </div>
               <p className="text-xs text-muted-foreground">
                 Show desktop notifications in your browser
@@ -298,7 +312,6 @@ export const NotificationSettings: React.FC = () => {
               id="browser-notifications"
               checked={preferences.browser_notifications}
               onCheckedChange={(checked) => updatePreference('browser_notifications', checked)}
-              disabled={updating}
             />
           </div>
 
@@ -314,10 +327,13 @@ export const NotificationSettings: React.FC = () => {
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label htmlFor="conversation-notifications" className="text-sm font-medium">
-                Conversation Activity
-              </Label>
+            <div className="space-y-0.5 flex-1">
+              <div className="flex items-center gap-2">
+                <Label htmlFor="conversation-notifications" className="text-sm font-medium">
+                  Conversation Activity
+                </Label>
+                <SavedIndicator show={showSaved.conversation_notifications} />
+              </div>
               <p className="text-xs text-muted-foreground">
                 New conversations, escalations, and takeover requests
               </p>
@@ -326,15 +342,17 @@ export const NotificationSettings: React.FC = () => {
               id="conversation-notifications"
               checked={preferences.conversation_notifications}
               onCheckedChange={(checked) => updatePreference('conversation_notifications', checked)}
-              disabled={updating}
             />
           </div>
 
           <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label htmlFor="lead-notifications" className="text-sm font-medium">
-                Lead Notifications
-              </Label>
+            <div className="space-y-0.5 flex-1">
+              <div className="flex items-center gap-2">
+                <Label htmlFor="lead-notifications" className="text-sm font-medium">
+                  Lead Notifications
+                </Label>
+                <SavedIndicator show={showSaved.lead_notifications} />
+              </div>
               <p className="text-xs text-muted-foreground">
                 New leads captured and lead status changes
               </p>
@@ -343,15 +361,17 @@ export const NotificationSettings: React.FC = () => {
               id="lead-notifications"
               checked={preferences.lead_notifications}
               onCheckedChange={(checked) => updatePreference('lead_notifications', checked)}
-              disabled={updating}
             />
           </div>
 
           <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label htmlFor="agent-notifications" className="text-sm font-medium">
-                Agent Alerts
-              </Label>
+            <div className="space-y-0.5 flex-1">
+              <div className="flex items-center gap-2">
+                <Label htmlFor="agent-notifications" className="text-sm font-medium">
+                  Agent Alerts
+                </Label>
+                <SavedIndicator show={showSaved.agent_notifications} />
+              </div>
               <p className="text-xs text-muted-foreground">
                 Agent errors and knowledge source updates
               </p>
@@ -360,15 +380,17 @@ export const NotificationSettings: React.FC = () => {
               id="agent-notifications"
               checked={preferences.agent_notifications}
               onCheckedChange={(checked) => updatePreference('agent_notifications', checked)}
-              disabled={updating}
             />
           </div>
 
           <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label htmlFor="team-notifications" className="text-sm font-medium">
-                Team Activity
-              </Label>
+            <div className="space-y-0.5 flex-1">
+              <div className="flex items-center gap-2">
+                <Label htmlFor="team-notifications" className="text-sm font-medium">
+                  Team Activity
+                </Label>
+                <SavedIndicator show={showSaved.team_notifications} />
+              </div>
               <p className="text-xs text-muted-foreground">
                 Team invitations and member updates
               </p>
@@ -377,15 +399,17 @@ export const NotificationSettings: React.FC = () => {
               id="team-notifications"
               checked={preferences.team_notifications}
               onCheckedChange={(checked) => updatePreference('team_notifications', checked)}
-              disabled={updating}
             />
           </div>
 
           <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label htmlFor="report-notifications" className="text-sm font-medium">
-                Report Notifications
-              </Label>
+            <div className="space-y-0.5 flex-1">
+              <div className="flex items-center gap-2">
+                <Label htmlFor="report-notifications" className="text-sm font-medium">
+                  Report Notifications
+                </Label>
+                <SavedIndicator show={showSaved.report_notifications} />
+              </div>
               <p className="text-xs text-muted-foreground">
                 Scheduled reports and analytics alerts
               </p>
@@ -394,7 +418,6 @@ export const NotificationSettings: React.FC = () => {
               id="report-notifications"
               checked={preferences.report_notifications}
               onCheckedChange={(checked) => updatePreference('report_notifications', checked)}
-              disabled={updating}
             />
           </div>
         </CardContent>
