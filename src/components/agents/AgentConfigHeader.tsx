@@ -33,18 +33,24 @@ export const AgentConfigHeader = ({
     <div className="border-b">
       {/* Hero Section with Dotted Grid */}
       <div className="relative overflow-hidden">
-        <div className="relative h-40 bg-neutral-950" style={{
-          backgroundImage: 'radial-gradient(circle, rgba(255, 255, 255, 0.1) 0.5px, transparent 0.5px)',
-          backgroundSize: '12px 12px'
-        }}>
-          <div className="relative z-10 px-4 lg:px-8 py-4 h-full flex flex-col">
+        <div 
+          className="relative h-40 bg-neutral-100 dark:bg-neutral-950"
+          style={{
+            backgroundImage: 'radial-gradient(circle, rgba(0, 0, 0, 0.08) 0.5px, transparent 0.5px)',
+            backgroundSize: '12px 12px'
+          }}
+        >
+          <div 
+            className="relative z-10 px-4 lg:px-8 py-4 h-full flex flex-col [background-image:radial-gradient(circle,_rgba(0,_0,_0,_0.08)_0.5px,_transparent_0.5px)] dark:[background-image:radial-gradient(circle,_rgba(255,_255,_255,_0.1)_0.5px,_transparent_0.5px)]"
+            style={{ backgroundSize: '12px 12px' }}
+          >
             {/* Top Row: Back button + Save controls */}
             <div className="flex items-center justify-between mb-auto">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => navigate('/agents')}
-                className="h-8 text-white/90 hover:text-white hover:bg-white/10"
+                className="h-8 text-neutral-700 hover:text-neutral-900 hover:bg-neutral-200/50 dark:text-white/90 dark:hover:text-white dark:hover:bg-white/10"
               >
                 <ChevronLeft size={16} />
                 Back
@@ -52,7 +58,7 @@ export const AgentConfigHeader = ({
 
               <div className="flex items-center gap-2">
                 {showSaved && (
-                  <div className="flex items-center gap-1.5 text-xs text-white/90 animate-fade-in">
+                  <div className="flex items-center gap-1.5 text-xs text-neutral-700 dark:text-white/90 animate-fade-in">
                     <CheckCircle className="h-3 w-3" />
                     <span>Saved</span>
                   </div>
@@ -62,7 +68,7 @@ export const AgentConfigHeader = ({
                     onClick={onSave} 
                     disabled={isSaving} 
                     size="sm"
-                    className="bg-white/20 text-white hover:bg-white/30 border-white/20"
+                    className="bg-neutral-900/10 text-neutral-900 hover:bg-neutral-900/20 border-neutral-900/20 dark:bg-white/20 dark:text-white dark:hover:bg-white/30 dark:border-white/20"
                   >
                     {isSaving ? 'Saving...' : 'Save Changes'}
                   </Button>
@@ -73,7 +79,7 @@ export const AgentConfigHeader = ({
             {/* Bottom: Agent info */}
             <div className="mt-auto">
               <div className="flex items-center gap-2 mb-1">
-                <h1 className="text-xl font-semibold text-white drop-shadow-md">
+                <h1 className="text-xl font-semibold text-neutral-900 dark:text-white drop-shadow-sm dark:drop-shadow-md">
                   {agent.name}
                 </h1>
                 <Badge 
@@ -84,7 +90,7 @@ export const AgentConfigHeader = ({
                 </Badge>
               </div>
               {agent.description && (
-                <p className="text-sm text-white/90 line-clamp-1 drop-shadow">
+                <p className="text-sm text-neutral-700 dark:text-white/90 line-clamp-1 drop-shadow-sm dark:drop-shadow">
                   {agent.description}
                 </p>
               )}
