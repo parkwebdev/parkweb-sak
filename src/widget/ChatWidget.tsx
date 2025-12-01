@@ -1237,10 +1237,10 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                       : 'text-muted-foreground'
                   }`}
                 >
-                  <div className="flex items-center justify-center w-6 h-6 mb-0.5">
+                  <div className="flex items-center justify-center w-6 h-6 mb-1.5">
                     <HomeNavIcon active={currentView === 'home'} hovered={hoveredNav === 'home'} className="h-5 w-5" />
                   </div>
-                  <span className="text-xs">Home</span>
+                  <span className="text-xs pl-0.5">Home</span>
                 </button>
                 {config.enableMessagesTab && (
                   <button 
@@ -1253,10 +1253,10 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                         : 'text-muted-foreground'
                     }`}
                   >
-                    <div className="flex items-center justify-center w-6 h-6 mb-0.5">
+                    <div className="flex items-center justify-center w-6 h-6 mb-1.5">
                       <ChatNavIcon active={currentView === 'messages'} hovered={hoveredNav === 'messages'} className="h-5 w-5" />
                     </div>
-                    <span className="text-xs">Chat</span>
+                    <span className="text-xs pl-0.5">Chat</span>
                     {messages.some(m => !m.read && m.role === 'assistant') && (
                       <div className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
                     )}
@@ -1273,10 +1273,10 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
                         : 'text-muted-foreground'
                     }`}
                   >
-                    <div className="flex items-center justify-center w-6 h-6 mb-0.5">
+                    <div className="flex items-center justify-center w-6 h-6 mb-1.5">
                       <HelpNavIcon active={currentView === 'help'} hovered={hoveredNav === 'help'} className="h-5 w-5" />
                     </div>
-                    <span className="text-xs">Help</span>
+                    <span className="text-xs pl-0.5">Help</span>
                   </button>
                 )}
               </div>
