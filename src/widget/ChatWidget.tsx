@@ -988,9 +988,9 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                         href="https://chatpad.ai" 
                         target="_blank" 
                         rel="noopener noreferrer"
-                        className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                        className="text-xs text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1.5"
                       >
-                        Powered by ChatPad
+                        Powered by <ChatPadLogo className="h-3 w-3" /> ChatPad
                       </a>
                     </div>
                   )}
