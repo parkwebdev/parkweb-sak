@@ -291,7 +291,7 @@ export const AgentConfigureTab = ({ agent, onUpdate, onFormChange }: AgentConfig
               </TooltipTrigger>
               <TooltipContent side="right" className="max-w-xs">
                 <p className="font-medium mb-1">Tips for great prompts:</p>
-                <ul className="text-xs space-y-1 list-disc list-inside">
+                <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside marker:text-muted-foreground/60">
                   <li>Be specific about the agent's role and expertise</li>
                   <li>Define the tone and communication style</li>
                   <li>Include any rules or limitations</li>
