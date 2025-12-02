@@ -36,12 +36,12 @@ export const ExportButtons = ({ data, startDate, endDate, orgName, config }: Exp
 
   return (
     <div className="flex gap-2">
-      <Button variant="outline" onClick={handleExportCSV} className="h-10">
+      <Button variant="outline" onClick={handleExportCSV}>
         <CsvIcon className="h-5 w-5 mr-2" />
         Generate CSV
       </Button>
       
-      <Button variant="outline" onClick={handleExportPDF} className="h-10">
+      <Button variant="outline" onClick={handleExportPDF}>
         <PdfIcon className="h-5 w-5 mr-2" />
         Generate PDF
       </Button>

@@ -895,7 +895,6 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                           <Button 
                             size="icon" 
                             variant="ghost" 
-                            className="h-9 w-9" 
                             onClick={() => setIsAttachingFiles(true)}
                           >
                             <Attachment01 className="h-4 w-4" />
@@ -905,7 +904,6 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                           <Button 
                             size="icon" 
                             variant="ghost" 
-                            className="h-9 w-9" 
                             onClick={() => setIsRecordingAudio(true)}
                           >
                             <Microphone01 className="h-4 w-4" />

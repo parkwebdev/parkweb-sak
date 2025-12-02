@@ -65,9 +65,9 @@ export const AnalyticsToolbar = ({
         {/* Date Range Picker */}
         <Popover>
           <PopoverTrigger asChild>
-            <Button variant="outline" size="sm" className="h-9">
-              <Calendar className="h-4 w-4 mr-2" />
-              {formatDateRange(startDate, endDate)}
+        <Button variant="outline" size="sm">
+          <Calendar className="h-4 w-4 mr-2" />
+          {formatDateRange(startDate, endDate)}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0" align="start">
@@ -83,15 +83,15 @@ export const AnalyticsToolbar = ({
         {/* Filters Popover */}
         <Popover>
           <PopoverTrigger asChild>
-            <Button variant="outline" size="sm" className="h-9">
-              <FilterLines className="h-4 w-4 mr-2" />
-              Filters
-              {activeFilterCount > 0 && (
-                <Badge variant="secondary" className="ml-2 h-5 px-1.5 text-xs">
-                  {activeFilterCount}
-                </Badge>
-              )}
-            </Button>
+        <Button variant="outline" size="sm">
+          <FilterLines className="h-4 w-4 mr-2" />
+          Filters
+          {activeFilterCount > 0 && (
+            <Badge variant="secondary" className="ml-2 h-5 px-1.5 text-xs">
+              {activeFilterCount}
+            </Badge>
+          )}
+        </Button>
           </PopoverTrigger>
           <PopoverContent className="w-80" align="start">
             <div className="space-y-4">
@@ -198,16 +198,16 @@ export const AnalyticsToolbar = ({
 
       {/* Actions */}
       <div className="flex gap-2">
-        <Button variant="ghost" size="sm" onClick={onRefresh} className="h-9">
+        <Button variant="ghost" size="sm" onClick={onRefresh}>
           <RefreshCcw01 className="h-4 w-4" />
         </Button>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" className="h-9">
-              <Download01 className="h-4 w-4 mr-2" />
-              Export
-            </Button>
+          <Button variant="outline" size="sm">
+            <Download01 className="h-4 w-4 mr-2" />
+            Export
+          </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={onExportCSV}>
