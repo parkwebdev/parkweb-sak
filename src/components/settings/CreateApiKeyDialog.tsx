@@ -156,11 +156,11 @@ export const CreateApiKeyDialog = ({ open, onOpenChange, onKeyCreated }: CreateA
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
               Cancel
             </Button>
-            <Button type="submit" disabled={saving}>
-              {saving ? 'Creating...' : 'Create API Key'}
+            <Button type="submit" loading={saving}>
+              Create API Key
             </Button>
           </DialogFooter>
         </form>

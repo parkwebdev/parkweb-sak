@@ -87,10 +87,10 @@ export const CreateLeadDialog = ({ open, onOpenChange, onCreate }: CreateLeadDia
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" loading={isSubmitting}>
               Create Lead
             </Button>
           </DialogFooter>

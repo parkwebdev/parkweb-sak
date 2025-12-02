@@ -102,10 +102,11 @@ export const InviteMemberDialog: React.FC<InviteMemberDialogProps> = ({
             </Button>
             <Button 
               onClick={handleInvite}
-              disabled={loading || !email || !isValidEmail(email)}
+              loading={loading}
+              disabled={!email || !isValidEmail(email)}
             >
               <Mail size={16} className="mr-2" />
-              {loading ? 'Sending...' : 'Send Invitation'}
+              Send Invitation
             </Button>
           </div>
         </div>
