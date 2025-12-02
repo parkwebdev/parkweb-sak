@@ -52,8 +52,8 @@ export const TakeoverDialog = ({ open, onOpenChange, onConfirm }: TakeoverDialog
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={loading}>
-            {loading ? 'Taking Over...' : 'Take Over'}
+          <Button onClick={handleSubmit} loading={loading}>
+            Take Over
           </Button>
         </DialogFooter>
       </DialogContent>
