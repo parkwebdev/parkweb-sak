@@ -1,5 +1,6 @@
 import React from 'react';
 import { Menu01 as Menu } from '@untitledui/icons';
+import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/lib/utils';
 
 interface AgentSettingsLayoutProps {
@@ -68,7 +69,18 @@ export const AgentSettingsLayout = <T extends string = string>({
           </button>
           <div>
             <h2 className="text-base font-semibold text-foreground">{title}</h2>
-            <p className="text-sm text-muted-foreground">{description}</p>
+            <AnimatePresence mode="wait">
+              <motion.p 
+                key={description}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
+                className="text-sm text-muted-foreground"
+              >
+                {description}
+              </motion.p>
+            </AnimatePresence>
           </div>
         </div>
         
@@ -96,7 +108,18 @@ export const AgentSettingsLayout = <T extends string = string>({
         <div className="sticky top-8">
           <div className="mb-6">
             <h2 className="text-base font-semibold text-foreground mb-1">{title}</h2>
-            <p className="text-sm text-muted-foreground">{description}</p>
+            <AnimatePresence mode="wait">
+              <motion.p 
+                key={description}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
+                className="text-sm text-muted-foreground"
+              >
+                {description}
+              </motion.p>
+            </AnimatePresence>
           </div>
           <nav className="space-y-1">
             {menuItems.map((item) => (
@@ -114,7 +137,17 @@ export const AgentSettingsLayout = <T extends string = string>({
 
       {/* Content Area */}
       <div className="flex-1 min-w-0">
-        {children}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, x: 10 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -10 }}
+            transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+          >
+            {children}
+          </motion.div>
+        </AnimatePresence>
       </div>
     </div>
   );

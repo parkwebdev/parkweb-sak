@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { Tables } from '@/integrations/supabase/types';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -403,20 +404,30 @@ export const AgentConfigureTab: React.FC<AgentConfigureTabProps> = ({ agent, onU
         {/* Right column: Contextual info panel */}
         <div className="w-72 flex-shrink-0 hidden lg:block">
           <div className="sticky top-8 p-4 rounded-lg bg-accent/30 border border-border/50">
-            {currentSliderInfo ? (
-              <>
-                <h4 className="text-sm font-semibold text-foreground mb-2">
-                  {currentSliderInfo.contextTitle}
-                </h4>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  {currentSliderInfo.contextDescription}
-                </p>
-              </>
-            ) : (
-              <p className="text-sm text-muted-foreground italic">
-                Hover over a slider to see detailed information about how it affects your agent's behavior.
-              </p>
-            )}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeSlider || 'default'}
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -5 }}
+                transition={{ duration: 0.15 }}
+              >
+                {currentSliderInfo ? (
+                  <>
+                    <h4 className="text-sm font-semibold text-foreground mb-2">
+                      {currentSliderInfo.contextTitle}
+                    </h4>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      {currentSliderInfo.contextDescription}
+                    </p>
+                  </>
+                ) : (
+                  <p className="text-sm text-muted-foreground italic">
+                    Hover over a slider to see detailed information about how it affects your agent's behavior.
+                  </p>
+                )}
+              </motion.div>
+            </AnimatePresence>
           </div>
         </div>
       </div>

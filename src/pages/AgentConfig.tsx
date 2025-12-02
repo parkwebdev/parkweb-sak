@@ -8,6 +8,7 @@ import { AgentToolsTab } from '@/components/agents/tabs/AgentToolsTab';
 import { AgentEmbedTab } from '@/components/agents/tabs/AgentEmbedTab';
 import { AgentAnnouncementsTab } from '@/components/agents/tabs/AgentAnnouncementsTab';
 import { AgentConfigLayout, type AgentConfigTab } from '@/components/agents/AgentConfigLayout';
+import { TabContentTransition } from '@/components/ui/tab-content-transition';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Agent = Tables<'agents'>;
@@ -91,28 +92,32 @@ const AgentConfig: React.FC<AgentConfigProps> = ({ onMenuClick }) => {
         activeTab={activeTab}
         onTabChange={setActiveTab}
       >
-        {activeTab === 'configure' && (
-          <AgentConfigureTab
-            agent={agent}
-            onUpdate={handleUpdate}
-            onFormChange={setHasUnsavedChanges}
-          />
-        )}
-        {activeTab === 'knowledge' && (
-          <AgentKnowledgeTab agentId={agent.id} userId={agent.user_id} />
-        )}
-        {activeTab === 'tools' && (
-          <AgentToolsTab agentId={agent.id} agent={agent} onUpdate={handleUpdate} />
-        )}
-        {activeTab === 'embed' && (
+        {activeTab === 'embed' ? (
+          // No transition for embed tab as requested
           <AgentEmbedTab
             agent={agent}
             onUpdate={handleUpdate}
             onFormChange={setHasUnsavedChanges}
           />
-        )}
-        {activeTab === 'announcements' && (
-          <AgentAnnouncementsTab />
+        ) : (
+          <TabContentTransition activeKey={activeTab}>
+            {activeTab === 'configure' && (
+              <AgentConfigureTab
+                agent={agent}
+                onUpdate={handleUpdate}
+                onFormChange={setHasUnsavedChanges}
+              />
+            )}
+            {activeTab === 'knowledge' && (
+              <AgentKnowledgeTab agentId={agent.id} userId={agent.user_id} />
+            )}
+            {activeTab === 'tools' && (
+              <AgentToolsTab agentId={agent.id} agent={agent} onUpdate={handleUpdate} />
+            )}
+            {activeTab === 'announcements' && (
+              <AgentAnnouncementsTab />
+            )}
+          </TabContentTransition>
         )}
       </AgentConfigLayout>
     </div>
