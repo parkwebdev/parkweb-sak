@@ -195,7 +195,7 @@ export const AgentConfigureTab = ({ agent, onUpdate, onFormChange }: AgentConfig
                     </span>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Controls randomness. Higher = more creative</p>
+                    <p>How creative or predictable responses are. Lower values give more focused, consistent answers. Higher values give more varied, creative responses.</p>
                   </TooltipContent>
                 </Tooltip>
               </div>
@@ -226,7 +226,7 @@ export const AgentConfigureTab = ({ agent, onUpdate, onFormChange }: AgentConfig
                     </span>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Nucleus sampling threshold</p>
+                    <p>Controls response diversity. Lower values make responses more focused and deterministic. Keep at 1.0 unless you need specific control.</p>
                   </TooltipContent>
                 </Tooltip>
               </div>

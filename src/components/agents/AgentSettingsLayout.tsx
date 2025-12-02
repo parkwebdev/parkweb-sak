@@ -67,8 +67,8 @@ export const AgentSettingsLayout: React.FC<AgentSettingsLayoutContentProps> = ({
             <Menu size={20} />
           </button>
           <div>
-            <h2 className="text-sm font-semibold text-foreground">{title}</h2>
-            <p className="text-xs text-muted-foreground">{description}</p>
+            <h2 className="text-base font-semibold text-foreground">{title}</h2>
+            <p className="text-sm text-muted-foreground">{description}</p>
           </div>
         </div>
         
@@ -95,8 +95,8 @@ export const AgentSettingsLayout: React.FC<AgentSettingsLayoutContentProps> = ({
       <div className="hidden lg:block w-56 flex-shrink-0">
         <div className="sticky top-8">
           <div className="mb-6">
-            <h2 className="text-sm font-semibold text-foreground mb-1">{title}</h2>
-            <p className="text-xs text-muted-foreground">{description}</p>
+            <h2 className="text-base font-semibold text-foreground mb-1">{title}</h2>
+            <p className="text-sm text-muted-foreground">{description}</p>
           </div>
           <nav className="space-y-1">
             {menuItems.map((item) => (
