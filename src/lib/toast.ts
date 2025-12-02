@@ -92,13 +92,14 @@ toastImpl.loading = (message: string, options?: ToastOptions) => {
 };
 
 toastImpl.promise = <T>(promise: Promise<T>, options: PromiseOptions<T>): Promise<T> => {
-  return sonnerToast.promise(promise, {
+  sonnerToast.promise(promise, {
     loading: options.loading,
     success: options.success,
     error: options.error,
     description: options.description,
     finally: options.finally,
   });
+  return promise;
 };
 
 toastImpl.dismiss = (id?: string | number) => {
