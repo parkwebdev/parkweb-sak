@@ -33,8 +33,16 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
   });
 
   const menuItems = [
-    { id: 'api-access' as const, label: 'API Access' },
-    { id: 'custom-tools' as const, label: 'Custom Tools' },
+    { 
+      id: 'api-access' as const, 
+      label: 'API Access',
+      description: 'Enable API access to interact with your agent programmatically from external applications'
+    },
+    { 
+      id: 'custom-tools' as const, 
+      label: 'Custom Tools',
+      description: 'Add custom tools and functions that extend your agent\'s capabilities'
+    },
   ];
 
   const apiEndpoint = `https://mvaimvwdukpgvkifkfpa.supabase.co/functions/v1/widget-chat`;
@@ -162,17 +170,10 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
       onTabChange={(tab) => setActiveTab(tab as ToolsTab)}
       menuItems={menuItems}
       title="Tools"
-      description="Configure tools and API access"
+      description={menuItems.find(item => item.id === activeTab)?.description || ''}
     >
       {activeTab === 'api-access' && agent && onUpdate && (
         <div className="space-y-4">
-          <div>
-            <h3 className="text-sm font-semibold">API Access</h3>
-            <p className="text-xs text-muted-foreground mt-1">
-              Enable API access to interact with your agent programmatically
-            </p>
-          </div>
-
           <div className="p-5 rounded-lg bg-muted/30 border border-dashed space-y-4">
             <div className="flex items-center justify-between">
               <div>
@@ -203,11 +204,7 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
 
       {activeTab === 'custom-tools' && (
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-sm font-semibold">Custom Tools</h3>
-              <p className="text-xs text-muted-foreground mt-1">Add custom tools and functions for your agent</p>
-            </div>
+          <div className="flex items-center justify-end">
             <Button onClick={() => setShowAddForm(!showAddForm)} size="sm">
               {showAddForm ? <XClose className="h-4 w-4 mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
               {showAddForm ? 'Cancel' : 'Add Tool'}

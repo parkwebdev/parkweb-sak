@@ -21,8 +21,16 @@ export const AgentKnowledgeTab = ({ agentId, userId }: AgentKnowledgeTabProps) =
   const [activeTab, setActiveTab] = useState<KnowledgeTab>('knowledge-sources');
 
   const menuItems = [
-    { id: 'knowledge-sources' as const, label: 'Knowledge Sources' },
-    { id: 'help-articles' as const, label: 'Help Articles' },
+    { 
+      id: 'knowledge-sources' as const, 
+      label: 'Knowledge Sources',
+      description: 'Add documents, URLs, or custom content to enhance your agent\'s knowledge'
+    },
+    { 
+      id: 'help-articles' as const, 
+      label: 'Help Articles',
+      description: 'Create and organize help articles that your agent can reference and share'
+    },
   ];
 
   if (loading) {
@@ -35,20 +43,11 @@ export const AgentKnowledgeTab = ({ agentId, userId }: AgentKnowledgeTabProps) =
       onTabChange={(tab) => setActiveTab(tab as KnowledgeTab)}
       menuItems={menuItems}
       title="Knowledge"
-      description="Manage your agent's knowledge base"
+      description={menuItems.find(item => item.id === activeTab)?.description || ''}
     >
       {activeTab === 'knowledge-sources' && (
         <div className="space-y-4">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <h3 className="text-sm font-semibold flex items-center gap-2">
-                <Database01 className="h-5 w-5" />
-                Knowledge Sources
-              </h3>
-              <p className="text-xs text-muted-foreground mt-1">
-                Add documents, URLs, or custom content to enhance your agent's knowledge
-              </p>
-            </div>
+          <div className="flex items-center justify-end gap-4">
             <Button size="sm" onClick={() => setAddDialogOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Add Source
