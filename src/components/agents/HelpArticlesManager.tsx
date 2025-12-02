@@ -189,11 +189,7 @@ export const HelpArticlesManager = ({ agentId }: HelpArticlesManagerProps) => {
       
       {!loading && (
         <>
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-muted-foreground">
-              Add help articles to display in the chat widget's help tab, organized by categories.
-            </p>
-            <div className="flex gap-2">
+          <div className="flex items-center justify-end gap-2">
           <Dialog open={newCategoryDialogOpen} onOpenChange={setNewCategoryDialogOpen}>
             <DialogTrigger asChild>
               <Button size="sm" variant="outline">
@@ -356,8 +352,7 @@ export const HelpArticlesManager = ({ agentId }: HelpArticlesManagerProps) => {
               </DialogFooter>
             </DialogContent>
           </Dialog>
-        </div>
-      </div>
+          </div>
 
       {articles.length === 0 ? (
         <Card>
