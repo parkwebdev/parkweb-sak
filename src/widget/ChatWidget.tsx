@@ -639,7 +639,12 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                   </div>
                   
                   {/* Content wrapper with gradient from transparent to white */}
-                  <div className="bg-gradient-to-b from-transparent via-background via-30% to-background relative z-20 flex-1 flex flex-col justify-start">
+                  <div 
+                    className="relative z-20 flex-1 flex flex-col justify-start"
+                    style={{
+                      background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.5) 25%, rgba(255,255,255,0.85) 50%, white 75%)'
+                    }}
+                  >
                     <div className="px-6 py-4 space-y-3">
                       {config.announcements.length > 0 && (
                         <CSSAnimatedList className="space-y-3 mb-6" staggerDelay={0.1}>
