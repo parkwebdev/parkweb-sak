@@ -7,7 +7,8 @@ import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
-import { HelpCircle, Lightbulb01 } from '@untitledui/icons';
+import { Lightbulb01 } from '@untitledui/icons';
+import { InfoCircleIcon, InfoCircleIconFilled } from '@/components/ui/info-circle-icon';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Agent = Tables<'agents'>;
@@ -188,8 +189,9 @@ export const AgentConfigureTab = ({ agent, onUpdate, onFormChange }: AgentConfig
                 <Label htmlFor="temperature" className="text-xs font-medium">Temperature</Label>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <span className="inline-flex">
-                      <HelpCircle className="h-3.5 w-3.5 text-muted-foreground" />
+                    <span className="inline-flex group">
+                      <InfoCircleIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                      <InfoCircleIconFilled className="h-3.5 w-3.5 text-muted-foreground" />
                     </span>
                   </TooltipTrigger>
                   <TooltipContent>
@@ -218,8 +220,9 @@ export const AgentConfigureTab = ({ agent, onUpdate, onFormChange }: AgentConfig
                 <Label htmlFor="top_p" className="text-xs font-medium">Top P</Label>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <span className="inline-flex">
-                      <HelpCircle className="h-3.5 w-3.5 text-muted-foreground" />
+                    <span className="inline-flex group">
+                      <InfoCircleIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                      <InfoCircleIconFilled className="h-3.5 w-3.5 text-muted-foreground" />
                     </span>
                   </TooltipTrigger>
                   <TooltipContent>
@@ -247,8 +250,9 @@ export const AgentConfigureTab = ({ agent, onUpdate, onFormChange }: AgentConfig
                 <Label htmlFor="max_tokens" className="text-xs font-medium">Max Tokens</Label>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <span className="inline-flex">
-                      <HelpCircle className="h-3.5 w-3.5 text-muted-foreground" />
+                    <span className="inline-flex group">
+                      <InfoCircleIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                      <InfoCircleIconFilled className="h-3.5 w-3.5 text-muted-foreground" />
                     </span>
                   </TooltipTrigger>
                   <TooltipContent>
