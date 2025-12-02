@@ -702,9 +702,9 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                   </div>
                   
                   {config.showBranding && (
-                    <div className="text-center py-2 mt-auto bg-white">
+                    <div className="text-center py-2 mt-auto bg-white border-t">
                       <a 
-                        href="https://chatpad.ai" 
+                        href="https://pad.chat" 
                         target="_blank" 
                         rel="noopener noreferrer"
                         className="text-xs text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-0.5"
