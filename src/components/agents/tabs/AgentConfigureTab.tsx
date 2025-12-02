@@ -7,8 +7,8 @@ import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
-import { Lightbulb01 } from '@untitledui/icons';
 import { InfoCircleIcon, InfoCircleIconFilled } from '@/components/ui/info-circle-icon';
+import { LightbulbIcon, LightbulbIconFilled } from '@/components/ui/lightbulb-icon';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Agent = Tables<'agents'>;
@@ -284,8 +284,9 @@ export const AgentConfigureTab = ({ agent, onUpdate, onFormChange }: AgentConfig
             </div>
             <Tooltip>
               <TooltipTrigger asChild>
-                <span className="inline-flex">
-                  <Lightbulb01 className="h-4 w-4 text-amber-500" />
+                <span className="inline-flex group">
+                  <LightbulbIcon className="h-4 w-4 text-amber-500" />
+                  <LightbulbIconFilled className="h-4 w-4 text-amber-500" />
                 </span>
               </TooltipTrigger>
               <TooltipContent side="right" className="max-w-xs">
