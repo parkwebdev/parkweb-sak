@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { ChatWidget } from '@/widget/ChatWidget';
-import { WidgetLoader } from '@/widget/WidgetLoader';
 import type { WidgetConfig } from '@/widget/api';
 import { fetchWidgetConfig } from '@/widget/api';
 
@@ -115,7 +114,7 @@ const WidgetPage = () => {
   }, [agentId, searchParams]);
   
   if (loading) {
-    return <WidgetLoader />;
+    return null;
   }
 
   if (error || !config) {

@@ -97,40 +97,6 @@ input, textarea {
   animation: slow-pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
-/* Widget loader animations */
-@keyframes widget-progress-indeterminate {
-  0% { 
-    transform: translateX(-100%);
-    width: 30%;
-  }
-  50% {
-    width: 60%;
-  }
-  100% { 
-    transform: translateX(400%);
-    width: 30%;
-  }
-}
-
-@keyframes widget-logo-pulse {
-  0%, 100% { 
-    transform: scale(1);
-    opacity: 1;
-  }
-  50% { 
-    transform: scale(1.05);
-    opacity: 0.8;
-  }
-}
-
-.widget-progress-bar {
-  animation: widget-progress-indeterminate 1.5s ease-in-out infinite;
-}
-
-.widget-loader-logo {
-  animation: widget-logo-pulse 2s ease-in-out infinite;
-}
-
 /* CSS Animation replacements for motion/react */
 @keyframes widget-fade-in-up {
   from {
