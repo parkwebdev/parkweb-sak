@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef, lazy, Suspense } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
 import { fetchWidgetConfig, createLead, submitArticleFeedback, type WidgetConfig } from './api';
-import { AnimatedList } from '@/components/ui/animated-list';
-import { AnimatedItem } from '@/components/ui/animated-item';
+import { CSSAnimatedList } from './CSSAnimatedList';
+import { CSSAnimatedItem } from './CSSAnimatedItem';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,9 +22,8 @@ const BubbleBackground = lazy(() => import('@/components/ui/bubble-background').
 const VoiceInput = lazy(() => import('@/components/molecule-ui/voice-input').then(m => ({ default: m.VoiceInput })));
 const FileDropZone = lazy(() => import('@/components/chat/FileDropZone').then(m => ({ default: m.FileDropZone })));
 
-import { MessageReactions } from '@/components/chat/MessageReactions';
+const MessageReactions = lazy(() => import('@/components/chat/MessageReactions').then(m => ({ default: m.MessageReactions })));
 import { AudioPlayer } from '@/components/chat/AudioPlayer';
-import { z } from 'zod';
 
 interface ChatWidgetProps {
   config: WidgetConfig | { agentId: string; position?: string; primaryColor?: string };
@@ -646,9 +644,9 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                   <div className="bg-gradient-to-b from-transparent via-background via-30% to-background relative z-20 flex-1 flex flex-col justify-start">
                     <div className="px-6 py-4 space-y-3">
                       {config.announcements.length > 0 && (
-                        <AnimatedList className="space-y-3 mb-6" staggerDelay={0.1}>
+                        <CSSAnimatedList className="space-y-3 mb-6" staggerDelay={0.1}>
                           {config.announcements.map((announcement) => (
-                            <AnimatedItem key={announcement.id}>
+                            <CSSAnimatedItem key={announcement.id}>
                               <div
                                 className="rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
                                 style={{ backgroundColor: announcement.background_color }}
@@ -670,14 +668,14 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
                                </div>
                               </div>
-                             </AnimatedItem>
+                             </CSSAnimatedItem>
                           ))}
-                        </AnimatedList>
+                        </CSSAnimatedList>
                       )}
 
-                      <AnimatedList className="space-y-3" staggerDelay={0.1}>
+                      <CSSAnimatedList className="space-y-3" staggerDelay={0.1}>
                         {config.quickActions.map((action) => (
-                          <AnimatedItem key={action.id}>
+                          <CSSAnimatedItem key={action.id}>
                             <div
                               className="p-4 border rounded-lg bg-card hover:bg-accent/50 cursor-pointer transition-all"
                               onClick={() => handleQuickActionClick(action.action || action.actionType)}
@@ -697,9 +695,9 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                               </div>
                              </div>
                             </div>
-                          </AnimatedItem>
+                          </CSSAnimatedItem>
                         ))}
-                      </AnimatedList>
+                      </CSSAnimatedList>
                     </div>
                   </div>
                 </div>
@@ -729,18 +727,10 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
 
             {/* Content - Only for non-home views */}
             {currentView !== 'home' && (
-              <AnimatePresence mode="wait">
               <div className="flex-1 overflow-hidden bg-background flex flex-col">
 
               {currentView === 'messages' && (
-                <motion.div 
-                  key="messages"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1.0] }}
-                  className="flex-1 flex flex-col"
-                >
+                <div className="flex-1 flex flex-col widget-view-enter">
                   {/* Conversation List View - for returning users */}
                   {showConversationList && chatUser && (
                     <div className="flex-1 flex flex-col">
@@ -814,29 +804,37 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                               });
 
                               try {
-                                const schema = z.object({
-                                  firstName: z.string().trim().min(1).max(50),
-                                  lastName: z.string().trim().min(1).max(50),
-                                  email: z.string().trim().email().max(255),
-                                });
-                                schema.parse({ firstName, lastName, email });
+                                // Inline validation
+                                const errors: Record<string, string> = {};
+                                const trimmedFirstName = firstName.trim();
+                                const trimmedLastName = lastName.trim();
+                                const trimmedEmail = email.trim();
+                                
+                                if (!trimmedFirstName || trimmedFirstName.length > 50) {
+                                  errors.firstName = 'First name is required (max 50 chars)';
+                                }
+                                if (!trimmedLastName || trimmedLastName.length > 50) {
+                                  errors.lastName = 'Last name is required (max 50 chars)';
+                                }
+                                if (!trimmedEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail) || trimmedEmail.length > 255) {
+                                  errors.email = 'Valid email is required';
+                                }
+                                
+                                if (Object.keys(errors).length > 0) {
+                                  setFormErrors(errors);
+                                  return;
+                                }
                                 setFormErrors({});
 
-                                const { leadId } = await createLead(config.agentId, { firstName, lastName, email, customFields: customFieldData });
-                                const userData = { firstName, lastName, email, leadId };
+                                const { leadId } = await createLead(config.agentId, { firstName: trimmedFirstName, lastName: trimmedLastName, email: trimmedEmail, customFields: customFieldData });
+                                const userData = { firstName: trimmedFirstName, lastName: trimmedLastName, email: trimmedEmail, leadId };
                                 localStorage.setItem(`chatpad_user_${config.agentId}`, JSON.stringify(userData));
                                 setChatUser(userData);
                                 // Add greeting message for new user after form submission
                                 setMessages([{ role: 'assistant', content: config.greeting, read: true, timestamp: new Date(), type: 'text', reactions: [] }]);
                                 setActiveConversationId('new');
                               } catch (error) {
-                                if (error instanceof z.ZodError) {
-                                  const errors: Record<string, string> = {};
-                                  error.errors.forEach(err => {
-                                    if (err.path[0]) errors[err.path[0] as string] = err.message;
-                                  });
-                                  setFormErrors(errors);
-                                 }
+                                console.error('Error creating lead:', error);
                                }
                              }}
                           >
@@ -905,34 +903,36 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                           {msg.type === 'text' && <p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p>}
                           
                           {config.enableMessageReactions && (
-                            <MessageReactions
-                              reactions={msg.reactions || []}
-                              onAddReaction={(emoji) => {
-                                const newMessages = [...messages];
-                                const reaction = newMessages[idx].reactions?.find(r => r.emoji === emoji);
-                                if (reaction) {
-                                  reaction.count += 1;
-                                  reaction.userReacted = true;
-                                } else {
-                                  newMessages[idx].reactions = [...(newMessages[idx].reactions || []), { emoji, count: 1, userReacted: true }];
-                                }
-                                setMessages(newMessages);
-                              }}
-                              onRemoveReaction={(emoji) => {
-                                const newMessages = [...messages];
-                                const reaction = newMessages[idx].reactions?.find(r => r.emoji === emoji);
-                                if (reaction) {
-                                  reaction.count -= 1;
-                                  reaction.userReacted = false;
-                                  if (reaction.count === 0) {
-                                    newMessages[idx].reactions = newMessages[idx].reactions?.filter(r => r.emoji !== emoji);
+                            <Suspense fallback={null}>
+                              <MessageReactions
+                                reactions={msg.reactions || []}
+                                onAddReaction={(emoji) => {
+                                  const newMessages = [...messages];
+                                  const reaction = newMessages[idx].reactions?.find(r => r.emoji === emoji);
+                                  if (reaction) {
+                                    reaction.count += 1;
+                                    reaction.userReacted = true;
+                                  } else {
+                                    newMessages[idx].reactions = [...(newMessages[idx].reactions || []), { emoji, count: 1, userReacted: true }];
                                   }
-                                }
-                                setMessages(newMessages);
-                              }}
-                              primaryColor={config.primaryColor}
-                              compact
-                            />
+                                  setMessages(newMessages);
+                                }}
+                                onRemoveReaction={(emoji) => {
+                                  const newMessages = [...messages];
+                                  const reaction = newMessages[idx].reactions?.find(r => r.emoji === emoji);
+                                  if (reaction) {
+                                    reaction.count -= 1;
+                                    reaction.userReacted = false;
+                                    if (reaction.count === 0) {
+                                      newMessages[idx].reactions = newMessages[idx].reactions?.filter(r => r.emoji !== emoji);
+                                    }
+                                  }
+                                  setMessages(newMessages);
+                                }}
+                                primaryColor={config.primaryColor}
+                                compact
+                              />
+                            </Suspense>
                           )}
                           
                           <div className="flex items-center justify-between gap-2 mt-1">
@@ -1056,18 +1056,11 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                       </div>
                     </>
                   )}
-                </motion.div>
+                </div>
               )}
 
               {currentView === 'help' && (
-                <motion.div 
-                  key="help"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1.0] }}
-                  className="flex-1 flex flex-col"
-                >
+                <div className="flex-1 flex flex-col widget-view-enter">
                   {/* Level 1: Categories List / Search Results (No category selected) */}
                   {!selectedCategory && !selectedArticle && (
                     <>
@@ -1099,18 +1092,13 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                         {helpSearchQuery ? (
                           // Search Results
                           filteredArticles.length === 0 ? (
-                            <motion.p 
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              transition={{ duration: 0.3 }}
-                              className="text-center text-muted-foreground text-sm py-8"
-                            >
+                            <p className="text-center text-muted-foreground text-sm py-8 widget-animated-item">
                               No articles found
-                            </motion.p>
+                            </p>
                           ) : (
-                            <AnimatedList className="space-y-2" staggerDelay={0.1}>
+                            <CSSAnimatedList className="space-y-2" staggerDelay={0.1}>
                               {filteredArticles.map((article) => (
-                                <AnimatedItem key={article.id}>
+                                <CSSAnimatedItem key={article.id}>
                                   <div
                                     className="p-3 border rounded-lg hover:bg-accent cursor-pointer transition-colors"
                                     onClick={() => {
@@ -1127,30 +1115,25 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                                      )}
                                    </div>
                                   </div>
-                                 </AnimatedItem>
+                                 </CSSAnimatedItem>
                               ))}
-                            </AnimatedList>
+                            </CSSAnimatedList>
                           )
                         ) : (
                           // Categories List
                           config.helpCategories.length === 0 ? (
-                            <motion.p 
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              transition={{ duration: 0.3 }}
-                              className="text-center text-muted-foreground text-sm py-8"
-                            >
+                            <p className="text-center text-muted-foreground text-sm py-8 widget-animated-item">
                               No categories available
-                            </motion.p>
+                            </p>
                           ) : (
-                            <AnimatedList className="space-y-3" staggerDelay={0.1}>
+                            <CSSAnimatedList className="space-y-3" staggerDelay={0.1}>
                               {config.helpCategories.map((category) => {
                                 const articlesInCategory = config.helpArticles.filter(
                                   a => a.category_id === category.id || a.category === category.name
                                 ).length;
                                 
                                 return (
-                                  <AnimatedItem key={category.id}>
+                                  <CSSAnimatedItem key={category.id}>
                                     <button
                                       className="w-full p-4 border rounded-lg bg-card hover:bg-accent/50 cursor-pointer transition-all text-left"
                                       onClick={() => setSelectedCategory(category.id)}
@@ -1168,10 +1151,10 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                                       <ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
                                     </div>
                                     </button>
-                                  </AnimatedItem>
+                                  </CSSAnimatedItem>
                                 );
                               })}
-                            </AnimatedList>
+                            </CSSAnimatedList>
                           )
                         )}
                       </div>
@@ -1208,18 +1191,13 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
 
                       <div className="flex-1 overflow-y-auto p-4">
                         {filteredArticles.length === 0 ? (
-                          <motion.p 
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ duration: 0.3 }}
-                            className="text-center text-muted-foreground text-sm py-8"
-                          >
+                          <p className="text-center text-muted-foreground text-sm py-8 widget-animated-item">
                             No articles in this category
-                          </motion.p>
+                          </p>
                         ) : (
-                          <AnimatedList className="space-y-2" staggerDelay={0.1}>
+                          <CSSAnimatedList className="space-y-2" staggerDelay={0.1}>
                             {filteredArticles.map((article) => (
-                              <AnimatedItem key={article.id}>
+                              <CSSAnimatedItem key={article.id}>
                                 <button
                                   className="w-full p-3 border rounded-lg hover:bg-accent cursor-pointer transition-colors text-left"
                                   onClick={() => setSelectedArticle(article)}
@@ -1229,9 +1207,9 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                                    <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                                  </div>
                                 </button>
-                              </AnimatedItem>
+                              </CSSAnimatedItem>
                             ))}
-                          </AnimatedList>
+                          </CSSAnimatedList>
                         )}
                       </div>
                     </>
@@ -1346,10 +1324,9 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                       </div>
                     </div>
                    )}
-                 </motion.div>
+                 </div>
                )}
              </div>
-             </AnimatePresence>
              )}
 
             {/* Bottom Navigation */}

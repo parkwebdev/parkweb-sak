@@ -96,3 +96,53 @@ input, textarea {
 .animate-slow-pulse {
   animation: slow-pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
+
+/* CSS Animation replacements for motion/react */
+@keyframes widget-fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes widget-fade-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes widget-fade-out-left {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+}
+
+/* Animated list items with stagger support */
+.widget-animated-item {
+  animation: widget-fade-in-up 0.3s ease-out forwards;
+  animation-delay: var(--stagger-delay, 0s);
+  opacity: 0;
+}
+
+/* View transition classes */
+.widget-view-enter {
+  animation: widget-fade-in-right 0.3s cubic-bezier(0.25, 0.1, 0.25, 1.0) forwards;
+}
+
+.widget-view-exit {
+  animation: widget-fade-out-left 0.3s cubic-bezier(0.25, 0.1, 0.25, 1.0) forwards;
+}
