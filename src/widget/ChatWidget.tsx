@@ -120,16 +120,12 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
       fetchWidgetConfig((configProp as any).agentId)
         .then(cfg => {
           setConfig(cfg);
-          setMessages([{ role: 'assistant', content: cfg.greeting, read: false, timestamp: new Date(), type: 'text', reactions: [] }]);
           setLoading(false);
         })
         .catch(err => {
           console.error('Failed to load config:', err);
           setLoading(false);
         });
-    } else {
-      const fullConfig = configProp as WidgetConfig;
-      setMessages([{ role: 'assistant', content: fullConfig.greeting, read: false, timestamp: new Date(), type: 'text', reactions: [] }]);
     }
   }, []);
 
@@ -190,16 +186,6 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     }
   }, [messages, currentView, activeConversationId]);
 
-  // Update greeting based on user status (only on initial load)
-  useEffect(() => {
-    if (messages.length === 0 && config) {
-      if (chatUser) {
-        setMessages([{ role: 'assistant', content: `Welcome back, ${chatUser.firstName}! 👋 How can I help you today?`, read: true, timestamp: new Date(), type: 'text', reactions: [] }]);
-      } else {
-        setMessages([{ role: 'assistant', content: config.greeting, read: true, timestamp: new Date(), type: 'text', reactions: [] }]);
-      }
-    }
-  }, [chatUser, config]);
 
   // Mark messages as read
   useEffect(() => {
@@ -303,9 +289,27 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
   const handleQuickActionClick = (actionType: string) => {
     if (actionType === 'start_chat' || actionType === 'chat') {
       setCurrentView('messages');
-      if (!chatUser) setActiveConversationId('new');
+      if (!chatUser) {
+        setActiveConversationId('new');
+      } else {
+        // Returning user - add greeting and start conversation
+        setMessages([{ role: 'assistant', content: `Welcome back, ${chatUser.firstName}! 👋 How can I help you today?`, read: true, timestamp: new Date(), type: 'text', reactions: [] }]);
+        setActiveConversationId('new');
+      }
     } else if (actionType === 'open_help' || actionType === 'help') {
       setCurrentView('help');
+    }
+  };
+
+  const handleStartNewConversation = () => {
+    setCurrentView('messages');
+    if (chatUser) {
+      // Returning user - add greeting and start conversation
+      setMessages([{ role: 'assistant', content: `Welcome back, ${chatUser.firstName}! 👋 How can I help you today?`, read: true, timestamp: new Date(), type: 'text', reactions: [] }]);
+      setActiveConversationId('new');
+    } else {
+      // New user - will show contact form first
+      setActiveConversationId('new');
     }
   };
 
@@ -630,6 +634,18 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                           </AnimatedItem>
                         ))}
                       </AnimatedList>
+
+                      {/* Start New Conversation Button */}
+                      <div className="pt-4">
+                        <Button
+                          onClick={handleStartNewConversation}
+                          style={{ backgroundColor: config.primaryColor }}
+                          className="w-full rounded-full"
+                        >
+                          <MessageChatCircle className="h-4 w-4 mr-2" />
+                          Start New Conversation
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -703,6 +719,8 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                                 const userData = { firstName, lastName, email, leadId };
                                 localStorage.setItem(`chatpad_user_${config.agentId}`, JSON.stringify(userData));
                                 setChatUser(userData);
+                                // Add greeting message for new user after form submission
+                                setMessages([{ role: 'assistant', content: config.greeting, read: true, timestamp: new Date(), type: 'text', reactions: [] }]);
                                 setActiveConversationId('new');
                                 toast.success(`Welcome, ${firstName}!`);
                               } catch (error) {
@@ -753,19 +771,6 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                       </div>
                     )}
 
-                    {/* Empty Conversation State */}
-                    {chatUser && !activeConversationId && messages.length <= 1 && (
-                      <div className="flex-1 flex flex-col justify-end p-4">
-                        <Button
-                          onClick={() => setActiveConversationId('new')}
-                          style={{ backgroundColor: config.primaryColor }}
-                          className="w-full rounded-full"
-                        >
-                          <MessageChatCircle className="h-4 w-4 mr-2" />
-                          Start New Conversation
-                        </Button>
-                      </div>
-                    )}
 
                     {messages.map((msg, idx) => (
                       <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
