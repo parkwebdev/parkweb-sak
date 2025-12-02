@@ -442,22 +442,6 @@ export const EmbedSettingsPanel = ({ config, onConfigChange, embedCode }: EmbedS
         <AccordionItem value="features">
           <AccordionTrigger className="text-sm font-medium">Features</AccordionTrigger>
           <AccordionContent className="space-y-4 pt-4">
-            <div className="space-y-2">
-              <Label htmlFor="transitions" className="text-sm">View Transitions</Label>
-              <Select 
-                value={config.viewTransition} 
-                onValueChange={(value: any) => onConfigChange({ viewTransition: value })}
-              >
-                <SelectTrigger className="text-sm">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="slide">Slide</SelectItem>
-                  <SelectItem value="fade">Fade</SelectItem>
-                  <SelectItem value="none">None</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <Label htmlFor="default-sound" className="text-sm">Sound by Default</Label>

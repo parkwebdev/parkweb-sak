@@ -778,10 +778,13 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                   {!showConversationList && (
                     <>
                       <div className="flex-1 overflow-y-auto p-4 space-y-3 messages-container">
-                        {!chatUser && (
+                        {!chatUser && config.enableContactForm && (
                       <div className="flex items-start">
                         <div className="bg-muted rounded-lg p-3 w-full">
-                          <p className="text-sm font-medium mb-3">Quick intro before we chat 👋</p>
+                          <p className="text-sm font-medium mb-1">{config.contactFormTitle || 'Quick intro before we chat 👋'}</p>
+                          {config.contactFormSubtitle && (
+                            <p className="text-xs text-muted-foreground mb-3">{config.contactFormSubtitle}</p>
+                          )}
                           <form 
                             className="space-y-2"
                             onSubmit={async (e) => {
@@ -858,6 +861,14 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                         </div>
                       </div>
                     )}
+                    
+                    {!chatUser && !config.enableContactForm && messages.length === 0 && (
+                      <div className="flex items-start">
+                        <div className="bg-muted rounded-lg p-3 max-w-[80%]">
+                          <p className="text-sm whitespace-pre-wrap break-words">{config.greeting}</p>
+                        </div>
+                      </div>
+                    )}
 
 
                     {messages.map((msg, idx) => (
@@ -879,9 +890,9 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                           )}
                           {msg.type === 'text' && <p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p>}
                           
-                          {config.enableMessageReactions && msg.reactions && msg.reactions.length > 0 && (
+                          {config.enableMessageReactions && (
                             <MessageReactions
-                              reactions={msg.reactions}
+                              reactions={msg.reactions || []}
                               onAddReaction={(emoji) => {
                                 const newMessages = [...messages];
                                 const reaction = newMessages[idx].reactions?.find(r => r.emoji === emoji);
@@ -954,6 +965,19 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                           </div>
                         </div>
                       ))}
+                    </div>
+                  )}
+                  
+                  {config.showBranding && (
+                    <div className="text-center py-2 border-t">
+                      <a 
+                        href="https://chatpad.ai" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        Powered by ChatPad
+                      </a>
                     </div>
                   )}
 

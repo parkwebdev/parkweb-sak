@@ -56,6 +56,9 @@ export const EmbedPreviewPanel = ({ config }: EmbedPreviewPanelProps) => {
     showMessagesTab: config.enableMessagesTab,
     showHelpTab: config.enableHelpTab,
     viewTransition: config.viewTransition,
+    enableContactForm: config.enableContactForm,
+    contactFormTitle: config.contactFormTitle,
+    contactFormSubtitle: config.contactFormSubtitle,
     customFields: config.customFields,
     quickActions: config.quickActions.map(qa => ({
       id: qa.id,
