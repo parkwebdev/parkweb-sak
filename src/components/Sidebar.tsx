@@ -123,36 +123,29 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
                       className="w-full"
                     >
                       <div className="items-center flex w-full overflow-hidden px-0 py-0.5">
-                        <div className={`flex items-center w-full rounded-md transition-colors ${
-                          isOnAgentsPage ? 'bg-accent' : 'bg-transparent'
+                        <div className={`flex items-center w-full rounded-md ${
+                          isOnAgentsPage 
+                            ? 'bg-accent text-accent-foreground' 
+                            : 'bg-transparent text-muted-foreground hover:bg-accent/50 hover:text-foreground'
                         }`}>
                           {/* Left side: Link to /agents (icon + label) */}
                           <Link 
                             to="/agents"
-                            className={`items-center flex gap-2.5 flex-1 transition-colors text-sm px-2.5 py-1.5 rounded-l-md ${
-                              isOnAgentsPage ? 'text-accent-foreground' : 'hover:bg-accent/50 text-muted-foreground hover:text-foreground'
-                            }`}
+                            className="items-center flex gap-2.5 flex-1 text-sm px-2.5 py-1.5"
                           >
                             <div className="items-center flex my-auto w-[18px] pr-0.5">
                               <item.icon size={14} className="self-stretch my-auto" />
                             </div>
                             <div className={`text-sm font-normal leading-4 self-stretch my-auto ${
-                              isOnAgentsPage ? 'text-accent-foreground font-medium' : ''
+                              isOnAgentsPage ? 'font-medium' : ''
                             }`}>
                               {item.label}
                             </div>
                           </Link>
                           
                           {/* Right side: Chevron toggle for dropdown */}
-                          <CollapsibleTrigger 
-                            className={`p-1.5 rounded-r-md transition-colors ${
-                              isOnAgentsPage ? 'text-accent-foreground' : 'hover:bg-accent/50 text-muted-foreground hover:text-foreground'
-                            }`}
-                          >
-                            <ChevronDown 
-                              size={14} 
-                              className={`transition-transform ${agentsOpen ? 'rotate-180' : ''}`}
-                            />
+                          <CollapsibleTrigger className="p-1.5">
+                            <ChevronDown size={14} />
                           </CollapsibleTrigger>
                         </div>
                       </div>
