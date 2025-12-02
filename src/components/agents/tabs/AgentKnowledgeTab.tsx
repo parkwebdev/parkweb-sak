@@ -30,9 +30,9 @@ export const AgentKnowledgeTab = ({ agentId, userId }: AgentKnowledgeTabProps) =
   }
 
   return (
-    <AgentSettingsLayout<KnowledgeTab>
+    <AgentSettingsLayout
       activeTab={activeTab}
-      onTabChange={setActiveTab}
+      onTabChange={(tab) => setActiveTab(tab as KnowledgeTab)}
       menuItems={menuItems}
       title="Knowledge"
       description="Manage your agent's knowledge base"

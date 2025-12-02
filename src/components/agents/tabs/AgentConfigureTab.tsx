@@ -483,9 +483,9 @@ export const AgentConfigureTab: React.FC<AgentConfigureTabProps> = ({ agent, onU
 
   return (
     <TooltipProvider>
-      <AgentSettingsLayout<ConfigureSection>
+      <AgentSettingsLayout
         activeTab={activeSection}
-        onTabChange={setActiveSection}
+        onTabChange={(tab) => setActiveSection(tab as ConfigureSection)}
         menuItems={CONFIGURE_MENU_ITEMS}
         title="Agent Configuration"
         description="Configure your agent's behavior and capabilities"

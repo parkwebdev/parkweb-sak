@@ -157,9 +157,9 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
   }
 
   return (
-    <AgentSettingsLayout<ToolsTab>
+    <AgentSettingsLayout
       activeTab={activeTab}
-      onTabChange={setActiveTab}
+      onTabChange={(tab) => setActiveTab(tab as ToolsTab)}
       menuItems={menuItems}
       title="Tools"
       description="Configure tools and API access"
