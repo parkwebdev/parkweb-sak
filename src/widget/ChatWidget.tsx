@@ -292,8 +292,11 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
       if (!chatUser) {
         setActiveConversationId('new');
       } else {
-        // Returning user - add greeting and start conversation
-        setMessages([{ role: 'assistant', content: `Welcome back, ${chatUser.firstName}! 👋 How can I help you today?`, read: true, timestamp: new Date(), type: 'text', reactions: [] }]);
+        // Returning user - navigate to messages view, preserve existing conversation
+        if (messages.length === 0) {
+          // If no messages exist, add a greeting
+          setMessages([{ role: 'assistant', content: `Welcome back, ${chatUser.firstName}! 👋 How can I help you today?`, read: true, timestamp: new Date(), type: 'text', reactions: [] }]);
+        }
         setActiveConversationId('new');
       }
     } else if (actionType === 'open_help' || actionType === 'help') {
@@ -302,15 +305,13 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
   };
 
   const handleStartNewConversation = () => {
-    setCurrentView('messages');
+    // Clear conversation history and start fresh
+    setMessages([]);
     if (chatUser) {
-      // Returning user - add greeting and start conversation
+      // Returning user - add greeting for new conversation
       setMessages([{ role: 'assistant', content: `Welcome back, ${chatUser.firstName}! 👋 How can I help you today?`, read: true, timestamp: new Date(), type: 'text', reactions: [] }]);
-      setActiveConversationId('new');
-    } else {
-      // New user - will show contact form first
-      setActiveConversationId('new');
     }
+    setActiveConversationId('new');
   };
 
   const formatTimestamp = (date: Date) => {
@@ -634,18 +635,6 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                           </AnimatedItem>
                         ))}
                       </AnimatedList>
-
-                      {/* Start New Conversation Button */}
-                      <div className="pt-4">
-                        <Button
-                          onClick={handleStartNewConversation}
-                          style={{ backgroundColor: config.primaryColor }}
-                          className="w-full rounded-full"
-                        >
-                          <MessageChatCircle className="h-4 w-4 mr-2" />
-                          Start New Conversation
-                        </Button>
-                      </div>
                     </div>
                   </div>
                 </div>
@@ -921,6 +910,20 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                           style={{ backgroundColor: config.primaryColor }}
                         >
                           <Send01 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    )}
+
+                    {/* Start New Conversation Button - Only show for returning users with messages */}
+                    {chatUser && messages.length > 0 && (
+                      <div className="px-3 pb-3">
+                        <Button
+                          onClick={handleStartNewConversation}
+                          variant="outline"
+                          className="w-full text-sm"
+                        >
+                          <MessageChatCircle className="h-4 w-4 mr-2" />
+                          Start New Conversation
                         </Button>
                       </div>
                     )}
