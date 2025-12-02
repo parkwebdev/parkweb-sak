@@ -47,9 +47,25 @@ interface AgentConfigureTabProps {
   onFormChange?: (hasChanges: boolean) => void;
 }
 
+const RESPONSE_LENGTH_PRESETS = [
+  { value: 'concise', label: 'Concise', tokens: 500, description: 'Short, direct answers' },
+  { value: 'balanced', label: 'Balanced', tokens: 2000, description: 'Standard responses' },
+  { value: 'detailed', label: 'Detailed', tokens: 4000, description: 'In-depth explanations' },
+  { value: 'custom', label: 'Custom', tokens: 0, description: 'Manual control' },
+];
+
 export const AgentConfigureTab = ({ agent, onUpdate, onFormChange }: AgentConfigureTabProps) => {
   const deploymentConfig = (agent.deployment_config as any) || {};
   
+  // Determine initial response length preset
+  const getInitialPreset = () => {
+    const tokens = agent.max_tokens || 2000;
+    if (tokens === 500) return 'concise';
+    if (tokens === 2000) return 'balanced';
+    if (tokens === 4000) return 'detailed';
+    return 'custom';
+  };
+
   const [formData, setFormData] = useState({
     name: agent.name,
     description: agent.description || '',
@@ -58,6 +74,9 @@ export const AgentConfigureTab = ({ agent, onUpdate, onFormChange }: AgentConfig
     max_tokens: agent.max_tokens || 2000,
     status: agent.status,
     top_p: deploymentConfig.top_p || 1.0,
+    presence_penalty: deploymentConfig.presence_penalty || 0,
+    frequency_penalty: deploymentConfig.frequency_penalty || 0,
+    response_length_preset: getInitialPreset(),
     system_prompt: agent.system_prompt,
   });
 
@@ -69,6 +88,9 @@ export const AgentConfigureTab = ({ agent, onUpdate, onFormChange }: AgentConfig
     max_tokens: agent.max_tokens || 2000,
     status: agent.status,
     top_p: deploymentConfig.top_p || 1.0,
+    presence_penalty: deploymentConfig.presence_penalty || 0,
+    frequency_penalty: deploymentConfig.frequency_penalty || 0,
+    response_length_preset: getInitialPreset(),
     system_prompt: agent.system_prompt,
   });
 
@@ -78,19 +100,40 @@ export const AgentConfigureTab = ({ agent, onUpdate, onFormChange }: AgentConfig
 
   const handleUpdate = (updates: Partial<typeof formData>) => {
     const newFormData = { ...formData, ...updates };
+    
+    // If response length preset changes, update max_tokens
+    if (updates.response_length_preset && updates.response_length_preset !== 'custom') {
+      const preset = RESPONSE_LENGTH_PRESETS.find(p => p.value === updates.response_length_preset);
+      if (preset) {
+        newFormData.max_tokens = preset.tokens;
+      }
+    }
+    
+    // If max_tokens is manually changed, switch to custom preset
+    if (updates.max_tokens !== undefined && updates.response_length_preset === undefined) {
+      const matchingPreset = RESPONSE_LENGTH_PRESETS.find(p => p.tokens === updates.max_tokens);
+      if (!matchingPreset || matchingPreset.value === 'custom') {
+        newFormData.response_length_preset = 'custom';
+      } else {
+        newFormData.response_length_preset = matchingPreset.value;
+      }
+    }
+    
     setFormData(newFormData);
   };
 
   // Export save function for parent
   (AgentConfigureTab as any).handleSave = async () => {
     if (hasChanges) {
-      const { top_p, system_prompt, ...coreFields } = formData;
+      const { top_p, presence_penalty, frequency_penalty, response_length_preset, system_prompt, ...coreFields } = formData;
       await onUpdate(agent.id, {
         ...coreFields,
         system_prompt,
         deployment_config: {
           ...deploymentConfig,
           top_p,
+          presence_penalty,
+          frequency_penalty,
         },
       });
     }
@@ -183,22 +226,77 @@ export const AgentConfigureTab = ({ agent, onUpdate, onFormChange }: AgentConfig
             <Separator />
 
             <div className="space-y-3">
+              {/* Response Length Preset */}
+              <div className="space-y-1.5">
+                <Label htmlFor="response_length" className="text-xs font-medium">Response Length</Label>
+                <Select
+                  value={formData.response_length_preset}
+                  onValueChange={(value) => handleUpdate({ response_length_preset: value })}
+                >
+                  <SelectTrigger id="response_length" className="h-9 text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {RESPONSE_LENGTH_PRESETS.map((preset) => (
+                      <SelectItem key={preset.value} value={preset.value} className="py-2">
+                        <div className="flex flex-col gap-0.5">
+                          <span className="font-medium text-sm">{preset.label}</span>
+                          <span className="text-xs text-muted-foreground">{preset.description}</span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Show manual max_tokens input only when Custom is selected */}
+              {formData.response_length_preset === 'custom' && (
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-1">
+                    <Label htmlFor="max_tokens" className="text-xs font-medium">Max Tokens</Label>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="inline-flex group">
+                          <InfoCircleIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                          <InfoCircleIconFilled className="h-3.5 w-3.5 text-muted-foreground" />
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Maximum response length in tokens. ~4 characters per token.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
+                  <Input
+                    id="max_tokens"
+                    type="number"
+                    min={100}
+                    max={32000}
+                    step={100}
+                    value={formData.max_tokens ?? 2000}
+                    onChange={(e) => handleUpdate({ max_tokens: parseInt(e.target.value) })}
+                    className="h-9 text-sm"
+                  />
+                </div>
+              )}
+
+              <Separator />
+
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1">
-                <Label htmlFor="temperature" className="text-xs font-medium">Temperature</Label>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className="inline-flex group">
-                      <InfoCircleIcon className="h-3.5 w-3.5 text-muted-foreground" />
-                      <InfoCircleIconFilled className="h-3.5 w-3.5 text-muted-foreground" />
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>How creative or predictable responses are. Lower values give more focused, consistent answers. Higher values give more varied, creative responses.</p>
-                  </TooltipContent>
-                </Tooltip>
-              </div>
+                  <div className="flex items-center gap-1">
+                    <Label htmlFor="temperature" className="text-xs font-medium">Temperature</Label>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="inline-flex group">
+                          <InfoCircleIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                          <InfoCircleIconFilled className="h-3.5 w-3.5 text-muted-foreground" />
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>How creative or predictable responses are. Lower values give more focused, consistent answers. Higher values give more varied, creative responses.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
                   <span className="text-xs text-muted-foreground font-mono">
                     {formData.temperature?.toFixed(2) ?? '0.70'}
                   </span>
@@ -216,20 +314,84 @@ export const AgentConfigureTab = ({ agent, onUpdate, onFormChange }: AgentConfig
 
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1">
-                <Label htmlFor="top_p" className="text-xs font-medium">Top P</Label>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className="inline-flex group">
-                      <InfoCircleIcon className="h-3.5 w-3.5 text-muted-foreground" />
-                      <InfoCircleIconFilled className="h-3.5 w-3.5 text-muted-foreground" />
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Controls response diversity. Lower values make responses more focused and deterministic. Keep at 1.0 unless you need specific control.</p>
-                  </TooltipContent>
-                </Tooltip>
+                  <div className="flex items-center gap-1">
+                    <Label htmlFor="presence_penalty" className="text-xs font-medium">Presence Penalty</Label>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="inline-flex group">
+                          <InfoCircleIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                          <InfoCircleIconFilled className="h-3.5 w-3.5 text-muted-foreground" />
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Encourages the agent to talk about new topics. Higher values make the agent less likely to repeat subjects already discussed.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
+                  <span className="text-xs text-muted-foreground font-mono">
+                    {formData.presence_penalty?.toFixed(2) ?? '0.00'}
+                  </span>
+                </div>
+                <Slider
+                  id="presence_penalty"
+                  min={0}
+                  max={2}
+                  step={0.01}
+                  value={[formData.presence_penalty ?? 0]}
+                  onValueChange={([value]) => handleUpdate({ presence_penalty: value })}
+                  className="w-full"
+                />
               </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1">
+                    <Label htmlFor="frequency_penalty" className="text-xs font-medium">Frequency Penalty</Label>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="inline-flex group">
+                          <InfoCircleIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                          <InfoCircleIconFilled className="h-3.5 w-3.5 text-muted-foreground" />
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Reduces repetitive responses. Higher values make the agent less likely to repeat the same phrases or words within a response.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
+                  <span className="text-xs text-muted-foreground font-mono">
+                    {formData.frequency_penalty?.toFixed(2) ?? '0.00'}
+                  </span>
+                </div>
+                <Slider
+                  id="frequency_penalty"
+                  min={0}
+                  max={2}
+                  step={0.01}
+                  value={[formData.frequency_penalty ?? 0]}
+                  onValueChange={([value]) => handleUpdate({ frequency_penalty: value })}
+                  className="w-full"
+                />
+              </div>
+
+              <Separator />
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1">
+                    <Label htmlFor="top_p" className="text-xs font-medium">Top P</Label>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="inline-flex group">
+                          <InfoCircleIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                          <InfoCircleIconFilled className="h-3.5 w-3.5 text-muted-foreground" />
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Controls response diversity. Lower values make responses more focused and deterministic. Keep at 1.0 unless you need specific control.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
                   <span className="text-xs text-muted-foreground font-mono">
                     {formData.top_p?.toFixed(2) ?? '0.90'}
                   </span>
@@ -242,33 +404,6 @@ export const AgentConfigureTab = ({ agent, onUpdate, onFormChange }: AgentConfig
                   value={[formData.top_p ?? 0.9]}
                   onValueChange={([value]) => handleUpdate({ top_p: value })}
                   className="w-full"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-              <div className="flex items-center gap-1">
-                <Label htmlFor="max_tokens" className="text-xs font-medium">Max Tokens</Label>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className="inline-flex group">
-                      <InfoCircleIcon className="h-3.5 w-3.5 text-muted-foreground" />
-                      <InfoCircleIconFilled className="h-3.5 w-3.5 text-muted-foreground" />
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Maximum response length</p>
-                  </TooltipContent>
-                </Tooltip>
-              </div>
-                <Input
-                  id="max_tokens"
-                  type="number"
-                  min={100}
-                  max={32000}
-                  step={100}
-                  value={formData.max_tokens ?? 2000}
-                  onChange={(e) => handleUpdate({ max_tokens: parseInt(e.target.value) })}
-                  className="h-9 text-sm"
                 />
               </div>
             </div>
