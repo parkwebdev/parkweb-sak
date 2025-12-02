@@ -612,7 +612,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                 <div 
                   ref={homeContentRef}
                   onScroll={(e) => setHeaderScrollY(e.currentTarget.scrollTop)}
-                  className="absolute inset-0 overflow-y-auto z-10"
+                  className="absolute inset-0 overflow-y-auto z-10 flex flex-col"
                 >
                   {/* Spacer to push content down initially - shows gradient */}
                   <div className="h-[140px]" />
@@ -629,7 +629,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                   </div>
                   
                   {/* Content wrapper with gradient from transparent to white */}
-                  <div className="bg-gradient-to-b from-transparent via-background via-30% to-background relative z-20">
+                  <div className="bg-gradient-to-b from-transparent via-background via-30% to-background relative z-20 flex-1 flex flex-col justify-start">
                     <div className="px-6 py-4 space-y-3">
                       {config.announcements.length > 0 && (
                         <AnimatedList className="space-y-3 mb-6" staggerDelay={0.1}>
@@ -1322,7 +1322,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                     setSelectedArticle(null);
                     setHelpSearchQuery('');
                   }} 
-                  className={`flex-1 flex flex-col items-center justify-center h-auto py-2 transition-colors ${
+                  className={`flex-1 flex flex-col items-center justify-center h-auto py-2 transition-colors focus:outline-none focus-visible:ring-0 ${
                     currentView === 'home' 
                       ? 'text-foreground' 
                       : 'text-muted-foreground'
@@ -1348,7 +1348,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                         setShowConversationList(false);
                       }
                     }}
-                    className={`flex-1 flex flex-col items-center justify-center h-auto py-2 relative transition-colors ${
+                    className={`flex-1 flex flex-col items-center justify-center h-auto py-2 relative transition-colors focus:outline-none focus-visible:ring-0 ${
                       currentView === 'messages' 
                         ? 'text-foreground' 
                         : 'text-muted-foreground'
@@ -1368,7 +1368,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                     onMouseEnter={() => setHoveredNav('help')}
                     onMouseLeave={() => setHoveredNav(null)}
                     onClick={() => setCurrentView('help')} 
-                    className={`flex-1 flex flex-col items-center justify-center h-auto py-2 transition-colors ${
+                    className={`flex-1 flex flex-col items-center justify-center h-auto py-2 transition-colors focus:outline-none focus-visible:ring-0 ${
                       currentView === 'help' 
                         ? 'text-foreground' 
                         : 'text-muted-foreground'
