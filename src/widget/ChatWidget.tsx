@@ -23,7 +23,7 @@ const VoiceInput = lazy(() => import('@/components/molecule-ui/voice-input').the
 const FileDropZone = lazy(() => import('@/components/chat/FileDropZone').then(m => ({ default: m.FileDropZone })));
 
 const MessageReactions = lazy(() => import('@/components/chat/MessageReactions').then(m => ({ default: m.MessageReactions })));
-import { AudioPlayer } from '@/components/chat/AudioPlayer';
+const AudioPlayer = lazy(() => import('@/components/chat/AudioPlayer').then(m => ({ default: m.AudioPlayer })));
 
 interface ChatWidgetProps {
   config: WidgetConfig | { agentId: string; position?: string; primaryColor?: string };
@@ -902,7 +902,9 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                       <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                         <div className={`max-w-[80%] rounded-lg p-3 ${msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
                           {msg.type === 'audio' && msg.audioUrl && (
-                            <AudioPlayer audioUrl={msg.audioUrl} primaryColor={config.primaryColor} />
+                            <Suspense fallback={<div className="h-10 w-full bg-muted animate-pulse rounded" />}>
+                              <AudioPlayer audioUrl={msg.audioUrl} primaryColor={config.primaryColor} />
+                            </Suspense>
                           )}
                           {msg.type === 'file' && msg.files && (
                             <div className="space-y-2">
