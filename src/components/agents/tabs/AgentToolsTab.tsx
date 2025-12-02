@@ -270,7 +270,7 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
                       
                       <Collapsible>
                         <CollapsibleTrigger asChild>
-                          <Button variant="ghost" size="sm" className="h-7 text-xs px-2 -ml-2">
+                          <Button variant="ghost" size="sm" className="text-xs px-2 -ml-2">
                             <ChevronDown className="h-3 w-3 mr-1" />
                             View Parameters
                           </Button>

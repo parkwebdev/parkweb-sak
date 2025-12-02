@@ -383,14 +383,13 @@ export const HelpArticlesManager = ({ agentId }: HelpArticlesManagerProps) => {
                         <p className="text-xs text-muted-foreground mt-0.5">{category.description}</p>
                       )}
                     </div>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => handleEditCategory(category.name)}
-                      className="h-7 px-2"
-                    >
-                      Edit
-                    </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => handleEditCategory(category.name)}
+                  >
+                    Edit
+                  </Button>
                   </div>
                   <DndContext
                     sensors={sensors}

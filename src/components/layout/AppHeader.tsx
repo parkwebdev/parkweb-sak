@@ -94,8 +94,8 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ onMenuClick }) => {
         {/* User Avatar Dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="h-9 w-9 rounded-full p-0">
-              <Avatar className="h-8 w-8">
+          <Button variant="ghost" size="icon" className="rounded-full p-0">
+            <Avatar className="h-8 w-8">
                 <AvatarImage src={profile?.avatar_url || undefined} />
                 <AvatarFallback className="bg-primary text-primary-foreground text-xs">
                   {getInitials()}
