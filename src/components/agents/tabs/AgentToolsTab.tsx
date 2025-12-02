@@ -10,9 +10,10 @@ import { CopyButton } from '@/components/ui/copy-button';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/lib/toast';
 import type { Tables } from '@/integrations/supabase/types';
-import { AgentSettingsLayout, type AgentSettingsTab } from '@/components/agents/AgentSettingsLayout';
+import { AgentSettingsLayout } from '@/components/agents/AgentSettingsLayout';
 
 type AgentTool = Tables<'agent_tools'>;
+type ToolsTab = 'api-access' | 'custom-tools';
 
 interface AgentToolsTabProps {
   agentId: string;
@@ -24,7 +25,7 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
   const [tools, setTools] = useState<AgentTool[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [activeTab, setActiveTab] = useState<AgentSettingsTab>('api-access');
+  const [activeTab, setActiveTab] = useState<ToolsTab>('api-access');
   const [newTool, setNewTool] = useState({
     name: '',
     description: '',
@@ -32,8 +33,8 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
   });
 
   const menuItems = [
-    { id: 'api-access' as AgentSettingsTab, label: 'API Access' },
-    { id: 'custom-tools' as AgentSettingsTab, label: 'Custom Tools' },
+    { id: 'api-access' as const, label: 'API Access' },
+    { id: 'custom-tools' as const, label: 'Custom Tools' },
   ];
 
   const apiEndpoint = `https://mvaimvwdukpgvkifkfpa.supabase.co/functions/v1/widget-chat`;
@@ -156,7 +157,7 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
   }
 
   return (
-    <AgentSettingsLayout
+    <AgentSettingsLayout<ToolsTab>
       activeTab={activeTab}
       onTabChange={setActiveTab}
       menuItems={menuItems}
