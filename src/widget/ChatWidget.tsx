@@ -23,7 +23,6 @@ import { VoiceInput } from '@/components/molecule-ui/voice-input';
 import { FileDropZone } from '@/components/chat/FileDropZone';
 import { MessageReactions } from '@/components/chat/MessageReactions';
 import { AudioPlayer } from '@/components/chat/AudioPlayer';
-import { toast, Toaster } from 'sonner';
 import { z } from 'zod';
 
 interface ChatWidgetProps {
@@ -506,14 +505,8 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
       const sessionId = getSessionId();
       await submitArticleFeedback(selectedArticle.id, { sessionId, isHelpful: articleFeedback === 'helpful', comment: feedbackComment });
       setFeedbackSubmitted(true);
-      toast.success('Thank you for your feedback!');
     } catch (error: any) {
       console.error('Error submitting feedback:', error);
-      if (error.message?.includes('unique')) {
-        toast.error('You have already provided feedback for this article');
-      } else {
-        toast.error('Failed to submit feedback. Please try again.');
-      }
     }
   };
 
@@ -636,7 +629,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                   </div>
                   
                   {/* Content wrapper with gradient from transparent to white */}
-                  <div className="bg-gradient-to-b from-transparent via-background via-30% to-background min-h-full relative z-20">
+                  <div className="bg-gradient-to-b from-transparent via-background via-30% to-background relative z-20">
                     <div className="px-6 py-4 space-y-3">
                       {config.announcements.length > 0 && (
                         <AnimatedList className="space-y-3 mb-6" staggerDelay={0.1}>
@@ -819,7 +812,6 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                                 // Add greeting message for new user after form submission
                                 setMessages([{ role: 'assistant', content: config.greeting, read: true, timestamp: new Date(), type: 'text', reactions: [] }]);
                                 setActiveConversationId('new');
-                                toast.success(`Welcome, ${firstName}!`);
                               } catch (error) {
                                 if (error instanceof z.ZodError) {
                                   const errors: Record<string, string> = {};
@@ -828,7 +820,6 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                                   });
                                   setFormErrors(errors);
                                  }
-                                 toast.error('Failed to start chat. Please try again.');
                                }
                              }}
                           >
@@ -974,7 +965,6 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                             setPendingFiles(prev => [...prev, { file, preview: urls[i] || '' }]);
                           });
                           setIsAttachingFiles(false);
-                          toast.success(`${files.length} file(s) attached`);
                         }}
                         onCancel={() => setIsAttachingFiles(false)}
                         primaryColor={config.primaryColor}
@@ -1306,7 +1296,6 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                               setActiveConversationId('new');
                               setShowConversationList(false);
                             }
-                            toast.success('Starting a new conversation...');
                           }}
                         >
                           <MessageChatCircle className="h-4 w-4 mr-2" />
@@ -1450,7 +1439,6 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
         } as React.CSSProperties}
       >
         {widgetContent}
-        <Toaster position="top-center" richColors />
       </div>
     );
   }
@@ -1487,7 +1475,6 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
         <div className={`absolute ${positionClasses[position]} pointer-events-auto`}>
           {widgetContent}
         </div>
-        <Toaster position="top-center" richColors />
       </div>
     );
   }
@@ -1523,7 +1510,6 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
       <div className={`absolute ${positionClasses[position]} pointer-events-auto`}>
         {widgetContent}
       </div>
-      <Toaster position="top-center" richColors />
     </div>
   );
 };
