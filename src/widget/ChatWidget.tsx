@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { fetchWidgetConfig, createLead, submitArticleFeedback, type WidgetConfig } from './api';
 import { AnimatedList } from '@/components/ui/animated-list';
@@ -16,11 +16,13 @@ import { X, Send01, MessageChatCircle, ChevronRight, Zap, BookOpen01, Microphone
 import { HomeNavIcon, ChatNavIcon, HelpNavIcon } from './NavIcons';
 import { ChatBubbleIcon } from '@/components/agents/ChatBubbleIcon';
 import ChatPadLogo from '@/components/ChatPadLogo';
-import { BubbleBackground } from '@/components/ui/bubble-background';
 import { generateGradientPalette, darkenColor } from '@/lib/color-utils';
 
-import { VoiceInput } from '@/components/molecule-ui/voice-input';
-import { FileDropZone } from '@/components/chat/FileDropZone';
+// Lazy load heavy components to reduce initial bundle size
+const BubbleBackground = lazy(() => import('@/components/ui/bubble-background').then(m => ({ default: m.BubbleBackground })));
+const VoiceInput = lazy(() => import('@/components/molecule-ui/voice-input').then(m => ({ default: m.VoiceInput })));
+const FileDropZone = lazy(() => import('@/components/chat/FileDropZone').then(m => ({ default: m.FileDropZone })));
+
 import { MessageReactions } from '@/components/chat/MessageReactions';
 import { AudioPlayer } from '@/components/chat/AudioPlayer';
 import { z } from 'zod';
@@ -583,15 +585,27 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
               <div className="flex-1 relative overflow-hidden">
                 {/* Fixed gradient background - extends full height */}
                 <div className="absolute inset-0">
-                  <BubbleBackground 
-                    interactive
-                    colors={generateGradientPalette(config.gradientStartColor, config.gradientEndColor)}
-                    baseGradient={{
-                      from: darkenColor(config.gradientStartColor, 40),
-                      to: darkenColor(config.gradientEndColor, 50)
-                    }}
-                    className="absolute inset-0"
-                  />
+                  {/* Only render BubbleBackground when widget is visible to save GPU resources */}
+                  {(isOpen || isIframeMode) && (
+                    <Suspense fallback={
+                      <div 
+                        className="absolute inset-0" 
+                        style={{ 
+                          background: `linear-gradient(135deg, ${darkenColor(config.gradientStartColor, 40)}, ${darkenColor(config.gradientEndColor, 50)})` 
+                        }} 
+                      />
+                    }>
+                      <BubbleBackground 
+                        interactive
+                        colors={generateGradientPalette(config.gradientStartColor, config.gradientEndColor)}
+                        baseGradient={{
+                          from: darkenColor(config.gradientStartColor, 40),
+                          to: darkenColor(config.gradientEndColor, 50)
+                        }}
+                        className="absolute inset-0"
+                      />
+                    </Suspense>
+                  )}
                   
                   
                   {/* Logo in top left - aligned with content text */}
@@ -983,21 +997,25 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
 
                   <div className="p-3 border-t">
                     {isAttachingFiles ? (
-                      <FileDropZone
-                        onFilesSelected={(files, urls) => {
-                          files.forEach((file, i) => {
-                            setPendingFiles(prev => [...prev, { file, preview: urls[i] || '' }]);
-                          });
-                          setIsAttachingFiles(false);
-                        }}
-                        onCancel={() => setIsAttachingFiles(false)}
-                        primaryColor={config.primaryColor}
-                      />
+                      <Suspense fallback={<div className="h-32 flex items-center justify-center text-muted-foreground text-sm">Loading...</div>}>
+                        <FileDropZone
+                          onFilesSelected={(files, urls) => {
+                            files.forEach((file, i) => {
+                              setPendingFiles(prev => [...prev, { file, preview: urls[i] || '' }]);
+                            });
+                            setIsAttachingFiles(false);
+                          }}
+                          onCancel={() => setIsAttachingFiles(false)}
+                          primaryColor={config.primaryColor}
+                        />
+                      </Suspense>
                     ) : isRecordingAudio ? (
-                      <VoiceInput
-                        onStart={startAudioRecording}
-                        onStop={stopAudioRecording}
-                      />
+                      <Suspense fallback={<div className="h-12 flex items-center justify-center text-muted-foreground text-sm">Loading...</div>}>
+                        <VoiceInput
+                          onStart={startAudioRecording}
+                          onStop={stopAudioRecording}
+                        />
+                      </Suspense>
                     ) : (
                       <div className="flex items-center gap-2">
                         <Input

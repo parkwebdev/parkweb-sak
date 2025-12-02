@@ -20,8 +20,21 @@ export default defineConfig(({ mode }) => ({
   },
   build: {
     rollupOptions: {
+      input: {
+        main: path.resolve(__dirname, 'index.html'),
+        widget: path.resolve(__dirname, 'widget.html'),
+      },
       output: {
-        manualChunks: undefined,
+        manualChunks: (id) => {
+          // Separate widget bundle from main app
+          if (id.includes('widget-entry') || id.includes('src/widget/') || id.includes('src/pages/WidgetPage')) {
+            return 'widget';
+          }
+          // Keep node_modules in vendor chunk for main app
+          if (id.includes('node_modules')) {
+            return 'vendor';
+          }
+        },
       },
     },
   },

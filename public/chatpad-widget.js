@@ -250,9 +250,12 @@
       
       this.iframe = document.createElement('iframe');
       this.iframe.className = 'chatpad-widget-iframe';
-      this.iframe.src = `${this.config.appUrl}/widget?${params.toString()}`;
+      // Use widget.html for optimized widget bundle
+      this.iframe.src = `${this.config.appUrl}/widget.html?${params.toString()}`;
       this.iframe.allow = 'microphone; camera';
       this.iframe.title = 'Chat Widget';
+      // Lazy load iframe - don't load until needed
+      this.iframe.loading = 'lazy';
       
       this.iframeContainer.appendChild(this.iframe);
       this.container.appendChild(this.iframeContainer);
