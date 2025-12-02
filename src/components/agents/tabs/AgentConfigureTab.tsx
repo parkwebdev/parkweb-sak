@@ -6,8 +6,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ChevronDown, Lightbulb01 } from '@untitledui/icons';
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
+import { HelpCircle, Lightbulb01 } from '@untitledui/icons';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Agent = Tables<'agents'>;
@@ -96,9 +96,10 @@ export const AgentConfigureTab = ({ agent, onUpdate, onFormChange }: AgentConfig
   };
 
   return (
-    <div className="space-y-6 min-h-full pb-8">
-      {/* Three Column Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <TooltipProvider>
+      <div className="space-y-6 min-h-full pb-8">
+        {/* Three Column Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Column 1: Identity */}
         <div className="p-5 rounded-lg bg-muted/30 border space-y-4">
           <div>
@@ -183,7 +184,17 @@ export const AgentConfigureTab = ({ agent, onUpdate, onFormChange }: AgentConfig
             <div className="space-y-3">
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="temperature" className="text-xs font-medium">Temperature</Label>
+                  <div className="flex items-center gap-1">
+                    <Label htmlFor="temperature" className="text-xs font-medium">Temperature</Label>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <HelpCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Controls randomness. Higher = more creative</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
                   <span className="text-xs text-muted-foreground font-mono">
                     {formData.temperature?.toFixed(2) ?? '0.70'}
                   </span>
@@ -197,12 +208,21 @@ export const AgentConfigureTab = ({ agent, onUpdate, onFormChange }: AgentConfig
                   onValueChange={([value]) => handleUpdate({ temperature: value })}
                   className="w-full"
                 />
-                <p className="text-xs text-muted-foreground">Controls randomness. Higher = more creative</p>
               </div>
 
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="top_p" className="text-xs font-medium">Top P</Label>
+                  <div className="flex items-center gap-1">
+                    <Label htmlFor="top_p" className="text-xs font-medium">Top P</Label>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <HelpCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Nucleus sampling threshold</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </div>
                   <span className="text-xs text-muted-foreground font-mono">
                     {formData.top_p?.toFixed(2) ?? '0.90'}
                   </span>
@@ -216,11 +236,20 @@ export const AgentConfigureTab = ({ agent, onUpdate, onFormChange }: AgentConfig
                   onValueChange={([value]) => handleUpdate({ top_p: value })}
                   className="w-full"
                 />
-                <p className="text-xs text-muted-foreground">Nucleus sampling threshold</p>
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="max_tokens" className="text-xs font-medium">Max Tokens</Label>
+                <div className="flex items-center gap-1">
+                  <Label htmlFor="max_tokens" className="text-xs font-medium">Max Tokens</Label>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <HelpCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Maximum response length</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
                 <Input
                   id="max_tokens"
                   type="number"
@@ -231,7 +260,6 @@ export const AgentConfigureTab = ({ agent, onUpdate, onFormChange }: AgentConfig
                   onChange={(e) => handleUpdate({ max_tokens: parseInt(e.target.value) })}
                   className="h-9 text-sm"
                 />
-                <p className="text-xs text-muted-foreground">Maximum response length</p>
               </div>
             </div>
           </div>
@@ -239,9 +267,26 @@ export const AgentConfigureTab = ({ agent, onUpdate, onFormChange }: AgentConfig
 
         {/* Column 3: System Prompt */}
         <div className="p-5 rounded-lg bg-muted/30 border space-y-4">
-          <div>
-            <h3 className="text-sm font-semibold mb-1">System Prompt</h3>
-            <p className="text-xs text-muted-foreground">Define how your agent should behave</p>
+          <div className="flex items-center gap-2">
+            <div>
+              <h3 className="text-sm font-semibold mb-1">System Prompt</h3>
+              <p className="text-xs text-muted-foreground">Define how your agent should behave</p>
+            </div>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Lightbulb01 className="h-4 w-4 text-amber-500 cursor-help flex-shrink-0" />
+              </TooltipTrigger>
+              <TooltipContent side="right" className="max-w-xs">
+                <p className="font-medium mb-1">Tips for great prompts:</p>
+                <ul className="text-xs space-y-1 list-disc list-inside">
+                  <li>Be specific about the agent's role and expertise</li>
+                  <li>Define the tone and communication style</li>
+                  <li>Include any rules or limitations</li>
+                  <li>Specify how to handle edge cases</li>
+                  <li>Add examples of desired behavior</li>
+                </ul>
+              </TooltipContent>
+            </Tooltip>
           </div>
 
           <Textarea
@@ -250,28 +295,9 @@ export const AgentConfigureTab = ({ agent, onUpdate, onFormChange }: AgentConfig
             placeholder="You are a helpful assistant that..."
             className="min-h-[300px] text-sm font-mono resize-none"
           />
-
-          <Collapsible>
-            <CollapsibleTrigger className="flex items-center gap-2 text-xs font-medium hover:text-primary transition-colors group w-full justify-start">
-              <Lightbulb01 className="h-3.5 w-3.5 text-amber-500" />
-              <span>Tips for writing great prompts</span>
-              <ChevronDown className="h-3.5 w-3.5 ml-auto transition-transform group-data-[state=open]:rotate-180" />
-            </CollapsibleTrigger>
-            <CollapsibleContent className="pt-3">
-              <div className="text-xs text-muted-foreground space-y-2 bg-muted/50 rounded-md p-3">
-                <p className="font-medium text-foreground">Best practices:</p>
-                <ul className="space-y-1.5 list-disc list-inside">
-                  <li>Be specific about the agent's role and expertise</li>
-                  <li>Define the tone and communication style</li>
-                  <li>Include any rules or limitations</li>
-                  <li>Specify how to handle edge cases</li>
-                  <li>Add examples of desired behavior</li>
-                </ul>
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
         </div>
       </div>
-    </div>
+      </div>
+    </TooltipProvider>
   );
 };
