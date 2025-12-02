@@ -269,10 +269,9 @@
         </svg>
       `;
       
-      // Add preconnect hints on hover (before click)
-      this.button.addEventListener('mouseenter', () => this.addPreconnectHints(), { once: true });
-      // Also on touchstart for mobile
-      this.button.addEventListener('touchstart', () => this.addPreconnectHints(), { once: true, passive: true });
+      // Preload iframe on hover for near-instant opening
+      this.button.addEventListener('mouseenter', () => this.preloadIframe(), { once: true });
+      this.button.addEventListener('touchstart', () => this.preloadIframe(), { once: true, passive: true });
       
       this.button.addEventListener('click', () => this.toggle());
       this.container.appendChild(this.button);
@@ -330,6 +329,18 @@
     }
     
     /**
+     * Preload iframe on hover for near-instant opening
+     */
+    preloadIframe() {
+      this.addPreconnectHints();
+      
+      // Create iframe in background (hidden) if not already loaded
+      if (!this.iframeLoaded) {
+        this.createIframe();
+      }
+    }
+    
+    /**
      * Show the iframe container with animation
      */
     showContainer() {
@@ -349,15 +360,17 @@
     open() {
       this.isOpen = true;
       
-      // Create iframe on first open (deferred loading)
-      if (!this.iframeLoaded) {
-        this.createIframe();
-        // Don't show container yet - wait for widget ready signal
+      // If widget is already ready (preloaded on hover), show immediately
+      if (this.widgetReady) {
+        this.showContainer();
         return;
       }
       
-      // Already loaded, show immediately
-      this.showContainer();
+      // Create iframe if not already loading
+      if (!this.iframeLoaded) {
+        this.createIframe();
+      }
+      // Wait for ready signal (handled in handleMessage)
     }
     
     close() {
