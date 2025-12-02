@@ -1,11 +1,16 @@
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
 import { ChatWidget } from '@/widget/ChatWidget';
 import type { WidgetConfig } from '@/widget/api';
 import { fetchWidgetConfig } from '@/widget/api';
 
+// Simple hook to get search params without react-router dependency for widget bundle
+const useWidgetSearchParams = () => {
+  const [params] = useState(() => new URLSearchParams(window.location.search));
+  return params;
+};
+
 const WidgetPage = () => {
-  const [searchParams] = useSearchParams();
+  const searchParams = useWidgetSearchParams();
   const [config, setConfig] = useState<WidgetConfig | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
