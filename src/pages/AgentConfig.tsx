@@ -6,7 +6,7 @@ import { AgentConfigureTab } from '@/components/agents/tabs/AgentConfigureTab';
 import { AgentKnowledgeTab } from '@/components/agents/tabs/AgentKnowledgeTab';
 import { AgentToolsTab } from '@/components/agents/tabs/AgentToolsTab';
 import { AgentEmbedTab } from '@/components/agents/tabs/AgentEmbedTab';
-import { AgentAnnouncementsTab } from '@/components/agents/tabs/AgentAnnouncementsTab';
+import { AgentContentTab } from '@/components/agents/tabs/AgentContentTab';
 import { AgentConfigLayout, type AgentConfigTab } from '@/components/agents/AgentConfigLayout';
 import { TabContentTransition } from '@/components/ui/tab-content-transition';
 import type { Tables } from '@/integrations/supabase/types';
@@ -114,8 +114,8 @@ const AgentConfig: React.FC<AgentConfigProps> = ({ onMenuClick }) => {
             {activeTab === 'tools' && (
               <AgentToolsTab agentId={agent.id} agent={agent} onUpdate={handleUpdate} />
             )}
-            {activeTab === 'announcements' && (
-              <AgentAnnouncementsTab />
+            {activeTab === 'content' && (
+              <AgentContentTab />
             )}
           </TabContentTransition>
         )}

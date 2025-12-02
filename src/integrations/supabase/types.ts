@@ -608,6 +608,59 @@ export type Database = {
           },
         ]
       }
+      news_items: {
+        Row: {
+          agent_id: string
+          author_name: string | null
+          body: string
+          created_at: string | null
+          featured_image_url: string | null
+          id: string
+          is_published: boolean | null
+          order_index: number | null
+          published_at: string | null
+          title: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          agent_id: string
+          author_name?: string | null
+          body: string
+          created_at?: string | null
+          featured_image_url?: string | null
+          id?: string
+          is_published?: boolean | null
+          order_index?: number | null
+          published_at?: string | null
+          title: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          agent_id?: string
+          author_name?: string | null
+          body?: string
+          created_at?: string | null
+          featured_image_url?: string | null
+          id?: string
+          is_published?: boolean | null
+          order_index?: number | null
+          published_at?: string | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "news_items_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notification_preferences: {
         Row: {
           agent_notifications: boolean | null
