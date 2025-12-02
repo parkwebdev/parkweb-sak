@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Plus, Trash01, ChevronDown, XClose } from '@untitledui/icons';
+import { Plus, Trash01, ChevronDown } from '@untitledui/icons';
 import { CopyButton } from '@/components/ui/copy-button';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/lib/toast';
@@ -206,7 +206,6 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
         <div className="space-y-4">
           <div className="flex items-center justify-end">
             <Button onClick={() => setShowAddForm(!showAddForm)} size="sm">
-              {showAddForm ? <XClose className="h-4 w-4 mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
               {showAddForm ? 'Cancel' : 'Add Tool'}
             </Button>
           </div>

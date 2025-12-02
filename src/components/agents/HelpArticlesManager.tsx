@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, BookOpen01 } from '@untitledui/icons';
+import { BookOpen01 } from '@untitledui/icons';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { useHelpArticles } from '@/hooks/useHelpArticles';
 import { toast } from '@/lib/toast';
@@ -193,7 +193,6 @@ export const HelpArticlesManager = ({ agentId }: HelpArticlesManagerProps) => {
           <Dialog open={newCategoryDialogOpen} onOpenChange={setNewCategoryDialogOpen}>
             <DialogTrigger asChild>
               <Button size="sm" variant="outline">
-                <Plus className="h-4 w-4 mr-2" />
                 Add Category
               </Button>
             </DialogTrigger>
@@ -272,7 +271,6 @@ export const HelpArticlesManager = ({ agentId }: HelpArticlesManagerProps) => {
           }}>
             <DialogTrigger asChild>
               <Button size="sm">
-                <Plus className="h-4 w-4 mr-2" />
                 Add Article
               </Button>
             </DialogTrigger>
