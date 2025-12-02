@@ -193,8 +193,12 @@
       this.iframe = null;
       // Track if iframe has been created (deferred loading)
       this.iframeLoaded = false;
+      // Track if widget has signaled ready
+      this.widgetReady = false;
       // Track if preconnect has been added
       this.preconnected = false;
+      // Timeout for fallback display
+      this.readyTimeout = null;
     }
     
     init() {
@@ -306,6 +310,13 @@
       this.iframe.title = 'Chat Widget';
       
       this.iframeContainer.appendChild(this.iframe);
+      
+      // Fallback: show container after 2 seconds even if no ready signal
+      this.readyTimeout = setTimeout(() => {
+        if (this.isOpen && !this.widgetReady) {
+          this.showContainer();
+        }
+      }, 2000);
     }
     
     toggle() {
@@ -318,24 +329,35 @@
       }
     }
     
+    /**
+     * Show the iframe container with animation
+     */
+    showContainer() {
+      this.widgetReady = true;
+      this.iframeContainer.classList.remove('hidden');
+      this.iframeContainer.classList.add('visible');
+      this.button.classList.add('chatpad-widget-button-open');
+      
+      // Notify iframe
+      if (this.iframe && this.iframe.contentWindow) {
+        this.iframe.contentWindow.postMessage({
+          type: 'chatpad-widget-opened',
+        }, '*');
+      }
+    }
+    
     open() {
       this.isOpen = true;
       
       // Create iframe on first open (deferred loading)
       if (!this.iframeLoaded) {
         this.createIframe();
+        // Don't show container yet - wait for widget ready signal
+        return;
       }
       
-      this.iframeContainer.classList.remove('hidden');
-      this.iframeContainer.classList.add('visible');
-      this.button.classList.add('chatpad-widget-button-open');
-      
-      // Notify iframe (if loaded)
-      if (this.iframe && this.iframe.contentWindow) {
-        this.iframe.contentWindow.postMessage({
-          type: 'chatpad-widget-opened',
-        }, '*');
-      }
+      // Already loaded, show immediately
+      this.showContainer();
     }
     
     close() {
@@ -357,6 +379,16 @@
       if (!event.data || typeof event.data !== 'object') return;
       
       switch (event.data.type) {
+        case 'chatpad-widget-ready':
+          // Widget is ready to display, now show the container
+          if (this.readyTimeout) {
+            clearTimeout(this.readyTimeout);
+          }
+          if (this.isOpen && !this.widgetReady) {
+            this.showContainer();
+          }
+          break;
+          
         case 'chatpad-widget-close':
           this.close();
           break;
