@@ -703,14 +703,17 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                   
                   {config.showBranding && (
                     <div className="text-center py-2 mt-auto bg-white border-t">
-                      <a 
-                        href="https://pad.chat" 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-xs text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-0.5"
-                      >
-                        Powered by <ChatPadLogo className="h-3 w-3" /> ChatPad
-                      </a>
+                      <span className="text-xs text-muted-foreground inline-flex items-center">
+                        Powered by
+                        <a 
+                          href="https://pad.chat" 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-xs text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-0.5 ml-1"
+                        >
+                          <ChatPadLogo className="h-3 w-3" /> ChatPad
+                        </a>
+                      </span>
                     </div>
                   )}
                 </div>
