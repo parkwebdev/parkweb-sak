@@ -57,6 +57,14 @@ interface Message {
   reactions?: Array<{ emoji: string; count: number; userReacted: boolean }>;
 }
 
+interface Conversation {
+  id: string;
+  messages: Message[];
+  createdAt: string;
+  updatedAt: string;
+  preview: string;
+}
+
 export const ChatWidget = ({ config: configProp, previewMode = false, containedPreview = false }: ChatWidgetProps) => {
   const isSimpleConfig = 'agentId' in configProp && !('greeting' in configProp);
   const [config, setConfig] = useState<WidgetConfig | null>(
@@ -95,7 +103,9 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
   const [showFeedbackComment, setShowFeedbackComment] = useState(false);
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
   
+  const [conversations, setConversations] = useState<Conversation[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [showConversationList, setShowConversationList] = useState(false);
   const [headerScrollY, setHeaderScrollY] = useState(0);
   const homeContentRef = useRef<HTMLDivElement>(null);
 
@@ -156,25 +166,66 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     }
   }, [chatSettings, agentId, config]);
 
-  // Load/save messages from localStorage
+  // Load conversations from localStorage (with migration from old format)
   useEffect(() => {
-    const stored = localStorage.getItem(`chatpad_messages_${agentId}`);
+    const stored = localStorage.getItem(`chatpad_conversations_${agentId}`);
+    const oldStored = localStorage.getItem(`chatpad_messages_${agentId}`);
+    
     if (stored) {
       try {
         const parsed = JSON.parse(stored);
-        const messagesWithDates = parsed.map((msg: any) => ({ ...msg, timestamp: new Date(msg.timestamp) }));
-        setMessages(messagesWithDates);
+        const conversationsWithDates = parsed.map((conv: any) => ({
+          ...conv,
+          messages: conv.messages.map((msg: any) => ({ ...msg, timestamp: new Date(msg.timestamp) }))
+        }));
+        setConversations(conversationsWithDates);
       } catch (error) {
-        console.error('Error loading messages:', error);
+        console.error('Error loading conversations:', error);
+      }
+    } else if (oldStored) {
+      // Migrate old messages format to conversations
+      try {
+        const parsed = JSON.parse(oldStored);
+        const messagesWithDates = parsed.map((msg: any) => ({ ...msg, timestamp: new Date(msg.timestamp) }));
+        if (messagesWithDates.length > 0) {
+          const migratedConversation: Conversation = {
+            id: 'migrated_' + Date.now(),
+            messages: messagesWithDates,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            preview: messagesWithDates[messagesWithDates.length - 1]?.content || 'Previous conversation'
+          };
+          setConversations([migratedConversation]);
+          localStorage.setItem(`chatpad_conversations_${agentId}`, JSON.stringify([migratedConversation]));
+          localStorage.removeItem(`chatpad_messages_${agentId}`);
+        }
+      } catch (error) {
+        console.error('Error migrating messages:', error);
       }
     }
   }, [agentId]);
 
+  // Save conversations to localStorage and update active conversation
   useEffect(() => {
-    if (messages.length > 1) {
-      localStorage.setItem(`chatpad_messages_${agentId}`, JSON.stringify(messages));
+    if (activeConversationId && messages.length > 0) {
+      const existingIndex = conversations.findIndex(c => c.id === activeConversationId);
+      const lastMessage = messages[messages.length - 1];
+      const updatedConversation: Conversation = {
+        id: activeConversationId,
+        messages: messages,
+        createdAt: existingIndex >= 0 ? conversations[existingIndex].createdAt : new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        preview: lastMessage?.content.slice(0, 60) || 'New conversation'
+      };
+
+      const updatedConversations = existingIndex >= 0
+        ? conversations.map((c, i) => i === existingIndex ? updatedConversation : c)
+        : [updatedConversation, ...conversations];
+
+      setConversations(updatedConversations);
+      localStorage.setItem(`chatpad_conversations_${agentId}`, JSON.stringify(updatedConversations));
     }
-  }, [messages, agentId]);
+  }, [messages, activeConversationId, agentId]);
 
   // Auto-scroll (always enabled)
   useEffect(() => {
@@ -291,13 +342,10 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
       setCurrentView('messages');
       if (!chatUser) {
         setActiveConversationId('new');
+        setShowConversationList(false);
       } else {
-        // Returning user - navigate to messages view, preserve existing conversation
-        if (messages.length === 0) {
-          // If no messages exist, add a greeting
-          setMessages([{ role: 'assistant', content: `Welcome back, ${chatUser.firstName}! 👋 How can I help you today?`, read: true, timestamp: new Date(), type: 'text', reactions: [] }]);
-        }
-        setActiveConversationId('new');
+        // Returning user - show conversation list
+        setShowConversationList(true);
       }
     } else if (actionType === 'open_help' || actionType === 'help') {
       setCurrentView('help');
@@ -305,13 +353,23 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
   };
 
   const handleStartNewConversation = () => {
-    // Clear conversation history and start fresh
-    setMessages([]);
+    const newConvId = 'conv_' + Date.now();
+    setActiveConversationId(newConvId);
+    setShowConversationList(false);
     if (chatUser) {
-      // Returning user - add greeting for new conversation
       setMessages([{ role: 'assistant', content: `Welcome back, ${chatUser.firstName}! 👋 How can I help you today?`, read: true, timestamp: new Date(), type: 'text', reactions: [] }]);
+    } else {
+      setMessages([]);
     }
-    setActiveConversationId('new');
+  };
+
+  const handleOpenConversation = (conversationId: string) => {
+    const conversation = conversations.find(c => c.id === conversationId);
+    if (conversation) {
+      setActiveConversationId(conversationId);
+      setMessages(conversation.messages);
+      setShowConversationList(false);
+    }
   };
 
   const formatTimestamp = (date: Date) => {
@@ -676,8 +734,58 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                   transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1.0] }}
                   className="flex-1 flex flex-col"
                 >
-                  <div className="flex-1 overflow-y-auto p-4 space-y-3 messages-container">
-                    {!chatUser && (
+                  {/* Conversation List View - for returning users */}
+                  {showConversationList && chatUser && (
+                    <div className="flex-1 flex flex-col">
+                      <div className="flex-1 overflow-y-auto p-4">
+                        {conversations.length === 0 ? (
+                          <div className="flex flex-col items-center justify-center py-12 text-center">
+                            <MessageChatCircle className="h-12 w-12 text-muted-foreground mb-3" />
+                            <p className="text-sm text-muted-foreground">No conversations yet</p>
+                            <p className="text-xs text-muted-foreground mt-1">Start a new conversation below</p>
+                          </div>
+                        ) : (
+                          <div className="space-y-2">
+                            {conversations.map((conversation) => (
+                              <div
+                                key={conversation.id}
+                                onClick={() => handleOpenConversation(conversation.id)}
+                                className="p-3 border rounded-lg hover:bg-accent cursor-pointer transition-colors"
+                              >
+                                <div className="flex items-start gap-2">
+                                  <MessageChatCircle className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-medium truncate">{conversation.preview}</p>
+                                    <p className="text-xs text-muted-foreground mt-1">
+                                      {formatTimestamp(new Date(conversation.updatedAt))}
+                                    </p>
+                                  </div>
+                                  <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Start New Conversation Button - Black styling */}
+                      <div className="p-4 border-t">
+                        <Button
+                          onClick={handleStartNewConversation}
+                          className="w-full bg-black text-white hover:bg-black/90"
+                        >
+                          <MessageChatCircle className="h-4 w-4 mr-2" />
+                          Start New Conversation
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Chat View - show contact form for new users OR active conversation */}
+                  {!showConversationList && (
+                    <>
+                      <div className="flex-1 overflow-y-auto p-4 space-y-3 messages-container">
+                        {!chatUser && (
                       <div className="flex items-start">
                         <div className="bg-muted rounded-lg p-3 w-full">
                           <p className="text-sm font-medium mb-3">Quick intro before we chat 👋</p>
@@ -913,21 +1021,9 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                         </Button>
                       </div>
                     )}
-
-                    {/* Start New Conversation Button - Only show for returning users with messages */}
-                    {chatUser && messages.length > 0 && (
-                      <div className="px-3 pb-3">
-                        <Button
-                          onClick={handleStartNewConversation}
-                          variant="outline"
-                          className="w-full text-sm"
-                        >
-                          <MessageChatCircle className="h-4 w-4 mr-2" />
-                          Start New Conversation
-                        </Button>
                       </div>
-                    )}
-                  </div>
+                    </>
+                  )}
                 </motion.div>
               )}
 
@@ -1202,8 +1298,13 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                           variant="outline"
                           onClick={() => {
                             setCurrentView('messages');
-                            if (!chatUser) {
+                            if (chatUser) {
+                              // Returning user - show conversation list
+                              setShowConversationList(true);
+                            } else {
+                              // New user - show contact form
                               setActiveConversationId('new');
+                              setShowConversationList(false);
                             }
                             toast.success('Starting a new conversation...');
                           }}
@@ -1247,7 +1348,17 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                   <button 
                     onMouseEnter={() => setHoveredNav('messages')}
                     onMouseLeave={() => setHoveredNav(null)}
-                    onClick={() => setCurrentView('messages')} 
+                    onClick={() => {
+                      setCurrentView('messages');
+                      if (chatUser) {
+                        // Returning user - show conversation list
+                        setShowConversationList(true);
+                      } else {
+                        // New user - show contact form
+                        setActiveConversationId('new');
+                        setShowConversationList(false);
+                      }
+                    }}
                     className={`flex-1 flex flex-col items-center justify-center h-auto py-2 relative transition-colors ${
                       currentView === 'messages' 
                         ? 'text-foreground' 
