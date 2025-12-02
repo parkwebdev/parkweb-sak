@@ -233,10 +233,8 @@ export const useAnalytics = (
         fetchUsageMetrics(),
       ]);
     } catch (error: any) {
-      toast({
-        title: 'Error fetching analytics',
+      toast.error('Error fetching analytics', {
         description: error.message,
-        variant: 'destructive',
       });
     } finally {
       setLoading(false);

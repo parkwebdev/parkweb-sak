@@ -25,10 +25,8 @@ export const useApiKeys = () => {
       if (error) throw error;
       setApiKeys(data || []);
     } catch (error: any) {
-      toast({
-        title: 'Error fetching API keys',
+      toast.error('Error fetching API keys', {
         description: error.message,
-        variant: 'destructive',
       });
     } finally {
       setLoading(false);
@@ -66,18 +64,15 @@ export const useApiKeys = () => {
 
       if (error) throw error;
 
-      toast({
-        title: 'API key created',
+      toast.success('API key created', {
         description: 'Make sure to copy your API key now. You won\'t be able to see it again.',
       });
 
       fetchApiKeys();
       return { key, keyPreview };
     } catch (error: any) {
-      toast({
-        title: 'Error creating API key',
+      toast.error('Error creating API key', {
         description: error.message,
-        variant: 'destructive',
       });
       return null;
     }
@@ -99,18 +94,15 @@ export const useApiKeys = () => {
 
       if (error) throw error;
 
-      toast({
-        title: 'API key rotated',
+      toast.success('API key rotated', {
         description: 'Your new API key has been generated. Make sure to update it in your applications.',
       });
 
       fetchApiKeys();
       return { key, keyPreview };
     } catch (error: any) {
-      toast({
-        title: 'Error rotating API key',
+      toast.error('Error rotating API key', {
         description: error.message,
-        variant: 'destructive',
       });
       return null;
     }
@@ -129,10 +121,8 @@ export const useApiKeys = () => {
 
       fetchApiKeys();
     } catch (error: any) {
-      toast({
-        title: 'Error updating API key',
+      toast.error('Error updating API key', {
         description: error.message,
-        variant: 'destructive',
       });
       throw error;
     }
@@ -147,17 +137,14 @@ export const useApiKeys = () => {
 
       if (error) throw error;
 
-      toast({
-        title: 'API key deleted',
+      toast.success('API key deleted', {
         description: 'API key has been deleted successfully',
       });
 
       fetchApiKeys();
     } catch (error: any) {
-      toast({
-        title: 'Error deleting API key',
+      toast.error('Error deleting API key', {
         description: error.message,
-        variant: 'destructive',
       });
       throw error;
     }

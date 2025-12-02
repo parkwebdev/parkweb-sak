@@ -27,10 +27,8 @@ export const useLeads = () => {
       if (error) throw error;
       setLeads(data || []);
     } catch (error: any) {
-      toast({
-        title: 'Error fetching leads',
+      toast.error('Error fetching leads', {
         description: error.message,
-        variant: 'destructive',
       });
     } finally {
       setLoading(false);
@@ -49,18 +47,15 @@ export const useLeads = () => {
 
       if (error) throw error;
 
-      toast({
-        title: 'Lead created',
+      toast.success('Lead created', {
         description: 'Lead has been created successfully',
       });
 
       fetchLeads();
       return data;
     } catch (error: any) {
-      toast({
-        title: 'Error creating lead',
+      toast.error('Error creating lead', {
         description: error.message,
-        variant: 'destructive',
       });
       throw error;
     }
@@ -78,10 +73,8 @@ export const useLeads = () => {
       // Success - no toast needed (SavedIndicator shows feedback for status changes)
       fetchLeads();
     } catch (error: any) {
-      toast({
-        title: 'Error updating lead',
+      toast.error('Error updating lead', {
         description: error.message,
-        variant: 'destructive',
       });
       throw error;
     }
@@ -96,17 +89,14 @@ export const useLeads = () => {
 
       if (error) throw error;
 
-      toast({
-        title: 'Lead deleted',
+      toast.success('Lead deleted', {
         description: 'Lead has been deleted successfully',
       });
 
       fetchLeads();
     } catch (error: any) {
-      toast({
-        title: 'Error deleting lead',
+      toast.error('Error deleting lead', {
         description: error.message,
-        variant: 'destructive',
       });
       throw error;
     }
