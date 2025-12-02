@@ -3,9 +3,7 @@ import { useParams } from 'react-router-dom';
 import { useAgents } from '@/hooks/useAgents';
 import { AgentConfigHeader } from '@/components/agents/AgentConfigHeader';
 import { AgentConfigureTab } from '@/components/agents/tabs/AgentConfigureTab';
-import { AgentBehaviorTab } from '@/components/agents/tabs/AgentBehaviorTab';
 import { AgentKnowledgeTab } from '@/components/agents/tabs/AgentKnowledgeTab';
-import { AgentHelpArticlesTab } from '@/components/agents/tabs/AgentHelpArticlesTab';
 import { AgentToolsTab } from '@/components/agents/tabs/AgentToolsTab';
 import { AgentEmbedTab } from '@/components/agents/tabs/AgentEmbedTab';
 import { AgentAnnouncementsTab } from '@/components/agents/tabs/AgentAnnouncementsTab';
@@ -48,8 +46,6 @@ const AgentConfig: React.FC<AgentConfigProps> = ({ onMenuClick }) => {
       // Call the appropriate tab's save function
       if (activeTab === 'configure') {
         await (AgentConfigureTab as any).handleSave?.();
-      } else if (activeTab === 'behavior') {
-        await (AgentBehaviorTab as any).handleSave?.();
       } else if (activeTab === 'embed') {
         await (AgentEmbedTab as any).handleSave?.();
       }
@@ -102,18 +98,8 @@ const AgentConfig: React.FC<AgentConfigProps> = ({ onMenuClick }) => {
             onFormChange={setHasUnsavedChanges}
           />
         )}
-        {activeTab === 'behavior' && (
-          <AgentBehaviorTab
-            agent={agent}
-            onUpdate={handleUpdate}
-            onFormChange={setHasUnsavedChanges}
-          />
-        )}
         {activeTab === 'knowledge' && (
           <AgentKnowledgeTab agentId={agent.id} userId={agent.user_id} />
-        )}
-        {activeTab === 'help' && (
-          <AgentHelpArticlesTab agentId={agent.id} />
         )}
         {activeTab === 'tools' && (
           <AgentToolsTab agentId={agent.id} agent={agent} onUpdate={handleUpdate} />
