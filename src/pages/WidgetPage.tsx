@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ChatWidget } from '@/widget/ChatWidget';
+import { WidgetLoader } from '@/widget/WidgetLoader';
 import type { WidgetConfig } from '@/widget/api';
 import { fetchWidgetConfig } from '@/widget/api';
 
@@ -114,23 +115,7 @@ const WidgetPage = () => {
   }, [agentId, searchParams]);
   
   if (loading) {
-    return (
-      <div 
-        className="w-full h-full flex items-center justify-center bg-transparent light" 
-        style={{
-          colorScheme: 'light',
-          '--background': '0 0% 100%',
-          '--foreground': '0 0% 3.9%',
-          '--primary': '221.2 83.2% 53.3%',
-          '--muted-foreground': '215.4 16.3% 46.9%',
-        } as React.CSSProperties
-      }>
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading widget...</p>
-        </div>
-      </div>
-    );
+    return <WidgetLoader />;
   }
 
   if (error || !config) {
