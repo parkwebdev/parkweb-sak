@@ -19,12 +19,20 @@ export default defineConfig(({ mode }) => ({
     },
   },
   build: {
+    // Use esbuild for minification (default, but explicit)
+    minify: 'esbuild',
+    // Target modern browsers for smaller bundles
+    target: 'es2020',
     rollupOptions: {
       input: {
         main: path.resolve(__dirname, 'index.html'),
         widget: path.resolve(__dirname, 'widget.html'),
       },
       output: {
+        // Optimize chunk names for better caching
+        chunkFileNames: 'assets/[name]-[hash].js',
+        entryFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash].[ext]',
         manualChunks: (id) => {
           // Separate widget bundle from main app
           if (id.includes('widget-entry') || id.includes('src/widget/') || id.includes('src/pages/WidgetPage')) {
@@ -37,5 +45,9 @@ export default defineConfig(({ mode }) => ({
         },
       },
     },
+  },
+  // Production optimizations: strip console logs and debugger statements
+  esbuild: {
+    drop: mode === 'production' ? ['console', 'debugger'] : [],
   },
 }));

@@ -1,6 +1,6 @@
 /**
  * ChatPad Widget - Iframe-Based Loader
- * This script creates a chat button and loads the full widget in an iframe
+ * Optimized: Deferred iframe loading, preconnect hints, minimal initial footprint
  */
 (function() {
   'use strict';
@@ -191,6 +191,10 @@
       this.button = null;
       this.iframeContainer = null;
       this.iframe = null;
+      // Track if iframe has been created (deferred loading)
+      this.iframeLoaded = false;
+      // Track if preconnect has been added
+      this.preconnected = false;
     }
     
     init() {
@@ -203,10 +207,10 @@
       this.container.style.setProperty('--chatpad-primary-color', this.config.primaryColor);
       document.body.appendChild(this.container);
       
-      // Create button
+      // Create button (with preconnect on hover)
       this.createButton();
       
-      // Create iframe container
+      // Create iframe container (but NOT the iframe yet - deferred)
       this.createIframeContainer();
       
       // Listen for messages from iframe
@@ -217,6 +221,33 @@
       const styleEl = document.createElement('style');
       styleEl.textContent = WIDGET_STYLES;
       document.head.appendChild(styleEl);
+    }
+    
+    /**
+     * Add preconnect hints for faster iframe loading
+     * Called on button hover to warm up connections before click
+     */
+    addPreconnectHints() {
+      if (this.preconnected) return;
+      this.preconnected = true;
+      
+      // Preconnect to widget host
+      const preconnectApp = document.createElement('link');
+      preconnectApp.rel = 'preconnect';
+      preconnectApp.href = this.config.appUrl;
+      document.head.appendChild(preconnectApp);
+      
+      // Preconnect to Google Fonts (used by widget)
+      const preconnectFonts = document.createElement('link');
+      preconnectFonts.rel = 'preconnect';
+      preconnectFonts.href = 'https://fonts.googleapis.com';
+      document.head.appendChild(preconnectFonts);
+      
+      const preconnectGstatic = document.createElement('link');
+      preconnectGstatic.rel = 'preconnect';
+      preconnectGstatic.href = 'https://fonts.gstatic.com';
+      preconnectGstatic.crossOrigin = 'anonymous';
+      document.head.appendChild(preconnectGstatic);
     }
     
     createButton() {
@@ -233,13 +264,32 @@
           <path d="M18 6L6 18M6 6l12 12"/>
         </svg>
       `;
+      
+      // Add preconnect hints on hover (before click)
+      this.button.addEventListener('mouseenter', () => this.addPreconnectHints(), { once: true });
+      // Also on touchstart for mobile
+      this.button.addEventListener('touchstart', () => this.addPreconnectHints(), { once: true, passive: true });
+      
       this.button.addEventListener('click', () => this.toggle());
       this.container.appendChild(this.button);
     }
     
+    /**
+     * Create iframe container without the iframe itself (deferred loading)
+     */
     createIframeContainer() {
       this.iframeContainer = document.createElement('div');
       this.iframeContainer.className = 'chatpad-widget-iframe-container hidden';
+      this.container.appendChild(this.iframeContainer);
+      // iframe will be created on first open
+    }
+    
+    /**
+     * Create and load the iframe (called on first open)
+     */
+    createIframe() {
+      if (this.iframeLoaded) return;
+      this.iframeLoaded = true;
       
       // Build iframe URL with config params
       const params = new URLSearchParams({
@@ -254,11 +304,8 @@
       this.iframe.src = `${this.config.appUrl}/widget.html?${params.toString()}`;
       this.iframe.allow = 'microphone; camera';
       this.iframe.title = 'Chat Widget';
-      // Lazy load iframe - don't load until needed
-      this.iframe.loading = 'lazy';
       
       this.iframeContainer.appendChild(this.iframe);
-      this.container.appendChild(this.iframeContainer);
     }
     
     toggle() {
@@ -273,14 +320,22 @@
     
     open() {
       this.isOpen = true;
+      
+      // Create iframe on first open (deferred loading)
+      if (!this.iframeLoaded) {
+        this.createIframe();
+      }
+      
       this.iframeContainer.classList.remove('hidden');
       this.iframeContainer.classList.add('visible');
       this.button.classList.add('chatpad-widget-button-open');
       
-      // Notify iframe
-      this.iframe.contentWindow?.postMessage({
-        type: 'chatpad-widget-opened',
-      }, '*');
+      // Notify iframe (if loaded)
+      if (this.iframe && this.iframe.contentWindow) {
+        this.iframe.contentWindow.postMessage({
+          type: 'chatpad-widget-opened',
+        }, '*');
+      }
     }
     
     close() {
@@ -289,10 +344,12 @@
       this.iframeContainer.classList.add('hidden');
       this.button.classList.remove('chatpad-widget-button-open');
       
-      // Notify iframe
-      this.iframe.contentWindow?.postMessage({
-        type: 'chatpad-widget-closed',
-      }, '*');
+      // Notify iframe (if loaded)
+      if (this.iframe && this.iframe.contentWindow) {
+        this.iframe.contentWindow.postMessage({
+          type: 'chatpad-widget-closed',
+        }, '*');
+      }
     }
     
     handleMessage(event) {
