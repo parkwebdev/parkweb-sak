@@ -36,18 +36,31 @@
     .chatpad-widget-button svg {
       width: 28px;
       height: 28px;
+      position: absolute;
+      transition: opacity 0.3s ease, transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
     
+    /* Open icon (ChatPad logo) - visible by default */
+    .chatpad-widget-button .chatpad-icon-open {
+      opacity: 1;
+      transform: rotate(0deg) scale(1);
+    }
+    
+    /* Close icon (X) - hidden by default */
     .chatpad-widget-button .chatpad-icon-close {
-      display: none;
+      opacity: 0;
+      transform: rotate(-90deg) scale(0.5);
     }
     
+    /* When widget is open: swap icons with rotation */
     .chatpad-widget-button.chatpad-widget-button-open .chatpad-icon-open {
-      display: none;
+      opacity: 0;
+      transform: rotate(90deg) scale(0.5);
     }
     
     .chatpad-widget-button.chatpad-widget-button-open .chatpad-icon-close {
-      display: block;
+      opacity: 1;
+      transform: rotate(0deg) scale(1);
     }
     
     .chatpad-widget-iframe-container {
