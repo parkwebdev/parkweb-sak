@@ -123,21 +123,23 @@ function CSSBubbleBackground({
         className="absolute inset-0"
         style={{ filter: 'url(#goo-css) blur(40px)' }}
       >
-        {/* Bubble 1 - Vertical movement */}
+      {/* Bubble 1 - Vertical movement */}
         <div
-          className="bubble-1 absolute rounded-full size-[80%] top-[10%] left-[10%] mix-blend-hard-light"
+          className="bubble-1 absolute rounded-full size-[50%] mix-blend-hard-light"
           style={{
             background: `radial-gradient(circle at center, rgba(${colors.first}, 0.8) 0%, rgba(${colors.first}, 0) 50%)`,
+            top: '-15%',
+            left: '-5%',
           }}
         />
 
         {/* Bubble 2 - Circular movement */}
         <div
           className="bubble-2 absolute inset-0 flex justify-center items-center"
-          style={{ transformOrigin: 'calc(50% - 400px)' }}
+          style={{ transformOrigin: '70% 40%' }}
         >
           <div
-            className="rounded-full size-[80%] mix-blend-hard-light"
+            className="rounded-full size-[60%] mix-blend-hard-light"
             style={{
               background: `radial-gradient(circle at center, rgba(${colors.second}, 0.8) 0%, rgba(${colors.second}, 0) 50%)`,
             }}
@@ -147,37 +149,39 @@ function CSSBubbleBackground({
         {/* Bubble 3 - Reverse circular movement */}
         <div
           className="bubble-3 absolute inset-0 flex justify-center items-center"
-          style={{ transformOrigin: 'calc(50% + 400px)' }}
+          style={{ transformOrigin: '30% 60%' }}
         >
           <div
-            className="absolute rounded-full size-[80%] mix-blend-hard-light"
+            className="absolute rounded-full size-[50%] mix-blend-hard-light"
             style={{
               background: `radial-gradient(circle at center, rgba(${colors.third}, 0.8) 0%, rgba(${colors.third}, 0) 50%)`,
-              top: 'calc(50% + 200px)',
-              left: 'calc(50% - 500px)',
+              top: '-10%',
+              left: '20%',
             }}
           />
         </div>
 
         {/* Bubble 4 - Horizontal movement */}
         <div
-          className="bubble-4 absolute rounded-full size-[80%] top-[10%] left-[10%] mix-blend-hard-light opacity-70"
+          className="bubble-4 absolute rounded-full size-[45%] mix-blend-hard-light opacity-70"
           style={{
             background: `radial-gradient(circle at center, rgba(${colors.fourth}, 0.8) 0%, rgba(${colors.fourth}, 0) 50%)`,
+            top: '5%',
+            left: '50%',
           }}
         />
 
         {/* Bubble 5 - Another circular movement */}
         <div
           className="bubble-5 absolute inset-0 flex justify-center items-center"
-          style={{ transformOrigin: 'calc(50% - 800px) calc(50% + 200px)' }}
+          style={{ transformOrigin: '50% 30%' }}
         >
           <div
-            className="absolute rounded-full size-[160%] mix-blend-hard-light"
+            className="absolute rounded-full size-[70%] mix-blend-hard-light"
             style={{
               background: `radial-gradient(circle at center, rgba(${colors.fifth}, 0.8) 0%, rgba(${colors.fifth}, 0) 50%)`,
-              top: 'calc(50% - 80%)',
-              left: 'calc(50% - 80%)',
+              top: '-20%',
+              left: '10%',
             }}
           />
         </div>
@@ -185,14 +189,14 @@ function CSSBubbleBackground({
         {/* Bubble 6 - Reverse circular at bottom */}
         <div
           className="bubble-6 absolute inset-0 flex justify-center items-center"
-          style={{ transformOrigin: 'calc(50% + 600px) calc(50% - 300px)' }}
+          style={{ transformOrigin: '60% 50%' }}
         >
           <div
-            className="absolute rounded-full size-[70%] mix-blend-hard-light opacity-80"
+            className="absolute rounded-full size-[40%] mix-blend-hard-light opacity-80"
             style={{
               background: `radial-gradient(circle at center, rgba(${colors.sixth}, 0.8) 0%, rgba(${colors.sixth}, 0) 50%)`,
-              top: 'calc(50% + 100px)',
-              left: 'calc(50% + 200px)',
+              top: '10%',
+              left: '60%',
             }}
           />
         </div>
