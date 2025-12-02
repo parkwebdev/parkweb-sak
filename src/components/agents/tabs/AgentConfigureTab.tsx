@@ -96,224 +96,179 @@ export const AgentConfigureTab = ({ agent, onUpdate, onFormChange }: AgentConfig
   };
 
   return (
-    <div className="space-y-6">
-      {/* Two-Column Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Left Column: Identity */}
-        <div className="space-y-4 p-5 rounded-lg bg-muted/30 border">
+    <div className="space-y-6 min-h-full pb-8">
+      {/* Three Column Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Column 1: Identity */}
+        <div className="p-5 rounded-lg bg-muted/30 border space-y-4">
           <div>
-            <h3 className="text-sm font-semibold mb-1">Identity</h3>
-            <p className="text-xs text-muted-foreground">Define your agent's basic information</p>
+            <h3 className="text-sm font-semibold mb-1">Agent Identity</h3>
+            <p className="text-xs text-muted-foreground">Define how your agent presents itself</p>
           </div>
 
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="name" className="text-xs font-medium">Agent Name</Label>
               <Input
                 id="name"
                 value={formData.name}
                 onChange={(e) => handleUpdate({ name: e.target.value })}
-                placeholder="My Agent"
-                required
+                placeholder="My AI Agent"
+                className="h-9 text-sm"
               />
             </div>
 
-            <div className="flex items-center justify-between">
-              <div>
-                <Label htmlFor="status" className="text-sm">Status</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="description" className="text-xs font-medium">Description</Label>
+              <Textarea
+                id="description"
+                value={formData.description || ''}
+                onChange={(e) => handleUpdate({ description: e.target.value })}
+                placeholder="Brief description of what this agent does"
+                className="text-sm resize-none"
+                rows={3}
+              />
+            </div>
+
+            <div className="flex items-center justify-between pt-2">
+              <div className="space-y-0.5">
+                <Label htmlFor="status" className="text-xs font-medium">Status</Label>
                 <p className="text-xs text-muted-foreground">
-                  {formData.status === 'active' ? 'Agent is live' : 'Agent is inactive'}
+                  {formData.status === 'active' ? 'Agent is live' : formData.status === 'paused' ? 'Agent is paused' : 'Agent is in draft'}
                 </p>
               </div>
               <Switch
                 id="status"
                 checked={formData.status === 'active'}
-                onCheckedChange={(checked) => 
-                  handleUpdate({ status: checked ? 'active' : 'draft' })
-                }
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                value={formData.description || ''}
-                onChange={(e) => handleUpdate({ description: e.target.value })}
-                placeholder="A brief description of what this agent does"
-                rows={4}
+                onCheckedChange={(checked) => handleUpdate({ status: checked ? 'active' : 'draft' })}
               />
             </div>
           </div>
         </div>
 
-        {/* Right Column: Model & Generation */}
-        <div className="space-y-4">
-          {/* Model & Generation Settings */}
-          <div className="p-5 rounded-lg bg-muted/30 border space-y-4">
-            <div>
-              <h3 className="text-sm font-semibold mb-1">Model & Generation</h3>
-              <p className="text-xs text-muted-foreground">Configure AI model and response parameters</p>
+        {/* Column 2: Model & Generation */}
+        <div className="p-5 rounded-lg bg-muted/30 border space-y-4">
+          <div>
+            <h3 className="text-sm font-semibold mb-1">Model & Generation</h3>
+            <p className="text-xs text-muted-foreground">Configure AI model and generation parameters</p>
+          </div>
+
+          <div className="space-y-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="model" className="text-xs font-medium">AI Model</Label>
+              <Select
+                value={formData.model}
+                onValueChange={(value) => handleUpdate({ model: value })}
+              >
+                <SelectTrigger id="model" className="h-9 text-sm">
+                  <SelectValue placeholder="Select a model" />
+                </SelectTrigger>
+                <SelectContent>
+                  {MODELS.map((model) => (
+                    <SelectItem key={model.value} value={model.value} className="text-sm">
+                      <div className="flex flex-col">
+                        <span className="font-medium">{model.label}</span>
+                        <span className="text-xs text-muted-foreground">{model.description}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
-            <div className="space-y-4">
+            <Separator />
+
+            <div className="space-y-3">
               <div className="space-y-2">
-                <Label htmlFor="model">AI Model</Label>
-                <Select value={formData.model} onValueChange={(value) => handleUpdate({ model: value })}>
-                  <SelectTrigger id="model">
-                    <SelectValue>
-                      {MODELS.find(m => m.value === formData.model)?.label || 'Select model'}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {MODELS.map((model) => (
-                      <SelectItem key={model.value} value={model.value}>
-                        <div className="flex flex-col items-start">
-                          <span className="font-medium">{model.label}</span>
-                          <span className="text-xs text-muted-foreground">{model.description}</span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="temperature" className="text-sm">Temperature</Label>
-                  <span className="text-sm font-mono text-muted-foreground">{formData.temperature}</span>
+                  <Label htmlFor="temperature" className="text-xs font-medium">Temperature</Label>
+                  <span className="text-xs text-muted-foreground font-mono">
+                    {formData.temperature?.toFixed(2) ?? '0.70'}
+                  </span>
                 </div>
-                <div className="relative">
-                  <Slider
-                    id="temperature"
-                    value={[formData.temperature]}
-                    onValueChange={([value]) => handleUpdate({ temperature: value })}
-                    min={0}
-                    max={2}
-                    step={0.1}
-                    className="[&_[role=slider]]:border-primary [&_[role=slider]]:ring-offset-background [&_.bg-primary]:bg-gradient-to-r [&_.bg-primary]:from-indigo-500 [&_.bg-primary]:to-purple-500"
-                  />
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Higher = more creative, Lower = more focused
-                </p>
-              </div>
-
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="top_p" className="text-sm">Top P</Label>
-                  <span className="text-sm font-mono text-muted-foreground">{formData.top_p}</span>
-                </div>
-                <div className="relative">
-                  <Slider
-                    id="top_p"
-                    value={[formData.top_p]}
-                    onValueChange={([value]) => handleUpdate({ top_p: value })}
-                    min={0}
-                    max={1}
-                    step={0.05}
-                    className="[&_[role=slider]]:border-primary [&_[role=slider]]:ring-offset-background [&_.bg-primary]:bg-gradient-to-r [&_.bg-primary]:from-indigo-500 [&_.bg-primary]:to-purple-500"
-                  />
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Controls response diversity
-                </p>
+                <Slider
+                  id="temperature"
+                  min={0}
+                  max={2}
+                  step={0.01}
+                  value={[formData.temperature ?? 0.7]}
+                  onValueChange={([value]) => handleUpdate({ temperature: value })}
+                  className="w-full"
+                />
+                <p className="text-xs text-muted-foreground">Controls randomness. Higher = more creative</p>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="max_tokens" className="text-sm">Max Tokens</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="top_p" className="text-xs font-medium">Top P</Label>
+                  <span className="text-xs text-muted-foreground font-mono">
+                    {formData.top_p?.toFixed(2) ?? '0.90'}
+                  </span>
+                </div>
+                <Slider
+                  id="top_p"
+                  min={0}
+                  max={1}
+                  step={0.01}
+                  value={[formData.top_p ?? 0.9]}
+                  onValueChange={([value]) => handleUpdate({ top_p: value })}
+                  className="w-full"
+                />
+                <p className="text-xs text-muted-foreground">Nucleus sampling threshold</p>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="max_tokens" className="text-xs font-medium">Max Tokens</Label>
                 <Input
                   id="max_tokens"
                   type="number"
-                  value={formData.max_tokens}
+                  min={100}
+                  max={32000}
+                  step={100}
+                  value={formData.max_tokens ?? 2000}
                   onChange={(e) => handleUpdate({ max_tokens: parseInt(e.target.value) })}
-                  min={1}
-                  max={8000}
+                  className="h-9 text-sm"
                 />
-                <p className="text-xs text-muted-foreground">
-                  Maximum response length
-                </p>
+                <p className="text-xs text-muted-foreground">Maximum response length</p>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* System Prompt - Full Width Below */}
-      <div className="p-5 rounded-lg bg-muted/30 border space-y-4">
-        <div>
-          <h3 className="text-sm font-semibold mb-1">System Prompt</h3>
-          <p className="text-xs text-muted-foreground">Define how your agent should behave, respond, and interact with users</p>
-        </div>
+        {/* Column 3: System Prompt */}
+        <div className="p-5 rounded-lg bg-muted/30 border space-y-4">
+          <div>
+            <h3 className="text-sm font-semibold mb-1">System Prompt</h3>
+            <p className="text-xs text-muted-foreground">Define how your agent should behave</p>
+          </div>
 
-        <div className="space-y-3">
           <Textarea
-            id="system_prompt"
             value={formData.system_prompt}
             onChange={(e) => handleUpdate({ system_prompt: e.target.value })}
             placeholder="You are a helpful assistant that..."
-            rows={12}
-            required
-            className="font-mono text-sm resize-none leading-relaxed"
+            className="min-h-[300px] text-sm font-mono resize-none"
           />
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>Define your agent's personality, tone, knowledge boundaries, and capabilities</span>
-            <span className="font-mono">{formData.system_prompt.length} characters</span>
-          </div>
-        </div>
 
-        {/* Collapsible Tips Section */}
-        <Collapsible>
-          <CollapsibleTrigger className="flex items-center gap-2 text-sm font-medium hover:text-primary transition-colors group">
-            <Lightbulb01 className="h-4 w-4 text-amber-500" />
-            <span>Tips for better prompts</span>
-            <ChevronDown className="h-4 w-4 transition-transform group-data-[state=open]:rotate-180" />
-          </CollapsibleTrigger>
-          <CollapsibleContent className="mt-3">
-            <div className="p-4 rounded-lg bg-muted/50 border space-y-3">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                <div className="space-y-1">
-                  <p className="font-medium">• Define personality first</p>
-                  <p className="text-xs text-muted-foreground pl-3">
-                    Start with tone, voice, and character traits
-                  </p>
-                </div>
-                <div className="space-y-1">
-                  <p className="font-medium">• Set topic boundaries</p>
-                  <p className="text-xs text-muted-foreground pl-3">
-                    Specify what the agent should and shouldn't discuss
-                  </p>
-                </div>
-                <div className="space-y-1">
-                  <p className="font-medium">• Include example responses</p>
-                  <p className="text-xs text-muted-foreground pl-3">
-                    Show the style and format you want
-                  </p>
-                </div>
-                <div className="space-y-1">
-                  <p className="font-medium">• Be specific about tone</p>
-                  <p className="text-xs text-muted-foreground pl-3">
-                    Professional, casual, friendly, formal, etc.
-                  </p>
-                </div>
-                <div className="space-y-1">
-                  <p className="font-medium">• Define response structure</p>
-                  <p className="text-xs text-muted-foreground pl-3">
-                    Bullet points, paragraphs, step-by-step, etc.
-                  </p>
-                </div>
-                <div className="space-y-1">
-                  <p className="font-medium">• Add safety guardrails</p>
-                  <p className="text-xs text-muted-foreground pl-3">
-                    Prevent harmful, biased, or off-topic responses
-                  </p>
-                </div>
+          <Collapsible>
+            <CollapsibleTrigger className="flex items-center gap-2 text-xs font-medium hover:text-primary transition-colors group w-full justify-start">
+              <Lightbulb01 className="h-3.5 w-3.5 text-amber-500" />
+              <span>Tips for writing great prompts</span>
+              <ChevronDown className="h-3.5 w-3.5 ml-auto transition-transform group-data-[state=open]:rotate-180" />
+            </CollapsibleTrigger>
+            <CollapsibleContent className="pt-3">
+              <div className="text-xs text-muted-foreground space-y-2 bg-muted/50 rounded-md p-3">
+                <p className="font-medium text-foreground">Best practices:</p>
+                <ul className="space-y-1.5 list-disc list-inside">
+                  <li>Be specific about the agent's role and expertise</li>
+                  <li>Define the tone and communication style</li>
+                  <li>Include any rules or limitations</li>
+                  <li>Specify how to handle edge cases</li>
+                  <li>Add examples of desired behavior</li>
+                </ul>
               </div>
-            </div>
-          </CollapsibleContent>
-        </Collapsible>
+            </CollapsibleContent>
+          </Collapsible>
+        </div>
       </div>
     </div>
   );
