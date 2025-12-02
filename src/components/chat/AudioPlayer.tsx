@@ -2,7 +2,6 @@ import React, { useRef, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { PlayCircle as Play, PauseCircle as Pause } from '@untitledui/icons';
 import { formatDuration } from '@/lib/audio-recording';
-import { motion } from 'motion/react';
 
 interface AudioPlayerProps {
   audioUrl: string;
@@ -72,7 +71,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl, primaryColor
     try {
       audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
       analyserRef.current = audioContextRef.current.createAnalyser();
-      analyserRef.current.fftSize = 128; // Smaller for smoother bars
+      analyserRef.current.fftSize = 128;
       analyserRef.current.smoothingTimeConstant = 0.8;
 
       sourceNodeRef.current = audioContextRef.current.createMediaElementSource(audioRef.current);
@@ -120,11 +119,9 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl, primaryColor
     const dataArray = new Uint8Array(bufferLength);
     analyserRef.current.getByteFrequencyData(dataArray);
 
-    // Take only the first 64 bars for visualization
     const bars = Array.from(dataArray.slice(0, 64)).map(value => value / 255);
     setFrequencyData(bars);
 
-    // Use ref instead of state to avoid stale closure
     if (isPlayingRef.current) {
       animationIdRef.current = requestAnimationFrame(analyzeFrequency);
     }
@@ -152,7 +149,6 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl, primaryColor
     ctx.clearRect(0, 0, width, height);
 
     if (isPlaying && frequencyData.length > 0) {
-      // Real-time frequency visualization
       const barCount = frequencyData.length;
       const barWidth = width / barCount;
 
@@ -160,7 +156,6 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl, primaryColor
         const barHeight = Math.max(3, value * height * 0.8);
         const x = index * barWidth;
 
-        // Create gradient for bars
         const gradient = ctx.createLinearGradient(0, height - barHeight, 0, height);
         gradient.addColorStop(0, primaryColor);
         gradient.addColorStop(1, primaryColor + '80');
@@ -169,7 +164,6 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl, primaryColor
         ctx.fillRect(x, height - barHeight, barWidth - 1, barHeight);
       });
     } else if (waveformData.length > 0) {
-      // Static waveform when paused
       const barWidth = width / waveformData.length;
       const progress = duration > 0 ? currentTime / duration : 0;
 
@@ -193,7 +187,6 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl, primaryColor
       isPlayingRef.current = false;
       setIsPlaying(false);
     } else {
-      // Resume audio context if suspended
       if (audioContextRef.current && audioContextRef.current.state === 'suspended') {
         await audioContextRef.current.resume();
       }
@@ -207,10 +200,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl, primaryColor
     <div className="flex items-center gap-2 max-w-[280px]">
       <audio ref={audioRef} src={audioUrl} preload="metadata" />
       
-      <motion.div
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-      >
+      <div className="transition-transform duration-150 hover:scale-105 active:scale-95">
         <Button
           size="sm"
           onClick={togglePlayPause}
@@ -218,18 +208,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl, primaryColor
           className="h-10 w-10 p-0 text-white flex-shrink-0 relative overflow-hidden"
         >
           {isPlaying && (
-            <motion.div
-              className="absolute inset-0 bg-white/20"
-              animate={{
-                scale: [1, 1.5, 1],
-                opacity: [0.5, 0, 0.5],
-              }}
-              transition={{
-                duration: 1.5,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-            />
+            <div className="absolute inset-0 bg-white/20 animate-audio-pulse" />
           )}
           {isPlaying ? (
             <Pause className="h-5 w-5 relative z-10" />
@@ -237,7 +216,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl, primaryColor
             <Play className="h-5 w-5 ml-0.5 relative z-10" />
           )}
         </Button>
-      </motion.div>
+      </div>
 
       <div className="flex-1 flex flex-col gap-1">
         <div className="relative">
@@ -248,18 +227,10 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl, primaryColor
             className="w-full h-[40px] rounded-sm"
           />
           {isPlaying && (
-            <motion.div
-              className="absolute -top-0.5 -bottom-0.5 left-0 right-0 pointer-events-none"
+            <div
+              className="absolute -top-0.5 -bottom-0.5 left-0 right-0 pointer-events-none animate-audio-glow"
               style={{
                 background: `linear-gradient(90deg, transparent 0%, ${primaryColor}15 50%, transparent 100%)`,
-              }}
-              animate={{
-                opacity: [0.3, 0.6, 0.3],
-              }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                ease: "easeInOut",
               }}
             />
           )}

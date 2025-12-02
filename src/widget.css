@@ -180,3 +180,22 @@ input, textarea {
 .widget-view-exit {
   animation: widget-fade-out-left 0.3s cubic-bezier(0.25, 0.1, 0.25, 1.0) forwards;
 }
+
+/* Audio player animations */
+@keyframes audio-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.5; }
+  50% { transform: scale(1.5); opacity: 0; }
+}
+
+@keyframes audio-glow {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.6; }
+}
+
+.animate-audio-pulse {
+  animation: audio-pulse 1.5s ease-in-out infinite;
+}
+
+.animate-audio-glow {
+  animation: audio-glow 2s ease-in-out infinite;
+}
