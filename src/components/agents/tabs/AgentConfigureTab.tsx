@@ -161,13 +161,15 @@ export const AgentConfigureTab = ({ agent, onUpdate, onFormChange }: AgentConfig
                 onValueChange={(value) => handleUpdate({ model: value })}
               >
                 <SelectTrigger id="model" className="h-9 text-sm">
-                  <SelectValue placeholder="Select a model" />
+                  <SelectValue placeholder="Select a model">
+                    {MODELS.find(m => m.value === formData.model)?.label || "Select a model"}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {MODELS.map((model) => (
-                    <SelectItem key={model.value} value={model.value} className="text-sm">
-                      <div className="flex flex-col">
-                        <span className="font-medium">{model.label}</span>
+                    <SelectItem key={model.value} value={model.value} className="py-2">
+                      <div className="flex flex-col gap-0.5">
+                        <span className="font-medium text-sm">{model.label}</span>
                         <span className="text-xs text-muted-foreground">{model.description}</span>
                       </div>
                     </SelectItem>
