@@ -24,8 +24,8 @@ serve(async (req) => {
         const url = new URL(referer);
         appUrl = `${url.protocol}//${url.host}`;
       } else {
-        // Default to custom domain
-        appUrl = 'https://app.pad.chat';
+        // Default to Supabase project URL
+        appUrl = 'https://mvaimvwdukpgvkifkfpa.supabase.co';
       }
     }
 

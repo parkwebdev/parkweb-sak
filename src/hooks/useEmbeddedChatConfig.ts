@@ -282,7 +282,7 @@ export const useEmbeddedChatConfig = (agentId: string) => {
   }, [agentId]);
 
   const generateEmbedCode = (): string => {
-    const scriptUrl = `https://app.pad.chat/chatpad-widget.js`;
+    const scriptUrl = `https://mvaimvwdukpgvkifkfpa.supabase.co/functions/v1/serve-widget`;
     
     // Simplified embed code - config loaded dynamically from edge function
     return `<!-- ChatPad Widget -->
