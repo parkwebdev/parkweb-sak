@@ -36,19 +36,15 @@ export const SimpleAvatarUpload: React.FC<SimpleAvatarUploadProps> = ({
 
     // Validate file
     if (file.size > 5 * 1024 * 1024) {
-      toast({
-        title: "File too large",
+      toast.error("File too large", {
         description: "Please select an image smaller than 5MB.",
-        variant: "destructive",
       });
       return;
     }
 
     if (!file.type.startsWith('image/')) {
-      toast({
-        title: "Invalid file",
+      toast.error("Invalid file", {
         description: "Please select an image file.",
-        variant: "destructive",
       });
       return;
     }
@@ -88,18 +84,15 @@ export const SimpleAvatarUpload: React.FC<SimpleAvatarUploadProps> = ({
       // Update the parent component
       onAvatarChange(urlData.publicUrl);
 
-      toast({
-        title: "Avatar uploaded",
+      toast.success("Avatar uploaded", {
         description: "Avatar uploaded successfully!",
       });
 
     } catch (error: any) {
       console.error('💥 Avatar upload error:', error);
       
-      toast({
-        title: "Upload failed",
+      toast.error("Upload failed", {
         description: error.message || "Failed to upload avatar. Please try again.",
-        variant: "destructive",
       });
     } finally {
       setUploading(false);

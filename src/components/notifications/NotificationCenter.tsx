@@ -91,8 +91,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNotifi
           setUnreadCount(prev => prev + 1);
 
           // Show toast notification
-          toast({
-            title: newNotification.title,
+          toast.success(newNotification.title, {
             description: newNotification.message,
           });
 
@@ -177,8 +176,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNotifi
       setNotifications(prev => prev.map(n => ({ ...n, read: true })));
       setUnreadCount(0);
 
-      toast({
-        title: "All notifications marked as read",
+      toast.success("All notifications marked as read", {
         description: "You're all caught up!",
       });
     } catch (error) {

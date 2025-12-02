@@ -148,15 +148,12 @@ export const useNotifications = () => {
       const permission = await Notification.requestPermission();
       
       if (permission === 'granted') {
-        toast({
-          title: "Notifications enabled",
+        toast.success("Notifications enabled", {
           description: "You'll receive browser notifications for important updates.",
         });
       } else if (permission === 'denied') {
-        toast({
-          title: "Notifications blocked",
+        toast.error("Notifications blocked", {
           description: "Please enable notifications in your browser settings to receive updates.",
-          variant: "destructive",
         });
       }
       

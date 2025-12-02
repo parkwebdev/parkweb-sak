@@ -80,8 +80,7 @@ export const ProfileEditDialog: React.FC<ProfileEditDialogProps> = ({
         throw new Error('No rows were updated. This might be a permissions issue.');
       }
 
-      toast({
-        title: "Profile updated",
+      toast.success("Profile updated", {
         description: `${displayName || member.email}'s profile has been updated successfully.`,
       });
 
@@ -92,10 +91,8 @@ export const ProfileEditDialog: React.FC<ProfileEditDialogProps> = ({
 
     } catch (error: any) {
       console.error('💥 Error updating profile:', error);
-      toast({
-        title: "Update failed",
+      toast.error("Update failed", {
         description: error.message || "Failed to update profile. Please try again.",
-        variant: "destructive",
       });
     } finally {
       setLoading(false);

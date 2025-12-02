@@ -113,10 +113,8 @@ export const GeneralSettings: React.FC = () => {
           if (key === 'compact_mode') {
             document.body.classList.toggle('compact-mode', prevValue as boolean);
           }
-          toast({
-            title: "Update failed",
+          toast.error("Update failed", {
             description: "Failed to update preference.",
-            variant: "destructive",
           });
           return;
         }
@@ -130,10 +128,8 @@ export const GeneralSettings: React.FC = () => {
         if (key === 'compact_mode') {
           document.body.classList.toggle('compact-mode', prevValue as boolean);
         }
-        toast({
-          title: "Update failed",
+        toast.error("Update failed", {
           description: "Failed to update preference.",
-          variant: "destructive",
         });
       }
     }, 1000);
