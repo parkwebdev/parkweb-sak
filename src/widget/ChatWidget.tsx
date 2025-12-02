@@ -166,6 +166,13 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     }
   }, [chatSettings, agentId, config]);
 
+  // Signal to parent that widget is ready to display (eliminates flicker on first open)
+  useEffect(() => {
+    if (window.parent !== window) {
+      window.parent.postMessage({ type: 'chatpad-widget-ready' }, '*');
+    }
+  }, []);
+
   // Load conversations from localStorage (with migration from old format)
   useEffect(() => {
     const stored = localStorage.getItem(`chatpad_conversations_${agentId}`);
