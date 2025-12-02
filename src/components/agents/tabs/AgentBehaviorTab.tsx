@@ -30,7 +30,7 @@ export const AgentBehaviorTab = ({ agent, onUpdate, onFormChange }: AgentBehavio
   };
 
   return (
-    <div className="max-w-5xl space-y-4">
+    <div className="space-y-4">
       <div>
         <h3 className="text-base font-semibold mb-1">System Prompt</h3>
         <p className="text-sm text-muted-foreground">

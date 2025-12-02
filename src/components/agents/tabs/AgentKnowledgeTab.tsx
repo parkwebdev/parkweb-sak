@@ -20,7 +20,7 @@ export const AgentKnowledgeTab = ({ agentId, userId }: AgentKnowledgeTabProps) =
   }
 
   return (
-    <div className="max-w-5xl space-y-3 min-h-full pb-8">
+    <div className="space-y-3 min-h-full pb-8">
       <div className="flex items-center justify-between gap-4">
         <p className="text-sm text-muted-foreground">
           Add knowledge sources to give your agent access to specific information.
