@@ -137,17 +137,7 @@ export const AgentSettingsLayout = <T extends string = string>({
 
       {/* Content Area */}
       <div className="flex-1 min-w-0">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeTab}
-            initial={{ opacity: 0, x: 10 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -10 }}
-            transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-          >
-            {children}
-          </motion.div>
-        </AnimatePresence>
+        {children}
       </div>
     </div>
   );

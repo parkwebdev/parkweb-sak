@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Trash01, Edit02, Image03, ChevronRight } from '@untitledui/icons';
+import { Trash01, Edit02, Image03, ChevronRight } from '@untitledui/icons';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useSortable } from '@dnd-kit/sortable';
@@ -677,7 +677,6 @@ export const AgentContentTab = () => {
               <SavedIndicator show={showSaved} message="Order saved" />
             </div>
             <Button onClick={() => setIsCreateAnnouncementOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
               Add Announcement
             </Button>
           </div>
@@ -685,14 +684,11 @@ export const AgentContentTab = () => {
           {announcementsLoading ? (
             <div className="text-center py-8 text-muted-foreground">Loading announcements...</div>
           ) : announcements.length === 0 ? (
-            <Card>
-              <CardHeader>
-                <CardTitle>No announcements yet</CardTitle>
-                <CardDescription>
-                  Create your first announcement to engage with your users
-                </CardDescription>
-              </CardHeader>
-            </Card>
+            <div className="text-center py-12 rounded-lg border border-dashed bg-muted/30">
+              <p className="text-sm text-muted-foreground">
+                No announcements yet. Create your first announcement to engage with your users.
+              </p>
+            </div>
           ) : (
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleAnnouncementDragEnd}>
               <SortableContext items={announcements.map(a => a.id)} strategy={verticalListSortingStrategy}>
@@ -719,7 +715,6 @@ export const AgentContentTab = () => {
               <SavedIndicator show={showSaved} message="Order saved" />
             </div>
             <Button onClick={() => setIsCreateNewsOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
               Add News Item
             </Button>
           </div>
@@ -727,14 +722,11 @@ export const AgentContentTab = () => {
           {newsLoading ? (
             <div className="text-center py-8 text-muted-foreground">Loading news...</div>
           ) : newsItems.length === 0 ? (
-            <Card>
-              <CardHeader>
-                <CardTitle>No news items yet</CardTitle>
-                <CardDescription>
-                  Create your first news article to keep users informed
-                </CardDescription>
-              </CardHeader>
-            </Card>
+            <div className="text-center py-12 rounded-lg border border-dashed bg-muted/30">
+              <p className="text-sm text-muted-foreground">
+                No news items yet. Create your first news article to keep users informed.
+              </p>
+            </div>
           ) : (
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleNewsDragEnd}>
               <SortableContext items={newsItems.map(n => n.id)} strategy={verticalListSortingStrategy}>

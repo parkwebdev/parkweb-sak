@@ -6,7 +6,7 @@ import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Trash01 } from '@untitledui/icons';
+import { Trash01 } from '@untitledui/icons';
 import { CopyButton } from '@/components/ui/copy-button';
 import type { EmbeddedChatConfig, CustomField } from '@/hooks/useEmbeddedChatConfig';
 import { toast } from '@/lib/toast';
@@ -460,7 +460,6 @@ export const EmbedSettingsPanel = ({ config, onConfigChange, embedCode }: EmbedS
                       onClick={addCustomField}
                       className="w-full"
                     >
-                      <Plus className="h-4 w-4 mr-2" />
                       Add Field
                     </Button>
                   </div>
