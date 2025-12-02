@@ -48,6 +48,9 @@ export interface WidgetConfig {
   viewTransition: 'none' | 'slide' | 'fade';
   
   // Contact form
+  enableContactForm: boolean;
+  contactFormTitle: string;
+  contactFormSubtitle?: string;
   customFields: Array<{
     id: string;
     label: string;
