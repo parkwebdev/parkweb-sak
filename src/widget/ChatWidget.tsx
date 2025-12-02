@@ -17,8 +17,9 @@ import { ChatBubbleIcon } from '@/components/agents/ChatBubbleIcon';
 import ChatPadLogo from '@/components/ChatPadLogo';
 import { generateGradientPalette, darkenColor } from '@/lib/color-utils';
 
+// Eager load CSSBubbleBackground (CSS-only, ~3KB) to prevent flicker on widget open
+import { CSSBubbleBackground } from '@/components/ui/css-bubble-background';
 // Lazy load heavy components to reduce initial bundle size
-const CSSBubbleBackground = lazy(() => import('@/components/ui/css-bubble-background').then(m => ({ default: m.CSSBubbleBackground })));
 const VoiceInput = lazy(() => import('@/components/molecule-ui/voice-input').then(m => ({ default: m.VoiceInput })));
 const FileDropZone = lazy(() => import('@/components/chat/FileDropZone').then(m => ({ default: m.FileDropZone })));
 
@@ -585,23 +586,14 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                 <div className="absolute inset-0">
                   {/* Only render BubbleBackground when widget is visible to save GPU resources */}
                   {(isOpen || isIframeMode) && (
-                    <Suspense fallback={
-                      <div 
-                        className="absolute inset-0" 
-                        style={{ 
-                          background: `linear-gradient(135deg, ${darkenColor(config.gradientStartColor, 40)}, ${darkenColor(config.gradientEndColor, 50)})` 
-                        }} 
-                      />
-                    }>
-                      <CSSBubbleBackground 
-                        colors={generateGradientPalette(config.gradientStartColor, config.gradientEndColor)}
-                        baseGradient={{
-                          from: darkenColor(config.gradientStartColor, 40),
-                          to: darkenColor(config.gradientEndColor, 50)
-                        }}
-                        className="absolute inset-0"
-                      />
-                    </Suspense>
+                    <CSSBubbleBackground 
+                      colors={generateGradientPalette(config.gradientStartColor, config.gradientEndColor)}
+                      baseGradient={{
+                        from: darkenColor(config.gradientStartColor, 40),
+                        to: darkenColor(config.gradientEndColor, 50)
+                      }}
+                      className="absolute inset-0"
+                    />
                   )}
                   
                   
