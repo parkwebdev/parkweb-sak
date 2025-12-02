@@ -68,6 +68,49 @@ const RESPONSE_LENGTH_PRESETS = [
 
 type ConfigureSection = 'identity' | 'model' | 'behavior' | 'prompt';
 
+const BEHAVIOR_SLIDERS = [
+  {
+    id: 'temperature' as const,
+    label: 'Temperature',
+    min: 0,
+    max: 2,
+    contextTitle: 'Creativity vs Consistency',
+    contextDescription: 'Temperature controls the randomness of your agent\'s responses. At 0, responses are highly focused and deterministic—great for factual Q&A or support. At 1+, responses become more creative and varied—ideal for brainstorming or creative writing. Most agents work well between 0.5-0.8.',
+    lowLabel: 'Focused & Predictable',
+    highLabel: 'Creative & Varied',
+  },
+  {
+    id: 'presence_penalty' as const,
+    label: 'Presence Penalty',
+    min: 0,
+    max: 2,
+    contextTitle: 'Topic Diversity',
+    contextDescription: 'Presence penalty encourages your agent to explore new topics rather than dwelling on subjects already mentioned. At 0, the agent may repeatedly reference the same topics. Higher values push the agent to introduce fresh subjects. Useful for agents that need to cover broad ground or avoid redundancy.',
+    lowLabel: 'May Repeat Topics',
+    highLabel: 'Explores New Topics',
+  },
+  {
+    id: 'frequency_penalty' as const,
+    label: 'Frequency Penalty',
+    min: 0,
+    max: 2,
+    contextTitle: 'Response Variation',
+    contextDescription: 'Frequency penalty reduces word and phrase repetition within responses. At 0, the agent may use the same words or phrases multiple times. Higher values encourage more varied vocabulary. Helpful for agents that generate longer content or need to sound more natural.',
+    lowLabel: 'May Repeat Phrases',
+    highLabel: 'Varied Vocabulary',
+  },
+  {
+    id: 'top_p' as const,
+    label: 'Top P',
+    min: 0,
+    max: 1,
+    contextTitle: 'Response Diversity (Advanced)',
+    contextDescription: 'Top P (nucleus sampling) controls the pool of words the model considers for each token. At 1.0, all words are considered. Lower values restrict to only the most likely words, making output more focused. Most users should keep this at 1.0 and use Temperature instead for control.',
+    lowLabel: 'Highly Focused',
+    highLabel: 'Full Diversity',
+  },
+];
+
 const CONFIGURE_MENU_ITEMS = [
   { id: 'identity' as const, label: 'Identity', description: 'Set your agent\'s name, description, and activation status' },
   { id: 'model' as const, label: 'Model & Cost', description: 'Choose the AI model, response length, and view estimated costs' },
@@ -92,6 +135,7 @@ const calculateEstimatedCost = (model: string, maxTokens: number) => {
 
 export const AgentConfigureTab: React.FC<AgentConfigureTabProps> = ({ agent, onUpdate, onFormChange }) => {
   const [activeSection, setActiveSection] = useState<ConfigureSection>('identity');
+  const [activeSlider, setActiveSlider] = useState<string | null>(null);
   const deploymentConfig = (agent.deployment_config as any) || {};
   
   const getInitialPreset = () => {
@@ -175,7 +219,7 @@ export const AgentConfigureTab: React.FC<AgentConfigureTabProps> = ({ agent, onU
   const costEstimate = calculateEstimatedCost(formData.model, formData.max_tokens);
 
   const renderIdentitySection = () => (
-    <div className="space-y-6 max-w-2xl">
+    <div className="space-y-6">
       <div>
         <Label htmlFor="name">Agent Name</Label>
         <Input
@@ -215,7 +259,7 @@ export const AgentConfigureTab: React.FC<AgentConfigureTabProps> = ({ agent, onU
   );
 
   const renderModelSection = () => (
-    <div className="space-y-6 max-w-2xl">
+    <div className="space-y-6">
       <div>
         <Label htmlFor="model">AI Model</Label>
         <Select
@@ -319,136 +363,68 @@ export const AgentConfigureTab: React.FC<AgentConfigureTabProps> = ({ agent, onU
     </div>
   );
 
-  const renderBehaviorSection = () => (
-    <div className="space-y-6 max-w-2xl">
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1">
-            <Label htmlFor="temperature">Temperature</Label>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span className="inline-flex group">
-                  <InfoCircleIcon className="h-3.5 w-3.5 text-muted-foreground" />
-                  <InfoCircleIconFilled className="h-3.5 w-3.5 text-muted-foreground" />
+  const renderBehaviorSection = () => {
+    const currentSliderInfo = BEHAVIOR_SLIDERS.find(s => s.id === activeSlider);
+    
+    return (
+      <div className="flex gap-8">
+        {/* Left column: Sliders */}
+        <div className="flex-1 space-y-6">
+          {BEHAVIOR_SLIDERS.map((slider) => (
+            <div 
+              key={slider.id}
+              className="space-y-3"
+              onMouseEnter={() => setActiveSlider(slider.id)}
+              onMouseLeave={() => setActiveSlider(null)}
+            >
+              <div className="flex items-center justify-between">
+                <Label htmlFor={slider.id}>{slider.label}</Label>
+                <span className="text-sm text-muted-foreground font-mono">
+                  {(formData[slider.id as keyof typeof formData] as number)?.toFixed(2) || (slider.id === 'top_p' ? '1.00' : '0.00')}
                 </span>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>How creative or predictable responses are. Lower values give more focused, consistent answers. Higher values give more varied, creative responses.</p>
-              </TooltipContent>
-            </Tooltip>
-          </div>
-          <span className="text-sm text-muted-foreground font-mono">
-            {formData.temperature?.toFixed(2) ?? '0.70'}
-          </span>
+              </div>
+              <Slider
+                id={slider.id}
+                min={slider.min}
+                max={slider.max}
+                step={0.01}
+                value={[(formData[slider.id as keyof typeof formData] as number) || (slider.id === 'top_p' ? 1 : slider.id === 'temperature' ? 0.7 : 0)]}
+                onValueChange={([value]) => handleUpdate({ [slider.id]: value })}
+                className="w-full"
+              />
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>{slider.lowLabel}</span>
+                <span>{slider.highLabel}</span>
+              </div>
+            </div>
+          ))}
         </div>
-        <Slider
-          id="temperature"
-          min={0}
-          max={2}
-          step={0.01}
-          value={[formData.temperature ?? 0.7]}
-          onValueChange={([value]) => handleUpdate({ temperature: value })}
-          className="w-full"
-        />
-      </div>
-
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1">
-            <Label htmlFor="presence_penalty">Presence Penalty</Label>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span className="inline-flex group">
-                  <InfoCircleIcon className="h-3.5 w-3.5 text-muted-foreground" />
-                  <InfoCircleIconFilled className="h-3.5 w-3.5 text-muted-foreground" />
-                </span>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Encourages the agent to talk about new topics. Higher values make the agent less likely to repeat subjects already discussed.</p>
-              </TooltipContent>
-            </Tooltip>
+        
+        {/* Right column: Contextual info panel */}
+        <div className="w-72 flex-shrink-0 hidden lg:block">
+          <div className="sticky top-8 p-4 rounded-lg bg-accent/30 border border-border/50">
+            {currentSliderInfo ? (
+              <>
+                <h4 className="text-sm font-semibold text-foreground mb-2">
+                  {currentSliderInfo.contextTitle}
+                </h4>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  {currentSliderInfo.contextDescription}
+                </p>
+              </>
+            ) : (
+              <p className="text-sm text-muted-foreground italic">
+                Hover over a slider to see detailed information about how it affects your agent's behavior.
+              </p>
+            )}
           </div>
-          <span className="text-sm text-muted-foreground font-mono">
-            {formData.presence_penalty?.toFixed(2) ?? '0.00'}
-          </span>
         </div>
-        <Slider
-          id="presence_penalty"
-          min={0}
-          max={2}
-          step={0.01}
-          value={[formData.presence_penalty ?? 0]}
-          onValueChange={([value]) => handleUpdate({ presence_penalty: value })}
-          className="w-full"
-        />
       </div>
-
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1">
-            <Label htmlFor="frequency_penalty">Frequency Penalty</Label>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span className="inline-flex group">
-                  <InfoCircleIcon className="h-3.5 w-3.5 text-muted-foreground" />
-                  <InfoCircleIconFilled className="h-3.5 w-3.5 text-muted-foreground" />
-                </span>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Reduces repetitive responses. Higher values make the agent less likely to repeat the same phrases or words within a response.</p>
-              </TooltipContent>
-            </Tooltip>
-          </div>
-          <span className="text-sm text-muted-foreground font-mono">
-            {formData.frequency_penalty?.toFixed(2) ?? '0.00'}
-          </span>
-        </div>
-        <Slider
-          id="frequency_penalty"
-          min={0}
-          max={2}
-          step={0.01}
-          value={[formData.frequency_penalty ?? 0]}
-          onValueChange={([value]) => handleUpdate({ frequency_penalty: value })}
-          className="w-full"
-        />
-      </div>
-
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1">
-            <Label htmlFor="top_p">Top P</Label>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span className="inline-flex group">
-                  <InfoCircleIcon className="h-3.5 w-3.5 text-muted-foreground" />
-                  <InfoCircleIconFilled className="h-3.5 w-3.5 text-muted-foreground" />
-                </span>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Controls response diversity. Lower values make responses more focused and deterministic. Keep at 1.0 unless you need specific control.</p>
-              </TooltipContent>
-            </Tooltip>
-          </div>
-          <span className="text-sm text-muted-foreground font-mono">
-            {formData.top_p?.toFixed(2) ?? '1.00'}
-          </span>
-        </div>
-        <Slider
-          id="top_p"
-          min={0}
-          max={1}
-          step={0.01}
-          value={[formData.top_p ?? 1.0]}
-          onValueChange={([value]) => handleUpdate({ top_p: value })}
-          className="w-full"
-        />
-      </div>
-    </div>
-  );
+    );
+  };
 
   const renderPromptSection = () => (
-    <div className="space-y-6 max-w-2xl">
+    <div className="space-y-6">
       <div className="space-y-3">
         <div className="flex items-center gap-2">
           <Label htmlFor="system_prompt">System Prompt</Label>
