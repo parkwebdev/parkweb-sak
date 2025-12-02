@@ -166,13 +166,13 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
       {activeTab === 'api-access' && agent && onUpdate && (
         <div className="space-y-4">
           <div>
-            <h3 className="text-base font-semibold">API Access</h3>
-            <p className="text-sm text-muted-foreground mt-1">
+            <h3 className="text-sm font-semibold">API Access</h3>
+            <p className="text-xs text-muted-foreground mt-1">
               Enable API access to interact with your agent programmatically
             </p>
           </div>
 
-          <div className="p-5 rounded-lg bg-muted/30 border space-y-4">
+          <div className="p-5 rounded-lg bg-muted/30 border border-dashed space-y-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium">Enable API</p>
@@ -204,8 +204,8 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-base font-semibold">Custom Tools</h3>
-              <p className="text-sm text-muted-foreground mt-1">Add custom tools and functions for your agent</p>
+              <h3 className="text-sm font-semibold">Custom Tools</h3>
+              <p className="text-xs text-muted-foreground mt-1">Add custom tools and functions for your agent</p>
             </div>
             <Button onClick={() => setShowAddForm(!showAddForm)} size="sm">
               {showAddForm ? <XClose className="h-4 w-4 mr-2" /> : <Plus className="h-4 w-4 mr-2" />}

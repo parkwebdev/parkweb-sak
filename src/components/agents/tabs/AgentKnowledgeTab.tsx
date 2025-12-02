@@ -39,11 +39,11 @@ export const AgentKnowledgeTab = ({ agentId, userId }: AgentKnowledgeTabProps) =
         <div className="space-y-4">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <h3 className="text-base font-semibold flex items-center gap-2">
+              <h3 className="text-sm font-semibold flex items-center gap-2">
                 <Database01 className="h-5 w-5" />
                 Knowledge Sources
               </h3>
-              <p className="text-sm text-muted-foreground mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 Add documents, URLs, or custom content to enhance your agent's knowledge
               </p>
             </div>
