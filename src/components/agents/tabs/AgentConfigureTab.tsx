@@ -184,17 +184,19 @@ export const AgentConfigureTab = ({ agent, onUpdate, onFormChange }: AgentConfig
             <div className="space-y-3">
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1">
-                    <Label htmlFor="temperature" className="text-xs font-medium">Temperature</Label>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <HelpCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Controls randomness. Higher = more creative</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </div>
+              <div className="flex items-center gap-1">
+                <Label htmlFor="temperature" className="text-xs font-medium">Temperature</Label>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="inline-flex">
+                      <HelpCircle className="h-3.5 w-3.5 text-muted-foreground" />
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Controls randomness. Higher = more creative</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
                   <span className="text-xs text-muted-foreground font-mono">
                     {formData.temperature?.toFixed(2) ?? '0.70'}
                   </span>
@@ -212,17 +214,19 @@ export const AgentConfigureTab = ({ agent, onUpdate, onFormChange }: AgentConfig
 
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1">
-                    <Label htmlFor="top_p" className="text-xs font-medium">Top P</Label>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <HelpCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Nucleus sampling threshold</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </div>
+              <div className="flex items-center gap-1">
+                <Label htmlFor="top_p" className="text-xs font-medium">Top P</Label>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="inline-flex">
+                      <HelpCircle className="h-3.5 w-3.5 text-muted-foreground" />
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Nucleus sampling threshold</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
                   <span className="text-xs text-muted-foreground font-mono">
                     {formData.top_p?.toFixed(2) ?? '0.90'}
                   </span>
@@ -239,17 +243,19 @@ export const AgentConfigureTab = ({ agent, onUpdate, onFormChange }: AgentConfig
               </div>
 
               <div className="space-y-1.5">
-                <div className="flex items-center gap-1">
-                  <Label htmlFor="max_tokens" className="text-xs font-medium">Max Tokens</Label>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <HelpCircle className="h-3.5 w-3.5 text-muted-foreground cursor-help" />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Maximum response length</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
+              <div className="flex items-center gap-1">
+                <Label htmlFor="max_tokens" className="text-xs font-medium">Max Tokens</Label>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="inline-flex">
+                      <HelpCircle className="h-3.5 w-3.5 text-muted-foreground" />
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Maximum response length</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
                 <Input
                   id="max_tokens"
                   type="number"
@@ -274,7 +280,9 @@ export const AgentConfigureTab = ({ agent, onUpdate, onFormChange }: AgentConfig
             </div>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Lightbulb01 className="h-4 w-4 text-amber-500 cursor-help flex-shrink-0" />
+                <span className="inline-flex">
+                  <Lightbulb01 className="h-4 w-4 text-amber-500" />
+                </span>
               </TooltipTrigger>
               <TooltipContent side="right" className="max-w-xs">
                 <p className="font-medium mb-1">Tips for great prompts:</p>
