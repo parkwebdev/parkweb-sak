@@ -1,8 +1,8 @@
 import React from 'react';
-import { Settings01 as Settings, Database01, Tool01, Code01, MessageCircle02, Announcement01, BookOpen01 } from '@untitledui/icons';
+import { Settings01 as Settings, Database01, Tool01, Code01, Announcement01 } from '@untitledui/icons';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-export type AgentConfigTab = 'configure' | 'behavior' | 'knowledge' | 'help' | 'tools' | 'embed' | 'announcements';
+export type AgentConfigTab = 'configure' | 'knowledge' | 'tools' | 'embed' | 'announcements';
 
 interface AgentConfigLayoutProps {
   activeTab: AgentConfigTab;
@@ -31,27 +31,11 @@ export const AgentConfigLayout: React.FC<AgentConfigLayoutProps> = ({
             </TabsTrigger>
             
             <TabsTrigger
-              value="behavior"
-              className="h-11 px-0 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none text-sm"
-            >
-              <MessageCircle02 size={14} className="mr-1.5" />
-              Behavior
-            </TabsTrigger>
-            
-            <TabsTrigger
               value="knowledge"
               className="h-11 px-0 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none text-sm"
             >
               <Database01 size={14} className="mr-1.5" />
               Knowledge
-            </TabsTrigger>
-            
-            <TabsTrigger
-              value="help"
-              className="h-11 px-0 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none text-sm"
-            >
-              <BookOpen01 size={14} className="mr-1.5" />
-              Help Articles
             </TabsTrigger>
             
             <TabsTrigger

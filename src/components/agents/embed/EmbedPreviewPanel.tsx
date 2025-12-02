@@ -105,14 +105,14 @@ export const EmbedPreviewPanel = ({ config }: EmbedPreviewPanelProps) => {
   };
 
   return (
-    <div className="sticky top-0 h-screen p-6 bg-muted/30">
+    <div className="sticky top-0 h-screen p-6 bg-muted/30 rounded-lg">
       <div className="h-full flex flex-col">
         <div className="text-center mb-4">
           <span className="text-xs text-muted-foreground">Live Preview</span>
         </div>
         {/* Canvas - simulates a webpage */}
         <div 
-          className="flex-1 relative overflow-hidden rounded-xl border bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 shadow-inner"
+          className="flex-1 relative overflow-hidden rounded-xl border bg-secondary dark:bg-muted shadow-inner"
         >
           <ChatWidget 
             key={`${config.agentId}-${config.position}`}

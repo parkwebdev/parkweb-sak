@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AgentConfigureTab } from './tabs/AgentConfigureTab';
-import { AgentBehaviorTab } from './tabs/AgentBehaviorTab';
 import { AgentToolsTab } from './tabs/AgentToolsTab';
 import { AgentKnowledgeTab } from './tabs/AgentKnowledgeTab';
 import { AgentEmbedTab } from './tabs/AgentEmbedTab';
@@ -39,9 +38,8 @@ export const EditAgentDialog = ({ agent, open, onOpenChange, onUpdate }: EditAge
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="configure">Configure</TabsTrigger>
-            <TabsTrigger value="behavior">Behavior</TabsTrigger>
             <TabsTrigger value="knowledge">Knowledge</TabsTrigger>
             <TabsTrigger value="tools">Tools</TabsTrigger>
             <TabsTrigger value="embed">Embed</TabsTrigger>
@@ -50,10 +48,6 @@ export const EditAgentDialog = ({ agent, open, onOpenChange, onUpdate }: EditAge
           <div className="flex-1 overflow-y-auto mt-4">
             <TabsContent value="configure" className="mt-0">
               <AgentConfigureTab agent={agent} onUpdate={onUpdate} />
-            </TabsContent>
-
-            <TabsContent value="behavior" className="mt-0">
-              <AgentBehaviorTab agent={agent} onUpdate={onUpdate} />
             </TabsContent>
 
             <TabsContent value="knowledge" className="mt-0">

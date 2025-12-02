@@ -6,6 +6,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ChevronDown, Lightbulb01 } from '@untitledui/icons';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Agent = Tables<'agents'>;
@@ -55,6 +57,7 @@ export const AgentConfigureTab = ({ agent, onUpdate, onFormChange }: AgentConfig
     max_tokens: agent.max_tokens || 2000,
     status: agent.status,
     top_p: deploymentConfig.top_p || 1.0,
+    system_prompt: agent.system_prompt,
   });
 
   const hasChanges = JSON.stringify(formData) !== JSON.stringify({
@@ -65,6 +68,7 @@ export const AgentConfigureTab = ({ agent, onUpdate, onFormChange }: AgentConfig
     max_tokens: agent.max_tokens || 2000,
     status: agent.status,
     top_p: deploymentConfig.top_p || 1.0,
+    system_prompt: agent.system_prompt,
   });
 
   useEffect(() => {
@@ -79,9 +83,10 @@ export const AgentConfigureTab = ({ agent, onUpdate, onFormChange }: AgentConfig
   // Export save function for parent
   (AgentConfigureTab as any).handleSave = async () => {
     if (hasChanges) {
-      const { top_p, ...coreFields } = formData;
+      const { top_p, system_prompt, ...coreFields } = formData;
       await onUpdate(agent.id, {
         ...coreFields,
+        system_prompt,
         deployment_config: {
           ...deploymentConfig,
           top_p,
@@ -234,6 +239,81 @@ export const AgentConfigureTab = ({ agent, onUpdate, onFormChange }: AgentConfig
             </div>
           </div>
         </div>
+      </div>
+
+      {/* System Prompt - Full Width Below */}
+      <div className="p-5 rounded-lg bg-muted/30 border space-y-4">
+        <div>
+          <h3 className="text-sm font-semibold mb-1">System Prompt</h3>
+          <p className="text-xs text-muted-foreground">Define how your agent should behave, respond, and interact with users</p>
+        </div>
+
+        <div className="space-y-3">
+          <Textarea
+            id="system_prompt"
+            value={formData.system_prompt}
+            onChange={(e) => handleUpdate({ system_prompt: e.target.value })}
+            placeholder="You are a helpful assistant that..."
+            rows={12}
+            required
+            className="font-mono text-sm resize-none leading-relaxed"
+          />
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <span>Define your agent's personality, tone, knowledge boundaries, and capabilities</span>
+            <span className="font-mono">{formData.system_prompt.length} characters</span>
+          </div>
+        </div>
+
+        {/* Collapsible Tips Section */}
+        <Collapsible>
+          <CollapsibleTrigger className="flex items-center gap-2 text-sm font-medium hover:text-primary transition-colors group">
+            <Lightbulb01 className="h-4 w-4 text-amber-500" />
+            <span>Tips for better prompts</span>
+            <ChevronDown className="h-4 w-4 transition-transform group-data-[state=open]:rotate-180" />
+          </CollapsibleTrigger>
+          <CollapsibleContent className="mt-3">
+            <div className="p-4 rounded-lg bg-muted/50 border space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                <div className="space-y-1">
+                  <p className="font-medium">• Define personality first</p>
+                  <p className="text-xs text-muted-foreground pl-3">
+                    Start with tone, voice, and character traits
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <p className="font-medium">• Set topic boundaries</p>
+                  <p className="text-xs text-muted-foreground pl-3">
+                    Specify what the agent should and shouldn't discuss
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <p className="font-medium">• Include example responses</p>
+                  <p className="text-xs text-muted-foreground pl-3">
+                    Show the style and format you want
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <p className="font-medium">• Be specific about tone</p>
+                  <p className="text-xs text-muted-foreground pl-3">
+                    Professional, casual, friendly, formal, etc.
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <p className="font-medium">• Define response structure</p>
+                  <p className="text-xs text-muted-foreground pl-3">
+                    Bullet points, paragraphs, step-by-step, etc.
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <p className="font-medium">• Add safety guardrails</p>
+                  <p className="text-xs text-muted-foreground pl-3">
+                    Prevent harmful, biased, or off-topic responses
+                  </p>
+                </div>
+              </div>
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
       </div>
     </div>
   );
