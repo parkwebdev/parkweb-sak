@@ -69,10 +69,10 @@ const RESPONSE_LENGTH_PRESETS = [
 type ConfigureSection = 'identity' | 'model' | 'behavior' | 'prompt';
 
 const CONFIGURE_MENU_ITEMS = [
-  { id: 'identity' as const, label: 'Identity' },
-  { id: 'model' as const, label: 'Model & Cost' },
-  { id: 'behavior' as const, label: 'Behavior' },
-  { id: 'prompt' as const, label: 'System Prompt' },
+  { id: 'identity' as const, label: 'Identity', description: 'Set your agent\'s name, description, and activation status' },
+  { id: 'model' as const, label: 'Model & Cost', description: 'Choose the AI model, response length, and view estimated costs' },
+  { id: 'behavior' as const, label: 'Behavior', description: 'Fine-tune creativity, topic diversity, and response variation' },
+  { id: 'prompt' as const, label: 'System Prompt', description: 'Define your agent\'s personality, role, and communication style' },
 ];
 
 const calculateEstimatedCost = (model: string, maxTokens: number) => {
@@ -240,30 +240,6 @@ export const AgentConfigureTab: React.FC<AgentConfigureTabProps> = ({ agent, onU
         </Select>
       </div>
 
-      {costEstimate && (
-        <Card className="p-4 bg-accent/50 border-border">
-          <div className="flex items-start justify-between mb-2">
-            <h4 className="text-sm font-semibold text-foreground">💰 Estimated Cost</h4>
-            <Badge variant={costEstimate.tier === 'Budget' ? 'secondary' : costEstimate.tier === 'Standard' ? 'default' : 'destructive'}>
-              {costEstimate.tier}
-            </Badge>
-          </div>
-          <div className="space-y-1.5 text-sm">
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Per request:</span>
-              <span className="font-medium text-foreground">${costEstimate.perRequest.toFixed(6)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Per 1,000 requests:</span>
-              <span className="font-medium text-foreground">${costEstimate.per1000Requests.toFixed(2)}</span>
-            </div>
-            <p className="text-xs text-muted-foreground pt-2 border-t border-border/50">
-              Based on ~500 input tokens per request
-            </p>
-          </div>
-        </Card>
-      )}
-
       <div>
         <Label htmlFor="response-length">Response Length</Label>
         <Select
@@ -271,7 +247,9 @@ export const AgentConfigureTab: React.FC<AgentConfigureTabProps> = ({ agent, onU
           onValueChange={(value) => handleUpdate({ response_length_preset: value })}
         >
           <SelectTrigger id="response-length" className="mt-1.5">
-            <SelectValue />
+            <SelectValue>
+              {RESPONSE_LENGTH_PRESETS.find(p => p.value === formData.response_length_preset)?.label}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             {RESPONSE_LENGTH_PRESETS.map((preset) => (
@@ -313,6 +291,30 @@ export const AgentConfigureTab: React.FC<AgentConfigureTabProps> = ({ agent, onU
             className="mt-1.5"
           />
         </div>
+      )}
+
+      {costEstimate && (
+        <Card className="p-4 bg-accent/50 border-border">
+          <div className="flex items-start justify-between mb-2">
+            <h4 className="text-sm font-semibold text-foreground">💰 Estimated Cost</h4>
+            <Badge variant={costEstimate.tier === 'Budget' ? 'secondary' : costEstimate.tier === 'Standard' ? 'default' : 'destructive'}>
+              {costEstimate.tier}
+            </Badge>
+          </div>
+          <div className="space-y-1.5 text-sm">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Per request:</span>
+              <span className="font-medium text-foreground">${costEstimate.perRequest.toFixed(6)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Per 1,000 requests:</span>
+              <span className="font-medium text-foreground">${costEstimate.per1000Requests.toFixed(2)}</span>
+            </div>
+            <p className="text-xs text-muted-foreground pt-2 border-t border-border/50">
+              Based on ~500 input tokens per request
+            </p>
+          </div>
+        </Card>
       )}
     </div>
   );
@@ -487,8 +489,8 @@ export const AgentConfigureTab: React.FC<AgentConfigureTabProps> = ({ agent, onU
         activeTab={activeSection}
         onTabChange={(tab) => setActiveSection(tab as ConfigureSection)}
         menuItems={CONFIGURE_MENU_ITEMS}
-        title="Agent Configuration"
-        description="Configure your agent's behavior and capabilities"
+        title="Configure"
+        description={CONFIGURE_MENU_ITEMS.find(item => item.id === activeSection)?.description || ''}
       >
         {activeSection === 'identity' && renderIdentitySection()}
         {activeSection === 'model' && renderModelSection()}

@@ -34,7 +34,7 @@ export const AgentConfigHeader = ({
       {/* Hero Section with Dotted Grid */}
       <div className="relative overflow-hidden">
         <div 
-          className="relative h-40 bg-neutral-100 dark:bg-neutral-950"
+          className="relative h-48 bg-neutral-100 dark:bg-neutral-950"
           style={{
             backgroundImage: 'radial-gradient(circle, rgba(0, 0, 0, 0.15) 0.5px, transparent 0.5px)',
             backgroundSize: '12px 12px'
