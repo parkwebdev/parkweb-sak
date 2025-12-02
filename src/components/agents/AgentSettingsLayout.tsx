@@ -8,19 +8,19 @@ interface AgentSettingsLayoutProps {
 
 export type AgentSettingsTab = 'knowledge-sources' | 'help-articles' | 'api-access' | 'custom-tools';
 
-interface AgentSettingsMenuItemProps {
-  id: AgentSettingsTab;
+interface AgentSettingsMenuItemProps<T extends string = string> {
+  id: T;
   label: string;
   active: boolean;
-  onClick: (id: AgentSettingsTab) => void;
+  onClick: (id: T) => void;
 }
 
-const AgentSettingsMenuItem: React.FC<AgentSettingsMenuItemProps> = ({
+const AgentSettingsMenuItem = <T extends string = string>({
   id,
   label,
   active,
   onClick,
-}) => {
+}: AgentSettingsMenuItemProps<T>) => {
   return (
     <button
       onClick={() => onClick(id)}
@@ -36,17 +36,17 @@ const AgentSettingsMenuItem: React.FC<AgentSettingsMenuItemProps> = ({
   );
 };
 
-interface AgentSettingsLayoutContentProps {
-  activeTab: AgentSettingsTab;
-  onTabChange: (tab: AgentSettingsTab) => void;
+interface AgentSettingsLayoutContentProps<T extends string = string> {
+  activeTab: T;
+  onTabChange: (tab: T) => void;
   children: React.ReactNode;
   onMenuClick?: () => void;
-  menuItems: Array<{ id: AgentSettingsTab; label: string }>;
+  menuItems: Array<{ id: T; label: string }>;
   title: string;
   description: string;
 }
 
-export const AgentSettingsLayout: React.FC<AgentSettingsLayoutContentProps> = ({
+export const AgentSettingsLayout = <T extends string = string>({
   activeTab,
   onTabChange,
   children,
@@ -54,7 +54,7 @@ export const AgentSettingsLayout: React.FC<AgentSettingsLayoutContentProps> = ({
   menuItems,
   title,
   description,
-}) => {
+}: AgentSettingsLayoutContentProps<T>) => {
   return (
     <div className="flex flex-col lg:flex-row gap-4 lg:gap-8 w-full">
       {/* Mobile header with menu button and tabs */}

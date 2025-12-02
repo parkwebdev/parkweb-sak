@@ -6,21 +6,23 @@ import { useKnowledgeSources } from '@/hooks/useKnowledgeSources';
 import { KnowledgeSourceCard } from '@/components/agents/KnowledgeSourceCard';
 import { AddKnowledgeDialog } from '@/components/agents/AddKnowledgeDialog';
 import { HelpArticlesManager } from '@/components/agents/HelpArticlesManager';
-import { AgentSettingsLayout, type AgentSettingsTab } from '@/components/agents/AgentSettingsLayout';
+import { AgentSettingsLayout } from '@/components/agents/AgentSettingsLayout';
 
 interface AgentKnowledgeTabProps {
   agentId: string;
   userId: string;
 }
 
+type KnowledgeTab = 'knowledge-sources' | 'help-articles';
+
 export const AgentKnowledgeTab = ({ agentId, userId }: AgentKnowledgeTabProps) => {
   const { sources, loading, deleteSource, reprocessSource } = useKnowledgeSources(agentId);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<AgentSettingsTab>('knowledge-sources');
+  const [activeTab, setActiveTab] = useState<KnowledgeTab>('knowledge-sources');
 
   const menuItems = [
-    { id: 'knowledge-sources' as AgentSettingsTab, label: 'Knowledge Sources' },
-    { id: 'help-articles' as AgentSettingsTab, label: 'Help Articles' },
+    { id: 'knowledge-sources' as const, label: 'Knowledge Sources' },
+    { id: 'help-articles' as const, label: 'Help Articles' },
   ];
 
   if (loading) {
@@ -28,7 +30,7 @@ export const AgentKnowledgeTab = ({ agentId, userId }: AgentKnowledgeTabProps) =
   }
 
   return (
-    <AgentSettingsLayout
+    <AgentSettingsLayout<KnowledgeTab>
       activeTab={activeTab}
       onTabChange={setActiveTab}
       menuItems={menuItems}
