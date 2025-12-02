@@ -113,7 +113,7 @@ const BEHAVIOR_SLIDERS = [
 ];
 
 const CONFIGURE_MENU_ITEMS = [
-  { id: 'identity' as const, label: 'Identity', description: 'Set your agent\'s name, description, and activation status' },
+  { id: 'identity' as const, label: 'Identity', description: 'Set your agent\'s name and description' },
   { id: 'model' as const, label: 'Model & Cost', description: 'Choose the AI model, response length, and view estimated costs' },
   { id: 'behavior' as const, label: 'Behavior', description: 'Fine-tune creativity, topic diversity, and response variation' },
   { id: 'prompt' as const, label: 'System Prompt', description: 'Define your agent\'s personality, role, and communication style' },
@@ -240,20 +240,6 @@ export const AgentConfigureTab: React.FC<AgentConfigureTabProps> = ({ agent, onU
           onChange={(e) => handleUpdate({ description: e.target.value })}
           placeholder="Brief description of what this agent does"
           className="mt-1.5 min-h-[80px]"
-        />
-      </div>
-
-      <div className="flex items-center justify-between pt-2">
-        <div>
-          <Label htmlFor="status" className="text-sm font-medium">Agent Status</Label>
-          <p className="text-xs text-muted-foreground mt-1">
-            {formData.status === 'active' ? 'Agent is live' : formData.status === 'paused' ? 'Agent is paused' : 'Agent is in draft'}
-          </p>
-        </div>
-        <Switch
-          id="status"
-          checked={formData.status === 'active'}
-          onCheckedChange={(checked) => handleUpdate({ status: checked ? 'active' : 'draft' })}
         />
       </div>
     </div>

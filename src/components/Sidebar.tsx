@@ -123,25 +123,33 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
                       className="w-full"
                     >
                       <div className="items-center flex w-full overflow-hidden px-0 py-0.5">
-                        <CollapsibleTrigger className={`items-center flex w-full gap-2.5 flex-1 shrink basis-[0%] my-auto transition-colors text-sm px-2.5 py-1.5 rounded-md ${
-                          isOnAgentsPage ? 'bg-accent text-accent-foreground' : 'bg-transparent hover:bg-accent/50 text-muted-foreground hover:text-foreground'
-                        }`}>
-                          <div className="items-center flex gap-2 my-auto w-full flex-1 shrink basis-[0%]">
-                            <div className="items-center flex my-auto w-[18px] pr-0.5">
-                              <item.icon size={14} className="self-stretch my-auto" />
-                            </div>
-                            <div className="flex items-center justify-between flex-1">
-                              <div className={`text-sm font-normal leading-4 self-stretch my-auto ${
-                                isOnAgentsPage ? 'text-accent-foreground font-medium' : ''
-                              }`}>
-                                {item.label}
-                              </div>
-                              <ChevronDown 
-                                size={14} 
-                                className={`transition-transform ${agentsOpen ? 'rotate-180' : ''}`}
-                              />
-                            </div>
+                        {/* Left side: Link to /agents (icon + label) */}
+                        <Link 
+                          to="/agents"
+                          className={`items-center flex gap-2.5 flex-1 my-auto transition-colors text-sm px-2.5 py-1.5 rounded-l-md ${
+                            isOnAgentsPage ? 'bg-accent text-accent-foreground' : 'bg-transparent hover:bg-accent/50 text-muted-foreground hover:text-foreground'
+                          }`}
+                        >
+                          <div className="items-center flex my-auto w-[18px] pr-0.5">
+                            <item.icon size={14} className="self-stretch my-auto" />
                           </div>
+                          <div className={`text-sm font-normal leading-4 self-stretch my-auto ${
+                            isOnAgentsPage ? 'text-accent-foreground font-medium' : ''
+                          }`}>
+                            {item.label}
+                          </div>
+                        </Link>
+                        
+                        {/* Right side: Chevron toggle for dropdown */}
+                        <CollapsibleTrigger 
+                          className={`p-1.5 rounded-r-md transition-colors ${
+                            isOnAgentsPage ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/50 text-muted-foreground hover:text-foreground'
+                          }`}
+                        >
+                          <ChevronDown 
+                            size={14} 
+                            className={`transition-transform ${agentsOpen ? 'rotate-180' : ''}`}
+                          />
                         </CollapsibleTrigger>
                       </div>
                       <CollapsibleContent>
