@@ -91,7 +91,7 @@ export const AgentConfigureTab = ({ agent, onUpdate, onFormChange }: AgentConfig
   };
 
   return (
-    <div className="max-w-5xl space-y-6">
+    <div className="space-y-6">
       {/* Two-Column Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Left Column: Identity */}
