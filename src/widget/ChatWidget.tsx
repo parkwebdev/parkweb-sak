@@ -29,6 +29,7 @@ import { z } from 'zod';
 interface ChatWidgetProps {
   config: WidgetConfig | { agentId: string; position?: string; primaryColor?: string };
   previewMode?: boolean;
+  containedPreview?: boolean;
 }
 
 type ViewType = 'home' | 'messages' | 'help';
@@ -56,7 +57,7 @@ interface Message {
   reactions?: Array<{ emoji: string; count: number; userReacted: boolean }>;
 }
 
-export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidgetProps) => {
+export const ChatWidget = ({ config: configProp, previewMode = false, containedPreview = false }: ChatWidgetProps) => {
   const isSimpleConfig = 'agentId' in configProp && !('greeting' in configProp);
   const [config, setConfig] = useState<WidgetConfig | null>(
     isSimpleConfig ? null : (configProp as WidgetConfig)
@@ -1332,6 +1333,43 @@ export const ChatWidget = ({ config: configProp, previewMode = false }: ChatWidg
         } as React.CSSProperties}
       >
         {widgetContent}
+        <Toaster position="top-center" richColors />
+      </div>
+    );
+  }
+
+  // Contained preview mode: Use absolute positioning within parent canvas
+  if (containedPreview) {
+    return (
+      <div 
+        className="absolute inset-0 pointer-events-none light" 
+        style={{
+          colorScheme: 'light',
+            '--background': '0 0% 100%',
+            '--foreground': '0 0% 3.9%',
+            '--card': '0 0% 100%',
+            '--card-foreground': '0 0% 3.9%',
+            '--popover': '0 0% 100%',
+            '--popover-foreground': '0 0% 3.9%',
+            '--primary': '221.2 83.2% 53.3%',
+            '--primary-foreground': '0 0% 98%',
+            '--secondary': '0 0% 96.1%',
+            '--secondary-foreground': '0 0% 9%',
+            '--muted': '0 0% 96.1%',
+            '--muted-foreground': '0 0% 45.1%',
+            '--accent': '0 0% 96.1%',
+            '--accent-foreground': '0 0% 9%',
+            '--destructive': '0 84.2% 60.2%',
+            '--destructive-foreground': '0 0% 98%',
+            '--border': '0 0% 89.8%',
+            '--input': '0 0% 89.8%',
+            '--ring': '221.2 83.2% 53.3%',
+            '--radius': '0.5rem',
+        } as React.CSSProperties}
+      >
+        <div className={`absolute ${positionClasses[position]} pointer-events-auto`}>
+          {widgetContent}
+        </div>
         <Toaster position="top-center" richColors />
       </div>
     );
