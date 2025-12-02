@@ -700,6 +700,19 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                       </CSSAnimatedList>
                     </div>
                   </div>
+                  
+                  {config.showBranding && (
+                    <div className="text-center py-4 mt-auto">
+                      <a 
+                        href="https://chatpad.ai" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-xs text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-0.5"
+                      >
+                        Powered by <ChatPadLogo className="h-3 w-3" /> ChatPad
+                      </a>
+                    </div>
+                  )}
                 </div>
               </div>
             ) : (
@@ -982,18 +995,6 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                     </div>
                   )}
                   
-                  {config.showBranding && (
-                    <div className="text-center py-2 border-t">
-                      <a 
-                        href="https://chatpad.ai" 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-xs text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1.5"
-                      >
-                        Powered by <ChatPadLogo className="h-3 w-3" /> ChatPad
-                      </a>
-                    </div>
-                  )}
 
                   <div className="p-3 border-t">
                     {isAttachingFiles ? (
