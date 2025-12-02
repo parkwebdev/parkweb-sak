@@ -58,8 +58,7 @@ export const ApiKeySettings = () => {
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    toast({
-      title: 'Copied to clipboard',
+    toast.success('Copied to clipboard', {
       description: 'API key has been copied to your clipboard',
     });
   };

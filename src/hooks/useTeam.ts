@@ -50,10 +50,8 @@ export const useTeam = () => {
         .order('created_at', { ascending: false });
 
       if (profilesError) {
-        toast({
-          title: "Error",
+        toast.error("Error", {
           description: "Failed to load team members.",
-          variant: "destructive",
         });
         return;
       }
@@ -96,25 +94,20 @@ export const useTeam = () => {
       });
 
       if (error) {
-        toast({
-          title: "Failed to send invitation",
+        toast.error("Failed to send invitation", {
           description: "There was an error sending the invitation email.",
-          variant: "destructive",
         });
         return false;
       }
 
-      toast({
-        title: "Invitation sent",
+      toast.success("Invitation sent", {
         description: `Team invitation sent to ${inviteData.email}`,
       });
       
       return true;
     } catch (error) {
-      toast({
-        title: "Error",
+      toast.error("Error", {
         description: "Failed to send invitation.",
-        variant: "destructive",
       });
       return false;
     }
@@ -139,16 +132,13 @@ export const useTeam = () => {
         .eq('user_id', member.user_id);
 
       if (profileError) {
-        toast({
-          title: "Remove failed",
+        toast.error("Remove failed", {
           description: "Failed to remove team member.",
-          variant: "destructive",
         });
         return false;
       }
 
-      toast({
-        title: "Member removed",
+      toast.success("Member removed", {
         description: `${member.display_name || member.email} has been removed from the team.`,
       });
 
@@ -156,10 +146,8 @@ export const useTeam = () => {
       await fetchTeamMembers();
       return true;
     } catch (error) {
-      toast({
-        title: "Remove failed", 
+      toast.error("Remove failed", {
         description: "An error occurred while removing the team member.",
-        variant: "destructive",
       });
       return false;
     }
@@ -187,10 +175,8 @@ export const useTeam = () => {
 
       if (error) {
         console.error('❌ Database error updating role:', error);
-        toast({
-          title: "Update failed",
+        toast.error("Update failed", {
           description: `Database error: ${error.message}`,
-          variant: "destructive",
         });
         return false;
       }
@@ -203,10 +189,8 @@ export const useTeam = () => {
       return true;
     } catch (error) {
       console.error('❌ Unexpected error updating role:', error);
-      toast({
-        title: "Update failed",
+      toast.error("Update failed", {
         description: "An unexpected error occurred while updating the role.",
-        variant: "destructive",
       });
       return false;
     }

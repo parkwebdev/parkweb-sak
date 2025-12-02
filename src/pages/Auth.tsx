@@ -51,10 +51,8 @@ const Auth = () => {
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
-      toast({
-        title: "Error",
+      toast.error("Error", {
         description: "Please fill in all fields",
-        variant: "destructive",
       });
       return;
     }
@@ -69,22 +67,16 @@ const Auth = () => {
       if (error) {
         logAuthEvent('login', false, { error: error.message });
         if (error.message.includes('Invalid login credentials')) {
-          toast({
-            title: "Invalid credentials",
+          toast.error("Invalid credentials", {
             description: "Please check your email and password and try again.",
-            variant: "destructive",
           });
         } else if (error.message.includes('Email not confirmed')) {
-          toast({
-            title: "Email not confirmed",
+          toast.error("Email not confirmed", {
             description: "Please check your email and click the confirmation link.",
-            variant: "destructive",
           });
         } else {
-          toast({
-            title: "Sign in failed",
+          toast.error("Sign in failed", {
             description: error.message,
-            variant: "destructive",
           });
         }
         return;
