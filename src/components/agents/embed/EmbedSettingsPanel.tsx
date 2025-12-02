@@ -137,37 +137,6 @@ export const EmbedSettingsPanel = ({ config, onConfigChange, embedCode }: EmbedS
               </div>
             )}
 
-            <div className="space-y-2">
-              <Label htmlFor="position" className="text-sm">Chat Position</Label>
-              <Select value={config.position} onValueChange={(value: any) => onConfigChange({ position: value })}>
-                <SelectTrigger className="text-sm">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="bottom-right">Bottom Right</SelectItem>
-                  <SelectItem value="bottom-left">Bottom Left</SelectItem>
-                  <SelectItem value="top-right">Top Right</SelectItem>
-                  <SelectItem value="top-left">Top Left</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="animation" className="text-sm">Bubble Animation</Label>
-              <Select value={config.animation} onValueChange={(value: any) => onConfigChange({ animation: value })}>
-                <SelectTrigger className="text-sm">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">None</SelectItem>
-                  <SelectItem value="ring">Pulse Ring</SelectItem>
-                  <SelectItem value="pulse">Pulse</SelectItem>
-                  <SelectItem value="bounce">Bounce</SelectItem>
-                  <SelectItem value="fade">Fade</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
             <div className="flex items-center justify-between">
               <div>
                 <Label htmlFor="badge" className="text-sm">Notification Badge</Label>
@@ -496,14 +465,6 @@ export const EmbedSettingsPanel = ({ config, onConfigChange, embedCode }: EmbedS
                   id="default-sound"
                   checked={config.defaultSoundEnabled}
                   onCheckedChange={(checked) => onConfigChange({ defaultSoundEnabled: checked })}
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <Label htmlFor="default-scroll" className="text-sm">Auto-Scroll by Default</Label>
-                <Switch
-                  id="default-scroll"
-                  checked={config.defaultAutoScroll}
-                  onCheckedChange={(checked) => onConfigChange({ defaultAutoScroll: checked })}
                 />
               </div>
             </div>
