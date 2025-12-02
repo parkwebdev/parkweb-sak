@@ -18,7 +18,7 @@ import ChatPadLogo from '@/components/ChatPadLogo';
 import { generateGradientPalette, darkenColor } from '@/lib/color-utils';
 
 // Lazy load heavy components to reduce initial bundle size
-const BubbleBackground = lazy(() => import('@/components/ui/bubble-background').then(m => ({ default: m.BubbleBackground })));
+const CSSBubbleBackground = lazy(() => import('@/components/ui/css-bubble-background').then(m => ({ default: m.CSSBubbleBackground })));
 const VoiceInput = lazy(() => import('@/components/molecule-ui/voice-input').then(m => ({ default: m.VoiceInput })));
 const FileDropZone = lazy(() => import('@/components/chat/FileDropZone').then(m => ({ default: m.FileDropZone })));
 
@@ -593,8 +593,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                         }} 
                       />
                     }>
-                      <BubbleBackground 
-                        interactive
+                      <CSSBubbleBackground 
                         colors={generateGradientPalette(config.gradientStartColor, config.gradientEndColor)}
                         baseGradient={{
                           from: darkenColor(config.gradientStartColor, 40),
