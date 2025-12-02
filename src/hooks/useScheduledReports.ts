@@ -27,10 +27,8 @@ export const useScheduledReports = () => {
       setReports(data || []);
     } catch (error: any) {
       console.error('Error fetching scheduled reports:', error);
-      toast({
-        title: 'Error fetching reports',
+      toast.error('Error fetching reports', {
         description: error.message,
-        variant: 'destructive',
       });
     } finally {
       setLoading(false);
@@ -53,8 +51,7 @@ export const useScheduledReports = () => {
 
       if (error) throw error;
 
-      toast({
-        title: 'Report scheduled',
+      toast.success('Report scheduled', {
         description: 'Your scheduled report has been created successfully.',
       });
 
@@ -62,10 +59,8 @@ export const useScheduledReports = () => {
       return data;
     } catch (error: any) {
       console.error('Error creating scheduled report:', error);
-      toast({
-        title: 'Error creating report',
+      toast.error('Error creating report', {
         description: error.message,
-        variant: 'destructive',
       });
     }
   };
@@ -81,8 +76,7 @@ export const useScheduledReports = () => {
 
       if (error) throw error;
 
-      toast({
-        title: 'Report updated',
+      toast.success('Report updated', {
         description: 'Your scheduled report has been updated successfully.',
       });
 
@@ -90,10 +84,8 @@ export const useScheduledReports = () => {
       return data;
     } catch (error: any) {
       console.error('Error updating scheduled report:', error);
-      toast({
-        title: 'Error updating report',
+      toast.error('Error updating report', {
         description: error.message,
-        variant: 'destructive',
       });
     }
   };
@@ -107,18 +99,15 @@ export const useScheduledReports = () => {
 
       if (error) throw error;
 
-      toast({
-        title: 'Report deleted',
+      toast.success('Report deleted', {
         description: 'Your scheduled report has been deleted successfully.',
       });
 
       await fetchReports();
     } catch (error: any) {
       console.error('Error deleting scheduled report:', error);
-      toast({
-        title: 'Error deleting report',
+      toast.error('Error deleting report', {
         description: error.message,
-        variant: 'destructive',
       });
     }
   };
@@ -137,10 +126,8 @@ export const useScheduledReports = () => {
       await fetchReports();
     } catch (error: any) {
       console.error('Error toggling report status:', error);
-      toast({
-        title: 'Error updating status',
+      toast.error('Error updating status', {
         description: error.message,
-        variant: 'destructive',
       });
     }
   };

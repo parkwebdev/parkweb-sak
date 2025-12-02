@@ -39,10 +39,8 @@ export const useWebhooks = () => {
       if (error) throw error;
       setWebhooks(data || []);
     } catch (error: any) {
-      toast({
-        title: 'Error fetching webhooks',
+      toast.error('Error fetching webhooks', {
         description: error.message,
-        variant: 'destructive',
       });
     } finally {
       setLoading(false);
@@ -68,10 +66,8 @@ export const useWebhooks = () => {
       if (error) throw error;
       setLogs(data || []);
     } catch (error: any) {
-      toast({
-        title: 'Error fetching webhook logs',
+      toast.error('Error fetching webhook logs', {
         description: error.message,
-        variant: 'destructive',
       });
     }
   };
@@ -88,18 +84,15 @@ export const useWebhooks = () => {
 
       if (error) throw error;
 
-      toast({
-        title: 'Webhook created',
+      toast.success('Webhook created', {
         description: 'Webhook has been created successfully',
       });
 
       fetchWebhooks();
       return data;
     } catch (error: any) {
-      toast({
-        title: 'Error creating webhook',
+      toast.error('Error creating webhook', {
         description: error.message,
-        variant: 'destructive',
       });
       throw error;
     }
@@ -117,10 +110,8 @@ export const useWebhooks = () => {
       // Success - no toast needed (SavedIndicator shows feedback)
       fetchWebhooks();
     } catch (error: any) {
-      toast({
-        title: 'Error updating webhook',
+      toast.error('Error updating webhook', {
         description: error.message,
-        variant: 'destructive',
       });
       throw error;
     }
@@ -135,17 +126,14 @@ export const useWebhooks = () => {
 
       if (error) throw error;
 
-      toast({
-        title: 'Webhook deleted',
+      toast.success('Webhook deleted', {
         description: 'Webhook has been deleted successfully',
       });
 
       fetchWebhooks();
     } catch (error: any) {
-      toast({
-        title: 'Error deleting webhook',
+      toast.error('Error deleting webhook', {
         description: error.message,
-        variant: 'destructive',
       });
       throw error;
     }
@@ -162,18 +150,15 @@ export const useWebhooks = () => {
 
       if (error) throw error;
 
-      toast({
-        title: 'Test webhook sent',
+      toast.success('Test webhook sent', {
         description: 'Check the delivery logs for results',
       });
 
       fetchLogs(id);
       return data;
     } catch (error: any) {
-      toast({
-        title: 'Error testing webhook',
+      toast.error('Error testing webhook', {
         description: error.message,
-        variant: 'destructive',
       });
       throw error;
     }

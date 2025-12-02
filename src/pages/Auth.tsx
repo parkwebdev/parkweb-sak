@@ -83,16 +83,13 @@ const Auth = () => {
       }
 
       logAuthEvent('login', true);
-      toast({
-        title: "Welcome back!",
+      toast.success("Welcome back!", {
         description: "You have been signed in successfully.",
       });
       navigate('/');
     } catch (error) {
-      toast({
-        title: "Error",
+      toast.error("Error", {
         description: "An unexpected error occurred. Please try again.",
-        variant: "destructive",
       });
     } finally {
       setIsLoading(false);
@@ -102,19 +99,15 @@ const Auth = () => {
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password || !confirmPassword || !displayName) {
-      toast({
-        title: "Error",
+      toast.error("Error", {
         description: "Please fill in all fields",
-        variant: "destructive",
       });
       return;
     }
 
     if (password !== confirmPassword) {
-      toast({
-        title: "Error",
+      toast.error("Error", {
         description: "Passwords do not match",
-        variant: "destructive",
       });
       return;
     }
@@ -122,10 +115,8 @@ const Auth = () => {
     // Validate password strength
     const passwordValidation = validatePasswordStrength(password);
     if (!passwordValidation.isValid) {
-      toast({
-        title: "Password too weak",
+      toast.error("Password too weak", {
         description: passwordValidation.errors[0],
-        variant: "destructive",
       });
       return;
     }
@@ -148,16 +139,12 @@ const Auth = () => {
       if (error) {
         logAuthEvent('signup', false, { error: error.message });
         if (error.message.includes('User already registered')) {
-          toast({
-            title: "Account exists",
+          toast.error("Account exists", {
             description: "An account with this email already exists. Please sign in instead.",
-            variant: "destructive",
           });
         } else {
-          toast({
-            title: "Sign up failed",
+          toast.error("Sign up failed", {
             description: error.message,
-            variant: "destructive",
           });
         }
         return;
@@ -177,8 +164,7 @@ const Auth = () => {
         console.error('Error processing signup completion:', error);
       }
 
-      toast({
-        title: "Account created!",
+      toast.success("Account created!", {
         description: "Please check your email to confirm your account, then you can sign in.",
       });
       
@@ -188,10 +174,8 @@ const Auth = () => {
       setConfirmPassword('');
       setDisplayName('');
     } catch (error) {
-      toast({
-        title: "Error",
+      toast.error("Error", {
         description: "An unexpected error occurred. Please try again.",
-        variant: "destructive",
       });
     } finally {
       setIsLoading(false);

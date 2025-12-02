@@ -25,10 +25,8 @@ export const useKnowledgeSources = (agentId?: string) => {
       setSources(data || []);
     } catch (error: any) {
       console.error('Error fetching knowledge sources:', error);
-      toast({
-        title: 'Error loading knowledge sources',
+      toast.error('Error loading knowledge sources', {
         description: error.message,
-        variant: 'destructive',
       });
     } finally {
       setLoading(false);
@@ -83,8 +81,7 @@ export const useKnowledgeSources = (agentId?: string) => {
         body: { sourceId: data.id, agentId },
       });
 
-      toast({
-        title: 'Document uploaded',
+      toast.success('Document uploaded', {
         description: 'Processing document...',
       });
 
@@ -92,10 +89,8 @@ export const useKnowledgeSources = (agentId?: string) => {
       return data.id;
     } catch (error: any) {
       console.error('Error uploading document:', error);
-      toast({
-        title: 'Upload failed',
+      toast.error('Upload failed', {
         description: error.message,
-        variant: 'destructive',
       });
       return null;
     }
@@ -129,8 +124,7 @@ export const useKnowledgeSources = (agentId?: string) => {
         body: { sourceId: data.id, agentId },
       });
 
-      toast({
-        title: 'URL added',
+      toast.success('URL added', {
         description: 'Processing content...',
       });
 
@@ -138,10 +132,8 @@ export const useKnowledgeSources = (agentId?: string) => {
       return data.id;
     } catch (error: any) {
       console.error('Error adding URL source:', error);
-      toast({
-        title: 'Failed to add URL',
+      toast.error('Failed to add URL', {
         description: error.message,
-        variant: 'destructive',
       });
       return null;
     }
@@ -179,8 +171,7 @@ export const useKnowledgeSources = (agentId?: string) => {
         body: { sourceId: data.id, agentId },
       });
 
-      toast({
-        title: 'Content added',
+      toast.success('Content added', {
         description: 'Processing content...',
       });
 
@@ -188,10 +179,8 @@ export const useKnowledgeSources = (agentId?: string) => {
       return data.id;
     } catch (error: any) {
       console.error('Error adding text source:', error);
-      toast({
-        title: 'Failed to add content',
+      toast.error('Failed to add content', {
         description: error.message,
-        variant: 'destructive',
       });
       return null;
     }
@@ -206,18 +195,15 @@ export const useKnowledgeSources = (agentId?: string) => {
 
       if (error) throw error;
 
-      toast({
-        title: 'Source deleted',
+      toast.success('Source deleted', {
         description: 'Knowledge source has been removed.',
       });
 
       await fetchSources();
     } catch (error: any) {
       console.error('Error deleting source:', error);
-      toast({
-        title: 'Delete failed',
+      toast.error('Delete failed', {
         description: error.message,
-        variant: 'destructive',
       });
     }
   };
@@ -239,18 +225,15 @@ export const useKnowledgeSources = (agentId?: string) => {
 
       if (invokeError) throw invokeError;
 
-      toast({
-        title: 'Reprocessing',
+      toast.success('Reprocessing', {
         description: 'Knowledge source is being reprocessed.',
       });
 
       await fetchSources();
     } catch (error: any) {
       console.error('Error reprocessing source:', error);
-      toast({
-        title: 'Reprocess failed',
+      toast.error('Reprocess failed', {
         description: error.message,
-        variant: 'destructive',
       });
     }
   };
