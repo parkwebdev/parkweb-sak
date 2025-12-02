@@ -60,16 +60,13 @@ export const UserAccountCard: React.FC<UserAccountCardProps> = ({ isCollapsed = 
   const handleSignOut = async () => {
     try {
       await signOut();
-      toast({
-        title: "Signed out",
+      toast.success("Signed out", {
         description: "You have been signed out successfully.",
       });
       navigate('/login');
     } catch (error) {
-      toast({
-        title: "Error",
+      toast.error("Error", {
         description: "Failed to sign out. Please try again.",
-        variant: "destructive",
       });
     }
   };

@@ -50,10 +50,8 @@ export const FileDropZone: React.FC<FileDropZoneProps> = ({
     const validation = validateFiles(files);
     
     if (!validation.valid) {
-      toast({
-        title: 'Invalid file',
+      toast.error('Invalid file', {
         description: validation.error,
-        variant: 'destructive',
       });
       return;
     }

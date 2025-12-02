@@ -147,16 +147,13 @@ export const ProfileSettings: React.FC = () => {
 
       if (error) {
         console.error('Error updating profile:', error);
-        toast({
-          title: "Update failed",
+        toast.error("Update failed", {
           description: "Failed to update your profile.",
-          variant: "destructive",
         });
         return;
       }
 
-      toast({
-        title: "Profile updated",
+      toast.success("Profile updated", {
         description: "Your profile has been updated successfully.",
       });
     } catch (error) {
@@ -182,28 +179,22 @@ export const ProfileSettings: React.FC = () => {
 
   const handlePasswordUpdate = async () => {
     if (!passwords.new || !passwords.confirm) {
-      toast({
-        title: "Error",
+      toast.error("Error", {
         description: "Please fill in all password fields.",
-        variant: "destructive",
       });
       return;
     }
 
     if (passwords.new !== passwords.confirm) {
-      toast({
-        title: "Error",
+      toast.error("Error", {
         description: "New passwords don't match.",
-        variant: "destructive",
       });
       return;
     }
 
     if (passwords.new.length < 8) {
-      toast({
-        title: "Error",
+      toast.error("Error", {
         description: "Password must be at least 8 characters long.",
-        variant: "destructive",
       });
       return;
     }
@@ -216,17 +207,14 @@ export const ProfileSettings: React.FC = () => {
 
       if (error) {
         console.error('Error updating password:', error);
-        toast({
-          title: "Password update failed",
+        toast.error("Password update failed", {
           description: error.message,
-          variant: "destructive",
         });
         return;
       }
 
       setPasswords({ current: '', new: '', confirm: '' });
-      toast({
-        title: "Password updated",
+      toast.success("Password updated", {
         description: "Your password has been updated successfully.",
       });
     } catch (error) {

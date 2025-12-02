@@ -268,10 +268,8 @@ export const useEmbeddedChatConfig = (agentId: string) => {
 
       // Success - no toast needed (SavedIndicator shows feedback)
     } catch (error: any) {
-      toast({
-        title: 'Error saving configuration',
+      toast.error('Error saving configuration', {
         description: error.message,
-        variant: 'destructive',
       });
       throw error;
     }

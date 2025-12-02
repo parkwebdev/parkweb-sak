@@ -108,10 +108,8 @@ export const NotificationSettings: React.FC = () => {
     // Handle browser notification permission requests
     if (key === 'browser_notifications' && value) {
       if (!('Notification' in window)) {
-        toast({
-          title: "Not supported",
+        toast.error("Not supported", {
           description: "Browser notifications are not supported in this environment.",
-          variant: "destructive",
         });
         return;
       }
@@ -119,10 +117,8 @@ export const NotificationSettings: React.FC = () => {
       const currentPermission = Notification.permission;
       
       if (currentPermission === 'denied') {
-        toast({
-          title: "Permission blocked",
+        toast.error("Permission blocked", {
           description: "Browser notifications are blocked. Please enable them in your browser settings and refresh the page.",
-          variant: "destructive",
         });
         return;
       }
@@ -135,19 +131,15 @@ export const NotificationSettings: React.FC = () => {
             if (permission === 'denied') {
               description = "Notifications were denied. Please enable them in your browser settings and refresh the page.";
             }
-            toast({
-              title: "Permission not granted",
+            toast.error("Permission not granted", {
               description,
-              variant: "destructive",
             });
             return;
           }
         } catch (error) {
           console.error('Error requesting notification permission:', error);
-          toast({
-            title: "Permission request failed",
+          toast.error("Permission request failed", {
             description: "Unable to request notification permission. Please enable notifications manually in your browser settings.",
-            variant: "destructive",
           });
           return;
         }
@@ -169,11 +161,9 @@ export const NotificationSettings: React.FC = () => {
 
         if (error) {
           console.error('Error updating preference:', error);
-          toast({
-            title: "Update failed",
-            description: "Failed to update notification preference.",
-            variant: "destructive",
-          });
+        toast.error("Update failed", {
+          description: "Failed to update notification preference.",
+        });
           return;
         }
 
@@ -181,11 +171,9 @@ export const NotificationSettings: React.FC = () => {
         setShowSaved(prev => ({ ...prev, [key]: true }));
       } catch (error) {
         console.error('Error in updatePreference:', error);
-        toast({
-          title: "Update failed",
-          description: "Failed to update notification preference.",
-          variant: "destructive",
-        });
+          toast.error("Update failed", {
+            description: "Failed to update notification preference.",
+          });
       }
     }, 1000);
   };
@@ -199,19 +187,15 @@ export const NotificationSettings: React.FC = () => {
 
   const testNotification = async () => {
     if (!('Notification' in window)) {
-      toast({
-        title: "Not supported",
+      toast.error("Not supported", {
         description: "Browser notifications are not supported in this environment.",
-        variant: "destructive",
       });
       return;
     }
 
     if (!preferences?.browser_notifications) {
-      toast({
-        title: "Browser notifications disabled",
+      toast.error("Browser notifications disabled", {
         description: "Please enable browser notifications first.",
-        variant: "destructive",
       });
       return;
     }
@@ -228,8 +212,7 @@ export const NotificationSettings: React.FC = () => {
       icon: '/favicon.ico',
     });
 
-    toast({
-      title: "Test notification sent",
+    toast.success("Test notification sent", {
       description: "Check your browser for the notification!",
     });
   };
@@ -456,23 +439,18 @@ export const NotificationSettings: React.FC = () => {
                 try {
                   const permission = await Notification.requestPermission();
                   if (permission === 'granted') {
-                    toast({
-                      title: "Notifications enabled",
+                    toast.success("Notifications enabled", {
                       description: "You will now receive browser notifications.",
                     });
                   } else {
-                    toast({
-                      title: "Permission denied",
+                    toast.error("Permission denied", {
                       description: "Browser notifications were not enabled.",
-                      variant: "destructive",
                     });
                   }
                 } catch (error) {
                   console.error('Notification permission error:', error);
-                  toast({
-                    title: "Error",
+                  toast.error("Error", {
                     description: "Failed to request notification permission.",
-                    variant: "destructive",
                   });
                 }
               }}
