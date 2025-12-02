@@ -184,7 +184,7 @@
         agentId: config.agentId,
         position: config.position || 'bottom-right',
         primaryColor: config.primaryColor || '#3b82f6',
-        appUrl: config.appUrl || 'https://mvaimvwdukpgvkifkfpa.supabase.co',
+        appUrl: config.appUrl || 'https://app.pad.chat',
       };
       this.isOpen = false;
       this.container = null;
@@ -338,7 +338,7 @@
       agentId: currentScript.getAttribute('data-agent-id'),
       position: currentScript.getAttribute('data-position') || 'bottom-right',
       primaryColor: currentScript.getAttribute('data-primary-color') || '#3b82f6',
-      appUrl: currentScript.getAttribute('data-app-url') || 'https://mvaimvwdukpgvkifkfpa.supabase.co',
+      appUrl: currentScript.getAttribute('data-app-url') || 'https://app.pad.chat',
     };
     
     const widget = new ChatPadWidget(config);
