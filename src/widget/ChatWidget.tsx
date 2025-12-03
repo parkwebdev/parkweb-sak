@@ -93,7 +93,22 @@ interface Conversation {
   preview: string;
 }
 
+// Detect mobile full-screen mode (matches media query in chatpad-widget.js)
+const getIsMobileFullScreen = () => {
+  if (typeof window === 'undefined') return false;
+  return window.innerWidth <= 480;
+};
+
 export const ChatWidget = ({ config: configProp, previewMode = false, containedPreview = false, isLoading: isLoadingProp = false }: ChatWidgetProps) => {
+  // Mobile detection for removing border radius on full-screen mobile
+  const [isMobileFullScreen, setIsMobileFullScreen] = useState(getIsMobileFullScreen);
+  
+  useEffect(() => {
+    const handleResize = () => setIsMobileFullScreen(getIsMobileFullScreen());
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   // If isLoading prop is provided, parent is handling config fetching (Intercom-style)
   const parentHandlesConfig = isLoadingProp !== undefined && 'greeting' in configProp;
   const isSimpleConfig = !parentHandlesConfig && 'agentId' in configProp && !('greeting' in configProp);
@@ -575,7 +590,9 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     <div id="chatpad-widget-root" className="h-full bg-transparent">
       {isOpen || isIframeMode ? (
           <Card 
-            className={isIframeMode ? "w-full h-full flex flex-col shadow-none overflow-hidden border-0 rounded-3xl" : "w-[380px] h-[650px] flex flex-col shadow-xl overflow-hidden border-0 rounded-3xl"}
+            className={isIframeMode 
+              ? `w-full h-full flex flex-col shadow-none overflow-hidden border-0 ${isMobileFullScreen ? '' : 'rounded-3xl'}` 
+              : "w-[380px] h-[650px] flex flex-col shadow-xl overflow-hidden border-0 rounded-3xl"}
             style={{
               background: currentView === 'home' 
                 ? `linear-gradient(to bottom right, ${config.gradientStartColor}, ${config.gradientEndColor})`
