@@ -48,14 +48,15 @@ serve(async (req) => {
       // Still allow sending but log warning - might be returning to AI soon
     }
 
-    // Get sender profile for name
+    // Get sender profile for name and avatar
     const { data: senderProfile } = await supabase
       .from('profiles')
-      .select('display_name, email')
+      .select('display_name, email, avatar_url')
       .eq('user_id', senderId)
       .single();
 
     const senderName = senderProfile?.display_name || senderProfile?.email || 'Team Member';
+    const senderAvatar = senderProfile?.avatar_url || null;
 
     // Insert the message with human sender metadata
     const { data: message, error: msgError } = await supabase
@@ -68,6 +69,7 @@ serve(async (req) => {
           sender_type: 'human',
           sender_id: senderId,
           sender_name: senderName,
+          sender_avatar: senderAvatar,
           source: 'admin',
         },
       })
