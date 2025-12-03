@@ -199,6 +199,35 @@ serve(async (req) => {
       );
     }
 
+    // Check if conversation is closed - save message but return friendly notice
+    if (conversation?.status === 'closed') {
+      console.log('Conversation is closed, saving message but not calling AI');
+      
+      // Still save the user message for context
+      if (messages && messages.length > 0) {
+        const lastUserMessage = messages[messages.length - 1];
+        if (lastUserMessage.role === 'user') {
+          await supabase.from('messages').insert({
+            conversation_id: activeConversationId,
+            role: 'user',
+            content: lastUserMessage.content,
+            metadata: { source: 'widget' }
+          });
+        }
+      }
+
+      return new Response(
+        JSON.stringify({
+          conversationId: activeConversationId,
+          status: 'closed',
+          response: 'This conversation has been closed. Please start a new conversation if you need further assistance.',
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
     // Save the user message to database
     if (messages && messages.length > 0) {
       const lastUserMessage = messages[messages.length - 1];

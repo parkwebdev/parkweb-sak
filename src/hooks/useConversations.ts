@@ -196,6 +196,16 @@ export const useConversations = () => {
     }
   };
 
+  const reopenConversation = async (conversationId: string) => {
+    try {
+      await updateConversationStatus(conversationId, 'human_takeover');
+      toast.success('Conversation re-opened - you can now respond');
+    } catch (error) {
+      console.error('Error re-opening conversation:', error);
+      toast.error('Failed to re-open conversation');
+    }
+  };
+
   const sendHumanMessage = async (conversationId: string, content: string): Promise<boolean> => {
     if (!user?.id) {
       toast.error('You must be logged in to send messages');
@@ -234,6 +244,7 @@ export const useConversations = () => {
     takeover,
     returnToAI,
     sendHumanMessage,
+    reopenConversation,
     refetch: fetchConversations,
   };
 };

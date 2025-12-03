@@ -30,6 +30,7 @@ const Conversations: React.FC = () => {
     takeover, 
     returnToAI,
     sendHumanMessage,
+    reopenConversation,
   } = useConversations();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -144,6 +145,11 @@ const Conversations: React.FC = () => {
   const handleClose = async () => {
     if (!selectedConversation) return;
     await updateConversationStatus(selectedConversation.id, 'closed');
+  };
+
+  const handleReopen = async () => {
+    if (!selectedConversation) return;
+    await reopenConversation(selectedConversation.id);
   };
 
   const handleSendMessage = async () => {
@@ -353,6 +359,11 @@ const Conversations: React.FC = () => {
                 {selectedConversation.status !== 'closed' && (
                   <Button size="sm" variant="destructive" onClick={handleClose}>
                     Close
+                  </Button>
+                )}
+                {selectedConversation.status === 'closed' && (
+                  <Button size="sm" variant="outline" onClick={handleReopen}>
+                    Re-open
                   </Button>
                 )}
               </div>
