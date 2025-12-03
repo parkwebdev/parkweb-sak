@@ -18,6 +18,12 @@ type CSSBubbleBackgroundProps = React.ComponentProps<'div'> & {
   };
 };
 
+// Detect mobile devices for performance optimization
+const getIsMobile = () => {
+  if (typeof window === 'undefined') return false;
+  return window.innerWidth <= 768 || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+};
+
 function CSSBubbleBackground({
   ref,
   className,
@@ -34,7 +40,16 @@ function CSSBubbleBackground({
   ...props
 }: CSSBubbleBackgroundProps) {
   const containerRef = React.useRef<HTMLDivElement>(null);
+  const [isMobile, setIsMobile] = React.useState(getIsMobile);
+  
   React.useImperativeHandle(ref as any, () => containerRef.current as HTMLDivElement);
+
+  // Update mobile detection on resize
+  React.useEffect(() => {
+    const handleResize = () => setIsMobile(getIsMobile());
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   return (
     <div
@@ -121,7 +136,11 @@ function CSSBubbleBackground({
 
       <div
         className="absolute inset-0"
-        style={{ filter: 'url(#goo-css) blur(25px)' }}
+        style={{ 
+          // Mobile: Use CSS-only blur (better iOS Safari support, smoother rendering)
+          // Desktop: Full SVG goo filter for lava lamp effect
+          filter: isMobile ? 'blur(35px)' : 'url(#goo-css) blur(25px)' 
+        }}
       >
         {/* Bubble 1 - Vertical movement */}
         <div
