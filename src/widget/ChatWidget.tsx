@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, lazy, Suspense } from 'react';
-import { fetchWidgetConfig, createLead, submitArticleFeedback, type WidgetConfig } from './api';
+import { fetchWidgetConfig, createLead, submitArticleFeedback, sendChatMessage, type WidgetConfig, type ChatResponse } from './api';
 import { CSSAnimatedList } from './CSSAnimatedList';
 import { CSSAnimatedItem } from './CSSAnimatedItem';
 import { Card } from '@/components/ui/card';
@@ -68,6 +68,7 @@ interface ChatUser {
   lastName: string;
   email: string;
   leadId: string;
+  conversationId?: string; // Database conversation ID
 }
 
 interface Message {
@@ -426,34 +427,89 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     else return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!messageInput.trim() && pendingFiles.length === 0) return;
 
-    if (pendingFiles.length > 0) {
-      const newMessage: Message = {
-        role: 'user',
-        content: messageInput || 'Sent files',
-        read: false,
-        timestamp: new Date(),
-        type: 'file',
-        files: pendingFiles.map(pf => ({ name: pf.file.name, url: pf.preview, type: pf.file.type, size: pf.file.size })),
-        reactions: [],
-      };
-      setMessages(prev => [...prev, newMessage]);
-      setPendingFiles([]);
-    } else {
-      const newMessage: Message = { role: 'user', content: messageInput, read: false, timestamp: new Date(), type: 'text', reactions: [] };
-      setMessages(prev => [...prev, newMessage]);
-    }
+    const userContent = pendingFiles.length > 0 ? (messageInput || 'Sent files') : messageInput;
     
+    // Create user message
+    const newMessage: Message = {
+      role: 'user',
+      content: userContent,
+      read: false,
+      timestamp: new Date(),
+      type: pendingFiles.length > 0 ? 'file' : 'text',
+      files: pendingFiles.length > 0 ? pendingFiles.map(pf => ({ name: pf.file.name, url: pf.preview, type: pf.file.type, size: pf.file.size })) : undefined,
+      reactions: [],
+    };
+    
+    setMessages(prev => [...prev, newMessage]);
+    setPendingFiles([]);
     setMessageInput('');
-
-
     setIsTyping(true);
-    setTimeout(() => {
-      setMessages(prev => [...prev, { role: 'assistant', content: 'Thanks for your message! This is a demo response.', read: isOpen && currentView === 'messages', timestamp: new Date(), type: 'text', reactions: [] }]);
+
+    try {
+      // Build message history for context
+      const messageHistory = [...messages, newMessage].map(m => ({
+        role: m.role,
+        content: m.content,
+      }));
+
+      // Call the real AI endpoint
+      const response = await sendChatMessage(
+        config.agentId,
+        activeConversationId,
+        messageHistory,
+        chatUser?.leadId
+      );
+
+      // Update conversation ID if this was a new conversation
+      if (response.conversationId && response.conversationId !== activeConversationId) {
+        setActiveConversationId(response.conversationId);
+        
+        // Update chatUser with new conversation ID
+        if (chatUser) {
+          const updatedUser = { ...chatUser, conversationId: response.conversationId };
+          setChatUser(updatedUser);
+          localStorage.setItem(`chatpad_user_${config.agentId}`, JSON.stringify(updatedUser));
+        }
+      }
+
+      // Handle human takeover status
+      if (response.status === 'human_takeover') {
+        setMessages(prev => [...prev, { 
+          role: 'assistant', 
+          content: response.message || 'A team member is now handling your conversation. They will respond shortly.', 
+          read: isOpen && currentView === 'messages', 
+          timestamp: new Date(), 
+          type: 'text', 
+          reactions: [] 
+        }]);
+      } else if (response.response) {
+        // Add AI response
+        setMessages(prev => [...prev, { 
+          role: 'assistant', 
+          content: response.response, 
+          read: isOpen && currentView === 'messages', 
+          timestamp: new Date(), 
+          type: 'text', 
+          reactions: [] 
+        }]);
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+      // Show error message to user
+      setMessages(prev => [...prev, { 
+        role: 'assistant', 
+        content: 'Sorry, I encountered an error. Please try again.', 
+        read: true, 
+        timestamp: new Date(), 
+        type: 'text', 
+        reactions: [] 
+      }]);
+    } finally {
       setIsTyping(false);
-    }, 2000);
+    }
   };
 
   const startAudioRecording = async () => {
@@ -884,13 +940,14 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                                 }
                                 setFormErrors({});
 
-                                const { leadId } = await createLead(config.agentId, { firstName: trimmedFirstName, lastName: trimmedLastName, email: trimmedEmail, customFields: customFieldData, _formLoadTime: formLoadTime });
-                                const userData = { firstName: trimmedFirstName, lastName: trimmedLastName, email: trimmedEmail, leadId };
+                                const { leadId, conversationId } = await createLead(config.agentId, { firstName: trimmedFirstName, lastName: trimmedLastName, email: trimmedEmail, customFields: customFieldData, _formLoadTime: formLoadTime });
+                                const userData = { firstName: trimmedFirstName, lastName: trimmedLastName, email: trimmedEmail, leadId, conversationId: conversationId || undefined };
                                 localStorage.setItem(`chatpad_user_${config.agentId}`, JSON.stringify(userData));
                                 setChatUser(userData);
                                 // Add greeting message for new user after form submission
                                 setMessages([{ role: 'assistant', content: config.greeting, read: true, timestamp: new Date(), type: 'text', reactions: [] }]);
-                                setActiveConversationId('new');
+                                // Use the database conversation ID if available
+                                setActiveConversationId(conversationId || 'new');
                               } catch (error) {
                                 console.error('Error creating lead:', error);
                                }

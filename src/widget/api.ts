@@ -123,7 +123,7 @@ export async function createLead(agentId: string, data: {
   email: string;
   customFields: Record<string, any>;
   _formLoadTime?: number; // Spam protection: timestamp when form was loaded
-}): Promise<{ leadId: string }> {
+}): Promise<{ leadId: string; conversationId: string | null }> {
   const response = await fetch(`${SUPABASE_URL}/functions/v1/create-widget-lead`, {
     method: 'POST',
     headers: {
@@ -166,7 +166,20 @@ export async function submitArticleFeedback(articleId: string, data: {
   }
 }
 
-export async function sendChatMessage(agentId: string, conversationId: string | null, messages: Array<{ role: string; content: string }>): Promise<{ response: string; conversationId: string }> {
+export interface ChatResponse {
+  conversationId: string;
+  response: string;
+  status?: 'active' | 'human_takeover';
+  message?: string;
+  sources?: Array<{ source: string; type: string; similarity: number }>;
+}
+
+export async function sendChatMessage(
+  agentId: string, 
+  conversationId: string | null, 
+  messages: Array<{ role: string; content: string }>,
+  leadId?: string
+): Promise<ChatResponse> {
   const response = await fetch(`${SUPABASE_URL}/functions/v1/widget-chat`, {
     method: 'POST',
     headers: {
@@ -177,11 +190,13 @@ export async function sendChatMessage(agentId: string, conversationId: string | 
       agentId,
       conversationId,
       messages,
+      leadId,
     }),
   });
 
   if (!response.ok) {
-    throw new Error('Failed to send message');
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error || 'Failed to send message');
   }
 
   return response.json();
