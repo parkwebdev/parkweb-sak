@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, lazy, Suspense } from 'react';
-import { fetchWidgetConfig, createLead, submitArticleFeedback, sendChatMessage, subscribeToMessages, unsubscribeFromMessages, subscribeToConversationStatus, unsubscribeFromConversationStatus, subscribeToTypingIndicator, unsubscribeFromTypingIndicator, type WidgetConfig, type ChatResponse } from './api';
+import { fetchWidgetConfig, createLead, submitArticleFeedback, sendChatMessage, subscribeToMessages, unsubscribeFromMessages, subscribeToConversationStatus, unsubscribeFromConversationStatus, subscribeToTypingIndicator, unsubscribeFromTypingIndicator, fetchTakeoverAgent, type WidgetConfig, type ChatResponse } from './api';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { CSSAnimatedList } from './CSSAnimatedList';
 import { CSSAnimatedItem } from './CSSAnimatedItem';
@@ -86,6 +86,10 @@ interface Message {
     size: number;
   }>;
   reactions?: Array<{ emoji: string; count: number; userReacted: boolean }>;
+  isSystemNotice?: boolean; // For takeover notices - no timestamp, no emoji, no avatar
+  isHuman?: boolean;
+  senderName?: string;
+  senderAvatar?: string;
 }
 
 interface Conversation {
@@ -406,9 +410,36 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
       statusChannelRef.current = null;
     }
 
-    statusChannelRef.current = subscribeToConversationStatus(activeConversationId, (status) => {
+    statusChannelRef.current = subscribeToConversationStatus(activeConversationId, async (status) => {
       console.log('[Widget] Status changed to:', status);
+      const wasTakeover = isHumanTakeover;
       setIsHumanTakeover(status === 'human_takeover');
+      
+      // When takeover starts, immediately show a system notice
+      if (status === 'human_takeover' && !wasTakeover) {
+        // Fetch agent info for personalized message
+        const agent = await fetchTakeoverAgent(activeConversationId);
+        const agentName = agent?.name || 'A team member';
+        setTakeoverAgentName(agent?.name);
+        setTakeoverAgentAvatar(agent?.avatar);
+        
+        // Add system notice (no emoji, no timestamp)
+        setMessages(prev => {
+          // Check if we already have a recent system notice to avoid duplicates
+          const lastMsg = prev[prev.length - 1];
+          if (lastMsg?.isSystemNotice) return prev;
+          
+          return [...prev, {
+            role: 'assistant',
+            content: `${agentName} has joined the conversation`,
+            read: true,
+            timestamp: new Date(),
+            type: 'text',
+            reactions: [],
+            isSystemNotice: true,
+          }];
+        });
+      }
     });
 
     return () => {
@@ -665,14 +696,12 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
       // Handle human takeover status
       if (response.status === 'human_takeover') {
         setIsHumanTakeover(true);
-        setMessages(prev => [...prev, { 
-          role: 'assistant', 
-          content: response.message || 'A team member is now handling your conversation. They will respond shortly.', 
-          read: isOpen && currentView === 'messages', 
-          timestamp: new Date(), 
-          type: 'text', 
-          reactions: [] 
-        }]);
+        if (response.takenOverBy) {
+          setTakeoverAgentName(response.takenOverBy.name);
+          setTakeoverAgentAvatar(response.takenOverBy.avatar);
+        }
+        // Note: System notice is now added via real-time status subscription, not here
+        // This prevents duplicate notices
       } else if (response.response) {
         // Add AI response
         setMessages(prev => [...prev, { 
@@ -1206,6 +1235,18 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
 
                     {messages.map((msg, idx) => {
                       const msgWithExtras = msg as Message & { isHuman?: boolean; senderName?: string; senderAvatar?: string };
+                      
+                      // System notices render differently - centered, no avatar, no timestamp
+                      if (msg.isSystemNotice) {
+                        return (
+                          <div key={idx} className="flex justify-center py-2">
+                            <div className="bg-muted/60 rounded-full px-4 py-1.5">
+                              <p className="text-xs text-muted-foreground">{msg.content}</p>
+                            </div>
+                          </div>
+                        );
+                      }
+                      
                       return (
                         <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} ${msgWithExtras.isHuman ? 'items-start gap-2' : ''}`}>
                           {/* Avatar for human messages */}
