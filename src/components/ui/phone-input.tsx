@@ -1,6 +1,5 @@
 import { useState, useEffect, forwardRef, ChangeEvent } from 'react';
 import { AsYouType, parsePhoneNumber, CountryCode } from 'libphonenumber-js/min';
-import Flag from 'react-flag-cdn';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 
@@ -75,7 +74,12 @@ export const PhoneInputField = forwardRef<HTMLInputElement, PhoneInputFieldProps
     <div className="relative flex items-center">
       {detectedCountry && (
         <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center pointer-events-none z-10">
-          <Flag country={detectedCountry} width={20} />
+          <img 
+            src={`https://flagcdn.com/${detectedCountry.toLowerCase()}.svg`}
+            alt={detectedCountry}
+            width={20}
+            className="h-5 w-auto object-contain"
+          />
         </div>
       )}
       <Input
