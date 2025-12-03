@@ -57,7 +57,7 @@ export const SortableArticleItem = ({ article, onEdit, onDelete }: SortableArtic
       
       <div className="flex-1 min-w-0">
         <h5 className="font-medium text-sm">{article.title}</h5>
-        <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+        <p className="text-xs text-muted-foreground/70 mt-1 line-clamp-2">
           {article.content}
         </p>
       </div>
