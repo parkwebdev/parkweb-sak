@@ -9,19 +9,45 @@ import { BookOpen01, Upload01 } from '@untitledui/icons';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { useHelpArticles } from '@/hooks/useHelpArticles';
 import { toast } from '@/lib/toast';
-import { DndContext, closestCenter, DragEndEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
-import { SortableContext, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
-import { SortableArticleItem } from './SortableArticleItem';
+import { 
+  DndContext, 
+  closestCenter, 
+  DragEndEvent, 
+  DragOverEvent,
+  DragStartEvent,
+  DragOverlay,
+  PointerSensor, 
+  useSensor, 
+  useSensors 
+} from '@dnd-kit/core';
+import { arrayMove } from '@dnd-kit/sortable';
 import { BulkImportDialog } from './BulkImportDialog';
+import { DroppableCategoryCard } from './DroppableCategoryCard';
+import { DeleteCategoryDialog } from './DeleteCategoryDialog';
+import { SortableArticleItem } from './SortableArticleItem';
+import type { HelpArticle } from '@/hooks/useEmbeddedChatConfig';
 
 interface HelpArticlesManagerProps {
   agentId: string;
 }
 
 export const HelpArticlesManager = ({ agentId }: HelpArticlesManagerProps) => {
-  const { articles, categories, loading, addArticle, updateArticle, deleteArticle, addCategory, updateCategory, removeCategory, reorderArticles, bulkImport } = useHelpArticles(agentId);
+  const { 
+    articles, 
+    categories, 
+    loading, 
+    addArticle, 
+    updateArticle, 
+    deleteArticle, 
+    addCategory, 
+    updateCategory, 
+    removeCategory, 
+    moveArticleToCategory,
+    reorderArticles, 
+    bulkImport 
+  } = useHelpArticles(agentId);
   
-  // Configure sensors for drag and drop (require 5px movement to start dragging)
+  // Configure sensors for drag and drop
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -29,12 +55,17 @@ export const HelpArticlesManager = ({ agentId }: HelpArticlesManagerProps) => {
       },
     })
   );
+
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingArticle, setEditingArticle] = useState<string | null>(null);
   const [newCategoryDialogOpen, setNewCategoryDialogOpen] = useState(false);
   const [editCategoryDialogOpen, setEditCategoryDialogOpen] = useState(false);
+  const [deleteCategoryDialogOpen, setDeleteCategoryDialogOpen] = useState(false);
   const [editingCategoryName, setEditingCategoryName] = useState('');
+  const [deletingCategoryName, setDeletingCategoryName] = useState('');
   const [bulkImportOpen, setBulkImportOpen] = useState(false);
+  const [activeArticle, setActiveArticle] = useState<HelpArticle | null>(null);
+  const [overCategoryName, setOverCategoryName] = useState<string | null>(null);
   
   const [formData, setFormData] = useState({
     title: '',
@@ -143,63 +174,123 @@ export const HelpArticlesManager = ({ agentId }: HelpArticlesManagerProps) => {
     }
   };
 
-  const handleDeleteCategory = async () => {
-    const articlesInCategory = articles.filter(a => a.category === editingCategoryName);
-    
-    if (articlesInCategory.length > 0) {
-      toast.error(`Cannot delete category with ${articlesInCategory.length} article(s). Move or delete articles first.`);
-      return;
-    }
-    
-    if (confirm(`Are you sure you want to delete the category "${editingCategoryName}"?`)) {
-      try {
-        await removeCategory(editingCategoryName);
-        toast.success('Category deleted');
-        setEditCategoryDialogOpen(false);
-        setEditingCategoryName('');
-        setEditCategoryForm({ name: '', description: '' });
-      } catch (error) {
-        toast.error('Failed to delete category');
-      }
-    }
+  const handleDeleteCategoryClick = (categoryName: string) => {
+    setDeletingCategoryName(categoryName);
+    setDeleteCategoryDialogOpen(true);
   };
 
-  const handleDragEnd = async (event: DragEndEvent, category: string) => {
-    const { active, over } = event;
-
-    if (!over || active.id === over.id) {
-      return;
-    }
-
-    const categoryArticles = articles
-      .filter(article => article.category === category)
-      .sort((a, b) => a.order - b.order);
-
-    const oldIndex = categoryArticles.findIndex(article => article.id === active.id);
-    const newIndex = categoryArticles.findIndex(article => article.id === over.id);
-
-    if (oldIndex === -1 || newIndex === -1) {
-      return;
-    }
-
-    // Reorder articles within this category
-    const reorderedCategoryArticles = arrayMove(categoryArticles, oldIndex, newIndex);
-    
-    // Update order for reordered articles
-    const updatedArticles = articles.map(article => {
-      if (article.category !== category) {
-        return article;
-      }
-      const newOrder = reorderedCategoryArticles.findIndex(a => a.id === article.id);
-      return { ...article, order: newOrder };
-    });
-
+  const handleDeleteCategoryConfirm = async (action: 'move' | 'delete', targetCategory?: string) => {
     try {
-      await reorderArticles(updatedArticles);
+      if (action === 'move' && targetCategory) {
+        await removeCategory(deletingCategoryName, { moveArticlesTo: targetCategory });
+        toast.success('Articles moved and category deleted');
+      } else {
+        await removeCategory(deletingCategoryName, { deleteArticles: true });
+        toast.success('Category and articles deleted');
+      }
+      setDeleteCategoryDialogOpen(false);
+      setDeletingCategoryName('');
     } catch (error) {
-      toast.error('Failed to reorder articles');
+      toast.error('Failed to delete category');
     }
   };
+
+  const handleAddArticleToCategory = (categoryName: string) => {
+    setFormData({ title: '', content: '', category: categoryName, icon: '' });
+    setEditingArticle(null);
+    setDialogOpen(true);
+  };
+
+  // Drag and Drop handlers
+  const handleDragStart = (event: DragStartEvent) => {
+    const { active } = event;
+    const article = articles.find(a => a.id === active.id);
+    if (article) {
+      setActiveArticle(article);
+    }
+  };
+
+  const handleDragOver = (event: DragOverEvent) => {
+    const { over } = event;
+    if (over) {
+      const overId = over.id.toString();
+      if (overId.startsWith('category-')) {
+        setOverCategoryName(overId.replace('category-', ''));
+      } else {
+        // Over an article - find its category
+        const overArticle = articles.find(a => a.id === overId);
+        if (overArticle) {
+          setOverCategoryName(overArticle.category);
+        }
+      }
+    } else {
+      setOverCategoryName(null);
+    }
+  };
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveArticle(null);
+    setOverCategoryName(null);
+
+    if (!over) return;
+
+    const activeArticle = articles.find(a => a.id === active.id);
+    if (!activeArticle) return;
+
+    const overId = over.id.toString();
+    let targetCategory: string;
+    let targetArticleId: string | null = null;
+
+    if (overId.startsWith('category-')) {
+      // Dropped on a category
+      targetCategory = overId.replace('category-', '');
+    } else {
+      // Dropped on an article
+      const overArticle = articles.find(a => a.id === overId);
+      if (!overArticle) return;
+      targetCategory = overArticle.category;
+      targetArticleId = overId;
+    }
+
+    const sourceCategory = activeArticle.category;
+
+    if (sourceCategory !== targetCategory) {
+      // Moving to different category
+      try {
+        await moveArticleToCategory(active.id.toString(), targetCategory);
+        toast.success('Article moved');
+      } catch (error) {
+        toast.error('Failed to move article');
+      }
+    } else if (targetArticleId && active.id !== over.id) {
+      // Reordering within same category
+      const categoryArticles = articles
+        .filter(a => a.category === sourceCategory)
+        .sort((a, b) => a.order - b.order);
+
+      const oldIndex = categoryArticles.findIndex(a => a.id === active.id);
+      const newIndex = categoryArticles.findIndex(a => a.id === over.id);
+
+      if (oldIndex !== -1 && newIndex !== -1) {
+        const reorderedCategoryArticles = arrayMove(categoryArticles, oldIndex, newIndex);
+        const updatedArticles = articles.map(article => {
+          if (article.category !== sourceCategory) return article;
+          const newOrder = reorderedCategoryArticles.findIndex(a => a.id === article.id);
+          return { ...article, order: newOrder };
+        });
+
+        try {
+          await reorderArticles(updatedArticles);
+        } catch (error) {
+          toast.error('Failed to reorder articles');
+        }
+      }
+    }
+  };
+
+  const deletingCategoryArticleCount = articles.filter(a => a.category === deletingCategoryName).length;
+  const otherCategories = categories.filter(c => c.name !== deletingCategoryName);
 
   return (
     <div className="space-y-4">
@@ -213,256 +304,252 @@ export const HelpArticlesManager = ({ agentId }: HelpArticlesManagerProps) => {
       {!loading && (
         <>
           <div className="flex items-center justify-end gap-2">
-          <Button size="sm" variant="outline" onClick={() => setBulkImportOpen(true)}>
-            <Upload01 className="w-3.5 h-3.5 mr-1.5" />
-            Import CSV
-          </Button>
-          <Dialog open={newCategoryDialogOpen} onOpenChange={setNewCategoryDialogOpen}>
-            <DialogTrigger asChild>
-              <Button size="sm" variant="outline">
-                Add Category
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Add Category</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="category-name">Category Name *</Label>
-                  <Input
-                    id="category-name"
-                    value={newCategoryForm.name}
-                    onChange={(e) => setNewCategoryForm({ ...newCategoryForm, name: e.target.value })}
-                    placeholder="e.g., Getting Started, FAQ, Troubleshooting"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="category-description">Category Description</Label>
-                  <Textarea
-                    id="category-description"
-                    value={newCategoryForm.description}
-                    onChange={(e) => setNewCategoryForm({ ...newCategoryForm, description: e.target.value })}
-                    placeholder="Brief description to help users understand this category"
-                    rows={2}
-                  />
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setNewCategoryDialogOpen(false)}>
-                  Cancel
+            <Button size="sm" variant="outline" onClick={() => setBulkImportOpen(true)}>
+              <Upload01 className="w-3.5 h-3.5 mr-1.5" />
+              Import CSV
+            </Button>
+            
+            {/* Add Category Dialog */}
+            <Dialog open={newCategoryDialogOpen} onOpenChange={setNewCategoryDialogOpen}>
+              <DialogTrigger asChild>
+                <Button size="sm" variant="outline">
+                  Add Category
                 </Button>
-                <Button onClick={handleAddCategory}>Add Category</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Add Category</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="category-name">Category Name *</Label>
+                    <Input
+                      id="category-name"
+                      value={newCategoryForm.name}
+                      onChange={(e) => setNewCategoryForm({ ...newCategoryForm, name: e.target.value })}
+                      placeholder="e.g., Getting Started, FAQ, Troubleshooting"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="category-description">Category Description</Label>
+                    <Textarea
+                      id="category-description"
+                      value={newCategoryForm.description}
+                      onChange={(e) => setNewCategoryForm({ ...newCategoryForm, description: e.target.value })}
+                      placeholder="Brief description to help users understand this category"
+                      rows={2}
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setNewCategoryDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button onClick={handleAddCategory}>Add Category</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
 
-          <Dialog open={editCategoryDialogOpen} onOpenChange={setEditCategoryDialogOpen}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Edit Category</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="edit-category-name">Category Name *</Label>
-                  <Input
-                    id="edit-category-name"
-                    value={editCategoryForm.name}
-                    onChange={(e) => setEditCategoryForm({ ...editCategoryForm, name: e.target.value })}
-                    placeholder="e.g., Getting Started, FAQ, Troubleshooting"
-                  />
+            {/* Edit Category Dialog */}
+            <Dialog open={editCategoryDialogOpen} onOpenChange={setEditCategoryDialogOpen}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Edit Category</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-category-name">Category Name *</Label>
+                    <Input
+                      id="edit-category-name"
+                      value={editCategoryForm.name}
+                      onChange={(e) => setEditCategoryForm({ ...editCategoryForm, name: e.target.value })}
+                      placeholder="e.g., Getting Started, FAQ, Troubleshooting"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit-category-description">Category Description</Label>
+                    <Textarea
+                      id="edit-category-description"
+                      value={editCategoryForm.description}
+                      onChange={(e) => setEditCategoryForm({ ...editCategoryForm, description: e.target.value })}
+                      placeholder="Brief description to help users understand this category"
+                      rows={2}
+                    />
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-category-description">Category Description</Label>
-                  <Textarea
-                    id="edit-category-description"
-                    value={editCategoryForm.description}
-                    onChange={(e) => setEditCategoryForm({ ...editCategoryForm, description: e.target.value })}
-                    placeholder="Brief description to help users understand this category"
-                    rows={2}
-                  />
-                </div>
-              </div>
-              <DialogFooter className="flex justify-between sm:justify-between">
-                <Button variant="destructive" onClick={handleDeleteCategory}>
-                  Delete Category
-                </Button>
-                <div className="flex gap-2">
+                <DialogFooter>
                   <Button variant="outline" onClick={() => setEditCategoryDialogOpen(false)}>
                     Cancel
                   </Button>
                   <Button onClick={handleUpdateCategory}>Update Category</Button>
-                </div>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
 
-          <Dialog open={dialogOpen} onOpenChange={(open) => {
-            setDialogOpen(open);
-            if (!open) resetForm();
-          }}>
-            <DialogTrigger asChild>
-              <Button size="sm">
-                Add Article
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>{editingArticle ? 'Edit Article' : 'Add Help Article'}</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="title">Title *</Label>
-                  <Input
-                    id="title"
-                    value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    placeholder="How to get started"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="content">Content *</Label>
-                  <Textarea
-                    id="content"
-                    value={formData.content}
-                    onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                    placeholder="Write your help article content here..."
-                    rows={6}
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
+            {/* Add Article Dialog */}
+            <Dialog open={dialogOpen} onOpenChange={(open) => {
+              setDialogOpen(open);
+              if (!open) resetForm();
+            }}>
+              <DialogTrigger asChild>
+                <Button size="sm">
+                  Add Article
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>{editingArticle ? 'Edit Article' : 'Add Help Article'}</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
                   <div className="space-y-2">
-                    <Label htmlFor="category">Category *</Label>
-                    <Select
-                      value={formData.category}
-                      onValueChange={(value) => setFormData({ ...formData, category: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {categories.map((cat) => (
-                          <SelectItem key={cat.name} value={cat.name}>
-                            {cat.name}
-                          </SelectItem>
-                        ))}
-                        {categories.length === 0 && (
-                          <div className="p-2 text-sm text-muted-foreground">
-                            No categories yet. Add one first.
-                          </div>
-                        )}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="icon">Icon (emoji, optional)</Label>
+                    <Label htmlFor="title">Title *</Label>
                     <Input
-                      id="icon"
-                      value={formData.icon}
-                      onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
-                      placeholder="📖"
-                      maxLength={2}
+                      id="title"
+                      value={formData.title}
+                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                      placeholder="How to get started"
                     />
                   </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="content">Content *</Label>
+                    <Textarea
+                      id="content"
+                      value={formData.content}
+                      onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                      placeholder="Write your help article content here..."
+                      rows={6}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="category">Category *</Label>
+                      <Select
+                        value={formData.category}
+                        onValueChange={(value) => setFormData({ ...formData, category: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {categories.map((cat) => (
+                            <SelectItem key={cat.name} value={cat.name}>
+                              {cat.name}
+                            </SelectItem>
+                          ))}
+                          {categories.length === 0 && (
+                            <div className="p-2 text-sm text-muted-foreground">
+                              No categories yet. Add one first.
+                            </div>
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="icon">Icon (emoji, optional)</Label>
+                      <Input
+                        id="icon"
+                        value={formData.icon}
+                        onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
+                        placeholder="📖"
+                        maxLength={2}
+                      />
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => {
-                  setDialogOpen(false);
-                  resetForm();
-                }}>
-                  Cancel
-                </Button>
-                <Button onClick={handleSubmit}>
-                  {editingArticle ? 'Update' : 'Add'} Article
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => {
+                    setDialogOpen(false);
+                    resetForm();
+                  }}>
+                    Cancel
+                  </Button>
+                  <Button onClick={handleSubmit}>
+                    {editingArticle ? 'Update' : 'Add'} Article
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
 
-      {articles.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <BookOpen01 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <p className="text-muted-foreground mb-4">
-              No help articles yet
-            </p>
-            <p className="text-sm text-muted-foreground mb-4">
-              Create help articles to display in your chat widget's help tab
-            </p>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="space-y-4">
-          {categories.map((category) => {
-            const categoryArticles = articles
-              .filter(article => article.category === category.name)
-              .sort((a, b) => a.order - b.order);
-            
-            return (
-              <Card key={category.name}>
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <div>
-                      <h4 className="font-semibold">{category.name}</h4>
-                      {category.description && (
-                        <p className="text-xs text-muted-foreground mt-0.5">{category.description}</p>
-                      )}
-                    </div>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => handleEditCategory(category.name)}
-                    >
-                      Edit
-                    </Button>
-                  </div>
-                  {categoryArticles.length === 0 ? (
-                    <p className="text-sm text-muted-foreground py-4 text-center">
-                      No articles in this category
-                    </p>
-                  ) : (
-                    <DndContext
-                      sensors={sensors}
-                      collisionDetection={closestCenter}
-                      onDragEnd={(event) => handleDragEnd(event, category.name)}
-                    >
-                      <SortableContext
-                        items={categoryArticles.map(a => a.id)}
-                        strategy={verticalListSortingStrategy}
-                      >
-                        <div className="space-y-2">
-                          {categoryArticles.map((article) => (
-                            <SortableArticleItem
-                              key={article.id}
-                              article={article}
-                              onEdit={handleEdit}
-                              onDelete={handleDelete}
-                            />
-                          ))}
-                        </div>
-                      </SortableContext>
-                    </DndContext>
-                  )}
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      )}
+          {/* Delete Category Dialog */}
+          <DeleteCategoryDialog
+            open={deleteCategoryDialogOpen}
+            onOpenChange={setDeleteCategoryDialogOpen}
+            categoryName={deletingCategoryName}
+            articleCount={deletingCategoryArticleCount}
+            otherCategories={otherCategories}
+            onConfirm={handleDeleteCategoryConfirm}
+          />
 
-      <BulkImportDialog
-        open={bulkImportOpen}
-        onOpenChange={setBulkImportOpen}
-        onImport={bulkImport}
-        existingCategories={categories.map(c => c.name)}
-      />
-      </>
+          {articles.length === 0 && categories.length === 0 ? (
+            <Card>
+              <CardContent className="py-12 text-center">
+                <BookOpen01 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <p className="text-muted-foreground mb-4">
+                  No help articles yet
+                </p>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Create help articles to display in your chat widget's help tab
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragStart={handleDragStart}
+              onDragOver={handleDragOver}
+              onDragEnd={handleDragEnd}
+            >
+              <div className="space-y-4">
+                {categories.map((category) => {
+                  const categoryArticles = articles
+                    .filter(article => article.category === category.name)
+                    .sort((a, b) => a.order - b.order);
+                  
+                  return (
+                    <DroppableCategoryCard
+                      key={category.name}
+                      category={category}
+                      articles={categoryArticles}
+                      onEdit={handleEdit}
+                      onDelete={handleDelete}
+                      onEditCategory={handleEditCategory}
+                      onDeleteCategory={handleDeleteCategoryClick}
+                      onAddArticle={handleAddArticleToCategory}
+                      isOver={overCategoryName === category.name}
+                    />
+                  );
+                })}
+              </div>
+              
+              <DragOverlay>
+                {activeArticle && (
+                  <div className="opacity-80">
+                    <SortableArticleItem
+                      article={activeArticle}
+                      onEdit={() => {}}
+                      onDelete={() => {}}
+                    />
+                  </div>
+                )}
+              </DragOverlay>
+            </DndContext>
+          )}
+
+          <BulkImportDialog
+            open={bulkImportOpen}
+            onOpenChange={setBulkImportOpen}
+            onImport={bulkImport}
+            existingCategories={categories.map(c => c.name)}
+          />
+        </>
       )}
     </div>
   );
 };
+
+export default HelpArticlesManager;

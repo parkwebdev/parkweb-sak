@@ -296,12 +296,43 @@ export const useHelpArticles = (agentId: string) => {
     }
   };
 
-  const removeCategory = async (name: string) => {
+  const removeCategory = async (name: string, options?: { moveArticlesTo?: string; deleteArticles?: boolean }) => {
     try {
-      // Check if any articles use this category
       const articlesInCategory = articles.filter(a => a.category === name);
+      
       if (articlesInCategory.length > 0) {
-        throw new Error('Cannot delete category with existing articles');
+        if (options?.moveArticlesTo) {
+          // Move articles to target category
+          const targetCategory = categories.find(c => c.name === options.moveArticlesTo);
+          if (!targetCategory) throw new Error('Target category not found');
+          
+          const { error: moveError } = await supabase
+            .from('help_articles')
+            .update({ category_id: targetCategory.id })
+            .eq('agent_id', agentId)
+            .in('id', articlesInCategory.map(a => a.id));
+          
+          if (moveError) throw moveError;
+          
+          // Update local state for moved articles
+          setArticles(articles.map(a => 
+            a.category === name ? { ...a, category: options.moveArticlesTo! } : a
+          ));
+        } else if (options?.deleteArticles) {
+          // Delete all articles in category
+          const { error: deleteError } = await supabase
+            .from('help_articles')
+            .delete()
+            .eq('agent_id', agentId)
+            .in('id', articlesInCategory.map(a => a.id));
+          
+          if (deleteError) throw deleteError;
+          
+          // Update local state
+          setArticles(articles.filter(a => a.category !== name));
+        } else {
+          throw new Error('Cannot delete category with existing articles');
+        }
       }
 
       const { error } = await supabase
@@ -315,6 +346,27 @@ export const useHelpArticles = (agentId: string) => {
       setCategories(categories.filter(c => c.name !== name));
     } catch (error) {
       console.error('Error removing category:', error);
+      throw error;
+    }
+  };
+
+  const moveArticleToCategory = async (articleId: string, targetCategoryName: string) => {
+    try {
+      const targetCategory = categories.find(c => c.name === targetCategoryName);
+      if (!targetCategory) throw new Error('Target category not found');
+
+      const { error } = await supabase
+        .from('help_articles')
+        .update({ category_id: targetCategory.id })
+        .eq('id', articleId);
+
+      if (error) throw error;
+
+      setArticles(articles.map(a =>
+        a.id === articleId ? { ...a, category: targetCategoryName } : a
+      ));
+    } catch (error) {
+      console.error('Error moving article:', error);
       throw error;
     }
   };
@@ -434,6 +486,7 @@ export const useHelpArticles = (agentId: string) => {
     addCategory,
     updateCategory,
     removeCategory,
+    moveArticleToCategory,
     importFromKnowledge,
     bulkImport,
   };
