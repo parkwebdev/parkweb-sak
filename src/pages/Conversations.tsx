@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,7 +27,8 @@ const Conversations: React.FC = () => {
     updateConversationStatus,
     updateConversationMetadata,
     takeover, 
-    returnToAI 
+    returnToAI,
+    sendHumanMessage,
   } = useConversations();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -35,6 +36,9 @@ const Conversations: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [takeoverDialogOpen, setTakeoverDialogOpen] = useState(false);
+  const [messageInput, setMessageInput] = useState('');
+  const [sendingMessage, setSendingMessage] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Load messages when conversation is selected
   useEffect(() => {
@@ -135,6 +139,31 @@ const Conversations: React.FC = () => {
     if (!selectedConversation) return;
     await updateConversationStatus(selectedConversation.id, 'closed');
   };
+
+  const handleSendMessage = async () => {
+    if (!selectedConversation || !messageInput.trim() || sendingMessage) return;
+    
+    setSendingMessage(true);
+    const success = await sendHumanMessage(selectedConversation.id, messageInput.trim());
+    
+    if (success) {
+      setMessageInput('');
+      // Messages will update via real-time subscription
+    }
+    setSendingMessage(false);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
+
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
   return (
     <div className="h-screen bg-muted/30 flex overflow-hidden">
@@ -321,25 +350,36 @@ const Conversations: React.FC = () => {
                       </div>
                     );
                   })}
+                  <div ref={messagesEndRef} />
                 </div>
               )}
             </ScrollArea>
 
-            {/* Message Input (disabled for now) */}
+            {/* Message Input */}
             {selectedConversation.status === 'human_takeover' && (
               <div className="px-6 py-4 border-t bg-background">
-                <div className="flex gap-3 max-w-4xl mx-auto">
+                <form 
+                  onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }}
+                  className="flex gap-3 max-w-4xl mx-auto"
+                >
                   <Input 
                     placeholder="Type a message..." 
-                    disabled
-                    className="flex-1 bg-muted/50"
+                    value={messageInput}
+                    onChange={(e) => setMessageInput(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    disabled={sendingMessage}
+                    className="flex-1"
                   />
-                  <Button size="sm" disabled>
+                  <Button 
+                    type="submit" 
+                    size="sm" 
+                    disabled={sendingMessage || !messageInput.trim()}
+                  >
                     <Send01 size={16} />
                   </Button>
-                </div>
+                </form>
                 <p className="text-xs text-muted-foreground mt-2 text-center">
-                  Human messaging coming in Phase 3
+                  Messages sent here will appear in the user's widget in real-time
                 </p>
               </div>
             )}
