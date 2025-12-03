@@ -10,6 +10,12 @@ interface SortableArticleItemProps {
   onDelete: (id: string) => void;
 }
 
+// Helper to strip HTML tags for preview text
+const stripHtml = (html: string): string => {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  return doc.body.textContent || '';
+};
+
 export const SortableArticleItem = ({ article, onEdit, onDelete }: SortableArticleItemProps) => {
   const {
     attributes,
@@ -58,7 +64,7 @@ export const SortableArticleItem = ({ article, onEdit, onDelete }: SortableArtic
       <div className="flex-1 min-w-0">
         <h5 className="font-medium text-sm">{article.title}</h5>
         <p className="text-xs text-muted-foreground/70 mt-1 line-clamp-2">
-          {article.content}
+          {stripHtml(article.content)}
         </p>
       </div>
       
