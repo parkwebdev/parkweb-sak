@@ -94,26 +94,24 @@ export const EmojiPicker: React.FC<EmojiPickerProps> = ({
 
 interface QuickEmojiPickerProps {
   onEmojiSelect: (emoji: string) => void;
-  primaryColor: string;
 }
 
 export const QuickEmojiPicker: React.FC<QuickEmojiPickerProps> = ({
   onEmojiSelect,
-  primaryColor,
 }) => {
   const quickEmojis = ['👍', '❤️', '😂', '😮', '😢', '🎉'];
 
   return (
     <div className="flex items-center gap-1 px-3 py-1 bg-white shadow-lg border max-w-[180px] overflow-x-auto rounded-full">
       {quickEmojis.map((emoji) => (
-        <Button
+        <button
           key={emoji}
-          variant="ghost"
-          className="h-8 w-8 p-0 text-lg hover:scale-110 transition-transform flex-shrink-0"
+          type="button"
+          className="h-8 w-8 p-0 text-lg hover:scale-110 hover:bg-gray-100 transition-all flex-shrink-0 rounded-full flex items-center justify-center"
           onClick={() => onEmojiSelect(emoji)}
         >
           {emoji}
-        </Button>
+        </button>
       ))}
     </div>
   );
