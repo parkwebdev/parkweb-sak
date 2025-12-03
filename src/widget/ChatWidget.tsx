@@ -1214,10 +1214,16 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                               src={msgWithExtras.senderAvatar} 
                               alt={msgWithExtras.senderName || 'Team'} 
                               className="w-7 h-7 rounded-full object-cover flex-shrink-0 mt-0.5"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                                const fallback = e.currentTarget.nextElementSibling;
+                                if (fallback) fallback.classList.remove('hidden');
+                              }}
                             />
                           )}
-                          {msgWithExtras.isHuman && !msgWithExtras.senderAvatar && (
-                            <div className="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                          {/* Fallback avatar - shown when image fails or no avatar */}
+                          {msgWithExtras.isHuman && (
+                            <div className={`w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 mt-0.5 ${msgWithExtras.senderAvatar ? 'hidden' : ''}`}>
                               <span className="text-blue-600 text-xs font-medium">
                                 {(msgWithExtras.senderName || 'T').charAt(0).toUpperCase()}
                               </span>
