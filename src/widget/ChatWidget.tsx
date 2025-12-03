@@ -25,6 +25,7 @@ const FileDropZone = lazy(() => import('@/components/chat/FileDropZone').then(m 
 
 const MessageReactions = lazy(() => import('@/components/chat/MessageReactions').then(m => ({ default: m.MessageReactions })));
 const AudioPlayer = lazy(() => import('@/components/chat/AudioPlayer').then(m => ({ default: m.AudioPlayer })));
+const PhoneInputField = lazy(() => import('@/components/ui/phone-input').then(m => ({ default: m.PhoneInputField })));
 
 interface ChatWidgetProps {
   config: WidgetConfig | { agentId: string; position?: string; primaryColor?: string };
@@ -905,8 +906,17 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                                   </Select>
                                 ) : field.fieldType === 'textarea' ? (
                                   <Textarea name={field.id} placeholder={field.label} className="text-sm" required={field.required} />
+                                ) : field.fieldType === 'phone' ? (
+                                  <Suspense fallback={<Input placeholder={field.label} className="h-8 text-sm" disabled />}>
+                                    <PhoneInputField 
+                                      name={field.id}
+                                      placeholder={field.label}
+                                      className="h-8 text-sm"
+                                      required={field.required}
+                                    />
+                                  </Suspense>
                                 ) : (
-                                  <Input name={field.id} type={field.fieldType} placeholder={field.label} className="h-8 text-sm" required={field.required} />
+                                  <Input name={field.id} type={field.fieldType === 'email' ? 'email' : 'text'} placeholder={field.label} className="h-8 text-sm" required={field.required} />
                                 )}
                               </div>
                             ))}
