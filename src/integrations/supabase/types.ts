@@ -440,6 +440,7 @@ export type Database = {
           agent_id: string
           created_at: string | null
           description: string | null
+          icon: string | null
           id: string
           name: string
           order_index: number | null
@@ -450,6 +451,7 @@ export type Database = {
           agent_id: string
           created_at?: string | null
           description?: string | null
+          icon?: string | null
           id?: string
           name: string
           order_index?: number | null
@@ -460,6 +462,7 @@ export type Database = {
           agent_id?: string
           created_at?: string | null
           description?: string | null
+          icon?: string | null
           id?: string
           name?: string
           order_index?: number | null

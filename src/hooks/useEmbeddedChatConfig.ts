@@ -24,7 +24,6 @@ export interface HelpArticle {
   title: string;
   content: string;
   category: string;
-  icon?: string;
   order: number;
   featured_image?: string;
 }
@@ -33,6 +32,7 @@ export interface HelpCategory {
   id: string;
   name: string;
   description: string;
+  icon?: string;
 }
 
 export interface EmbeddedChatConfig {

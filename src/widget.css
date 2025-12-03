@@ -166,6 +166,25 @@ input, textarea {
   animation: audio-glow 2s ease-in-out infinite;
 }
 
+/* Click transition animations */
+@keyframes widget-scale-out {
+  from { opacity: 1; transform: scale(1); }
+  to { opacity: 0; transform: scale(0.95); }
+}
+
+@keyframes widget-slide-in {
+  from { opacity: 0; transform: translateX(10px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.widget-category-exit {
+  animation: widget-scale-out 0.15s ease-out forwards;
+}
+
+.widget-content-enter {
+  animation: widget-slide-in 0.2s ease-out;
+}
+
 /* Article content rich text styles */
 .article-content {
   @apply text-sm leading-relaxed;
