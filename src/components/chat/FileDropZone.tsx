@@ -74,13 +74,13 @@ export const FileDropZone: React.FC<FileDropZoneProps> = ({
   };
 
   return (
-    <div className="p-4 border-t bg-background space-y-3">
+    <div className="p-4 bg-background space-y-3">
       {selectedFiles.length === 0 ? (
         <div
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
-          className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+          className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
             isDragging
               ? 'border-primary bg-primary/5'
               : 'border-muted-foreground/25 hover:border-primary/50'
@@ -88,20 +88,17 @@ export const FileDropZone: React.FC<FileDropZoneProps> = ({
         >
           <div className="flex flex-col items-center gap-3">
             <div
-              className="p-3 rounded-full"
+              className="p-2 rounded-full"
               style={{ backgroundColor: `${primaryColor}15` }}
             >
               <Upload01
-                className="h-6 w-6"
+                className="h-5 w-5"
                 style={{ color: primaryColor }}
               />
             </div>
             <div>
               <p className="text-sm font-medium">
                 Drag and drop files here
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                or click to browse
               </p>
               <p className="text-xs text-muted-foreground mt-2">
                 Max 5 files, 10MB each

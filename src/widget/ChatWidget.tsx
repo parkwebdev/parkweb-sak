@@ -486,6 +486,25 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     }
   };
 
+  const cancelAudioRecording = () => {
+    if (mediaRecorderRef.current && isRecordingAudio) {
+      // Remove the onstop handler to prevent message being sent
+      mediaRecorderRef.current.onstop = null;
+      // Stop the recorder
+      mediaRecorderRef.current.stop();
+      // Stop all audio tracks (turn off microphone)
+      mediaRecorderRef.current.stream?.getTracks().forEach(track => track.stop());
+    }
+    // Reset state
+    setIsRecordingAudio(false);
+    setRecordingTime(0);
+    if (recordingIntervalRef.current) {
+      clearInterval(recordingIntervalRef.current);
+      recordingIntervalRef.current = null;
+    }
+    chunksRef.current = [];
+  };
+
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     files.forEach(file => {
@@ -1059,6 +1078,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                             isRecording={isRecordingAudio}
                             recordingTime={recordingTime}
                             onStop={stopAudioRecording}
+                            onCancel={cancelAudioRecording}
                           />
                         </Suspense>
                       </div>
