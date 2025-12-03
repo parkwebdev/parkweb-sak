@@ -5,20 +5,21 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { BookOpen01 } from '@untitledui/icons';
+import { BookOpen01, Upload01 } from '@untitledui/icons';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { useHelpArticles } from '@/hooks/useHelpArticles';
 import { toast } from '@/lib/toast';
 import { DndContext, closestCenter, DragEndEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
 import { SortableArticleItem } from './SortableArticleItem';
+import { BulkImportDialog } from './BulkImportDialog';
 
 interface HelpArticlesManagerProps {
   agentId: string;
 }
 
 export const HelpArticlesManager = ({ agentId }: HelpArticlesManagerProps) => {
-  const { articles, categories, loading, addArticle, updateArticle, deleteArticle, addCategory, updateCategory, reorderArticles } = useHelpArticles(agentId);
+  const { articles, categories, loading, addArticle, updateArticle, deleteArticle, addCategory, updateCategory, reorderArticles, bulkImport } = useHelpArticles(agentId);
   
   // Configure sensors for drag and drop (require 5px movement to start dragging)
   const sensors = useSensors(
@@ -33,6 +34,7 @@ export const HelpArticlesManager = ({ agentId }: HelpArticlesManagerProps) => {
   const [newCategoryDialogOpen, setNewCategoryDialogOpen] = useState(false);
   const [editCategoryDialogOpen, setEditCategoryDialogOpen] = useState(false);
   const [editingCategoryName, setEditingCategoryName] = useState('');
+  const [bulkImportOpen, setBulkImportOpen] = useState(false);
   
   const [formData, setFormData] = useState({
     title: '',
@@ -190,6 +192,10 @@ export const HelpArticlesManager = ({ agentId }: HelpArticlesManagerProps) => {
       {!loading && (
         <>
           <div className="flex items-center justify-end gap-2">
+          <Button size="sm" variant="outline" onClick={() => setBulkImportOpen(true)}>
+            <Upload01 className="w-3.5 h-3.5 mr-1.5" />
+            Import CSV
+          </Button>
           <Dialog open={newCategoryDialogOpen} onOpenChange={setNewCategoryDialogOpen}>
             <DialogTrigger asChild>
               <Button size="sm" variant="outline">
@@ -418,6 +424,13 @@ export const HelpArticlesManager = ({ agentId }: HelpArticlesManagerProps) => {
           })}
         </div>
       )}
+
+      <BulkImportDialog
+        open={bulkImportOpen}
+        onOpenChange={setBulkImportOpen}
+        onImport={bulkImport}
+        existingCategories={categories.map(c => c.name)}
+      />
       </>
       )}
     </div>
