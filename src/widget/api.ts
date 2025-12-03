@@ -29,12 +29,8 @@ export interface WidgetConfig {
   // Display timing
   displayTiming: 'immediate' | 'delayed' | 'scroll';
   delaySeconds: number;
-  showTeaser: boolean;
-  teaserMessage: string;
-  teaserText?: string;
   
   // Widget button
-  showBadge: boolean;
   animation: 'none' | 'pulse' | 'bounce' | 'fade' | 'ring';
   buttonAnimation?: 'none' | 'pulse' | 'bounce' | 'fade' | 'ring';
   
