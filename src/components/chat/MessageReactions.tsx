@@ -83,7 +83,7 @@ export const MessageReactions: React.FC<MessageReactionsProps> = ({
             </Button>
           </PopoverTrigger>
           <PopoverContent 
-            className="w-auto p-0" 
+            className="w-auto p-0 bg-transparent border-none shadow-none rounded-full" 
             align={isUserMessage ? "end" : "start"}
             side="top"
           >
