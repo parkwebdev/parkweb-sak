@@ -122,11 +122,6 @@ Deno.serve(async (req) => {
       showTeamAvatars: embeddedChatConfig.showTeamAvatars || false,
       teamAvatarUrls: embeddedChatConfig.teamAvatarUrls || [],
       
-      // Timing
-      displayTiming: embeddedChatConfig.displayTiming || 'immediate',
-      delaySeconds: embeddedChatConfig.delaySeconds || 3,
-      scrollDepth: embeddedChatConfig.scrollDepth || 50,
-      
       // Welcome
       welcomeEmoji: embeddedChatConfig.welcomeEmoji || '👋',
       welcomeTitle: embeddedChatConfig.welcomeTitle || 'Hi there!',
@@ -135,9 +130,7 @@ Deno.serve(async (req) => {
       // Messages
       greeting: embeddedChatConfig.greeting || 'Hello! How can I help you today?',
       placeholder: embeddedChatConfig.placeholder || 'Type your message...',
-      showTypingIndicator: embeddedChatConfig.showTypingIndicator !== false,
       showReadReceipts: embeddedChatConfig.showReadReceipts || false,
-      showTimestamps: embeddedChatConfig.showTimestamps !== false,
       
       // Features
       enableContactForm: embeddedChatConfig.enableContactForm || false,
@@ -145,10 +138,8 @@ Deno.serve(async (req) => {
       contactFormSubtitle: embeddedChatConfig.contactFormSubtitle || 'Fill out the form below to start chatting',
       customFields: embeddedChatConfig.customFields || [],
       
-      enableFileUpload: embeddedChatConfig.enableFileUpload || false,
       enableFileAttachments: true, // Always enabled for widget
       allowedFileTypes: embeddedChatConfig.allowedFileTypes || ['image/*', 'application/pdf'],
-      maxFileSize: embeddedChatConfig.maxFileSize || 10,
       
       enableVoiceMessages: true, // Always enabled for widget
       enableMessageReactions: true, // Always enabled for widget
@@ -159,11 +150,6 @@ Deno.serve(async (req) => {
       enableMessagesTab: embeddedChatConfig.enableMessagesTab !== false,
       enableHelpTab: embeddedChatConfig.enableHelpTab !== false,
       quickActions: quickActions,
-      
-      // Effects
-      viewTransition: embeddedChatConfig.viewTransition || 'slide',
-      defaultSoundEnabled: embeddedChatConfig.defaultSoundEnabled || false,
-      defaultAutoScroll: embeddedChatConfig.defaultAutoScroll !== false,
       
       // Branding
       showBranding: embeddedChatConfig.showBranding !== false,

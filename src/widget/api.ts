@@ -20,15 +20,10 @@ export interface WidgetConfig {
   welcomeEmoji?: string;
   showTeamAvatars: boolean;
   teamAvatarUrls: string[];
-  teamAvatarUrl?: string;
   
   // Greetings and messages
   greeting: string;
   placeholder: string;
-  
-  // Display timing
-  displayTiming: 'immediate' | 'delayed' | 'scroll';
-  delaySeconds: number;
   
   // Widget button
   animation: 'none' | 'pulse' | 'bounce' | 'fade' | 'ring';
@@ -39,9 +34,6 @@ export interface WidgetConfig {
   enableMessagesTab: boolean;
   enableHelpTab: boolean;
   showBottomNav: boolean;
-  showMessagesTab?: boolean;
-  showHelpTab?: boolean;
-  viewTransition: 'none' | 'slide' | 'fade';
   
   // Contact form
   enableContactForm: boolean;
@@ -101,7 +93,6 @@ export interface WidgetConfig {
   allowedFileTypes: string[];
   enableMessageReactions: boolean;
   showReadReceipts: boolean;
-  defaultAutoScroll: boolean;
   
   // Branding
   showBranding: boolean;

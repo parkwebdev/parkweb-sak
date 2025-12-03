@@ -499,22 +499,6 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     chunksRef.current = [];
   };
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    files.forEach(file => {
-      if (file.type.startsWith('image/')) {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          setPendingFiles(prev => [...prev, { file, preview: event.target?.result as string }]);
-        };
-        reader.readAsDataURL(file);
-      } else {
-        setPendingFiles(prev => [...prev, { file, preview: '' }]);
-      }
-    });
-    e.target.value = '';
-  };
-
   const removeFile = (index: number) => {
     setPendingFiles(prev => prev.filter((_, i) => i !== index));
   };

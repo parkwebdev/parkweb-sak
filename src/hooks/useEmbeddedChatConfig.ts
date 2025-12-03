@@ -45,9 +45,6 @@ export interface EmbeddedChatConfig {
   avatarUrl?: string;
   agentName: string;
   animation: 'none' | 'pulse' | 'bounce' | 'fade' | 'ring';
-  displayTiming: 'immediate' | 'delayed' | 'scroll';
-  delaySeconds: number;
-  scrollDepth: number;
   
   // Home Screen Options
   welcomeEmoji: string;
@@ -72,7 +69,6 @@ export interface EmbeddedChatConfig {
   teamAvatarUrls: string[];
   
   // File Attachments (always enabled)
-  maxFileSize: number;
   allowedFileTypes: string[];
   
   // Contact Form
@@ -80,12 +76,6 @@ export interface EmbeddedChatConfig {
   contactFormTitle: string;
   contactFormSubtitle: string;
   customFields: CustomField[];
-  
-  // View Transitions
-  viewTransition: 'slide' | 'fade' | 'none';
-  
-  // Chat Settings
-  defaultAutoScroll: boolean;
   
   // Help Articles
   helpArticles: HelpArticle[];
@@ -103,9 +93,6 @@ export const useEmbeddedChatConfig = (agentId: string) => {
     showBranding: true,
     agentName: 'AI Assistant',
     animation: 'ring',
-    displayTiming: 'immediate',
-    delaySeconds: 3,
-    scrollDepth: 50,
     
     // Home Screen
     welcomeEmoji: '👋',
@@ -152,7 +139,6 @@ export const useEmbeddedChatConfig = (agentId: string) => {
     teamAvatarUrls: [],
     
     // File Attachments (always enabled)
-    maxFileSize: 10,
     allowedFileTypes: ['image', 'document'],
     
     // Contact Form
@@ -160,12 +146,6 @@ export const useEmbeddedChatConfig = (agentId: string) => {
     contactFormTitle: 'Get in touch',
     contactFormSubtitle: 'Fill out the form below and we\'ll get back to you',
     customFields: [],
-    
-    // View Transitions
-    viewTransition: 'slide',
-    
-    // Chat Settings
-    defaultAutoScroll: true,
     
     // Help Articles
     helpArticles: [],
