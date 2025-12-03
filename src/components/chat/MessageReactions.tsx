@@ -27,8 +27,7 @@ export const MessageReactions: React.FC<MessageReactionsProps> = ({
   compact = false,
   isUserMessage = false,
 }) => {
-  const [showQuickPicker, setShowQuickPicker] = useState(false);
-  const [showFullPicker, setShowFullPicker] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   const handleReactionClick = (reaction: Reaction) => {
     if (reaction.userReacted) {
@@ -45,8 +44,7 @@ export const MessageReactions: React.FC<MessageReactionsProps> = ({
     } else {
       onAddReaction(emoji);
     }
-    setShowQuickPicker(false);
-    setShowFullPicker(false);
+    setPickerOpen(false);
   };
 
   return (
@@ -71,47 +69,35 @@ export const MessageReactions: React.FC<MessageReactionsProps> = ({
         </Button>
       ))}
 
-      {compact ? (
-        <Popover open={showQuickPicker} onOpenChange={setShowQuickPicker}>
-          <PopoverTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-6 w-6 p-0"
-            >
-              <FaceSmile className="h-3 w-3 text-muted-foreground" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent 
-            className="w-auto p-0 bg-transparent border-none shadow-none rounded-full" 
-            align={isUserMessage ? "end" : "start"}
-            side="top"
+      <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-6 w-6 p-0"
           >
-            <QuickEmojiPicker
-              onEmojiSelect={handleEmojiSelect}
-              primaryColor={primaryColor}
-            />
-          </PopoverContent>
-        </Popover>
-      ) : (
-        <Popover open={showFullPicker} onOpenChange={setShowFullPicker}>
-          <PopoverTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-6 w-6 p-0 hover:bg-accent"
-            >
+            {compact ? (
+              <FaceSmile className="h-3 w-3 text-muted-foreground" />
+            ) : (
               <Plus className="h-3 w-3 text-muted-foreground" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
+            )}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent 
+          className="w-auto p-0 bg-transparent border-none shadow-none rounded-full" 
+          align={isUserMessage ? "end" : "start"}
+          side="top"
+        >
+          {compact ? (
+            <QuickEmojiPicker onEmojiSelect={handleEmojiSelect} />
+          ) : (
             <EmojiPicker
               onEmojiSelect={handleEmojiSelect}
               primaryColor={primaryColor}
             />
-          </PopoverContent>
-        </Popover>
-      )}
+          )}
+        </PopoverContent>
+      </Popover>
     </div>
   );
 };
