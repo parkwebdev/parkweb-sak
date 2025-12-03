@@ -13,10 +13,20 @@ import {
   Lightbulb01,
   File06,
   Home01,
-  ShoppingBag01
+  ShoppingBag01,
+  Calendar,
+  Globe01,
+  DownloadCloud01,
+  Link01,
+  PlayCircle,
+  Gift01,
+  Truck01,
+  Clock,
+  MessageChatCircle,
+  Building07
 } from '@untitledui/icons';
 
-// Curated set of 15 icons that cover 99% of use cases
+// Curated set of 25 icons that cover 99% of use cases
 export const CATEGORY_ICONS = {
   book: BookOpen01,
   help: HelpCircle,
@@ -33,6 +43,16 @@ export const CATEGORY_ICONS = {
   docs: File06,
   home: Home01,
   shop: ShoppingBag01,
+  calendar: Calendar,
+  globe: Globe01,
+  download: DownloadCloud01,
+  link: Link01,
+  video: PlayCircle,
+  gift: Gift01,
+  shipping: Truck01,
+  clock: Clock,
+  chat: MessageChatCircle,
+  company: Building07,
 } as const;
 
 export type CategoryIconName = keyof typeof CATEGORY_ICONS;
@@ -53,6 +73,16 @@ export const CATEGORY_ICON_OPTIONS: Array<{ value: CategoryIconName; label: stri
   { value: 'docs', label: 'Documentation' },
   { value: 'home', label: 'General' },
   { value: 'shop', label: 'Shopping' },
+  { value: 'calendar', label: 'Scheduling' },
+  { value: 'globe', label: 'International' },
+  { value: 'download', label: 'Downloads' },
+  { value: 'link', label: 'Integrations' },
+  { value: 'video', label: 'Tutorials' },
+  { value: 'gift', label: 'Promotions' },
+  { value: 'shipping', label: 'Shipping' },
+  { value: 'clock', label: 'Hours' },
+  { value: 'chat', label: 'Messaging' },
+  { value: 'company', label: 'Company' },
 ];
 
 interface CategoryIconProps {
