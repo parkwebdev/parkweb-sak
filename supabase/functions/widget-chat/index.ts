@@ -187,11 +187,37 @@ serve(async (req) => {
         }
       }
 
+      // Fetch the team member who took over
+      let takenOverBy = null;
+      const { data: takeover } = await supabase
+        .from('conversation_takeovers')
+        .select('taken_over_by')
+        .eq('conversation_id', activeConversationId)
+        .is('returned_to_ai_at', null)
+        .order('taken_over_at', { ascending: false })
+        .limit(1)
+        .single();
+      
+      if (takeover?.taken_over_by) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('display_name, avatar_url')
+          .eq('user_id', takeover.taken_over_by)
+          .single();
+        
+        if (profile) {
+          takenOverBy = {
+            name: profile.display_name || 'Team Member',
+            avatar: profile.avatar_url,
+          };
+        }
+      }
+
       return new Response(
         JSON.stringify({
           conversationId: activeConversationId,
           status: 'human_takeover',
-          message: 'A team member is handling this conversation',
+          takenOverBy,
         }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },

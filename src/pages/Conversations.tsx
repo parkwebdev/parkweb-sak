@@ -381,11 +381,12 @@ const Conversations: React.FC = () => {
                   <p className="text-sm text-muted-foreground">No messages yet</p>
                 </div>
               ) : (
-                <div className="space-y-3 max-w-4xl mx-auto">
+              <div className="space-y-3 max-w-4xl mx-auto">
                   {messages.map((message) => {
                     const isUser = message.role === 'user';
                     const msgMetadata = message.metadata as any;
                     const isHumanSent = msgMetadata?.sender_type === 'human';
+                    const reactions = msgMetadata?.reactions as Array<{ emoji: string; count: number }> | undefined;
                     
                     return (
                       <div
@@ -412,10 +413,20 @@ const Conversations: React.FC = () => {
                             >
                               <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</p>
                             </div>
+                            {/* Message reactions display */}
+                            {reactions && reactions.length > 0 && (
+                              <div className="flex items-center gap-1 mt-1 px-1">
+                                {reactions.map((reaction, i) => (
+                                  <span key={i} className="text-xs bg-muted rounded-full px-1.5 py-0.5">
+                                    {reaction.emoji} {reaction.count > 1 && reaction.count}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
                             <p className={`text-[10px] mt-1 px-2 ${
                               isUser ? 'text-right text-muted-foreground' : 'text-muted-foreground'
                             }`}>
-                              {isHumanSent && <span className="mr-1">👤</span>}
+                              {isHumanSent && <span className="mr-1">{msgMetadata?.sender_name || 'Team'}</span>}
                               {formatDistanceToNow(new Date(message.created_at), { addSuffix: true })}
                             </p>
                           </div>

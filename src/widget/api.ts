@@ -174,9 +174,34 @@ export async function submitArticleFeedback(articleId: string, data: {
 export interface ChatResponse {
   conversationId: string;
   response: string;
-  status?: 'active' | 'human_takeover';
+  status?: 'active' | 'human_takeover' | 'closed';
   message?: string;
+  takenOverBy?: { name: string; avatar?: string };
   sources?: Array<{ source: string; type: string; similarity: number }>;
+}
+
+// Fetch the current takeover agent for a conversation
+export async function fetchTakeoverAgent(conversationId: string): Promise<{ name: string; avatar?: string } | null> {
+  try {
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/get-takeover-agent`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ conversationId }),
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const data = await response.json();
+    return data.agent || null;
+  } catch (error) {
+    console.error('Error fetching takeover agent:', error);
+    return null;
+  }
 }
 
 export async function sendChatMessage(
