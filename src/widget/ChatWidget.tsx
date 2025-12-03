@@ -1289,35 +1289,38 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
 
                   {/* Level 3: Article Content with Feedback */}
                   {selectedArticle && (
-                    <div className="flex-1 overflow-y-auto">
-                      <div className="p-4">
-                        <Button 
-                          size="sm" 
-                          variant="ghost" 
-                          onClick={() => {
-                            setSelectedArticle(null);
-                            setArticleFeedback(null);
-                            setShowFeedbackComment(false);
-                            setFeedbackComment('');
-                            setFeedbackSubmitted(false);
-                          }}
-                          className="mb-3"
-                        >
-                          <ChevronRight className="h-4 w-4 rotate-180 mr-1" />
-                          Back
-                        </Button>
-                        
-                        <h2 className="text-xl font-bold mb-4">{selectedArticle.title}</h2>
-                        <div 
-                          className="prose prose-sm max-w-none text-sm whitespace-pre-wrap break-words" 
-                          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(selectedArticle.content, {
-                            ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'b', 'i', 'u', 'a', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'code', 'pre', 'span', 'div'],
-                            ALLOWED_ATTR: ['href', 'target', 'rel', 'class'],
-                          }) }} 
-                        />
+                    <div className="flex-1 flex flex-col overflow-hidden">
+                      {/* Scrollable Article Content */}
+                      <div className="flex-1 overflow-y-auto">
+                        <div className="p-4">
+                          <Button 
+                            size="sm" 
+                            variant="ghost" 
+                            onClick={() => {
+                              setSelectedArticle(null);
+                              setArticleFeedback(null);
+                              setShowFeedbackComment(false);
+                              setFeedbackComment('');
+                              setFeedbackSubmitted(false);
+                            }}
+                            className="mb-3"
+                          >
+                            <ChevronRight className="h-4 w-4 rotate-180 mr-1" />
+                            Back
+                          </Button>
+                          
+                          <h2 className="text-xl font-bold mb-4">{selectedArticle.title}</h2>
+                          <div 
+                            className="prose prose-sm max-w-none text-sm whitespace-pre-wrap break-words" 
+                            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(selectedArticle.content, {
+                              ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'b', 'i', 'u', 'a', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'code', 'pre', 'span', 'div'],
+                              ALLOWED_ATTR: ['href', 'target', 'rel', 'class'],
+                            }) }} 
+                          />
+                        </div>
                       </div>
 
-                      {/* Feedback Section */}
+                      {/* Feedback Section - Pinned to Bottom */}
                       <div className="p-4 border-t bg-muted/30">
                         <p className="text-sm font-medium mb-3">Was this article helpful?</p>
                         {!feedbackSubmitted ? (
@@ -1374,28 +1377,6 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                             <p className="text-sm text-muted-foreground mb-2">Thank you for your feedback!</p>
                           </div>
                         )}
-                      </div>
-
-                      {/* Still Need Help Button */}
-                      <div className="p-4 border-t">
-                        <Button
-                          className="w-full"
-                          variant="outline"
-                          onClick={() => {
-                            setCurrentView('messages');
-                            if (chatUser) {
-                              // Returning user - show conversation list
-                              setShowConversationList(true);
-                            } else {
-                              // New user - show contact form
-                              setActiveConversationId('new');
-                              setShowConversationList(false);
-                            }
-                          }}
-                        >
-                          <MessageChatCircle className="h-4 w-4 mr-2" />
-                          Still need help? Start Chat
-                        </Button>
                       </div>
                     </div>
                    )}
