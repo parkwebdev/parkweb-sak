@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, lazy, Suspense } from 'react';
-import { fetchWidgetConfig, createLead, submitArticleFeedback, sendChatMessage, subscribeToMessages, unsubscribeFromMessages, subscribeToConversationStatus, unsubscribeFromConversationStatus, type WidgetConfig, type ChatResponse } from './api';
+import { fetchWidgetConfig, createLead, submitArticleFeedback, sendChatMessage, subscribeToMessages, unsubscribeFromMessages, subscribeToConversationStatus, unsubscribeFromConversationStatus, subscribeToTypingIndicator, unsubscribeFromTypingIndicator, type WidgetConfig, type ChatResponse } from './api';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { CSSAnimatedList } from './CSSAnimatedList';
 import { CSSAnimatedItem } from './CSSAnimatedItem';
@@ -158,6 +158,8 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
   const [messages, setMessages] = useState<Message[]>([]);
   const [showConversationList, setShowConversationList] = useState(false);
   const [isHumanTakeover, setIsHumanTakeover] = useState(false);
+  const [isHumanTyping, setIsHumanTyping] = useState(false);
+  const [typingAgentName, setTypingAgentName] = useState<string | undefined>();
   const [unreadCount, setUnreadCount] = useState(0);
   const [headerScrollY, setHeaderScrollY] = useState(0);
   const homeContentRef = useRef<HTMLDivElement>(null);
@@ -394,6 +396,44 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
       }
     };
   }, [activeConversationId]);
+
+  // Subscribe to human typing indicators when in takeover mode
+  const typingChannelRef = useRef<RealtimeChannel | null>(null);
+  
+  useEffect(() => {
+    const isValidUUID = activeConversationId && 
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(activeConversationId);
+    
+    // Only subscribe to typing if in human takeover mode
+    if (!isValidUUID || !isHumanTakeover) {
+      setIsHumanTyping(false);
+      setTypingAgentName(undefined);
+      return;
+    }
+
+    console.log('[Widget] Setting up typing indicator subscription for:', activeConversationId);
+    
+    if (typingChannelRef.current) {
+      unsubscribeFromTypingIndicator(typingChannelRef.current);
+      typingChannelRef.current = null;
+    }
+
+    typingChannelRef.current = subscribeToTypingIndicator(
+      activeConversationId,
+      (isTyping, agentName) => {
+        console.log('[Widget] Typing indicator changed:', { isTyping, agentName });
+        setIsHumanTyping(isTyping);
+        setTypingAgentName(agentName);
+      }
+    );
+
+    return () => {
+      if (typingChannelRef.current) {
+        unsubscribeFromTypingIndicator(typingChannelRef.current);
+        typingChannelRef.current = null;
+      }
+    };
+  }, [activeConversationId, isHumanTakeover]);
 
   // Track unread count and notify parent
   useEffect(() => {
@@ -1206,14 +1246,26 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                       );
                     })}
 
-                    {isTyping && (
+                    {(isTyping || isHumanTyping) && (
                       <div className="flex justify-start">
-                        <div className="bg-muted rounded-lg p-3">
+                        <div className={`rounded-lg p-3 flex items-center gap-2 ${
+                          isHumanTyping ? 'bg-blue-50 border border-blue-100' : 'bg-muted'
+                        }`}>
+                          {isHumanTyping && <span className="text-sm">👤</span>}
                           <div className="flex gap-1">
-                            <div className="w-2 h-2 bg-foreground/40 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                            <div className="w-2 h-2 bg-foreground/40 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                            <div className="w-2 h-2 bg-foreground/40 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                            <div className={`w-2 h-2 rounded-full animate-bounce ${
+                              isHumanTyping ? 'bg-blue-400' : 'bg-foreground/40'
+                            }`} style={{ animationDelay: '0ms' }} />
+                            <div className={`w-2 h-2 rounded-full animate-bounce ${
+                              isHumanTyping ? 'bg-blue-400' : 'bg-foreground/40'
+                            }`} style={{ animationDelay: '150ms' }} />
+                            <div className={`w-2 h-2 rounded-full animate-bounce ${
+                              isHumanTyping ? 'bg-blue-400' : 'bg-foreground/40'
+                            }`} style={{ animationDelay: '300ms' }} />
                           </div>
+                          {isHumanTyping && (
+                            <span className="text-xs text-blue-600 ml-1">Team member typing...</span>
+                          )}
                         </div>
                       </div>
                     )}

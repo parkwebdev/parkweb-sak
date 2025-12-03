@@ -287,3 +287,33 @@ export function unsubscribeFromConversationStatus(channel: RealtimeChannel) {
   console.log('[Widget] Unsubscribing from conversation status');
   widgetSupabase.removeChannel(channel);
 }
+
+// Subscribe to typing indicators using Supabase Presence
+export function subscribeToTypingIndicator(
+  conversationId: string,
+  onTypingChange: (isTyping: boolean, agentName?: string) => void
+): RealtimeChannel {
+  console.log('[Widget] Subscribing to typing indicator for:', conversationId);
+  
+  const channel = widgetSupabase
+    .channel(`typing-${conversationId}`)
+    .on('presence', { event: 'sync' }, () => {
+      const state = channel.presenceState();
+      // Check if any agent is typing
+      const allUsers = Object.values(state).flat() as Array<{ isTyping?: boolean; name?: string }>;
+      const typingUsers = allUsers.filter((user) => user.isTyping);
+      const isAgentTyping = typingUsers.length > 0;
+      const agentName = typingUsers[0]?.name;
+      onTypingChange(isAgentTyping, agentName);
+    })
+    .subscribe((status) => {
+      console.log('[Widget] Typing indicator subscription status:', status);
+    });
+
+  return channel;
+}
+
+export function unsubscribeFromTypingIndicator(channel: RealtimeChannel) {
+  console.log('[Widget] Unsubscribing from typing indicator');
+  widgetSupabase.removeChannel(channel);
+}
