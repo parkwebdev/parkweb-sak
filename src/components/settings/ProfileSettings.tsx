@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { SavedIndicator } from './SavedIndicator';
 import { AnimatedList } from '@/components/ui/animated-list';
 import { AnimatedItem } from '@/components/ui/animated-item';
+import { uploadAvatar } from '@/lib/avatar-upload';
 
 export const ProfileSettings: React.FC = () => {
   const [profile, setProfile] = useState({
@@ -183,16 +184,13 @@ export const ProfileSettings: React.FC = () => {
     const file = event.target.files?.[0];
     if (!file || !user) return;
     
-    // Reset input
     event.target.value = '';
     
-    // Validate file size (5MB)
     if (file.size > 5 * 1024 * 1024) {
       toast.error("File too large", { description: "Please select an image smaller than 5MB." });
       return;
     }
     
-    // Validate file type
     if (!file.type.startsWith('image/')) {
       toast.error("Invalid file", { description: "Please select an image file." });
       return;
@@ -201,33 +199,20 @@ export const ProfileSettings: React.FC = () => {
     setAvatarUploading(true);
     
     try {
-      const timestamp = Date.now();
-      const fileExt = file.name.split('.').pop() || 'jpg';
-      const fileName = `${user.id}/${user.id}-${timestamp}.${fileExt}`;
-      
-      // Upload to avatars bucket
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(fileName, file, { cacheControl: '3600', upsert: false });
-      
-      if (uploadError) throw uploadError;
-      
-      // Get public URL
-      const { data: urlData } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(fileName);
+      // Upload optimized avatar (resized to 256x256, compressed to 65% WebP)
+      const avatarUrl = await uploadAvatar(file, user.id);
       
       // Update profile in database
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({ avatar_url: urlData.publicUrl })
+        .update({ avatar_url: avatarUrl })
         .eq('user_id', user.id);
       
       if (updateError) throw updateError;
       
       // Update local state
-      setProfile(prev => ({ ...prev, avatar_url: urlData.publicUrl }));
-      setInitialProfile(prev => prev ? { ...prev, avatar_url: urlData.publicUrl } : null);
+      setProfile(prev => ({ ...prev, avatar_url: avatarUrl }));
+      setInitialProfile(prev => prev ? { ...prev, avatar_url: avatarUrl } : null);
       
       toast.success("Avatar updated", { description: "Your profile picture has been updated." });
     } catch (error: any) {
