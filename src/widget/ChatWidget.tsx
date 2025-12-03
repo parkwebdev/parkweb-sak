@@ -1132,7 +1132,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
               )}
 
               {currentView === 'help' && (
-                <div className="flex-1 flex flex-col widget-view-enter">
+                <div className="flex-1 flex flex-col overflow-hidden widget-view-enter">
                   {/* Level 1: Categories List / Search Results (No category selected) */}
                   {!selectedCategory && !selectedArticle && (
                     <>
