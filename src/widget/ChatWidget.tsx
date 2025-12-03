@@ -1103,7 +1103,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                           onChange={(e) => setMessageInput(e.target.value)}
                           onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
                           placeholder={config.placeholder || 'Type a message...'}
-                          className="flex-1 h-9"
+                          className="flex-1 h-9 text-sm placeholder:text-xs"
                         />
                         {config.enableFileAttachments && (
                           <Button 
