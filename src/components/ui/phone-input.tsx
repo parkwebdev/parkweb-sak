@@ -89,7 +89,7 @@ export const PhoneInputField = forwardRef<HTMLInputElement, PhoneInputFieldProps
         value={inputValue}
         onChange={handleChange}
         placeholder={placeholder}
-        className={cn(detectedCountry ? 'pl-12' : '', className)}
+        className={cn(detectedCountry ? 'pl-14' : '', className)}
         required={required}
       />
     </div>
