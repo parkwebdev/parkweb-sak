@@ -1380,30 +1380,6 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                     </div>
                   )}
                   
-                  {/* Human takeover banner */}
-                  {isHumanTakeover && (
-                    <div className="px-4 py-2 bg-blue-50 border-b border-blue-100 flex items-center gap-3">
-                      {takeoverAgentAvatar ? (
-                        <img 
-                          src={takeoverAgentAvatar} 
-                          alt={takeoverAgentName || 'Team'} 
-                          className="w-8 h-8 rounded-full object-cover flex-shrink-0"
-                        />
-                      ) : (
-                        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                          <span className="text-blue-600 text-sm font-medium">
-                            {(takeoverAgentName || 'T').charAt(0).toUpperCase()}
-                          </span>
-                        </div>
-                      )}
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-blue-800">
-                          {takeoverAgentName ? `You're chatting with ${takeoverAgentName}` : "You're chatting with a team member"}
-                        </p>
-                        <p className="text-xs text-blue-600">A real person is here to help you</p>
-                      </div>
-                    </div>
-                  )}
 
                   <div className="p-3 border-t">
                     {isRecordingAudio ? (
