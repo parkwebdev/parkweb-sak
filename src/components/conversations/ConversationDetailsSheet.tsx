@@ -24,6 +24,7 @@ interface ConversationDetailsSheetProps {
   onTakeover: (conversationId: string, reason?: string) => Promise<void>;
   onReturnToAI: (conversationId: string) => Promise<void>;
   onClose: (conversationId: string) => Promise<void>;
+  onReopen: (conversationId: string) => Promise<void>;
 }
 
 export const ConversationDetailsSheet = ({
@@ -34,6 +35,7 @@ export const ConversationDetailsSheet = ({
   onTakeover,
   onReturnToAI,
   onClose,
+  onReopen,
 }: ConversationDetailsSheetProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
@@ -92,6 +94,11 @@ export const ConversationDetailsSheet = ({
   const handleCloseConversation = async () => {
     if (!conversation?.id) return;
     await onClose(conversation.id);
+  };
+
+  const handleReopen = async () => {
+    if (!conversation?.id) return;
+    await onReopen(conversation.id);
   };
 
   if (!conversation) return null;
@@ -177,6 +184,17 @@ export const ConversationDetailsSheet = ({
                 >
                   <XCircle className="h-4 w-4 mr-2" />
                   Close
+                </Button>
+              )}
+
+              {conversation.status === 'closed' && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleReopen}
+                >
+                  <RefreshCcw01 className="h-4 w-4 mr-2" />
+                  Re-open
                 </Button>
               )}
             </div>
