@@ -52,7 +52,6 @@ const getDefaultConfig = (agentId: string): WidgetConfig => ({
   allowedFileTypes: ['image/*', 'application/pdf'],
   enableMessageReactions: true,
   showReadReceipts: false,
-  defaultSoundEnabled: false,
   defaultAutoScroll: true,
 });
 
@@ -143,7 +142,6 @@ const WidgetPage = () => {
           contactFormTitle: data.contactFormTitle || 'Quick intro before we chat 👋',
           contactFormSubtitle: data.contactFormSubtitle,
           viewTransition: data.viewTransition,
-          defaultSoundEnabled: data.defaultSoundEnabled,
           defaultAutoScroll: data.defaultAutoScroll,
           announcements: data.announcements || [],
           helpArticles: data.helpArticles || [],
