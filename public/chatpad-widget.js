@@ -162,6 +162,10 @@
         border-radius: 0 !important;
       }
       
+      .chatpad-widget-iframe {
+        border-radius: 0 !important;
+      }
+      
       .chatpad-widget-button {
         bottom: 20px !important;
         right: 20px !important;
