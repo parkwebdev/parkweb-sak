@@ -82,7 +82,10 @@ export const PhoneInputField = forwardRef<HTMLInputElement, PhoneInputFieldProps
   return (
     <div className="relative flex items-center">
       {detectedCountry && (
-        <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center pointer-events-none z-10 text-base">
+        <div 
+          className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center pointer-events-none z-10 text-base"
+          style={{ fontFamily: '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Android Emoji", "EmojiSymbols", sans-serif' }}
+        >
           {getCountryFlag(detectedCountry)}
         </div>
       )}
