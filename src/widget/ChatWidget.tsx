@@ -117,6 +117,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
   const homeContentRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const isOpeningConversationRef = useRef(false);
 
   const [chatSettings, setChatSettings] = useState(() => {
     const saved = localStorage.getItem(`chatpad_settings_${agentId}`);
@@ -246,9 +247,19 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
   // Auto-scroll (always enabled)
   useEffect(() => {
     if (currentView === 'messages' && activeConversationId && messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      // Use instant scroll when opening existing conversation, smooth for new messages
+      const behavior = isOpeningConversationRef.current ? 'instant' : 'smooth';
+      messagesEndRef.current.scrollIntoView({ behavior });
+      isOpeningConversationRef.current = false;
     }
   }, [messages, currentView, activeConversationId]);
+
+  // Scroll to bottom when file attachment opens
+  useEffect(() => {
+    if (isAttachingFiles && messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [isAttachingFiles]);
 
 
   // Mark messages as read
@@ -380,6 +391,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
   const handleOpenConversation = (conversationId: string) => {
     const conversation = conversations.find(c => c.id === conversationId);
     if (conversation) {
+      isOpeningConversationRef.current = true; // Use instant scroll for existing conversations
       setActiveConversationId(conversationId);
       setMessages(conversation.messages);
       setShowConversationList(false);
