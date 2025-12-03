@@ -174,7 +174,6 @@
       }
     }
     
-    /* Badge animation */
     .chatpad-badge {
       position: absolute;
       top: -8px;
@@ -182,14 +181,19 @@
       background: #ef4444;
       color: white;
       border-radius: 50%;
-      width: 20px;
+      min-width: 20px;
       height: 20px;
       font-size: 11px;
       font-weight: 600;
-      display: flex;
+      display: none;
       align-items: center;
       justify-content: center;
+      padding: 0 4px;
       animation: chatpad-pulse 2s infinite;
+    }
+    
+    .chatpad-badge.visible {
+      display: flex;
     }
     
     @keyframes chatpad-pulse {
@@ -342,7 +346,10 @@
         <svg class="chatpad-icon-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M18 6L6 18M6 6l12 12"/>
         </svg>
+        <span class="chatpad-badge"></span>
       `;
+      
+      this.badge = this.button.querySelector('.chatpad-badge');
       
       this.button.addEventListener('click', () => this.toggle());
       this.container.appendChild(this.button);
@@ -411,6 +418,8 @@
       this.isOpen = true;
       // Widget is preloaded, just show it
       this.showContainer();
+      // Clear unread badge when opening
+      this.updateUnreadBadge(0);
     }
     
     close() {
@@ -463,6 +472,21 @@
             this.iframeContainer.style.height = `${Math.min(event.data.height, window.innerHeight - 120)}px`;
           }
           break;
+          
+        case 'chatpad-unread-count':
+          this.updateUnreadBadge(event.data.count);
+          break;
+      }
+    }
+    
+    updateUnreadBadge(count) {
+      if (!this.badge) return;
+      
+      if (count > 0 && !this.isOpen) {
+        this.badge.textContent = count > 9 ? '9+' : count.toString();
+        this.badge.classList.add('visible');
+      } else {
+        this.badge.classList.remove('visible');
       }
     }
     
