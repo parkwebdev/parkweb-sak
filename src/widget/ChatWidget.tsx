@@ -609,8 +609,8 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                       }}
                       className="absolute inset-0"
                       style={{
-                        maskImage: 'linear-gradient(to bottom, black 0%, black 85%, transparent 100%)',
-                        WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 85%, transparent 100%)'
+                        maskImage: 'linear-gradient(to bottom, black 0%, black 35%, transparent 65%)',
+                        WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 35%, transparent 65%)'
                       }}
                     />
                   )}

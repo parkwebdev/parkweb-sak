@@ -105,13 +105,13 @@ function CSSBubbleBackground({
           <filter id="goo-css">
             <feGaussianBlur
               in="SourceGraphic"
-              stdDeviation="18"
+              stdDeviation="12"
               result="blur"
             />
             <feColorMatrix
               in="blur"
               mode="matrix"
-              values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 30 -15"
+              values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7"
               result="goo"
             />
             <feComposite in="SourceGraphic" in2="goo" operator="atop" />
@@ -121,13 +121,13 @@ function CSSBubbleBackground({
 
       <div
         className="absolute inset-0"
-        style={{ filter: 'url(#goo-css)' }}
+        style={{ filter: 'url(#goo-css) blur(25px)' }}
       >
         {/* Bubble 1 - Vertical movement */}
         <div
           className="bubble-1 absolute rounded-full size-[55%]"
           style={{
-            background: `radial-gradient(circle at center, rgba(${colors.first}, 1) 0%, rgba(${colors.first}, 1) 50%, rgba(${colors.first}, 0) 75%)`,
+            background: `radial-gradient(circle at center, rgba(${colors.first}, 0.8) 0%, rgba(${colors.first}, 0.5) 40%, rgba(${colors.first}, 0) 70%)`,
             top: '-10%',
             left: '5%',
           }}
@@ -141,7 +141,7 @@ function CSSBubbleBackground({
           <div
             className="rounded-full size-[60%]"
             style={{
-              background: `radial-gradient(circle at center, rgba(${colors.second}, 1) 0%, rgba(${colors.second}, 1) 50%, rgba(${colors.second}, 0) 75%)`,
+              background: `radial-gradient(circle at center, rgba(${colors.second}, 0.8) 0%, rgba(${colors.second}, 0.5) 40%, rgba(${colors.second}, 0) 70%)`,
             }}
           />
         </div>
@@ -154,7 +154,7 @@ function CSSBubbleBackground({
           <div
             className="absolute rounded-full size-[50%]"
             style={{
-              background: `radial-gradient(circle at center, rgba(${colors.third}, 1) 0%, rgba(${colors.third}, 1) 50%, rgba(${colors.third}, 0) 75%)`,
+              background: `radial-gradient(circle at center, rgba(${colors.third}, 0.8) 0%, rgba(${colors.third}, 0.5) 40%, rgba(${colors.third}, 0) 70%)`,
               top: '0%',
               left: '20%',
             }}
@@ -165,7 +165,7 @@ function CSSBubbleBackground({
         <div
           className="bubble-4 absolute rounded-full size-[45%]"
           style={{
-            background: `radial-gradient(circle at center, rgba(${colors.fourth}, 1) 0%, rgba(${colors.fourth}, 1) 50%, rgba(${colors.fourth}, 0) 75%)`,
+            background: `radial-gradient(circle at center, rgba(${colors.fourth}, 0.8) 0%, rgba(${colors.fourth}, 0.5) 40%, rgba(${colors.fourth}, 0) 70%)`,
             top: '5%',
             left: '35%',
           }}
@@ -179,7 +179,7 @@ function CSSBubbleBackground({
           <div
             className="absolute rounded-full size-[65%]"
             style={{
-              background: `radial-gradient(circle at center, rgba(${colors.fifth}, 1) 0%, rgba(${colors.fifth}, 1) 50%, rgba(${colors.fifth}, 0) 75%)`,
+              background: `radial-gradient(circle at center, rgba(${colors.fifth}, 0.8) 0%, rgba(${colors.fifth}, 0.5) 40%, rgba(${colors.fifth}, 0) 70%)`,
               top: '-15%',
               left: '15%',
             }}
@@ -194,7 +194,7 @@ function CSSBubbleBackground({
           <div
             className="absolute rounded-full size-[40%]"
             style={{
-              background: `radial-gradient(circle at center, rgba(${colors.sixth}, 1) 0%, rgba(${colors.sixth}, 1) 50%, rgba(${colors.sixth}, 0) 75%)`,
+              background: `radial-gradient(circle at center, rgba(${colors.sixth}, 0.8) 0%, rgba(${colors.sixth}, 0.5) 40%, rgba(${colors.sixth}, 0) 70%)`,
               top: '10%',
               left: '40%',
             }}
