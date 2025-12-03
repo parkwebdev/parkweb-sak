@@ -14,21 +14,23 @@ export const optimizeAvatar = async (file: File): Promise<File> => {
     img.onload = () => {
       URL.revokeObjectURL(img.src);
       
-      let { width, height } = img;
+      const { width, height } = img;
       
-      if (width > AVATAR_CONFIG.maxSize || height > AVATAR_CONFIG.maxSize) {
-        if (width > height) {
-          height = Math.round((height * AVATAR_CONFIG.maxSize) / width);
-          width = AVATAR_CONFIG.maxSize;
-        } else {
-          width = Math.round((width * AVATAR_CONFIG.maxSize) / height);
-          height = AVATAR_CONFIG.maxSize;
-        }
-      }
+      // Center-crop to square
+      const size = Math.min(width, height);
+      const cropX = (width - size) / 2;
+      const cropY = (height - size) / 2;
       
-      canvas.width = width;
-      canvas.height = height;
-      ctx?.drawImage(img, 0, 0, width, height);
+      // Output is always 256x256 square
+      canvas.width = AVATAR_CONFIG.maxSize;
+      canvas.height = AVATAR_CONFIG.maxSize;
+      
+      // Draw center-cropped square, scaled to 256x256
+      ctx?.drawImage(
+        img,
+        cropX, cropY, size, size,
+        0, 0, AVATAR_CONFIG.maxSize, AVATAR_CONFIG.maxSize
+      );
       
       canvas.toBlob(
         (blob) => {
