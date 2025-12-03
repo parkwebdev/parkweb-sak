@@ -56,6 +56,7 @@ export const useHelpArticles = (agentId: string) => {
           category: categoriesData?.find(c => c.id === article.category_id)?.name || '',
           icon: article.icon || undefined,
           order: article.order_index,
+          featured_image: article.featured_image || undefined,
         }));
 
         setCategories(mappedCategories);
@@ -119,6 +120,7 @@ export const useHelpArticles = (agentId: string) => {
           title: article.title,
           content: article.content,
           icon: article.icon,
+          featured_image: article.featured_image || null,
           order_index: articles.length,
         })
         .select()
@@ -133,6 +135,7 @@ export const useHelpArticles = (agentId: string) => {
         content: newArticle.content,
         category: article.category,
         icon: article.icon,
+        featured_image: article.featured_image,
         order: newArticle.order_index,
       }]);
 
@@ -190,6 +193,7 @@ export const useHelpArticles = (agentId: string) => {
           ...(updates.title && { title: updates.title }),
           ...(updates.content && { content: updates.content }),
           ...(updates.icon !== undefined && { icon: updates.icon }),
+          ...(updates.featured_image !== undefined && { featured_image: updates.featured_image || null }),
           ...(categoryId && { category_id: categoryId }),
         })
         .eq('id', id);
