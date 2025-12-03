@@ -11,6 +11,7 @@ import type { Tables } from '@/integrations/supabase/types';
 import { formatDistanceToNow } from 'date-fns';
 import { TakeoverDialog } from '@/components/conversations/TakeoverDialog';
 import { supabase } from '@/integrations/supabase/client';
+import type { RealtimeChannel } from '@supabase/supabase-js';
 
 type Conversation = Tables<'conversations'> & {
   agents?: { name: string };
@@ -39,6 +40,11 @@ const Conversations: React.FC = () => {
   const [messageInput, setMessageInput] = useState('');
   const [sendingMessage, setSendingMessage] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  // Typing indicator state
+  const [isTypingBroadcast, setIsTypingBroadcast] = useState(false);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const typingChannelRef = useRef<RealtimeChannel | null>(null);
 
   // Load messages when conversation is selected
   useEffect(() => {
@@ -143,6 +149,9 @@ const Conversations: React.FC = () => {
   const handleSendMessage = async () => {
     if (!selectedConversation || !messageInput.trim() || sendingMessage) return;
     
+    // Immediately stop typing indicator
+    stopTypingIndicator();
+    
     setSendingMessage(true);
     const success = await sendHumanMessage(selectedConversation.id, messageInput.trim());
     
@@ -164,6 +173,64 @@ const Conversations: React.FC = () => {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  // Set up typing presence channel when conversation is in human takeover mode
+  useEffect(() => {
+    if (selectedConversation && selectedConversation.status === 'human_takeover' && user) {
+      const channel = supabase.channel(`typing-${selectedConversation.id}`);
+      typingChannelRef.current = channel;
+      
+      channel.subscribe(async (status) => {
+        if (status === 'SUBSCRIBED') {
+          await channel.track({ isTyping: false, userId: user.id, name: user.email });
+        }
+      });
+
+      return () => {
+        if (typingChannelRef.current) {
+          supabase.removeChannel(typingChannelRef.current);
+          typingChannelRef.current = null;
+        }
+        if (typingTimeoutRef.current) {
+          clearTimeout(typingTimeoutRef.current);
+        }
+      };
+    }
+  }, [selectedConversation?.id, selectedConversation?.status, user]);
+
+  // Handle typing state changes with debounce
+  const handleTyping = () => {
+    if (!typingChannelRef.current || !user) return;
+
+    // Start typing
+    if (!isTypingBroadcast) {
+      setIsTypingBroadcast(true);
+      typingChannelRef.current.track({ isTyping: true, userId: user.id, name: user.email });
+    }
+
+    // Clear existing timeout
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    // Set timeout to stop typing indicator after 2 seconds of inactivity
+    typingTimeoutRef.current = setTimeout(() => {
+      setIsTypingBroadcast(false);
+      typingChannelRef.current?.track({ isTyping: false, userId: user?.id, name: user?.email });
+    }, 2000);
+  };
+
+  // Stop typing indicator when message is sent
+  const stopTypingIndicator = () => {
+    if (typingChannelRef.current && user) {
+      typingChannelRef.current.track({ isTyping: false, userId: user.id, name: user.email });
+    }
+    setIsTypingBroadcast(false);
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = null;
+    }
+  };
 
   return (
     <div className="h-screen bg-muted/30 flex overflow-hidden">
@@ -365,7 +432,10 @@ const Conversations: React.FC = () => {
                   <Input 
                     placeholder="Type a message..." 
                     value={messageInput}
-                    onChange={(e) => setMessageInput(e.target.value)}
+                    onChange={(e) => {
+                      setMessageInput(e.target.value);
+                      handleTyping();
+                    }}
                     onKeyDown={handleKeyDown}
                     disabled={sendingMessage}
                     className="flex-1"
