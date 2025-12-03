@@ -833,9 +833,9 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                         {!chatUser && config.enableContactForm && (
                       <div className="flex items-start">
                         <div className="bg-muted rounded-lg p-3 w-full">
-                          <p className="text-sm font-medium mb-1">{config.contactFormTitle || 'Quick intro before we chat 👋'}</p>
+                          <p className="text-base font-semibold mb-1.5">{config.contactFormTitle || 'Quick intro before we chat 👋'}</p>
                           {config.contactFormSubtitle && (
-                            <p className="text-xs text-muted-foreground mb-3">{config.contactFormSubtitle}</p>
+                            <p className="text-sm text-muted-foreground mb-4">{config.contactFormSubtitle}</p>
                           )}
                           <form 
                             className="space-y-2"
