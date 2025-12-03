@@ -1,4 +1,5 @@
-import { createClient, RealtimeChannel } from '@supabase/supabase-js';
+import { createClient } from '@supabase/supabase-js';
+import type { RealtimeChannel } from '@supabase/supabase-js';
 
 const SUPABASE_URL = 'https://mvaimvwdukpgvkifkfpa.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im12YWltdndkdWtwZ3ZraWZrZnBhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcxNzI3MTYsImV4cCI6MjA3Mjc0ODcxNn0.DmeecDZcGids_IjJQQepFVQK5wdEdV0eNXDCTRzQtQo';
@@ -177,6 +178,8 @@ export interface ChatResponse {
   status?: 'active' | 'human_takeover' | 'closed';
   message?: string;
   takenOverBy?: { name: string; avatar?: string };
+  userMessageId?: string;
+  assistantMessageId?: string;
   sources?: Array<{ source: string; type: string; similarity: number }>;
 }
 
@@ -232,10 +235,41 @@ export async function sendChatMessage(
   return response.json();
 }
 
-// Subscribe to real-time messages for a conversation
+// Update message reaction (persist to database)
+export async function updateMessageReaction(
+  messageId: string,
+  emoji: string,
+  action: 'add' | 'remove',
+  reactorType: 'user' | 'admin'
+): Promise<{ success: boolean; reactions?: any[] }> {
+  try {
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/update-message-reaction`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ messageId, emoji, action, reactorType }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      console.error('Failed to update reaction:', error);
+      return { success: false };
+    }
+
+    return response.json();
+  } catch (error) {
+    console.error('Error updating reaction:', error);
+    return { success: false };
+  }
+}
+
+// Subscribe to real-time messages for a conversation (INSERT and UPDATE events)
 export function subscribeToMessages(
   conversationId: string,
-  onMessage: (message: { id: string; role: string; content: string; metadata: any; created_at: string }) => void
+  onMessage: (message: { id: string; role: string; content: string; metadata: any; created_at: string }) => void,
+  onMessageUpdate?: (message: { id: string; metadata: any }) => void
 ): RealtimeChannel {
   console.log('[Widget] Subscribing to messages for conversation:', conversationId);
   
@@ -260,6 +294,25 @@ export function subscribeToMessages(
             content: newMessage.content,
             metadata: newMessage.metadata,
             created_at: newMessage.created_at,
+          });
+        }
+      }
+    )
+    .on(
+      'postgres_changes',
+      {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'messages',
+        filter: `conversation_id=eq.${conversationId}`,
+      },
+      (payload) => {
+        console.log('[Widget] Message updated:', payload);
+        const updatedMessage = payload.new as any;
+        if (onMessageUpdate) {
+          onMessageUpdate({
+            id: updatedMessage.id,
+            metadata: updatedMessage.metadata,
           });
         }
       }

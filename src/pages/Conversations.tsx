@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/Badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { SearchMd, MessageChatSquare, User01, Send01 } from '@untitledui/icons';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { SearchMd, MessageChatSquare, User01, Send01, FaceSmile } from '@untitledui/icons';
 import { useConversations } from '@/hooks/useConversations';
 import { ConversationMetadataPanel } from '@/components/conversations/ConversationMetadataPanel';
 import type { Tables } from '@/integrations/supabase/types';
@@ -18,6 +19,33 @@ type Conversation = Tables<'conversations'> & {
 };
 
 type Message = Tables<'messages'>;
+
+const QUICK_EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '🎉'];
+
+// Function to update message reaction via edge function
+async function updateMessageReaction(
+  messageId: string,
+  emoji: string,
+  action: 'add' | 'remove',
+  reactorType: 'user' | 'admin'
+): Promise<{ success: boolean }> {
+  try {
+    const response = await fetch(
+      'https://mvaimvwdukpgvkifkfpa.supabase.co/functions/v1/update-message-reaction',
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im12YWltdndkdWtwZ3ZraWZrZnBhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcxNzI3MTYsImV4cCI6MjA3Mjc0ODcxNn0.DmeecDZcGids_IjJQQepFVQK5wdEdV0eNXDCTRzQtQo'}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ messageId, emoji, action, reactorType }),
+      }
+    );
+    return response.ok ? { success: true } : { success: false };
+  } catch {
+    return { success: false };
+  }
+}
 
 const Conversations: React.FC = () => {
   const { user } = useAuth();
@@ -386,7 +414,62 @@ const Conversations: React.FC = () => {
                     const isUser = message.role === 'user';
                     const msgMetadata = message.metadata as any;
                     const isHumanSent = msgMetadata?.sender_type === 'human';
-                    const reactions = msgMetadata?.reactions as Array<{ emoji: string; count: number }> | undefined;
+                    const reactions = msgMetadata?.reactions as Array<{ emoji: string; count: number; userReacted?: boolean; adminReacted?: boolean }> | undefined;
+                    
+                    const handleAddReaction = async (emoji: string) => {
+                      // Check if admin already reacted with this emoji
+                      const existingReaction = reactions?.find(r => r.emoji === emoji);
+                      if (existingReaction?.adminReacted) return;
+                      
+                      // Optimistic update
+                      const updatedMessages = messages.map(m => {
+                        if (m.id !== message.id) return m;
+                        const meta = (m.metadata as any) || {};
+                        const currentReactions = meta.reactions || [];
+                        const reactionIdx = currentReactions.findIndex((r: any) => r.emoji === emoji);
+                        
+                        let newReactions;
+                        if (reactionIdx >= 0) {
+                          newReactions = [...currentReactions];
+                          newReactions[reactionIdx] = { ...newReactions[reactionIdx], count: newReactions[reactionIdx].count + 1, adminReacted: true };
+                        } else {
+                          newReactions = [...currentReactions, { emoji, count: 1, userReacted: false, adminReacted: true }];
+                        }
+                        
+                        return { ...m, metadata: { ...meta, reactions: newReactions } };
+                      });
+                      setMessages(updatedMessages);
+                      
+                      // Persist to database
+                      await updateMessageReaction(message.id, emoji, 'add', 'admin');
+                    };
+                    
+                    const handleRemoveReaction = async (emoji: string) => {
+                      const existingReaction = reactions?.find(r => r.emoji === emoji);
+                      if (!existingReaction?.adminReacted) return;
+                      
+                      // Optimistic update
+                      const updatedMessages = messages.map(m => {
+                        if (m.id !== message.id) return m;
+                        const meta = (m.metadata as any) || {};
+                        const currentReactions = meta.reactions || [];
+                        const reactionIdx = currentReactions.findIndex((r: any) => r.emoji === emoji);
+                        
+                        if (reactionIdx < 0) return m;
+                        
+                        let newReactions = [...currentReactions];
+                        newReactions[reactionIdx] = { ...newReactions[reactionIdx], count: newReactions[reactionIdx].count - 1, adminReacted: false };
+                        if (newReactions[reactionIdx].count <= 0) {
+                          newReactions = newReactions.filter((_, i) => i !== reactionIdx);
+                        }
+                        
+                        return { ...m, metadata: { ...meta, reactions: newReactions } };
+                      });
+                      setMessages(updatedMessages);
+                      
+                      // Persist to database
+                      await updateMessageReaction(message.id, emoji, 'remove', 'admin');
+                    };
                     
                     return (
                       <div
@@ -413,16 +496,46 @@ const Conversations: React.FC = () => {
                             >
                               <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</p>
                             </div>
-                            {/* Message reactions display */}
-                            {reactions && reactions.length > 0 && (
-                              <div className="flex items-center gap-1 mt-1 px-1">
-                                {reactions.map((reaction, i) => (
-                                  <span key={i} className="text-xs bg-muted rounded-full px-1.5 py-0.5">
-                                    {reaction.emoji} {reaction.count > 1 && reaction.count}
-                                  </span>
-                                ))}
-                              </div>
-                            )}
+                            {/* Message reactions display + add */}
+                            <div className="flex items-center gap-1 mt-1 px-1 flex-wrap">
+                              {reactions && reactions.map((reaction, i) => (
+                                <button
+                                  key={i}
+                                  onClick={() => reaction.adminReacted ? handleRemoveReaction(reaction.emoji) : handleAddReaction(reaction.emoji)}
+                                  className={`text-xs rounded-full px-1.5 py-0.5 transition-colors ${
+                                    reaction.adminReacted 
+                                      ? 'bg-primary/20 border border-primary/30' 
+                                      : 'bg-muted hover:bg-muted/80'
+                                  }`}
+                                >
+                                  {reaction.emoji} {reaction.count > 1 && reaction.count}
+                                </button>
+                              ))}
+                              {/* Add reaction button */}
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <button className="text-xs bg-muted hover:bg-muted/80 rounded-full p-1 transition-colors opacity-50 hover:opacity-100">
+                                    <FaceSmile size={12} />
+                                  </button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-2" side="top" align="start">
+                                  <div className="flex gap-1">
+                                    {QUICK_EMOJIS.map((emoji) => {
+                                      const alreadyReacted = reactions?.find(r => r.emoji === emoji)?.adminReacted;
+                                      return (
+                                        <button
+                                          key={emoji}
+                                          onClick={() => alreadyReacted ? handleRemoveReaction(emoji) : handleAddReaction(emoji)}
+                                          className={`text-lg p-1 hover:bg-muted rounded transition-transform hover:scale-110 ${alreadyReacted ? 'bg-primary/20' : ''}`}
+                                        >
+                                          {emoji}
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                </PopoverContent>
+                              </Popover>
+                            </div>
                             <p className={`text-[10px] mt-1 px-2 ${
                               isUser ? 'text-right text-muted-foreground' : 'text-muted-foreground'
                             }`}>

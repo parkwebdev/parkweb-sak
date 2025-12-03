@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, lazy, Suspense } from 'react';
-import { fetchWidgetConfig, createLead, submitArticleFeedback, sendChatMessage, subscribeToMessages, unsubscribeFromMessages, subscribeToConversationStatus, unsubscribeFromConversationStatus, subscribeToTypingIndicator, unsubscribeFromTypingIndicator, fetchTakeoverAgent, type WidgetConfig, type ChatResponse } from './api';
+import { fetchWidgetConfig, createLead, submitArticleFeedback, sendChatMessage, subscribeToMessages, unsubscribeFromMessages, subscribeToConversationStatus, unsubscribeFromConversationStatus, subscribeToTypingIndicator, unsubscribeFromTypingIndicator, fetchTakeoverAgent, updateMessageReaction, type WidgetConfig, type ChatResponse } from './api';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { CSSAnimatedList } from './CSSAnimatedList';
 import { CSSAnimatedItem } from './CSSAnimatedItem';
@@ -73,6 +73,7 @@ interface ChatUser {
 }
 
 interface Message {
+  id?: string; // Database message ID for reactions
   role: 'user' | 'assistant';
   content: string;
   read?: boolean;
@@ -85,7 +86,7 @@ interface Message {
     type: string;
     size: number;
   }>;
-  reactions?: Array<{ emoji: string; count: number; userReacted: boolean }>;
+  reactions?: Array<{ emoji: string; count: number; userReacted: boolean; adminReacted?: boolean }>;
   isSystemNotice?: boolean; // For takeover notices - no timestamp, no emoji, no avatar
   isHuman?: boolean;
   senderName?: string;
@@ -338,52 +339,64 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
       realtimeChannelRef.current = null;
     }
 
-    // Subscribe to new messages
-    realtimeChannelRef.current = subscribeToMessages(activeConversationId, (newMessage) => {
-      // Check if this is a human message (not from AI)
-      const isHumanMessage = newMessage.metadata?.sender_type === 'human';
-      
-      console.log('[Widget] Processing new message:', { 
-        id: newMessage.id, 
-        isHuman: isHumanMessage,
-        content: newMessage.content.substring(0, 50)
-      });
-      
-      // Only add human messages to avoid duplicates (AI messages are added locally)
-      if (isHumanMessage) {
-        const senderName = newMessage.metadata?.sender_name;
-        const senderAvatar = newMessage.metadata?.sender_avatar;
+    // Subscribe to new messages and updates
+    realtimeChannelRef.current = subscribeToMessages(
+      activeConversationId, 
+      (newMessage) => {
+        // Check if this is a human message (not from AI)
+        const isHumanMessage = newMessage.metadata?.sender_type === 'human';
         
-        setMessages(prev => {
-          // Check if message already exists to prevent duplicates
-          if (prev.some(m => (m as any).dbId === newMessage.id)) {
-            return prev;
-          }
-          
-          return [...prev, {
-            role: 'assistant' as const,
-            content: newMessage.content,
-            read: isOpen && currentView === 'messages',
-            timestamp: new Date(newMessage.created_at),
-            type: 'text' as const,
-            reactions: [],
-            dbId: newMessage.id,
-            isHuman: true,
-            senderName,
-            senderAvatar,
-          } as Message & { dbId?: string; isHuman?: boolean; senderName?: string; senderAvatar?: string }];
+        console.log('[Widget] Processing new message:', { 
+          id: newMessage.id, 
+          isHuman: isHumanMessage,
+          content: newMessage.content.substring(0, 50)
         });
+        
+        // Only add human messages to avoid duplicates (AI messages are added locally)
+        if (isHumanMessage) {
+          const senderName = newMessage.metadata?.sender_name;
+          const senderAvatar = newMessage.metadata?.sender_avatar;
+          
+          setMessages(prev => {
+            // Check if message already exists to prevent duplicates
+            if (prev.some(m => m.id === newMessage.id)) {
+              return prev;
+            }
+            
+            return [...prev, {
+              id: newMessage.id,
+              role: 'assistant' as const,
+              content: newMessage.content,
+              read: isOpen && currentView === 'messages',
+              timestamp: new Date(newMessage.created_at),
+              type: 'text' as const,
+              reactions: newMessage.metadata?.reactions || [],
+              isHuman: true,
+              senderName,
+              senderAvatar,
+            }];
+          });
 
-        // Update takeover agent info for the banner
-        if (senderName) {
-          setTakeoverAgentName(senderName);
-          setTakeoverAgentAvatar(senderAvatar);
+          // Update takeover agent info for the banner
+          if (senderName) {
+            setTakeoverAgentName(senderName);
+            setTakeoverAgentAvatar(senderAvatar);
+          }
+
+          // Also stop typing indicator if it was showing
+          setIsTyping(false);
         }
-
-        // Also stop typing indicator if it was showing
-        setIsTyping(false);
+      },
+      // Handle message updates (for real-time reaction sync)
+      (updatedMessage) => {
+        console.log('[Widget] Message updated, syncing reactions:', updatedMessage.id);
+        setMessages(prev => prev.map(msg => 
+          msg.id === updatedMessage.id 
+            ? { ...msg, reactions: updatedMessage.metadata?.reactions || [] }
+            : msg
+        ));
       }
-    });
+    );
 
     return () => {
       if (realtimeChannelRef.current) {
@@ -700,11 +713,40 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
           setTakeoverAgentName(response.takenOverBy.name);
           setTakeoverAgentAvatar(response.takenOverBy.avatar);
         }
+        // Update user message with ID for reactions
+        if (response.userMessageId) {
+          setMessages(prev => {
+            const updated = [...prev];
+            // Find the most recent user message without an ID and set it
+            for (let i = updated.length - 1; i >= 0; i--) {
+              if (updated[i].role === 'user' && !updated[i].id) {
+                updated[i] = { ...updated[i], id: response.userMessageId };
+                break;
+              }
+            }
+            return updated;
+          });
+        }
         // Note: System notice is now added via real-time status subscription, not here
         // This prevents duplicate notices
       } else if (response.response) {
-        // Add AI response
+        // Update user message with ID for reactions
+        if (response.userMessageId) {
+          setMessages(prev => {
+            const updated = [...prev];
+            for (let i = updated.length - 1; i >= 0; i--) {
+              if (updated[i].role === 'user' && !updated[i].id) {
+                updated[i] = { ...updated[i], id: response.userMessageId };
+                break;
+              }
+            }
+            return updated;
+          });
+        }
+        
+        // Add AI response with message ID
         setMessages(prev => [...prev, { 
+          id: response.assistantMessageId,
           role: 'assistant', 
           content: response.response, 
           read: isOpen && currentView === 'messages', 
@@ -1304,28 +1346,42 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                             <Suspense fallback={null}>
                               <MessageReactions
                                 reactions={msg.reactions || []}
-                                onAddReaction={(emoji) => {
+                                onAddReaction={async (emoji) => {
+                                  // Optimistic update
                                   const newMessages = [...messages];
                                   const reaction = newMessages[idx].reactions?.find(r => r.emoji === emoji);
                                   if (reaction) {
-                                    reaction.count += 1;
-                                    reaction.userReacted = true;
+                                    if (!reaction.userReacted) {
+                                      reaction.count += 1;
+                                      reaction.userReacted = true;
+                                    }
                                   } else {
                                     newMessages[idx].reactions = [...(newMessages[idx].reactions || []), { emoji, count: 1, userReacted: true }];
                                   }
                                   setMessages(newMessages);
+                                  
+                                  // Persist to database if we have a message ID
+                                  if (msg.id) {
+                                    await updateMessageReaction(msg.id, emoji, 'add', 'user');
+                                  }
                                 }}
-                                onRemoveReaction={(emoji) => {
+                                onRemoveReaction={async (emoji) => {
+                                  // Optimistic update
                                   const newMessages = [...messages];
                                   const reaction = newMessages[idx].reactions?.find(r => r.emoji === emoji);
-                                  if (reaction) {
+                                  if (reaction && reaction.userReacted) {
                                     reaction.count -= 1;
                                     reaction.userReacted = false;
-                                    if (reaction.count === 0) {
+                                    if (reaction.count <= 0) {
                                       newMessages[idx].reactions = newMessages[idx].reactions?.filter(r => r.emoji !== emoji);
                                     }
                                   }
                                   setMessages(newMessages);
+                                  
+                                  // Persist to database if we have a message ID
+                                  if (msg.id) {
+                                    await updateMessageReaction(msg.id, emoji, 'remove', 'user');
+                                  }
                                 }}
                               primaryColor={config.primaryColor}
                                 compact

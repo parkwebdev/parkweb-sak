@@ -62,3 +62,6 @@ schedule = "0 * * * *"
 
 [functions.get-takeover-agent]
 verify_jwt = false
+
+[functions.update-message-reaction]
+verify_jwt = false
