@@ -1,9 +1,12 @@
 /**
  * ChatPad Widget - Iframe-Based Loader
- * Optimized: Deferred iframe loading, preconnect hints, minimal initial footprint
+ * Optimized: Instant loading (Intercom-style) - iframe + config fetch on page load
  */
 (function() {
   'use strict';
+  
+  const SUPABASE_URL = 'https://mvaimvwdukpgvkifkfpa.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im12YWltdndkdWtwZ3ZraWZrZnBhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcxNzI3MTYsImV4cCI6MjA3Mjc0ODcxNn0.DmeecDZcGids_IjJQQepFVQK5wdEdV0eNXDCTRzQtQo';
   
   const WIDGET_STYLES = `
     .chatpad-widget-container {
@@ -197,21 +200,21 @@
         agentId: config.agentId,
         position: config.position || 'bottom-right',
         primaryColor: config.primaryColor || '#3b82f6',
-        appUrl: config.appUrl || 'https://mvaimvwdukpgvkifkfpa.supabase.co',
+        appUrl: config.appUrl || SUPABASE_URL,
       };
       this.isOpen = false;
       this.container = null;
       this.button = null;
       this.iframeContainer = null;
       this.iframe = null;
-      // Track if iframe has been created (deferred loading)
+      // Track if iframe has been created
       this.iframeLoaded = false;
       // Track if widget has signaled ready
       this.widgetReady = false;
-      // Track if preconnect has been added
-      this.preconnected = false;
-      // Timeout for fallback display
-      this.readyTimeout = null;
+      // Cached config from API
+      this.cachedConfig = null;
+      // Config fetch in progress
+      this.configFetching = false;
     }
     
     init() {
@@ -224,14 +227,17 @@
       this.container.style.setProperty('--chatpad-primary-color', this.config.primaryColor);
       document.body.appendChild(this.container);
       
-      // Create button (with preconnect on hover)
+      // Create button
       this.createButton();
       
-      // Create iframe container (but NOT the iframe yet - deferred)
+      // Create iframe container (but hidden)
       this.createIframeContainer();
       
       // Listen for messages from iframe
       window.addEventListener('message', this.handleMessage.bind(this));
+      
+      // INSTANT LOADING: Start fetching config and creating iframe immediately on page load
+      this.preloadEverything();
     }
     
     injectStyles() {
@@ -241,20 +247,72 @@
     }
     
     /**
-     * Add preconnect hints for faster iframe loading
-     * Called on button hover to warm up connections before click
+     * Preload everything on page load (Intercom-style)
+     * This makes click-to-open instant
+     */
+    preloadEverything() {
+      // Add preconnect hints
+      this.addPreconnectHints();
+      
+      // Fetch config and create iframe in parallel
+      this.fetchConfig();
+      this.createIframe();
+    }
+    
+    /**
+     * Fetch widget config from API (called on page load)
+     */
+    async fetchConfig() {
+      if (this.configFetching || this.cachedConfig) return;
+      this.configFetching = true;
+      
+      try {
+        const response = await fetch(
+          `${SUPABASE_URL}/functions/v1/get-widget-config?agentId=${this.config.agentId}`,
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': SUPABASE_ANON_KEY,
+            },
+          }
+        );
+        
+        if (response.ok) {
+          this.cachedConfig = await response.json();
+          
+          // If iframe is ready, send config immediately
+          if (this.widgetReady && this.iframe?.contentWindow) {
+            this.sendConfigToIframe();
+          }
+        }
+      } catch (e) {
+        console.warn('ChatPad: Config prefetch failed, will fetch in iframe', e);
+      }
+    }
+    
+    /**
+     * Send cached config to iframe via postMessage
+     */
+    sendConfigToIframe() {
+      if (this.cachedConfig && this.iframe?.contentWindow) {
+        this.iframe.contentWindow.postMessage({
+          type: 'chatpad-widget-config',
+          config: this.cachedConfig,
+        }, '*');
+      }
+    }
+    
+    /**
+     * Add preconnect hints for faster loading
      */
     addPreconnectHints() {
-      if (this.preconnected) return;
-      this.preconnected = true;
-      
-      // Preconnect to widget host
+      // Preconnect to Supabase
       const preconnectApp = document.createElement('link');
       preconnectApp.rel = 'preconnect';
-      preconnectApp.href = this.config.appUrl;
+      preconnectApp.href = SUPABASE_URL;
       document.head.appendChild(preconnectApp);
       
-      // Preconnect to Google Fonts (used by widget)
+      // Preconnect to Google Fonts
       const preconnectFonts = document.createElement('link');
       preconnectFonts.rel = 'preconnect';
       preconnectFonts.href = 'https://fonts.googleapis.com';
@@ -282,26 +340,21 @@
         </svg>
       `;
       
-      // Preload iframe on hover for near-instant opening
-      this.button.addEventListener('mouseenter', () => this.preloadIframe(), { once: true });
-      this.button.addEventListener('touchstart', () => this.preloadIframe(), { once: true, passive: true });
-      
       this.button.addEventListener('click', () => this.toggle());
       this.container.appendChild(this.button);
     }
     
     /**
-     * Create iframe container without the iframe itself (deferred loading)
+     * Create iframe container without the iframe itself
      */
     createIframeContainer() {
       this.iframeContainer = document.createElement('div');
       this.iframeContainer.className = 'chatpad-widget-iframe-container hidden';
       this.container.appendChild(this.iframeContainer);
-      // iframe will be created on first open
     }
     
     /**
-     * Create and load the iframe (called on first open)
+     * Create and load the iframe (called on page load)
      */
     createIframe() {
       if (this.iframeLoaded) return;
@@ -322,13 +375,6 @@
       this.iframe.title = 'Chat Widget';
       
       this.iframeContainer.appendChild(this.iframe);
-      
-      // Fallback: show container after 2 seconds even if no ready signal
-      this.readyTimeout = setTimeout(() => {
-        if (this.isOpen && !this.widgetReady) {
-          this.showContainer();
-        }
-      }, 2000);
     }
     
     toggle() {
@@ -342,22 +388,9 @@
     }
     
     /**
-     * Preload iframe on hover for near-instant opening
-     */
-    preloadIframe() {
-      this.addPreconnectHints();
-      
-      // Create iframe in background (hidden) if not already loaded
-      if (!this.iframeLoaded) {
-        this.createIframe();
-      }
-    }
-    
-    /**
-     * Show the iframe container with animation
+     * Show the iframe container (instant since everything is preloaded)
      */
     showContainer() {
-      this.widgetReady = true;
       this.iframeContainer.classList.remove('hidden');
       this.iframeContainer.classList.add('visible');
       this.button.classList.add('chatpad-widget-button-open');
@@ -372,18 +405,8 @@
     
     open() {
       this.isOpen = true;
-      
-      // If widget is already ready (preloaded on hover), show immediately
-      if (this.widgetReady) {
-        this.showContainer();
-        return;
-      }
-      
-      // Create iframe if not already loading
-      if (!this.iframeLoaded) {
-        this.createIframe();
-      }
-      // Wait for ready signal (handled in handleMessage)
+      // Widget is preloaded, just show it
+      this.showContainer();
     }
     
     close() {
@@ -406,12 +429,10 @@
       
       switch (event.data.type) {
         case 'chatpad-widget-ready':
-          // Widget is ready to display, now show the container
-          if (this.readyTimeout) {
-            clearTimeout(this.readyTimeout);
-          }
-          if (this.isOpen && !this.widgetReady) {
-            this.showContainer();
+          // Widget iframe is ready, send cached config if available
+          this.widgetReady = true;
+          if (this.cachedConfig) {
+            this.sendConfigToIframe();
           }
           break;
           
@@ -456,7 +477,7 @@
       agentId: currentScript.getAttribute('data-agent-id'),
       position: currentScript.getAttribute('data-position') || 'bottom-right',
       primaryColor: currentScript.getAttribute('data-primary-color') || '#3b82f6',
-      appUrl: currentScript.getAttribute('data-app-url') || 'https://mvaimvwdukpgvkifkfpa.supabase.co',
+      appUrl: currentScript.getAttribute('data-app-url') || SUPABASE_URL,
     };
     
     const widget = new ChatPadWidget(config);

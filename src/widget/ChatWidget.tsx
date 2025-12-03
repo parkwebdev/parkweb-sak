@@ -30,6 +30,7 @@ interface ChatWidgetProps {
   config: WidgetConfig | { agentId: string; position?: string; primaryColor?: string };
   previewMode?: boolean;
   containedPreview?: boolean;
+  isLoading?: boolean; // When true, show skeleton placeholders for dynamic content
 }
 
 type ViewType = 'home' | 'messages' | 'help';
@@ -65,12 +66,18 @@ interface Conversation {
   preview: string;
 }
 
-export const ChatWidget = ({ config: configProp, previewMode = false, containedPreview = false }: ChatWidgetProps) => {
-  const isSimpleConfig = 'agentId' in configProp && !('greeting' in configProp);
+export const ChatWidget = ({ config: configProp, previewMode = false, containedPreview = false, isLoading: isLoadingProp = false }: ChatWidgetProps) => {
+  // If isLoading prop is provided, parent is handling config fetching (Intercom-style)
+  const parentHandlesConfig = isLoadingProp !== undefined && 'greeting' in configProp;
+  const isSimpleConfig = !parentHandlesConfig && 'agentId' in configProp && !('greeting' in configProp);
+  
   const [config, setConfig] = useState<WidgetConfig | null>(
     isSimpleConfig ? null : (configProp as WidgetConfig)
   );
   const [loading, setLoading] = useState(isSimpleConfig);
+  
+  // Use the loading state from parent if provided (Intercom-style instant loading)
+  const isContentLoading = parentHandlesConfig ? isLoadingProp : loading;
   const [isOpen, setIsOpen] = useState(false);
   const [currentView, setCurrentView] = useState<ViewType>('home');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -139,12 +146,12 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     }
   }, []);
 
-  // Sync config state when configProp changes (for preview mode)
+  // Sync config state when configProp changes (for preview mode OR parent handles config)
   useEffect(() => {
-    if (!isSimpleConfig && previewMode) {
+    if (!isSimpleConfig && (previewMode || parentHandlesConfig)) {
       setConfig(configProp as WidgetConfig);
     }
-  }, [configProp, isSimpleConfig, previewMode]);
+  }, [configProp, isSimpleConfig, previewMode, parentHandlesConfig]);
 
   // Update greeting when config changes in preview mode
   useEffect(() => {
@@ -307,7 +314,8 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     return () => window.removeEventListener('message', handleParentMessage);
   }, [previewMode]);
 
-  if (loading || !config) return null;
+  // Only return null for simple config loading, not when parent handles config (instant loading)
+  if (!parentHandlesConfig && (loading || !config)) return null;
 
   const positionClasses = {
     'bottom-right': 'bottom-4 right-4',
@@ -650,61 +658,72 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                     }}
                   >
                     <div className="px-6 py-4 space-y-3">
-                      {config.announcements.length > 0 && (
-                        <CSSAnimatedList className="space-y-3 mb-6" staggerDelay={0.1}>
-                          {config.announcements.map((announcement) => (
-                            <CSSAnimatedItem key={announcement.id}>
-                              <div
-                                className="rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
-                                style={{ backgroundColor: announcement.background_color }}
-                                onClick={() => {
-                                  if (announcement.action_type === 'start_chat') setCurrentView('messages');
-                                  else if (announcement.action_type === 'open_help') setCurrentView('help');
-                                }}
-                              >
-                              {announcement.image_url && (
-                                <div className="h-32 overflow-hidden">
-                                  <img src={announcement.image_url} alt="" className="w-full h-full object-cover" />
-                                </div>
-                              )}
-                               <div className="p-4 flex items-center justify-between">
-                                 <div className="flex-1">
-                                   <h3 className="font-semibold text-base" style={{ color: announcement.title_color }}>{announcement.title}</h3>
-                                   {announcement.subtitle && <p className="text-sm text-muted-foreground mt-1">{announcement.subtitle}</p>}
-                                 </div>
-                                 <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                               </div>
-                              </div>
-                             </CSSAnimatedItem>
-                          ))}
-                        </CSSAnimatedList>
-                      )}
+                      {isContentLoading ? (
+                        // Loading skeleton for dynamic content
+                        <div className="space-y-3 animate-pulse">
+                          <div className="h-20 bg-black/5 rounded-lg" />
+                          <div className="h-16 bg-black/5 rounded-lg" />
+                          <div className="h-16 bg-black/5 rounded-lg" />
+                        </div>
+                      ) : (
+                        <>
+                          {config.announcements.length > 0 && (
+                            <CSSAnimatedList className="space-y-3 mb-6" staggerDelay={0.1}>
+                              {config.announcements.map((announcement) => (
+                                <CSSAnimatedItem key={announcement.id}>
+                                  <div
+                                    className="rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
+                                    style={{ backgroundColor: announcement.background_color }}
+                                    onClick={() => {
+                                      if (announcement.action_type === 'start_chat') setCurrentView('messages');
+                                      else if (announcement.action_type === 'open_help') setCurrentView('help');
+                                    }}
+                                  >
+                                  {announcement.image_url && (
+                                    <div className="h-32 overflow-hidden">
+                                      <img src={announcement.image_url} alt="" className="w-full h-full object-cover" />
+                                    </div>
+                                  )}
+                                   <div className="p-4 flex items-center justify-between">
+                                     <div className="flex-1">
+                                       <h3 className="font-semibold text-base" style={{ color: announcement.title_color }}>{announcement.title}</h3>
+                                       {announcement.subtitle && <p className="text-sm text-muted-foreground mt-1">{announcement.subtitle}</p>}
+                                     </div>
+                                     <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                                   </div>
+                                  </div>
+                                 </CSSAnimatedItem>
+                              ))}
+                            </CSSAnimatedList>
+                          )}
 
-                      <CSSAnimatedList className="space-y-3" staggerDelay={0.1}>
-                        {config.quickActions.map((action) => (
-                          <CSSAnimatedItem key={action.id}>
-                            <div
-                              className="p-4 border rounded-lg bg-card hover:bg-accent/50 cursor-pointer transition-all"
-                              onClick={() => handleQuickActionClick(action.action || action.actionType)}
-                            >
-                            <div className="flex items-start gap-3">
-                              <div className="p-2 rounded-lg" style={{ backgroundColor: `${config.primaryColor}15` }}>
-                                <div style={{ color: config.primaryColor }}>{getQuickActionIcon(action.icon)}</div>
-                              </div>
-                              <div className="flex-1">
-                                <div className="flex items-center justify-between gap-2">
-                                  <h4 className="font-medium text-sm">{action.title || action.label}</h4>
-                                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                          <CSSAnimatedList className="space-y-3" staggerDelay={0.1}>
+                            {config.quickActions.map((action) => (
+                              <CSSAnimatedItem key={action.id}>
+                                <div
+                                  className="p-4 border rounded-lg bg-card hover:bg-accent/50 cursor-pointer transition-all"
+                                  onClick={() => handleQuickActionClick(action.action || action.actionType)}
+                                >
+                                <div className="flex items-start gap-3">
+                                  <div className="p-2 rounded-lg" style={{ backgroundColor: `${config.primaryColor}15` }}>
+                                    <div style={{ color: config.primaryColor }}>{getQuickActionIcon(action.icon)}</div>
+                                  </div>
+                                  <div className="flex-1">
+                                    <div className="flex items-center justify-between gap-2">
+                                      <h4 className="font-medium text-sm">{action.title || action.label}</h4>
+                                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                                    </div>
+                                    {action.subtitle && (
+                                      <p className="text-xs text-muted-foreground mt-0.5">{action.subtitle}</p>
+                                    )}
+                                  </div>
+                                 </div>
                                 </div>
-                                {action.subtitle && (
-                                  <p className="text-xs text-muted-foreground mt-0.5">{action.subtitle}</p>
-                                )}
-                              </div>
-                             </div>
-                            </div>
-                          </CSSAnimatedItem>
-                        ))}
-                      </CSSAnimatedList>
+                              </CSSAnimatedItem>
+                            ))}
+                          </CSSAnimatedList>
+                        </>
+                      )}
                     </div>
                   </div>
                   

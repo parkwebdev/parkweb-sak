@@ -25,12 +25,42 @@ Deno.serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Fetch agent details and deployment config
-    const { data: agent, error: agentError } = await supabase
-      .from('agents')
-      .select('name, deployment_config')
-      .eq('id', agentId)
-      .single();
+    // OPTIMIZED: Run all queries in parallel for faster response
+    const [agentResult, announcementsResult, categoriesResult, articlesResult] = await Promise.all([
+      // Fetch agent details and deployment config
+      supabase
+        .from('agents')
+        .select('name, deployment_config')
+        .eq('id', agentId)
+        .single(),
+      
+      // Fetch active announcements (exclude user_id for security)
+      supabase
+        .from('announcements')
+        .select('id, agent_id, title, subtitle, image_url, title_color, background_color, action_type, action_url, order_index, is_active')
+        .eq('agent_id', agentId)
+        .eq('is_active', true)
+        .order('order_index', { ascending: true }),
+      
+      // Fetch help categories (exclude user_id for security)
+      supabase
+        .from('help_categories')
+        .select('id, agent_id, name, description, order_index')
+        .eq('agent_id', agentId)
+        .order('order_index', { ascending: true }),
+      
+      // Fetch help articles (exclude user_id for security)
+      supabase
+        .from('help_articles')
+        .select('id, agent_id, category_id, title, content, icon, order_index')
+        .eq('agent_id', agentId)
+        .order('order_index', { ascending: true }),
+    ]);
+
+    const { data: agent, error: agentError } = agentResult;
+    const { data: announcements, error: announcementsError } = announcementsResult;
+    const { data: categories, error: categoriesError } = categoriesResult;
+    const { data: articles, error: articlesError } = articlesResult;
 
     if (agentError || !agent) {
       console.error('Agent fetch error:', agentError);
@@ -40,35 +70,13 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Fetch active announcements (exclude user_id for security)
-    const { data: announcements, error: announcementsError } = await supabase
-      .from('announcements')
-      .select('id, agent_id, title, subtitle, image_url, title_color, background_color, action_type, action_url, order_index, is_active')
-      .eq('agent_id', agentId)
-      .eq('is_active', true)
-      .order('order_index', { ascending: true });
-
     if (announcementsError) {
       console.error('Announcements fetch error:', announcementsError);
     }
 
-    // Fetch help categories (exclude user_id for security)
-    const { data: categories, error: categoriesError } = await supabase
-      .from('help_categories')
-      .select('id, agent_id, name, description, order_index')
-      .eq('agent_id', agentId)
-      .order('order_index', { ascending: true });
-
     if (categoriesError) {
       console.error('Categories fetch error:', categoriesError);
     }
-
-    // Fetch help articles (exclude user_id for security)
-    const { data: articles, error: articlesError } = await supabase
-      .from('help_articles')
-      .select('id, agent_id, category_id, title, content, icon, order_index')
-      .eq('agent_id', agentId)
-      .order('order_index', { ascending: true });
 
     if (articlesError) {
       console.error('Articles fetch error:', articlesError);
