@@ -842,7 +842,10 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                               const customFieldData: Record<string, any> = {};
 
                               config.customFields.forEach(field => {
-                                customFieldData[field.id] = formData.get(field.id);
+                                const value = formData.get(field.id);
+                                if (value) {
+                                  customFieldData[field.label] = value;
+                                }
                               });
 
                               try {
