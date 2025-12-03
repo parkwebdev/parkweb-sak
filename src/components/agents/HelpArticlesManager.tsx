@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { BookOpen01, Upload01 } from '@untitledui/icons';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
@@ -29,9 +30,10 @@ import type { HelpArticle } from '@/hooks/useEmbeddedChatConfig';
 
 interface HelpArticlesManagerProps {
   agentId: string;
+  userId: string;
 }
 
-export const HelpArticlesManager = ({ agentId }: HelpArticlesManagerProps) => {
+export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProps) => {
   const { 
     articles, 
     categories, 
@@ -396,7 +398,7 @@ export const HelpArticlesManager = ({ agentId }: HelpArticlesManagerProps) => {
                   Add Article
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-2xl">
+              <DialogContent className="max-w-3xl">
                 <DialogHeader>
                   <DialogTitle>{editingArticle ? 'Edit Article' : 'Add Help Article'}</DialogTitle>
                 </DialogHeader>
@@ -412,13 +414,14 @@ export const HelpArticlesManager = ({ agentId }: HelpArticlesManagerProps) => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="content">Content *</Label>
-                    <Textarea
-                      id="content"
-                      value={formData.content}
-                      onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                    <Label>Content *</Label>
+                    <RichTextEditor
+                      content={formData.content}
+                      onChange={(html) => setFormData({ ...formData, content: html })}
                       placeholder="Write your help article content here..."
-                      rows={6}
+                      agentId={agentId}
+                      userId={userId}
+                      minHeight="250px"
                     />
                   </div>
 

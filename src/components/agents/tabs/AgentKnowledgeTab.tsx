@@ -91,7 +91,7 @@ export const AgentKnowledgeTab = ({ agentId, userId }: AgentKnowledgeTabProps) =
       )}
 
       {activeTab === 'help-articles' && (
-        <HelpArticlesManager agentId={agentId} />
+        <HelpArticlesManager agentId={agentId} userId={userId} />
       )}
     </AgentSettingsLayout>
   );
