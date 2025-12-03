@@ -45,12 +45,9 @@ export interface EmbeddedChatConfig {
   avatarUrl?: string;
   agentName: string;
   animation: 'none' | 'pulse' | 'bounce' | 'fade' | 'ring';
-  showBadge: boolean;
   displayTiming: 'immediate' | 'delayed' | 'scroll';
   delaySeconds: number;
   scrollDepth: number;
-  showTeaser: boolean;
-  teaserText: string;
   
   // Home Screen Options
   welcomeEmoji: string;
@@ -106,12 +103,9 @@ export const useEmbeddedChatConfig = (agentId: string) => {
     showBranding: true,
     agentName: 'AI Assistant',
     animation: 'ring',
-    showBadge: true,
     displayTiming: 'immediate',
     delaySeconds: 3,
     scrollDepth: 50,
-    showTeaser: true,
-    teaserText: 'Need help! Chat with us!',
     
     // Home Screen
     welcomeEmoji: '👋',

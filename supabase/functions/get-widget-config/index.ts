@@ -116,7 +116,6 @@ Deno.serve(async (req) => {
       position: embeddedChatConfig.position || 'bottom-right',
       animation: embeddedChatConfig.animation || 'bounce',
       buttonAnimation: embeddedChatConfig.animation || 'bounce', // Alias for animation
-      showBadge: embeddedChatConfig.showBadge !== false,
       useGradientHeader: embeddedChatConfig.useGradientHeader !== false,
       
       // Team avatars
@@ -127,11 +126,6 @@ Deno.serve(async (req) => {
       displayTiming: embeddedChatConfig.displayTiming || 'immediate',
       delaySeconds: embeddedChatConfig.delaySeconds || 3,
       scrollDepth: embeddedChatConfig.scrollDepth || 50,
-      
-      // Teaser
-      showTeaser: embeddedChatConfig.showTeaser || false,
-      teaserText: embeddedChatConfig.teaserText || 'Need help?',
-      teaserMessage: embeddedChatConfig.teaserText || 'Need help?', // Alias for teaserText
       
       // Welcome
       welcomeEmoji: embeddedChatConfig.welcomeEmoji || '👋',

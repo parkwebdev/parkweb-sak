@@ -1,5 +1,5 @@
 import { useState, useEffect, forwardRef, ChangeEvent } from 'react';
-import { AsYouType, parsePhoneNumber, CountryCode, getCountryCallingCode } from 'libphonenumber-js/min';
+import { AsYouType, parsePhoneNumber, CountryCode } from 'libphonenumber-js/min';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 
@@ -54,15 +54,12 @@ export const PhoneInputField = forwardRef<HTMLInputElement, PhoneInputFieldProps
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const rawValue = e.target.value;
     
-    // Use AsYouType formatter for live formatting
+    // Use AsYouType formatter for live formatting with proper country-specific formatting
     const formatter = new AsYouType(detectedCountry || defaultCountry);
-    const formatted = formatter.getNumber() ? formatter.input(rawValue) : rawValue;
+    const formatted = formatter.input(rawValue);
     
-    // Try to detect country from input
-    const asYouType = new AsYouType();
-    asYouType.input(rawValue.startsWith('+') ? rawValue : `+${getCountryCallingCode(detectedCountry || defaultCountry)}${rawValue.replace(/\D/g, '')}`);
-    const country = asYouType.getCountry();
-    
+    // Detect country from the formatted result
+    const country = formatter.getCountry();
     if (country) {
       setDetectedCountry(country);
     }

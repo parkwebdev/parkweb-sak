@@ -137,43 +137,6 @@ export const EmbedSettingsPanel = ({ config, onConfigChange, embedCode }: EmbedS
               </div>
             )}
 
-            <div className="flex items-center justify-between">
-              <div>
-                <Label htmlFor="badge" className="text-sm">Notification Badge</Label>
-                <p className="text-xs text-muted-foreground">Show availability dot</p>
-              </div>
-              <Switch
-                id="badge"
-                checked={config.showBadge}
-                onCheckedChange={(checked) => onConfigChange({ showBadge: checked })}
-              />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div>
-                <Label htmlFor="teaser" className="text-sm">Conversation Teaser</Label>
-                <p className="text-xs text-muted-foreground">Show preview text</p>
-              </div>
-              <Switch
-                id="teaser"
-                checked={config.showTeaser}
-                onCheckedChange={(checked) => onConfigChange({ showTeaser: checked })}
-              />
-            </div>
-
-            {config.showTeaser && (
-              <div className="space-y-2 pl-4 border-l-2">
-                <Label htmlFor="teaser-text" className="text-sm">Teaser Text</Label>
-                <Input
-                  id="teaser-text"
-                  value={config.teaserText}
-                  onChange={(e) => onConfigChange({ teaserText: e.target.value })}
-                  placeholder="Need help? Chat with us!"
-                  className="text-sm"
-                  maxLength={50}
-                />
-              </div>
-            )}
           </AccordionContent>
         </AccordionItem>
 

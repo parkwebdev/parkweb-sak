@@ -145,10 +145,6 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isOpeningConversationRef = useRef(false);
 
-
-  // Calculate unread messages (assistant messages that haven't been read)
-  const unreadCount = messages.filter(msg => msg.role === 'assistant' && msg.read === false).length;
-  
   // Track hover state for nav icons
   const [hoveredNav, setHoveredNav] = useState<'home' | 'messages' | 'help' | null>(null);
 
@@ -1506,15 +1502,6 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
             >
               {/* Chat Icon */}
               <ChatBubbleIcon className="h-6 w-6 relative z-10" />
-              
-            {/* Notification Badge - shows unread message count */}
-            {unreadCount > 0 && (
-              <div className="absolute -top-1 -right-1 min-w-5 h-5 bg-red-500 rounded-full border-2 border-white flex items-center justify-center z-20">
-                <span className="text-white text-xs font-semibold px-1">
-                  {unreadCount > 99 ? '99+' : unreadCount}
-                </span>
-              </div>
-            )}
             </Button>
           </div>
         )}
