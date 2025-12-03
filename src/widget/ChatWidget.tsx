@@ -1314,7 +1314,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
 
                   {/* Level 3: Article Content with Feedback */}
                   {selectedArticle && (
-                    <div className="flex-1 flex flex-col overflow-hidden">
+                    <div className="flex-1 flex flex-col overflow-hidden widget-content-enter">
                       {/* Scrollable Article Content */}
                       <div className="flex-1 overflow-y-auto">
                         {/* Hero Section - Only shown if featured_image exists */}
