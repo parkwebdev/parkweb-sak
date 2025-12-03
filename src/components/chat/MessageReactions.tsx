@@ -16,6 +16,7 @@ interface MessageReactionsProps {
   onRemoveReaction: (emoji: string) => void;
   primaryColor: string;
   compact?: boolean;
+  isUserMessage?: boolean;
 }
 
 export const MessageReactions: React.FC<MessageReactionsProps> = ({
@@ -24,6 +25,7 @@ export const MessageReactions: React.FC<MessageReactionsProps> = ({
   onRemoveReaction,
   primaryColor,
   compact = false,
+  isUserMessage = false,
 }) => {
   const [showQuickPicker, setShowQuickPicker] = useState(false);
   const [showFullPicker, setShowFullPicker] = useState(false);
@@ -70,27 +72,27 @@ export const MessageReactions: React.FC<MessageReactionsProps> = ({
       ))}
 
       {compact ? (
-        <div 
-          className="relative"
-          onMouseEnter={() => setShowQuickPicker(true)}
-          onMouseLeave={() => setShowQuickPicker(false)}
-        >
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-6 w-6 p-0"
+        <Popover open={showQuickPicker} onOpenChange={setShowQuickPicker}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 w-6 p-0"
+            >
+              <FaceSmile className="h-3 w-3 text-muted-foreground" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent 
+            className="w-auto p-0" 
+            align={isUserMessage ? "end" : "start"}
+            side="top"
           >
-            <FaceSmile className="h-3 w-3 text-muted-foreground" />
-          </Button>
-          {showQuickPicker && (
-            <div className="absolute bottom-full left-0 mb-1 z-50">
-              <QuickEmojiPicker
-                onEmojiSelect={handleEmojiSelect}
-                primaryColor={primaryColor}
-              />
-            </div>
-          )}
-        </div>
+            <QuickEmojiPicker
+              onEmojiSelect={handleEmojiSelect}
+              primaryColor={primaryColor}
+            />
+          </PopoverContent>
+        </Popover>
       ) : (
         <Popover open={showFullPicker} onOpenChange={setShowFullPicker}>
           <PopoverTrigger asChild>

@@ -1009,8 +1009,9 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                                   }
                                   setMessages(newMessages);
                                 }}
-                                primaryColor={config.primaryColor}
+                              primaryColor={config.primaryColor}
                                 compact
+                                isUserMessage={msg.role === 'user'}
                               />
                             </Suspense>
                           )}
