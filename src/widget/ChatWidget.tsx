@@ -119,14 +119,6 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isOpeningConversationRef = useRef(false);
 
-  const [chatSettings, setChatSettings] = useState(() => {
-    const saved = localStorage.getItem(`chatpad_settings_${agentId}`);
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      return { soundEnabled: parsed.soundEnabled ?? config?.defaultSoundEnabled ?? true };
-    }
-    return { soundEnabled: config?.defaultSoundEnabled ?? true };
-  });
 
   // Calculate unread messages (assistant messages that haven't been read)
   const unreadCount = messages.filter(msg => msg.role === 'assistant' && msg.read === false).length;
@@ -169,12 +161,6 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     }
   }, [config?.greeting, previewMode]);
 
-  // Save settings
-  useEffect(() => {
-    if (config) {
-      localStorage.setItem(`chatpad_settings_${agentId}`, JSON.stringify(chatSettings));
-    }
-  }, [chatSettings, agentId, config]);
 
   // Signal to parent that widget is ready to display (eliminates flicker on first open)
   useEffect(() => {
@@ -433,22 +419,6 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     
     setMessageInput('');
 
-    if (chatSettings.soundEnabled) {
-      try {
-        const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
-        oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
-        oscillator.frequency.value = 800;
-        oscillator.type = 'sine';
-        gainNode.gain.value = 0.1;
-        oscillator.start(audioContext.currentTime);
-        oscillator.stop(audioContext.currentTime + 0.1);
-      } catch (error) {
-        console.error('Error playing sound:', error);
-      }
-    }
 
     setIsTyping(true);
     setTimeout(() => {
@@ -1110,6 +1080,8 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                             size="icon" 
                             variant="ghost" 
                             onClick={() => setIsAttachingFiles(true)}
+                            disabled={!chatUser && config.enableContactForm}
+                            className={!chatUser && config.enableContactForm ? 'opacity-50 cursor-not-allowed' : ''}
                           >
                             <Attachment01 className="h-4 w-4" />
                           </Button>
@@ -1119,6 +1091,8 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                             size="icon" 
                             variant="ghost" 
                             onClick={startAudioRecording}
+                            disabled={!chatUser && config.enableContactForm}
+                            className={!chatUser && config.enableContactForm ? 'opacity-50 cursor-not-allowed' : ''}
                           >
                             <Microphone01 className="h-4 w-4" />
                           </Button>

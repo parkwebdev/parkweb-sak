@@ -102,7 +102,6 @@ export const EmbedPreviewPanel = ({ config }: EmbedPreviewPanelProps) => {
     allowedFileTypes: ['image', 'document'],
     enableMessageReactions: true,
     showReadReceipts: true,
-    defaultSoundEnabled: config.defaultSoundEnabled,
     defaultAutoScroll: config.defaultAutoScroll,
     showBranding: config.showBranding,
   };

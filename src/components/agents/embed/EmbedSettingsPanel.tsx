@@ -438,22 +438,6 @@ export const EmbedSettingsPanel = ({ config, onConfigChange, embedCode }: EmbedS
           </AccordionContent>
         </AccordionItem>
 
-        {/* Features Section */}
-        <AccordionItem value="features">
-          <AccordionTrigger className="text-sm font-medium">Features</AccordionTrigger>
-          <AccordionContent className="space-y-4 pt-4">
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="default-sound" className="text-sm">Sound by Default</Label>
-                <Switch
-                  id="default-sound"
-                  checked={config.defaultSoundEnabled}
-                  onCheckedChange={(checked) => onConfigChange({ defaultSoundEnabled: checked })}
-                />
-              </div>
-            </div>
-          </AccordionContent>
-        </AccordionItem>
 
         {/* Installation Section */}
         <AccordionItem value="installation">

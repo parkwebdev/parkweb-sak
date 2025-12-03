@@ -105,7 +105,6 @@ export interface WidgetConfig {
   allowedFileTypes: string[];
   enableMessageReactions: boolean;
   showReadReceipts: boolean;
-  defaultSoundEnabled: boolean;
   defaultAutoScroll: boolean;
   
   // Branding

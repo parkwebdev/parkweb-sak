@@ -87,8 +87,7 @@ export interface EmbeddedChatConfig {
   // View Transitions
   viewTransition: 'slide' | 'fade' | 'none';
   
-  // Chat Settings (simplified - only sound and auto-scroll)
-  defaultSoundEnabled: boolean;
+  // Chat Settings
   defaultAutoScroll: boolean;
   
   // Help Articles
@@ -171,8 +170,7 @@ export const useEmbeddedChatConfig = (agentId: string) => {
     // View Transitions
     viewTransition: 'slide',
     
-    // Chat Settings (simplified)
-    defaultSoundEnabled: true,
+    // Chat Settings
     defaultAutoScroll: true,
     
     // Help Articles
