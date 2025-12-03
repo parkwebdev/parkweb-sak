@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 const IMAGE_CONFIG = {
   maxWidth: 800,        // Max width in pixels
   maxHeight: 600,       // Max height in pixels  
-  quality: 0.85,        // WebP quality (0-1)
+  quality: 0.6,         // WebP quality (0-1)
 };
 
 /**
@@ -102,7 +102,7 @@ export const uploadArticleImage = async (
 const FEATURED_IMAGE_CONFIG = {
   maxWidth: 1200,
   maxHeight: 600,
-  quality: 0.9,
+  quality: 0.6,
 };
 
 /**
