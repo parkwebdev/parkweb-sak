@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { PhoneInputField } from '@/components/ui/phone-input';
 import { Trash02, Save01, LinkExternal02 } from '@untitledui/icons';
 import { useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
@@ -88,10 +89,10 @@ export const LeadDetailsSheet = ({
 
             <div className="space-y-2">
               <Label htmlFor="phone">Phone</Label>
-              <Input
-                id="phone"
+              <PhoneInputField
+                name="phone"
                 value={currentData.phone || ''}
-                onChange={(e) => setEditedLead({ ...editedLead, phone: e.target.value })}
+                onChange={(phone) => setEditedLead({ ...editedLead, phone })}
               />
             </div>
 
