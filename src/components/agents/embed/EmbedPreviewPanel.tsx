@@ -83,7 +83,6 @@ export const EmbedPreviewPanel = ({ config }: EmbedPreviewPanelProps) => {
         category: art.category,
         title: art.title,
         content: art.content,
-        icon: art.icon || undefined,
         order: art.order || 0,
       };
     }),
