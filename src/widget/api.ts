@@ -1,5 +1,10 @@
+import { createClient, RealtimeChannel } from '@supabase/supabase-js';
+
 const SUPABASE_URL = 'https://mvaimvwdukpgvkifkfpa.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im12YWltdndkdWtwZ3ZraWZrZnBhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcxNzI3MTYsImV4cCI6MjA3Mjc0ODcxNn0.DmeecDZcGids_IjJQQepFVQK5wdEdV0eNXDCTRzQtQo';
+
+// Create a Supabase client for real-time subscriptions
+export const widgetSupabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 export interface WidgetConfig {
   // Agent info
@@ -200,4 +205,48 @@ export async function sendChatMessage(
   }
 
   return response.json();
+}
+
+// Subscribe to real-time messages for a conversation
+export function subscribeToMessages(
+  conversationId: string,
+  onMessage: (message: { id: string; role: string; content: string; metadata: any; created_at: string }) => void
+): RealtimeChannel {
+  console.log('[Widget] Subscribing to messages for conversation:', conversationId);
+  
+  const channel = widgetSupabase
+    .channel(`widget-messages-${conversationId}`)
+    .on(
+      'postgres_changes',
+      {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'messages',
+        filter: `conversation_id=eq.${conversationId}`,
+      },
+      (payload) => {
+        console.log('[Widget] New message received:', payload);
+        const newMessage = payload.new as any;
+        // Only notify for assistant messages (from human or AI)
+        if (newMessage.role === 'assistant') {
+          onMessage({
+            id: newMessage.id,
+            role: newMessage.role,
+            content: newMessage.content,
+            metadata: newMessage.metadata,
+            created_at: newMessage.created_at,
+          });
+        }
+      }
+    )
+    .subscribe((status) => {
+      console.log('[Widget] Subscription status:', status);
+    });
+
+  return channel;
+}
+
+export function unsubscribeFromMessages(channel: RealtimeChannel) {
+  console.log('[Widget] Unsubscribing from messages');
+  widgetSupabase.removeChannel(channel);
 }

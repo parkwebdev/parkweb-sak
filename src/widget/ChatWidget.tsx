@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, lazy, Suspense } from 'react';
-import { fetchWidgetConfig, createLead, submitArticleFeedback, sendChatMessage, type WidgetConfig, type ChatResponse } from './api';
+import { fetchWidgetConfig, createLead, submitArticleFeedback, sendChatMessage, subscribeToMessages, unsubscribeFromMessages, type WidgetConfig, type ChatResponse } from './api';
+import type { RealtimeChannel } from '@supabase/supabase-js';
 import { CSSAnimatedList } from './CSSAnimatedList';
 import { CSSAnimatedItem } from './CSSAnimatedItem';
 import { Card } from '@/components/ui/card';
@@ -296,6 +297,70 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
       return () => clearTimeout(timer);
     }
   }, [currentView, activeConversationId]);
+
+  // Subscribe to real-time messages for human takeover
+  const realtimeChannelRef = useRef<RealtimeChannel | null>(null);
+  
+  useEffect(() => {
+    // Only subscribe if we have a valid database conversation ID (UUID format)
+    const isValidUUID = activeConversationId && 
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(activeConversationId);
+    
+    if (!isValidUUID) {
+      return;
+    }
+
+    console.log('[Widget] Setting up real-time subscription for:', activeConversationId);
+    
+    // Unsubscribe from previous channel if exists
+    if (realtimeChannelRef.current) {
+      unsubscribeFromMessages(realtimeChannelRef.current);
+      realtimeChannelRef.current = null;
+    }
+
+    // Subscribe to new messages
+    realtimeChannelRef.current = subscribeToMessages(activeConversationId, (newMessage) => {
+      // Check if this is a human message (not from AI)
+      const isHumanMessage = newMessage.metadata?.sender_type === 'human';
+      
+      console.log('[Widget] Processing new message:', { 
+        id: newMessage.id, 
+        isHuman: isHumanMessage,
+        content: newMessage.content.substring(0, 50)
+      });
+      
+      // Only add human messages to avoid duplicates (AI messages are added locally)
+      if (isHumanMessage) {
+        setMessages(prev => {
+          // Check if message already exists to prevent duplicates
+          if (prev.some(m => (m as any).dbId === newMessage.id)) {
+            return prev;
+          }
+          
+          return [...prev, {
+            role: 'assistant' as const,
+            content: newMessage.content,
+            read: isOpen && currentView === 'messages',
+            timestamp: new Date(newMessage.created_at),
+            type: 'text' as const,
+            reactions: [],
+            dbId: newMessage.id, // Track database ID to prevent duplicates
+            isHuman: true, // Mark as human message for styling
+          } as Message & { dbId?: string; isHuman?: boolean }];
+        });
+
+        // Also stop typing indicator if it was showing
+        setIsTyping(false);
+      }
+    });
+
+    return () => {
+      if (realtimeChannelRef.current) {
+        unsubscribeFromMessages(realtimeChannelRef.current);
+        realtimeChannelRef.current = null;
+      }
+    };
+  }, [activeConversationId, isOpen, currentView]);
 
 
   // Send resize notifications based on content
@@ -1016,16 +1081,24 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                     )}
 
 
-                    {messages.map((msg, idx) => (
-                      <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                        <div 
-                          className={`max-w-[80%] rounded-lg p-3 ${msg.role === 'user' ? '' : 'bg-muted'}`}
-                          style={msg.role === 'user' ? { 
-                            backgroundColor: `rgba(${hexToRgb(config.gradientStartColor)}, 0.12)`,
-                            color: 'inherit'
-                          } : undefined}
-                        >
-                          {msg.type === 'audio' && msg.audioUrl && (
+                    {messages.map((msg, idx) => {
+                      const msgWithExtras = msg as Message & { isHuman?: boolean };
+                      return (
+                        <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                          <div 
+                            className={`max-w-[80%] rounded-lg p-3 ${msg.role === 'user' ? '' : msgWithExtras.isHuman ? 'bg-blue-50 border border-blue-100' : 'bg-muted'}`}
+                            style={msg.role === 'user' ? { 
+                              backgroundColor: `rgba(${hexToRgb(config.gradientStartColor)}, 0.12)`,
+                              color: 'inherit'
+                            } : undefined}
+                          >
+                            {msgWithExtras.isHuman && (
+                              <div className="flex items-center gap-1 text-xs text-blue-600 mb-1">
+                                <span>👤</span>
+                                <span className="font-medium">Team Member</span>
+                              </div>
+                            )}
+                            {msg.type === 'audio' && msg.audioUrl && (
                             <Suspense fallback={<div className="h-10 w-full bg-muted animate-pulse rounded" />}>
                               <AudioPlayer audioUrl={msg.audioUrl} primaryColor={config.primaryColor} />
                             </Suspense>
@@ -1083,7 +1156,8 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                           </div>
                         </div>
                       </div>
-                    ))}
+                      );
+                    })}
 
                     {isTyping && (
                       <div className="flex justify-start">

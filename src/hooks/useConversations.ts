@@ -196,6 +196,35 @@ export const useConversations = () => {
     }
   };
 
+  const sendHumanMessage = async (conversationId: string, content: string): Promise<boolean> => {
+    if (!user?.id) {
+      toast.error('You must be logged in to send messages');
+      return false;
+    }
+
+    try {
+      const { data, error } = await supabase.functions.invoke('send-human-message', {
+        body: {
+          conversationId,
+          content,
+          senderId: user.id,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.error) {
+        throw new Error(data.error);
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error sending human message:', error);
+      toast.error('Failed to send message');
+      return false;
+    }
+  };
+
   return {
     conversations,
     loading,
@@ -204,6 +233,7 @@ export const useConversations = () => {
     updateConversationMetadata,
     takeover,
     returnToAI,
+    sendHumanMessage,
     refetch: fetchConversations,
   };
 };
