@@ -1,7 +1,7 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Button } from '@/components/ui/button';
-import { Edit05, Trash01, DotsGrid } from '@untitledui/icons';
+import { Edit05, Trash01, DotsGrid, Image01 } from '@untitledui/icons';
 import type { HelpArticle } from '@/hooks/useEmbeddedChatConfig';
 
 interface SortableArticleItemProps {
@@ -40,6 +40,20 @@ export const SortableArticleItem = ({ article, onEdit, onDelete }: SortableArtic
       >
         <DotsGrid className="h-4 w-4" />
       </button>
+      
+      {article.featured_image ? (
+        <div className="w-10 h-10 rounded-md overflow-hidden flex-shrink-0 bg-muted">
+          <img 
+            src={article.featured_image} 
+            alt="" 
+            className="w-full h-full object-cover"
+          />
+        </div>
+      ) : (
+        <div className="w-10 h-10 rounded-md flex-shrink-0 bg-muted/50 flex items-center justify-center">
+          <Image01 className="h-4 w-4 text-muted-foreground/40" />
+        </div>
+      )}
       
       <div className="flex-1 min-w-0">
         <h5 className="font-medium text-sm">{article.title}</h5>

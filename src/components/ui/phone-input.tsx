@@ -73,12 +73,12 @@ export const PhoneInputField = forwardRef<HTMLInputElement, PhoneInputFieldProps
   return (
     <div className="relative flex items-center">
       {detectedCountry && (
-        <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center pointer-events-none z-10">
+        <div className="absolute left-2.5 top-1/2 -translate-y-1/2 flex items-center pointer-events-none z-10">
           <img 
             src={`https://flagcdn.com/${detectedCountry.toLowerCase()}.svg`}
             alt={detectedCountry}
-            width={20}
-            className="h-5 w-auto object-contain"
+            width={16}
+            className="h-3.5 w-auto object-contain"
           />
         </div>
       )}
@@ -89,7 +89,7 @@ export const PhoneInputField = forwardRef<HTMLInputElement, PhoneInputFieldProps
         value={inputValue}
         onChange={handleChange}
         placeholder={placeholder}
-        className={cn(detectedCountry ? 'pl-14' : '', className)}
+        className={cn(detectedCountry ? 'pl-10' : '', className)}
         required={required}
       />
     </div>
