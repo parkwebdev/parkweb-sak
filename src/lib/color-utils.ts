@@ -104,9 +104,9 @@ export function generateGradientPalette(
   return {
     first: hexToRgb(primaryColor),
     second: hexToRgb(secondaryColor),
-    third: lightenColor(primaryColor, 20),
-    fourth: darkenColor(primaryColor, 15),
-    fifth: lightenColor(secondaryColor, 15),
+    third: lightenColor(primaryColor, 25),
+    fourth: lightenColor(primaryColor, 40),
+    fifth: lightenColor(secondaryColor, 20),
     sixth: blendColors(primaryColor, secondaryColor, 0.5),
   };
 }
