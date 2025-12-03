@@ -53,13 +53,37 @@ async function searchKnowledge(
   return data || [];
 }
 
+// Parse user agent string for device info
+function parseUserAgent(userAgent: string | null): { device: string; browser: string; os: string } {
+  if (!userAgent) return { device: 'unknown', browser: 'unknown', os: 'unknown' };
+  
+  let device = 'desktop';
+  if (/mobile/i.test(userAgent)) device = 'mobile';
+  else if (/tablet|ipad/i.test(userAgent)) device = 'tablet';
+  
+  let browser = 'unknown';
+  if (/chrome/i.test(userAgent) && !/edge/i.test(userAgent)) browser = 'Chrome';
+  else if (/safari/i.test(userAgent) && !/chrome/i.test(userAgent)) browser = 'Safari';
+  else if (/firefox/i.test(userAgent)) browser = 'Firefox';
+  else if (/edge/i.test(userAgent)) browser = 'Edge';
+  
+  let os = 'unknown';
+  if (/windows/i.test(userAgent)) os = 'Windows';
+  else if (/macintosh|mac os/i.test(userAgent)) os = 'macOS';
+  else if (/linux/i.test(userAgent)) os = 'Linux';
+  else if (/android/i.test(userAgent)) os = 'Android';
+  else if (/iphone|ipad/i.test(userAgent)) os = 'iOS';
+  
+  return { device, browser, os };
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { agentId, messages } = await req.json();
+    const { agentId, conversationId, messages, leadId } = await req.json();
 
     if (!agentId) {
       throw new Error('Agent ID is required');
@@ -80,6 +104,117 @@ serve(async (req) => {
     if (agentError) throw agentError;
 
     const deploymentConfig = (agent.deployment_config as any) || {};
+
+    // Capture request metadata
+    const ipAddress = req.headers.get('cf-connecting-ip') || 
+                      req.headers.get('x-forwarded-for')?.split(',')[0] || 
+                      req.headers.get('x-real-ip') || 
+                      'unknown';
+    const country = req.headers.get('cf-ipcountry') || 'unknown';
+    const userAgent = req.headers.get('user-agent');
+    const referer = req.headers.get('referer') || null;
+    const { device, browser, os } = parseUserAgent(userAgent);
+
+    // Create or get conversation
+    let activeConversationId = conversationId;
+    
+    if (!activeConversationId || activeConversationId === 'new' || activeConversationId.startsWith('conv_') || activeConversationId.startsWith('migrated_')) {
+      // Create a new conversation in the database
+      const conversationMetadata = {
+        ip_address: ipAddress,
+        country,
+        device,
+        browser,
+        os,
+        referer_url: referer,
+        session_started_at: new Date().toISOString(),
+        lead_id: leadId || null,
+        tags: [],
+        messages_count: 0,
+      };
+
+      const { data: newConversation, error: createError } = await supabase
+        .from('conversations')
+        .insert({
+          agent_id: agentId,
+          user_id: agent.user_id,
+          status: 'active',
+          metadata: conversationMetadata,
+        })
+        .select('id')
+        .single();
+
+      if (createError) {
+        console.error('Error creating conversation:', createError);
+        throw createError;
+      }
+
+      activeConversationId = newConversation.id;
+      console.log(`Created new conversation: ${activeConversationId}`);
+    }
+
+    // Check conversation status (for human takeover)
+    const { data: conversation } = await supabase
+      .from('conversations')
+      .select('status, metadata')
+      .eq('id', activeConversationId)
+      .single();
+
+    if (conversation?.status === 'human_takeover') {
+      // Don't call AI - just save the user message and return
+      if (messages && messages.length > 0) {
+        const lastUserMessage = messages[messages.length - 1];
+        if (lastUserMessage.role === 'user') {
+          await supabase.from('messages').insert({
+            conversation_id: activeConversationId,
+            role: 'user',
+            content: lastUserMessage.content,
+            metadata: { source: 'widget' }
+          });
+
+          // Update conversation metadata
+          const currentMetadata = conversation.metadata || {};
+          await supabase
+            .from('conversations')
+            .update({
+              metadata: {
+                ...currentMetadata,
+                messages_count: (currentMetadata.messages_count || 0) + 1,
+              },
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', activeConversationId);
+        }
+      }
+
+      return new Response(
+        JSON.stringify({
+          conversationId: activeConversationId,
+          status: 'human_takeover',
+          message: 'A team member is handling this conversation',
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    // Save the user message to database
+    if (messages && messages.length > 0) {
+      const lastUserMessage = messages[messages.length - 1];
+      if (lastUserMessage.role === 'user') {
+        const { error: msgError } = await supabase.from('messages').insert({
+          conversation_id: activeConversationId,
+          role: 'user',
+          content: lastUserMessage.content,
+          metadata: { source: 'widget' }
+        });
+        
+        if (msgError) {
+          console.error('Error saving user message:', msgError);
+        }
+      }
+    }
 
     // Check plan limits - get subscription and limits
     const { data: subscription } = await supabase
@@ -121,6 +256,7 @@ serve(async (req) => {
           limit_reached: true,
           current: currentApiCalls,
           limit: maxApiCalls,
+          conversationId: activeConversationId,
         }),
         {
           status: 429,
@@ -214,7 +350,7 @@ When answering, you can naturally reference the information from the knowledge b
           },
           ...messages,
         ],
-        stream: true,
+        stream: false, // Non-streaming for easier message persistence
         temperature: agent.temperature || 0.7,
         max_tokens: agent.max_tokens || 2000,
         top_p: deploymentConfig.top_p || 1.0,
@@ -224,7 +360,7 @@ When answering, you can naturally reference the information from the knowledge b
     if (!response.ok) {
       if (response.status === 429) {
         return new Response(
-          JSON.stringify({ error: 'Rate limit exceeded. Please try again later.' }),
+          JSON.stringify({ error: 'Rate limit exceeded. Please try again later.', conversationId: activeConversationId }),
           {
             status: 429,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -233,7 +369,7 @@ When answering, you can naturally reference the information from the knowledge b
       }
       if (response.status === 402) {
         return new Response(
-          JSON.stringify({ error: 'Credits exhausted. Please add funds to continue.' }),
+          JSON.stringify({ error: 'Credits exhausted. Please add funds to continue.', conversationId: activeConversationId }),
           {
             status: 402,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -245,17 +381,38 @@ When answering, you can naturally reference the information from the knowledge b
       throw new Error('AI Gateway error');
     }
 
-    // Add sources metadata to response headers if any were found
-    const responseHeaders: Record<string, string> = {
-      ...corsHeaders,
-      'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache',
-      'Connection': 'keep-alive',
-    };
+    const aiResponse = await response.json();
+    const assistantContent = aiResponse.choices?.[0]?.message?.content || 'I apologize, but I was unable to generate a response.';
 
-    if (sources.length > 0) {
-      responseHeaders['X-Knowledge-Sources'] = JSON.stringify(sources);
+    // Save the assistant message to database
+    const { error: assistantMsgError } = await supabase.from('messages').insert({
+      conversation_id: activeConversationId,
+      role: 'assistant',
+      content: assistantContent,
+      metadata: { 
+        source: 'ai',
+        model: agent.model,
+        knowledge_sources: sources.length > 0 ? sources : undefined,
+      }
+    });
+
+    if (assistantMsgError) {
+      console.error('Error saving assistant message:', assistantMsgError);
     }
+
+    // Update conversation metadata (message count, last activity)
+    const currentMetadata = conversation?.metadata || {};
+    await supabase
+      .from('conversations')
+      .update({
+        metadata: {
+          ...currentMetadata,
+          messages_count: (currentMetadata.messages_count || 0) + 2, // user + assistant
+          first_message_at: currentMetadata.first_message_at || new Date().toISOString(),
+        },
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', activeConversationId);
 
     // Track API call usage (fire and forget - don't wait)
     const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
@@ -272,10 +429,17 @@ When answering, you can naturally reference the information from the knowledge b
       .then(() => console.log('API usage tracked'))
       .catch(err => console.error('Failed to track usage:', err));
 
-    // Return the stream
-    return new Response(response.body, {
-      headers: responseHeaders,
-    });
+    // Return the response with conversation ID
+    return new Response(
+      JSON.stringify({
+        conversationId: activeConversationId,
+        response: assistantContent,
+        sources: sources.length > 0 ? sources : undefined,
+      }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
   } catch (error) {
     console.error('Widget chat error:', error);
     return new Response(
