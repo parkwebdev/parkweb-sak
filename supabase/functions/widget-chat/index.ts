@@ -255,18 +255,21 @@ serve(async (req) => {
     }
 
     // Save the user message to database
+    let userMessageId: string | undefined;
     if (messages && messages.length > 0) {
       const lastUserMessage = messages[messages.length - 1];
       if (lastUserMessage.role === 'user') {
-        const { error: msgError } = await supabase.from('messages').insert({
+        const { data: userMsg, error: msgError } = await supabase.from('messages').insert({
           conversation_id: activeConversationId,
           role: 'user',
           content: lastUserMessage.content,
           metadata: { source: 'widget' }
-        });
+        }).select('id').single();
         
         if (msgError) {
           console.error('Error saving user message:', msgError);
+        } else {
+          userMessageId = userMsg?.id;
         }
       }
     }
@@ -440,7 +443,7 @@ When answering, you can naturally reference the information from the knowledge b
     const assistantContent = aiResponse.choices?.[0]?.message?.content || 'I apologize, but I was unable to generate a response.';
 
     // Save the assistant message to database
-    const { error: assistantMsgError } = await supabase.from('messages').insert({
+    const { data: assistantMsg, error: assistantMsgError } = await supabase.from('messages').insert({
       conversation_id: activeConversationId,
       role: 'assistant',
       content: assistantContent,
@@ -449,11 +452,13 @@ When answering, you can naturally reference the information from the knowledge b
         model: agent.model,
         knowledge_sources: sources.length > 0 ? sources : undefined,
       }
-    });
+    }).select('id').single();
 
     if (assistantMsgError) {
       console.error('Error saving assistant message:', assistantMsgError);
     }
+
+    const assistantMessageId = assistantMsg?.id;
 
     // Update conversation metadata (message count, last activity)
     const currentMetadata = conversation?.metadata || {};
@@ -484,11 +489,13 @@ When answering, you can naturally reference the information from the knowledge b
       .then(() => console.log('API usage tracked'))
       .catch(err => console.error('Failed to track usage:', err));
 
-    // Return the response with conversation ID
+    // Return the response with conversation ID and message IDs
     return new Response(
       JSON.stringify({
         conversationId: activeConversationId,
         response: assistantContent,
+        userMessageId,
+        assistantMessageId,
         sources: sources.length > 0 ? sources : undefined,
       }),
       {
