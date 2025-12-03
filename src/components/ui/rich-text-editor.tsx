@@ -48,6 +48,8 @@ export const RichTextEditor = ({
         openOnClick: false,
         HTMLAttributes: {
           class: 'text-primary underline cursor-pointer',
+          target: '_blank',
+          rel: 'noopener noreferrer',
         },
       }),
       Placeholder.configure({
