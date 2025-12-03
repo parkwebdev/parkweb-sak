@@ -1311,10 +1311,10 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                           
                           <h2 className="text-xl font-bold mb-4">{selectedArticle.title}</h2>
                           <div 
-                            className="prose prose-sm max-w-none text-sm whitespace-pre-wrap break-words" 
+                            className="article-content max-w-none" 
                             dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(selectedArticle.content, {
-                              ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'b', 'i', 'u', 'a', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'code', 'pre', 'span', 'div'],
-                              ALLOWED_ATTR: ['href', 'target', 'rel', 'class'],
+                              ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'b', 'i', 'u', 'a', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'code', 'pre', 'span', 'div', 'img'],
+                              ALLOWED_ATTR: ['href', 'target', 'rel', 'class', 'src', 'alt', 'width', 'height', 'style'],
                             }) }} 
                           />
                         </div>
