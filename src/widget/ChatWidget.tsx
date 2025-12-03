@@ -213,6 +213,15 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     }
   }, []);
 
+  // Initialize activeConversationId from chatUser if available (for returning users)
+  // This enables real-time subscriptions immediately on widget load
+  useEffect(() => {
+    if (chatUser?.conversationId && !activeConversationId) {
+      console.log('[Widget] Restoring conversation ID from chatUser:', chatUser.conversationId);
+      setActiveConversationId(chatUser.conversationId);
+    }
+  }, [chatUser?.conversationId]);
+
   // Load conversations from localStorage (with migration from old format)
   useEffect(() => {
     const stored = localStorage.getItem(`chatpad_conversations_${agentId}`);
@@ -537,7 +546,10 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
         setActiveConversationId('new');
         setShowConversationList(false);
       } else {
-        // Returning user - show conversation list
+        // Returning user - if they have a conversation ID, activate it for real-time subscription
+        if (chatUser.conversationId) {
+          setActiveConversationId(chatUser.conversationId);
+        }
         setShowConversationList(true);
       }
     } else if (actionType === 'open_help' || actionType === 'help') {
@@ -617,6 +629,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
 
       // Update conversation ID if this was a new conversation
       if (response.conversationId && response.conversationId !== activeConversationId) {
+        const oldConvId = activeConversationId;
         setActiveConversationId(response.conversationId);
         
         // Update chatUser with new conversation ID
@@ -625,10 +638,20 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
           setChatUser(updatedUser);
           localStorage.setItem(`chatpad_user_${config.agentId}`, JSON.stringify(updatedUser));
         }
+        
+        // Update local conversations array to use the database UUID
+        if (oldConvId) {
+          setConversations(prev => prev.map(conv => 
+            conv.id === oldConvId 
+              ? { ...conv, id: response.conversationId } 
+              : conv
+          ));
+        }
       }
 
       // Handle human takeover status
       if (response.status === 'human_takeover') {
+        setIsHumanTakeover(true);
         setMessages(prev => [...prev, { 
           role: 'assistant', 
           content: response.message || 'A team member is now handling your conversation. They will respond shortly.', 
