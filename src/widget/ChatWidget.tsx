@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { X, Send01, MessageChatCircle, ChevronRight, Zap, BookOpen01, Microphone01, Attachment01, Image03, FileCheck02, ThumbsUp, ThumbsDown } from '@untitledui/icons';
+import { CategoryIcon } from './category-icons';
 import { HomeNavIcon, ChatNavIcon, HelpNavIcon } from './NavIcons';
 import { ChatBubbleIcon } from '@/components/agents/ChatBubbleIcon';
 import ChatPadLogo from '@/components/ChatPadLogo';
@@ -1224,16 +1225,23 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                                 return (
                                   <CSSAnimatedItem key={category.id}>
                                     <button
-                                      className="w-full p-4 border rounded-lg bg-card hover:bg-accent/50 cursor-pointer transition-all text-left"
+                                      className="w-full p-4 border rounded-lg bg-card hover:bg-accent/50 cursor-pointer transition-all text-left active:scale-[0.98]"
                                       onClick={() => setSelectedCategory(category.id)}
                                     >
-                                    <div className="flex items-start justify-between gap-3">
-                                      <div className="flex-1">
-                                        <h4 className="font-medium text-sm mb-1">{category.name}</h4>
-                                        {category.description && (
-                                          <p className="text-xs text-muted-foreground">{category.description}</p>
-                                        )}
-                                        <p className="text-xs text-muted-foreground mt-2">
+                                    <div className="flex items-center gap-3">
+                                      <div 
+                                        className="p-2.5 rounded-lg flex-shrink-0"
+                                        style={{ backgroundColor: `${config.gradientStartColor}15` }}
+                                      >
+                                        <CategoryIcon 
+                                          name={category.icon} 
+                                          className="h-5 w-5" 
+                                          style={{ color: config.gradientStartColor }}
+                                        />
+                                      </div>
+                                      <div className="flex-1 min-w-0">
+                                        <h4 className="font-medium text-sm">{category.name}</h4>
+                                        <p className="text-xs text-muted-foreground mt-1">
                                           {articlesInCategory} {articlesInCategory === 1 ? 'article' : 'articles'}
                                         </p>
                                       </div>
@@ -1288,7 +1296,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                             {filteredArticles.map((article) => (
                               <CSSAnimatedItem key={article.id}>
                                 <button
-                                  className="w-full p-3 border rounded-lg hover:bg-accent cursor-pointer transition-colors text-left"
+                                  className="w-full p-3 border rounded-lg hover:bg-accent cursor-pointer transition-colors text-left active:scale-[0.98]"
                                   onClick={() => setSelectedArticle(article)}
                                 >
                                  <div className="flex items-center justify-between gap-2">

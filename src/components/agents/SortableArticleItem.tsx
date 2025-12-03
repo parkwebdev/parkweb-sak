@@ -41,10 +41,6 @@ export const SortableArticleItem = ({ article, onEdit, onDelete }: SortableArtic
         <DotsGrid className="h-4 w-4" />
       </button>
       
-      {article.icon && (
-        <span className="text-xl">{article.icon}</span>
-      )}
-      
       <div className="flex-1 min-w-0">
         <h5 className="font-medium text-sm">{article.title}</h5>
         <p className="text-xs text-muted-foreground mt-1 line-clamp-2">

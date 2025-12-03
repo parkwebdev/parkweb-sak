@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { useHelpArticles } from '@/hooks/useHelpArticles';
 import { toast } from '@/lib/toast';
 import { uploadFeaturedImage } from '@/lib/article-image-upload';
+import { CATEGORY_ICON_OPTIONS, CategoryIcon, type CategoryIconName } from '@/widget/category-icons';
 import { 
   DndContext, 
   closestCenter, 
@@ -74,17 +75,18 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
     title: '',
     content: '',
     category: '',
-    icon: '',
     featured_image: '',
   });
   const [featuredImageUploading, setFeaturedImageUploading] = useState(false);
   const [newCategoryForm, setNewCategoryForm] = useState({
     name: '',
     description: '',
+    icon: 'book' as CategoryIconName,
   });
   const [editCategoryForm, setEditCategoryForm] = useState({
     name: '',
     description: '',
+    icon: 'book' as CategoryIconName,
   });
 
   const handleSubmit = async () => {
@@ -116,7 +118,6 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
         title: article.title,
         content: article.content,
         category: article.category,
-        icon: article.icon || '',
         featured_image: article.featured_image || '',
       });
       setEditingArticle(articleId);
@@ -136,7 +137,7 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
   };
 
   const resetForm = () => {
-    setFormData({ title: '', content: '', category: '', icon: '', featured_image: '' });
+    setFormData({ title: '', content: '', category: '', featured_image: '' });
     setEditingArticle(null);
   };
 
@@ -146,9 +147,9 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
       return;
     }
     try {
-      await addCategory(newCategoryForm.name, newCategoryForm.description);
+      await addCategory(newCategoryForm.name, newCategoryForm.description, newCategoryForm.icon);
       toast.success('Category added');
-      setNewCategoryForm({ name: '', description: '' });
+      setNewCategoryForm({ name: '', description: '', icon: 'book' });
       setNewCategoryDialogOpen(false);
     } catch (error) {
       toast.error('Failed to add category');
@@ -159,7 +160,11 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
     const category = categories.find(c => c.name === categoryName);
     if (category) {
       setEditingCategoryName(categoryName);
-      setEditCategoryForm({ name: category.name, description: category.description });
+      setEditCategoryForm({ 
+        name: category.name, 
+        description: category.description,
+        icon: (category.icon as CategoryIconName) || 'book'
+      });
       setEditCategoryDialogOpen(true);
     }
   };
@@ -170,11 +175,11 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
       return;
     }
     try {
-      await updateCategory(editingCategoryName, editCategoryForm.name, editCategoryForm.description);
+      await updateCategory(editingCategoryName, editCategoryForm.name, editCategoryForm.description, editCategoryForm.icon);
       toast.success('Category updated');
       setEditCategoryDialogOpen(false);
       setEditingCategoryName('');
-      setEditCategoryForm({ name: '', description: '' });
+      setEditCategoryForm({ name: '', description: '', icon: 'book' });
     } catch (error) {
       toast.error('Failed to update category');
     }
@@ -202,7 +207,7 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
   };
 
   const handleAddArticleToCategory = (categoryName: string) => {
-    setFormData({ title: '', content: '', category: categoryName, icon: '', featured_image: '' });
+    setFormData({ title: '', content: '', category: categoryName, featured_image: '' });
     setEditingArticle(null);
     setDialogOpen(true);
   };
@@ -368,6 +373,26 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
                       rows={2}
                     />
                   </div>
+                  <div className="space-y-2">
+                    <Label>Category Icon</Label>
+                    <div className="grid grid-cols-5 gap-2">
+                      {CATEGORY_ICON_OPTIONS.map((option) => (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() => setNewCategoryForm({ ...newCategoryForm, icon: option.value })}
+                          className={`p-3 rounded-lg border flex items-center justify-center transition-all ${
+                            newCategoryForm.icon === option.value 
+                              ? 'border-primary bg-primary/10' 
+                              : 'border-border hover:bg-accent'
+                          }`}
+                          title={option.label}
+                        >
+                          <CategoryIcon name={option.value} className="h-5 w-5" />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
                 <DialogFooter>
                   <Button variant="outline" onClick={() => setNewCategoryDialogOpen(false)}>
@@ -403,6 +428,26 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
                       placeholder="Brief description to help users understand this category"
                       rows={2}
                     />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Category Icon</Label>
+                    <div className="grid grid-cols-5 gap-2">
+                      {CATEGORY_ICON_OPTIONS.map((option) => (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() => setEditCategoryForm({ ...editCategoryForm, icon: option.value })}
+                          className={`p-3 rounded-lg border flex items-center justify-center transition-all ${
+                            editCategoryForm.icon === option.value 
+                              ? 'border-primary bg-primary/10' 
+                              : 'border-border hover:bg-accent'
+                          }`}
+                          title={option.label}
+                        >
+                          <CategoryIcon name={option.value} className="h-5 w-5" />
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
                 <DialogFooter>
@@ -474,17 +519,6 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
                           )}
                         </SelectContent>
                       </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="icon">Icon (emoji, optional)</Label>
-                      <Input
-                        id="icon"
-                        value={formData.icon}
-                        onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
-                        placeholder="📖"
-                        maxLength={2}
-                      />
                     </div>
                   </div>
 

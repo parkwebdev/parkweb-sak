@@ -45,7 +45,7 @@ Deno.serve(async (req) => {
       // Fetch help categories (exclude user_id for security)
       supabase
         .from('help_categories')
-        .select('id, agent_id, name, description, order_index')
+        .select('id, agent_id, name, description, icon, order_index')
         .eq('agent_id', agentId)
         .order('order_index', { ascending: true }),
       

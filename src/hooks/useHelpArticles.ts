@@ -47,6 +47,7 @@ export const useHelpArticles = (agentId: string) => {
           id: cat.id,
           name: cat.name,
           description: cat.description || '',
+          icon: cat.icon || 'book',
         }));
 
         const mappedArticles: HelpArticle[] = (articlesData || []).map((article) => ({
@@ -54,7 +55,6 @@ export const useHelpArticles = (agentId: string) => {
           title: article.title,
           content: article.content,
           category: categoriesData?.find(c => c.id === article.category_id)?.name || '',
-          icon: article.icon || undefined,
           order: article.order_index,
           featured_image: article.featured_image || undefined,
         }));
@@ -110,7 +110,7 @@ export const useHelpArticles = (agentId: string) => {
         categoryId = newCategory.id;
       }
 
-      // Insert article
+      // Insert article (without icon field)
       const { data: newArticle, error } = await supabase
         .from('help_articles')
         .insert({
@@ -119,7 +119,6 @@ export const useHelpArticles = (agentId: string) => {
           category_id: categoryId,
           title: article.title,
           content: article.content,
-          icon: article.icon,
           featured_image: article.featured_image || null,
           order_index: articles.length,
         })
@@ -134,7 +133,6 @@ export const useHelpArticles = (agentId: string) => {
         title: newArticle.title,
         content: newArticle.content,
         category: article.category,
-        icon: article.icon,
         featured_image: article.featured_image,
         order: newArticle.order_index,
       }]);
@@ -192,7 +190,6 @@ export const useHelpArticles = (agentId: string) => {
         .update({
           ...(updates.title && { title: updates.title }),
           ...(updates.content && { content: updates.content }),
-          ...(updates.icon !== undefined && { icon: updates.icon }),
           ...(updates.featured_image !== undefined && { featured_image: updates.featured_image || null }),
           ...(categoryId && { category_id: categoryId }),
         })
@@ -244,7 +241,7 @@ export const useHelpArticles = (agentId: string) => {
     }
   };
 
-  const addCategory = async (name: string, description: string = '') => {
+  const addCategory = async (name: string, description: string = '', icon: string = 'book') => {
     try {
       // Get agent's user_id
       const { data: agent } = await supabase
@@ -262,6 +259,7 @@ export const useHelpArticles = (agentId: string) => {
           user_id: agent.user_id,
           name,
           description,
+          icon,
           order_index: categories.length,
         })
         .select()
@@ -269,7 +267,7 @@ export const useHelpArticles = (agentId: string) => {
 
       if (error) throw error;
 
-      setCategories([...categories, { id: data.id, name, description }]);
+      setCategories([...categories, { id: data.id, name, description, icon }]);
       return data.id;
     } catch (error) {
       console.error('Error adding category:', error);
@@ -277,18 +275,18 @@ export const useHelpArticles = (agentId: string) => {
     }
   };
 
-  const updateCategory = async (oldName: string, newName: string, description: string = '') => {
+  const updateCategory = async (oldName: string, newName: string, description: string = '', icon: string = 'book') => {
     try {
       const { error } = await supabase
         .from('help_categories')
-        .update({ name: newName, description })
+        .update({ name: newName, description, icon })
         .eq('agent_id', agentId)
         .eq('name', oldName);
 
       if (error) throw error;
 
       setCategories(categories.map(c =>
-        c.name === oldName ? { id: c.id, name: newName, description } : c
+        c.name === oldName ? { id: c.id, name: newName, description, icon } : c
       ));
 
       setArticles(articles.map(a =>
@@ -384,7 +382,6 @@ export const useHelpArticles = (agentId: string) => {
     title: string;
     content: string;
     category: string;
-    icon?: string;
   }>) => {
     try {
       // Get agent's user_id
@@ -436,7 +433,6 @@ export const useHelpArticles = (agentId: string) => {
         category_id: categoryMap.get(item.category)!,
         title: item.title,
         content: item.content,
-        icon: item.icon || null,
         order_index: articles.length + index,
       }));
 
@@ -453,7 +449,6 @@ export const useHelpArticles = (agentId: string) => {
         title: article.title,
         content: article.content,
         category: importData[index].category,
-        icon: article.icon || undefined,
         order: article.order_index,
       }));
 
