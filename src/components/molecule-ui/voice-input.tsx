@@ -2,6 +2,7 @@
 
 import React from "react"
 import { AnimatePresence, motion } from "motion/react"
+import { XClose } from "@untitledui/icons"
 
 import { cn } from "@/lib/utils"
 
@@ -18,6 +19,10 @@ export interface VoiceInputProps {
    * Callback function called when stop button is clicked
    */
   onStop?: () => void
+  /**
+   * Callback function called when cancel button is clicked
+   */
+  onCancel?: () => void
 }
 
 export function VoiceInput({
@@ -25,6 +30,7 @@ export function VoiceInput({
   isRecording,
   recordingTime,
   onStop,
+  onCancel,
   ...props
 }: React.ComponentProps<"div"> & VoiceInputProps) {
   const formatTime = (seconds: number) => {
@@ -35,9 +41,18 @@ export function VoiceInput({
 
   return (
     <div
-      className={cn("flex flex-col items-center justify-center", className)}
+      className={cn("flex items-center justify-center gap-2", className)}
       {...props}
     >
+      {/* Cancel button */}
+      <button
+        type="button"
+        onClick={onCancel}
+        className="flex h-8 w-8 items-center justify-center rounded-full border text-muted-foreground hover:bg-muted transition-colors"
+      >
+        <XClose className="h-4 w-4" />
+      </button>
+
       <motion.div
         className="flex cursor-pointer items-center justify-center rounded-full border p-2"
         layout
