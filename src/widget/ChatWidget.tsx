@@ -160,6 +160,8 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
   const [isHumanTakeover, setIsHumanTakeover] = useState(false);
   const [isHumanTyping, setIsHumanTyping] = useState(false);
   const [typingAgentName, setTypingAgentName] = useState<string | undefined>();
+  const [takeoverAgentName, setTakeoverAgentName] = useState<string | undefined>();
+  const [takeoverAgentAvatar, setTakeoverAgentAvatar] = useState<string | undefined>();
   const [unreadCount, setUnreadCount] = useState(0);
   const [headerScrollY, setHeaderScrollY] = useState(0);
   const homeContentRef = useRef<HTMLDivElement>(null);
@@ -345,6 +347,9 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
       
       // Only add human messages to avoid duplicates (AI messages are added locally)
       if (isHumanMessage) {
+        const senderName = newMessage.metadata?.sender_name;
+        const senderAvatar = newMessage.metadata?.sender_avatar;
+        
         setMessages(prev => {
           // Check if message already exists to prevent duplicates
           if (prev.some(m => (m as any).dbId === newMessage.id)) {
@@ -358,10 +363,18 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
             timestamp: new Date(newMessage.created_at),
             type: 'text' as const,
             reactions: [],
-            dbId: newMessage.id, // Track database ID to prevent duplicates
-            isHuman: true, // Mark as human message for styling
-          } as Message & { dbId?: string; isHuman?: boolean }];
+            dbId: newMessage.id,
+            isHuman: true,
+            senderName,
+            senderAvatar,
+          } as Message & { dbId?: string; isHuman?: boolean; senderName?: string; senderAvatar?: string }];
         });
+
+        // Update takeover agent info for the banner
+        if (senderName) {
+          setTakeoverAgentName(senderName);
+          setTakeoverAgentAvatar(senderAvatar);
+        }
 
         // Also stop typing indicator if it was showing
         setIsTyping(false);
@@ -1192,9 +1205,24 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
 
 
                     {messages.map((msg, idx) => {
-                      const msgWithExtras = msg as Message & { isHuman?: boolean };
+                      const msgWithExtras = msg as Message & { isHuman?: boolean; senderName?: string; senderAvatar?: string };
                       return (
-                        <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                        <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} ${msgWithExtras.isHuman ? 'items-start gap-2' : ''}`}>
+                          {/* Avatar for human messages */}
+                          {msgWithExtras.isHuman && msgWithExtras.senderAvatar && (
+                            <img 
+                              src={msgWithExtras.senderAvatar} 
+                              alt={msgWithExtras.senderName || 'Team'} 
+                              className="w-7 h-7 rounded-full object-cover flex-shrink-0 mt-0.5"
+                            />
+                          )}
+                          {msgWithExtras.isHuman && !msgWithExtras.senderAvatar && (
+                            <div className="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                              <span className="text-blue-600 text-xs font-medium">
+                                {(msgWithExtras.senderName || 'T').charAt(0).toUpperCase()}
+                              </span>
+                            </div>
+                          )}
                           <div 
                             className={`max-w-[80%] rounded-lg p-3 ${msg.role === 'user' ? '' : msgWithExtras.isHuman ? 'bg-blue-50 border border-blue-100' : 'bg-muted'}`}
                             style={msg.role === 'user' ? { 
@@ -1203,9 +1231,8 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                             } : undefined}
                           >
                             {msgWithExtras.isHuman && (
-                              <div className="flex items-center gap-1 text-xs text-blue-600 mb-1">
-                                <span>👤</span>
-                                <span className="font-medium">Team Member</span>
+                              <div className="flex items-center gap-1.5 text-xs text-blue-600 mb-1">
+                                <span className="font-medium">{msgWithExtras.senderName || 'Team Member'}</span>
                               </div>
                             )}
                             {msg.type === 'audio' && msg.audioUrl && (
@@ -1270,11 +1297,24 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                     })}
 
                     {(isTyping || isHumanTyping) && (
-                      <div className="flex justify-start">
+                      <div className="flex justify-start items-start gap-2">
+                        {isHumanTyping && takeoverAgentAvatar && (
+                          <img 
+                            src={takeoverAgentAvatar} 
+                            alt={takeoverAgentName || 'Team'} 
+                            className="w-7 h-7 rounded-full object-cover flex-shrink-0"
+                          />
+                        )}
+                        {isHumanTyping && !takeoverAgentAvatar && (
+                          <div className="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                            <span className="text-blue-600 text-xs font-medium">
+                              {(takeoverAgentName || 'T').charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                        )}
                         <div className={`rounded-lg p-3 flex items-center gap-2 ${
                           isHumanTyping ? 'bg-blue-50 border border-blue-100' : 'bg-muted'
                         }`}>
-                          {isHumanTyping && <span className="text-sm">👤</span>}
                           <div className="flex gap-1">
                             <div className={`w-2 h-2 rounded-full animate-bounce ${
                               isHumanTyping ? 'bg-blue-400' : 'bg-foreground/40'
@@ -1286,8 +1326,8 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                               isHumanTyping ? 'bg-blue-400' : 'bg-foreground/40'
                             }`} style={{ animationDelay: '300ms' }} />
                           </div>
-                          {isHumanTyping && (
-                            <span className="text-xs text-blue-600 ml-1">Team member typing...</span>
+                          {isHumanTyping && takeoverAgentName && (
+                            <span className="text-xs text-blue-600 ml-1">{takeoverAgentName} is typing...</span>
                           )}
                         </div>
                       </div>
@@ -1342,10 +1382,24 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                   
                   {/* Human takeover banner */}
                   {isHumanTakeover && (
-                    <div className="px-4 py-2 bg-blue-50 border-b border-blue-100 flex items-center gap-2">
-                      <span className="text-lg">👤</span>
+                    <div className="px-4 py-2 bg-blue-50 border-b border-blue-100 flex items-center gap-3">
+                      {takeoverAgentAvatar ? (
+                        <img 
+                          src={takeoverAgentAvatar} 
+                          alt={takeoverAgentName || 'Team'} 
+                          className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+                        />
+                      ) : (
+                        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                          <span className="text-blue-600 text-sm font-medium">
+                            {(takeoverAgentName || 'T').charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                      )}
                       <div className="flex-1">
-                        <p className="text-sm font-medium text-blue-800">You're chatting with a team member</p>
+                        <p className="text-sm font-medium text-blue-800">
+                          {takeoverAgentName ? `You're chatting with ${takeoverAgentName}` : "You're chatting with a team member"}
+                        </p>
                         <p className="text-xs text-blue-600">A real person is here to help you</p>
                       </div>
                     </div>
