@@ -52,8 +52,8 @@ function CSSBubbleBackground({
       <style>
         {`
           @keyframes moveVertical {
-            0%, 100% { transform: translateY(-50%); }
-            50% { transform: translateY(50%); }
+            0%, 100% { transform: translateY(-30%); }
+            50% { transform: translateY(30%); }
           }
           
           @keyframes moveInCircle {
@@ -67,32 +67,32 @@ function CSSBubbleBackground({
           }
           
           @keyframes moveHorizontal {
-            0%, 100% { transform: translateX(-50%) translateY(-10%); }
-            50% { transform: translateX(50%) translateY(10%); }
+            0%, 100% { transform: translateX(-30%) translateY(-10%); }
+            50% { transform: translateX(30%) translateY(10%); }
           }
           
           .bubble-1 {
-            animation: moveVertical 35s ease-in-out infinite;
+            animation: moveVertical 20s ease-in-out infinite;
           }
           
           .bubble-2 {
-            animation: moveInCircle 28s linear infinite;
+            animation: moveInCircle 15s linear infinite;
           }
           
           .bubble-3 {
-            animation: moveInCircleReverse 45s linear infinite;
+            animation: moveInCircleReverse 25s linear infinite;
           }
           
           .bubble-4 {
-            animation: moveHorizontal 38s ease-in-out infinite;
+            animation: moveHorizontal 18s ease-in-out infinite;
           }
           
           .bubble-5 {
-            animation: moveInCircle 32s linear infinite;
+            animation: moveInCircle 22s linear infinite;
           }
           
           .bubble-6 {
-            animation: moveInCircleReverse 42s linear infinite;
+            animation: moveInCircleReverse 28s linear infinite;
           }
         `}
       </style>
@@ -105,16 +105,16 @@ function CSSBubbleBackground({
           <filter id="goo-css">
             <feGaussianBlur
               in="SourceGraphic"
-              stdDeviation="12"
+              stdDeviation="18"
               result="blur"
             />
             <feColorMatrix
               in="blur"
               mode="matrix"
-              values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 19 -9"
+              values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 30 -15"
               result="goo"
             />
-            <feBlend in="SourceGraphic" in2="goo" />
+            <feComposite in="SourceGraphic" in2="goo" operator="atop" />
           </filter>
         </defs>
       </svg>
@@ -125,23 +125,23 @@ function CSSBubbleBackground({
       >
         {/* Bubble 1 - Vertical movement */}
         <div
-          className="bubble-1 absolute rounded-full size-[35%]"
+          className="bubble-1 absolute rounded-full size-[55%]"
           style={{
-            background: `radial-gradient(circle at center, rgba(${colors.first}, 1) 0%, rgba(${colors.first}, 0.8) 40%, rgba(${colors.first}, 0) 70%)`,
-            top: '0%',
-            left: '10%',
+            background: `radial-gradient(circle at center, rgba(${colors.first}, 1) 0%, rgba(${colors.first}, 1) 50%, rgba(${colors.first}, 0) 75%)`,
+            top: '-10%',
+            left: '5%',
           }}
         />
 
         {/* Bubble 2 - Circular movement */}
         <div
           className="bubble-2 absolute inset-0 flex justify-center items-center"
-          style={{ transformOrigin: '50% 30%' }}
+          style={{ transformOrigin: '45% 25%' }}
         >
           <div
-            className="rounded-full size-[40%]"
+            className="rounded-full size-[60%]"
             style={{
-              background: `radial-gradient(circle at center, rgba(${colors.second}, 1) 0%, rgba(${colors.second}, 0.8) 40%, rgba(${colors.second}, 0) 70%)`,
+              background: `radial-gradient(circle at center, rgba(${colors.second}, 1) 0%, rgba(${colors.second}, 1) 50%, rgba(${colors.second}, 0) 75%)`,
             }}
           />
         </div>
@@ -149,39 +149,39 @@ function CSSBubbleBackground({
         {/* Bubble 3 - Reverse circular movement */}
         <div
           className="bubble-3 absolute inset-0 flex justify-center items-center"
-          style={{ transformOrigin: '40% 50%' }}
+          style={{ transformOrigin: '35% 45%' }}
         >
           <div
-            className="absolute rounded-full size-[35%]"
+            className="absolute rounded-full size-[50%]"
             style={{
-              background: `radial-gradient(circle at center, rgba(${colors.third}, 1) 0%, rgba(${colors.third}, 0.8) 40%, rgba(${colors.third}, 0) 70%)`,
-              top: '5%',
-              left: '30%',
+              background: `radial-gradient(circle at center, rgba(${colors.third}, 1) 0%, rgba(${colors.third}, 1) 50%, rgba(${colors.third}, 0) 75%)`,
+              top: '0%',
+              left: '20%',
             }}
           />
         </div>
 
         {/* Bubble 4 - Horizontal movement */}
         <div
-          className="bubble-4 absolute rounded-full size-[30%]"
+          className="bubble-4 absolute rounded-full size-[45%]"
           style={{
-            background: `radial-gradient(circle at center, rgba(${colors.fourth}, 1) 0%, rgba(${colors.fourth}, 0.8) 40%, rgba(${colors.fourth}, 0) 70%)`,
-            top: '10%',
-            left: '40%',
+            background: `radial-gradient(circle at center, rgba(${colors.fourth}, 1) 0%, rgba(${colors.fourth}, 1) 50%, rgba(${colors.fourth}, 0) 75%)`,
+            top: '5%',
+            left: '35%',
           }}
         />
 
         {/* Bubble 5 - Another circular movement */}
         <div
           className="bubble-5 absolute inset-0 flex justify-center items-center"
-          style={{ transformOrigin: '60% 40%' }}
+          style={{ transformOrigin: '55% 35%' }}
         >
           <div
-            className="absolute rounded-full size-[45%]"
+            className="absolute rounded-full size-[65%]"
             style={{
-              background: `radial-gradient(circle at center, rgba(${colors.fifth}, 1) 0%, rgba(${colors.fifth}, 0.8) 40%, rgba(${colors.fifth}, 0) 70%)`,
-              top: '-5%',
-              left: '25%',
+              background: `radial-gradient(circle at center, rgba(${colors.fifth}, 1) 0%, rgba(${colors.fifth}, 1) 50%, rgba(${colors.fifth}, 0) 75%)`,
+              top: '-15%',
+              left: '15%',
             }}
           />
         </div>
@@ -189,14 +189,14 @@ function CSSBubbleBackground({
         {/* Bubble 6 - Reverse circular at bottom */}
         <div
           className="bubble-6 absolute inset-0 flex justify-center items-center"
-          style={{ transformOrigin: '50% 60%' }}
+          style={{ transformOrigin: '50% 50%' }}
         >
           <div
-            className="absolute rounded-full size-[30%]"
+            className="absolute rounded-full size-[40%]"
             style={{
-              background: `radial-gradient(circle at center, rgba(${colors.sixth}, 1) 0%, rgba(${colors.sixth}, 0.8) 40%, rgba(${colors.sixth}, 0) 70%)`,
-              top: '15%',
-              left: '45%',
+              background: `radial-gradient(circle at center, rgba(${colors.sixth}, 1) 0%, rgba(${colors.sixth}, 1) 50%, rgba(${colors.sixth}, 0) 75%)`,
+              top: '10%',
+              left: '40%',
             }}
           />
         </div>

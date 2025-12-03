@@ -15,7 +15,7 @@ import { X, Send01, MessageChatCircle, ChevronRight, Zap, BookOpen01, Microphone
 import { HomeNavIcon, ChatNavIcon, HelpNavIcon } from './NavIcons';
 import { ChatBubbleIcon } from '@/components/agents/ChatBubbleIcon';
 import ChatPadLogo from '@/components/ChatPadLogo';
-import { generateGradientPalette, darkenColor } from '@/lib/color-utils';
+import { generateGradientPalette, hexToRgb } from '@/lib/color-utils';
 
 // Eager load CSSBubbleBackground (CSS-only, ~3KB) to prevent flicker on widget open
 import { CSSBubbleBackground } from '@/components/ui/css-bubble-background';
@@ -604,13 +604,13 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                     <CSSBubbleBackground 
                       colors={generateGradientPalette(config.gradientStartColor, config.gradientEndColor)}
                       baseGradient={{
-                        from: darkenColor(config.gradientStartColor, 40),
-                        to: darkenColor(config.gradientEndColor, 50)
+                        from: hexToRgb(config.gradientStartColor),
+                        to: hexToRgb(config.gradientEndColor)
                       }}
                       className="absolute inset-0"
                       style={{
-                        maskImage: 'linear-gradient(to bottom, black 0%, black 35%, transparent 65%)',
-                        WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 35%, transparent 65%)'
+                        maskImage: 'linear-gradient(to bottom, black 0%, black 85%, transparent 100%)',
+                        WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 85%, transparent 100%)'
                       }}
                     />
                   )}
