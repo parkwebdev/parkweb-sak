@@ -3,14 +3,12 @@ import { AsYouType, parsePhoneNumber, CountryCode } from 'libphonenumber-js/min'
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 
-// Emoji flags using regional indicator symbols
-const getCountryFlag = (countryCode: string): string => {
-  const codePoints = countryCode
-    .toUpperCase()
-    .split('')
-    .map(char => 127397 + char.charCodeAt(0));
-  return String.fromCodePoint(...codePoints);
-};
+// Flag images from CDN for cross-platform compatibility (Windows doesn't support flag emoji)
+const getFlagUrl = (countryCode: string): string => 
+  `https://flagcdn.com/w20/${countryCode.toLowerCase()}.png`;
+
+const getFlagUrl2x = (countryCode: string): string => 
+  `https://flagcdn.com/w40/${countryCode.toLowerCase()}.png`;
 
 interface PhoneInputFieldProps {
   value?: string;
@@ -82,11 +80,13 @@ export const PhoneInputField = forwardRef<HTMLInputElement, PhoneInputFieldProps
   return (
     <div className="relative flex items-center">
       {detectedCountry && (
-        <div 
-          className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center pointer-events-none z-10 text-base"
-          style={{ fontFamily: '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Android Emoji", "EmojiSymbols", sans-serif' }}
-        >
-          {getCountryFlag(detectedCountry)}
+        <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center pointer-events-none z-10">
+          <img 
+            src={getFlagUrl(detectedCountry)}
+            srcSet={`${getFlagUrl2x(detectedCountry)} 2x`}
+            alt={detectedCountry}
+            className="h-4 w-5 object-cover rounded-sm"
+          />
         </div>
       )}
       <Input
