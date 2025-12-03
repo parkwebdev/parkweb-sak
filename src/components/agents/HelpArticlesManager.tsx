@@ -19,7 +19,7 @@ interface HelpArticlesManagerProps {
 }
 
 export const HelpArticlesManager = ({ agentId }: HelpArticlesManagerProps) => {
-  const { articles, categories, loading, addArticle, updateArticle, deleteArticle, addCategory, updateCategory, reorderArticles, bulkImport } = useHelpArticles(agentId);
+  const { articles, categories, loading, addArticle, updateArticle, deleteArticle, addCategory, updateCategory, removeCategory, reorderArticles, bulkImport } = useHelpArticles(agentId);
   
   // Configure sensors for drag and drop (require 5px movement to start dragging)
   const sensors = useSensors(
@@ -143,6 +143,27 @@ export const HelpArticlesManager = ({ agentId }: HelpArticlesManagerProps) => {
     }
   };
 
+  const handleDeleteCategory = async () => {
+    const articlesInCategory = articles.filter(a => a.category === editingCategoryName);
+    
+    if (articlesInCategory.length > 0) {
+      toast.error(`Cannot delete category with ${articlesInCategory.length} article(s). Move or delete articles first.`);
+      return;
+    }
+    
+    if (confirm(`Are you sure you want to delete the category "${editingCategoryName}"?`)) {
+      try {
+        await removeCategory(editingCategoryName);
+        toast.success('Category deleted');
+        setEditCategoryDialogOpen(false);
+        setEditingCategoryName('');
+        setEditCategoryForm({ name: '', description: '' });
+      } catch (error) {
+        toast.error('Failed to delete category');
+      }
+    }
+  };
+
   const handleDragEnd = async (event: DragEndEvent, category: string) => {
     const { active, over } = event;
 
@@ -262,11 +283,16 @@ export const HelpArticlesManager = ({ agentId }: HelpArticlesManagerProps) => {
                   />
                 </div>
               </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setEditCategoryDialogOpen(false)}>
-                  Cancel
+              <DialogFooter className="flex justify-between sm:justify-between">
+                <Button variant="destructive" onClick={handleDeleteCategory}>
+                  Delete Category
                 </Button>
-                <Button onClick={handleUpdateCategory}>Update Category</Button>
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={() => setEditCategoryDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button onClick={handleUpdateCategory}>Update Category</Button>
+                </div>
               </DialogFooter>
             </DialogContent>
           </Dialog>
@@ -377,8 +403,6 @@ export const HelpArticlesManager = ({ agentId }: HelpArticlesManagerProps) => {
               .filter(article => article.category === category.name)
               .sort((a, b) => a.order - b.order);
             
-            if (categoryArticles.length === 0) return null;
-            
             return (
               <Card key={category.name}>
                 <CardContent className="p-4">
@@ -389,35 +413,41 @@ export const HelpArticlesManager = ({ agentId }: HelpArticlesManagerProps) => {
                         <p className="text-xs text-muted-foreground mt-0.5">{category.description}</p>
                       )}
                     </div>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => handleEditCategory(category.name)}
-                  >
-                    Edit
-                  </Button>
-                  </div>
-                  <DndContext
-                    sensors={sensors}
-                    collisionDetection={closestCenter}
-                    onDragEnd={(event) => handleDragEnd(event, category.name)}
-                  >
-                    <SortableContext
-                      items={categoryArticles.map(a => a.id)}
-                      strategy={verticalListSortingStrategy}
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => handleEditCategory(category.name)}
                     >
-                      <div className="space-y-2">
-                        {categoryArticles.map((article) => (
-                          <SortableArticleItem
-                            key={article.id}
-                            article={article}
-                            onEdit={handleEdit}
-                            onDelete={handleDelete}
-                          />
-                        ))}
-                      </div>
-                    </SortableContext>
-                  </DndContext>
+                      Edit
+                    </Button>
+                  </div>
+                  {categoryArticles.length === 0 ? (
+                    <p className="text-sm text-muted-foreground py-4 text-center">
+                      No articles in this category
+                    </p>
+                  ) : (
+                    <DndContext
+                      sensors={sensors}
+                      collisionDetection={closestCenter}
+                      onDragEnd={(event) => handleDragEnd(event, category.name)}
+                    >
+                      <SortableContext
+                        items={categoryArticles.map(a => a.id)}
+                        strategy={verticalListSortingStrategy}
+                      >
+                        <div className="space-y-2">
+                          {categoryArticles.map((article) => (
+                            <SortableArticleItem
+                              key={article.id}
+                              article={article}
+                              onEdit={handleEdit}
+                              onDelete={handleDelete}
+                            />
+                          ))}
+                        </div>
+                      </SortableContext>
+                    </DndContext>
+                  )}
                 </CardContent>
               </Card>
             );
