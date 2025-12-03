@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import * as PopoverPrimitive from "@radix-ui/react-popover";
+import { Popover, PopoverTrigger } from '@/components/ui/popover';
 import { FaceSmile, Plus } from '@untitledui/icons';
 import { EmojiPicker, QuickEmojiPicker } from './EmojiPicker';
 
@@ -83,20 +84,23 @@ export const MessageReactions: React.FC<MessageReactionsProps> = ({
             )}
           </Button>
         </PopoverTrigger>
-        <PopoverContent 
-          className="w-auto p-0 bg-transparent border-none shadow-none rounded-full" 
-          align={isUserMessage ? "end" : "start"}
-          side="top"
-        >
-          {compact ? (
-            <QuickEmojiPicker onEmojiSelect={handleEmojiSelect} />
-          ) : (
-            <EmojiPicker
-              onEmojiSelect={handleEmojiSelect}
-              primaryColor={primaryColor}
-            />
-          )}
-        </PopoverContent>
+        <PopoverPrimitive.Portal>
+          <PopoverPrimitive.Content
+            align={isUserMessage ? "end" : "start"}
+            side="top"
+            sideOffset={4}
+            className="z-50 outline-none"
+          >
+            {compact ? (
+              <QuickEmojiPicker onEmojiSelect={handleEmojiSelect} />
+            ) : (
+              <EmojiPicker
+                onEmojiSelect={handleEmojiSelect}
+                primaryColor={primaryColor}
+              />
+            )}
+          </PopoverPrimitive.Content>
+        </PopoverPrimitive.Portal>
       </Popover>
     </div>
   );
