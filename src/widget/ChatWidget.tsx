@@ -104,6 +104,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
   const [messageInput, setMessageInput] = useState('');
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [pendingFiles, setPendingFiles] = useState<Array<{ file: File; preview: string }>>([]);
+  const [formLoadTime] = useState(() => Date.now()); // Spam protection: track when form rendered
   
   const [helpSearchQuery, setHelpSearchQuery] = useState('');
   const [articleFeedback, setArticleFeedback] = useState<'helpful' | 'not_helpful' | null>(null);
@@ -840,7 +841,14 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                               const firstName = formData.get('firstName') as string;
                               const lastName = formData.get('lastName') as string;
                               const email = formData.get('email') as string;
+                              const honeypot = formData.get('website') as string; // Honeypot field
                               const customFieldData: Record<string, any> = {};
+
+                              // Spam check: if honeypot is filled, silently reject
+                              if (honeypot) {
+                                console.log('Spam detected: honeypot filled');
+                                return;
+                              }
 
                               config.customFields.forEach(field => {
                                 const value = formData.get(field.id);
@@ -872,7 +880,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                                 }
                                 setFormErrors({});
 
-                                const { leadId } = await createLead(config.agentId, { firstName: trimmedFirstName, lastName: trimmedLastName, email: trimmedEmail, customFields: customFieldData });
+                                const { leadId } = await createLead(config.agentId, { firstName: trimmedFirstName, lastName: trimmedLastName, email: trimmedEmail, customFields: customFieldData, _formLoadTime: formLoadTime });
                                 const userData = { firstName: trimmedFirstName, lastName: trimmedLastName, email: trimmedEmail, leadId };
                                 localStorage.setItem(`chatpad_user_${config.agentId}`, JSON.stringify(userData));
                                 setChatUser(userData);
@@ -884,6 +892,15 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                                }
                              }}
                           >
+                            {/* Honeypot field - hidden from users, bots fill it */}
+                            <input 
+                              name="website" 
+                              type="text" 
+                              tabIndex={-1} 
+                              autoComplete="off"
+                              className="absolute -left-[9999px] h-0 w-0 opacity-0 pointer-events-none"
+                              aria-hidden="true"
+                            />
                             <Input name="firstName" placeholder="First name" className="h-8 text-sm" required />
                             {formErrors.firstName && <p className="text-xs text-destructive">{formErrors.firstName}</p>}
                             <Input name="lastName" placeholder="Last name" className="h-8 text-sm" required />

@@ -134,6 +134,7 @@ export async function createLead(agentId: string, data: {
   lastName: string;
   email: string;
   customFields: Record<string, any>;
+  _formLoadTime?: number; // Spam protection: timestamp when form was loaded
 }): Promise<{ leadId: string }> {
   const response = await fetch(`${SUPABASE_URL}/functions/v1/create-widget-lead`, {
     method: 'POST',
