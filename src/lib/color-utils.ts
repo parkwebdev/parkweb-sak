@@ -102,11 +102,11 @@ export function generateGradientPalette(
   sixth: string;
 } {
   return {
-    first: hexToRgb(primaryColor),           // Primary (brand dominant)
-    second: hexToRgb(secondaryColor),        // Secondary (brand accent)
-    third: lightenColor(primaryColor, 20),   // Lightened primary (20% lighter)
-    fourth: darkenColor(secondaryColor, 15), // Darkened secondary (15% darker)
-    fifth: blendColors(primaryColor, secondaryColor, 0.5),  // 50/50 blend
-    sixth: lightenColor(secondaryColor, 25), // Lightened secondary (25% lighter)
+    first: lightenColor(primaryColor, 40),    // Bright primary for visible blobs
+    second: lightenColor(secondaryColor, 50), // Bright secondary
+    third: "255,255,255",                     // Pure white blob for max contrast
+    fourth: lightenColor(primaryColor, 60),   // Very light primary
+    fifth: lightenColor(secondaryColor, 70),  // Very light secondary
+    sixth: "255,255,255",                     // Another white blob
   };
 }
