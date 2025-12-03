@@ -6,10 +6,11 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { BookOpen01, Upload01 } from '@untitledui/icons';
+import { BookOpen01, Upload01, XClose, Image01 } from '@untitledui/icons';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { useHelpArticles } from '@/hooks/useHelpArticles';
 import { toast } from '@/lib/toast';
+import { uploadFeaturedImage } from '@/lib/article-image-upload';
 import { 
   DndContext, 
   closestCenter, 
@@ -74,7 +75,9 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
     content: '',
     category: '',
     icon: '',
+    featured_image: '',
   });
+  const [featuredImageUploading, setFeaturedImageUploading] = useState(false);
   const [newCategoryForm, setNewCategoryForm] = useState({
     name: '',
     description: '',
@@ -114,6 +117,7 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
         content: article.content,
         category: article.category,
         icon: article.icon || '',
+        featured_image: article.featured_image || '',
       });
       setEditingArticle(articleId);
       setDialogOpen(true);
@@ -132,7 +136,7 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
   };
 
   const resetForm = () => {
-    setFormData({ title: '', content: '', category: '', icon: '' });
+    setFormData({ title: '', content: '', category: '', icon: '', featured_image: '' });
     setEditingArticle(null);
   };
 
@@ -198,9 +202,31 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
   };
 
   const handleAddArticleToCategory = (categoryName: string) => {
-    setFormData({ title: '', content: '', category: categoryName, icon: '' });
+    setFormData({ title: '', content: '', category: categoryName, icon: '', featured_image: '' });
     setEditingArticle(null);
     setDialogOpen(true);
+  };
+
+  const handleFeaturedImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
+      return;
+    }
+
+    try {
+      setFeaturedImageUploading(true);
+      const imageUrl = await uploadFeaturedImage(file, userId, agentId);
+      setFormData({ ...formData, featured_image: imageUrl });
+      toast.success('Featured image uploaded');
+    } catch (error) {
+      console.error('Featured image upload error:', error);
+      toast.error('Failed to upload featured image');
+    } finally {
+      setFeaturedImageUploading(false);
+    }
   };
 
   // Drag and Drop handlers
@@ -460,6 +486,58 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
                         maxLength={2}
                       />
                     </div>
+                  </div>
+
+                  {/* Featured Image Upload */}
+                  <div className="space-y-2">
+                    <Label>Featured Image (Hero)</Label>
+                    <p className="text-xs text-muted-foreground">
+                      This image will appear as a hero banner at the top of the article
+                    </p>
+                    {formData.featured_image ? (
+                      <div className="relative rounded-lg overflow-hidden">
+                        <img 
+                          src={formData.featured_image} 
+                          alt="Featured" 
+                          className="w-full h-40 object-cover"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                        <Button 
+                          size="sm" 
+                          variant="secondary" 
+                          className="absolute top-2 right-2"
+                          onClick={() => setFormData({ ...formData, featured_image: '' })}
+                        >
+                          <XClose className="h-4 w-4 mr-1" />
+                          Remove
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="border-2 border-dashed rounded-lg p-6 text-center hover:bg-muted/50 transition-colors">
+                        <input 
+                          type="file" 
+                          accept="image/*" 
+                          onChange={handleFeaturedImageUpload}
+                          className="hidden"
+                          id="featured-image-upload"
+                          disabled={featuredImageUploading}
+                        />
+                        <label htmlFor="featured-image-upload" className="cursor-pointer block">
+                          {featuredImageUploading ? (
+                            <div className="flex flex-col items-center">
+                              <div className="h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent mb-2" />
+                              <p className="text-sm text-muted-foreground">Uploading...</p>
+                            </div>
+                          ) : (
+                            <>
+                              <Image01 className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                              <p className="text-sm text-muted-foreground">Click to upload featured image</p>
+                              <p className="text-xs text-muted-foreground mt-1">Recommended: 1200×400px</p>
+                            </>
+                          )}
+                        </label>
+                      </div>
+                    )}
                   </div>
                 </div>
                 <DialogFooter>

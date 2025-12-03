@@ -98,6 +98,98 @@ export const uploadArticleImage = async (
   return urlData.publicUrl;
 };
 
+// Featured image config - larger for hero display
+const FEATURED_IMAGE_CONFIG = {
+  maxWidth: 1200,
+  maxHeight: 600,
+  quality: 0.9,
+};
+
+/**
+ * Optimize featured image for hero display
+ */
+const optimizeFeaturedImage = async (file: File): Promise<File> => {
+  return new Promise((resolve, reject) => {
+    const img = new window.Image();
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    
+    img.onload = () => {
+      URL.revokeObjectURL(img.src);
+      
+      let { width, height } = img;
+      
+      // Calculate new dimensions maintaining aspect ratio
+      if (width > FEATURED_IMAGE_CONFIG.maxWidth) {
+        height = (height * FEATURED_IMAGE_CONFIG.maxWidth) / width;
+        width = FEATURED_IMAGE_CONFIG.maxWidth;
+      }
+      if (height > FEATURED_IMAGE_CONFIG.maxHeight) {
+        width = (width * FEATURED_IMAGE_CONFIG.maxHeight) / height;
+        height = FEATURED_IMAGE_CONFIG.maxHeight;
+      }
+      
+      canvas.width = width;
+      canvas.height = height;
+      
+      ctx?.drawImage(img, 0, 0, width, height);
+      
+      canvas.toBlob(
+        (blob) => {
+          if (blob) {
+            const optimizedFile = new File(
+              [blob], 
+              file.name.replace(/\.[^/.]+$/, '.webp'),
+              { type: 'image/webp' }
+            );
+            resolve(optimizedFile);
+          } else {
+            resolve(file);
+          }
+        },
+        'image/webp',
+        FEATURED_IMAGE_CONFIG.quality
+      );
+    };
+    
+    img.onerror = () => {
+      URL.revokeObjectURL(img.src);
+      reject(new Error('Failed to load image'));
+    };
+    
+    img.src = URL.createObjectURL(file);
+  });
+};
+
+export const uploadFeaturedImage = async (
+  file: File,
+  userId: string,
+  agentId: string
+): Promise<string> => {
+  const optimizedFile = await optimizeFeaturedImage(file);
+  
+  const fileExt = optimizedFile.name.split('.').pop()?.toLowerCase() || 'webp';
+  const fileName = `${userId}/${agentId}/featured-${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
+
+  const { error } = await supabase.storage
+    .from('article-images')
+    .upload(fileName, optimizedFile, {
+      cacheControl: '3600',
+      upsert: false,
+    });
+
+  if (error) {
+    console.error('Featured image upload error:', error);
+    throw new Error('Failed to upload featured image');
+  }
+
+  const { data: urlData } = supabase.storage
+    .from('article-images')
+    .getPublicUrl(fileName);
+
+  return urlData.publicUrl;
+};
+
 export const deleteArticleImage = async (imageUrl: string): Promise<void> => {
   // Extract the path from the public URL
   const urlParts = imageUrl.split('/article-images/');

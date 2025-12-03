@@ -26,6 +26,7 @@ export interface HelpArticle {
   category: string;
   icon?: string;
   order: number;
+  featured_image?: string;
 }
 
 export interface HelpCategory {

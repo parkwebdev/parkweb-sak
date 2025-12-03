@@ -1292,32 +1292,79 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                     <div className="flex-1 flex flex-col overflow-hidden">
                       {/* Scrollable Article Content */}
                       <div className="flex-1 overflow-y-auto">
-                        <div className="p-4">
-                          <Button 
-                            size="sm" 
-                            variant="ghost" 
-                            onClick={() => {
-                              setSelectedArticle(null);
-                              setArticleFeedback(null);
-                              setShowFeedbackComment(false);
-                              setFeedbackComment('');
-                              setFeedbackSubmitted(false);
-                            }}
-                            className="mb-3"
-                          >
-                            <ChevronRight className="h-4 w-4 rotate-180 mr-1" />
-                            Back
-                          </Button>
-                          
-                          <h2 className="text-xl font-bold mb-4">{selectedArticle.title}</h2>
-                          <div 
-                            className="article-content max-w-none" 
-                            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(selectedArticle.content, {
-                              ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'b', 'i', 'u', 'a', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'code', 'pre', 'span', 'div', 'img'],
-                              ALLOWED_ATTR: ['href', 'target', 'rel', 'class', 'src', 'alt', 'width', 'height', 'style'],
-                            }) }} 
-                          />
-                        </div>
+                        {/* Hero Section - Only shown if featured_image exists */}
+                        {selectedArticle.featured_image ? (
+                          <>
+                            <div 
+                              className="relative h-48 bg-cover bg-center"
+                              style={{ backgroundImage: `url(${selectedArticle.featured_image})` }}
+                            >
+                              {/* Gradient Overlay */}
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20" />
+                              
+                              {/* Back Button - Top Left */}
+                              <Button 
+                                size="sm" 
+                                variant="ghost" 
+                                onClick={() => {
+                                  setSelectedArticle(null);
+                                  setArticleFeedback(null);
+                                  setShowFeedbackComment(false);
+                                  setFeedbackComment('');
+                                  setFeedbackSubmitted(false);
+                                }}
+                                className="absolute top-3 left-3 text-white hover:bg-white/20 hover:text-white"
+                              >
+                                <ChevronRight className="h-4 w-4 rotate-180 mr-1" />
+                                Back
+                              </Button>
+                              
+                              {/* Title - Bottom */}
+                              <div className="absolute bottom-0 left-0 right-0 p-4">
+                                <h2 className="text-xl font-bold text-white drop-shadow-lg">{selectedArticle.title}</h2>
+                              </div>
+                            </div>
+                            
+                            {/* Article Content below hero */}
+                            <div className="p-4">
+                              <div 
+                                className="article-content max-w-none" 
+                                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(selectedArticle.content, {
+                                  ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'b', 'i', 'u', 'a', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'code', 'pre', 'span', 'div', 'img'],
+                                  ALLOWED_ATTR: ['href', 'target', 'rel', 'class', 'src', 'alt', 'width', 'height', 'style'],
+                                }) }} 
+                              />
+                            </div>
+                          </>
+                        ) : (
+                          /* Standard layout for articles without featured image */
+                          <div className="p-4">
+                            <Button 
+                              size="sm" 
+                              variant="ghost" 
+                              onClick={() => {
+                                setSelectedArticle(null);
+                                setArticleFeedback(null);
+                                setShowFeedbackComment(false);
+                                setFeedbackComment('');
+                                setFeedbackSubmitted(false);
+                              }}
+                              className="mb-3"
+                            >
+                              <ChevronRight className="h-4 w-4 rotate-180 mr-1" />
+                              Back
+                            </Button>
+                            
+                            <h2 className="text-xl font-bold mb-4">{selectedArticle.title}</h2>
+                            <div 
+                              className="article-content max-w-none" 
+                              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(selectedArticle.content, {
+                                ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'b', 'i', 'u', 'a', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'code', 'pre', 'span', 'div', 'img'],
+                                ALLOWED_ATTR: ['href', 'target', 'rel', 'class', 'src', 'alt', 'width', 'height', 'style'],
+                              }) }} 
+                            />
+                          </div>
+                        )}
                       </div>
 
                       {/* Feedback Section - Pinned to Bottom */}

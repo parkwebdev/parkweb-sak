@@ -85,6 +85,7 @@ export interface WidgetConfig {
     content: string;
     icon?: string;
     order?: number;
+    featured_image?: string;
   }>;
   
   // Features
