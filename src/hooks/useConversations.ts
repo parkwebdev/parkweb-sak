@@ -104,6 +104,49 @@ export const useConversations = () => {
     }
   };
 
+  const updateConversationMetadata = async (
+    conversationId: string,
+    metadata: Record<string, any>
+  ) => {
+    try {
+      // First fetch current conversation to merge metadata
+      const { data: current, error: fetchError } = await supabase
+        .from('conversations')
+        .select('metadata')
+        .eq('id', conversationId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      const mergedMetadata = {
+        ...(current?.metadata as Record<string, any> || {}),
+        ...metadata,
+      };
+
+      const { error } = await supabase
+        .from('conversations')
+        .update({ metadata: mergedMetadata })
+        .eq('id', conversationId);
+
+      if (error) throw error;
+      
+      // Update local state
+      setConversations(prev => 
+        prev.map(conv => 
+          conv.id === conversationId 
+            ? { ...conv, metadata: mergedMetadata }
+            : conv
+        )
+      );
+      
+      toast.success('Updated successfully');
+    } catch (error) {
+      console.error('Error updating conversation metadata:', error);
+      toast.error('Failed to update');
+      throw error;
+    }
+  };
+
   const takeover = async (conversationId: string, reason?: string) => {
     if (!user?.id) return;
 
@@ -158,6 +201,7 @@ export const useConversations = () => {
     loading,
     fetchMessages,
     updateConversationStatus,
+    updateConversationMetadata,
     takeover,
     returnToAI,
     refetch: fetchConversations,
