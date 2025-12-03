@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Camera01 as Camera, User01 as User } from '@untitledui/icons';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -26,8 +26,10 @@ export const ProfileSettings: React.FC = () => {
   });
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
+  const [avatarUploading, setAvatarUploading] = useState(false);
   const [savedFields, setSavedFields] = useState<Record<string, boolean>>({});
   const [initialProfile, setInitialProfile] = useState<typeof profile | null>(null);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -177,6 +179,65 @@ export const ProfileSettings: React.FC = () => {
     }));
   };
 
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !user) return;
+    
+    // Reset input
+    event.target.value = '';
+    
+    // Validate file size (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("File too large", { description: "Please select an image smaller than 5MB." });
+      return;
+    }
+    
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error("Invalid file", { description: "Please select an image file." });
+      return;
+    }
+    
+    setAvatarUploading(true);
+    
+    try {
+      const timestamp = Date.now();
+      const fileExt = file.name.split('.').pop() || 'jpg';
+      const fileName = `${user.id}/${user.id}-${timestamp}.${fileExt}`;
+      
+      // Upload to avatars bucket
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, file, { cacheControl: '3600', upsert: false });
+      
+      if (uploadError) throw uploadError;
+      
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(fileName);
+      
+      // Update profile in database
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: urlData.publicUrl })
+        .eq('user_id', user.id);
+      
+      if (updateError) throw updateError;
+      
+      // Update local state
+      setProfile(prev => ({ ...prev, avatar_url: urlData.publicUrl }));
+      setInitialProfile(prev => prev ? { ...prev, avatar_url: urlData.publicUrl } : null);
+      
+      toast.success("Avatar updated", { description: "Your profile picture has been updated." });
+    } catch (error: any) {
+      console.error('Avatar upload error:', error);
+      toast.error("Upload failed", { description: error.message || "Failed to upload avatar." });
+    } finally {
+      setAvatarUploading(false);
+    }
+  };
+
   const handlePasswordUpdate = async () => {
     if (!passwords.new || !passwords.confirm) {
       toast.error("Error", {
@@ -255,7 +316,10 @@ export const ProfileSettings: React.FC = () => {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-6">
-            <div className="relative group cursor-pointer mx-auto sm:mx-0">
+            <div 
+              className="relative group cursor-pointer mx-auto sm:mx-0" 
+              onClick={() => !avatarUploading && avatarInputRef.current?.click()}
+            >
               <Avatar className="h-16 w-16">
                 <AvatarImage src={profile.avatar_url} />
                 <AvatarFallback className="text-sm">
@@ -265,9 +329,26 @@ export const ProfileSettings: React.FC = () => {
                   }
                 </AvatarFallback>
               </Avatar>
-              <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                <Camera size={20} className="text-white" />
-              </div>
+              {avatarUploading ? (
+                <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center">
+                  <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                </div>
+              ) : (
+                <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                  <Camera size={20} className="text-white" />
+                </div>
+              )}
+              <input
+                ref={avatarInputRef}
+                type="file"
+                accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+                onChange={handleAvatarUpload}
+                className="hidden"
+              />
+            </div>
+            <div className="text-center sm:text-left">
+              <p className="text-sm text-muted-foreground">Click to upload new avatar</p>
+              <p className="text-xs text-muted-foreground/60">JPG, PNG, GIF up to 5MB</p>
             </div>
           </div>
 
