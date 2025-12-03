@@ -25,15 +25,12 @@ const getDefaultConfig = (agentId: string): WidgetConfig => ({
   gradientEndColor: '#8b5cf6',
   showBranding: true,
   animation: 'none',
-  displayTiming: 'immediate',
-  delaySeconds: 0,
   showTeamAvatars: false,
   teamAvatarUrls: [],
   enableHomeTab: true,
   enableMessagesTab: true,
   enableHelpTab: true,
   showBottomNav: true,
-  viewTransition: 'slide',
   enableContactForm: false,
   contactFormTitle: 'Quick intro before we chat 👋',
   customFields: [],
@@ -49,7 +46,6 @@ const getDefaultConfig = (agentId: string): WidgetConfig => ({
   allowedFileTypes: ['image/*', 'application/pdf'],
   enableMessageReactions: true,
   showReadReceipts: false,
-  defaultAutoScroll: true,
 });
 
 const WidgetPage = () => {
@@ -110,8 +106,6 @@ const WidgetPage = () => {
           showBranding: data.showBranding,
           animation: data.animation,
           buttonAnimation: data.buttonAnimation || data.animation,
-          displayTiming: data.displayTiming,
-          delaySeconds: data.delaySeconds,
           welcomeEmoji: data.welcomeEmoji,
           welcomeTitle: data.welcomeTitle,
           welcomeSubtitle: data.welcomeSubtitle,
@@ -134,8 +128,6 @@ const WidgetPage = () => {
           enableContactForm: data.enableContactForm ?? true,
           contactFormTitle: data.contactFormTitle || 'Quick intro before we chat 👋',
           contactFormSubtitle: data.contactFormSubtitle,
-          viewTransition: data.viewTransition,
-          defaultAutoScroll: data.defaultAutoScroll,
           announcements: data.announcements || [],
           helpArticles: data.helpArticles || [],
           helpCategories: data.helpCategories || []
