@@ -100,7 +100,7 @@ export const EmbedSettingsPanel = ({ config, onConfigChange, embedCode }: EmbedS
             {config.useGradientHeader && (
               <div className="space-y-3 pl-4 border-l-2">
                 <div className="space-y-2">
-                  <Label htmlFor="gradient-start" className="text-sm">Gradient Start Color</Label>
+                  <Label htmlFor="gradient-start" className="text-sm">Primary Brand Color</Label>
                   <div className="flex items-center gap-2">
                     <Input
                       id="gradient-start"
@@ -118,7 +118,7 @@ export const EmbedSettingsPanel = ({ config, onConfigChange, embedCode }: EmbedS
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="gradient-end" className="text-sm">Gradient End Color</Label>
+                  <Label htmlFor="gradient-end" className="text-sm">Secondary Brand Color</Label>
                   <div className="flex items-center gap-2">
                     <Input
                       id="gradient-end"

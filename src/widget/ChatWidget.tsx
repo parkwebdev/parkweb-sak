@@ -927,7 +927,13 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
 
                     {messages.map((msg, idx) => (
                       <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                        <div className={`max-w-[80%] rounded-lg p-3 ${msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
+                        <div 
+                          className={`max-w-[80%] rounded-lg p-3 ${msg.role === 'user' ? '' : 'bg-muted'}`}
+                          style={msg.role === 'user' ? { 
+                            backgroundColor: `rgba(${hexToRgb(config.gradientStartColor)}, 0.12)`,
+                            color: 'inherit'
+                          } : undefined}
+                        >
                           {msg.type === 'audio' && msg.audioUrl && (
                             <Suspense fallback={<div className="h-10 w-full bg-muted animate-pulse rounded" />}>
                               <AudioPlayer audioUrl={msg.audioUrl} primaryColor={config.primaryColor} />
@@ -998,6 +1004,24 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                         </div>
                       </div>
                     )}
+
+                    {/* File attachment overlay */}
+                    {isAttachingFiles && (
+                      <div className="p-4">
+                        <Suspense fallback={<div className="h-32 flex items-center justify-center text-muted-foreground text-sm">Loading...</div>}>
+                          <FileDropZone
+                            onFilesSelected={(files, urls) => {
+                              files.forEach((file, i) => {
+                                setPendingFiles(prev => [...prev, { file, preview: urls[i] || '' }]);
+                              });
+                              setIsAttachingFiles(false);
+                            }}
+                            onCancel={() => setIsAttachingFiles(false)}
+                            primaryColor={config.primaryColor}
+                          />
+                        </Suspense>
+                      </div>
+                    )}
                   </div>
 
                   {pendingFiles.length > 0 && (
@@ -1028,26 +1052,16 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                   
 
                   <div className="p-3 border-t">
-                    {isAttachingFiles ? (
-                      <Suspense fallback={<div className="h-32 flex items-center justify-center text-muted-foreground text-sm">Loading...</div>}>
-                        <FileDropZone
-                          onFilesSelected={(files, urls) => {
-                            files.forEach((file, i) => {
-                              setPendingFiles(prev => [...prev, { file, preview: urls[i] || '' }]);
-                            });
-                            setIsAttachingFiles(false);
-                          }}
-                          onCancel={() => setIsAttachingFiles(false)}
-                          primaryColor={config.primaryColor}
-                        />
-                      </Suspense>
-                    ) : isRecordingAudio ? (
-                      <Suspense fallback={<div className="h-12 flex items-center justify-center text-muted-foreground text-sm">Loading...</div>}>
-                        <VoiceInput
-                          onStart={startAudioRecording}
-                          onStop={stopAudioRecording}
-                        />
-                      </Suspense>
+                    {isRecordingAudio ? (
+                      <div className="flex items-center justify-center gap-3">
+                        <Suspense fallback={<div className="h-12 flex items-center justify-center text-muted-foreground text-sm">Loading...</div>}>
+                          <VoiceInput
+                            isRecording={isRecordingAudio}
+                            recordingTime={recordingTime}
+                            onStop={stopAudioRecording}
+                          />
+                        </Suspense>
+                      </div>
                     ) : (
                       <div className="flex items-center gap-2">
                         <Input
@@ -1070,7 +1084,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                           <Button 
                             size="icon" 
                             variant="ghost" 
-                            onClick={() => setIsRecordingAudio(true)}
+                            onClick={startAudioRecording}
                           >
                             <Microphone01 className="h-4 w-4" />
                           </Button>
