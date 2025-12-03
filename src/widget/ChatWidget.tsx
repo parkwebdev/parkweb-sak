@@ -16,6 +16,32 @@ import { HomeNavIcon, ChatNavIcon, HelpNavIcon } from './NavIcons';
 import { ChatBubbleIcon } from '@/components/agents/ChatBubbleIcon';
 import ChatPadLogo from '@/components/ChatPadLogo';
 import { generateGradientPalette, hexToRgb } from '@/lib/color-utils';
+import DOMPurify from 'isomorphic-dompurify';
+
+// Shared CSS variables to ensure consistent light mode styling across render modes
+const WIDGET_CSS_VARS = {
+  colorScheme: 'light',
+  '--background': '0 0% 100%',
+  '--foreground': '0 0% 3.9%',
+  '--card': '0 0% 100%',
+  '--card-foreground': '0 0% 3.9%',
+  '--popover': '0 0% 100%',
+  '--popover-foreground': '0 0% 3.9%',
+  '--primary': '221.2 83.2% 53.3%',
+  '--primary-foreground': '0 0% 98%',
+  '--secondary': '0 0% 96.1%',
+  '--secondary-foreground': '0 0% 9%',
+  '--muted': '0 0% 96.1%',
+  '--muted-foreground': '0 0% 45.1%',
+  '--accent': '0 0% 96.1%',
+  '--accent-foreground': '0 0% 9%',
+  '--destructive': '0 84.2% 60.2%',
+  '--destructive-foreground': '0 0% 98%',
+  '--border': '0 0% 89.8%',
+  '--input': '0 0% 89.8%',
+  '--ring': '221.2 83.2% 53.3%',
+  '--radius': '0.5rem',
+} as React.CSSProperties;
 
 // Eager load CSSBubbleBackground (CSS-only, ~3KB) to prevent flicker on widget open
 import { CSSBubbleBackground } from '@/components/ui/css-bubble-background';
@@ -91,8 +117,6 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     return stored ? JSON.parse(stored) : null;
   });
   
-  const [isVisible, setIsVisible] = useState(true);
-  const [showTeaser, setShowTeaser] = useState(false);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [isTyping, setIsTyping] = useState(false);
   const [isRecordingAudio, setIsRecordingAudio] = useState(false);
@@ -321,15 +345,6 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     'top-right': 'top-4 right-4',
     'top-left': 'top-4 left-4',
   };
-
-  const animationClasses = {
-    'none': '',
-    'pulse': 'animate-pulse',
-    'bounce': 'animate-bounce',
-    'fade': 'animate-pulse opacity-75',
-    'ring': '',
-  };
-
 
   // Calculate logo opacity based on scroll (graceful fade over 120px with easing)
   const logoOpacity = Math.max(0, 1 - Math.pow(headerScrollY / 120, 1.5));
@@ -578,15 +593,6 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
   // Shared widget content
   const widgetContent = (
     <div id="chatpad-widget-root" className="h-full bg-transparent">
-      {/* Teaser Message */}
-      {showTeaser && !isOpen && config.showTeaser && !isIframeMode && (
-        <div className="absolute mb-20 mr-2 max-w-xs">
-          <div className="bg-card border shadow-lg rounded-lg p-3 animate-in slide-in-from-bottom-2">
-            <p className="text-sm">{config.teaserText || config.teaserMessage}</p>
-          </div>
-        </div>
-      )}
-
       {isOpen || isIframeMode ? (
           <Card 
             className={isIframeMode ? "w-full h-full flex flex-col shadow-none overflow-hidden border-0 rounded-3xl" : "w-[380px] h-[650px] flex flex-col shadow-xl overflow-hidden border-0 rounded-3xl"}
@@ -1322,7 +1328,10 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                         <h2 className="text-xl font-bold mb-4">{selectedArticle.title}</h2>
                         <div 
                           className="prose prose-sm max-w-none text-sm whitespace-pre-wrap break-words" 
-                          dangerouslySetInnerHTML={{ __html: selectedArticle.content }} 
+                          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(selectedArticle.content, {
+                            ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'b', 'i', 'u', 'a', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'code', 'pre', 'span', 'div'],
+                            ALLOWED_ATTR: ['href', 'target', 'rel', 'class'],
+                          }) }} 
                         />
                       </div>
 
@@ -1515,32 +1524,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
   // In iframe mode, render directly without fixed positioning
   if (isIframeMode) {
     return (
-      <div 
-        className="w-full h-full light" 
-        style={{
-          colorScheme: 'light',
-          '--background': '0 0% 100%',
-          '--foreground': '0 0% 3.9%',
-          '--card': '0 0% 100%',
-          '--card-foreground': '0 0% 3.9%',
-          '--popover': '0 0% 100%',
-          '--popover-foreground': '0 0% 3.9%',
-          '--primary': '221.2 83.2% 53.3%',
-          '--primary-foreground': '0 0% 98%',
-          '--secondary': '0 0% 96.1%',
-          '--secondary-foreground': '0 0% 9%',
-          '--muted': '0 0% 96.1%',
-          '--muted-foreground': '0 0% 45.1%',
-          '--accent': '0 0% 96.1%',
-          '--accent-foreground': '0 0% 9%',
-          '--destructive': '0 84.2% 60.2%',
-          '--destructive-foreground': '0 0% 98%',
-          '--border': '0 0% 89.8%',
-          '--input': '0 0% 89.8%',
-          '--ring': '221.2 83.2% 53.3%',
-          '--radius': '0.5rem',
-        } as React.CSSProperties}
-      >
+      <div className="w-full h-full light" style={WIDGET_CSS_VARS}>
         {widgetContent}
       </div>
     );
@@ -1549,32 +1533,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
   // Contained preview mode: Use absolute positioning within parent canvas
   if (containedPreview) {
     return (
-      <div 
-        className="absolute inset-0 pointer-events-none light" 
-        style={{
-          colorScheme: 'light',
-            '--background': '0 0% 100%',
-            '--foreground': '0 0% 3.9%',
-            '--card': '0 0% 100%',
-            '--card-foreground': '0 0% 3.9%',
-            '--popover': '0 0% 100%',
-            '--popover-foreground': '0 0% 3.9%',
-            '--primary': '221.2 83.2% 53.3%',
-            '--primary-foreground': '0 0% 98%',
-            '--secondary': '0 0% 96.1%',
-            '--secondary-foreground': '0 0% 9%',
-            '--muted': '0 0% 96.1%',
-            '--muted-foreground': '0 0% 45.1%',
-            '--accent': '0 0% 96.1%',
-            '--accent-foreground': '0 0% 9%',
-            '--destructive': '0 84.2% 60.2%',
-            '--destructive-foreground': '0 0% 98%',
-            '--border': '0 0% 89.8%',
-            '--input': '0 0% 89.8%',
-            '--ring': '221.2 83.2% 53.3%',
-            '--radius': '0.5rem',
-        } as React.CSSProperties}
-      >
+      <div className="absolute inset-0 pointer-events-none light" style={WIDGET_CSS_VARS}>
         <div className={`absolute ${positionClasses[position]} pointer-events-auto`}>
           {widgetContent}
         </div>
@@ -1584,32 +1543,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
 
   // Preview mode: Use fixed positioning with position classes
   return (
-    <div 
-      className="fixed inset-0 pointer-events-none z-[9999] light" 
-      style={{
-        colorScheme: 'light',
-          '--background': '0 0% 100%',
-          '--foreground': '0 0% 3.9%',
-          '--card': '0 0% 100%',
-          '--card-foreground': '0 0% 3.9%',
-          '--popover': '0 0% 100%',
-          '--popover-foreground': '0 0% 3.9%',
-          '--primary': '221.2 83.2% 53.3%',
-          '--primary-foreground': '0 0% 98%',
-          '--secondary': '0 0% 96.1%',
-          '--secondary-foreground': '0 0% 9%',
-          '--muted': '0 0% 96.1%',
-          '--muted-foreground': '0 0% 45.1%',
-          '--accent': '0 0% 96.1%',
-          '--accent-foreground': '0 0% 9%',
-          '--destructive': '0 84.2% 60.2%',
-          '--destructive-foreground': '0 0% 98%',
-          '--border': '0 0% 89.8%',
-          '--input': '0 0% 89.8%',
-          '--ring': '221.2 83.2% 53.3%',
-          '--radius': '0.5rem',
-      } as React.CSSProperties}
-    >
+    <div className="fixed inset-0 pointer-events-none z-[9999] light" style={WIDGET_CSS_VARS}>
       <div className={`absolute ${positionClasses[position]} pointer-events-auto`}>
         {widgetContent}
       </div>
