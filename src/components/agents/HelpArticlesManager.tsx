@@ -469,11 +469,11 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
                   Add Article
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-3xl">
+              <DialogContent className="max-w-3xl max-h-[85vh] overflow-hidden flex flex-col">
                 <DialogHeader>
                   <DialogTitle>{editingArticle ? 'Edit Article' : 'Add Help Article'}</DialogTitle>
                 </DialogHeader>
-                <div className="space-y-4 py-4">
+                <div className="space-y-4 py-4 overflow-y-auto flex-1 pr-2">
                   <div className="space-y-2">
                     <Label htmlFor="title">Title *</Label>
                     <Input
