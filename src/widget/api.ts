@@ -250,3 +250,40 @@ export function unsubscribeFromMessages(channel: RealtimeChannel) {
   console.log('[Widget] Unsubscribing from messages');
   widgetSupabase.removeChannel(channel);
 }
+
+// Subscribe to real-time conversation status changes (for human takeover)
+export function subscribeToConversationStatus(
+  conversationId: string,
+  onStatusChange: (status: 'active' | 'human_takeover' | 'closed') => void
+): RealtimeChannel {
+  console.log('[Widget] Subscribing to conversation status for:', conversationId);
+  
+  const channel = widgetSupabase
+    .channel(`widget-conv-status-${conversationId}`)
+    .on(
+      'postgres_changes',
+      {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'conversations',
+        filter: `id=eq.${conversationId}`,
+      },
+      (payload) => {
+        console.log('[Widget] Conversation status changed:', payload);
+        const newStatus = (payload.new as any).status;
+        if (newStatus) {
+          onStatusChange(newStatus);
+        }
+      }
+    )
+    .subscribe((status) => {
+      console.log('[Widget] Conversation status subscription:', status);
+    });
+
+  return channel;
+}
+
+export function unsubscribeFromConversationStatus(channel: RealtimeChannel) {
+  console.log('[Widget] Unsubscribing from conversation status');
+  widgetSupabase.removeChannel(channel);
+}

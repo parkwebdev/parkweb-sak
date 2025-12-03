@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, lazy, Suspense } from 'react';
-import { fetchWidgetConfig, createLead, submitArticleFeedback, sendChatMessage, subscribeToMessages, unsubscribeFromMessages, type WidgetConfig, type ChatResponse } from './api';
+import { fetchWidgetConfig, createLead, submitArticleFeedback, sendChatMessage, subscribeToMessages, unsubscribeFromMessages, subscribeToConversationStatus, unsubscribeFromConversationStatus, type WidgetConfig, type ChatResponse } from './api';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { CSSAnimatedList } from './CSSAnimatedList';
 import { CSSAnimatedItem } from './CSSAnimatedItem';
@@ -157,6 +157,8 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [showConversationList, setShowConversationList] = useState(false);
+  const [isHumanTakeover, setIsHumanTakeover] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [headerScrollY, setHeaderScrollY] = useState(0);
   const homeContentRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -300,6 +302,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
 
   // Subscribe to real-time messages for human takeover
   const realtimeChannelRef = useRef<RealtimeChannel | null>(null);
+  const statusChannelRef = useRef<RealtimeChannel | null>(null);
   
   useEffect(() => {
     // Only subscribe if we have a valid database conversation ID (UUID format)
@@ -361,6 +364,50 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
       }
     };
   }, [activeConversationId, isOpen, currentView]);
+
+  // Subscribe to conversation status changes (for human takeover banner)
+  useEffect(() => {
+    const isValidUUID = activeConversationId && 
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(activeConversationId);
+    
+    if (!isValidUUID) {
+      setIsHumanTakeover(false);
+      return;
+    }
+
+    console.log('[Widget] Setting up status subscription for:', activeConversationId);
+    
+    if (statusChannelRef.current) {
+      unsubscribeFromConversationStatus(statusChannelRef.current);
+      statusChannelRef.current = null;
+    }
+
+    statusChannelRef.current = subscribeToConversationStatus(activeConversationId, (status) => {
+      console.log('[Widget] Status changed to:', status);
+      setIsHumanTakeover(status === 'human_takeover');
+    });
+
+    return () => {
+      if (statusChannelRef.current) {
+        unsubscribeFromConversationStatus(statusChannelRef.current);
+        statusChannelRef.current = null;
+      }
+    };
+  }, [activeConversationId]);
+
+  // Track unread count and notify parent
+  useEffect(() => {
+    const unread = messages.filter(m => m.role === 'assistant' && !m.read).length;
+    setUnreadCount(unread);
+    
+    // Notify parent window of unread count for badge display
+    if (window.parent !== window) {
+      window.parent.postMessage({ 
+        type: 'chatpad-unread-count', 
+        count: unread 
+      }, '*');
+    }
+  }, [messages]);
 
 
   // Send resize notifications based on content
@@ -1218,6 +1265,16 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                     </div>
                   )}
                   
+                  {/* Human takeover banner */}
+                  {isHumanTakeover && (
+                    <div className="px-4 py-2 bg-blue-50 border-b border-blue-100 flex items-center gap-2">
+                      <span className="text-lg">👤</span>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-blue-800">You're chatting with a team member</p>
+                        <p className="text-xs text-blue-600">A real person is here to help you</p>
+                      </div>
+                    </div>
+                  )}
 
                   <div className="p-3 border-t">
                     {isRecordingAudio ? (
