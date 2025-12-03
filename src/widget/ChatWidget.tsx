@@ -115,6 +115,8 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
   const [showConversationList, setShowConversationList] = useState(false);
   const [headerScrollY, setHeaderScrollY] = useState(0);
   const homeContentRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const [chatSettings, setChatSettings] = useState(() => {
     const saved = localStorage.getItem(`chatpad_settings_${agentId}`);
@@ -243,11 +245,8 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
 
   // Auto-scroll (always enabled)
   useEffect(() => {
-    if (currentView === 'messages' && activeConversationId) {
-      const messagesContainer = document.querySelector('.messages-container');
-      if (messagesContainer) {
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-      }
+    if (currentView === 'messages' && activeConversationId && messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages, currentView, activeConversationId]);
 
@@ -788,10 +787,10 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
 
             {/* Content - Only for non-home views */}
             {currentView !== 'home' && (
-              <div className="flex-1 overflow-hidden bg-background flex flex-col">
+              <div className="flex-1 overflow-hidden bg-background flex flex-col min-h-0">
 
               {currentView === 'messages' && (
-                <div className="flex-1 flex flex-col widget-view-enter">
+                <div className="flex-1 flex flex-col widget-view-enter min-h-0">
                   {/* Conversation List View - for returning users */}
                   {showConversationList && chatUser && (
                     <div className="flex-1 flex flex-col">
@@ -842,7 +841,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                   {/* Chat View - show contact form for new users OR active conversation */}
                   {!showConversationList && (
                     <>
-                      <div className="flex-1 overflow-y-auto p-4 space-y-3 messages-container">
+                      <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-4 space-y-3 messages-container min-h-0">
                         {!chatUser && config.enableContactForm && (
                       <div className="flex items-start">
                         <div className="bg-muted rounded-lg p-3 w-full">
@@ -1041,6 +1040,8 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                         </Suspense>
                       </div>
                     )}
+                    {/* Scroll anchor for auto-scroll */}
+                    <div ref={messagesEndRef} />
                   </div>
 
                   {pendingFiles.length > 0 && (
