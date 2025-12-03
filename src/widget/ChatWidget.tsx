@@ -1089,7 +1089,8 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                           onChange={(e) => setMessageInput(e.target.value)}
                           onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
                           placeholder={config.placeholder || 'Type a message...'}
-                          className="flex-1 h-9 text-sm placeholder:text-xs"
+                          disabled={!chatUser && config.enableContactForm}
+                          className={`flex-1 h-9 text-sm placeholder:text-xs ${!chatUser && config.enableContactForm ? 'opacity-50 cursor-not-allowed' : ''}`}
                         />
                         {config.enableFileAttachments && (
                           <Button 
@@ -1115,8 +1116,9 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                         )}
                         <Button 
                           size="icon" 
-                          className="h-9 w-9" 
+                          className={`h-9 w-9 ${!chatUser && config.enableContactForm ? 'opacity-50 cursor-not-allowed' : ''}`}
                           onClick={handleSendMessage} 
+                          disabled={!chatUser && config.enableContactForm}
                           style={{ backgroundColor: config.primaryColor }}
                         >
                           <Send01 className="h-4 w-4" />
