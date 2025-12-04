@@ -12,8 +12,8 @@ import { toast } from '@/lib/toast';
 import type { Tables } from '@/integrations/supabase/types';
 import { AgentSettingsLayout } from '@/components/agents/AgentSettingsLayout';
 import { useWebhooks } from '@/hooks/useWebhooks';
-import { CreateWebhookDialog } from '@/components/settings/CreateWebhookDialog';
-import { WebhookLogsDialog } from '@/components/settings/WebhookLogsDialog';
+import { CreateWebhookDialog } from '@/components/agents/webhooks/CreateWebhookDialog';
+import { WebhookLogsDialog } from '@/components/agents/webhooks/WebhookLogsDialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { AnimatedList } from '@/components/ui/animated-list';
 import { AnimatedItem } from '@/components/ui/animated-item';
@@ -460,6 +460,7 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
             open={showLogsDialog}
             onOpenChange={setShowLogsDialog}
             webhookId={selectedWebhookForLogs}
+            agentId={agentId}
           />
 
           <AlertDialog open={!!webhookToDelete} onOpenChange={() => setWebhookToDelete(null)}>

@@ -16,10 +16,11 @@ interface WebhookLogsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   webhookId: string | null;
+  agentId?: string;
 }
 
-export const WebhookLogsDialog = ({ open, onOpenChange, webhookId }: WebhookLogsDialogProps) => {
-  const { logs, fetchLogs } = useWebhooks();
+export const WebhookLogsDialog = ({ open, onOpenChange, webhookId, agentId }: WebhookLogsDialogProps) => {
+  const { logs, fetchLogs } = useWebhooks(agentId);
 
   useEffect(() => {
     if (open && webhookId) {
