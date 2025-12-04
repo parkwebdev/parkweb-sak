@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Separator } from '@/components/ui/separator';
 import {
   Select,
@@ -246,13 +246,23 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
                 {metadata.lead_email && (
                   <div className="flex items-center gap-2.5 text-sm">
                     <Mail01 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                    <span className="truncate">{metadata.lead_email}</span>
+                    <a 
+                      href={`mailto:${metadata.lead_email}`}
+                      className="truncate text-primary hover:underline"
+                    >
+                      {metadata.lead_email}
+                    </a>
                   </div>
                 )}
                 {metadata.lead_phone && (
                   <div className="flex items-center gap-2.5 text-sm">
                     <Phone01 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                    <span className="truncate">{metadata.lead_phone}</span>
+                    <a 
+                      href={`tel:${metadata.lead_phone}`}
+                      className="truncate text-primary hover:underline"
+                    >
+                      {metadata.lead_phone}
+                    </a>
                   </div>
                 )}
                 {metadata.lead_company && (
@@ -291,53 +301,88 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
               </h4>
               <div className="space-y-2.5">
                 {/* Channel */}
-                <div className="flex items-center gap-2.5 text-sm">
-                  <ChannelIcon channel={conversation.channel || 'widget'} />
-                  <span>{getChannelLabel(conversation.channel || 'widget')}</span>
-                </div>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center gap-2.5 text-sm cursor-help">
+                      <ChannelIcon channel={conversation.channel || 'widget'} />
+                      <span>{getChannelLabel(conversation.channel || 'widget')}</span>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>Source channel for this conversation</TooltipContent>
+                </Tooltip>
                 {metadata.country && (
-                  <div className="flex items-center gap-2.5 text-sm">
-                    <Globe01 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                    <span>
-                      {metadata.city ? `${metadata.city}, ` : ''}{metadata.country}
-                    </span>
-                  </div>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="flex items-center gap-2.5 text-sm cursor-help">
+                        <Globe01 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                        <span>
+                          {metadata.city ? `${metadata.city}, ` : ''}{metadata.country}
+                        </span>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>Visitor's geographic location</TooltipContent>
+                  </Tooltip>
                 )}
                 {metadata.ip_address && (
-                  <div className="flex items-center gap-2.5 text-sm">
-                    <span className="text-muted-foreground text-xs w-4 text-center">IP</span>
-                    <span className="font-mono text-xs">{metadata.ip_address}</span>
-                  </div>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="flex items-center gap-2.5 text-sm cursor-help">
+                        <span className="text-muted-foreground text-xs w-4 text-center">IP</span>
+                        <span className="font-mono text-xs">{metadata.ip_address}</span>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>Visitor's IP address</TooltipContent>
+                  </Tooltip>
                 )}
                 {metadata.device_type && (
-                  <div className="flex items-center gap-2.5 text-sm">
-                    <Monitor01 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                    <span className="capitalize">
-                      {getDeviceIcon()} {metadata.device_type}
-                      {metadata.browser && ` • ${metadata.browser}`}
-                    </span>
-                  </div>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="flex items-center gap-2.5 text-sm cursor-help">
+                        <Monitor01 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                        <span className="capitalize">
+                          {getDeviceIcon()} {metadata.device_type}
+                          {metadata.browser && ` • ${metadata.browser}`}
+                        </span>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>Device and browser information</TooltipContent>
+                  </Tooltip>
                 )}
                 {metadata.os && (
-                  <div className="flex items-center gap-2.5 text-sm">
-                    <span className="text-muted-foreground text-xs w-4 text-center">OS</span>
-                    <span>{metadata.os}</span>
-                  </div>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="flex items-center gap-2.5 text-sm cursor-help">
+                        <span className="text-muted-foreground text-xs w-4 text-center">OS</span>
+                        <span>{metadata.os}</span>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>Operating system</TooltipContent>
+                  </Tooltip>
                 )}
                 {metadata.referrer_url && (
-                  <div className="flex items-start gap-2.5 text-sm">
-                    <Link01 className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
-                    <span className="truncate text-xs text-muted-foreground" title={metadata.referrer_url}>
-                      {metadata.referrer_url}
-                    </span>
-                  </div>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="flex items-start gap-2.5 text-sm cursor-help">
+                        <Link01 className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+                        <span className="truncate text-xs text-muted-foreground">
+                          {metadata.referrer_url}
+                        </span>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>Page where conversation started</TooltipContent>
+                  </Tooltip>
                 )}
-                <div className="flex items-center gap-2.5 text-sm">
-                  <Clock className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                  <span>
-                    Started {formatDistanceToNow(new Date(conversation.created_at), { addSuffix: true })}
-                  </span>
-                </div>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center gap-2.5 text-sm cursor-help">
+                      <Clock className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                      <span>
+                        Started {formatDistanceToNow(new Date(conversation.created_at), { addSuffix: true })}
+                      </span>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>When this conversation began</TooltipContent>
+                </Tooltip>
               </div>
             </div>
 

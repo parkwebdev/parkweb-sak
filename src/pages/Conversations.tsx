@@ -22,6 +22,30 @@ type Message = Tables<'messages'>;
 
 const QUICK_EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '🎉'];
 
+// Format time as "11 hrs ago" or "5 mins ago"
+const formatShortTime = (date: Date): string => {
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHrs = Math.floor(diffMins / 60);
+  const diffDays = Math.floor(diffHrs / 24);
+  
+  if (diffMins < 1) return 'now';
+  if (diffMins < 60) return `${diffMins} min${diffMins > 1 ? 's' : ''} ago`;
+  if (diffHrs < 24) return `${diffHrs} hr${diffHrs > 1 ? 's' : ''} ago`;
+  if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+};
+
+// Format sender name as "Aaron C."
+const formatSenderName = (fullName: string): string => {
+  const parts = fullName.trim().split(' ');
+  if (parts.length === 1) return parts[0];
+  const firstName = parts[0];
+  const lastInitial = parts[parts.length - 1][0].toUpperCase();
+  return `${firstName} ${lastInitial}.`;
+};
+
 // Function to update message reaction via edge function
 async function updateMessageReaction(
   messageId: string,
@@ -332,7 +356,7 @@ const Conversations: React.FC = () => {
                             </span>
                           </div>
                           <p className="text-xs text-muted-foreground truncate mb-1.5">
-                            via {conv.agents?.name}
+                            via {conv.agents?.name || 'Unknown'}
                           </p>
                           <div className="flex items-center gap-1.5 flex-wrap">
                             <Badge variant="outline" className={`${getStatusColor(conv.status)} text-[10px] px-2 py-0.5`}>
@@ -502,7 +526,7 @@ const Conversations: React.FC = () => {
                               >
                                 <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</p>
                               </div>
-                              {/* Message reactions display + add */}
+                              {/* Message reactions display + add + time */}
                               <div className="flex items-center gap-1 mt-1 px-1 flex-wrap">
                                 {reactions && reactions.map((reaction, i) => (
                                   <button
@@ -541,13 +565,14 @@ const Conversations: React.FC = () => {
                                     </div>
                                   </PopoverContent>
                                 </Popover>
+                                {/* Time inline with reactions */}
+                                <span className={`text-[10px] text-muted-foreground ml-auto ${isUser ? 'order-first mr-auto ml-0' : ''}`}>
+                                  {isHumanSent && msgMetadata?.sender_name && (
+                                    <>{formatSenderName(msgMetadata.sender_name)} • </>
+                                  )}
+                                  {formatShortTime(new Date(message.created_at))}
+                                </span>
                               </div>
-                              <p className={`text-[10px] mt-1 px-2 ${
-                                isUser ? 'text-right text-muted-foreground' : 'text-muted-foreground'
-                              }`}>
-                                {isHumanSent && <span className="mr-1">{msgMetadata?.sender_name || 'Team'}</span>}
-                                {formatDistanceToNow(new Date(message.created_at), { addSuffix: true })}
-                              </p>
                             </div>
                           </div>
                         </div>
