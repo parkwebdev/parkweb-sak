@@ -29,7 +29,30 @@ import {
   ChevronRight,
   ChevronLeft,
   MessageChatCircle,
+  MessageTextSquare01,
 } from '@untitledui/icons';
+
+// Helper to get appropriate icon for custom field based on field name
+const getCustomFieldIcon = (fieldName: string) => {
+  const lowerName = fieldName.toLowerCase();
+  
+  if (lowerName.includes('phone') || lowerName.includes('mobile') || lowerName.includes('cell') || lowerName.includes('tel')) {
+    return Phone01;
+  }
+  if (lowerName.includes('message') || lowerName.includes('note') || lowerName.includes('comment') || lowerName.includes('question')) {
+    return MessageTextSquare01;
+  }
+  if (lowerName.includes('email') || lowerName.includes('mail')) {
+    return Mail01;
+  }
+  if (lowerName.includes('company') || lowerName.includes('organization') || lowerName.includes('business')) {
+    return Building07;
+  }
+  if (lowerName.includes('website') || lowerName.includes('url') || lowerName.includes('link')) {
+    return Link01;
+  }
+  return File06;
+};
 import { formatDistanceToNow, format } from 'date-fns';
 import type { Tables } from '@/integrations/supabase/types';
 import { cn } from '@/lib/utils';
@@ -279,15 +302,30 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
               {/* Custom Fields */}
               {metadata.custom_fields && Object.keys(metadata.custom_fields).length > 0 && (
                 <div className="mt-3 pt-3 border-t border-dashed space-y-2">
-                  {Object.entries(metadata.custom_fields).map(([key, value]) => (
-                    <div key={key} className="flex items-start gap-2.5 text-sm">
-                      <File06 className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
-                      <div className="min-w-0">
-                        <span className="text-muted-foreground">{key}:</span>{' '}
-                        <span className="break-words">{String(value)}</span>
+                  {Object.entries(metadata.custom_fields).map(([key, value]) => {
+                    const IconComponent = getCustomFieldIcon(key);
+                    const lowerKey = key.toLowerCase();
+                    const isPhoneField = lowerKey.includes('phone') || lowerKey.includes('mobile') || lowerKey.includes('cell') || lowerKey.includes('tel');
+                    
+                    return (
+                      <div key={key} className="flex items-start gap-2.5 text-sm">
+                        <IconComponent className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+                        <div className="min-w-0">
+                          <span className="text-muted-foreground">{key}:</span>{' '}
+                          {isPhoneField ? (
+                            <a 
+                              href={`tel:${String(value)}`}
+                              className="break-words text-primary hover:underline"
+                            >
+                              {String(value)}
+                            </a>
+                          ) : (
+                            <span className="break-words">{String(value)}</span>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
