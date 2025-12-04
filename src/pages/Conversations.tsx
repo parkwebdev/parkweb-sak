@@ -60,7 +60,15 @@ const Conversations: React.FC = () => {
   const [takeoverDialogOpen, setTakeoverDialogOpen] = useState(false);
   const [messageInput, setMessageInput] = useState('');
   const [sendingMessage, setSendingMessage] = useState(false);
-  const [metadataPanelCollapsed, setMetadataPanelCollapsed] = useState(false);
+  const [metadataPanelCollapsed, setMetadataPanelCollapsed] = useState(() => {
+    const saved = localStorage.getItem('conversations_metadata_collapsed');
+    return saved === 'true';
+  });
+
+  // Persist metadata panel collapsed state
+  useEffect(() => {
+    localStorage.setItem('conversations_metadata_collapsed', String(metadataPanelCollapsed));
+  }, [metadataPanelCollapsed]);
   const messagesScrollRef = useRef<HTMLDivElement>(null);
   
   // Typing indicator state
@@ -281,7 +289,7 @@ const Conversations: React.FC = () => {
         </div>
 
         {/* Conversation List */}
-        <div className="flex-1 min-h-0">
+        <div className="flex-1 min-h-0 overflow-hidden">
           <ScrollArea className="h-full">
             {loading ? (
               <div className="p-4 text-center text-sm text-muted-foreground">
@@ -391,19 +399,20 @@ const Conversations: React.FC = () => {
             </div>
 
             {/* Messages */}
-            <div className="flex-1 min-h-0">
-              <ScrollArea ref={messagesScrollRef} className="h-full px-6 py-4">
-                {loadingMessages ? (
-                  <div className="text-center py-12 text-sm text-muted-foreground">
-                    Loading messages...
-                  </div>
-                ) : messages.length === 0 ? (
-                  <div className="text-center py-12">
-                    <MessageChatSquare className="h-16 w-16 mx-auto text-muted-foreground/50 mb-3" />
-                    <p className="text-sm text-muted-foreground">No messages yet</p>
-                  </div>
-                ) : (
-                <div className="space-y-3 max-w-4xl mx-auto">
+            <div className="flex-1 min-h-0 overflow-hidden">
+              <ScrollArea ref={messagesScrollRef} className="h-full">
+                <div className="px-6 py-4">
+                  {loadingMessages ? (
+                    <div className="text-center py-12 text-sm text-muted-foreground">
+                      Loading messages...
+                    </div>
+                  ) : messages.length === 0 ? (
+                    <div className="text-center py-12">
+                      <MessageChatSquare className="h-16 w-16 mx-auto text-muted-foreground/50 mb-3" />
+                      <p className="text-sm text-muted-foreground">No messages yet</p>
+                    </div>
+                  ) : (
+                  <div className="space-y-3 max-w-4xl mx-auto">
                     {messages.map((message) => {
                       const isUser = message.role === 'user';
                       const msgMetadata = message.metadata as any;
@@ -541,8 +550,9 @@ const Conversations: React.FC = () => {
                         </div>
                       );
                     })}
-                  </div>
-                )}
+                    </div>
+                  )}
+                </div>
               </ScrollArea>
             </div>
 
