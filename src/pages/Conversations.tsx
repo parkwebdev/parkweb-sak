@@ -60,6 +60,7 @@ const Conversations: React.FC = () => {
   const [takeoverDialogOpen, setTakeoverDialogOpen] = useState(false);
   const [messageInput, setMessageInput] = useState('');
   const [sendingMessage, setSendingMessage] = useState(false);
+  const [metadataPanelCollapsed, setMetadataPanelCollapsed] = useState(false);
   const messagesScrollRef = useRef<HTMLDivElement>(null);
   
   // Typing indicator state
@@ -600,6 +601,8 @@ const Conversations: React.FC = () => {
         <ConversationMetadataPanel
           conversation={selectedConversation}
           onUpdateMetadata={updateConversationMetadata}
+          isCollapsed={metadataPanelCollapsed}
+          onToggleCollapse={() => setMetadataPanelCollapsed(!metadataPanelCollapsed)}
         />
       )}
 
