@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { Edit02, Trash01, Clock } from '@untitledui/icons';
+import { Trash01, Clock } from '@untitledui/icons';
 import { useScheduledReports } from '@/hooks/useScheduledReports';
 import { CreateScheduledReportDialog } from './CreateScheduledReportDialog';
 import { SavedIndicator } from '@/components/settings/SavedIndicator';
@@ -140,24 +140,13 @@ export const ScheduledReportsManager = () => {
                       </div>
                     </TableCell>
                     <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            // TODO: Implement edit functionality
-                          }}
-                        >
-                          <Edit02 className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => setDeleteId(report.id)}
-                        >
-                          <Trash01 className="h-4 w-4" />
-                        </Button>
-                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setDeleteId(report.id)}
+                      >
+                        <Trash01 className="h-4 w-4" />
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}

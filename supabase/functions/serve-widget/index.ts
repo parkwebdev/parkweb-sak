@@ -32,6 +32,7 @@ serve(async (req) => {
     console.log('[Serve Widget] App URL:', appUrl);
 
     // Generate the loader script that creates iframe-based widget
+    // Note: No console logs in generated JS to keep client bundles clean
     const loaderScript = `
 (function() {
   'use strict';
@@ -39,7 +40,6 @@ serve(async (req) => {
   // Get configuration from script tag
   var currentScript = document.currentScript;
   if (!currentScript || !currentScript.hasAttribute('data-agent-id')) {
-    console.error('[ChatPad Widget] data-agent-id attribute is required');
     return;
   }
   
@@ -50,8 +50,6 @@ serve(async (req) => {
     appUrl: '${appUrl}',
   };
   
-  console.log('[ChatPad Widget] Loading widget with config:', config);
-  
   // Dynamically load the full widget bundle
   var script = document.createElement('script');
   script.src = config.appUrl + '/chatpad-widget.js';
@@ -60,14 +58,6 @@ serve(async (req) => {
   script.setAttribute('data-position', config.position);
   script.setAttribute('data-primary-color', config.primaryColor);
   script.setAttribute('data-app-url', config.appUrl);
-  
-  script.onload = function() {
-    console.log('[ChatPad Widget] Widget bundle loaded successfully');
-  };
-  
-  script.onerror = function() {
-    console.error('[ChatPad Widget] Failed to load widget bundle from ' + config.appUrl);
-  };
   
   document.head.appendChild(script);
 })();
