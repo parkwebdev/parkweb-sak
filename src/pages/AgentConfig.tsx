@@ -94,12 +94,13 @@ const AgentConfig: React.FC<AgentConfigProps> = ({ onMenuClick }) => {
         onTabChange={setActiveTab}
       >
         {activeTab === 'embed' ? (
-          // No transition for embed tab as requested
-          <AgentEmbedTab
-            agent={agent}
-            onUpdate={handleUpdate}
-            onFormChange={setHasUnsavedChanges}
-          />
+          <div className="flex-1 h-full min-h-0 flex flex-col">
+            <AgentEmbedTab
+              agent={agent}
+              onUpdate={handleUpdate}
+              onFormChange={setHasUnsavedChanges}
+            />
+          </div>
         ) : (
           <TabContentTransition activeKey={activeTab}>
             {activeTab === 'configure' && (
