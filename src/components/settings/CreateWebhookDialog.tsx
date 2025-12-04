@@ -22,6 +22,7 @@ import { ResponseActionBuilder } from './ResponseActionBuilder';
 interface CreateWebhookDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  agentId?: string;
 }
 
 const AVAILABLE_EVENTS = [
@@ -41,8 +42,8 @@ const AUTH_TYPES = [
   { value: 'basic_auth', label: 'Basic Auth' },
 ];
 
-export const CreateWebhookDialog = ({ open, onOpenChange }: CreateWebhookDialogProps) => {
-  const { createWebhook } = useWebhooks();
+export const CreateWebhookDialog = ({ open, onOpenChange, agentId }: CreateWebhookDialogProps) => {
+  const { createWebhook } = useWebhooks(agentId);
   const [loading, setLoading] = useState(false);
   const [name, setName] = useState('');
   const [url, setUrl] = useState('');
