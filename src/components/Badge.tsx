@@ -33,7 +33,7 @@ export const Badge: React.FC<BadgeProps> = ({
   };
 
   return (
-    <div className={`${getVariantClasses()} ${className} uppercase`}>
+    <div className={`${getVariantClasses()} ${className}`}>
       {children}
     </div>
   );
