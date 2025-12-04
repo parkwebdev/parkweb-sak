@@ -160,7 +160,7 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
   return (
     <div 
       className={cn(
-        "border-l bg-background flex flex-col h-full transition-all duration-200 ease-in-out overflow-x-hidden",
+        "border-l bg-background flex flex-col h-full min-h-0 transition-all duration-200 ease-in-out overflow-x-hidden",
         isCollapsed ? "w-12" : "w-80"
       )}
     >
