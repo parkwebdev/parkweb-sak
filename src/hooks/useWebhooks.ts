@@ -19,7 +19,7 @@ type WebhookLog = {
   delivered_at: string | null;
 };
 
-export const useWebhooks = () => {
+export const useWebhooks = (agentId?: string) => {
   const [webhooks, setWebhooks] = useState<Webhook[]>([]);
   const [logs, setLogs] = useState<WebhookLog[]>([]);
   const [loading, setLoading] = useState(true);
@@ -30,11 +30,19 @@ export const useWebhooks = () => {
     
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      let query = supabase
         .from('webhooks')
         .select('*')
-        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
+
+      // Filter by agent_id if provided, otherwise by user_id (for backwards compatibility)
+      if (agentId) {
+        query = query.eq('agent_id', agentId);
+      } else {
+        query = query.eq('user_id', user.id).is('agent_id', null);
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       setWebhooks(data || []);
@@ -72,13 +80,13 @@ export const useWebhooks = () => {
     }
   };
 
-  const createWebhook = async (webhookData: Omit<Webhook, 'id' | 'created_at' | 'updated_at' | 'user_id'>) => {
+  const createWebhook = async (webhookData: Omit<Webhook, 'id' | 'created_at' | 'updated_at' | 'user_id' | 'agent_id'>) => {
     if (!user) return;
 
     try {
       const { data, error } = await supabase
         .from('webhooks')
-        .insert([{ ...webhookData, user_id: user.id }])
+        .insert([{ ...webhookData, user_id: user.id, agent_id: agentId || null }])
         .select()
         .single();
 
@@ -98,7 +106,7 @@ export const useWebhooks = () => {
     }
   };
 
-  const updateWebhook = async (id: string, updates: Partial<Omit<Webhook, 'id' | 'created_at' | 'updated_at' | 'user_id'>>) => {
+  const updateWebhook = async (id: string, updates: Partial<Omit<Webhook, 'id' | 'created_at' | 'updated_at' | 'user_id' | 'agent_id'>>) => {
     try {
       const { error } = await supabase
         .from('webhooks')
@@ -168,15 +176,19 @@ export const useWebhooks = () => {
     fetchWebhooks();
 
     // Subscribe to real-time updates
+    const filter = agentId 
+      ? `agent_id=eq.${agentId}` 
+      : `user_id=eq.${user?.id}`;
+    
     const channel = supabase
-      .channel('webhooks-changes')
+      .channel(`webhooks-changes-${agentId || user?.id}`)
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
           table: 'webhooks',
-          filter: `user_id=eq.${user?.id}`,
+          filter,
         },
         () => {
           fetchWebhooks();
@@ -198,7 +210,7 @@ export const useWebhooks = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user?.id]);
+  }, [user?.id, agentId]);
 
   return {
     webhooks,

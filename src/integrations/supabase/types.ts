@@ -1157,6 +1157,7 @@ export type Database = {
       webhooks: {
         Row: {
           active: boolean | null
+          agent_id: string | null
           auth_config: Json | null
           auth_type: string
           conditions: Json | null
@@ -1173,6 +1174,7 @@ export type Database = {
         }
         Insert: {
           active?: boolean | null
+          agent_id?: string | null
           auth_config?: Json | null
           auth_type?: string
           conditions?: Json | null
@@ -1189,6 +1191,7 @@ export type Database = {
         }
         Update: {
           active?: boolean | null
+          agent_id?: string | null
           auth_config?: Json | null
           auth_type?: string
           conditions?: Json | null
@@ -1203,7 +1206,15 @@ export type Database = {
           url?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "webhooks_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
