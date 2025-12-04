@@ -13,12 +13,48 @@ interface Reaction {
   adminReacted: boolean;
 }
 
+// Simple in-memory rate limiting (resets on function cold start)
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+const RATE_LIMIT_WINDOW_MS = 60000; // 1 minute
+const MAX_REQUESTS_PER_WINDOW = 30; // 30 reactions per minute per IP
+
+function isRateLimited(clientIp: string): boolean {
+  const now = Date.now();
+  const record = rateLimitMap.get(clientIp);
+  
+  if (!record || now > record.resetTime) {
+    rateLimitMap.set(clientIp, { count: 1, resetTime: now + RATE_LIMIT_WINDOW_MS });
+    return false;
+  }
+  
+  if (record.count >= MAX_REQUESTS_PER_WINDOW) {
+    return true;
+  }
+  
+  record.count++;
+  return false;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    // Get client IP for rate limiting
+    const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 
+                     req.headers.get('x-real-ip') || 
+                     'unknown';
+    
+    // Check rate limit
+    if (isRateLimited(clientIp)) {
+      console.log(`Rate limited IP: ${clientIp}`);
+      return new Response(
+        JSON.stringify({ error: 'Too many requests. Please try again later.' }),
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const { messageId, emoji, action, reactorType } = await req.json();
 
     if (!messageId || !emoji || !action || !reactorType) {
@@ -38,6 +74,24 @@ serve(async (req) => {
     if (!['user', 'admin'].includes(reactorType)) {
       return new Response(
         JSON.stringify({ error: 'Invalid reactorType' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Validate emoji (only allow common emojis, prevent injection)
+    const allowedEmojis = ['👍', '❤️', '😂', '😮', '😢', '🎉', '👎', '🔥', '💯', '🙏'];
+    if (!allowedEmojis.includes(emoji)) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid emoji' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Validate messageId format (UUID)
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(messageId)) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid message ID format' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -121,7 +175,7 @@ serve(async (req) => {
       );
     }
 
-    console.log(`Reaction ${action}ed: ${emoji} on message ${messageId} by ${reactorType}`);
+    console.log(`Reaction ${action}ed: ${emoji} on message ${messageId} by ${reactorType} from IP ${clientIp}`);
 
     return new Response(
       JSON.stringify({ success: true, reactions }),
