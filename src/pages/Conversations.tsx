@@ -289,7 +289,7 @@ const Conversations: React.FC = () => {
         </div>
 
         {/* Conversation List */}
-        <div className="flex-1 min-h-0 overflow-hidden">
+        <div className="flex-1 min-h-0">
           <ScrollArea className="h-full">
             {loading ? (
               <div className="p-4 text-center text-sm text-muted-foreground">
@@ -399,7 +399,7 @@ const Conversations: React.FC = () => {
             </div>
 
             {/* Messages */}
-            <div className="flex-1 min-h-0 overflow-hidden">
+            <div className="flex-1 min-h-0">
               <ScrollArea ref={messagesScrollRef} className="h-full">
                 <div className="px-6 py-4">
                   {loadingMessages ? (
