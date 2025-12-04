@@ -102,7 +102,7 @@ export const QuickEmojiPicker: React.FC<QuickEmojiPickerProps> = ({
   const quickEmojis = ['👍', '❤️', '😂', '😮', '😢', '🎉'];
 
   return (
-    <div className="flex items-center gap-1 px-3 py-1 bg-white shadow-lg max-w-[180px] overflow-x-auto rounded-full [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+    <div className="flex items-center gap-1 px-3 py-1 bg-white shadow-lg max-w-[180px] overflow-x-auto rounded-full">
       {quickEmojis.map((emoji) => (
         <button
           key={emoji}
