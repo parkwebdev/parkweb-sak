@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from '@/components/ui/chart';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid } from 'recharts';
 
 interface ConversationChartProps {
   data: Array<{
@@ -35,47 +35,45 @@ export const ConversationChart = ({ data }: ConversationChartProps) => {
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig} className="h-[300px] w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={data}>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-              <XAxis 
-                dataKey="date" 
-                className="text-xs"
-                tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                tickLine={{ stroke: 'hsl(var(--muted-foreground))' }}
-              />
-              <YAxis 
-                className="text-xs"
-                tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                tickLine={{ stroke: 'hsl(var(--muted-foreground))' }}
-              />
-              <ChartTooltip content={<ChartTooltipContent />} />
-              <Line 
-                type="monotone" 
-                dataKey="total" 
-                stroke="var(--color-total)"
-                strokeWidth={2.5}
-                dot={{ fill: "var(--color-total)", r: 4 }}
-                activeDot={{ r: 6 }}
-              />
-              <Line 
-                type="monotone" 
-                dataKey="active" 
-                stroke="var(--color-active)"
-                strokeWidth={2.5}
-                dot={{ fill: "var(--color-active)", r: 4 }}
-                activeDot={{ r: 6 }}
-              />
-              <Line 
-                type="monotone" 
-                dataKey="closed" 
-                stroke="var(--color-closed)"
-                strokeWidth={2.5}
-                dot={{ fill: "var(--color-closed)", r: 4 }}
-                activeDot={{ r: 6 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
+          <LineChart data={data}>
+            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+            <XAxis 
+              dataKey="date" 
+              className="text-xs"
+              tick={{ fill: 'hsl(var(--muted-foreground))' }}
+              tickLine={{ stroke: 'hsl(var(--muted-foreground))' }}
+            />
+            <YAxis 
+              className="text-xs"
+              tick={{ fill: 'hsl(var(--muted-foreground))' }}
+              tickLine={{ stroke: 'hsl(var(--muted-foreground))' }}
+            />
+            <ChartTooltip content={<ChartTooltipContent />} />
+            <Line 
+              type="monotone" 
+              dataKey="total" 
+              stroke="var(--color-total)"
+              strokeWidth={2.5}
+              dot={{ fill: "var(--color-total)", r: 4 }}
+              activeDot={{ r: 6 }}
+            />
+            <Line 
+              type="monotone" 
+              dataKey="active" 
+              stroke="var(--color-active)"
+              strokeWidth={2.5}
+              dot={{ fill: "var(--color-active)", r: 4 }}
+              activeDot={{ r: 6 }}
+            />
+            <Line 
+              type="monotone" 
+              dataKey="closed" 
+              stroke="var(--color-closed)"
+              strokeWidth={2.5}
+              dot={{ fill: "var(--color-closed)", r: 4 }}
+              activeDot={{ r: 6 }}
+            />
+          </LineChart>
         </ChartContainer>
       </CardContent>
     </Card>

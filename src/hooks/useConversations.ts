@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/lib/toast';
+import { logger } from '@/utils/logger';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Conversation = Tables<'conversations'> & {
@@ -33,7 +34,7 @@ export const useConversations = () => {
       if (error) throw error;
       setConversations(data || []);
     } catch (error) {
-      console.error('Error fetching conversations:', error);
+      logger.error('Error fetching conversations:', error);
       toast.error('Failed to load conversations');
     } finally {
       setLoading(false);
@@ -78,7 +79,7 @@ export const useConversations = () => {
       if (error) throw error;
       return data || [];
     } catch (error) {
-      console.error('Error fetching messages:', error);
+      logger.error('Error fetching messages:', error);
       toast.error('Failed to load messages');
       return [];
     }
@@ -99,7 +100,7 @@ export const useConversations = () => {
       toast.success(`Conversation ${status === 'human_takeover' ? 'taken over' : status}`);
       await fetchConversations();
     } catch (error) {
-      console.error('Error updating conversation:', error);
+      logger.error('Error updating conversation:', error);
       toast.error('Failed to update conversation');
     }
   };
@@ -141,7 +142,7 @@ export const useConversations = () => {
       
       toast.success('Updated successfully');
     } catch (error) {
-      console.error('Error updating conversation metadata:', error);
+      logger.error('Error updating conversation metadata:', error);
       toast.error('Failed to update');
       throw error;
     }
@@ -163,7 +164,7 @@ export const useConversations = () => {
 
       await updateConversationStatus(conversationId, 'human_takeover');
     } catch (error) {
-      console.error('Error taking over conversation:', error);
+      logger.error('Error taking over conversation:', error);
       toast.error('Failed to take over conversation');
     }
   };
@@ -191,7 +192,7 @@ export const useConversations = () => {
 
       await updateConversationStatus(conversationId, 'active');
     } catch (error) {
-      console.error('Error returning to AI:', error);
+      logger.error('Error returning to AI:', error);
       toast.error('Failed to return to AI');
     }
   };
@@ -201,7 +202,7 @@ export const useConversations = () => {
       await updateConversationStatus(conversationId, 'human_takeover');
       toast.success('Conversation re-opened - you can now respond');
     } catch (error) {
-      console.error('Error re-opening conversation:', error);
+      logger.error('Error re-opening conversation:', error);
       toast.error('Failed to re-open conversation');
     }
   };
@@ -229,7 +230,7 @@ export const useConversations = () => {
 
       return true;
     } catch (error) {
-      console.error('Error sending human message:', error);
+      logger.error('Error sending human message:', error);
       toast.error('Failed to send message');
       return false;
     }

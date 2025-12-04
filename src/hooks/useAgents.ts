@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/lib/toast';
+import { logger } from '@/utils/logger';
 import type { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
 
 type Agent = Tables<'agents'>;
@@ -27,7 +28,7 @@ export const useAgents = () => {
       if (error) throw error;
       setAgents(data || []);
     } catch (error) {
-      console.error('Error fetching agents:', error);
+      logger.error('Error fetching agents:', error);
       toast.error('Failed to load agents');
     } finally {
       setLoading(false);
@@ -54,7 +55,7 @@ export const useAgents = () => {
       toast.success('Agent created successfully');
       return data;
     } catch (error) {
-      console.error('Error creating agent:', error);
+      logger.error('Error creating agent:', error);
       toast.error('Failed to create agent');
       return null;
     }
@@ -75,7 +76,7 @@ export const useAgents = () => {
       // Success - no toast needed (SavedIndicator shows feedback in tabs)
       return data;
     } catch (error) {
-      console.error('Error updating agent:', error);
+      logger.error('Error updating agent:', error);
       toast.error('Failed to update agent');
       return null;
     }
@@ -94,7 +95,7 @@ export const useAgents = () => {
       toast.success('Agent deleted successfully');
       return true;
     } catch (error) {
-      console.error('Error deleting agent:', error);
+      logger.error('Error deleting agent:', error);
       toast.error('Failed to delete agent');
       return false;
     }
