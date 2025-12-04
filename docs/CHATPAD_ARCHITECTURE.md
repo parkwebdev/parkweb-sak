@@ -1,708 +1,498 @@
-# ChatPad Platform Architecture
+# ChatPad System Architecture
 
-## Overview
+Detailed system architecture documentation for the ChatPad platform.
 
-ChatPad is a multi-tenant AI agent platform that enables businesses to deploy intelligent conversational agents for customer engagement, lead capture, and automated support. The platform features full RAG (Retrieval Augmented Generation) capabilities, human takeover, white-label branding, and comprehensive integrations.
+## Table of Contents
 
-## System Architecture
+1. [System Overview](#system-overview)
+2. [Access Control Model](#access-control-model)
+3. [AI Integration](#ai-integration)
+4. [Deployment Methods](#deployment-methods)
+5. [Data Flow](#data-flow)
+6. [Plan Tiers](#plan-tiers)
+7. [Monitoring & Analytics](#monitoring--analytics)
 
-### Multi-Tenant Structure
+---
+
+## System Overview
+
+ChatPad is a multi-tenant AI agent platform built on a user-based ownership model with team sharing capabilities.
+
+### High-Level Architecture
 
 ```
-Platform Level (Super Admin)
-├── Organizations (Tenants)
-│   ├── Agents (AI Configurations)
-│   │   ├── Knowledge Sources (RAG)
-│   │   └── Agent Tools (Function Calling)
-│   ├── Conversations
-│   │   ├── Messages
-│   │   └── Takeovers (Human Intervention)
-│   ├── Leads
-│   ├── Integrations
-│   │   ├── Webhooks
-│   │   └── API Keys
-│   └── Team Members
-└── Plans & Subscriptions
+┌─────────────────────────────────────────────────────────────────┐
+│                         Client Layer                             │
+├─────────────────┬─────────────────┬─────────────────────────────┤
+│   Admin App     │   Widget        │   External API              │
+│   (React SPA)   │   (Embedded)    │   (REST)                    │
+└────────┬────────┴────────┬────────┴──────────┬──────────────────┘
+         │                 │                   │
+         ▼                 ▼                   ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                      Supabase Layer                              │
+├─────────────────┬─────────────────┬─────────────────────────────┤
+│   Auth          │   Edge Functions │   Realtime                 │
+│   (JWT)         │   (Deno)         │   (WebSocket)              │
+└────────┬────────┴────────┬────────┴──────────┬──────────────────┘
+         │                 │                   │
+         ▼                 ▼                   ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                      Database Layer                              │
+├─────────────────┬─────────────────┬─────────────────────────────┤
+│   PostgreSQL    │   Row Level     │   Storage                   │
+│   (Tables)      │   Security      │   (Buckets)                 │
+└─────────────────┴─────────────────┴─────────────────────────────┘
 ```
 
-## Database Schema
+### Core Entities
 
-### Core Tables
+| Entity | Description |
+|--------|-------------|
+| **User** | Account owner with subscription |
+| **Team Member** | User with access to another user's resources |
+| **Agent** | AI chatbot configuration |
+| **Conversation** | Chat session with a widget visitor |
+| **Lead** | Contact information captured from widget |
+| **Knowledge Source** | RAG data for agent responses |
 
-#### `organizations`
-Multi-tenant foundation for the platform.
-```sql
-- id: uuid (PK)
-- name: text
-- slug: text (unique, used in URLs)
-- created_at: timestamp
-- settings: jsonb (org-wide configuration)
-```
+---
 
-#### `org_members`
-Links users to organizations with specific roles.
-```sql
-- id: uuid (PK)
-- org_id: uuid (FK -> organizations)
-- user_id: uuid (FK -> auth.users)
-- role: org_role (owner, admin, member)
-- created_at: timestamp
-```
+## Access Control Model
 
-#### `plans`
-Subscription tier definitions.
-```sql
-- id: uuid (PK)
-- name: text (Basic, Advanced, Pro)
-- price_monthly: integer (cents)
-- price_yearly: integer (cents)
-- features: jsonb
-- limits: jsonb {
-    max_agents: integer,
-    max_conversations_per_month: integer,
-    max_messages_per_conversation: integer,
-    max_knowledge_sources: integer,
-    max_api_calls_per_month: integer
-  }
-```
+### Ownership Pattern
 
-#### `subscriptions`
-Organization to plan mapping with Stripe integration.
-```sql
-- id: uuid (PK)
-- org_id: uuid (FK -> organizations, unique)
-- plan_id: uuid (FK -> plans)
-- stripe_subscription_id: text
-- status: text (active, past_due, canceled)
-- current_period_start: timestamp
-- current_period_end: timestamp
-```
-
-#### `agents`
-AI agent configurations.
-```sql
-- id: uuid (PK)
-- org_id: uuid (FK -> organizations)
-- name: text
-- description: text
-- system_prompt: text (personality/instructions)
-- model: text (google/gemini-2.5-flash, etc.)
-- temperature: float (0.0-1.0)
-- max_tokens: integer
-- status: agent_status (draft, active, paused)
-- deployment_config: jsonb {
-    widget_enabled: boolean,
-    hosted_page_enabled: boolean,
-    api_enabled: boolean
-  }
-- created_at: timestamp
-- updated_at: timestamp
-```
-
-#### `knowledge_sources`
-RAG knowledge base with vector embeddings.
-```sql
-- id: uuid (PK)
-- agent_id: uuid (FK -> agents)
-- org_id: uuid (FK -> organizations)
-- type: knowledge_type (pdf, url, api, json, xml, csv)
-- source: text (file path, URL, endpoint)
-- content: text (extracted/parsed content)
-- embedding: vector(1536) (OpenAI embeddings)
-- metadata: jsonb
-- status: text (processing, ready, error)
-- created_at: timestamp
-```
-
-#### `conversations`
-Chat sessions with 6-month retention.
-```sql
-- id: uuid (PK)
-- agent_id: uuid (FK -> agents)
-- org_id: uuid (FK -> organizations)
-- status: conversation_status (active, human_takeover, closed)
-- metadata: jsonb (user info, session data)
-- created_at: timestamp
-- updated_at: timestamp
-- expires_at: timestamp (created_at + 6 months)
-```
-
-#### `messages`
-Individual chat messages.
-```sql
-- id: uuid (PK)
-- conversation_id: uuid (FK -> conversations)
-- role: text (user, assistant, system)
-- content: text
-- metadata: jsonb (sources, tokens, model)
-- created_at: timestamp
-```
-
-#### `leads`
-Captured lead information from conversations.
-```sql
-- id: uuid (PK)
-- org_id: uuid (FK -> organizations)
-- conversation_id: uuid (FK -> conversations)
-- name: text
-- email: text
-- phone: text
-- company: text
-- status: lead_status (new, contacted, qualified, converted)
-- data: jsonb (custom fields)
-- created_at: timestamp
-```
-
-#### `webhooks`
-Outbound webhook configurations.
-```sql
-- id: uuid (PK)
-- org_id: uuid (FK -> organizations)
-- name: text
-- url: text
-- events: text[] (conversation.ended, lead.captured, etc.)
-- headers: jsonb
-- active: boolean
-- created_at: timestamp
-```
-
-#### `api_keys`
-Organization API keys for programmatic access.
-```sql
-- id: uuid (PK)
-- org_id: uuid (FK -> organizations)
-- name: text
-- key: text (hashed)
-- key_preview: text (last 4 chars)
-- permissions: text[]
-- last_used_at: timestamp
-- created_at: timestamp
-```
-
-#### `conversation_takeovers`
-Human intervention tracking.
-```sql
-- id: uuid (PK)
-- conversation_id: uuid (FK -> conversations)
-- taken_over_by: uuid (FK -> auth.users)
-- taken_over_at: timestamp
-- returned_to_ai_at: timestamp
-- reason: text
-```
-
-#### `org_branding`
-White-label customization (Pro plan).
-```sql
-- id: uuid (PK)
-- org_id: uuid (FK -> organizations, unique)
-- logo_url: text
-- primary_color: text
-- secondary_color: text
-- custom_domain: text
-- hide_powered_by: boolean
-- created_at: timestamp
-```
-
-### Enums
+Resources are owned by users via `user_id` column:
 
 ```sql
--- Organization member roles
-CREATE TYPE org_role AS ENUM ('owner', 'admin', 'member');
-
--- Agent lifecycle status
-CREATE TYPE agent_status AS ENUM ('draft', 'active', 'paused');
-
--- Conversation state
-CREATE TYPE conversation_status AS ENUM ('active', 'human_takeover', 'closed');
-
--- Lead workflow status
-CREATE TYPE lead_status AS ENUM ('new', 'contacted', 'qualified', 'converted');
-
--- Knowledge source types
-CREATE TYPE knowledge_type AS ENUM ('pdf', 'url', 'api', 'json', 'xml', 'csv');
-
--- Platform-level roles (extends existing app_role)
-ALTER TYPE app_role ADD VALUE 'super_admin';
+-- Example: agents table
+CREATE TABLE agents (
+  id uuid PRIMARY KEY,
+  user_id uuid NOT NULL,  -- Owner
+  name text NOT NULL,
+  -- ...
+);
 ```
 
-## User Roles & Permissions
+### Team Sharing
 
-### Platform Level
-- **Super Admin**: Full platform access, manages organizations and plans
+Team members gain access through `team_members` table:
 
-### Organization Level
-- **Owner**: Full org access, billing, branding, team management
-- **Admin**: Manage agents, conversations, leads, integrations
-- **Member**: View-only access to conversations and leads
+```sql
+CREATE TABLE team_members (
+  id uuid PRIMARY KEY,
+  owner_id uuid NOT NULL,   -- Resource owner
+  member_id uuid NOT NULL,  -- Team member
+  role text DEFAULT 'member'
+);
+```
+
+### Access Function
+
+The `has_account_access()` function checks ownership OR team membership:
+
+```sql
+CREATE FUNCTION has_account_access(account_owner_id uuid)
+RETURNS boolean
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT auth.uid() = account_owner_id 
+     OR EXISTS (
+       SELECT 1 FROM team_members 
+       WHERE owner_id = account_owner_id 
+         AND member_id = auth.uid()
+     )
+$$;
+```
+
+### RLS Implementation
+
+```sql
+-- Typical policy pattern
+CREATE POLICY "Users can view accessible agents"
+ON agents FOR SELECT
+USING (has_account_access(user_id));
+
+CREATE POLICY "Users can create their own agents"
+ON agents FOR INSERT
+WITH CHECK (auth.uid() = user_id);
+```
+
+### Role Hierarchy
+
+```
+super_admin
+    │
+    ▼
+  admin ─────────┐
+    │            │
+    ▼            ▼
+ manager      (all permissions)
+    │
+    ▼
+ member
+    │
+    ▼
+ client
+```
+
+**Role Capabilities:**
+
+| Role | Capabilities |
+|------|-------------|
+| `super_admin` | Full platform access, manage plans |
+| `admin` | Manage team, all resource access |
+| `manager` | Manage agents, conversations, leads |
+| `member` | View and respond to conversations |
+| `client` | Limited view access |
+
+---
+
+## AI Integration
+
+### RAG Pipeline
+
+```
+┌──────────┐     ┌──────────────┐     ┌──────────────┐
+│  Query   │────▶│   Embed      │────▶│   Vector     │
+│          │     │   Query      │     │   Search     │
+└──────────┘     └──────────────┘     └──────────────┘
+                                            │
+                                            ▼
+┌──────────┐     ┌──────────────┐     ┌──────────────┐
+│ Response │◀────│   Generate   │◀────│   Augment    │
+│          │     │   Response   │     │   Prompt     │
+└──────────┘     └──────────────┘     └──────────────┘
+```
+
+### Knowledge Processing
+
+1. **Upload**: User uploads PDF, URL, CSV, etc.
+2. **Extract**: Content extracted from source
+3. **Chunk**: Content split into chunks
+4. **Embed**: OpenAI generates vector embeddings
+5. **Store**: Vectors stored in `knowledge_sources`
+
+### Vector Search
+
+```sql
+CREATE FUNCTION search_knowledge_sources(
+  p_agent_id uuid,
+  p_query_embedding vector,
+  p_match_threshold float DEFAULT 0.7,
+  p_match_count int DEFAULT 5
+)
+RETURNS TABLE(id uuid, source text, content text, type text, similarity float)
+AS $$
+  SELECT
+    ks.id, ks.source, ks.content, ks.type::text,
+    1 - (ks.embedding <=> p_query_embedding) as similarity
+  FROM knowledge_sources ks
+  WHERE ks.agent_id = p_agent_id
+    AND ks.status = 'ready'
+    AND 1 - (ks.embedding <=> p_query_embedding) > p_match_threshold
+  ORDER BY ks.embedding <=> p_query_embedding
+  LIMIT p_match_count;
+$$;
+```
+
+### Model Selection
+
+Available models via Lovable AI Gateway:
+
+| Model | Use Case | Cost |
+|-------|----------|------|
+| `google/gemini-2.5-flash` | Fast, economical (default) | $ |
+| `google/gemini-2.5-pro` | Complex reasoning | $$ |
+| `openai/gpt-4o` | High quality | $$$ |
+| `openai/gpt-4o-mini` | Fast OpenAI option | $$ |
+| `anthropic/claude-3.5-sonnet` | Nuanced responses | $$$ |
+
+---
+
+## Deployment Methods
+
+### 1. Embeddable Widget
+
+Primary deployment method - JavaScript snippet for websites:
+
+```html
+<script 
+  src="https://project.supabase.co/functions/v1/serve-widget"
+  data-agent-id="uuid"
+  async
+></script>
+```
+
+**Features:**
+- Floating chat button
+- Customizable appearance
+- Help center integration
+- Contact form capture
+- Voice messages
+- File attachments
+
+### 2. Hosted Chat Page
+
+Direct link to full-page chat interface:
+
+```
+https://app.chatpad.com/chat/[agent-id]
+```
+
+**Use Cases:**
+- QR codes
+- Email signatures
+- Social media links
+
+### 3. API Access
+
+REST API for custom integrations:
+
+```typescript
+// Example: Send message
+const response = await fetch(`${SUPABASE_URL}/functions/v1/widget-chat`, {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${API_KEY}`
+  },
+  body: JSON.stringify({
+    agentId: 'uuid',
+    conversationId: 'uuid',
+    message: 'Hello!'
+  })
+});
+```
+
+---
+
+## Data Flow
+
+### Widget Conversation Flow
+
+```
+┌─────────┐     ┌──────────┐     ┌─────────────┐
+│ Visitor │────▶│  Widget  │────▶│ get-widget- │
+│         │     │  Opens   │     │   config    │
+└─────────┘     └──────────┘     └─────────────┘
+                                       │
+                                       ▼
+┌─────────┐     ┌──────────┐     ┌─────────────┐
+│ Message │────▶│  Widget  │────▶│ widget-chat │
+│  Sent   │     │          │     │ (with RAG)  │
+└─────────┘     └──────────┘     └─────────────┘
+                                       │
+                     ┌─────────────────┴─────────────────┐
+                     ▼                                   ▼
+              ┌─────────────┐                    ┌─────────────┐
+              │   Message   │                    │  AI Model   │
+              │   Stored    │                    │  Response   │
+              └─────────────┘                    └─────────────┘
+```
+
+### Human Takeover Flow
+
+```
+┌───────────┐     ┌──────────────┐     ┌───────────────┐
+│   Admin   │────▶│   Takeover   │────▶│  Status:      │
+│  Clicks   │     │   Button     │     │  human_       │
+│ "Takeover"│     │              │     │  takeover     │
+└───────────┘     └──────────────┘     └───────────────┘
+                                              │
+                                              ▼
+┌───────────┐     ┌──────────────┐     ┌───────────────┐
+│  Widget   │◀────│   Realtime   │◀────│   Takeover    │
+│  Updates  │     │ Subscription │     │   Record      │
+└───────────┘     └──────────────┘     └───────────────┘
+                                              │
+                                              ▼
+┌───────────┐     ┌──────────────┐     ┌───────────────┐
+│  Human    │────▶│ send-human-  │────▶│   Message     │
+│ Response  │     │   message    │     │  (realtime)   │
+└───────────┘     └──────────────┘     └───────────────┘
+```
+
+### Lead Capture Flow
+
+```
+┌───────────┐     ┌──────────────┐     ┌───────────────┐
+│  Visitor  │────▶│   Contact    │────▶│ create-widget │
+│  Fills    │     │    Form      │     │     -lead     │
+│   Form    │     │              │     │               │
+└───────────┘     └──────────────┘     └───────────────┘
+                                              │
+                         ┌────────────────────┴────────────────────┐
+                         ▼                                        ▼
+                  ┌─────────────┐                         ┌─────────────┐
+                  │    Lead     │                         │ Conversation│
+                  │   Created   │◀────────────────────────│   Created   │
+                  └─────────────┘      (linked)           └─────────────┘
+                         │
+                         ▼
+                  ┌─────────────┐
+                  │   Webhook   │
+                  │  Triggered  │
+                  └─────────────┘
+```
+
+---
 
 ## Plan Tiers
 
 ### Basic Plan
-**Target**: Small businesses, testing
-- **Price**: $49/month or $470/year
-- **Features**:
-  - 1 agent
-  - 500 conversations/month
-  - 50 messages per conversation
-  - 5 knowledge sources
-  - 10,000 API calls/month
-  - Widget deployment only
-  - Email support
+
+| Feature | Limit |
+|---------|-------|
+| Agents | 1 |
+| Conversations/month | 100 |
+| Knowledge sources | 5 |
+| Team members | 1 |
+| File storage | 100MB |
 
 ### Advanced Plan
-**Target**: Growing businesses
-- **Price**: $149/month or $1,430/year
-- **Features**:
-  - 5 agents
-  - 2,000 conversations/month
-  - 100 messages per conversation
-  - 25 knowledge sources
-  - 50,000 API calls/month
-  - Widget + hosted page deployment
-  - Webhooks (5 max)
-  - Priority email support
+
+| Feature | Limit |
+|---------|-------|
+| Agents | 5 |
+| Conversations/month | 1,000 |
+| Knowledge sources | 25 |
+| Team members | 5 |
+| File storage | 1GB |
+| Custom branding | ✓ |
+| Webhooks | ✓ |
+| API access | ✓ |
 
 ### Pro Plan
-**Target**: Enterprises, agencies
-- **Price**: $399/month or $3,830/year
-- **Features**:
-  - Unlimited agents
-  - 10,000 conversations/month
-  - 200 messages per conversation
-  - Unlimited knowledge sources
-  - 200,000 API calls/month
-  - All deployment methods (widget, hosted, API)
-  - Unlimited webhooks
-  - White-label branding
-  - Custom domain
-  - Dedicated support
-  - 12-month conversation retention (vs 6-month default)
 
-## Agent Deployment Methods
-
-### 1. Embeddable Widget
-JavaScript snippet that adds a chat bubble to any website.
-
-**Implementation**:
-```html
-<script src="https://chatpad.app/widget.js"></script>
-<script>
-  ChatPad.init({
-    agentId: 'your-agent-id',
-    apiKey: 'your-api-key'
-  });
-</script>
-```
-
-### 2. Hosted Chat Page
-Standalone chat interface at a unique URL.
-
-**URL Format**: `https://chat.chatpad.app/{org-slug}/{agent-slug}`
-
-**White-label URL**: `https://chat.yourdomain.com` (Pro plan only)
-
-### 3. API Access
-REST API for custom integrations.
-
-**Endpoint**: `POST /api/v1/chat`
-```json
-{
-  "agentId": "uuid",
-  "conversationId": "uuid (optional)",
-  "message": "string",
-  "metadata": {}
-}
-```
-
-## Knowledge Base & RAG
-
-### Supported Sources
-- **PDF**: Text extraction, chunking, embedding
-- **URL**: Web scraping, content extraction
-- **API**: JSON/XML response parsing
-- **JSON**: Direct data import
-- **XML**: Structured data parsing
-- **CSV**: Tabular data import
-
-### Processing Pipeline
-1. **Ingestion**: Upload/fetch source content
-2. **Extraction**: Parse content based on type
-3. **Chunking**: Split into semantic chunks (~500 tokens)
-4. **Embedding**: Generate vector embeddings via OpenAI
-5. **Storage**: Save to `knowledge_sources` with pgvector
-6. **Query**: Vector similarity search during conversations
-
-### RAG Flow
-```
-User Message → Vector Search → Top 3 Relevant Chunks → 
-Context Injection → AI Response with Sources
-```
-
-## Human Takeover
-
-### Trigger Mechanisms
-1. User explicitly requests human assistance
-2. Agent detects sensitive topic
-3. Agent confidence below threshold
-4. Manual takeover by team member
-
-### Takeover Flow
-```mermaid
-sequenceDiagram
-    User->>Agent: Request help
-    Agent->>System: Trigger takeover request
-    System->>TeamMember: Notify available agents
-    TeamMember->>System: Accept takeover
-    System->>User: "Connecting you with a human agent..."
-    TeamMember->>User: Direct conversation
-    TeamMember->>System: Return to AI
-    System->>Agent: Resume AI responses
-```
-
-### Implementation
-- Real-time notifications via Supabase Realtime
-- Conversation status changes to `human_takeover`
-- All messages during takeover tagged with `taken_over_by`
-- Team member can return conversation to AI at any time
-
-## Integrations
-
-### Webhooks
-Outbound HTTP calls triggered by events:
-- `conversation.started`
-- `conversation.ended`
-- `lead.captured`
-- `lead.status_changed`
-- `conversation.takeover_requested`
-
-**Webhook Payload**:
-```json
-{
-  "event": "lead.captured",
-  "timestamp": "2024-01-15T10:30:00Z",
-  "data": {
-    "leadId": "uuid",
-    "name": "John Doe",
-    "email": "john@example.com",
-    "conversationId": "uuid"
-  }
-}
-```
-
-### API Keys
-- Scoped to organization
-- Rate-limited based on plan
-- Usage tracking for billing
-- Revocable at any time
-
-## Security & RLS
-
-### Row-Level Security Policies
-
-**Super Admin Bypass**:
-```sql
-CREATE POLICY "Super admins bypass all restrictions"
-ON all_tables FOR ALL
-USING (is_super_admin(auth.uid()));
-```
-
-**Organization-Scoped Access**:
-```sql
-CREATE POLICY "Users can access their org data"
-ON organizations FOR ALL
-USING (
-  EXISTS (
-    SELECT 1 FROM org_members
-    WHERE org_id = organizations.id
-    AND user_id = auth.uid()
-  )
-);
-```
-
-**Public Chat Access**:
-```sql
-CREATE POLICY "Public can create conversations"
-ON conversations FOR INSERT
-WITH CHECK (auth.uid() IS NULL); -- Anonymous access
-```
-
-### Security Functions
-
-```sql
--- Check if user is platform super admin
-CREATE FUNCTION is_super_admin(user_id uuid)
-RETURNS boolean AS $$
-  SELECT EXISTS (
-    SELECT 1 FROM user_roles
-    WHERE user_id = $1
-    AND role = 'super_admin'
-  );
-$$ LANGUAGE sql STABLE SECURITY DEFINER;
-
--- Check if user has org admin privileges
-CREATE FUNCTION is_org_admin(user_id uuid, org_id uuid)
-RETURNS boolean AS $$
-  SELECT EXISTS (
-    SELECT 1 FROM org_members
-    WHERE user_id = $1
-    AND org_id = $2
-    AND role IN ('owner', 'admin')
-  );
-$$ LANGUAGE sql STABLE SECURITY DEFINER;
-
--- Get user's role in organization
-CREATE FUNCTION get_user_org_role(user_id uuid, org_id uuid)
-RETURNS org_role AS $$
-  SELECT role FROM org_members
-  WHERE user_id = $1
-  AND org_id = $2
-  LIMIT 1;
-$$ LANGUAGE sql STABLE SECURITY DEFINER;
-```
-
-## AI Integration
-
-### Lovable AI Gateway
-- **Endpoint**: `https://ai.gateway.lovable.dev/v1/chat/completions`
-- **Default Model**: `google/gemini-2.5-flash`
-- **Streaming**: Server-Sent Events (SSE)
-- **Authentication**: `LOVABLE_API_KEY` (auto-configured)
-
-### Model Selection
-- **Basic Plan**: `google/gemini-2.5-flash-lite` (fastest, cheapest)
-- **Advanced Plan**: `google/gemini-2.5-flash` (balanced)
-- **Pro Plan**: Any model (including `google/gemini-2.5-pro`, `openai/gpt-5`)
-
-### Token Management
-- Track usage per conversation
-- Calculate costs based on model
-- Enforce plan limits
-- Alert when approaching limit
-
-## Data Retention
-
-### Conversations
-- **Default**: 6 months from creation
-- **Pro Plan**: 12 months
-- **Cleanup**: Automated via scheduled edge function
-- **Archive**: Optional export before deletion (Pro)
-
-### Deleted Items
-- **Soft Delete**: Mark as deleted but retain for 30 days
-- **Hard Delete**: Permanent removal after 30 days
-- **Audit Log**: Track all deletions
-
-## Performance Considerations
-
-### Database Optimization
-- Indexes on `org_id` for all tenant tables
-- Composite index on `(conversation_id, created_at)` for messages
-- Vector index (HNSW) on `knowledge_sources.embedding`
-- Partition `conversations` table by month for better performance
-
-### Caching Strategy
-- Cache agent configurations in Redis
-- Cache plan limits for quick validation
-- Cache knowledge embeddings for fast RAG queries
-
-### Real-time Optimization
-- Use Supabase Realtime for conversation updates
-- Implement SSE for AI streaming (not WebSockets for cost)
-- Debounce typing indicators
-
-## Billing & Usage Tracking
-
-### Stripe Integration
-- Subscription management
-- Automatic plan upgrades/downgrades
-- Proration handling
-- Failed payment retry logic
-
-### Usage Metering
-```sql
-CREATE TABLE usage_metrics (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  org_id uuid REFERENCES organizations(id),
-  period_start timestamp,
-  period_end timestamp,
-  conversations_count integer,
-  messages_count integer,
-  api_calls_count integer,
-  tokens_used integer,
-  overage_amount integer -- in cents
-);
-```
-
-### Overage Handling
-- **Basic/Advanced**: Hard limits (block at limit)
-- **Pro**: Soft limits (allow with overage charges at $0.10/1000 tokens)
-
-## White-Label Branding (Pro)
-
-### Customization Options
-- Upload custom logo
-- Set primary/secondary colors
-- Configure custom domain (CNAME setup)
-- Hide "Powered by ChatPad" footer
-- Custom email templates
-
-### Implementation
-- Store branding config in `org_branding` table
-- Apply theme dynamically in chat widget
-- Use organization slug for hosted pages
-- Custom domain DNS verification
-
-## Monitoring & Analytics
-
-### Platform Metrics (Super Admin)
-- Total organizations
-- Active subscriptions by plan
-- Total conversations/messages
-- Revenue metrics
-- API usage trends
-
-### Organization Metrics
-- Conversations over time
-- Most active agents
-- Lead conversion rate
-- Average response time
-- Customer satisfaction (CSAT)
-- Token usage and costs
-
-### Alerts
-- Approaching plan limits
-- Failed webhook deliveries
-- High error rates
-- Inactive agents
-- Expiring trials
-
-## API Reference
-
-### Authentication
-All API requests require an API key in the `Authorization` header:
-```
-Authorization: Bearer {api-key}
-```
-
-### Endpoints
-
-#### Chat
-```
-POST /api/v1/chat
-Body: { agentId, conversationId?, message, metadata? }
-Response: { conversationId, messageId, response, sources? }
-```
-
-#### Conversations
-```
-GET /api/v1/conversations
-GET /api/v1/conversations/{id}
-POST /api/v1/conversations/{id}/takeover
-POST /api/v1/conversations/{id}/return
-DELETE /api/v1/conversations/{id}
-```
-
-#### Leads
-```
-GET /api/v1/leads
-GET /api/v1/leads/{id}
-PUT /api/v1/leads/{id}
-```
-
-#### Knowledge
-```
-POST /api/v1/knowledge/upload
-GET /api/v1/knowledge/sources
-DELETE /api/v1/knowledge/sources/{id}
-```
-
-## Development Roadmap
-
-### Phase 1: Foundation (Current)
-- ✓ Database schema
-- ✓ Authentication & authorization
-- ✓ Core multi-tenant setup
-
-### Phase 2: Core Features
-- Agent management
-- Chat system with AI
-- Basic deployments (widget, hosted)
-
-### Phase 3: Advanced Features
-- Knowledge base & RAG
-- Human takeover
-- Leads & webhooks
-
-### Phase 4: Business Features
-- Stripe billing
-- Usage tracking
-- Plan enforcement
-
-### Phase 5: Premium Features
-- White-label branding
-- Custom domains
-- Advanced analytics
-
-### Phase 6: Scale & Optimize
-- Performance tuning
-- Caching layer
-- Advanced monitoring
-
-## Technical Stack
-
-### Frontend
-- React 18 with TypeScript
-- Vite for bundling
-- Tailwind CSS for styling
-- TanStack Query for state management
-- Radix UI components
-
-### Backend
-- Supabase (PostgreSQL)
-- Supabase Edge Functions (Deno)
-- Supabase Realtime
-- Supabase Storage
-- pgvector for embeddings
-
-### AI/ML
-- Lovable AI Gateway
-- OpenAI for embeddings
-- Google Gemini models
-
-### Infrastructure
-- Supabase Cloud
-- Stripe for payments
-- Resend for emails
-
-### Development
-- Git for version control
-- GitHub for CI/CD
-- Lovable for development
-
-## Support & Documentation
-
-### User Documentation
-- Getting started guide
-- Agent builder tutorial
-- Knowledge base setup
-- Deployment guides
-- API documentation
-- Webhook examples
-
-### Developer Resources
-- API reference
-- SDK libraries (planned)
-- Code examples
-- Best practices
-
-### Support Channels
-- Email support (all plans)
-- Priority support (Advanced+)
-- Dedicated support (Pro)
-- Community Discord (planned)
+| Feature | Limit |
+|---------|-------|
+| Agents | Unlimited |
+| Conversations/month | 10,000 |
+| Knowledge sources | 100 |
+| Team members | Unlimited |
+| File storage | 10GB |
+| Custom branding | ✓ |
+| Webhooks | ✓ |
+| API access | ✓ |
+| Custom domains | ✓ |
+| Priority support | ✓ |
+| White-label | ✓ |
 
 ---
 
-**Document Version**: 1.0  
-**Last Updated**: January 2025  
-**Maintained By**: Park Web Team
+## Monitoring & Analytics
+
+### Platform Metrics
+
+Tracked in `usage_metrics` table:
+
+- Conversations count
+- Messages count
+- API calls count
+- Tokens used
+
+### Agent Analytics
+
+Available in Analytics dashboard:
+
+- **Conversations**: Volume, duration, resolution
+- **Messages**: Total, per conversation average
+- **Leads**: Capture rate, conversion rate
+- **Response Time**: AI response latency
+- **User Satisfaction**: Based on conversation outcomes
+
+### Scheduled Reports
+
+Automated reports via `scheduled_reports`:
+
+- Daily/weekly/monthly summaries
+- Custom metrics selection
+- Email delivery to multiple recipients
+- PDF export capability
+
+### Security Monitoring
+
+Logged to `security_logs`:
+
+- Authentication events
+- API key usage
+- Team member changes
+- Resource modifications
+
+---
+
+## Integration Points
+
+### Webhooks
+
+Subscribe to events:
+
+| Event | Payload |
+|-------|---------|
+| `conversation.created` | Conversation data |
+| `conversation.closed` | Conversation + summary |
+| `message.received` | Message data |
+| `lead.created` | Lead data |
+| `takeover.started` | Takeover data |
+| `takeover.ended` | Takeover data |
+
+### API Endpoints
+
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/widget-chat` | POST | Send/receive messages |
+| `/get-widget-config` | POST | Fetch agent config |
+| `/create-widget-lead` | POST | Create lead |
+| `/validate-api-key` | POST | Validate API key |
+
+### External Services
+
+| Service | Purpose |
+|---------|---------|
+| **Lovable AI Gateway** | AI model access |
+| **OpenAI** | Embeddings generation |
+| **Resend** | Email delivery |
+| **Stripe** | Billing and subscriptions |
+
+---
+
+## Scaling Considerations
+
+### Database
+
+- Connection pooling via Supabase
+- Vector indexes for knowledge search
+- Partitioning for large tables (planned)
+
+### Edge Functions
+
+- Cold start optimization
+- Response caching where appropriate
+- Parallel database queries
+
+### Widget
+
+- Separate build (~50KB gzipped)
+- Lazy-loaded components
+- CSS-only animations
+- Preload on hover
+
+### Real-time
+
+- Channel-based subscriptions
+- Presence for typing indicators
+- Automatic reconnection
+
+---
+
+## Related Documentation
+
+- [Database Schema](./DATABASE_SCHEMA.md) - Complete table reference
+- [Edge Functions](./EDGE_FUNCTIONS.md) - API documentation
+- [Widget Architecture](./WIDGET_ARCHITECTURE.md) - Widget details
+- [Security](./SECURITY.md) - Security implementation
+- [Application Overview](./APPLICATION_OVERVIEW.md) - Development guide
