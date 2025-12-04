@@ -39,6 +39,14 @@ export const AgentConfigLayout: React.FC<AgentConfigLayoutProps> = ({
             </TabsTrigger>
             
             <TabsTrigger
+              value="content"
+              className="h-11 px-0 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none text-sm"
+            >
+              <Announcement01 size={14} className="mr-1.5" />
+              Content
+            </TabsTrigger>
+            
+            <TabsTrigger
               value="tools"
               className="h-11 px-0 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none text-sm"
             >
@@ -60,14 +68,6 @@ export const AgentConfigLayout: React.FC<AgentConfigLayoutProps> = ({
             >
               <Code01 size={14} className="mr-1.5" />
               Embed
-            </TabsTrigger>
-            
-            <TabsTrigger
-              value="content"
-              className="h-11 px-0 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none text-sm"
-            >
-              <Announcement01 size={14} className="mr-1.5" />
-              Content
             </TabsTrigger>
           </TabsList>
         </div>
