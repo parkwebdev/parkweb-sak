@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { HelpArticle, HelpCategory } from './useEmbeddedChatConfig';
+import { logger } from '@/utils/logger';
 
 export const useHelpArticles = (agentId: string) => {
   const [articles, setArticles] = useState<HelpArticle[]>([]);
@@ -21,7 +22,7 @@ export const useHelpArticles = (agentId: string) => {
           .single();
 
         if (!agent) {
-          console.error('Agent not found');
+          logger.error('Agent not found');
           return;
         }
 
@@ -62,7 +63,7 @@ export const useHelpArticles = (agentId: string) => {
         setCategories(mappedCategories);
         setArticles(mappedArticles);
       } catch (error) {
-        console.error('Error fetching help articles:', error);
+        logger.error('Error fetching help articles', error);
       } finally {
         setLoading(false);
       }
@@ -139,7 +140,7 @@ export const useHelpArticles = (agentId: string) => {
 
       return newArticle.id;
     } catch (error) {
-      console.error('Error adding article:', error);
+      logger.error('Error adding article', error);
       throw error;
     }
   };
@@ -202,7 +203,7 @@ export const useHelpArticles = (agentId: string) => {
         a.id === id ? { ...a, ...updates } : a
       ));
     } catch (error) {
-      console.error('Error updating article:', error);
+      logger.error('Error updating article', error);
       throw error;
     }
   };
@@ -218,7 +219,7 @@ export const useHelpArticles = (agentId: string) => {
 
       setArticles(articles.filter(a => a.id !== id));
     } catch (error) {
-      console.error('Error deleting article:', error);
+      logger.error('Error deleting article', error);
       throw error;
     }
   };
@@ -236,7 +237,7 @@ export const useHelpArticles = (agentId: string) => {
       await Promise.all(updates);
       setArticles(reorderedArticles);
     } catch (error) {
-      console.error('Error reordering articles:', error);
+      logger.error('Error reordering articles', error);
       throw error;
     }
   };
@@ -270,7 +271,7 @@ export const useHelpArticles = (agentId: string) => {
       setCategories([...categories, { id: data.id, name, description, icon }]);
       return data.id;
     } catch (error) {
-      console.error('Error adding category:', error);
+      logger.error('Error adding category', error);
       throw error;
     }
   };
@@ -293,7 +294,7 @@ export const useHelpArticles = (agentId: string) => {
         a.category === oldName ? { ...a, category: newName } : a
       ));
     } catch (error) {
-      console.error('Error updating category:', error);
+      logger.error('Error updating category', error);
       throw error;
     }
   };
@@ -347,7 +348,7 @@ export const useHelpArticles = (agentId: string) => {
 
       setCategories(categories.filter(c => c.name !== name));
     } catch (error) {
-      console.error('Error removing category:', error);
+      logger.error('Error removing category', error);
       throw error;
     }
   };
@@ -368,14 +369,14 @@ export const useHelpArticles = (agentId: string) => {
         a.id === articleId ? { ...a, category: targetCategoryName } : a
       ));
     } catch (error) {
-      console.error('Error moving article:', error);
+      logger.error('Error moving article', error);
       throw error;
     }
   };
 
   const importFromKnowledge = async (knowledgeSourceIds: string[]) => {
     // Placeholder for importing from knowledge sources
-    console.log('Importing from knowledge sources:', knowledgeSourceIds);
+    logger.info('Importing from knowledge sources', knowledgeSourceIds);
   };
 
   const bulkImport = async (importData: Array<{
@@ -469,7 +470,7 @@ export const useHelpArticles = (agentId: string) => {
 
       return insertedArticles.length;
     } catch (error) {
-      console.error('Error bulk importing articles:', error);
+      logger.error('Error bulk importing articles', error);
       throw error;
     }
   };

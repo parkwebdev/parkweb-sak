@@ -20,6 +20,7 @@ Deno.serve(async (req) => {
     // Map database events to webhook event types
     let eventType: string | null = null;
     let eventData = payload.record;
+    let agentId: string | null = null;
 
     if (payload.table === 'leads') {
       if (payload.type === 'insert') {
@@ -28,6 +29,7 @@ Deno.serve(async (req) => {
         eventType = 'lead.updated';
       }
     } else if (payload.table === 'conversations') {
+      agentId = payload.record?.agent_id;
       if (payload.type === 'insert') {
         eventType = 'conversation.created';
       } else if (payload.type === 'update' && payload.old_record?.status !== payload.record?.status) {
@@ -44,6 +46,15 @@ Deno.serve(async (req) => {
         if (payload.record?.role === 'assistant') {
           eventType = 'agent.message';
         }
+        // Get agent_id from the conversation
+        if (payload.record?.conversation_id) {
+          const { data: conversation } = await supabase
+            .from('conversations')
+            .select('agent_id')
+            .eq('id', payload.record.conversation_id)
+            .single();
+          agentId = conversation?.agent_id || null;
+        }
       }
     }
 
@@ -59,12 +70,19 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ message: 'No user_id' }), { status: 200 });
     }
 
-    // Get all active webhooks for this user that listen to this event
-    const { data: webhooks, error: webhooksError } = await supabase
+    // Build the query for active webhooks
+    let webhooksQuery = supabase
       .from('webhooks')
       .select('*')
       .eq('user_id', userId)
       .eq('active', true);
+
+    // If we have an agent_id, also filter by it (or get webhooks with no agent_id set)
+    if (agentId) {
+      webhooksQuery = webhooksQuery.or(`agent_id.eq.${agentId},agent_id.is.null`);
+    }
+
+    const { data: webhooks, error: webhooksError } = await webhooksQuery;
 
     if (webhooksError) {
       throw webhooksError;

@@ -4,6 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from '@/lib/toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Upload01 as Upload } from '@untitledui/icons';
+import { logger } from '@/utils/logger';
 
 interface SimpleAvatarUploadProps {
   currentAvatarUrl?: string;
@@ -23,11 +24,10 @@ export const SimpleAvatarUpload: React.FC<SimpleAvatarUploadProps> = ({
   const [uploading, setUploading] = useState(false);
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    console.log('🖼️ Starting simple avatar upload...');
+    logger.debug('Starting simple avatar upload');
     
     const file = event.target.files?.[0];
     if (!file) {
-      console.log('❌ No file selected');
       return;
     }
 
@@ -57,7 +57,7 @@ export const SimpleAvatarUpload: React.FC<SimpleAvatarUploadProps> = ({
       const fileExt = file.name.split('.').pop() || 'jpg';
       const fileName = `avatar_${memberId}_${timestamp}.${fileExt}`;
 
-      console.log('📤 Uploading to avatars bucket:', fileName);
+      logger.debug('Uploading to avatars bucket', fileName);
 
       // Upload directly to the public avatars bucket
       const { data: uploadResult, error: uploadError } = await supabase.storage
@@ -68,18 +68,18 @@ export const SimpleAvatarUpload: React.FC<SimpleAvatarUploadProps> = ({
         });
 
       if (uploadError) {
-        console.error('❌ Upload failed:', uploadError);
+        logger.error('Upload failed', uploadError);
         throw new Error(`Upload failed: ${uploadError.message}`);
       }
 
-      console.log('✅ Upload successful:', uploadResult);
+      logger.success('Upload successful', uploadResult);
 
       // Get the public URL
       const { data: urlData } = supabase.storage
         .from('avatars')
         .getPublicUrl(fileName);
 
-      console.log('🔗 Public URL generated:', urlData.publicUrl);
+      logger.debug('Public URL generated', urlData.publicUrl);
 
       // Update the parent component
       onAvatarChange(urlData.publicUrl);
@@ -89,7 +89,7 @@ export const SimpleAvatarUpload: React.FC<SimpleAvatarUploadProps> = ({
       });
 
     } catch (error: any) {
-      console.error('💥 Avatar upload error:', error);
+      logger.error('Avatar upload error', error);
       
       toast.error("Upload failed", {
         description: error.message || "Failed to upload avatar. Please try again.",

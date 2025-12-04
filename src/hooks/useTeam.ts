@@ -3,6 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/lib/toast';
 import { supabase } from '@/integrations/supabase/client';
 import { TeamMember, InviteMemberData, UserRole } from '@/types/team';
+import { logger } from '@/utils/logger';
 
 export const useTeam = () => {
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
@@ -30,13 +31,13 @@ export const useTeam = () => {
         .single();
 
       if (error && error.code !== 'PGRST116') {
-        console.error('Error fetching user role:', error);
+        logger.error('Error fetching user role', error);
         return;
       }
 
       setCurrentUserRole((data?.role as UserRole) || 'member');
     } catch (error) {
-      console.error('Error in fetchCurrentUserRole:', error);
+      logger.error('Error in fetchCurrentUserRole', error);
     }
   };
 
@@ -62,7 +63,7 @@ export const useTeam = () => {
         .select('user_id, role, permissions');
 
       if (rolesError) {
-        console.error('Error fetching roles:', rolesError);
+        logger.error('Error fetching roles', rolesError);
       }
 
       // Combine profile and role data
@@ -77,7 +78,7 @@ export const useTeam = () => {
 
       setTeamMembers(membersWithRoles);
     } catch (error) {
-      console.error('Error in fetchTeamMembers:', error);
+      logger.error('Error in fetchTeamMembers', error);
     } finally {
       setLoading(false);
     }
@@ -122,7 +123,7 @@ export const useTeam = () => {
         .eq('user_id', member.user_id);
 
       if (roleError) {
-        console.error('Error removing user role:', roleError);
+        logger.error('Error removing user role', roleError);
       }
 
       // Remove from profiles table
@@ -155,12 +156,11 @@ export const useTeam = () => {
 
   const updateMemberRole = async (member: TeamMember, role: UserRole, permissions: string[]): Promise<boolean> => {
     try {
-      console.log('🔄 Attempting to update role for user:', {
+      logger.debug('Attempting to update role for user', {
         userId: member.user_id,
         currentRole: member.role,
         newRole: role,
         newPermissions: permissions,
-        currentUser: user?.id
       });
 
       const { error } = await supabase
@@ -174,21 +174,20 @@ export const useTeam = () => {
         });
 
       if (error) {
-        console.error('❌ Database error updating role:', error);
+        logger.error('Database error updating role', error);
         toast.error("Update failed", {
           description: `Database error: ${error.message}`,
         });
         return false;
       }
 
-      console.log('✅ Role update successful');
-      // Success - no toast needed (SavedIndicator shows feedback in dialog)
+      logger.success('Role update successful');
 
       await fetchTeamMembers();
       await fetchCurrentUserRole();
       return true;
     } catch (error) {
-      console.error('❌ Unexpected error updating role:', error);
+      logger.error('Unexpected error updating role', error);
       toast.error("Update failed", {
         description: "An unexpected error occurred while updating the role.",
       });
