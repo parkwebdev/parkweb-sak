@@ -80,7 +80,7 @@ const AgentConfig: React.FC<AgentConfigProps> = ({ onMenuClick }) => {
   }
 
   return (
-    <div className="flex-1 bg-muted/30 min-h-screen flex flex-col">
+    <div className="flex-1 bg-muted/30 min-h-screen flex flex-col min-h-0">
       <AgentConfigHeader
           agent={agent}
           hasUnsavedChanges={hasUnsavedChanges}
