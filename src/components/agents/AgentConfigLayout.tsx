@@ -1,8 +1,8 @@
 import React from 'react';
-import { Settings01 as Settings, Database01, Tool01, Code01, Announcement01 } from '@untitledui/icons';
+import { Settings01 as Settings, Database01, Tool01, Code01, Announcement01, Link03 } from '@untitledui/icons';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-export type AgentConfigTab = 'configure' | 'knowledge' | 'tools' | 'embed' | 'content';
+export type AgentConfigTab = 'configure' | 'knowledge' | 'tools' | 'integrations' | 'embed' | 'content';
 
 interface AgentConfigLayoutProps {
   activeTab: AgentConfigTab;
@@ -44,6 +44,14 @@ export const AgentConfigLayout: React.FC<AgentConfigLayoutProps> = ({
             >
               <Tool01 size={14} className="mr-1.5" />
               Tools
+            </TabsTrigger>
+            
+            <TabsTrigger
+              value="integrations"
+              className="h-11 px-0 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none text-sm"
+            >
+              <Link03 size={14} className="mr-1.5" />
+              Integrations
             </TabsTrigger>
             
             <TabsTrigger

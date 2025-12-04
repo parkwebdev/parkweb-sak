@@ -5,6 +5,7 @@ import { AgentConfigHeader } from '@/components/agents/AgentConfigHeader';
 import { AgentConfigureTab } from '@/components/agents/tabs/AgentConfigureTab';
 import { AgentKnowledgeTab } from '@/components/agents/tabs/AgentKnowledgeTab';
 import { AgentToolsTab } from '@/components/agents/tabs/AgentToolsTab';
+import { AgentIntegrationsTab } from '@/components/agents/tabs/AgentIntegrationsTab';
 import { AgentEmbedTab } from '@/components/agents/tabs/AgentEmbedTab';
 import { AgentContentTab } from '@/components/agents/tabs/AgentContentTab';
 import { AgentConfigLayout, type AgentConfigTab } from '@/components/agents/AgentConfigLayout';
@@ -113,6 +114,9 @@ const AgentConfig: React.FC<AgentConfigProps> = ({ onMenuClick }) => {
             )}
             {activeTab === 'tools' && (
               <AgentToolsTab agentId={agent.id} agent={agent} onUpdate={handleUpdate} />
+            )}
+            {activeTab === 'integrations' && (
+              <AgentIntegrationsTab agentId={agent.id} />
             )}
             {activeTab === 'content' && (
               <AgentContentTab />
