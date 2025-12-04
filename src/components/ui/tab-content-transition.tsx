@@ -23,7 +23,7 @@ export const TabContentTransition = ({
           duration: 0.2, 
           ease: [0.4, 0, 0.2, 1] 
         }}
-        className={`flex-1 min-h-0 flex flex-col ${className || ''}`}
+        className={`flex-1 h-full min-h-0 flex flex-col ${className || ''}`}
       >
         {children}
       </motion.div>
