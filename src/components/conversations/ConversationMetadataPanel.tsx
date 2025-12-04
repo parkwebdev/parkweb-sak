@@ -14,14 +14,14 @@ import {
 } from '@/components/ui/select';
 import {
   User01,
-  Mail02,
-  Phone,
+  Mail01,
+  Phone01,
   Globe01,
   Monitor01,
   Clock,
   Tag01,
   AlertCircle,
-  File01,
+  File06,
   Plus,
   XClose,
   Building07,
@@ -245,7 +245,7 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
                 )}
                 {metadata.lead_email && (
                   <div className="flex items-center gap-2.5 text-sm">
-                    <Mail02 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                    <Mail01 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                     <a 
                       href={`mailto:${metadata.lead_email}`}
                       className="truncate text-primary hover:underline"
@@ -256,7 +256,7 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
                 )}
                 {metadata.lead_phone && (
                   <div className="flex items-center gap-2.5 text-sm">
-                    <Phone className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                    <Phone01 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                     <a 
                       href={`tel:${metadata.lead_phone}`}
                       className="truncate text-primary hover:underline"
@@ -281,7 +281,7 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
                 <div className="mt-3 pt-3 border-t border-dashed space-y-2">
                   {Object.entries(metadata.custom_fields).map(([key, value]) => (
                     <div key={key} className="flex items-start gap-2.5 text-sm">
-                      <File01 className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+                      <File06 className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
                       <div className="min-w-0">
                         <span className="text-muted-foreground">{key}:</span>{' '}
                         <span className="break-words">{String(value)}</span>
