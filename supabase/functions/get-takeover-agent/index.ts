@@ -49,8 +49,18 @@ serve(async (req) => {
       .eq('user_id', takeover.taken_over_by)
       .single();
 
+    // Mask last name for privacy (e.g., "John Smith" -> "John S.")
+    const maskName = (fullName: string | null): string => {
+      if (!fullName) return 'Team Member';
+      const parts = fullName.trim().split(/\s+/);
+      if (parts.length === 1) return parts[0];
+      const firstName = parts[0];
+      const lastInitial = parts[parts.length - 1].charAt(0).toUpperCase();
+      return `${firstName} ${lastInitial}.`;
+    };
+
     const agent = profile ? {
-      name: profile.display_name || 'Team Member',
+      name: maskName(profile.display_name),
       avatar: profile.avatar_url,
     } : {
       name: 'Team Member',
