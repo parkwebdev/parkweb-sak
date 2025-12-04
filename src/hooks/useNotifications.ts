@@ -1,6 +1,7 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/lib/toast';
+import { logger } from '@/utils/logger';
 
 interface CreateNotificationParams {
   type: 'conversation' | 'lead' | 'agent' | 'team' | 'report' | 'system';
@@ -24,7 +25,7 @@ export const useNotifications = () => {
       const targetUserId = userId || user?.id;
       
       if (!targetUserId) {
-        console.error('No user ID provided for notification');
+        logger.error('No user ID provided for notification');
         return { error: 'No user ID available' };
       }
 
@@ -42,13 +43,13 @@ export const useNotifications = () => {
         .single();
 
       if (error) {
-        console.error('Error creating notification:', error);
+        logger.error('Error creating notification:', error);
         return { error };
       }
 
       return { data: notification, error: null };
     } catch (error) {
-      console.error('Error in createNotification:', error);
+      logger.error('Error in createNotification:', error);
       return { error };
     }
   };

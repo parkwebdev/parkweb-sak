@@ -30,18 +30,10 @@ async function updateMessageReaction(
   reactorType: 'user' | 'admin'
 ): Promise<{ success: boolean }> {
   try {
-    const response = await fetch(
-      'https://mvaimvwdukpgvkifkfpa.supabase.co/functions/v1/update-message-reaction',
-      {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im12YWltdndkdWtwZ3ZraWZrZnBhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcxNzI3MTYsImV4cCI6MjA3Mjc0ODcxNn0.DmeecDZcGids_IjJQQepFVQK5wdEdV0eNXDCTRzQtQo'}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ messageId, emoji, action, reactorType }),
-      }
-    );
-    return response.ok ? { success: true } : { success: false };
+    const { error } = await supabase.functions.invoke('update-message-reaction', {
+      body: { messageId, emoji, action, reactorType },
+    });
+    return error ? { success: false } : { success: true };
   } catch {
     return { success: false };
   }

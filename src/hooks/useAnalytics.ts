@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/lib/toast';
 import { useAuth } from '@/hooks/useAuth';
 import { format } from 'date-fns';
+import { logger } from '@/utils/logger';
 
 interface ConversationStats {
   date: string;
@@ -97,7 +98,7 @@ export const useAnalytics = (
         a.date.localeCompare(b.date)
       ));
     } catch (error: any) {
-      console.error('Error fetching conversation stats:', error);
+      logger.error('Error fetching conversation stats:', error);
     }
   };
 
@@ -149,7 +150,7 @@ export const useAnalytics = (
         a.date.localeCompare(b.date)
       ));
     } catch (error: any) {
-      console.error('Error fetching lead stats:', error);
+      logger.error('Error fetching lead stats:', error);
     }
   };
 
@@ -192,7 +193,7 @@ export const useAnalytics = (
 
       setAgentPerformance(performance);
     } catch (error: any) {
-      console.error('Error fetching agent performance:', error);
+      logger.error('Error fetching agent performance:', error);
     }
   };
 
@@ -219,7 +220,7 @@ export const useAnalytics = (
 
       setUsageMetrics(metrics);
     } catch (error: any) {
-      console.error('Error fetching usage metrics:', error);
+      logger.error('Error fetching usage metrics:', error);
     }
   };
 

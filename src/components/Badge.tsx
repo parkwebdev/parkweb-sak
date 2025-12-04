@@ -1,5 +1,4 @@
 import React from 'react';
-import { Folder } from '@untitledui/icons';
 
 interface BadgeProps {
   children: React.ReactNode;

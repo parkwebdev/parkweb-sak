@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from '@/components/ui/chart';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 
 interface AgentPerformanceChartProps {
   data: Array<{
@@ -28,28 +28,26 @@ export const AgentPerformanceChart = ({ data }: AgentPerformanceChartProps) => {
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig} className="h-[300px] w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={data}>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-              <XAxis 
-                dataKey="agent_name" 
-                className="text-xs"
-                tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                tickLine={{ stroke: 'hsl(var(--muted-foreground))' }}
-              />
-              <YAxis 
-                className="text-xs"
-                tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                tickLine={{ stroke: 'hsl(var(--muted-foreground))' }}
-              />
-              <ChartTooltip content={<ChartTooltipContent />} />
-              <Bar 
-                dataKey="total_conversations" 
-                fill="var(--color-total_conversations)"
-                radius={[8, 8, 0, 0]}
-              />
-            </BarChart>
-          </ResponsiveContainer>
+          <BarChart data={data}>
+            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+            <XAxis 
+              dataKey="agent_name" 
+              className="text-xs"
+              tick={{ fill: 'hsl(var(--muted-foreground))' }}
+              tickLine={{ stroke: 'hsl(var(--muted-foreground))' }}
+            />
+            <YAxis 
+              className="text-xs"
+              tick={{ fill: 'hsl(var(--muted-foreground))' }}
+              tickLine={{ stroke: 'hsl(var(--muted-foreground))' }}
+            />
+            <ChartTooltip content={<ChartTooltipContent />} />
+            <Bar 
+              dataKey="total_conversations" 
+              fill="var(--color-total_conversations)"
+              radius={[8, 8, 0, 0]}
+            />
+          </BarChart>
         </ChartContainer>
       </CardContent>
     </Card>
