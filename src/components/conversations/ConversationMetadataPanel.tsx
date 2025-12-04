@@ -14,8 +14,8 @@ import {
 } from '@/components/ui/select';
 import {
   User01,
-  Mail01,
-  Phone01,
+  Mail02,
+  Phone,
   Globe01,
   Monitor01,
   Clock,
@@ -245,7 +245,7 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
                 )}
                 {metadata.lead_email && (
                   <div className="flex items-center gap-2.5 text-sm">
-                    <Mail01 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                    <Mail02 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                     <a 
                       href={`mailto:${metadata.lead_email}`}
                       className="truncate text-primary hover:underline"
@@ -256,7 +256,7 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
                 )}
                 {metadata.lead_phone && (
                   <div className="flex items-center gap-2.5 text-sm">
-                    <Phone01 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                    <Phone className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                     <a 
                       href={`tel:${metadata.lead_phone}`}
                       className="truncate text-primary hover:underline"
