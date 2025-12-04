@@ -60,7 +60,7 @@ const Conversations: React.FC = () => {
   const [takeoverDialogOpen, setTakeoverDialogOpen] = useState(false);
   const [messageInput, setMessageInput] = useState('');
   const [sendingMessage, setSendingMessage] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesScrollRef = useRef<HTMLDivElement>(null);
   
   // Typing indicator state
   const [isTypingBroadcast, setIsTypingBroadcast] = useState(false);
@@ -197,7 +197,10 @@ const Conversations: React.FC = () => {
 
   // Scroll to bottom when messages change
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const viewport = messagesScrollRef.current?.querySelector('[data-radix-scroll-area-viewport]');
+    if (viewport) {
+      viewport.scrollTop = viewport.scrollHeight;
+    }
   }, [messages]);
 
   // Set up typing presence channel when conversation is in human takeover mode
@@ -259,9 +262,9 @@ const Conversations: React.FC = () => {
   };
 
   return (
-    <div className="h-screen bg-muted/30 flex overflow-hidden">
+    <div className="h-full bg-muted/30 flex overflow-hidden">
       {/* Conversations List Sidebar */}
-      <div className="hidden lg:flex lg:w-80 xl:w-96 border-r flex-col bg-background">
+      <div className="hidden lg:flex lg:w-80 xl:w-96 border-r flex-col bg-background min-h-0">
         {/* Header */}
         <div className="p-4 border-b">
           <h2 className="text-lg font-semibold text-foreground mb-3">Conversations</h2>
@@ -344,7 +347,7 @@ const Conversations: React.FC = () => {
       </div>
 
       {/* Chat Area */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 min-h-0">
         {selectedConversation ? (
           <>
             {/* Chat Header */}
@@ -390,7 +393,7 @@ const Conversations: React.FC = () => {
             </div>
 
             {/* Messages */}
-            <ScrollArea className="flex-1 px-6 py-4">
+            <ScrollArea ref={messagesScrollRef} className="flex-1 px-6 py-4">
               {loadingMessages ? (
                 <div className="text-center py-12 text-sm text-muted-foreground">
                   Loading messages...
@@ -544,7 +547,6 @@ const Conversations: React.FC = () => {
                       </div>
                     );
                   })}
-                  <div ref={messagesEndRef} />
                 </div>
               )}
             </ScrollArea>
