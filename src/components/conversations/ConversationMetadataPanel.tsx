@@ -26,6 +26,8 @@ import {
   XClose,
   Building07,
   Link01,
+  ChevronRight,
+  ChevronLeft,
 } from '@untitledui/icons';
 import { formatDistanceToNow, format } from 'date-fns';
 import type { Tables } from '@/integrations/supabase/types';
@@ -60,6 +62,8 @@ interface ConversationMetadata {
 interface ConversationMetadataPanelProps {
   conversation: Conversation;
   onUpdateMetadata: (conversationId: string, metadata: Partial<ConversationMetadata>) => Promise<void>;
+  isCollapsed?: boolean;
+  onToggleCollapse?: () => void;
 }
 
 const priorityColors: Record<string, string> = {
@@ -77,12 +81,32 @@ const PRESET_TAGS = [
 export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps> = ({
   conversation,
   onUpdateMetadata,
+  isCollapsed = false,
+  onToggleCollapse,
 }) => {
   const metadata = (conversation.metadata || {}) as ConversationMetadata;
   const [newTag, setNewTag] = useState('');
   const [notes, setNotes] = useState(metadata.notes || '');
   const [isEditingNotes, setIsEditingNotes] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Collapsed state - just show expand button
+  if (isCollapsed) {
+    return (
+      <div className="w-10 border-l bg-background flex flex-col h-full">
+        <div className="p-2 border-b flex items-center justify-center">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-6 w-6 p-0"
+            onClick={onToggleCollapse}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   const handleAddTag = async (tag: string) => {
     if (!tag.trim()) return;
@@ -152,8 +176,18 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
 
   return (
     <div className="w-80 border-l bg-background flex flex-col h-full">
-      <div className="p-4 border-b">
+      <div className="p-4 border-b flex items-center justify-between">
         <h3 className="font-semibold text-sm">Conversation Details</h3>
+        {onToggleCollapse && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-6 w-6 p-0"
+            onClick={onToggleCollapse}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        )}
       </div>
 
       <ScrollArea className="flex-1">
