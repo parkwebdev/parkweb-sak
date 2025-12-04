@@ -270,7 +270,7 @@ const Conversations: React.FC = () => {
   };
 
   return (
-    <div className="h-full flex">
+    <div className="h-full flex min-h-0">
       {/* Conversations List Sidebar */}
       <div className="hidden lg:flex lg:w-80 xl:w-96 border-r flex-col bg-background min-h-0">
         {/* Header */}
