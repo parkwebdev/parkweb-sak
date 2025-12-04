@@ -289,8 +289,8 @@ const Conversations: React.FC = () => {
         </div>
 
         {/* Conversation List */}
-        <div className="flex-1 min-h-0">
-          <ScrollArea className="h-full">
+        <div className="flex-1 min-h-0 relative">
+          <ScrollArea className="absolute inset-0">
             {loading ? (
               <div className="p-4 text-center text-sm text-muted-foreground">
                 Loading...
@@ -399,8 +399,8 @@ const Conversations: React.FC = () => {
             </div>
 
             {/* Messages */}
-            <div className="flex-1 min-h-0">
-              <ScrollArea ref={messagesScrollRef} className="h-full">
+            <div className="flex-1 min-h-0 relative">
+              <ScrollArea ref={messagesScrollRef} className="absolute inset-0">
                 <div className="px-6 py-4">
                   {loadingMessages ? (
                     <div className="text-center py-12 text-sm text-muted-foreground">

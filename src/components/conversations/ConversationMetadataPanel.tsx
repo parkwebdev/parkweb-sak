@@ -188,11 +188,11 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
       {/* Content - hidden when collapsed via overflow + opacity */}
       <div 
         className={cn(
-          "flex-1 min-h-0 transition-opacity duration-200",
+          "flex-1 min-h-0 relative transition-opacity duration-200",
           isCollapsed ? "opacity-0 invisible" : "opacity-100 visible"
         )}
       >
-        <ScrollArea className="h-full">
+        <ScrollArea className="absolute inset-0">
           <div className="p-4 space-y-6">
             {/* Contact Info */}
             <div>
