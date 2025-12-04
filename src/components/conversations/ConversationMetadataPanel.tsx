@@ -107,7 +107,7 @@ interface ConversationMetadataPanelProps {
 const priorityColors: Record<string, string> = {
   not_set: 'bg-muted text-muted-foreground',
   low: 'bg-muted text-muted-foreground',
-  normal: 'bg-primary/10 text-primary',
+  normal: 'bg-info/10 text-info',
   high: 'bg-warning/10 text-warning',
   urgent: 'bg-destructive/10 text-destructive',
 };

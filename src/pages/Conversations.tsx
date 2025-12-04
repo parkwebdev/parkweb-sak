@@ -475,12 +475,20 @@ const Conversations: React.FC = () => {
                           className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}
                         >
                           <div className="flex items-start gap-2 max-w-[75%]">
-                            {!isUser && (
-                              <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-1 ${
-                                isHumanSent ? 'bg-warning/10' : 'bg-primary/10'
-                              }`}>
-                                <User01 size={14} className={isHumanSent ? 'text-warning' : 'text-primary'} />
-                              </div>
+                          {!isUser && (
+                              isHumanSent && msgMetadata?.sender_avatar ? (
+                                <img 
+                                  src={msgMetadata.sender_avatar} 
+                                  alt={msgMetadata?.sender_name || 'Team member'} 
+                                  className="w-8 h-8 rounded-full object-cover flex-shrink-0 mt-1"
+                                />
+                              ) : (
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-1 ${
+                                  isHumanSent ? 'bg-info/10' : 'bg-primary/10'
+                                }`}>
+                                  <User01 size={14} className={isHumanSent ? 'text-info' : 'text-primary'} />
+                                </div>
+                              )
                             )}
                             <div>
                               <div
@@ -488,7 +496,7 @@ const Conversations: React.FC = () => {
                                   isUser
                                     ? 'bg-primary text-primary-foreground'
                                     : isHumanSent
-                                      ? 'bg-warning/10 text-foreground border border-warning/20'
+                                      ? 'bg-info/10 text-foreground border border-info/20'
                                       : 'bg-muted text-foreground'
                                 }`}
                               >
