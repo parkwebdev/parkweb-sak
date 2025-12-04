@@ -3,7 +3,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/Badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
+
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { SearchMd, MessageChatSquare, User01, Send01, FaceSmile } from '@untitledui/icons';
 import { useConversations } from '@/hooks/useConversations';
@@ -206,9 +206,8 @@ const Conversations: React.FC = () => {
 
   // Scroll to bottom when messages change
   useEffect(() => {
-    const viewport = messagesScrollRef.current?.querySelector('[data-radix-scroll-area-viewport]');
-    if (viewport) {
-      viewport.scrollTop = viewport.scrollHeight;
+    if (messagesScrollRef.current) {
+      messagesScrollRef.current.scrollTop = messagesScrollRef.current.scrollHeight;
     }
   }, [messages]);
 
@@ -289,8 +288,7 @@ const Conversations: React.FC = () => {
         </div>
 
         {/* Conversation List */}
-        <div className="flex-1 min-h-0 relative">
-          <ScrollArea className="absolute inset-0">
+        <div className="flex-1 min-h-0 overflow-y-auto">
             {loading ? (
               <div className="p-4 text-center text-sm text-muted-foreground">
                 Loading...
@@ -353,7 +351,6 @@ const Conversations: React.FC = () => {
                 })}
               </div>
             )}
-          </ScrollArea>
         </div>
       </div>
 
@@ -399,9 +396,7 @@ const Conversations: React.FC = () => {
             </div>
 
             {/* Messages */}
-            <div className="flex-1 min-h-0 relative">
-              <ScrollArea ref={messagesScrollRef} className="absolute inset-0">
-                <div className="px-6 py-4">
+            <div ref={messagesScrollRef} className="flex-1 min-h-0 overflow-y-auto px-6 py-4">
                   {loadingMessages ? (
                     <div className="text-center py-12 text-sm text-muted-foreground">
                       Loading messages...
@@ -552,8 +547,6 @@ const Conversations: React.FC = () => {
                     })}
                     </div>
                   )}
-                </div>
-              </ScrollArea>
             </div>
 
             {/* Message Input */}
