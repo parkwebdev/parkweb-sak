@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { ScrollArea } from '@/components/ui/scroll-area';
+
 import { Separator } from '@/components/ui/separator';
 import {
   Select,
@@ -188,12 +188,11 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
       {/* Content - hidden when collapsed via overflow + opacity */}
       <div 
         className={cn(
-          "flex-1 min-h-0 relative transition-opacity duration-200",
+          "flex-1 min-h-0 overflow-y-auto transition-opacity duration-200",
           isCollapsed ? "opacity-0 invisible" : "opacity-100 visible"
         )}
       >
-        <ScrollArea className="absolute inset-0">
-          <div className="p-4 space-y-6">
+        <div className="p-4 space-y-6">
             {/* Contact Info */}
             <div>
               <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
@@ -474,8 +473,7 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
               )}
             </div>
           </div>
-        </ScrollArea>
+        </div>
       </div>
-    </div>
   );
 };
