@@ -300,7 +300,7 @@ export const AgentIntegrationsTab = ({ agentId }: AgentIntegrationsTabProps) => 
       description={menuItems.find(item => item.id === activeTab)?.description || ''}
     >
       <ScrollArea className="h-[calc(100vh-280px)]">
-        <AnimatedList className="space-y-3 pr-4">
+        <AnimatedList className="space-y-3 pr-4" staggerDelay={0.08} initialDelay={0.05}>
           {getIntegrations().map((integration) => (
             <AnimatedItem key={integration.id}>
               <IntegrationCard integration={integration} />
