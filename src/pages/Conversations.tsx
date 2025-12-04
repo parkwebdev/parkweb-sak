@@ -165,7 +165,7 @@ const Conversations: React.FC = () => {
       case 'active':
         return 'bg-success/10 text-success';
       case 'human_takeover':
-        return 'bg-warning/10 text-warning';
+        return 'bg-info/10 text-info';
       case 'closed':
         return 'bg-muted text-muted-foreground';
       default:
