@@ -5,15 +5,22 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Plus, Trash01, ChevronDown } from '@untitledui/icons';
+import { Plus, Trash01, ChevronDown, Link03, Eye, FlipBackward } from '@untitledui/icons';
 import { CopyButton } from '@/components/ui/copy-button';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/lib/toast';
 import type { Tables } from '@/integrations/supabase/types';
 import { AgentSettingsLayout } from '@/components/agents/AgentSettingsLayout';
+import { useWebhooks } from '@/hooks/useWebhooks';
+import { CreateWebhookDialog } from '@/components/settings/CreateWebhookDialog';
+import { WebhookLogsDialog } from '@/components/settings/WebhookLogsDialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { AnimatedList } from '@/components/ui/animated-list';
+import { AnimatedItem } from '@/components/ui/animated-item';
+import { SavedIndicator } from '@/components/settings/SavedIndicator';
 
 type AgentTool = Tables<'agent_tools'>;
-type ToolsTab = 'api-access' | 'custom-tools';
+type ToolsTab = 'api-access' | 'custom-tools' | 'webhooks';
 
 interface AgentToolsTabProps {
   agentId: string;
@@ -32,6 +39,14 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
     parameters: '{}',
   });
 
+  // Webhook state
+  const { webhooks, loading: webhooksLoading, updateWebhook, deleteWebhook, testWebhook, fetchLogs } = useWebhooks(agentId);
+  const [showCreateWebhook, setShowCreateWebhook] = useState(false);
+  const [showLogsDialog, setShowLogsDialog] = useState(false);
+  const [selectedWebhookForLogs, setSelectedWebhookForLogs] = useState<string | null>(null);
+  const [webhookToDelete, setWebhookToDelete] = useState<string | null>(null);
+  const [savedWebhookIds, setSavedWebhookIds] = useState<Set<string>>(new Set());
+
   const menuItems = [
     { 
       id: 'api-access' as const, 
@@ -42,6 +57,11 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
       id: 'custom-tools' as const, 
       label: 'Custom Tools',
       description: 'Add custom tools and functions that extend your agent\'s capabilities'
+    },
+    { 
+      id: 'webhooks' as const, 
+      label: 'Webhooks',
+      description: 'Configure webhooks to send real-time events to external APIs when actions occur'
     },
   ];
 
@@ -158,6 +178,34 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
       },
     });
     toast.success(`API ${enabled ? 'enabled' : 'disabled'}`);
+  };
+
+  const handleDeleteWebhook = async () => {
+    if (!webhookToDelete) return;
+    await deleteWebhook(webhookToDelete);
+    setWebhookToDelete(null);
+  };
+
+  const handleToggleWebhook = async (id: string, active: boolean) => {
+    await updateWebhook(id, { active });
+    setSavedWebhookIds(prev => new Set([...prev, id]));
+    setTimeout(() => {
+      setSavedWebhookIds(prev => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+    }, 2000);
+  };
+
+  const handleTestWebhook = async (id: string) => {
+    await testWebhook(id);
+  };
+
+  const handleViewLogs = (id: string) => {
+    setSelectedWebhookForLogs(id);
+    fetchLogs(id);
+    setShowLogsDialog(true);
   };
 
   if (loading) {
@@ -302,6 +350,134 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
               ))}
             </div>
           )}
+        </div>
+      )}
+
+      {activeTab === 'webhooks' && (
+        <div className="space-y-4">
+          {webhooksLoading ? (
+            <div className="text-muted-foreground">Loading webhooks...</div>
+          ) : webhooks.length === 0 ? (
+            <div className="text-center py-12 rounded-lg border border-dashed bg-muted/30">
+              <Link03 className="h-10 w-10 mx-auto mb-3 text-muted-foreground/50" />
+              <p className="text-sm text-muted-foreground mb-4">
+                No webhooks configured yet. Create your first webhook to send events to external APIs.
+              </p>
+              <Button onClick={() => setShowCreateWebhook(true)} size="sm">
+                <Plus className="h-4 w-4 mr-2" />
+                Create Webhook
+              </Button>
+            </div>
+          ) : (
+            <>
+              <div className="flex justify-end">
+                <Button onClick={() => setShowCreateWebhook(true)} size="sm">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Webhook
+                </Button>
+              </div>
+
+              <AnimatedList>
+                {webhooks.map((webhook) => (
+                  <AnimatedItem key={webhook.id}>
+                    <div className="p-4 rounded-lg border bg-card hover:bg-muted/30 transition-colors">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h4 className="text-sm font-medium">{webhook.name}</h4>
+                            <span className="text-xs px-1.5 py-0.5 rounded bg-muted font-mono">
+                              {webhook.method}
+                            </span>
+                            <span className="text-xs px-1.5 py-0.5 rounded bg-muted capitalize">
+                              {webhook.auth_type === 'none' ? 'No Auth' : webhook.auth_type.replace('_', ' ')}
+                            </span>
+                            <SavedIndicator show={savedWebhookIds.has(webhook.id)} />
+                          </div>
+                          <p className="text-xs text-muted-foreground font-mono truncate mb-2">
+                            {webhook.url}
+                          </p>
+                          {webhook.events && webhook.events.length > 0 && (
+                            <div className="flex flex-wrap gap-1">
+                              {webhook.events.map((event) => (
+                                <span
+                                  key={event}
+                                  className="text-xs px-1.5 py-0.5 rounded-full bg-primary/10 text-primary"
+                                >
+                                  {event}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <Switch
+                            checked={webhook.active ?? true}
+                            onCheckedChange={(checked) => handleToggleWebhook(webhook.id, checked)}
+                          />
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleTestWebhook(webhook.id)}
+                            className="text-xs"
+                          >
+                            <FlipBackward className="h-3.5 w-3.5 mr-1" />
+                            Test
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleViewLogs(webhook.id)}
+                            className="text-xs"
+                          >
+                            <Eye className="h-3.5 w-3.5 mr-1" />
+                            Logs
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => setWebhookToDelete(webhook.id)}
+                          >
+                            <Trash01 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </AnimatedItem>
+                ))}
+              </AnimatedList>
+            </>
+          )}
+
+          <CreateWebhookDialog
+            open={showCreateWebhook}
+            onOpenChange={setShowCreateWebhook}
+            agentId={agentId}
+          />
+
+          <WebhookLogsDialog
+            open={showLogsDialog}
+            onOpenChange={setShowLogsDialog}
+            webhookId={selectedWebhookForLogs}
+          />
+
+          <AlertDialog open={!!webhookToDelete} onOpenChange={() => setWebhookToDelete(null)}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete Webhook</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to delete this webhook? This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDeleteWebhook} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       )}
     </AgentSettingsLayout>
