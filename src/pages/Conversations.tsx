@@ -360,7 +360,7 @@ const Conversations: React.FC = () => {
                           </p>
                           <div className="flex items-center gap-1.5 flex-wrap">
                             <Badge variant="outline" className={`${getStatusColor(conv.status)} text-[10px] px-2 py-0.5`}>
-                              {conv.status.replace('_', ' ')}
+                              {conv.status === 'human_takeover' ? 'Human' : conv.status === 'active' ? 'AI' : conv.status}
                             </Badge>
                             {metadata.country && (
                               <span className="text-[10px] text-muted-foreground">
@@ -548,7 +548,7 @@ const Conversations: React.FC = () => {
                                       <FaceSmile size={12} />
                                     </button>
                                   </PopoverTrigger>
-                                  <PopoverContent className="w-auto p-2" side="top" align="start">
+                                  <PopoverContent className="w-auto px-2 py-1 rounded-full" side="top" align="start">
                                     <div className="flex gap-1">
                                       {QUICK_EMOJIS.map((emoji) => {
                                         const alreadyReacted = reactions?.find(r => r.emoji === emoji)?.adminReacted;

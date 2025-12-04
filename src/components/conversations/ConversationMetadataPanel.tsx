@@ -303,7 +303,7 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
                 {/* Channel */}
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <div className="flex items-center gap-2.5 text-sm cursor-help">
+                    <div className="flex items-center gap-2.5 text-sm">
                       <ChannelIcon channel={conversation.channel || 'widget'} />
                       <span>{getChannelLabel(conversation.channel || 'widget')}</span>
                     </div>
@@ -313,7 +313,7 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
                 {metadata.country && (
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <div className="flex items-center gap-2.5 text-sm cursor-help">
+                      <div className="flex items-center gap-2.5 text-sm">
                         <Globe01 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                         <span>
                           {metadata.city ? `${metadata.city}, ` : ''}{metadata.country}
@@ -326,7 +326,7 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
                 {metadata.ip_address && (
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <div className="flex items-center gap-2.5 text-sm cursor-help">
+                      <div className="flex items-center gap-2.5 text-sm">
                         <span className="text-muted-foreground text-xs w-4 text-center">IP</span>
                         <span className="font-mono text-xs">{metadata.ip_address}</span>
                       </div>
@@ -337,7 +337,7 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
                 {metadata.device_type && (
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <div className="flex items-center gap-2.5 text-sm cursor-help">
+                      <div className="flex items-center gap-2.5 text-sm">
                         <Monitor01 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                         <span className="capitalize">
                           {getDeviceIcon()} {metadata.device_type}
@@ -351,7 +351,7 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
                 {metadata.os && (
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <div className="flex items-center gap-2.5 text-sm cursor-help">
+                      <div className="flex items-center gap-2.5 text-sm">
                         <span className="text-muted-foreground text-xs w-4 text-center">OS</span>
                         <span>{metadata.os}</span>
                       </div>
@@ -362,7 +362,7 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
                 {metadata.referrer_url && (
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <div className="flex items-start gap-2.5 text-sm cursor-help">
+                      <div className="flex items-start gap-2.5 text-sm">
                         <Link01 className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
                         <span className="truncate text-xs text-muted-foreground">
                           {metadata.referrer_url}
@@ -374,7 +374,7 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
                 )}
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <div className="flex items-center gap-2.5 text-sm cursor-help">
+                    <div className="flex items-center gap-2.5 text-sm">
                       <Clock className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                       <span>
                         Started {formatDistanceToNow(new Date(conversation.created_at), { addSuffix: true })}
@@ -416,7 +416,7 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
                   </SelectItem>
                   <SelectItem value="normal">
                     <div className="flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-primary" />
+                      <span className="w-2 h-2 rounded-full bg-info" />
                       Normal
                     </div>
                   </SelectItem>
