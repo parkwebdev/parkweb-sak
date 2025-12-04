@@ -1,52 +1,38 @@
 /**
  * Centralized logging utility for development and debugging
- * Can be easily disabled for production builds
+ * Automatically disabled in production builds via Vite's esbuild config
  */
 
-const isDevelopment = process.env.NODE_ENV === 'development';
+const isDevelopment = import.meta.env.DEV;
 
 export const logger = {
-  info: (message: string, data?: any) => {
+  info: (message: string, data?: unknown) => {
     if (isDevelopment) {
-      console.log(`ℹ️ ${message}`, data || '');
+      console.log(`ℹ️ ${message}`, data ?? '');
     }
   },
 
-  error: (message: string, error?: any) => {
+  error: (message: string, error?: unknown) => {
     if (isDevelopment) {
-      console.error(`❌ ${message}`, error || '');
+      console.error(`❌ ${message}`, error ?? '');
     }
   },
 
-  warn: (message: string, data?: any) => {
+  warn: (message: string, data?: unknown) => {
     if (isDevelopment) {
-      console.warn(`⚠️ ${message}`, data || '');
+      console.warn(`⚠️ ${message}`, data ?? '');
     }
   },
 
-  debug: (message: string, data?: any) => {
+  debug: (message: string, data?: unknown) => {
     if (isDevelopment) {
-      console.debug(`🐛 ${message}`, data || '');
+      console.debug(`🐛 ${message}`, data ?? '');
     }
   },
 
-  success: (message: string, data?: any) => {
+  success: (message: string, data?: unknown) => {
     if (isDevelopment) {
-      console.log(`✅ ${message}`, data || '');
+      console.log(`✅ ${message}`, data ?? '');
     }
   }
-};
-
-// Helper for performance timing
-export const performanceTimer = (label: string) => {
-  if (!isDevelopment) return { end: () => {} };
-  
-  const start = performance.now();
-  
-  return {
-    end: () => {
-      const end = performance.now();
-      logger.debug(`⏱️ ${label}: ${(end - start).toFixed(2)}ms`);
-    }
-  };
 };
