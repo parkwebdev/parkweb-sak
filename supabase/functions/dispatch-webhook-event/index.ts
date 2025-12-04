@@ -10,6 +10,18 @@ interface EventPayload {
 
 Deno.serve(async (req) => {
   try {
+    // Validate internal secret to prevent unauthorized external calls
+    const internalSecret = req.headers.get('x-internal-secret');
+    const expectedSecret = Deno.env.get('INTERNAL_WEBHOOK_SECRET');
+    
+    if (!expectedSecret || internalSecret !== expectedSecret) {
+      console.log('Unauthorized webhook dispatch attempt');
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401 }
+      );
+    }
+
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
