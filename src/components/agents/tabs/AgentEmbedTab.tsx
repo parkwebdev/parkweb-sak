@@ -68,18 +68,20 @@ export const AgentEmbedTab = ({ agent, onUpdate, onFormChange }: AgentEmbedTabPr
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[400px_1fr] gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-[400px_1fr] gap-6 h-full min-h-0">
       {/* Left Panel - Settings */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-col min-h-0">
+        <div className="flex items-center justify-between mb-4 flex-shrink-0">
           <h3 className="text-sm font-medium text-muted-foreground">Embed Configuration</h3>
           <SavedIndicator show={showSaved} />
         </div>
-        <EmbedSettingsPanel
-          config={localConfig}
-          onConfigChange={handleConfigChange}
-          embedCode={generateEmbedCode()}
-        />
+        <div className="flex-1 min-h-0 overflow-y-auto">
+          <EmbedSettingsPanel
+            config={localConfig}
+            onConfigChange={handleConfigChange}
+            embedCode={generateEmbedCode()}
+          />
+        </div>
       </div>
 
       {/* Right Panel - Preview */}
