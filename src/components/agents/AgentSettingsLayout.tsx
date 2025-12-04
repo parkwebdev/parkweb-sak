@@ -57,7 +57,7 @@ export const AgentSettingsLayout = <T extends string = string>({
   description,
 }: AgentSettingsLayoutContentProps<T>) => {
   return (
-    <div className="flex flex-col lg:flex-row gap-4 lg:gap-8 w-full">
+    <div className="flex flex-col lg:flex-row gap-4 lg:gap-8 w-full min-h-0 flex-1">
       {/* Mobile header with menu button and tabs */}
       <div className="lg:hidden">
         <div className="flex items-center gap-3 mb-4">
@@ -136,7 +136,7 @@ export const AgentSettingsLayout = <T extends string = string>({
       </div>
 
       {/* Content Area */}
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 min-h-0 overflow-y-auto">
         {children}
       </div>
     </div>
