@@ -79,14 +79,6 @@ export const isImageFile = (fileType: string): boolean => {
   return ALLOWED_IMAGE_TYPES.includes(fileType);
 };
 
-export const getFileIcon = (fileType: string): string => {
-  if (isImageFile(fileType)) return '🖼️';
-  if (fileType === 'application/pdf') return '📄';
-  if (fileType.includes('word') || fileType.includes('document')) return '📝';
-  if (fileType === 'text/plain') return '📃';
-  return '📎';
-};
-
 export const formatFileSize = (bytes: number): string => {
   if (bytes === 0) return '0 Bytes';
   const k = 1024;

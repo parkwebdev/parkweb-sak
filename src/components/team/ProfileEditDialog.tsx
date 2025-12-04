@@ -7,6 +7,7 @@ import { toast } from '@/lib/toast';
 import { supabase } from '@/integrations/supabase/client';
 import { TeamMember } from '@/types/team';
 import { SimpleAvatarUpload } from './SimpleAvatarUpload';
+import { logger } from '@/utils/logger';
 
 interface ProfileEditDialogProps {
   member: TeamMember | null;
@@ -27,7 +28,7 @@ export const ProfileEditDialog: React.FC<ProfileEditDialogProps> = ({
 
   useEffect(() => {
     if (member) {
-      console.log('🔄 ProfileEditDialog: Setting initial values for member:', member.user_id);
+      logger.debug('ProfileEditDialog: Setting initial values for member', member.user_id);
       setDisplayName(member.display_name || '');
       setAvatarUrl(member.avatar_url || '');
     }
@@ -36,12 +37,10 @@ export const ProfileEditDialog: React.FC<ProfileEditDialogProps> = ({
   const handleSave = async () => {
     if (!member) return;
 
-    console.log('💾 Starting profile save...', {
+    logger.debug('Starting profile save', {
       memberId: member.user_id,
       oldDisplayName: member.display_name,
       newDisplayName: displayName.trim() || null,
-      oldAvatarUrl: member.avatar_url,
-      newAvatarUrl: avatarUrl || null,
     });
 
     setLoading(true);
@@ -54,12 +53,10 @@ export const ProfileEditDialog: React.FC<ProfileEditDialogProps> = ({
       // Only update fields that have actually changed
       if (displayName.trim() !== (member.display_name || '')) {
         updateData.display_name = displayName.trim() || null;
-        console.log('🏷️ Display name will be updated:', updateData.display_name);
       }
 
       if (avatarUrl !== (member.avatar_url || '')) {
         updateData.avatar_url = avatarUrl || null;
-        console.log('🖼️ Avatar URL will be updated:', updateData.avatar_url);
       }
 
       const { data, error } = await supabase
@@ -69,12 +66,11 @@ export const ProfileEditDialog: React.FC<ProfileEditDialogProps> = ({
         .select();
 
       if (error) {
-        console.error('❌ Profile update error:', error);
+        logger.error('Profile update error', error);
         throw error;
       }
 
-      console.log('✅ Profile updated successfully. Rows affected:', data?.length || 0);
-      console.log('📝 Updated data:', data);
+      logger.success('Profile updated successfully', { rowsAffected: data?.length || 0 });
 
       if (!data || data.length === 0) {
         throw new Error('No rows were updated. This might be a permissions issue.');
@@ -84,13 +80,11 @@ export const ProfileEditDialog: React.FC<ProfileEditDialogProps> = ({
         description: `${displayName || member.email}'s profile has been updated successfully.`,
       });
 
-      // Trigger refresh and close
-      console.log('🔄 Calling onUpdate to refresh team list...');
       onUpdate();
       onClose();
 
     } catch (error: any) {
-      console.error('💥 Error updating profile:', error);
+      logger.error('Error updating profile', error);
       toast.error("Update failed", {
         description: error.message || "Failed to update profile. Please try again.",
       });
@@ -118,7 +112,6 @@ export const ProfileEditDialog: React.FC<ProfileEditDialogProps> = ({
             email={member.email || undefined}
             memberId={member.user_id}
             onAvatarChange={(newUrl) => {
-              console.log('🖼️ Avatar changed:', newUrl);
               setAvatarUrl(newUrl);
             }}
           />
@@ -128,10 +121,7 @@ export const ProfileEditDialog: React.FC<ProfileEditDialogProps> = ({
             <Input
               id="display-name"
               value={displayName}
-              onChange={(e) => {
-                console.log('🏷️ Display name changed:', e.target.value);
-                setDisplayName(e.target.value);
-              }}
+              onChange={(e) => setDisplayName(e.target.value)}
               placeholder="Enter display name"
             />
           </div>

@@ -23,18 +23,3 @@ export const getRoleColor = (role: string): string => {
       return 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-800/50 dark:text-gray-300 dark:border-gray-700';
   }
 };
-
-export const validateCurrentStep = (step: number, data: any): boolean => {
-  switch (step) {
-    case 1:
-      return !!(data.name && data.email && data.phone);
-    case 2:
-      return !!(data.companyName && data.industry);
-    case 3:
-      return !!(data.projectType && data.description);
-    case 4:
-      return !!(data.timeline && data.budgetRange);
-    default:
-      return false;
-  }
-};
