@@ -29,10 +29,10 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
       </div>
       
       {/* Wrapped Content Container */}
-      <div className={`flex-1 flex flex-col transition-all duration-300 ${
+      <div className={`flex-1 flex flex-col min-h-0 transition-all duration-300 ${
         isCollapsed ? 'lg:ml-[72px]' : 'lg:ml-[240px]'
       }`}>
-        <div className="flex-1 m-2 ml-0 lg:m-4 lg:ml-0 rounded-2xl bg-card border border-border shadow-sm overflow-hidden flex flex-col">
+        <div className="flex-1 min-h-0 m-2 ml-0 lg:m-4 lg:ml-0 rounded-2xl bg-card border border-border shadow-sm overflow-hidden flex flex-col">
           {/* Global Header */}
           <AppHeader onMenuClick={() => setSidebarOpen(true)} />
           

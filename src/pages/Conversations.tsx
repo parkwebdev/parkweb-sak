@@ -263,11 +263,11 @@ const Conversations: React.FC = () => {
   };
 
   return (
-    <div className="h-full bg-muted/30 flex overflow-hidden">
+    <div className="h-full flex overflow-hidden">
       {/* Conversations List Sidebar */}
       <div className="hidden lg:flex lg:w-80 xl:w-96 border-r flex-col bg-background min-h-0">
         {/* Header */}
-        <div className="p-4 border-b">
+        <div className="p-4 border-b shrink-0">
           <h2 className="text-lg font-semibold text-foreground mb-3">Conversations</h2>
           <div className="relative">
             <SearchMd className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -281,92 +281,89 @@ const Conversations: React.FC = () => {
         </div>
 
         {/* Conversation List */}
-        <ScrollArea className="flex-1">
-          {loading ? (
-            <div className="p-4 text-center text-sm text-muted-foreground">
-              Loading...
-            </div>
-          ) : filteredConversations.length === 0 ? (
-            <div className="p-8 text-center">
-              <MessageChatSquare className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
-              <p className="text-sm text-muted-foreground">No conversations yet</p>
-            </div>
-          ) : (
-            <div>
-              {filteredConversations.map((conv) => {
-                const isSelected = selectedConversation?.id === conv.id;
-                const metadata = (conv.metadata as any) || {};
-                const priority = metadata.priority;
-                
-                return (
-                  <button
-                    key={conv.id}
-                    onClick={() => setSelectedConversation(conv)}
-                    className={`w-full text-left p-4 hover:bg-accent/30 transition-colors border-b ${
-                      isSelected ? 'bg-accent/50' : ''
-                    }`}
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className="w-11 h-11 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 relative">
-                        <User01 size={20} className="text-primary" />
-                        {getPriorityIndicator(priority) && (
-                          <div className="absolute -top-0.5 -right-0.5">
-                            {getPriorityIndicator(priority)}
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-2 mb-0.5">
-                          <p className="font-medium text-sm truncate text-foreground">
-                            {metadata.lead_name || metadata.lead_email || 'Anonymous'}
-                          </p>
-                          <span className="text-[10px] text-muted-foreground whitespace-nowrap mt-0.5">
-                            {formatDistanceToNow(new Date(conv.updated_at), { addSuffix: true })}
-                          </span>
-                        </div>
-                        <p className="text-xs text-muted-foreground truncate mb-1.5">
-                          via {conv.agents?.name}
-                        </p>
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <Badge variant="outline" className={`${getStatusColor(conv.status)} text-[10px] px-2 py-0.5`}>
-                            {conv.status.replace('_', ' ')}
-                          </Badge>
-                          {metadata.country && (
-                            <span className="text-[10px] text-muted-foreground">
-                              {metadata.country}
-                            </span>
+        <div className="flex-1 min-h-0">
+          <ScrollArea className="h-full">
+            {loading ? (
+              <div className="p-4 text-center text-sm text-muted-foreground">
+                Loading...
+              </div>
+            ) : filteredConversations.length === 0 ? (
+              <div className="p-8 text-center">
+                <MessageChatSquare className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+                <p className="text-sm text-muted-foreground">No conversations yet</p>
+              </div>
+            ) : (
+              <div>
+                {filteredConversations.map((conv) => {
+                  const isSelected = selectedConversation?.id === conv.id;
+                  const metadata = (conv.metadata as any) || {};
+                  const priority = metadata.priority;
+                  
+                  return (
+                    <button
+                      key={conv.id}
+                      onClick={() => setSelectedConversation(conv)}
+                      className={`w-full text-left p-4 hover:bg-accent/30 transition-colors border-b ${
+                        isSelected ? 'bg-accent/50' : ''
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="w-11 h-11 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 relative">
+                          <User01 size={20} className="text-primary" />
+                          {getPriorityIndicator(priority) && (
+                            <div className="absolute -top-0.5 -right-0.5">
+                              {getPriorityIndicator(priority)}
+                            </div>
                           )}
                         </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-2 mb-0.5">
+                            <p className="font-medium text-sm truncate text-foreground">
+                              {metadata.lead_name || metadata.lead_email || 'Anonymous'}
+                            </p>
+                            <span className="text-[10px] text-muted-foreground whitespace-nowrap mt-0.5">
+                              {formatDistanceToNow(new Date(conv.updated_at), { addSuffix: true })}
+                            </span>
+                          </div>
+                          <p className="text-xs text-muted-foreground truncate mb-1.5">
+                            via {conv.agents?.name}
+                          </p>
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <Badge variant="outline" className={`${getStatusColor(conv.status)} text-[10px] px-2 py-0.5`}>
+                              {conv.status.replace('_', ' ')}
+                            </Badge>
+                            {metadata.country && (
+                              <span className="text-[10px] text-muted-foreground">
+                                {metadata.country}
+                              </span>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </ScrollArea>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </ScrollArea>
+        </div>
       </div>
 
       {/* Chat Area */}
       <div className="flex-1 flex flex-col min-w-0 min-h-0">
         {selectedConversation ? (
           <>
-            {/* Chat Header */}
-            <div className="px-6 py-4 border-b flex items-center justify-between bg-background">
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                  <User01 size={20} className="text-primary" />
-                </div>
-                <div>
-                  <p className="font-medium text-sm text-foreground">
-                    {((selectedConversation.metadata as any)?.lead_name || 
-                      (selectedConversation.metadata as any)?.lead_email || 
-                      'Anonymous')}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {selectedConversation.agents?.name} • {selectedConversation.status.replace('_', ' ')}
-                  </p>
-                </div>
+            {/* Chat Header - compact, no avatar */}
+            <div className="px-6 py-3 border-b flex items-center justify-between bg-background shrink-0">
+              <div>
+                <p className="font-medium text-sm text-foreground">
+                  {((selectedConversation.metadata as any)?.lead_name || 
+                    (selectedConversation.metadata as any)?.lead_email || 
+                    'Anonymous')}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {selectedConversation.agents?.name} • {selectedConversation.status.replace('_', ' ')}
+                </p>
               </div>
               
               <div className="flex items-center gap-2">
@@ -394,167 +391,164 @@ const Conversations: React.FC = () => {
             </div>
 
             {/* Messages */}
-            <ScrollArea ref={messagesScrollRef} className="flex-1 px-6 py-4">
-              {loadingMessages ? (
-                <div className="text-center py-12 text-sm text-muted-foreground">
-                  Loading messages...
-                </div>
-              ) : messages.length === 0 ? (
-                <div className="text-center py-12">
-                  <MessageChatSquare className="h-16 w-16 mx-auto text-muted-foreground/50 mb-3" />
-                  <p className="text-sm text-muted-foreground">No messages yet</p>
-                </div>
-              ) : (
-              <div className="space-y-3 max-w-4xl mx-auto">
-                  {messages.map((message) => {
-                    const isUser = message.role === 'user';
-                    const msgMetadata = message.metadata as any;
-                    const isHumanSent = msgMetadata?.sender_type === 'human';
-                    const reactions = msgMetadata?.reactions as Array<{ emoji: string; count: number; userReacted?: boolean; adminReacted?: boolean }> | undefined;
-                    
-                    const handleAddReaction = async (emoji: string) => {
-                      // Check if admin already reacted with this emoji
-                      const existingReaction = reactions?.find(r => r.emoji === emoji);
-                      if (existingReaction?.adminReacted) return;
+            <div className="flex-1 min-h-0">
+              <ScrollArea ref={messagesScrollRef} className="h-full px-6 py-4">
+                {loadingMessages ? (
+                  <div className="text-center py-12 text-sm text-muted-foreground">
+                    Loading messages...
+                  </div>
+                ) : messages.length === 0 ? (
+                  <div className="text-center py-12">
+                    <MessageChatSquare className="h-16 w-16 mx-auto text-muted-foreground/50 mb-3" />
+                    <p className="text-sm text-muted-foreground">No messages yet</p>
+                  </div>
+                ) : (
+                <div className="space-y-3 max-w-4xl mx-auto">
+                    {messages.map((message) => {
+                      const isUser = message.role === 'user';
+                      const msgMetadata = message.metadata as any;
+                      const isHumanSent = msgMetadata?.sender_type === 'human';
+                      const reactions = msgMetadata?.reactions as Array<{ emoji: string; count: number; userReacted?: boolean; adminReacted?: boolean }> | undefined;
                       
-                      // Optimistic update
-                      const updatedMessages = messages.map(m => {
-                        if (m.id !== message.id) return m;
-                        const meta = (m.metadata as any) || {};
-                        const currentReactions = meta.reactions || [];
-                        const reactionIdx = currentReactions.findIndex((r: any) => r.emoji === emoji);
+                      const handleAddReaction = async (emoji: string) => {
+                        // Check if admin already reacted with this emoji
+                        const existingReaction = reactions?.find(r => r.emoji === emoji);
+                        if (existingReaction?.adminReacted) return;
                         
-                        let newReactions;
-                        if (reactionIdx >= 0) {
-                          newReactions = [...currentReactions];
-                          newReactions[reactionIdx] = { ...newReactions[reactionIdx], count: newReactions[reactionIdx].count + 1, adminReacted: true };
-                        } else {
-                          newReactions = [...currentReactions, { emoji, count: 1, userReacted: false, adminReacted: true }];
-                        }
+                        // Optimistic update
+                        const updatedMessages = messages.map(m => {
+                          if (m.id !== message.id) return m;
+                          const meta = (m.metadata as any) || {};
+                          const currentReactions = meta.reactions || [];
+                          const reactionIdx = currentReactions.findIndex((r: any) => r.emoji === emoji);
+                          
+                          let newReactions;
+                          if (reactionIdx >= 0) {
+                            newReactions = [...currentReactions];
+                            newReactions[reactionIdx] = { ...newReactions[reactionIdx], count: newReactions[reactionIdx].count + 1, adminReacted: true };
+                          } else {
+                            newReactions = [...currentReactions, { emoji, count: 1, userReacted: false, adminReacted: true }];
+                          }
+                          
+                          return { ...m, metadata: { ...meta, reactions: newReactions } };
+                        });
+                        setMessages(updatedMessages);
                         
-                        return { ...m, metadata: { ...meta, reactions: newReactions } };
-                      });
-                      setMessages(updatedMessages);
+                        // Persist to database
+                        await updateMessageReaction(message.id, emoji, 'add', 'admin');
+                      };
                       
-                      // Persist to database
-                      await updateMessageReaction(message.id, emoji, 'add', 'admin');
-                    };
-                    
-                    const handleRemoveReaction = async (emoji: string) => {
-                      const existingReaction = reactions?.find(r => r.emoji === emoji);
-                      if (!existingReaction?.adminReacted) return;
+                      const handleRemoveReaction = async (emoji: string) => {
+                        const existingReaction = reactions?.find(r => r.emoji === emoji);
+                        if (!existingReaction?.adminReacted) return;
+                        
+                        // Optimistic update
+                        const updatedMessages = messages.map(m => {
+                          if (m.id !== message.id) return m;
+                          const meta = (m.metadata as any) || {};
+                          const currentReactions = meta.reactions || [];
+                          const reactionIdx = currentReactions.findIndex((r: any) => r.emoji === emoji);
+                          
+                          if (reactionIdx < 0) return m;
+                          
+                          let newReactions = [...currentReactions];
+                          newReactions[reactionIdx] = { ...newReactions[reactionIdx], count: newReactions[reactionIdx].count - 1, adminReacted: false };
+                          if (newReactions[reactionIdx].count <= 0) {
+                            newReactions = newReactions.filter((_, i) => i !== reactionIdx);
+                          }
+                          
+                          return { ...m, metadata: { ...meta, reactions: newReactions } };
+                        });
+                        setMessages(updatedMessages);
+                        
+                        // Persist to database
+                        await updateMessageReaction(message.id, emoji, 'remove', 'admin');
+                      };
                       
-                      // Optimistic update
-                      const updatedMessages = messages.map(m => {
-                        if (m.id !== message.id) return m;
-                        const meta = (m.metadata as any) || {};
-                        const currentReactions = meta.reactions || [];
-                        const reactionIdx = currentReactions.findIndex((r: any) => r.emoji === emoji);
-                        
-                        if (reactionIdx < 0) return m;
-                        
-                        let newReactions = [...currentReactions];
-                        newReactions[reactionIdx] = { ...newReactions[reactionIdx], count: newReactions[reactionIdx].count - 1, adminReacted: false };
-                        if (newReactions[reactionIdx].count <= 0) {
-                          newReactions = newReactions.filter((_, i) => i !== reactionIdx);
-                        }
-                        
-                        return { ...m, metadata: { ...meta, reactions: newReactions } };
-                      });
-                      setMessages(updatedMessages);
-                      
-                      // Persist to database
-                      await updateMessageReaction(message.id, emoji, 'remove', 'admin');
-                    };
-                    
-                    return (
-                      <div
-                        key={message.id}
-                        className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}
-                      >
-                        <div className="flex items-start gap-2 max-w-[75%]">
-                          {!isUser && (
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-1 ${
-                              isHumanSent ? 'bg-warning/10' : 'bg-primary/10'
-                            }`}>
-                              <User01 size={14} className={isHumanSent ? 'text-warning' : 'text-primary'} />
-                            </div>
-                          )}
-                          <div>
-                            <div
-                              className={`rounded-2xl px-4 py-2.5 ${
-                                isUser
-                                  ? 'bg-primary text-primary-foreground'
-                                  : isHumanSent
-                                    ? 'bg-warning/10 text-foreground border border-warning/20'
-                                    : 'bg-muted text-foreground'
-                              }`}
-                            >
-                              <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</p>
-                            </div>
-                            {/* Message reactions display + add */}
-                            <div className="flex items-center gap-1 mt-1 px-1 flex-wrap">
-                              {reactions && reactions.map((reaction, i) => (
-                                <button
-                                  key={i}
-                                  onClick={() => reaction.adminReacted ? handleRemoveReaction(reaction.emoji) : handleAddReaction(reaction.emoji)}
-                                  className={`text-xs rounded-full px-1.5 py-0.5 transition-colors ${
-                                    reaction.adminReacted 
-                                      ? 'bg-primary/20 border border-primary/30' 
-                                      : 'bg-muted hover:bg-muted/80'
-                                  }`}
-                                >
-                                  {reaction.emoji} {reaction.count > 1 && reaction.count}
-                                </button>
-                              ))}
-                              {/* Add reaction button */}
-                              <Popover>
-                                <PopoverTrigger asChild>
-                                  <button className="text-xs bg-muted hover:bg-muted/80 rounded-full p-1 transition-colors opacity-50 hover:opacity-100">
-                                    <FaceSmile size={12} />
+                      return (
+                        <div
+                          key={message.id}
+                          className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}
+                        >
+                          <div className="flex items-start gap-2 max-w-[75%]">
+                            {!isUser && (
+                              <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-1 ${
+                                isHumanSent ? 'bg-warning/10' : 'bg-primary/10'
+                              }`}>
+                                <User01 size={14} className={isHumanSent ? 'text-warning' : 'text-primary'} />
+                              </div>
+                            )}
+                            <div>
+                              <div
+                                className={`rounded-2xl px-4 py-2.5 ${
+                                  isUser
+                                    ? 'bg-primary text-primary-foreground'
+                                    : isHumanSent
+                                      ? 'bg-warning/10 text-foreground border border-warning/20'
+                                      : 'bg-muted text-foreground'
+                                }`}
+                              >
+                                <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</p>
+                              </div>
+                              {/* Message reactions display + add */}
+                              <div className="flex items-center gap-1 mt-1 px-1 flex-wrap">
+                                {reactions && reactions.map((reaction, i) => (
+                                  <button
+                                    key={i}
+                                    onClick={() => reaction.adminReacted ? handleRemoveReaction(reaction.emoji) : handleAddReaction(reaction.emoji)}
+                                    className={`text-xs rounded-full px-1.5 py-0.5 transition-colors ${
+                                      reaction.adminReacted 
+                                        ? 'bg-primary/20 border border-primary/30' 
+                                        : 'bg-muted hover:bg-muted/80'
+                                    }`}
+                                  >
+                                    {reaction.emoji} {reaction.count > 1 && reaction.count}
                                   </button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-2" side="top" align="start">
-                                  <div className="flex gap-1">
-                                    {QUICK_EMOJIS.map((emoji) => {
-                                      const alreadyReacted = reactions?.find(r => r.emoji === emoji)?.adminReacted;
-                                      return (
-                                        <button
-                                          key={emoji}
-                                          onClick={() => alreadyReacted ? handleRemoveReaction(emoji) : handleAddReaction(emoji)}
-                                          className={`text-lg p-1 hover:bg-muted rounded transition-transform hover:scale-110 ${alreadyReacted ? 'bg-primary/20' : ''}`}
-                                        >
-                                          {emoji}
-                                        </button>
-                                      );
-                                    })}
-                                  </div>
-                                </PopoverContent>
-                              </Popover>
+                                ))}
+                                {/* Add reaction button */}
+                                <Popover>
+                                  <PopoverTrigger asChild>
+                                    <button className="text-xs bg-muted hover:bg-muted/80 rounded-full p-1 transition-colors opacity-50 hover:opacity-100">
+                                      <FaceSmile size={12} />
+                                    </button>
+                                  </PopoverTrigger>
+                                  <PopoverContent className="w-auto p-2" side="top" align="start">
+                                    <div className="flex gap-1">
+                                      {QUICK_EMOJIS.map((emoji) => {
+                                        const alreadyReacted = reactions?.find(r => r.emoji === emoji)?.adminReacted;
+                                        return (
+                                          <button
+                                            key={emoji}
+                                            onClick={() => alreadyReacted ? handleRemoveReaction(emoji) : handleAddReaction(emoji)}
+                                            className={`text-lg p-1 hover:bg-muted rounded transition-transform hover:scale-110 ${alreadyReacted ? 'bg-primary/20' : ''}`}
+                                          >
+                                            {emoji}
+                                          </button>
+                                        );
+                                      })}
+                                    </div>
+                                  </PopoverContent>
+                                </Popover>
+                              </div>
+                              <p className={`text-[10px] mt-1 px-2 ${
+                                isUser ? 'text-right text-muted-foreground' : 'text-muted-foreground'
+                              }`}>
+                                {isHumanSent && <span className="mr-1">{msgMetadata?.sender_name || 'Team'}</span>}
+                                {formatDistanceToNow(new Date(message.created_at), { addSuffix: true })}
+                              </p>
                             </div>
-                            <p className={`text-[10px] mt-1 px-2 ${
-                              isUser ? 'text-right text-muted-foreground' : 'text-muted-foreground'
-                            }`}>
-                              {isHumanSent && <span className="mr-1">{msgMetadata?.sender_name || 'Team'}</span>}
-                              {formatDistanceToNow(new Date(message.created_at), { addSuffix: true })}
-                            </p>
                           </div>
-                          {isUser && (
-                            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-1">
-                              <User01 size={14} className="text-primary" />
-                            </div>
-                          )}
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </ScrollArea>
+                      );
+                    })}
+                  </div>
+                )}
+              </ScrollArea>
+            </div>
 
             {/* Message Input */}
             {selectedConversation.status === 'human_takeover' && (
-              <div className="px-6 py-4 border-t bg-background">
+              <div className="px-6 py-4 border-t bg-background shrink-0">
                 <form 
                   onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }}
                   className="flex gap-3 max-w-4xl mx-auto"
@@ -585,7 +579,7 @@ const Conversations: React.FC = () => {
             )}
           </>
         ) : (
-          <div className="flex-1 flex items-center justify-center bg-muted/20">
+          <div className="flex-1 flex items-center justify-center bg-muted/20 min-h-0">
             <div className="text-center">
               <MessageChatSquare className="h-20 w-20 mx-auto text-muted-foreground/50 mb-4" />
               <p className="text-sm text-muted-foreground">
