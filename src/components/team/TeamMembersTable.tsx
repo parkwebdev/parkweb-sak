@@ -20,7 +20,7 @@ import { DotsHorizontal as MoreHorizontal, Settings01 as Settings, Trash01 as Tr
 import { EmptyState } from '@/components/ui/empty-state';
 import { TeamMember } from '@/types/team';
 import { AnimatedTableRow } from '@/components/ui/animated-table-row';
-import { Spinner } from '@/components/ui/spinner';
+import { LoadingState } from '@/components/ui/loading-state';
 
 interface TeamMembersTableProps {
   teamMembers: TeamMember[];
@@ -73,8 +73,8 @@ export const TeamMembersTable: React.FC<TeamMembersTableProps> = ({
 
   if (loading) {
     return (
-      <div className="w-full bg-card border border-border rounded-xl p-8 flex items-center justify-center">
-        <Spinner size="lg" />
+      <div className="w-full bg-card border border-border rounded-xl">
+        <LoadingState className="p-8" />
       </div>
     );
   }

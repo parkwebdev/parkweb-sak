@@ -13,6 +13,7 @@ import { SavedIndicator } from './SavedIndicator';
 import { AnimatedList } from '@/components/ui/animated-list';
 import { AnimatedItem } from '@/components/ui/animated-item';
 import { uploadAvatar } from '@/lib/avatar-upload';
+import { LoadingState } from '@/components/ui/loading-state';
 import { Spinner } from '@/components/ui/spinner';
 
 export const ProfileSettings: React.FC = () => {
@@ -272,11 +273,7 @@ export const ProfileSettings: React.FC = () => {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-16">
-        <Spinner size="lg" />
-      </div>
-    );
+    return <LoadingState size="lg" className="py-16" />;
   }
 
   return (

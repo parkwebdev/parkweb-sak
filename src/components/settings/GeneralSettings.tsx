@@ -10,7 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { AnimatedList } from '@/components/ui/animated-list';
 import { AnimatedItem } from '@/components/ui/animated-item';
-import { Spinner } from '@/components/ui/spinner';
+import { LoadingState } from '@/components/ui/loading-state';
 
 export const GeneralSettings: React.FC = () => {
   const { user } = useAuth();
@@ -153,11 +153,7 @@ export const GeneralSettings: React.FC = () => {
   }, [preferences.compact_mode]);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <Spinner size="lg" />
-      </div>
-    );
+    return <LoadingState />;
   }
 
   return (

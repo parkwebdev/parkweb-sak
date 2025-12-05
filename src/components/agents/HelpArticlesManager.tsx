@@ -8,7 +8,7 @@ import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { EmptyState } from '@/components/ui/empty-state';
 import { BookOpen01, Upload01, XClose, Image01 } from '@untitledui/icons';
-import { Spinner } from '@/components/ui/spinner';
+import { LoadingState } from '@/components/ui/loading-state';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { useHelpArticles } from '@/hooks/useHelpArticles';
 import { toast } from '@/lib/toast';
@@ -330,10 +330,7 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
   return (
     <div className="space-y-4">
       {loading && (
-        <div className="flex flex-col items-center justify-center py-8 gap-2">
-          <Spinner size="lg" />
-          <p className="text-sm text-muted-foreground">Loading help articles...</p>
-        </div>
+        <LoadingState size="md" text="Loading help articles..." />
       )}
       
       {!loading && (
