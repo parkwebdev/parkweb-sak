@@ -3,6 +3,7 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { AppLoadingScreen } from '@/components/ui/app-loading-screen';
 import { motion } from 'motion/react';
+import { toast } from 'sonner';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -46,7 +47,12 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
         initial={{ filter: "blur(8px)", opacity: 0.7 }}
         animate={{ filter: "blur(0px)", opacity: 1 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
-        onAnimationComplete={() => setShowBlurTransition(false)}
+        onAnimationComplete={() => {
+          setShowBlurTransition(false);
+          toast.success("Welcome back!", {
+            description: "You have been signed in successfully.",
+          });
+        }}
         className="h-full"
       >
         {children}
