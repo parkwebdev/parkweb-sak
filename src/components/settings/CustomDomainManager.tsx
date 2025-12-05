@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { useCustomDomains } from '@/hooks/useCustomDomains';
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Spinner } from '@/components/ui/spinner';
 
 export const CustomDomainManager = () => {
   const { domains, loading, verifying, addDomain, verifyDomain, removeDomain, setPrimaryDomain } = useCustomDomains();
@@ -144,7 +145,7 @@ export const CustomDomainManager = () => {
       <CardContent className="space-y-4">
         {loading ? (
           <div className="flex items-center justify-center py-8">
-            <RefreshCw01 className="w-6 h-6 animate-spin text-muted-foreground" />
+            <Spinner size="lg" />
           </div>
         ) : domains.length === 0 ? (
           <Alert>

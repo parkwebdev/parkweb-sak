@@ -9,6 +9,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { TakeoverDialog } from './TakeoverDialog';
 import { supabase } from '@/integrations/supabase/client';
 import type { Tables } from '@/integrations/supabase/types';
+import { Spinner } from '@/components/ui/spinner';
 
 type Conversation = Tables<'conversations'> & {
   agents?: { name: string };
@@ -206,8 +207,8 @@ export const ConversationDetailsSheet = ({
             <h3 className="font-semibold mb-3">Message History</h3>
             
             {loading ? (
-              <div className="flex-1 flex items-center justify-center text-muted-foreground">
-                Loading messages...
+              <div className="flex-1 flex items-center justify-center">
+                <Spinner size="md" />
               </div>
             ) : messages.length === 0 ? (
               <div className="flex-1 flex items-center justify-center text-muted-foreground">

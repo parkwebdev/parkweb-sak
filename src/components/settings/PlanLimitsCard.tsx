@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Spinner } from '@/components/ui/spinner';
 import { usePlanLimits } from '@/hooks/usePlanLimits';
 import { useNavigate } from 'react-router-dom';
 
@@ -12,12 +12,8 @@ export const PlanLimitsCard = () => {
   if (loading) {
     return (
       <Card>
-        <CardHeader>
-          <Skeleton className="h-6 w-32" />
-          <Skeleton className="h-4 w-48" />
-        </CardHeader>
-        <CardContent>
-          <Skeleton className="h-20 w-full" />
+        <CardContent className="flex items-center justify-center py-12">
+          <Spinner size="lg" />
         </CardContent>
       </Card>
     );

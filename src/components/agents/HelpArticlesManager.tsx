@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { BookOpen01, Upload01, XClose, Image01 } from '@untitledui/icons';
+import { Spinner } from '@/components/ui/spinner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { useHelpArticles } from '@/hooks/useHelpArticles';
 import { toast } from '@/lib/toast';
@@ -328,9 +329,9 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
   return (
     <div className="space-y-4">
       {loading && (
-        <div className="text-center py-8">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent motion-reduce:animate-[spin_1.5s_linear_infinite]" />
-          <p className="text-sm text-muted-foreground mt-2">Loading help articles...</p>
+        <div className="flex flex-col items-center justify-center py-8 gap-2">
+          <Spinner size="lg" />
+          <p className="text-sm text-muted-foreground">Loading help articles...</p>
         </div>
       )}
       

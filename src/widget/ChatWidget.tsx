@@ -11,7 +11,6 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
 import { X, Send01, MessageChatCircle, ChevronRight, Zap, BookOpen01, Microphone01, Attachment01, Image03, FileCheck02, ThumbsUp, ThumbsDown } from '@untitledui/icons';
 import { CategoryIcon } from './category-icons';
 import { HomeNavIcon, ChatNavIcon, HelpNavIcon } from './NavIcons';
@@ -873,30 +872,14 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     }
   };
 
-  // Loading skeleton
+  // Loading state - use simple CSS spinner to keep bundle small
   if (loading || !config) {
     return (
-      <div className="w-full h-full flex flex-col bg-background p-4">
-        {/* Header skeleton */}
-        <div className="flex items-center gap-3 mb-6">
-          <Skeleton className="w-10 h-10 rounded-full" />
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-32" />
-            <Skeleton className="h-3 w-20" />
-          </div>
-        </div>
-        {/* Content skeletons */}
-        <div className="space-y-4 flex-1">
-          <Skeleton className="h-24 w-full rounded-lg" />
-          <Skeleton className="h-20 w-full rounded-lg" />
-          <Skeleton className="h-20 w-full rounded-lg" />
-        </div>
-        {/* Nav skeleton */}
-        <div className="flex justify-around pt-4 border-t mt-auto">
-          <Skeleton className="h-10 w-16" />
-          <Skeleton className="h-10 w-16" />
-          <Skeleton className="h-10 w-16" />
-        </div>
+      <div className="w-full h-full flex items-center justify-center bg-background">
+        <svg className="animate-spin h-8 w-8 text-primary" viewBox="0 0 24 24" fill="none">
+          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+        </svg>
       </div>
     );
   }
@@ -980,11 +963,12 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                   >
                     <div className="px-6 py-4 space-y-3">
                       {isContentLoading ? (
-                        // Loading skeleton for dynamic content
-                        <div className="space-y-3 animate-pulse">
-                          <div className="h-20 bg-black/5 rounded-lg" />
-                          <div className="h-16 bg-black/5 rounded-lg" />
-                          <div className="h-16 bg-black/5 rounded-lg" />
+                        // Loading spinner for dynamic content
+                        <div className="flex items-center justify-center py-8">
+                          <svg className="animate-spin h-6 w-6 text-primary" viewBox="0 0 24 24" fill="none">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                          </svg>
                         </div>
                       ) : (
                         <>

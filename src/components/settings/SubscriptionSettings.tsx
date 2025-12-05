@@ -11,6 +11,7 @@ import { formatDate } from '@/lib/formatting';
 import { CheckCircle, Download01, LinkExternal01, RefreshCw01 } from '@untitledui/icons';
 import { toast } from '@/lib/toast';
 import { AnimatedTableRow } from '@/components/ui/animated-table-row';
+import { Spinner } from '@/components/ui/spinner';
 
 type Subscription = Tables<'subscriptions'> & {
   plans?: Tables<'plans'>;
@@ -83,7 +84,11 @@ export const SubscriptionSettings = () => {
   }, [user]);
 
   if (loading) {
-    return <div className="text-center py-8">Loading subscription...</div>;
+    return (
+      <div className="flex items-center justify-center py-16">
+        <Spinner size="lg" />
+      </div>
+    );
   }
 
   const plan = subscription?.plans;
@@ -227,15 +232,15 @@ export const SubscriptionSettings = () => {
               onClick={fetchInvoices}
               disabled={invoicesLoading}
             >
-              <RefreshCw01 className={`h-4 w-4 mr-2 ${invoicesLoading ? 'animate-spin' : ''}`} />
+              {invoicesLoading ? <Spinner size="sm" className="mr-2" /> : <RefreshCw01 className="h-4 w-4 mr-2" />}
               Refresh
             </Button>
           </div>
         </CardHeader>
         <CardContent>
           {invoicesLoading ? (
-            <div className="text-center py-8 text-muted-foreground">
-              Loading invoices...
+            <div className="flex items-center justify-center py-8">
+              <Spinner size="md" />
             </div>
           ) : invoices.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
