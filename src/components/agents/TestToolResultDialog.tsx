@@ -6,6 +6,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, XCircle, PlayCircle } from '@untitledui/icons';
+import { EmptyState } from '@/components/ui/empty-state';
 import { Spinner } from '@/components/ui/spinner';
 
 interface TestResult {
@@ -92,12 +93,10 @@ export const TestToolResultDialog = ({
               )}
             </>
           ) : (
-            <div className="text-center py-12 px-8 rounded-lg border border-dashed bg-muted/30">
-              <div className="w-12 h-12 rounded-full bg-muted/50 border border-border flex items-center justify-center mx-auto mb-3">
-                <PlayCircle className="h-5 w-5 text-muted-foreground/50" />
-              </div>
-              <p className="text-sm text-muted-foreground">No test results yet.</p>
-            </div>
+            <EmptyState
+              icon={<PlayCircle className="h-5 w-5 text-muted-foreground/50" />}
+              title="No test results yet."
+            />
           )}
         </div>
 
