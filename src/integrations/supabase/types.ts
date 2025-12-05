@@ -14,6 +14,65 @@ export type Database = {
   }
   public: {
     Tables: {
+      agent_api_keys: {
+        Row: {
+          agent_id: string
+          created_at: string
+          current_day_requests: number
+          current_minute_requests: number
+          day_window_start: string | null
+          id: string
+          key_hash: string
+          key_prefix: string
+          last_used_at: string | null
+          minute_window_start: string | null
+          name: string
+          requests_per_day: number
+          requests_per_minute: number
+          revoked_at: string | null
+        }
+        Insert: {
+          agent_id: string
+          created_at?: string
+          current_day_requests?: number
+          current_minute_requests?: number
+          day_window_start?: string | null
+          id?: string
+          key_hash: string
+          key_prefix: string
+          last_used_at?: string | null
+          minute_window_start?: string | null
+          name?: string
+          requests_per_day?: number
+          requests_per_minute?: number
+          revoked_at?: string | null
+        }
+        Update: {
+          agent_id?: string
+          created_at?: string
+          current_day_requests?: number
+          current_minute_requests?: number
+          day_window_start?: string | null
+          id?: string
+          key_hash?: string
+          key_prefix?: string
+          last_used_at?: string | null
+          minute_window_start?: string | null
+          name?: string
+          requests_per_day?: number
+          requests_per_minute?: number
+          revoked_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_api_keys_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       agent_tools: {
         Row: {
           agent_id: string
@@ -1239,6 +1298,15 @@ export type Database = {
           similarity: number
           source: string
           type: string
+        }[]
+      }
+      validate_api_key: {
+        Args: { p_agent_id: string; p_key_hash: string }
+        Returns: {
+          error_message: string
+          key_id: string
+          rate_limited: boolean
+          valid: boolean
         }[]
       }
       validate_onboarding_token: { Args: { p_token: string }; Returns: boolean }
