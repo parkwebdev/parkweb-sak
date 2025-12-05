@@ -3,7 +3,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users01 as Users, MessageChatSquare, UserPlus01 as UserPlus, TrendUp01 as TrendUp, Cube01 as Bot, Zap } from '@untitledui/icons';
-import { Spinner } from '@/components/ui/spinner';
+import { LoadingState } from '@/components/ui/loading-state';
 
 import { AnimatedList } from '@/components/ui/animated-list';
 import { AnimatedItem } from '@/components/ui/animated-item';
@@ -80,11 +80,7 @@ export const Dashboard: React.FC = () => {
   };
 
   if (authLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Spinner size="xl" />
-      </div>
-    );
+    return <LoadingState size="xl" fullPage />;
   }
 
   if (!user) {
@@ -106,9 +102,7 @@ export const Dashboard: React.FC = () => {
       <div className="px-4 lg:px-8 pt-4 lg:pt-8 space-y-6">
       {/* Stats Grid */}
       {loading ? (
-        <div className="flex items-center justify-center py-16">
-          <Spinner size="lg" />
-        </div>
+        <LoadingState size="lg" className="py-16" />
       ) : (
         <AnimatedList className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" staggerDelay={0.08}>
           <AnimatedItem>

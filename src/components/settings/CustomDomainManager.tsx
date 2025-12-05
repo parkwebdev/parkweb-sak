@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { useCustomDomains } from '@/hooks/useCustomDomains';
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { LoadingState } from '@/components/ui/loading-state';
 import { Spinner } from '@/components/ui/spinner';
 
 export const CustomDomainManager = () => {
@@ -144,9 +145,7 @@ export const CustomDomainManager = () => {
       </CardHeader>
       <CardContent className="space-y-4">
         {loading ? (
-          <div className="flex items-center justify-center py-8">
-            <Spinner size="lg" />
-          </div>
+          <LoadingState size="lg" className="py-8" />
         ) : domains.length === 0 ? (
           <Alert>
             <Globe01 className="h-4 w-4" />

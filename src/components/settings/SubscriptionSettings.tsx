@@ -12,6 +12,7 @@ import { CheckCircle, Download01, LinkExternal01, RefreshCw01, Receipt } from '@
 import { EmptyState } from '@/components/ui/empty-state';
 import { toast } from '@/lib/toast';
 import { AnimatedTableRow } from '@/components/ui/animated-table-row';
+import { LoadingState } from '@/components/ui/loading-state';
 import { Spinner } from '@/components/ui/spinner';
 
 type Subscription = Tables<'subscriptions'> & {
@@ -85,11 +86,7 @@ export const SubscriptionSettings = () => {
   }, [user]);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-16">
-        <Spinner size="lg" />
-      </div>
-    );
+    return <LoadingState size="lg" className="py-16" />;
   }
 
   const plan = subscription?.plans;
@@ -240,9 +237,7 @@ export const SubscriptionSettings = () => {
         </CardHeader>
         <CardContent>
           {invoicesLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <Spinner size="md" />
-            </div>
+            <LoadingState size="md" />
           ) : invoices.length === 0 ? (
             <EmptyState
               icon={<Receipt className="h-5 w-5 text-muted-foreground/50" />}
