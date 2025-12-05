@@ -15,7 +15,7 @@ interface AppLoadingScreenProps {
 // Animated logo with liquid fill effect
 const AnimatedLogo = () => {
   return (
-    <div className="relative w-20 h-20">
+    <div className="relative w-14 h-14">
       {/* Base layer - muted version */}
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -94,8 +94,8 @@ export function AppLoadingScreen({
       {shouldShow && (
         <motion.div
           initial={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.5, ease: "easeInOut" }}
+          exit={{ opacity: 1 }}
+          transition={{ duration: 0 }}
           className={cn(
             "fixed inset-0 z-[200] flex flex-col items-center justify-center bg-background overflow-hidden",
             className
@@ -113,7 +113,7 @@ export function AppLoadingScreen({
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5, ease: "easeOut" }}
-            className="relative z-10 mt-4"
+            className="relative z-10"
           >
             <AnimatedLogo />
           </motion.div>
