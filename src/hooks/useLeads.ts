@@ -102,6 +102,30 @@ export const useLeads = () => {
     }
   };
 
+  const deleteLeads = async (ids: string[]) => {
+    if (ids.length === 0) return;
+    
+    try {
+      const { error } = await supabase
+        .from('leads')
+        .delete()
+        .in('id', ids);
+
+      if (error) throw error;
+
+      toast.success(`${ids.length} lead${ids.length > 1 ? 's' : ''} deleted`, {
+        description: 'Selected leads have been deleted successfully',
+      });
+
+      fetchLeads();
+    } catch (error: any) {
+      toast.error('Error deleting leads', {
+        description: error.message,
+      });
+      throw error;
+    }
+  };
+
   useEffect(() => {
     fetchLeads();
 
@@ -133,6 +157,7 @@ export const useLeads = () => {
     createLead,
     updateLead,
     deleteLead,
+    deleteLeads,
     refetch: fetchLeads,
   };
 };

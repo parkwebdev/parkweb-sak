@@ -2,12 +2,13 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Download01, Grid01, List, SearchLg, Menu01 as Menu } from '@untitledui/icons';
+import { Grid01, List, SearchLg, Menu01 as Menu, Trash01, XClose } from '@untitledui/icons';
 import { useLeads } from '@/hooks/useLeads';
 import { LeadCard } from '@/components/leads/LeadCard';
 import { LeadsTable } from '@/components/leads/LeadsTable';
 import { LeadDetailsSheet } from '@/components/leads/LeadDetailsSheet';
 import { CreateLeadDialog } from '@/components/leads/CreateLeadDialog';
+import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog';
 import type { Tables } from '@/integrations/supabase/types';
 import { AnimatedList } from '@/components/ui/animated-list';
 import { AnimatedItem } from '@/components/ui/animated-item';
@@ -17,13 +18,19 @@ interface LeadsProps {
 }
 
 const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
-  const { leads, loading, createLead, updateLead, deleteLead } = useLeads();
+  const { leads, loading, createLead, updateLead, deleteLead, deleteLeads } = useLeads();
   const [selectedLead, setSelectedLead] = useState<Tables<'leads'> | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('table');
+  
+  // Bulk selection state
+  const [selectedLeadIds, setSelectedLeadIds] = useState<Set<string>>(new Set());
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [deleteConfirmValue, setDeleteConfirmValue] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const filteredLeads = leads.filter((lead) => {
     const matchesSearch = 
@@ -62,6 +69,41 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
     a.href = url;
     a.download = `leads-${new Date().toISOString()}.csv`;
     a.click();
+  };
+
+  // Selection handlers
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedLeadIds(new Set(filteredLeads.map(l => l.id)));
+    } else {
+      setSelectedLeadIds(new Set());
+    }
+  };
+
+  const handleSelectLead = (id: string, checked: boolean) => {
+    const newSelected = new Set(selectedLeadIds);
+    if (checked) {
+      newSelected.add(id);
+    } else {
+      newSelected.delete(id);
+    }
+    setSelectedLeadIds(newSelected);
+  };
+
+  const handleBulkDelete = async () => {
+    setIsDeleting(true);
+    try {
+      await deleteLeads(Array.from(selectedLeadIds));
+      setSelectedLeadIds(new Set());
+      setIsDeleteDialogOpen(false);
+      setDeleteConfirmValue('');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const clearSelection = () => {
+    setSelectedLeadIds(new Set());
   };
 
   const stats = {
@@ -173,6 +215,33 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
           </div>
         </div>
 
+        {/* Bulk Action Bar */}
+        {selectedLeadIds.size > 0 && (
+          <div className="flex items-center justify-between p-3 bg-muted rounded-lg border">
+            <span className="text-sm font-medium">
+              {selectedLeadIds.size} lead{selectedLeadIds.size > 1 ? 's' : ''} selected
+            </span>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearSelection}
+              >
+                <XClose className="h-4 w-4 mr-1" />
+                Clear
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => setIsDeleteDialogOpen(true)}
+              >
+                <Trash01 className="h-4 w-4 mr-1" />
+                Delete
+              </Button>
+            </div>
+          </div>
+        )}
+
         {/* Content */}
         {loading ? (
           <div className="text-center py-12 text-muted-foreground">Loading leads...</div>
@@ -187,8 +256,11 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
         ) : (
           <LeadsTable
             leads={filteredLeads}
+            selectedIds={selectedLeadIds}
             onView={handleViewLead}
             onStatusChange={(leadId, status) => updateLead(leadId, { status: status as any })}
+            onSelectionChange={handleSelectLead}
+            onSelectAll={handleSelectAll}
           />
         )}
 
@@ -214,6 +286,18 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
         onCreate={async (lead) => {
           await createLead(lead);
         }}
+      />
+
+      <DeleteConfirmationDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        title={`Delete ${selectedLeadIds.size} lead${selectedLeadIds.size > 1 ? 's' : ''}?`}
+        description="This action cannot be undone. All selected leads and their associated data will be permanently deleted."
+        confirmationText="delete"
+        confirmationValue={deleteConfirmValue}
+        onConfirmationValueChange={setDeleteConfirmValue}
+        onConfirm={handleBulkDelete}
+        isDeleting={isDeleting}
       />
     </main>
   );
