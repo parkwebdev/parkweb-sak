@@ -403,20 +403,32 @@ Webhook delivery logs.
 
 ---
 
-#### `api_keys`
-API key management.
+#### `agent_api_keys`
+Agent-level API key management with rate limiting.
 
 | Column | Type | Nullable | Default | Description |
 |--------|------|----------|---------|-------------|
 | `id` | uuid | No | `gen_random_uuid()` | Primary key |
-| `user_id` | uuid | No | - | Owner's user ID |
-| `name` | text | No | - | Key name |
-| `key` | text | No | - | Hashed key |
-| `key_preview` | text | No | - | Key preview (last 4 chars) |
-| `permissions` | text[] | Yes | `'{}'` | Granted permissions |
+| `agent_id` | uuid | No | - | FK to agents |
+| `name` | text | No | `'Default'` | Key name |
+| `key_hash` | text | No | - | SHA-256 hashed key |
+| `key_prefix` | text | No | - | Key prefix for identification |
+| `requests_per_minute` | integer | No | `60` | Rate limit per minute |
+| `requests_per_day` | integer | No | `10000` | Rate limit per day |
+| `current_minute_requests` | integer | No | `0` | Current minute request count |
+| `current_day_requests` | integer | No | `0` | Current day request count |
+| `minute_window_start` | timestamptz | Yes | - | Minute window start time |
+| `day_window_start` | timestamptz | Yes | - | Day window start time |
 | `last_used_at` | timestamptz | Yes | - | Last usage timestamp |
 | `created_at` | timestamptz | No | `now()` | Creation timestamp |
-| `updated_at` | timestamptz | No | `now()` | Last update timestamp |
+| `revoked_at` | timestamptz | Yes | - | Revocation timestamp |
+
+**RLS Policies:**
+- Users can create/view/update/delete API keys for agents they have access to
+
+**Validation:**
+- Keys are validated via `validate_api_key(p_key_hash, p_agent_id)` database function
+- Rate limiting is enforced at validation time with sliding windows
 
 ---
 

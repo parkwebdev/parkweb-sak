@@ -477,28 +477,46 @@ if (req.method === 'OPTIONS') {
 
 ## Utility Functions
 
-### `validate-api-key`
+### `validate_api_key` (Database Function)
 
-**Purpose:** Validates API keys for external integrations.
+**Purpose:** Validates agent-level API keys with rate limiting.
 
-**Auth:** Public
+**Note:** This is now a PostgreSQL function, not an Edge Function.
 
-**Method:** `POST`
+**Function Signature:**
+```sql
+validate_api_key(p_key_hash text, p_agent_id uuid)
+RETURNS TABLE(valid boolean, key_id uuid, rate_limited boolean, error_message text)
+```
 
-**Request Body:**
+**Usage in Edge Functions:**
 ```typescript
-{
-  apiKey: string;
+const { data, error } = await supabaseAdmin
+  .rpc('validate_api_key', {
+    p_key_hash: hashedKey,
+    p_agent_id: agentId
+  });
+
+if (!data?.[0]?.valid) {
+  return new Response(JSON.stringify({ 
+    error: data?.[0]?.error_message || 'Invalid API key' 
+  }), { status: 401 });
+}
+
+if (data?.[0]?.rate_limited) {
+  return new Response(JSON.stringify({ 
+    error: data[0].error_message 
+  }), { status: 429 });
 }
 ```
 
-**Response:**
-```typescript
-{
-  valid: boolean;
-  userId?: string;
-  permissions?: string[];
-}
+**Details:**
+- Validates key hash against stored hashes
+- Checks if key is revoked
+- Enforces per-minute rate limiting (sliding window)
+- Enforces per-day rate limiting (sliding window)
+- Updates usage counters automatically
+- Returns detailed error messages for debugging
 ```
 
 **Details:**

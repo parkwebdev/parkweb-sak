@@ -1261,6 +1261,17 @@ export type Database = {
         Args: never
         Returns: Database["public"]["Enums"]["app_role"]
       }
+      get_team_profiles: {
+        Args: { p_owner_id: string }
+        Returns: {
+          avatar_url: string
+          created_at: string
+          display_name: string
+          id: string
+          updated_at: string
+          user_id: string
+        }[]
+      }
       get_user_role: {
         Args: { target_user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]

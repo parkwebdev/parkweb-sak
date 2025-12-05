@@ -489,6 +489,68 @@ Subscribe to events:
 
 ---
 
+## Multi-Account Integration Architecture
+
+ChatPad supports multi-account integrations, enabling users to connect multiple accounts per integration type (e.g., multiple Facebook pages, Gmail accounts, Google Calendars) per agent.
+
+### Use Case Example
+
+A Mobile Home Park Operator with 20 communities can:
+- Connect 20 Facebook pages (one per community)
+- Connect 20 email accounts
+- Connect 20 calendar accounts
+- AI agent routes messages/bookings to the correct account based on context
+
+### Architecture Overview
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                      Connected Accounts                          │
+├─────────────────┬─────────────────┬─────────────────────────────┤
+│   Social        │   Email         │   Calendar                   │
+│   - Facebook    │   - Gmail       │   - Google Calendar          │
+│   - Instagram   │   - Outlook     │   - Outlook Calendar         │
+│   - X (Twitter) │   - SMTP        │   - Calendly                 │
+└────────┬────────┴────────┬────────┴──────────┬──────────────────┘
+         │                 │                   │
+         ▼                 ▼                   ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                   Routing Intelligence                           │
+│   • Location-based routing                                       │
+│   • Context-aware routing                                        │
+│   • Pre-chat location selection                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Planned Database Tables
+
+```sql
+-- Locations for multi-site businesses
+CREATE TABLE locations (
+  id uuid PRIMARY KEY,
+  user_id uuid NOT NULL,
+  name text NOT NULL,
+  address text,
+  metadata jsonb DEFAULT '{}'
+);
+
+-- Connected integration accounts
+CREATE TABLE connected_accounts (
+  id uuid PRIMARY KEY,
+  user_id uuid NOT NULL,
+  agent_id uuid,
+  location_id uuid,
+  integration_type text NOT NULL, -- 'facebook', 'gmail', etc.
+  account_identifier text NOT NULL,
+  credentials jsonb, -- Encrypted OAuth tokens
+  metadata jsonb DEFAULT '{}'
+);
+```
+
+For detailed implementation plans, see [Multi-Account Integrations](./MULTI_ACCOUNT_INTEGRATIONS.md).
+
+---
+
 ## Related Documentation
 
 - [Database Schema](./DATABASE_SCHEMA.md) - Complete table reference
@@ -496,3 +558,4 @@ Subscribe to events:
 - [Widget Architecture](./WIDGET_ARCHITECTURE.md) - Widget details
 - [Security](./SECURITY.md) - Security implementation
 - [Application Overview](./APPLICATION_OVERVIEW.md) - Development guide
+- [Multi-Account Integrations](./MULTI_ACCOUNT_INTEGRATIONS.md) - Integration architecture
