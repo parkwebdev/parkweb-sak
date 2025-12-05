@@ -3,7 +3,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { SearchLg, Menu01 as Menu } from '@untitledui/icons';
+import { SearchLg, Menu01 as Menu, Rocket01 } from '@untitledui/icons';
 import { useAgents } from '@/hooks/useAgents';
 import { CreateAgentDialog } from '@/components/agents/CreateAgentDialog';
 import { AgentCard } from '@/components/agents/AgentCard';
@@ -93,14 +93,17 @@ const Agents: React.FC<AgentsProps> = ({ onMenuClick }) => {
             Loading agents...
           </div>
         ) : filteredAgents.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-muted-foreground mb-4">
+          <div className="text-center py-12 px-8 rounded-lg border border-dashed bg-muted/30">
+            <div className="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-3">
+              <Rocket01 className="h-5 w-5 text-muted-foreground/50" />
+            </div>
+            <p className="text-sm text-muted-foreground mb-4">
               {searchQuery || statusFilter !== 'all' 
                 ? 'No agents match your filters' 
                 : 'No agents created yet'}
             </p>
             {!searchQuery && statusFilter === 'all' && (
-              <Button onClick={() => setCreateDialogOpen(true)}>
+              <Button onClick={() => setCreateDialogOpen(true)} size="sm">
                 Create Your First Agent
               </Button>
             )}

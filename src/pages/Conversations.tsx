@@ -318,8 +318,10 @@ const Conversations: React.FC = () => {
                 Loading...
               </div>
             ) : filteredConversations.length === 0 ? (
-              <div className="p-8 text-center">
-                <MessageChatSquare className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+              <div className="text-center py-12 px-8 m-4 rounded-lg border border-dashed bg-muted/30">
+                <div className="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-3">
+                  <MessageChatSquare className="h-5 w-5 text-muted-foreground/50" />
+                </div>
                 <p className="text-sm text-muted-foreground">No conversations yet</p>
               </div>
             ) : (
@@ -426,8 +428,10 @@ const Conversations: React.FC = () => {
                       Loading messages...
                     </div>
                   ) : messages.length === 0 ? (
-                    <div className="text-center py-12">
-                      <MessageChatSquare className="h-16 w-16 mx-auto text-muted-foreground/50 mb-3" />
+                    <div className="text-center py-12 px-8 rounded-lg border border-dashed bg-muted/30">
+                      <div className="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-3">
+                        <MessageChatSquare className="h-5 w-5 text-muted-foreground/50" />
+                      </div>
                       <p className="text-sm text-muted-foreground">No messages yet</p>
                     </div>
                   ) : (
