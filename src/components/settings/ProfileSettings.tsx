@@ -13,6 +13,7 @@ import { SavedIndicator } from './SavedIndicator';
 import { AnimatedList } from '@/components/ui/animated-list';
 import { AnimatedItem } from '@/components/ui/animated-item';
 import { uploadAvatar } from '@/lib/avatar-upload';
+import { Spinner } from '@/components/ui/spinner';
 
 export const ProfileSettings: React.FC = () => {
   const [profile, setProfile] = useState({
@@ -272,19 +273,8 @@ export const ProfileSettings: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="space-y-4">
-        <div className="flex items-center space-x-4">
-          <div className="h-16 w-16 rounded-full bg-muted animate-pulse" />
-          <div className="space-y-2">
-            <div className="h-4 w-32 bg-muted rounded animate-pulse" />
-            <div className="h-3 w-48 bg-muted rounded animate-pulse" />
-          </div>
-        </div>
-        <div className="space-y-3">
-          <div className="h-10 bg-muted rounded animate-pulse" />
-          <div className="h-10 bg-muted rounded animate-pulse" />
-          <div className="h-10 bg-muted rounded animate-pulse" />
-        </div>
+      <div className="flex items-center justify-center py-16">
+        <Spinner size="lg" />
       </div>
     );
   }
@@ -316,7 +306,7 @@ export const ProfileSettings: React.FC = () => {
               </Avatar>
               {avatarUploading ? (
                 <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center">
-                  <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <Spinner size="sm" className="text-white" />
                 </div>
               ) : (
                 <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
