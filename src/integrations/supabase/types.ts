@@ -79,27 +79,36 @@ export type Database = {
           created_at: string
           description: string
           enabled: boolean | null
+          endpoint_url: string | null
+          headers: Json | null
           id: string
           name: string
           parameters: Json
+          timeout_ms: number | null
         }
         Insert: {
           agent_id: string
           created_at?: string
           description: string
           enabled?: boolean | null
+          endpoint_url?: string | null
+          headers?: Json | null
           id?: string
           name: string
           parameters: Json
+          timeout_ms?: number | null
         }
         Update: {
           agent_id?: string
           created_at?: string
           description?: string
           enabled?: boolean | null
+          endpoint_url?: string | null
+          headers?: Json | null
           id?: string
           name?: string
           parameters?: Json
+          timeout_ms?: number | null
         }
         Relationships: [
           {

@@ -20,6 +20,7 @@ import { AnimatedItem } from '@/components/ui/animated-item';
 import { SavedIndicator } from '@/components/settings/SavedIndicator';
 import { AgentApiKeyManager } from '@/components/agents/AgentApiKeyManager';
 import { ApiUseCasesModal } from '@/components/agents/ApiUseCasesModal';
+import { ToolUseCasesModal } from '@/components/agents/ToolUseCasesModal';
 
 type AgentTool = Tables<'agent_tools'>;
 type ToolsTab = 'api-access' | 'custom-tools' | 'webhooks';
@@ -36,10 +37,14 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
   const [showAddForm, setShowAddForm] = useState(false);
   const [activeTab, setActiveTab] = useState<ToolsTab>('api-access');
   const [showUseCasesModal, setShowUseCasesModal] = useState(false);
+  const [showToolUseCasesModal, setShowToolUseCasesModal] = useState(false);
   const [newTool, setNewTool] = useState({
     name: '',
     description: '',
-    parameters: '{}',
+    endpoint_url: '',
+    parameters: '{\n  "type": "object",\n  "properties": {},\n  "required": []\n}',
+    headers: '{}',
+    timeout_ms: 10000,
   });
 
   // Webhook state
@@ -94,14 +99,24 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
 
   const addTool = async () => {
     try {
+      if (!newTool.endpoint_url) {
+        toast.error('Endpoint URL is required');
+        return;
+      }
+
       const parameters = JSON.parse(newTool.parameters);
+      const headers = JSON.parse(newTool.headers);
+      
       const { data, error } = await supabase
         .from('agent_tools')
         .insert({
           agent_id: agentId,
           name: newTool.name,
           description: newTool.description,
+          endpoint_url: newTool.endpoint_url,
           parameters,
+          headers,
+          timeout_ms: newTool.timeout_ms,
         })
         .select()
         .single();
@@ -109,7 +124,14 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
       if (error) throw error;
       
       setTools([data, ...tools]);
-      setNewTool({ name: '', description: '', parameters: '{}' });
+      setNewTool({ 
+        name: '', 
+        description: '', 
+        endpoint_url: '',
+        parameters: '{\n  "type": "object",\n  "properties": {},\n  "required": []\n}',
+        headers: '{}',
+        timeout_ms: 10000,
+      });
       setShowAddForm(false);
       toast.success('Tool added successfully');
     } catch (error) {
@@ -226,48 +248,109 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
 
       {activeTab === 'custom-tools' && (
         <div className="space-y-4">
-          <div className="flex items-center justify-end">
+          <div className="flex items-center justify-between">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => setShowToolUseCasesModal(true)}
+              className="text-xs"
+            >
+              <Lightbulb01 className="h-3.5 w-3.5 mr-1.5" />
+              View Use Cases
+            </Button>
             <Button onClick={() => setShowAddForm(!showAddForm)} size="sm">
               {showAddForm ? 'Cancel' : 'Add Tool'}
             </Button>
           </div>
 
           {showAddForm && (
-            <div className="space-y-3 p-5 rounded-lg bg-muted/30 border">
-              <div className="space-y-2">
-                <Label htmlFor="tool-name" className="text-sm">Tool Name</Label>
-                <Input
-                  id="tool-name"
-                  value={newTool.name}
-                  onChange={(e) => setNewTool({ ...newTool, name: e.target.value })}
-                  placeholder="weather_lookup"
-                />
+            <div className="space-y-4 p-5 rounded-lg bg-muted/30 border">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="tool-name" className="text-sm">Tool Name *</Label>
+                  <Input
+                    id="tool-name"
+                    value={newTool.name}
+                    onChange={(e) => setNewTool({ ...newTool, name: e.target.value })}
+                    placeholder="weather_lookup"
+                  />
+                  <p className="text-[10px] text-muted-foreground">Use snake_case, e.g. check_inventory</p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="tool-endpoint" className="text-sm">Endpoint URL *</Label>
+                  <Input
+                    id="tool-endpoint"
+                    value={newTool.endpoint_url}
+                    onChange={(e) => setNewTool({ ...newTool, endpoint_url: e.target.value })}
+                    placeholder="https://api.example.com/weather"
+                  />
+                  <p className="text-[10px] text-muted-foreground">Receives POST with tool arguments as JSON body</p>
+                </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="tool-description" className="text-sm">Description</Label>
+                <Label htmlFor="tool-description" className="text-sm">Description *</Label>
                 <Textarea
                   id="tool-description"
                   value={newTool.description}
                   onChange={(e) => setNewTool({ ...newTool, description: e.target.value })}
-                  placeholder="Fetches current weather data for a location"
+                  placeholder="Fetches current weather data for a given location. Returns temperature, conditions, and humidity."
                   rows={2}
                 />
+                <p className="text-[10px] text-muted-foreground">Help the AI understand when to use this tool</p>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="tool-parameters" className="text-sm">Parameters (JSON)</Label>
+                <Label htmlFor="tool-parameters" className="text-sm">Parameters (JSON Schema)</Label>
                 <Textarea
                   id="tool-parameters"
                   value={newTool.parameters}
                   onChange={(e) => setNewTool({ ...newTool, parameters: e.target.value })}
-                  placeholder='{"location": "string", "units": "celsius|fahrenheit"}'
-                  rows={4}
-                  className="font-mono text-sm"
+                  placeholder='{"type": "object", "properties": {...}}'
+                  rows={5}
+                  className="font-mono text-xs"
                 />
+                <p className="text-[10px] text-muted-foreground">Define the arguments using JSON Schema format</p>
               </div>
 
-              <Button onClick={addTool} className="w-full" size="sm">
+              <Collapsible>
+                <CollapsibleTrigger asChild>
+                  <Button variant="ghost" size="sm" className="text-xs px-0 hover:bg-transparent">
+                    <ChevronDown className="h-3 w-3 mr-1" />
+                    Advanced Settings
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="space-y-4 pt-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="tool-headers" className="text-sm">Headers (JSON)</Label>
+                    <Textarea
+                      id="tool-headers"
+                      value={newTool.headers}
+                      onChange={(e) => setNewTool({ ...newTool, headers: e.target.value })}
+                      placeholder='{"Authorization": "Bearer your_api_key"}'
+                      rows={2}
+                      className="font-mono text-xs"
+                    />
+                    <p className="text-[10px] text-muted-foreground">Optional custom headers for authentication</p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="tool-timeout" className="text-sm">Timeout (ms)</Label>
+                    <Input
+                      id="tool-timeout"
+                      type="number"
+                      value={newTool.timeout_ms}
+                      onChange={(e) => setNewTool({ ...newTool, timeout_ms: parseInt(e.target.value) || 10000 })}
+                      min={1000}
+                      max={30000}
+                    />
+                    <p className="text-[10px] text-muted-foreground">Request timeout (1-30 seconds)</p>
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+
+              <Button onClick={addTool} className="w-full" size="sm" disabled={!newTool.name || !newTool.endpoint_url || !newTool.description}>
                 Add Tool
               </Button>
             </div>
@@ -275,8 +358,11 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
 
           {tools.length === 0 ? (
             <div className="text-center py-12 rounded-lg border border-dashed bg-muted/30">
-              <p className="text-sm text-muted-foreground">
-                No tools configured yet. Add your first tool to get started.
+              <p className="text-sm text-muted-foreground mb-2">
+                No tools configured yet.
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Tools let your agent call external APIs when it needs real-time data or actions.
               </p>
             </div>
           ) : (
@@ -287,20 +373,44 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <h4 className="text-sm font-mono font-semibold">{tool.name}</h4>
+                        {!tool.endpoint_url && (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-destructive/10 text-destructive">
+                            No endpoint
+                          </span>
+                        )}
                       </div>
-                      <p className="text-xs text-muted-foreground mb-3">{tool.description}</p>
+                      <p className="text-xs text-muted-foreground mb-2">{tool.description}</p>
+                      {tool.endpoint_url && (
+                        <p className="text-xs font-mono text-muted-foreground/70 truncate mb-2">
+                          {tool.endpoint_url}
+                        </p>
+                      )}
                       
                       <Collapsible>
                         <CollapsibleTrigger asChild>
                           <Button variant="ghost" size="sm" className="text-xs px-2 -ml-2">
                             <ChevronDown className="h-3 w-3 mr-1" />
-                            View Parameters
+                            View Details
                           </Button>
                         </CollapsibleTrigger>
-                        <CollapsibleContent className="mt-2">
-                          <pre className="text-xs bg-muted p-3 rounded overflow-auto border">
-                            {JSON.stringify(tool.parameters, null, 2)}
-                          </pre>
+                        <CollapsibleContent className="mt-2 space-y-2">
+                          <div>
+                            <p className="text-[10px] text-muted-foreground mb-1">Parameters</p>
+                            <pre className="text-xs bg-muted p-3 rounded overflow-auto border">
+                              {JSON.stringify(tool.parameters, null, 2)}
+                            </pre>
+                          </div>
+                          {tool.headers && Object.keys(tool.headers as object).length > 0 && (
+                            <div>
+                              <p className="text-[10px] text-muted-foreground mb-1">Headers</p>
+                              <pre className="text-xs bg-muted p-3 rounded overflow-auto border">
+                                {JSON.stringify(tool.headers, null, 2)}
+                              </pre>
+                            </div>
+                          )}
+                          <p className="text-[10px] text-muted-foreground">
+                            Timeout: {tool.timeout_ms || 10000}ms
+                          </p>
                         </CollapsibleContent>
                       </Collapsible>
                     </div>
@@ -324,6 +434,11 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
               ))}
             </div>
           )}
+
+          <ToolUseCasesModal
+            open={showToolUseCasesModal}
+            onOpenChange={setShowToolUseCasesModal}
+          />
         </div>
       )}
 
