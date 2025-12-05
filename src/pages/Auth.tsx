@@ -83,9 +83,6 @@ const Auth = () => {
       }
 
       logAuthEvent('login', true);
-      toast.success("Welcome back!", {
-        description: "You have been signed in successfully.",
-      });
       navigate('/');
     } catch (error) {
       toast.error("Error", {
