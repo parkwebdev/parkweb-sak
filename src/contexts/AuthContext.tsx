@@ -6,6 +6,8 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  justSignedIn: boolean;
+  clearJustSignedIn: () => void;
   signOut: () => Promise<void>;
 }
 
@@ -27,6 +29,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [justSignedIn, setJustSignedIn] = useState(false);
+  const [initialCheckComplete, setInitialCheckComplete] = useState(false);
 
   useEffect(() => {
     // Set up auth state listener
@@ -35,6 +39,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+
+        // Only set justSignedIn for fresh logins (after initial check)
+        if (session?.user && event === 'SIGNED_IN' && initialCheckComplete) {
+          setJustSignedIn(true);
+        }
 
         // Handle profile creation/updates after successful authentication
         if (session?.user && event === 'SIGNED_IN') {
@@ -50,10 +59,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+      setInitialCheckComplete(true);
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [initialCheckComplete]);
 
   const createOrUpdateProfile = async (user: User) => {
     try {
@@ -115,10 +125,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const clearJustSignedIn = () => setJustSignedIn(false);
+
   const value = {
     user,
     session,
     loading,
+    justSignedIn,
+    clearJustSignedIn,
     signOut,
   };
 

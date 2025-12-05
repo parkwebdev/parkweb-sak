@@ -8,11 +8,22 @@ interface ProtectedRouteProps {
 }
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { user, loading } = useAuth();
+  const { user, loading, justSignedIn, clearJustSignedIn } = useAuth();
   const location = useLocation();
 
+  // Show animated loading screen only for fresh sign-ins
+  if (justSignedIn) {
+    return (
+      <AppLoadingScreen 
+        isLoading={true} 
+        onLoadingComplete={clearJustSignedIn}
+      />
+    );
+  }
+
+  // Normal loading state (session check) - show nothing
   if (loading) {
-    return <AppLoadingScreen isLoading={loading} />;
+    return null;
   }
 
   if (!user) {
