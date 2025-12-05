@@ -8,7 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import type { Tables } from '@/integrations/supabase/types';
 import { formatDate } from '@/lib/formatting';
-import { CheckCircle, Download01, LinkExternal01, RefreshCw01 } from '@untitledui/icons';
+import { CheckCircle, Download01, LinkExternal01, RefreshCw01, Receipt } from '@untitledui/icons';
 import { toast } from '@/lib/toast';
 import { AnimatedTableRow } from '@/components/ui/animated-table-row';
 import { Spinner } from '@/components/ui/spinner';
@@ -243,8 +243,11 @@ export const SubscriptionSettings = () => {
               <Spinner size="md" />
             </div>
           ) : invoices.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              No billing history available
+            <div className="text-center py-12 px-8 rounded-lg border border-dashed bg-muted/30">
+              <div className="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-3">
+                <Receipt className="h-5 w-5 text-muted-foreground/50" />
+              </div>
+              <p className="text-sm text-muted-foreground">No billing history available</p>
             </div>
           ) : (
             <div className="rounded-md border">

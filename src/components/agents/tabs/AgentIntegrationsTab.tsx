@@ -309,8 +309,10 @@ export const AgentIntegrationsTab = ({ agentId }: AgentIntegrationsTabProps) => 
         </AnimatedList>
 
         {getIntegrations().length === 0 && (
-          <div className="text-center py-12 rounded-lg border border-dashed bg-muted/30">
-            <Link03 className="h-10 w-10 mx-auto mb-3 text-muted-foreground/50" />
+          <div className="text-center py-12 px-8 rounded-lg border border-dashed bg-muted/30">
+            <div className="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-3">
+              <Link03 className="h-5 w-5 text-muted-foreground/50" />
+            </div>
             <p className="text-sm text-muted-foreground">
               No integrations available for this category yet.
             </p>

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+
 import { Database01 } from '@untitledui/icons';
 import { useKnowledgeSources } from '@/hooks/useKnowledgeSources';
 import { KnowledgeSourceCard } from '@/components/agents/KnowledgeSourceCard';
@@ -54,20 +54,20 @@ export const AgentKnowledgeTab = ({ agentId, userId }: AgentKnowledgeTabProps) =
           </div>
 
           {sources.length === 0 ? (
-            <Card>
-              <CardContent className="py-12 text-center">
-                <Database01 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <p className="text-muted-foreground mb-4">
-                  No knowledge sources configured yet
-                </p>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Add documents, URLs, or custom content to enhance your agent's knowledge
-                </p>
-                <Button onClick={() => setAddDialogOpen(true)}>
-                  Add Your First Source
-                </Button>
-              </CardContent>
-            </Card>
+            <div className="text-center py-12 px-8 rounded-lg border border-dashed bg-muted/30">
+              <div className="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-3">
+                <Database01 className="h-5 w-5 text-muted-foreground/50" />
+              </div>
+              <p className="text-sm text-muted-foreground mb-2">
+                No knowledge sources configured yet
+              </p>
+              <p className="text-xs text-muted-foreground mb-4">
+                Add documents, URLs, or custom content to enhance your agent's knowledge
+              </p>
+              <Button onClick={() => setAddDialogOpen(true)} size="sm">
+                Add Your First Source
+              </Button>
+            </div>
           ) : (
             <div className="grid gap-3">
               {sources.map((source) => (

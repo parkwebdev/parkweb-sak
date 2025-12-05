@@ -54,9 +54,11 @@ export const WebhookLogsDialog = ({ open, onOpenChange, webhookId, agentId }: We
 
         <ScrollArea className="h-[500px] pr-4">
           {logs.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              <Clock className="h-12 w-12 mx-auto mb-4" />
-              <p>No webhook deliveries yet</p>
+            <div className="text-center py-12 px-8 rounded-lg border border-dashed bg-muted/30">
+              <div className="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-3">
+                <Clock className="h-5 w-5 text-muted-foreground/50" />
+              </div>
+              <p className="text-sm text-muted-foreground">No webhook deliveries yet</p>
             </div>
           ) : (
             <div className="space-y-4">

@@ -601,17 +601,17 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
           />
 
           {articles.length === 0 && categories.length === 0 ? (
-            <Card>
-              <CardContent className="py-12 text-center">
-                <BookOpen01 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <p className="text-muted-foreground mb-4">
-                  No help articles yet
-                </p>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Create help articles to display in your chat widget's help tab
-                </p>
-              </CardContent>
-            </Card>
+            <div className="text-center py-12 px-8 rounded-lg border border-dashed bg-muted/30">
+              <div className="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-3">
+                <BookOpen01 className="h-5 w-5 text-muted-foreground/50" />
+              </div>
+              <p className="text-sm text-muted-foreground mb-2">
+                No help articles yet
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Create help articles to display in your chat widget's help tab
+              </p>
+            </div>
           ) : (
             <DndContext
               sensors={sensors}

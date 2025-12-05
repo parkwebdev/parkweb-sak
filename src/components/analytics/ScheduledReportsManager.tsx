@@ -90,10 +90,12 @@ export const ScheduledReportsManager = () => {
               Loading scheduled reports...
             </div>
           ) : reports.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <Clock className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p className="text-lg font-medium mb-2">No scheduled reports yet</p>
-              <p className="text-sm">Create your first scheduled report to automate analytics delivery</p>
+            <div className="text-center py-12 px-8 rounded-lg border border-dashed bg-muted/30">
+              <div className="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-3">
+                <Clock className="h-5 w-5 text-muted-foreground/50" />
+              </div>
+              <p className="text-sm text-muted-foreground mb-1">No scheduled reports yet</p>
+              <p className="text-xs text-muted-foreground">Create your first scheduled report to automate analytics delivery</p>
             </div>
           ) : (
             <Table>

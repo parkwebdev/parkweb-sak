@@ -106,8 +106,10 @@ export const AgentApiKeyManager = ({ agentId }: AgentApiKeyManagerProps) => {
       </div>
 
       {apiKeys.length === 0 ? (
-        <div className="text-center py-8 rounded-lg border border-dashed bg-muted/30">
-          <Key01 className="h-8 w-8 mx-auto mb-2 text-muted-foreground/50" />
+        <div className="text-center py-12 px-8 rounded-lg border border-dashed bg-muted/30">
+          <div className="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-3">
+            <Key01 className="h-5 w-5 text-muted-foreground/50" />
+          </div>
           <p className="text-sm text-muted-foreground">
             No API keys yet. Create one to enable programmatic access.
           </p>
