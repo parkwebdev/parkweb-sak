@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Separator } from '@/components/ui/separator';
+import { SectionHeader } from '@/components/ui/section-header';
 import {
   Select,
   SelectContent,
@@ -256,9 +257,7 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
         <div className="p-4 space-y-6">
             {/* Contact Info */}
             <div>
-              <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
-                Contact Info
-              </h4>
+              <SectionHeader>Contact Info</SectionHeader>
               <div className="space-y-2.5">
                 {metadata.lead_name && (
                   <div className="flex items-center gap-2.5 text-sm">
@@ -334,9 +333,7 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
 
             {/* Session Info */}
             <div>
-              <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
-                Session Info
-              </h4>
+              <SectionHeader>Session Info</SectionHeader>
               <div className="space-y-2.5">
                 {/* Channel */}
                 <Tooltip>
@@ -428,9 +425,7 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
 
             {/* Priority */}
             <div>
-              <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
-                Priority
-              </h4>
+              <SectionHeader>Priority</SectionHeader>
               <Select
                 value={metadata.priority || 'not_set'}
                 onValueChange={handlePriorityChange}
@@ -478,9 +473,7 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
 
             {/* Tags */}
             <div>
-              <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
-                Tags
-              </h4>
+              <SectionHeader>Tags</SectionHeader>
               
               {/* Existing Tags */}
               <div className="flex flex-wrap gap-1.5 mb-3">
