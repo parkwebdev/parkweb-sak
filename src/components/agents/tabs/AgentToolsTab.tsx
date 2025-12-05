@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Plus, Trash01, ChevronDown, Link03, Eye, FlipBackward, Lightbulb01, Edit03 } from '@untitledui/icons';
+import { Trash01, ChevronDown, Link03, Eye, FlipBackward, Lightbulb01, Edit03 } from '@untitledui/icons';
 import { CreateToolDialog } from '@/components/agents/CreateToolDialog';
 import { EditToolDialog } from '@/components/agents/EditToolDialog';
 import { TestToolResultDialog } from '@/components/agents/TestToolResultDialog';
@@ -321,28 +321,32 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
           <div className="p-5 rounded-lg bg-muted/30 border border-dashed space-y-3">
             <div className="flex items-center justify-between">
               <Label className="text-sm font-medium">Custom Tools</Label>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => setShowToolUseCasesModal(true)}
-                className="text-xs"
-              >
-                <Lightbulb01 className="h-3.5 w-3.5 mr-1.5" />
-                View Use Cases
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setShowToolUseCasesModal(true)}
+                  className="text-xs"
+                >
+                  <Lightbulb01 className="h-3.5 w-3.5 mr-1.5" />
+                  View Use Cases
+                </Button>
+                <Button onClick={() => setShowCreateToolDialog(true)} size="sm">
+                  Add Tool
+                </Button>
+              </div>
             </div>
             <p className="text-xs text-muted-foreground">
               Tools let your agent call external APIs when it needs real-time data or to perform actions.
             </p>
-            <Button onClick={() => setShowCreateToolDialog(true)} size="sm">
-              <Plus className="h-4 w-4 mr-1.5" />
-              Add Tool
-            </Button>
           </div>
 
           {/* Tools List */}
           {tools.length === 0 ? (
-            <div className="text-center py-8 rounded-lg border border-dashed bg-muted/30">
+            <div className="text-center py-8 px-8 rounded-lg border border-dashed bg-muted/30">
+              <div className="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-3">
+                <Link03 className="h-5 w-5 text-muted-foreground/50" />
+              </div>
               <p className="text-sm text-muted-foreground">
                 No tools configured yet.
               </p>
@@ -469,13 +473,14 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
           {webhooksLoading ? (
             <div className="text-muted-foreground">Loading webhooks...</div>
           ) : webhooks.length === 0 ? (
-            <div className="text-center py-12 rounded-lg border border-dashed bg-muted/30">
-              <Link03 className="h-10 w-10 mx-auto mb-3 text-muted-foreground/50" />
+            <div className="text-center py-12 px-8 rounded-lg border border-dashed bg-muted/30">
+              <div className="w-12 h-12 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-3">
+                <Link03 className="h-5 w-5 text-muted-foreground/50" />
+              </div>
               <p className="text-sm text-muted-foreground mb-4">
                 No webhooks configured yet. Create your first webhook to send events to external APIs.
               </p>
               <Button onClick={() => setShowCreateWebhook(true)} size="sm">
-                <Plus className="h-4 w-4 mr-2" />
                 Create Webhook
               </Button>
             </div>
@@ -483,7 +488,6 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
             <>
               <div className="flex justify-end">
                 <Button onClick={() => setShowCreateWebhook(true)} size="sm">
-                  <Plus className="h-4 w-4 mr-2" />
                   Create Webhook
                 </Button>
               </div>
