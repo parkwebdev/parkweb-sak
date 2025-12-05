@@ -2,13 +2,14 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Grid01, List, SearchLg, Menu01 as Menu, Trash01, XClose } from '@untitledui/icons';
+import { Grid01, List, SearchLg, Trash01, XClose } from '@untitledui/icons';
 import { useLeads } from '@/hooks/useLeads';
 import { LeadCard } from '@/components/leads/LeadCard';
 import { LeadsTable } from '@/components/leads/LeadsTable';
 import { LeadDetailsSheet } from '@/components/leads/LeadDetailsSheet';
 import { CreateLeadDialog } from '@/components/leads/CreateLeadDialog';
 import { DeleteLeadDialog } from '@/components/leads/DeleteLeadDialog';
+import { PageHeader } from '@/components/ui/page-header';
 import type { Tables } from '@/integrations/supabase/types';
 import { AnimatedList } from '@/components/ui/animated-list';
 import { AnimatedItem } from '@/components/ui/animated-item';
@@ -136,36 +137,18 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
 
   return (
     <main className="flex-1 bg-muted/30 h-screen overflow-auto">
-      <header className="w-full font-medium pt-4 lg:pt-8">
-        <div className="items-stretch flex w-full flex-col gap-6 px-4 lg:px-8 py-0">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-4 w-full sm:w-auto">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="lg:hidden flex items-center gap-2"
-                onClick={onMenuClick}
-              >
-                <Menu size={16} />
-              </Button>
-              <div className="flex-1 sm:flex-none">
-                <h1 className="text-2xl font-bold text-foreground">Leads</h1>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Track and manage leads captured from conversations
-                </p>
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={handleExport} disabled={filteredLeads.length === 0}>
-                Export
-              </Button>
-              <Button onClick={() => setIsCreateOpen(true)}>
-                Add Lead
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
+      <PageHeader
+        title="Leads"
+        description="Track and manage leads captured from conversations"
+        onMenuClick={onMenuClick}
+      >
+        <Button variant="outline" onClick={handleExport} disabled={filteredLeads.length === 0}>
+          Export
+        </Button>
+        <Button onClick={() => setIsCreateOpen(true)}>
+          Add Lead
+        </Button>
+      </PageHeader>
 
       <div className="px-4 lg:px-8 mt-6 space-y-6">
         {/* Stats */}

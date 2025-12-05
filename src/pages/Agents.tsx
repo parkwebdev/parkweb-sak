@@ -3,8 +3,9 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { SearchLg, Menu01 as Menu, Rocket01 } from '@untitledui/icons';
+import { SearchLg, Rocket01 } from '@untitledui/icons';
 import { EmptyState } from '@/components/ui/empty-state';
+import { PageHeader } from '@/components/ui/page-header';
 import { useAgents } from '@/hooks/useAgents';
 import { CreateAgentDialog } from '@/components/agents/CreateAgentDialog';
 import { AgentCard } from '@/components/agents/AgentCard';
@@ -38,31 +39,15 @@ const Agents: React.FC<AgentsProps> = ({ onMenuClick }) => {
 
   return (
     <main className="flex-1 bg-muted/30 h-screen overflow-auto">
-      <header className="w-full font-medium pt-4 lg:pt-8">
-        <div className="items-stretch flex w-full flex-col gap-6 px-4 lg:px-8 py-0">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-4 w-full sm:w-auto">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="lg:hidden flex items-center gap-2"
-                onClick={onMenuClick}
-              >
-                <Menu size={16} />
-              </Button>
-              <div className="flex-1 sm:flex-none">
-                <h1 className="text-2xl font-bold text-foreground">Agents</h1>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Manage AI agents
-                </p>
-              </div>
-            </div>
-            <Button onClick={() => setCreateDialogOpen(true)}>
-              Create Agent
-            </Button>
-          </div>
-        </div>
-      </header>
+      <PageHeader
+        title="Agents"
+        description="Manage AI agents"
+        onMenuClick={onMenuClick}
+      >
+        <Button onClick={() => setCreateDialogOpen(true)}>
+          Create Agent
+        </Button>
+      </PageHeader>
 
       <div className="px-4 lg:px-8 mt-6 space-y-6">
 
