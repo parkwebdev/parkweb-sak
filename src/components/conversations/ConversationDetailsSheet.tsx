@@ -10,7 +10,6 @@ import { TakeoverDialog } from './TakeoverDialog';
 import { supabase } from '@/integrations/supabase/client';
 import type { Tables } from '@/integrations/supabase/types';
 import { LoadingState } from '@/components/ui/loading-state';
-import { Spinner } from '@/components/ui/spinner';
 
 type Conversation = Tables<'conversations'> & {
   agents?: { name: string };

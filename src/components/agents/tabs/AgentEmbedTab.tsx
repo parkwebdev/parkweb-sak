@@ -5,6 +5,7 @@ import { useEmbeddedChatConfig } from '@/hooks/useEmbeddedChatConfig';
 import { EmbedSettingsPanel } from '../embed/EmbedSettingsPanel';
 import { EmbedPreviewPanel } from '../embed/EmbedPreviewPanel';
 import { SavedIndicator } from '@/components/settings/SavedIndicator';
+import { LoadingState } from '@/components/ui/loading-state';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Agent = Tables<'agents'>;
@@ -60,11 +61,7 @@ export const AgentEmbedTab = ({ agent, onUpdate, onFormChange }: AgentEmbedTabPr
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <p className="text-sm text-muted-foreground">Loading embed settings...</p>
-      </div>
-    );
+    return <LoadingState text="Loading embed settings..." />;
   }
 
   return (

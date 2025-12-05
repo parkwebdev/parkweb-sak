@@ -10,6 +10,7 @@ import { AgentEmbedTab } from '@/components/agents/tabs/AgentEmbedTab';
 import { AgentContentTab } from '@/components/agents/tabs/AgentContentTab';
 import { AgentConfigLayout, type AgentConfigTab } from '@/components/agents/AgentConfigLayout';
 import { TabContentTransition } from '@/components/ui/tab-content-transition';
+import { LoadingState } from '@/components/ui/loading-state';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Agent = Tables<'agents'>;
@@ -72,9 +73,7 @@ const AgentConfig: React.FC<AgentConfigProps> = ({ onMenuClick }) => {
   if (!agent) {
     return (
       <main className="flex-1 bg-muted/30">
-        <div className="flex items-center justify-center h-64">
-          <p className="text-muted-foreground">Loading agent...</p>
-        </div>
+        <LoadingState text="Loading agent..." />
       </main>
     );
   }
