@@ -4,21 +4,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { CopyButton } from '@/components/ui/copy-button';
 import { EmptyState } from '@/components/ui/empty-state';
+import { SimpleDeleteDialog } from '@/components/ui/simple-delete-dialog';
 import { Trash01, Key01, AlertCircle, Edit03 } from '@untitledui/icons';
 import { useAgentApiKeys } from '@/hooks/useAgentApiKeys';
 import { AnimatedList } from '@/components/ui/animated-list';
 import { AnimatedItem } from '@/components/ui/animated-item';
 import { formatDistanceToNow } from 'date-fns';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import {
   Dialog,
   DialogContent,
@@ -276,22 +267,14 @@ export const AgentApiKeyManager = ({ agentId }: AgentApiKeyManagerProps) => {
       </Dialog>
 
       {/* Revoke Confirmation */}
-      <AlertDialog open={!!keyToRevoke} onOpenChange={() => setKeyToRevoke(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Revoke API Key?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. Any applications using this key will immediately lose access.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleRevokeKey} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Revoke Key
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <SimpleDeleteDialog
+        open={!!keyToRevoke}
+        onOpenChange={() => setKeyToRevoke(null)}
+        title="Revoke API Key?"
+        description="This action cannot be undone. Any applications using this key will immediately lose access."
+        onConfirm={handleRevokeKey}
+        actionLabel="Revoke Key"
+      />
     </div>
   );
 };

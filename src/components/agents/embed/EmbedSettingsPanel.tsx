@@ -8,6 +8,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Trash01 } from '@untitledui/icons';
 import { CopyButton } from '@/components/ui/copy-button';
+import { ToggleSettingRow } from '@/components/ui/toggle-setting-row';
 import type { EmbeddedChatConfig, CustomField } from '@/hooks/useEmbeddedChatConfig';
 import { toast } from '@/lib/toast';
 
@@ -85,17 +86,13 @@ export const EmbedSettingsPanel = ({ config, onConfigChange, embedCode }: EmbedS
               </div>
             </div>
 
-            <div className="flex items-center justify-between">
-              <div>
-                <Label htmlFor="gradient" className="text-sm">Gradient Header</Label>
-                <p className="text-xs text-muted-foreground">Use gradient effect</p>
-              </div>
-              <Switch
-                id="gradient"
-                checked={config.useGradientHeader}
-                onCheckedChange={(checked) => onConfigChange({ useGradientHeader: checked })}
-              />
-            </div>
+            <ToggleSettingRow
+              id="gradient"
+              label="Gradient Header"
+              description="Use gradient effect"
+              checked={config.useGradientHeader}
+              onCheckedChange={(checked) => onConfigChange({ useGradientHeader: checked })}
+            />
 
             {config.useGradientHeader && (
               <div className="space-y-3 pl-4 border-l-2">
@@ -212,17 +209,13 @@ export const EmbedSettingsPanel = ({ config, onConfigChange, embedCode }: EmbedS
               />
             </div>
 
-            <div className="flex items-center justify-between">
-              <div>
-                <Label htmlFor="bottom-nav" className="text-sm">Bottom Navigation</Label>
-                <p className="text-xs text-muted-foreground">Show nav bar</p>
-              </div>
-              <Switch
-                id="bottom-nav"
-                checked={config.showBottomNav}
-                onCheckedChange={(checked) => onConfigChange({ showBottomNav: checked })}
-              />
-            </div>
+            <ToggleSettingRow
+              id="bottom-nav"
+              label="Bottom Navigation"
+              description="Show nav bar"
+              checked={config.showBottomNav}
+              onCheckedChange={(checked) => onConfigChange({ showBottomNav: checked })}
+            />
 
             {config.showBottomNav && (
               <div className="space-y-3 pl-4 border-l-2">
@@ -251,17 +244,13 @@ export const EmbedSettingsPanel = ({ config, onConfigChange, embedCode }: EmbedS
         <AccordionItem value="contact-form">
           <AccordionTrigger className="text-sm font-medium">Contact Form</AccordionTrigger>
           <AccordionContent className="space-y-4 pt-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <Label htmlFor="contact-form" className="text-sm">Enable Contact Form</Label>
-                <p className="text-xs text-muted-foreground">Collect user info before chat</p>
-              </div>
-              <Switch
-                id="contact-form"
-                checked={config.enableContactForm}
-                onCheckedChange={(checked) => onConfigChange({ enableContactForm: checked })}
-              />
-            </div>
+            <ToggleSettingRow
+              id="contact-form"
+              label="Enable Contact Form"
+              description="Collect user info before chat"
+              checked={config.enableContactForm}
+              onCheckedChange={(checked) => onConfigChange({ enableContactForm: checked })}
+            />
 
             {config.enableContactForm && (
               <div className="space-y-4 pl-4 border-l-2">

@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Trash01, Clock } from '@untitledui/icons';
 import { EmptyState } from '@/components/ui/empty-state';
+import { SimpleDeleteDialog } from '@/components/ui/simple-delete-dialog';
 import { useScheduledReports } from '@/hooks/useScheduledReports';
 import { CreateScheduledReportDialog } from './CreateScheduledReportDialog';
 import { SavedIndicator } from '@/components/settings/SavedIndicator';
@@ -17,16 +18,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 
 export const ScheduledReportsManager = () => {
   const { reports, loading, toggleReportStatus, deleteReport } = useScheduledReports();
@@ -162,20 +153,13 @@ export const ScheduledReportsManager = () => {
         onOpenChange={setIsCreateOpen}
       />
 
-      <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Scheduled Report</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete this scheduled report? This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <SimpleDeleteDialog
+        open={!!deleteId}
+        onOpenChange={() => setDeleteId(null)}
+        title="Delete Scheduled Report"
+        description="Are you sure you want to delete this scheduled report? This action cannot be undone."
+        onConfirm={handleDelete}
+      />
     </>
   );
 };
