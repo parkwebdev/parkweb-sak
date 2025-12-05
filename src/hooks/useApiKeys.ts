@@ -6,6 +6,15 @@ import type { Tables } from '@/integrations/supabase/types';
 
 type ApiKey = Tables<'api_keys'>;
 
+// Hash an API key using SHA-256
+async function hashApiKey(key: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(key);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
 export const useApiKeys = () => {
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
   const [loading, setLoading] = useState(true);
@@ -49,13 +58,15 @@ export const useApiKeys = () => {
     try {
       const key = generateApiKey();
       const keyPreview = key.substring(0, 12) + '...' + key.substring(key.length - 4);
+      const keyHash = await hashApiKey(key);
 
       const { data, error } = await supabase
         .from('api_keys')
         .insert([{
           name,
-          key,
+          key: keyPreview, // Store only the preview, not the full key
           key_preview: keyPreview,
+          key_hash: keyHash, // Store the hash for validation
           user_id: user.id,
           permissions,
         }])
@@ -82,12 +93,14 @@ export const useApiKeys = () => {
     try {
       const key = generateApiKey();
       const keyPreview = key.substring(0, 12) + '...' + key.substring(key.length - 4);
+      const keyHash = await hashApiKey(key);
 
       const { error } = await supabase
         .from('api_keys')
         .update({
-          key,
+          key: keyPreview, // Store only the preview, not the full key
           key_preview: keyPreview,
+          key_hash: keyHash, // Store the hash for validation
           last_used_at: null,
         })
         .eq('id', id);
