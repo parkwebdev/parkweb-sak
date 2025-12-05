@@ -67,10 +67,10 @@ export const SubscriptionSettings = () => {
 
     setInvoicesLoading(true);
     try {
-      // Get fresh session before calling edge function
-      const { data: sessionData } = await supabase.auth.getSession();
-      if (!sessionData.session) {
-        console.warn('No active session for fetching invoices');
+      // Force refresh session to get a fresh token before calling edge function
+      const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+      if (refreshError || !refreshData.session) {
+        console.warn('Failed to refresh session for fetching invoices:', refreshError?.message);
         setInvoicesLoading(false);
         return;
       }
