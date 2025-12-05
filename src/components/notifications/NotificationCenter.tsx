@@ -9,7 +9,7 @@ import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { LoadingState } from '@/components/ui/loading-state';
-import { Spinner } from '@/components/ui/spinner';
+import { EmptyState } from '@/components/ui/empty-state';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/lib/toast';
@@ -329,14 +329,20 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNotifi
               <LoadingState size="md" />
             </CardContent>
           ) : notifications.length === 0 ? (
-            <CardContent className="text-center py-8">
-              <Bell size={32} className="mx-auto mb-2 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">No notifications yet</p>
+            <CardContent>
+              <EmptyState
+                icon={<Bell className="h-5 w-5 text-muted-foreground/50" />}
+                title="No notifications yet"
+                className="py-4"
+              />
             </CardContent>
           ) : filteredNotifications.length === 0 ? (
-            <CardContent className="text-center py-8">
-              <SearchSm size={32} className="mx-auto mb-2 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">No notifications match your filters</p>
+            <CardContent>
+              <EmptyState
+                icon={<SearchSm className="h-5 w-5 text-muted-foreground/50" />}
+                title="No notifications match your filters"
+                className="py-4"
+              />
             </CardContent>
           ) : (
             <ScrollArea className="h-96">
