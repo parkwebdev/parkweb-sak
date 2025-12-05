@@ -11,17 +11,18 @@ interface AppLoadingScreenProps {
   className?: string;
 }
 
+// Vibrant, saturated colors
 const pathColors = [
-  "hsl(var(--primary))",      // Primary brand color
-  "#4FABFF",                   // Light blue
-  "#B1C5FF",                   // Periwinkle
-  "#FFDDB7",                   // Peach
-  "#FFB7C5",                   // Pink
+  "#8B5CF6",  // Vivid purple
+  "#06B6D4",  // Cyan
+  "#3B82F6",  // Electric blue
+  "#EC4899",  // Hot pink
+  "#F97316",  // Vibrant orange
 ];
 
 export function AppLoadingScreen({ 
   isLoading, 
-  minDisplayTime = 2000,
+  minDisplayTime = 3000,
   onLoadingComplete,
   className 
 }: AppLoadingScreenProps) {
@@ -35,12 +36,12 @@ export function AppLoadingScreen({
   const pathLength4 = useMotionValue(0);
   const pathLength5 = useMotionValue(0);
 
-  // Apply spring physics for smooth animation
-  const spring1 = useSpring(pathLength1, { damping: 30, stiffness: 100 });
-  const spring2 = useSpring(pathLength2, { damping: 30, stiffness: 100 });
-  const spring3 = useSpring(pathLength3, { damping: 30, stiffness: 100 });
-  const spring4 = useSpring(pathLength4, { damping: 30, stiffness: 100 });
-  const spring5 = useSpring(pathLength5, { damping: 30, stiffness: 100 });
+  // Apply slower spring physics for graceful animation
+  const spring1 = useSpring(pathLength1, { damping: 50, stiffness: 15 });
+  const spring2 = useSpring(pathLength2, { damping: 50, stiffness: 15 });
+  const spring3 = useSpring(pathLength3, { damping: 50, stiffness: 15 });
+  const spring4 = useSpring(pathLength4, { damping: 50, stiffness: 15 });
+  const spring5 = useSpring(pathLength5, { damping: 50, stiffness: 15 });
 
   // Minimum display time countdown
   useEffect(() => {
@@ -57,9 +58,9 @@ export function AppLoadingScreen({
     }
   }, [isLoading, minTimeElapsed]);
 
-  // Start path animations on mount
+  // Start path animations on mount with slower stagger
   useEffect(() => {
-    const delays = [0, 100, 200, 300, 400];
+    const delays = [0, 200, 400, 600, 800];
     const pathLengths = [pathLength1, pathLength2, pathLength3, pathLength4, pathLength5];
     
     delays.forEach((delay, index) => {
@@ -77,23 +78,34 @@ export function AppLoadingScreen({
     <AnimatePresence onExitComplete={handleExitComplete}>
       {showScreen && (
         <motion.div
-          initial={{ opacity: 0 }}
+          initial={{ opacity: 1 }}
           animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.4, ease: "easeOut" }}
+          exit={{ opacity: 0, filter: "blur(8px)" }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
           className={cn(
             "fixed inset-0 z-50 flex flex-col items-center justify-center bg-background",
             className
           )}
         >
-          {/* Logo */}
+          {/* Logo with fill-from-bottom effect */}
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.1, duration: 0.5, ease: "easeOut" }}
             className="relative z-10 mb-8"
           >
-            <ChatPadLogo className="h-16 w-16 text-primary" />
+            {/* Muted base logo */}
+            <ChatPadLogo className="h-16 w-16 text-muted-foreground/30" />
+            
+            {/* Animated color fill overlay */}
+            <motion.div
+              className="absolute inset-0 overflow-hidden"
+              initial={{ clipPath: "inset(100% 0 0 0)" }}
+              animate={{ clipPath: "inset(0% 0 0 0)" }}
+              transition={{ duration: 1.8, delay: 0.3, ease: "easeOut" }}
+            >
+              <ChatPadLogo className="h-16 w-16 text-primary" />
+            </motion.div>
           </motion.div>
 
           {/* Animated SVG Paths */}
