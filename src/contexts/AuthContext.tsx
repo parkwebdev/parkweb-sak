@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -30,7 +30,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [justSignedIn, setJustSignedIn] = useState(false);
-  const [initialCheckComplete, setInitialCheckComplete] = useState(false);
+  
+  // Use refs to avoid re-creating subscription and track state without triggering re-renders
+  const initialCheckCompleteRef = useRef(false);
+  const previousUserRef = useRef<User | null>(null);
 
   useEffect(() => {
     // Set up auth state listener
@@ -40,10 +43,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setUser(session?.user ?? null);
         setLoading(false);
 
-        // Only set justSignedIn for fresh logins (after initial check)
-        if (session?.user && event === 'SIGNED_IN' && initialCheckComplete) {
+        // Only set justSignedIn for ACTUAL fresh logins:
+        // - Initial check must be complete (not session restoration)
+        // - Must be a SIGNED_IN event
+        // - Must be transitioning from no user to having a user (not token refresh)
+        if (
+          session?.user && 
+          event === 'SIGNED_IN' && 
+          initialCheckCompleteRef.current &&
+          !previousUserRef.current
+        ) {
           setJustSignedIn(true);
         }
+
+        // Track previous user for detecting actual login transitions
+        previousUserRef.current = session?.user ?? null;
 
         // Handle profile creation/updates after successful authentication
         if (session?.user && event === 'SIGNED_IN') {
@@ -58,12 +72,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
+      previousUserRef.current = session?.user ?? null;
       setLoading(false);
-      setInitialCheckComplete(true);
+      initialCheckCompleteRef.current = true;
     });
 
     return () => subscription.unsubscribe();
-  }, [initialCheckComplete]);
+  }, []); // Empty dependency array - run once on mount
 
   const createOrUpdateProfile = async (user: User) => {
     try {
