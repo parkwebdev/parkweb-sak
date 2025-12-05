@@ -7,7 +7,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { CheckCircle, XCircle, PlayCircle } from '@untitledui/icons';
 import { EmptyState } from '@/components/ui/empty-state';
-import { Spinner } from '@/components/ui/spinner';
+import { LoadingState } from '@/components/ui/loading-state';
 
 interface TestResult {
   success: boolean;
@@ -44,10 +44,7 @@ export const TestToolResultDialog = ({
 
         <div className="overflow-y-auto flex-1 space-y-4">
           {loading ? (
-            <div className="flex flex-col items-center justify-center py-12">
-              <Spinner className="h-8 w-8 mb-3" />
-              <p className="text-sm text-muted-foreground">Testing endpoint...</p>
-            </div>
+            <LoadingState text="Testing endpoint..." />
           ) : result ? (
             <>
               {/* Status */}
