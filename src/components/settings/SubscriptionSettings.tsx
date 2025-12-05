@@ -67,6 +67,14 @@ export const SubscriptionSettings = () => {
 
     setInvoicesLoading(true);
     try {
+      // Get fresh session before calling edge function
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
+        console.warn('No active session for fetching invoices');
+        setInvoicesLoading(false);
+        return;
+      }
+
       const { data, error } = await supabase.functions.invoke('get-invoices');
 
       if (error) throw error;
@@ -82,7 +90,12 @@ export const SubscriptionSettings = () => {
   };
 
   useEffect(() => {
-    fetchInvoices();
+    // Only fetch invoices when we have a user and the component is mounted
+    if (user) {
+      // Small delay to ensure session is fully established
+      const timeoutId = setTimeout(fetchInvoices, 100);
+      return () => clearTimeout(timeoutId);
+    }
   }, [user]);
 
   if (loading) {
