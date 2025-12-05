@@ -14,6 +14,7 @@ import type { Tables } from '@/integrations/supabase/types';
 import { AgentSettingsLayout } from '@/components/agents/AgentSettingsLayout';
 import { useWebhooks } from '@/hooks/useWebhooks';
 import { CreateWebhookDialog } from '@/components/agents/webhooks/CreateWebhookDialog';
+import { EditWebhookDialog } from '@/components/agents/webhooks/EditWebhookDialog';
 import { WebhookLogsDialog } from '@/components/agents/webhooks/WebhookLogsDialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { AnimatedList } from '@/components/ui/animated-list';
@@ -54,6 +55,7 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
   const [showLogsDialog, setShowLogsDialog] = useState(false);
   const [selectedWebhookForLogs, setSelectedWebhookForLogs] = useState<string | null>(null);
   const [webhookToDelete, setWebhookToDelete] = useState<string | null>(null);
+  const [editingWebhook, setEditingWebhook] = useState<Tables<'webhooks'> | null>(null);
   const [savedWebhookIds, setSavedWebhookIds] = useState<Set<string>>(new Set());
 
   const menuItems = [
@@ -257,6 +259,10 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
 
   const handleTestWebhook = async (id: string) => {
     await testWebhook(id);
+  };
+
+  const handleUpdateWebhook = async (id: string, updates: any) => {
+    await updateWebhook(id, updates);
   };
 
   const handleViewLogs = (id: string) => {
@@ -542,6 +548,14 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8"
+                            onClick={() => setEditingWebhook(webhook)}
+                          >
+                            <Edit03 className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
                             onClick={() => setWebhookToDelete(webhook.id)}
                           >
                             <Trash01 className="h-4 w-4 text-destructive" />
@@ -559,6 +573,13 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
             open={showCreateWebhook}
             onOpenChange={setShowCreateWebhook}
             agentId={agentId}
+          />
+
+          <EditWebhookDialog
+            open={!!editingWebhook}
+            onOpenChange={(open) => !open && setEditingWebhook(null)}
+            webhook={editingWebhook}
+            onSave={handleUpdateWebhook}
           />
 
           {selectedWebhookForLogs && (
