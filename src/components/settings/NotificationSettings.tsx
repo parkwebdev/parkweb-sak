@@ -1,10 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/lib/toast';
-import { SavedIndicator } from './SavedIndicator';
+import { ToggleSettingRow } from '@/components/ui/toggle-setting-row';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNotifications } from '@/hooks/useNotifications';
 import { supabase } from '@/integrations/supabase/client';
@@ -246,44 +244,23 @@ export const NotificationSettings: React.FC = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5 flex-1">
-              <div className="flex items-center gap-2">
-                <Label htmlFor="email-notifications" className="text-sm font-medium">
-                  Email Notifications
-                </Label>
-                <SavedIndicator show={showSaved.email_notifications} />
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Receive notifications via email
-              </p>
-            </div>
-            <Switch
-              id="email-notifications"
-              checked={preferences.email_notifications}
-              onCheckedChange={(checked) => updatePreference('email_notifications', checked)}
-            />
-          </div>
+          <ToggleSettingRow
+            id="email-notifications"
+            label="Email Notifications"
+            description="Receive notifications via email"
+            checked={preferences.email_notifications}
+            onCheckedChange={(checked) => updatePreference('email_notifications', checked)}
+            showSaved={showSaved.email_notifications}
+          />
 
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5 flex-1">
-              <div className="flex items-center gap-2">
-                <Label htmlFor="browser-notifications" className="text-sm font-medium">
-                  Browser Notifications
-                </Label>
-                <SavedIndicator show={showSaved.browser_notifications} />
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Show desktop notifications in your browser
-              </p>
-            </div>
-            <Switch
-              id="browser-notifications"
-              checked={preferences.browser_notifications}
-              onCheckedChange={(checked) => updatePreference('browser_notifications', checked)}
-            />
-          </div>
-
+          <ToggleSettingRow
+            id="browser-notifications"
+            label="Browser Notifications"
+            description="Show desktop notifications in your browser"
+            checked={preferences.browser_notifications}
+            onCheckedChange={(checked) => updatePreference('browser_notifications', checked)}
+            showSaved={showSaved.browser_notifications}
+          />
         </CardContent>
       </Card>
       </AnimatedItem>
@@ -297,100 +274,50 @@ export const NotificationSettings: React.FC = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5 flex-1">
-              <div className="flex items-center gap-2">
-                <Label htmlFor="conversation-notifications" className="text-sm font-medium">
-                  Conversation Activity
-                </Label>
-                <SavedIndicator show={showSaved.conversation_notifications} />
-              </div>
-              <p className="text-xs text-muted-foreground">
-                New conversations, escalations, and takeover requests
-              </p>
-            </div>
-            <Switch
-              id="conversation-notifications"
-              checked={preferences.conversation_notifications}
-              onCheckedChange={(checked) => updatePreference('conversation_notifications', checked)}
-            />
-          </div>
+          <ToggleSettingRow
+            id="conversation-notifications"
+            label="Conversation Activity"
+            description="New conversations, escalations, and takeover requests"
+            checked={preferences.conversation_notifications}
+            onCheckedChange={(checked) => updatePreference('conversation_notifications', checked)}
+            showSaved={showSaved.conversation_notifications}
+          />
 
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5 flex-1">
-              <div className="flex items-center gap-2">
-                <Label htmlFor="lead-notifications" className="text-sm font-medium">
-                  Lead Notifications
-                </Label>
-                <SavedIndicator show={showSaved.lead_notifications} />
-              </div>
-              <p className="text-xs text-muted-foreground">
-                New leads captured and lead status changes
-              </p>
-            </div>
-            <Switch
-              id="lead-notifications"
-              checked={preferences.lead_notifications}
-              onCheckedChange={(checked) => updatePreference('lead_notifications', checked)}
-            />
-          </div>
+          <ToggleSettingRow
+            id="lead-notifications"
+            label="Lead Notifications"
+            description="New leads captured and lead status changes"
+            checked={preferences.lead_notifications}
+            onCheckedChange={(checked) => updatePreference('lead_notifications', checked)}
+            showSaved={showSaved.lead_notifications}
+          />
 
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5 flex-1">
-              <div className="flex items-center gap-2">
-                <Label htmlFor="agent-notifications" className="text-sm font-medium">
-                  Agent Alerts
-                </Label>
-                <SavedIndicator show={showSaved.agent_notifications} />
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Agent errors and knowledge source updates
-              </p>
-            </div>
-            <Switch
-              id="agent-notifications"
-              checked={preferences.agent_notifications}
-              onCheckedChange={(checked) => updatePreference('agent_notifications', checked)}
-            />
-          </div>
+          <ToggleSettingRow
+            id="agent-notifications"
+            label="Agent Alerts"
+            description="Agent errors and knowledge source updates"
+            checked={preferences.agent_notifications}
+            onCheckedChange={(checked) => updatePreference('agent_notifications', checked)}
+            showSaved={showSaved.agent_notifications}
+          />
 
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5 flex-1">
-              <div className="flex items-center gap-2">
-                <Label htmlFor="team-notifications" className="text-sm font-medium">
-                  Team Activity
-                </Label>
-                <SavedIndicator show={showSaved.team_notifications} />
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Team invitations and member updates
-              </p>
-            </div>
-            <Switch
-              id="team-notifications"
-              checked={preferences.team_notifications}
-              onCheckedChange={(checked) => updatePreference('team_notifications', checked)}
-            />
-          </div>
+          <ToggleSettingRow
+            id="team-notifications"
+            label="Team Activity"
+            description="Team invitations and member updates"
+            checked={preferences.team_notifications}
+            onCheckedChange={(checked) => updatePreference('team_notifications', checked)}
+            showSaved={showSaved.team_notifications}
+          />
 
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5 flex-1">
-              <div className="flex items-center gap-2">
-                <Label htmlFor="report-notifications" className="text-sm font-medium">
-                  Report Notifications
-                </Label>
-                <SavedIndicator show={showSaved.report_notifications} />
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Scheduled reports and analytics alerts
-              </p>
-            </div>
-            <Switch
-              id="report-notifications"
-              checked={preferences.report_notifications}
-              onCheckedChange={(checked) => updatePreference('report_notifications', checked)}
-            />
-          </div>
+          <ToggleSettingRow
+            id="report-notifications"
+            label="Report Notifications"
+            description="Scheduled reports and analytics alerts"
+            checked={preferences.report_notifications}
+            onCheckedChange={(checked) => updatePreference('report_notifications', checked)}
+            showSaved={showSaved.report_notifications}
+          />
         </CardContent>
       </Card>
       </AnimatedItem>
