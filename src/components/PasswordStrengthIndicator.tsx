@@ -72,7 +72,6 @@ export const PasswordStrengthIndicator: React.FC<PasswordStrengthIndicatorProps>
       
       {validation.isValid && (
         <div className="flex items-center gap-2 text-xs text-success">
-          <CheckCircle size={12} />
           Password meets all security requirements
         </div>
       )}
