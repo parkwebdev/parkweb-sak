@@ -65,3 +65,6 @@ verify_jwt = false
 
 [functions.update-message-reaction]
 verify_jwt = false
+
+[functions.test-tool-endpoint]
+verify_jwt = true

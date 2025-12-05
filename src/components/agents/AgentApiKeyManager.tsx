@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { CopyButton } from '@/components/ui/copy-button';
-import { Trash01, Key01, AlertCircle } from '@untitledui/icons';
+import { Trash01, Key01, AlertCircle, Edit03 } from '@untitledui/icons';
 import { useAgentApiKeys } from '@/hooks/useAgentApiKeys';
 import { AnimatedList } from '@/components/ui/animated-list';
 import { AnimatedItem } from '@/components/ui/animated-item';
@@ -31,12 +31,24 @@ interface AgentApiKeyManagerProps {
   agentId: string;
 }
 
+interface ApiKeyForEdit {
+  id: string;
+  name: string;
+  requests_per_minute: number;
+  requests_per_day: number;
+}
+
 export const AgentApiKeyManager = ({ agentId }: AgentApiKeyManagerProps) => {
-  const { apiKeys, loading, generating, createApiKey, revokeApiKey } = useAgentApiKeys(agentId);
+  const { apiKeys, loading, generating, createApiKey, revokeApiKey, updateApiKey } = useAgentApiKeys(agentId);
   const [keyToRevoke, setKeyToRevoke] = useState<string | null>(null);
   const [newKeyName, setNewKeyName] = useState('');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [newlyCreatedKey, setNewlyCreatedKey] = useState<string | null>(null);
+  
+  // Edit state
+  const [editingKey, setEditingKey] = useState<ApiKeyForEdit | null>(null);
+  const [editForm, setEditForm] = useState({ name: '', requests_per_minute: 60, requests_per_day: 10000 });
+  const [saving, setSaving] = useState(false);
 
   const handleCreateKey = async () => {
     const key = await createApiKey(newKeyName || 'Default');
@@ -51,6 +63,30 @@ export const AgentApiKeyManager = ({ agentId }: AgentApiKeyManagerProps) => {
     if (keyToRevoke) {
       await revokeApiKey(keyToRevoke);
       setKeyToRevoke(null);
+    }
+  };
+
+  const handleEditKey = (key: ApiKeyForEdit) => {
+    setEditingKey(key);
+    setEditForm({
+      name: key.name,
+      requests_per_minute: key.requests_per_minute,
+      requests_per_day: key.requests_per_day,
+    });
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingKey) return;
+    setSaving(true);
+    try {
+      await updateApiKey(editingKey.id, {
+        name: editForm.name,
+        requests_per_minute: editForm.requests_per_minute,
+        requests_per_day: editForm.requests_per_day,
+      });
+      setEditingKey(null);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -97,14 +133,24 @@ export const AgentApiKeyManager = ({ agentId }: AgentApiKeyManagerProps) => {
                       <span>{key.requests_per_minute}/min • {key.requests_per_day}/day</span>
                     </div>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 flex-shrink-0"
-                    onClick={() => setKeyToRevoke(key.id)}
-                  >
-                    <Trash01 className="h-4 w-4 text-destructive" />
-                  </Button>
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => handleEditKey(key)}
+                    >
+                      <Edit03 className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => setKeyToRevoke(key.id)}
+                    >
+                      <Trash01 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
                 </div>
               </div>
             </AnimatedItem>
@@ -138,6 +184,61 @@ export const AgentApiKeyManager = ({ agentId }: AgentApiKeyManagerProps) => {
             </Button>
             <Button onClick={handleCreateKey} disabled={generating}>
               {generating ? 'Creating...' : 'Create Key'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Key Dialog */}
+      <Dialog open={!!editingKey} onOpenChange={(open) => !open && setEditingKey(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit API Key</DialogTitle>
+            <DialogDescription>
+              Update the key name and rate limits.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-key-name">Key Name</Label>
+              <Input
+                id="edit-key-name"
+                placeholder="e.g., Production, Mobile App, Testing"
+                value={editForm.name}
+                onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-rpm">Requests per Minute</Label>
+                <Input
+                  id="edit-rpm"
+                  type="number"
+                  min={1}
+                  max={1000}
+                  value={editForm.requests_per_minute}
+                  onChange={(e) => setEditForm({ ...editForm, requests_per_minute: parseInt(e.target.value) || 60 })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-rpd">Requests per Day</Label>
+                <Input
+                  id="edit-rpd"
+                  type="number"
+                  min={1}
+                  max={100000}
+                  value={editForm.requests_per_day}
+                  onChange={(e) => setEditForm({ ...editForm, requests_per_day: parseInt(e.target.value) || 10000 })}
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingKey(null)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveEdit} disabled={saving || !editForm.name}>
+              {saving ? 'Saving...' : 'Save Changes'}
             </Button>
           </DialogFooter>
         </DialogContent>
