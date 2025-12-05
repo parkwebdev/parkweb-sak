@@ -274,9 +274,9 @@ const Auth = () => {
                 <Button 
                   type="submit" 
                   className="w-full h-11 bg-primary hover:bg-primary/90" 
-                  disabled={isLoading}
+                  loading={isLoading}
                 >
-                  {isLoading ? "Signing in..." : "Sign in"}
+                  Sign in
                 </Button>
 
                 {/* Google Sign In */}
@@ -385,9 +385,9 @@ const Auth = () => {
                 <Button 
                   type="submit" 
                   className="w-full h-11 bg-primary hover:bg-primary/90" 
-                  disabled={isLoading}
+                  loading={isLoading}
                 >
-                  {isLoading ? "Creating account..." : "Create Account"}
+                  Create Account
                 </Button>
               </form>
 

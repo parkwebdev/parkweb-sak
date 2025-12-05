@@ -178,8 +178,8 @@ export const AddKnowledgeDialog: React.FC<AddKnowledgeDialogProps> = ({
                   We'll fetch and process the content from this URL
                 </p>
               </div>
-              <Button type="submit" disabled={uploading || !url}>
-                {uploading ? 'Adding...' : 'Add URL'}
+              <Button type="submit" disabled={!url} loading={uploading}>
+                Add URL
               </Button>
             </form>
           </TabsContent>
@@ -209,8 +209,8 @@ export const AddKnowledgeDialog: React.FC<AddKnowledgeDialogProps> = ({
                   Add custom text, FAQs, product information, or any content you want your agent to learn
                 </p>
               </div>
-              <Button type="submit" disabled={uploading || !textContent}>
-                {uploading ? 'Adding...' : 'Add Content'}
+              <Button type="submit" disabled={!textContent} loading={uploading}>
+                Add Content
               </Button>
             </form>
           </TabsContent>

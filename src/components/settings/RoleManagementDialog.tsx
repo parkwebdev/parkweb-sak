@@ -246,8 +246,8 @@ export const RoleManagementDialog: React.FC<RoleManagementDialogProps> = ({
               <Button variant="outline" onClick={onClose} disabled={loading}>
                 Cancel
               </Button>
-              <Button onClick={handleSave} disabled={loading}>
-                {loading ? "Saving..." : "Save Changes"}
+              <Button onClick={handleSave} loading={loading}>
+                Save Changes
               </Button>
             </div>
           </div>
