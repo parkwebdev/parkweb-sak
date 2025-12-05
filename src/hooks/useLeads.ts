@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/lib/toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -80,8 +80,16 @@ export const useLeads = () => {
     }
   };
 
-  const deleteLead = async (id: string) => {
+  const deleteLead = async (id: string, deleteConversation: boolean = false) => {
     try {
+      // First, get the lead to find associated conversation
+      const { data: lead } = await supabase
+        .from('leads')
+        .select('conversation_id')
+        .eq('id', id)
+        .single();
+
+      // Delete the lead first
       const { error } = await supabase
         .from('leads')
         .delete()
@@ -89,8 +97,25 @@ export const useLeads = () => {
 
       if (error) throw error;
 
+      // If deleteConversation is true and there's an associated conversation, delete it
+      if (deleteConversation && lead?.conversation_id) {
+        // Delete messages first (foreign key constraint)
+        await supabase
+          .from('messages')
+          .delete()
+          .eq('conversation_id', lead.conversation_id);
+        
+        // Then delete the conversation
+        await supabase
+          .from('conversations')
+          .delete()
+          .eq('id', lead.conversation_id);
+      }
+
       toast.success('Lead deleted', {
-        description: 'Lead has been deleted successfully',
+        description: deleteConversation && lead?.conversation_id 
+          ? 'Lead and conversation have been deleted successfully'
+          : 'Lead has been deleted successfully',
       });
 
       fetchLeads();
@@ -102,10 +127,21 @@ export const useLeads = () => {
     }
   };
 
-  const deleteLeads = async (ids: string[]) => {
+  const deleteLeads = async (ids: string[], deleteConversations: boolean = false) => {
     if (ids.length === 0) return;
     
     try {
+      // Get all leads to find associated conversations
+      const { data: leadsToDelete } = await supabase
+        .from('leads')
+        .select('id, conversation_id')
+        .in('id', ids);
+
+      const conversationIds = leadsToDelete
+        ?.filter(l => l.conversation_id)
+        .map(l => l.conversation_id) || [];
+
+      // Delete the leads first
       const { error } = await supabase
         .from('leads')
         .delete()
@@ -113,8 +149,27 @@ export const useLeads = () => {
 
       if (error) throw error;
 
-      toast.success(`${ids.length} lead${ids.length > 1 ? 's' : ''} deleted`, {
-        description: 'Selected leads have been deleted successfully',
+      // If deleteConversations is true and there are associated conversations, delete them
+      if (deleteConversations && conversationIds.length > 0) {
+        // Delete messages first (foreign key constraint)
+        await supabase
+          .from('messages')
+          .delete()
+          .in('conversation_id', conversationIds);
+        
+        // Then delete the conversations
+        await supabase
+          .from('conversations')
+          .delete()
+          .in('id', conversationIds);
+      }
+
+      const conversationText = deleteConversations && conversationIds.length > 0
+        ? ` and ${conversationIds.length} conversation${conversationIds.length > 1 ? 's' : ''}`
+        : '';
+
+      toast.success(`${ids.length} lead${ids.length > 1 ? 's' : ''}${conversationText} deleted`, {
+        description: 'Selected items have been deleted successfully',
       });
 
       fetchLeads();
@@ -125,6 +180,11 @@ export const useLeads = () => {
       throw error;
     }
   };
+
+  // Helper to check if any of the provided lead IDs have conversations
+  const getLeadsWithConversations = useCallback((ids: string[]): boolean => {
+    return leads.some(lead => ids.includes(lead.id) && lead.conversation_id);
+  }, [leads]);
 
   useEffect(() => {
     fetchLeads();
@@ -158,6 +218,7 @@ export const useLeads = () => {
     updateLead,
     deleteLead,
     deleteLeads,
+    getLeadsWithConversations,
     refetch: fetchLeads,
   };
 };

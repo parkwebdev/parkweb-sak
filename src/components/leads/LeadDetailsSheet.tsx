@@ -40,10 +40,7 @@ export const LeadDetailsSheet = ({
   };
 
   const handleDelete = () => {
-    if (confirm('Are you sure you want to delete this lead?')) {
-      onDelete(lead.id);
-      onOpenChange(false);
-    }
+    onDelete(lead.id);
   };
 
   const currentData = { ...lead, ...editedLead };
