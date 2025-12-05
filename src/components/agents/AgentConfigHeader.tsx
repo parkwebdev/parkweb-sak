@@ -40,8 +40,8 @@ export const AgentConfigHeader = ({
             backgroundSize: '12px 12px'
           }}
         >
-          {/* Gradient Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-neutral-200/40 dark:to-neutral-950/60" />
+          {/* Gradient Overlay - stronger at bottom for text readability */}
+          <div className="absolute inset-0 bg-gradient-to-b from-neutral-100/20 via-neutral-100/40 to-neutral-100/70 dark:from-neutral-950/20 dark:via-neutral-950/40 dark:to-neutral-950/70" />
           
           <div 
             className="relative z-10 px-4 lg:px-8 py-4 h-full flex flex-col [background-image:radial-gradient(circle,_rgba(0,_0,_0,_0.20)_1px,_transparent_1px)] dark:[background-image:radial-gradient(circle,_rgba(255,_255,_255,_0.15)_1px,_transparent_1px)]"
@@ -53,7 +53,7 @@ export const AgentConfigHeader = ({
                 variant="ghost"
                 size="sm"
                 onClick={() => navigate('/agents')}
-                className="h-8 text-neutral-700 hover:text-neutral-900 hover:bg-neutral-200/50 dark:text-white/90 dark:hover:text-white dark:hover:bg-white/10"
+                className="h-8 text-neutral-700 hover:text-neutral-900 hover:bg-neutral-200/60 hover:backdrop-blur-sm hover:border hover:border-neutral-300 dark:text-white/90 dark:hover:text-white dark:hover:bg-white/15 dark:hover:border-white/20 transition-all"
               >
                 <ChevronLeft size={16} />
                 Back
