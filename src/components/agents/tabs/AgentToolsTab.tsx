@@ -3,8 +3,10 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Plus, Trash01, ChevronDown, Link03, Eye, FlipBackward, Lightbulb01 } from '@untitledui/icons';
+import { Plus, Trash01, ChevronDown, Link03, Eye, FlipBackward, Lightbulb01, Edit03 } from '@untitledui/icons';
 import { CreateToolDialog } from '@/components/agents/CreateToolDialog';
+import { EditToolDialog } from '@/components/agents/EditToolDialog';
+import { TestToolResultDialog } from '@/components/agents/TestToolResultDialog';
 import { CopyButton } from '@/components/ui/copy-button';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/lib/toast';
@@ -37,6 +39,14 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
   const [showUseCasesModal, setShowUseCasesModal] = useState(false);
   const [showToolUseCasesModal, setShowToolUseCasesModal] = useState(false);
   const [showCreateToolDialog, setShowCreateToolDialog] = useState(false);
+  
+  // Edit tool state
+  const [editingTool, setEditingTool] = useState<AgentTool | null>(null);
+  
+  // Test tool state
+  const [testingTool, setTestingTool] = useState<AgentTool | null>(null);
+  const [testLoading, setTestLoading] = useState(false);
+  const [testResult, setTestResult] = useState<any>(null);
 
   // Webhook state
   const { webhooks, loading: webhooksLoading, updateWebhook, deleteWebhook, testWebhook, fetchLogs } = useWebhooks(agentId);
@@ -122,6 +132,49 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
     toast.success('Tool added successfully');
   };
 
+  const updateTool = async (toolId: string, updates: {
+    name: string;
+    description: string;
+    endpoint_url: string;
+    parameters: string;
+    headers: string;
+    timeout_ms: number;
+  }) => {
+    try {
+      const parameters = JSON.parse(updates.parameters);
+      const headers = JSON.parse(updates.headers);
+      
+      const { error } = await supabase
+        .from('agent_tools')
+        .update({
+          name: updates.name,
+          description: updates.description,
+          endpoint_url: updates.endpoint_url,
+          parameters,
+          headers,
+          timeout_ms: updates.timeout_ms,
+        })
+        .eq('id', toolId);
+
+      if (error) throw error;
+      
+      setTools(tools.map(t => t.id === toolId ? { 
+        ...t, 
+        name: updates.name,
+        description: updates.description,
+        endpoint_url: updates.endpoint_url,
+        parameters,
+        headers,
+        timeout_ms: updates.timeout_ms,
+      } : t));
+      toast.success('Tool updated successfully');
+    } catch (error) {
+      console.error('Error updating tool:', error);
+      toast.error('Failed to update tool. Check JSON format.');
+      throw error;
+    }
+  };
+
   const toggleTool = async (id: string, enabled: boolean) => {
     try {
       const { error } = await supabase
@@ -153,6 +206,34 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
     } catch (error) {
       console.error('Error deleting tool:', error);
       toast.error('Failed to delete tool');
+    }
+  };
+
+  const testTool = async (tool: AgentTool) => {
+    setTestingTool(tool);
+    setTestResult(null);
+    setTestLoading(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('test-tool-endpoint', {
+        body: {
+          endpoint_url: tool.endpoint_url,
+          headers: tool.headers,
+          timeout_ms: tool.timeout_ms || 10000,
+          sample_data: {},
+        },
+      });
+
+      if (error) throw error;
+      setTestResult(data);
+    } catch (error: any) {
+      console.error('Error testing tool:', error);
+      setTestResult({
+        success: false,
+        error: error.message || 'Failed to test tool endpoint',
+      });
+    } finally {
+      setTestLoading(false);
     }
   };
 
@@ -315,6 +396,25 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
                         checked={tool.enabled ?? true}
                         onCheckedChange={(checked) => toggleTool(tool.id, checked)}
                       />
+                      {tool.endpoint_url && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => testTool(tool)}
+                          className="text-xs"
+                        >
+                          <FlipBackward className="h-3.5 w-3.5 mr-1" />
+                          Test
+                        </Button>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => setEditingTool(tool)}
+                      >
+                        <Edit03 className="h-4 w-4" />
+                      </Button>
                       <Button
                         variant="ghost"
                         size="icon"
@@ -339,6 +439,21 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
             open={showCreateToolDialog}
             onOpenChange={setShowCreateToolDialog}
             onCreateTool={addTool}
+          />
+
+          <EditToolDialog
+            open={!!editingTool}
+            onOpenChange={(open) => !open && setEditingTool(null)}
+            tool={editingTool}
+            onSave={updateTool}
+          />
+
+          <TestToolResultDialog
+            open={!!testingTool}
+            onOpenChange={(open) => !open && setTestingTool(null)}
+            toolName={testingTool?.name || ''}
+            loading={testLoading}
+            result={testResult}
           />
         </div>
       )}
@@ -446,18 +561,20 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
             agentId={agentId}
           />
 
-          <WebhookLogsDialog
-            open={showLogsDialog}
-            onOpenChange={setShowLogsDialog}
-            webhookId={selectedWebhookForLogs}
-          />
+          {selectedWebhookForLogs && (
+            <WebhookLogsDialog
+              open={showLogsDialog}
+              onOpenChange={setShowLogsDialog}
+              webhookId={selectedWebhookForLogs}
+            />
+          )}
 
           <AlertDialog open={!!webhookToDelete} onOpenChange={() => setWebhookToDelete(null)}>
             <AlertDialogContent>
               <AlertDialogHeader>
                 <AlertDialogTitle>Delete Webhook?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  This action cannot be undone. The webhook will stop receiving events immediately.
+                  This will permanently delete this webhook and all its logs. This action cannot be undone.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
@@ -471,7 +588,6 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
         </div>
       )}
 
-      {/* Use Cases Modal */}
       <ApiUseCasesModal
         open={showUseCasesModal}
         onOpenChange={setShowUseCasesModal}

@@ -119,20 +119,24 @@ export const useAgentApiKeys = (agentId: string) => {
     }
   };
 
-  const updateApiKeyLimits = async (keyId: string, limits: { requests_per_minute?: number; requests_per_day?: number }) => {
+  const updateApiKey = async (keyId: string, updates: { 
+    name?: string;
+    requests_per_minute?: number; 
+    requests_per_day?: number;
+  }) => {
     try {
       const { error } = await supabase
         .from('agent_api_keys')
-        .update(limits)
+        .update(updates)
         .eq('id', keyId);
 
       if (error) throw error;
 
-      setApiKeys(prev => prev.map(k => k.id === keyId ? { ...k, ...limits } : k));
-      toast.success('Rate limits updated');
+      setApiKeys(prev => prev.map(k => k.id === keyId ? { ...k, ...updates } : k));
+      toast.success('API key updated');
     } catch (error) {
-      logger.error('Error updating API key limits:', error);
-      toast.error('Failed to update rate limits');
+      logger.error('Error updating API key:', error);
+      toast.error('Failed to update API key');
     }
   };
 
@@ -142,7 +146,7 @@ export const useAgentApiKeys = (agentId: string) => {
     generating,
     createApiKey,
     revokeApiKey,
-    updateApiKeyLimits,
+    updateApiKey,
     refetch: fetchApiKeys,
   };
 };
