@@ -44,6 +44,15 @@ function checkRateLimit(apiKeyId: string, permission: string): boolean {
   return true;
 }
 
+// Hash an API key using SHA-256 (same as client-side)
+async function hashApiKey(key: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(key);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -78,15 +87,38 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Look up API key in database
-    const { data: apiKeyData, error: apiKeyError } = await supabase
+    // Hash the incoming API key for comparison
+    const keyHash = await hashApiKey(apiKey);
+    
+    // Look up API key by hash (secure comparison)
+    let apiKeyData: { id: string; user_id: string; permissions: string[] | null; name: string } | null = null;
+    
+    // First try to find by hash (new secure method)
+    const { data: hashMatch, error: hashError } = await supabase
       .from('api_keys')
       .select('id, user_id, permissions, name')
-      .eq('key', apiKey)
+      .eq('key_hash', keyHash)
       .single();
+    
+    if (hashMatch) {
+      apiKeyData = hashMatch;
+    } else {
+      // Fallback: Check legacy unhashed keys for backward compatibility
+      // This allows existing API keys to still work until they are rotated
+      const { data: legacyMatch, error: legacyError } = await supabase
+        .from('api_keys')
+        .select('id, user_id, permissions, name')
+        .eq('key', apiKey)
+        .single();
+      
+      if (legacyMatch) {
+        apiKeyData = legacyMatch;
+        console.log('Legacy API key used - recommend rotating:', legacyMatch.name);
+      }
+    }
 
-    if (apiKeyError || !apiKeyData) {
-      console.log('API key not found:', apiKeyError);
+    if (!apiKeyData) {
+      console.log('API key not found');
       return new Response(
         JSON.stringify({ error: 'Invalid API key' }),
         {
@@ -137,7 +169,7 @@ Deno.serve(async (req) => {
       .from('api_keys')
       .update({ last_used_at: new Date().toISOString() })
       .eq('id', apiKeyData.id)
-      .then(() => console.log('Updated last_used_at for key:', apiKeyData.name));
+      .then(() => console.log('Updated last_used_at for key:', apiKeyData!.name));
 
     // Return validated key info
     return new Response(

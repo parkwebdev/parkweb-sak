@@ -161,6 +161,7 @@ export type Database = {
           created_at: string
           id: string
           key: string
+          key_hash: string | null
           key_preview: string
           last_used_at: string | null
           name: string
@@ -172,6 +173,7 @@ export type Database = {
           created_at?: string
           id?: string
           key: string
+          key_hash?: string | null
           key_preview: string
           last_used_at?: string | null
           name: string
@@ -183,6 +185,7 @@ export type Database = {
           created_at?: string
           id?: string
           key?: string
+          key_hash?: string | null
           key_preview?: string
           last_used_at?: string | null
           name?: string
