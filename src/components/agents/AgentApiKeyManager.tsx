@@ -1,0 +1,198 @@
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { CopyButton } from '@/components/ui/copy-button';
+import { Plus, Trash01, Key01, AlertCircle } from '@untitledui/icons';
+import { useAgentApiKeys } from '@/hooks/useAgentApiKeys';
+import { AnimatedList } from '@/components/ui/animated-list';
+import { AnimatedItem } from '@/components/ui/animated-item';
+import { formatDistanceToNow } from 'date-fns';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+
+interface AgentApiKeyManagerProps {
+  agentId: string;
+}
+
+export const AgentApiKeyManager = ({ agentId }: AgentApiKeyManagerProps) => {
+  const { apiKeys, loading, generating, createApiKey, revokeApiKey } = useAgentApiKeys(agentId);
+  const [keyToRevoke, setKeyToRevoke] = useState<string | null>(null);
+  const [newKeyName, setNewKeyName] = useState('');
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [newlyCreatedKey, setNewlyCreatedKey] = useState<string | null>(null);
+
+  const handleCreateKey = async () => {
+    const key = await createApiKey(newKeyName || 'Default');
+    if (key) {
+      setNewlyCreatedKey(key);
+      setNewKeyName('');
+      setShowCreateDialog(false);
+    }
+  };
+
+  const handleRevokeKey = async () => {
+    if (keyToRevoke) {
+      await revokeApiKey(keyToRevoke);
+      setKeyToRevoke(null);
+    }
+  };
+
+  if (loading) {
+    return <div className="text-sm text-muted-foreground">Loading API keys...</div>;
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">
+          API keys authenticate programmatic access to this agent.
+        </p>
+        <Button onClick={() => setShowCreateDialog(true)} size="sm">
+          <Plus className="h-4 w-4 mr-2" />
+          Create Key
+        </Button>
+      </div>
+
+      {apiKeys.length === 0 ? (
+        <div className="text-center py-8 rounded-lg border border-dashed bg-muted/30">
+          <Key01 className="h-8 w-8 mx-auto mb-2 text-muted-foreground/50" />
+          <p className="text-sm text-muted-foreground">
+            No API keys yet. Create one to enable programmatic access.
+          </p>
+        </div>
+      ) : (
+        <AnimatedList>
+          {apiKeys.map((key) => (
+            <AnimatedItem key={key.id}>
+              <div className="p-4 rounded-lg border bg-card hover:bg-muted/30 transition-colors">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h4 className="text-sm font-medium">{key.name}</h4>
+                      <code className="text-xs px-1.5 py-0.5 rounded bg-muted font-mono">
+                        {key.key_prefix}
+                      </code>
+                    </div>
+                    <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                      <span>Created {formatDistanceToNow(new Date(key.created_at))} ago</span>
+                      {key.last_used_at && (
+                        <span>Last used {formatDistanceToNow(new Date(key.last_used_at))} ago</span>
+                      )}
+                      <span>{key.requests_per_minute}/min • {key.requests_per_day}/day</span>
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 flex-shrink-0"
+                    onClick={() => setKeyToRevoke(key.id)}
+                  >
+                    <Trash01 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </div>
+              </div>
+            </AnimatedItem>
+          ))}
+        </AnimatedList>
+      )}
+
+      {/* Create Key Dialog */}
+      <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create API Key</DialogTitle>
+            <DialogDescription>
+              Give your API key a name to help you identify it later.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="key-name">Key Name</Label>
+              <Input
+                id="key-name"
+                placeholder="e.g., Production, Mobile App, Testing"
+                value={newKeyName}
+                onChange={(e) => setNewKeyName(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleCreateKey} disabled={generating}>
+              {generating ? 'Creating...' : 'Create Key'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* New Key Display Dialog */}
+      <Dialog open={!!newlyCreatedKey} onOpenChange={() => setNewlyCreatedKey(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-warning" />
+              Save Your API Key
+            </DialogTitle>
+            <DialogDescription>
+              Copy this key now. You won't be able to see it again!
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <div className="flex items-center gap-2 p-3 bg-muted rounded-lg border">
+              <code className="flex-1 text-sm font-mono break-all">
+                {newlyCreatedKey}
+              </code>
+              <CopyButton 
+                content={newlyCreatedKey || ''} 
+                showToast={true} 
+                toastMessage="API key copied to clipboard" 
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setNewlyCreatedKey(null)}>
+              I've Saved My Key
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Revoke Confirmation */}
+      <AlertDialog open={!!keyToRevoke} onOpenChange={() => setKeyToRevoke(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Revoke API Key?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. Any applications using this key will immediately lose access.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleRevokeKey} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Revoke Key
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+};

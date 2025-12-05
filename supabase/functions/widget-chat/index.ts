@@ -6,6 +6,15 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Simple SHA-256 hash function for API key validation
+async function hashApiKey(key: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(key);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
 // Generate embedding for a query using Lovable AI
 async function generateEmbedding(query: string, apiKey: string): Promise<number[]> {
   const response = await fetch('https://ai.gateway.lovable.dev/v1/embeddings', {
@@ -77,6 +86,15 @@ function parseUserAgent(userAgent: string | null): { device: string; browser: st
   return { device, browser, os };
 }
 
+// Check if request is from widget (has valid widget origin)
+function isWidgetRequest(req: Request): boolean {
+  const origin = req.headers.get('origin');
+  const referer = req.headers.get('referer');
+  // Widget requests come from embedded iframes or the widget page
+  // They typically have an origin or referer set
+  return !!(origin || referer);
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -93,6 +111,57 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Check for API key authentication
+    const authHeader = req.headers.get('authorization');
+    const isFromWidget = isWidgetRequest(req);
+    
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const apiKey = authHeader.substring(7);
+      
+      // Hash the API key for comparison
+      const keyHash = await hashApiKey(apiKey);
+      
+      // Validate API key and check rate limits
+      const { data: validationResult, error: validationError } = await supabase
+        .rpc('validate_api_key', { p_key_hash: keyHash, p_agent_id: agentId });
+      
+      if (validationError) {
+        console.error('API key validation error:', validationError);
+        return new Response(
+          JSON.stringify({ error: 'API key validation failed' }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
+      const validation = validationResult?.[0];
+      
+      if (!validation?.valid) {
+        console.log('Invalid API key attempt for agent:', agentId);
+        return new Response(
+          JSON.stringify({ error: validation?.error_message || 'Invalid API key' }),
+          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
+      if (validation.rate_limited) {
+        console.log('Rate limited API key:', validation.key_id);
+        return new Response(
+          JSON.stringify({ error: validation.error_message || 'Rate limit exceeded' }),
+          { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
+      console.log('API key authenticated successfully:', validation.key_id);
+    } else if (!isFromWidget) {
+      // No API key and not from widget - reject
+      console.log('Rejected: No API key and not from widget origin');
+      return new Response(
+        JSON.stringify({ error: 'API key required. Include Authorization: Bearer <api_key> header.' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    // If from widget without API key, allow through (existing behavior)
 
     // Get agent configuration and user_id
     const { data: agent, error: agentError } = await supabase
@@ -505,7 +574,7 @@ When answering, you can naturally reference the information from the knowledge b
   } catch (error) {
     console.error('Widget chat error:', error);
     return new Response(
-      JSON.stringify({ error: error.message || 'Internal server error' }),
+      JSON.stringify({ error: error.message || 'An error occurred' }),
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

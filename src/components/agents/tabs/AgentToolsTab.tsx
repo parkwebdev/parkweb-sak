@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Plus, Trash01, ChevronDown, Link03, Eye, FlipBackward } from '@untitledui/icons';
+import { Plus, Trash01, ChevronDown, Link03, Eye, FlipBackward, Lightbulb01 } from '@untitledui/icons';
 import { CopyButton } from '@/components/ui/copy-button';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/lib/toast';
@@ -18,6 +18,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { AnimatedList } from '@/components/ui/animated-list';
 import { AnimatedItem } from '@/components/ui/animated-item';
 import { SavedIndicator } from '@/components/settings/SavedIndicator';
+import { AgentApiKeyManager } from '@/components/agents/AgentApiKeyManager';
+import { ApiUseCasesModal } from '@/components/agents/ApiUseCasesModal';
 
 type AgentTool = Tables<'agent_tools'>;
 type ToolsTab = 'api-access' | 'custom-tools' | 'webhooks';
@@ -33,6 +35,7 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
   const [activeTab, setActiveTab] = useState<ToolsTab>('api-access');
+  const [showUseCasesModal, setShowUseCasesModal] = useState(false);
   const [newTool, setNewTool] = useState({
     name: '',
     description: '',
@@ -51,7 +54,7 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
     { 
       id: 'api-access' as const, 
       label: 'API Access',
-      description: 'Enable API access to interact with your agent programmatically from external applications'
+      description: 'Authenticate programmatic access to your agent with API keys'
     },
     { 
       id: 'custom-tools' as const, 
@@ -66,25 +69,10 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
   ];
 
   const apiEndpoint = `https://mvaimvwdukpgvkifkfpa.supabase.co/functions/v1/widget-chat`;
-  const deploymentConfig = (agent?.deployment_config as any) || {};
 
   useEffect(() => {
     fetchTools();
   }, [agentId]);
-
-  useEffect(() => {
-    // Enable API by default
-    if (agent && onUpdate) {
-      if (!deploymentConfig.api_enabled) {
-        onUpdate(agent.id, {
-          deployment_config: {
-            ...deploymentConfig,
-            api_enabled: true,
-          },
-        });
-      }
-    }
-  }, []);
 
   const fetchTools = async () => {
     try {
@@ -164,22 +152,6 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
     }
   };
 
-  const getAgentApiUrl = () => {
-    return `${apiEndpoint}?agent_id=${agentId}`;
-  };
-
-  const handleToggleApi = async (enabled: boolean) => {
-    if (!agent || !onUpdate) return;
-    
-    await onUpdate(agent.id, {
-      deployment_config: {
-        ...deploymentConfig,
-        api_enabled: enabled,
-      },
-    });
-    toast.success(`API ${enabled ? 'enabled' : 'disabled'}`);
-  };
-
   const handleDeleteWebhook = async () => {
     if (!webhookToDelete) return;
     await deleteWebhook(webhookToDelete);
@@ -220,33 +192,35 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
       title="Tools"
       description={menuItems.find(item => item.id === activeTab)?.description || ''}
     >
-      {activeTab === 'api-access' && agent && onUpdate && (
-        <div className="space-y-4">
-          <div className="p-5 rounded-lg bg-muted/30 border border-dashed space-y-4">
+      {activeTab === 'api-access' && (
+        <div className="space-y-6">
+          {/* Endpoint URL */}
+          <div className="p-5 rounded-lg bg-muted/30 border border-dashed space-y-3">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium">Enable API</p>
-                <p className="text-xs text-muted-foreground">Allow external applications to interact with this agent</p>
-              </div>
-              <Switch
-                id="api-enabled"
-                checked={deploymentConfig?.api_enabled || false}
-                onCheckedChange={handleToggleApi}
-              />
+              <Label className="text-sm font-medium">API Endpoint</Label>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setShowUseCasesModal(true)}
+                className="text-xs"
+              >
+                <Lightbulb01 className="h-3.5 w-3.5 mr-1.5" />
+                View Use Cases
+              </Button>
             </div>
-
-            {deploymentConfig?.api_enabled && (
-              <div className="space-y-2 pt-2">
-                <Label className="text-xs font-medium">API Endpoint</Label>
-                <div className="flex items-center gap-2 p-3 bg-background rounded-md border">
-                  <code className="flex-1 text-xs font-mono break-all text-muted-foreground">
-                    {getAgentApiUrl()}
-                  </code>
-                  <CopyButton content={getAgentApiUrl()} showToast={true} toastMessage="API endpoint copied" />
-                </div>
-              </div>
-            )}
+            <div className="flex items-center gap-2 p-3 bg-background rounded-md border">
+              <code className="flex-1 text-xs font-mono break-all text-muted-foreground">
+                {apiEndpoint}
+              </code>
+              <CopyButton content={apiEndpoint} showToast={true} toastMessage="API endpoint copied" />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Requires an API key for authentication. Widget embeds don't need a key.
+            </p>
           </div>
+
+          {/* API Keys Manager */}
+          <AgentApiKeyManager agentId={agentId} />
         </div>
       )}
 
@@ -460,15 +434,14 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
             open={showLogsDialog}
             onOpenChange={setShowLogsDialog}
             webhookId={selectedWebhookForLogs}
-            agentId={agentId}
           />
 
           <AlertDialog open={!!webhookToDelete} onOpenChange={() => setWebhookToDelete(null)}>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Delete Webhook</AlertDialogTitle>
+                <AlertDialogTitle>Delete Webhook?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  Are you sure you want to delete this webhook? This action cannot be undone.
+                  This action cannot be undone. The webhook will stop receiving events immediately.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
@@ -481,6 +454,14 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
           </AlertDialog>
         </div>
       )}
+
+      {/* Use Cases Modal */}
+      <ApiUseCasesModal
+        open={showUseCasesModal}
+        onOpenChange={setShowUseCasesModal}
+        agentId={agentId}
+        apiEndpoint={apiEndpoint}
+      />
     </AgentSettingsLayout>
   );
 };
