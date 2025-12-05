@@ -13,6 +13,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { user, loading, justSignedIn, clearJustSignedIn } = useAuth();
   const location = useLocation();
   const [showBlurTransition, setShowBlurTransition] = useState(false);
+  const [blurComplete, setBlurComplete] = useState(false);
 
   // Handle loading complete - trigger blur-to-clear transition
   const handleLoadingComplete = () => {
@@ -41,6 +42,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   }
 
   // After loading animation completes, show app with blur-to-clear transition
+  // Keep wrapper to prevent re-mount of children which would trigger PageTransition again
   if (showBlurTransition) {
     return (
       <motion.div
@@ -48,7 +50,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
         animate={{ filter: "blur(0px)", opacity: 1 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
         onAnimationComplete={() => {
-          setShowBlurTransition(false);
+          setBlurComplete(true);
           toast.success("Welcome back!", {
             description: "You have been signed in successfully.",
           });
