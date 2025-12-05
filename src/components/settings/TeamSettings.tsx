@@ -10,7 +10,6 @@ import { useTeam } from '@/hooks/useTeam';
 import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
 import { TeamMember } from '@/types/team';
 import { LoadingState } from '@/components/ui/loading-state';
-import { Spinner } from '@/components/ui/spinner';
 
 interface TeamSettingsProps {
   openMemberId?: string | null;

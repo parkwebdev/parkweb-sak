@@ -17,7 +17,8 @@ import { useWebhooks } from '@/hooks/useWebhooks';
 import { CreateWebhookDialog } from '@/components/agents/webhooks/CreateWebhookDialog';
 import { EditWebhookDialog } from '@/components/agents/webhooks/EditWebhookDialog';
 import { WebhookLogsDialog } from '@/components/agents/webhooks/WebhookLogsDialog';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { SimpleDeleteDialog } from '@/components/ui/simple-delete-dialog';
+import { LoadingState } from '@/components/ui/loading-state';
 import { AnimatedList } from '@/components/ui/animated-list';
 import { AnimatedItem } from '@/components/ui/animated-item';
 import { SavedIndicator } from '@/components/settings/SavedIndicator';
@@ -273,7 +274,7 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
   };
 
   if (loading) {
-    return <div className="text-muted-foreground">Loading tools...</div>;
+    return <LoadingState text="Loading tools..." />;
   }
 
   return (
@@ -468,8 +469,8 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
 
       {activeTab === 'webhooks' && (
         <div className="space-y-4">
-          {webhooksLoading ? (
-            <div className="text-muted-foreground">Loading webhooks...</div>
+        {webhooksLoading ? (
+            <LoadingState size="sm" text="Loading webhooks..." />
           ) : webhooks.length === 0 ? (
             <EmptyState
               icon={<Link03 className="h-5 w-5 text-muted-foreground/50" />}
@@ -586,22 +587,13 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
             />
           )}
 
-          <AlertDialog open={!!webhookToDelete} onOpenChange={() => setWebhookToDelete(null)}>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Delete Webhook?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This will permanently delete this webhook and all its logs. This action cannot be undone.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={handleDeleteWebhook} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                  Delete
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+          <SimpleDeleteDialog
+            open={!!webhookToDelete}
+            onOpenChange={() => setWebhookToDelete(null)}
+            title="Delete Webhook?"
+            description="This will permanently delete this webhook and all its logs. This action cannot be undone."
+            onConfirm={handleDeleteWebhook}
+          />
         </div>
       )}
 

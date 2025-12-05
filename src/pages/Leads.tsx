@@ -10,6 +10,7 @@ import { LeadDetailsSheet } from '@/components/leads/LeadDetailsSheet';
 import { CreateLeadDialog } from '@/components/leads/CreateLeadDialog';
 import { DeleteLeadDialog } from '@/components/leads/DeleteLeadDialog';
 import { PageHeader } from '@/components/ui/page-header';
+import { LoadingState } from '@/components/ui/loading-state';
 import type { Tables } from '@/integrations/supabase/types';
 import { AnimatedList } from '@/components/ui/animated-list';
 import { AnimatedItem } from '@/components/ui/animated-item';
@@ -247,7 +248,7 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
 
         {/* Content */}
         {loading ? (
-          <div className="text-center py-12 text-muted-foreground">Loading leads...</div>
+          <LoadingState text="Loading leads..." />
         ) : viewMode === 'grid' ? (
           <AnimatedList className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" staggerDelay={0.06}>
             {filteredLeads.map((lead) => (

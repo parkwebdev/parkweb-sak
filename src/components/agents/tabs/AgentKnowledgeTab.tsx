@@ -7,6 +7,7 @@ import { KnowledgeSourceCard } from '@/components/agents/KnowledgeSourceCard';
 import { AddKnowledgeDialog } from '@/components/agents/AddKnowledgeDialog';
 import { HelpArticlesManager } from '@/components/agents/HelpArticlesManager';
 import { AgentSettingsLayout } from '@/components/agents/AgentSettingsLayout';
+import { LoadingState } from '@/components/ui/loading-state';
 
 interface AgentKnowledgeTabProps {
   agentId: string;
@@ -34,7 +35,7 @@ export const AgentKnowledgeTab = ({ agentId, userId }: AgentKnowledgeTabProps) =
   ];
 
   if (loading) {
-    return <div className="text-center py-8 text-muted-foreground">Loading knowledge sources...</div>;
+    return <LoadingState text="Loading knowledge sources..." />;
   }
 
   return (

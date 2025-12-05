@@ -12,7 +12,6 @@ import { useCustomDomains } from '@/hooks/useCustomDomains';
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { LoadingState } from '@/components/ui/loading-state';
-import { Spinner } from '@/components/ui/spinner';
 
 export const CustomDomainManager = () => {
   const { domains, loading, verifying, addDomain, verifyDomain, removeDomain, setPrimaryDomain } = useCustomDomains();
