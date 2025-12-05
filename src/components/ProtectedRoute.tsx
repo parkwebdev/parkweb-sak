@@ -53,7 +53,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
             description: "You have been signed in successfully.",
           });
         }}
-        className="h-full"
+        className="h-full bg-background"
       >
         {children}
       </motion.div>
