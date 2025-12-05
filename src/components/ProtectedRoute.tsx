@@ -12,24 +12,13 @@ interface ProtectedRouteProps {
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { user, loading, justSignedIn, clearJustSignedIn } = useAuth();
   const location = useLocation();
-  const [showBlurTransition, setShowBlurTransition] = useState(false);
-  const [blurComplete, setBlurComplete] = useState(false);
+  const [loadingComplete, setLoadingComplete] = useState(false);
+  const [hasShownToast, setHasShownToast] = useState(false);
 
-  // Handle loading complete - trigger blur-to-clear transition
   const handleLoadingComplete = () => {
-    setShowBlurTransition(true);
+    setLoadingComplete(true);
     clearJustSignedIn();
   };
-
-  // Show animated loading screen only for fresh sign-ins
-  if (justSignedIn) {
-    return (
-      <AppLoadingScreen 
-        isLoading={false}
-        onLoadingComplete={handleLoadingComplete}
-      />
-    );
-  }
 
   // Normal loading state (session check) - show nothing
   if (loading) {
@@ -37,19 +26,43 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   }
 
   if (!user) {
-    // Redirect to auth page but save the attempted location
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // After loading animation completes, show app immediately
-  if (showBlurTransition) {
-    if (!blurComplete) {
-      setBlurComplete(true);
-      toast.success("Welcome back!", {
-        description: "You have been signed in successfully.",
-      });
-    }
-    return <>{children}</>;
+  // For fresh sign-ins: render BOTH loading screen AND children (blurred underneath)
+  if (justSignedIn || (loadingComplete && !hasShownToast)) {
+    return (
+      <>
+        {/* Children underneath - start blurred, animate to clear when loading completes */}
+        <motion.div
+          initial={{ filter: "blur(8px)", opacity: 0.7 }}
+          animate={loadingComplete 
+            ? { filter: "blur(0px)", opacity: 1 } 
+            : { filter: "blur(8px)", opacity: 0.7 }
+          }
+          transition={{ duration: 0.5, ease: "easeOut" }}
+          onAnimationComplete={() => {
+            if (loadingComplete && !hasShownToast) {
+              setHasShownToast(true);
+              toast.success("Welcome back!", {
+                description: "You have been signed in successfully.",
+              });
+            }
+          }}
+          className="h-full"
+        >
+          {children}
+        </motion.div>
+
+        {/* Loading screen on top - exits instantly when complete */}
+        {justSignedIn && (
+          <AppLoadingScreen 
+            isLoading={false}
+            onLoadingComplete={handleLoadingComplete}
+          />
+        )}
+      </>
+    );
   }
 
   return <>{children}</>;
