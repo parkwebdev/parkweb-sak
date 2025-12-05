@@ -17,6 +17,7 @@ import {
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
 import { DotsHorizontal as MoreHorizontal, Settings01 as Settings, Trash01 as Trash, X, Users01 } from '@untitledui/icons';
+import { EmptyState } from '@/components/ui/empty-state';
 import { TeamMember } from '@/types/team';
 import { AnimatedTableRow } from '@/components/ui/animated-table-row';
 import { Spinner } from '@/components/ui/spinner';
@@ -80,13 +81,11 @@ export const TeamMembersTable: React.FC<TeamMembersTableProps> = ({
 
   if (teamMembers.length === 0) {
     return (
-      <div className="text-center py-12 px-8 rounded-lg border border-dashed bg-muted/30">
-        <div className="w-12 h-12 rounded-full bg-muted/50 border border-border flex items-center justify-center mx-auto mb-3">
-          <Users01 className="h-5 w-5 text-muted-foreground/50" />
-        </div>
-        <p className="text-sm text-muted-foreground mb-1">No team members found</p>
-        <p className="text-xs text-muted-foreground">Invite team members to get started.</p>
-      </div>
+      <EmptyState
+        icon={<Users01 className="h-5 w-5 text-muted-foreground/50" />}
+        title="No team members found"
+        description="Invite team members to get started."
+      />
     );
   }
 

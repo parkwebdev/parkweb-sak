@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Trash01, Edit02, Image03, ChevronRight } from '@untitledui/icons';
+import { EmptyState } from '@/components/ui/empty-state';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useSortable } from '@dnd-kit/sortable';
@@ -684,14 +685,10 @@ export const AgentContentTab = () => {
           {announcementsLoading ? (
             <div className="text-center py-8 text-muted-foreground">Loading announcements...</div>
           ) : announcements.length === 0 ? (
-            <div className="text-center py-12 px-8 rounded-lg border border-dashed bg-muted/30">
-              <div className="w-12 h-12 rounded-full bg-muted/50 border border-border flex items-center justify-center mx-auto mb-3">
-                <Image03 className="h-5 w-5 text-muted-foreground/50" />
-              </div>
-              <p className="text-sm text-muted-foreground">
-                No announcements yet. Create your first announcement to engage with your users.
-              </p>
-            </div>
+            <EmptyState
+              icon={<Image03 className="h-5 w-5 text-muted-foreground/50" />}
+              title="No announcements yet. Create your first announcement to engage with your users."
+            />
           ) : (
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleAnnouncementDragEnd}>
               <SortableContext items={announcements.map(a => a.id)} strategy={verticalListSortingStrategy}>
@@ -725,14 +722,10 @@ export const AgentContentTab = () => {
           {newsLoading ? (
             <div className="text-center py-8 text-muted-foreground">Loading news...</div>
           ) : newsItems.length === 0 ? (
-            <div className="text-center py-12 px-8 rounded-lg border border-dashed bg-muted/30">
-              <div className="w-12 h-12 rounded-full bg-muted/50 border border-border flex items-center justify-center mx-auto mb-3">
-                <Image03 className="h-5 w-5 text-muted-foreground/50" />
-              </div>
-              <p className="text-sm text-muted-foreground">
-                No news items yet. Create your first news article to keep users informed.
-              </p>
-            </div>
+            <EmptyState
+              icon={<Image03 className="h-5 w-5 text-muted-foreground/50" />}
+              title="No news items yet. Create your first news article to keep users informed."
+            />
           ) : (
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleNewsDragEnd}>
               <SortableContext items={newsItems.map(n => n.id)} strategy={verticalListSortingStrategy}>

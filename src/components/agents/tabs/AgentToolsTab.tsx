@@ -4,6 +4,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Trash01, ChevronDown, Link03, Eye, FlipBackward, Lightbulb01, Edit03 } from '@untitledui/icons';
+import { EmptyState } from '@/components/ui/empty-state';
 import { CreateToolDialog } from '@/components/agents/CreateToolDialog';
 import { EditToolDialog } from '@/components/agents/EditToolDialog';
 import { TestToolResultDialog } from '@/components/agents/TestToolResultDialog';
@@ -343,14 +344,11 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
 
           {/* Tools List */}
           {tools.length === 0 ? (
-            <div className="text-center py-8 px-8 rounded-lg border border-dashed bg-muted/30">
-              <div className="w-12 h-12 rounded-full bg-muted/50 border border-border flex items-center justify-center mx-auto mb-3">
-                <Link03 className="h-5 w-5 text-muted-foreground/50" />
-              </div>
-              <p className="text-sm text-muted-foreground">
-                No tools configured yet.
-              </p>
-            </div>
+            <EmptyState
+              icon={<Link03 className="h-5 w-5 text-muted-foreground/50" />}
+              title="No tools configured yet."
+              className="py-8"
+            />
           ) : (
             <div className="space-y-2">
               {tools.map((tool) => (
@@ -473,17 +471,11 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
           {webhooksLoading ? (
             <div className="text-muted-foreground">Loading webhooks...</div>
           ) : webhooks.length === 0 ? (
-            <div className="text-center py-12 px-8 rounded-lg border border-dashed bg-muted/30">
-              <div className="w-12 h-12 rounded-full bg-muted/50 border border-border flex items-center justify-center mx-auto mb-3">
-                <Link03 className="h-5 w-5 text-muted-foreground/50" />
-              </div>
-              <p className="text-sm text-muted-foreground mb-4">
-                No webhooks configured yet. Create your first webhook to send events to external APIs.
-              </p>
-              <Button onClick={() => setShowCreateWebhook(true)} size="sm">
-                Create Webhook
-              </Button>
-            </div>
+            <EmptyState
+              icon={<Link03 className="h-5 w-5 text-muted-foreground/50" />}
+              title="No webhooks configured yet. Create your first webhook to send events to external APIs."
+              action={<Button onClick={() => setShowCreateWebhook(true)} size="sm">Create Webhook</Button>}
+            />
           ) : (
             <>
               <div className="flex justify-end">

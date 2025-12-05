@@ -6,6 +6,7 @@ import { Badge } from '@/components/Badge';
 
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { SearchMd, MessageChatSquare, User01, Send01, FaceSmile } from '@untitledui/icons';
+import { EmptyState } from '@/components/ui/empty-state';
 import { useConversations } from '@/hooks/useConversations';
 import { ConversationMetadataPanel } from '@/components/conversations/ConversationMetadataPanel';
 import type { Tables } from '@/integrations/supabase/types';
@@ -318,12 +319,11 @@ const Conversations: React.FC = () => {
                 Loading...
               </div>
             ) : filteredConversations.length === 0 ? (
-              <div className="text-center py-12 px-8 m-4 rounded-lg border border-dashed bg-muted/30">
-                <div className="w-12 h-12 rounded-full bg-muted/50 border border-border flex items-center justify-center mx-auto mb-3">
-                  <MessageChatSquare className="h-5 w-5 text-muted-foreground/50" />
-                </div>
-                <p className="text-sm text-muted-foreground">No conversations yet</p>
-              </div>
+              <EmptyState
+                icon={<MessageChatSquare className="h-5 w-5 text-muted-foreground/50" />}
+                title="No conversations yet"
+                className="m-4"
+              />
             ) : (
               <div>
                 {filteredConversations.map((conv) => {
@@ -428,12 +428,10 @@ const Conversations: React.FC = () => {
                       Loading messages...
                     </div>
                   ) : messages.length === 0 ? (
-                    <div className="text-center py-12 px-8 rounded-lg border border-dashed bg-muted/30">
-                      <div className="w-12 h-12 rounded-full bg-muted/50 border border-border flex items-center justify-center mx-auto mb-3">
-                        <MessageChatSquare className="h-5 w-5 text-muted-foreground/50" />
-                      </div>
-                      <p className="text-sm text-muted-foreground">No messages yet</p>
-                    </div>
+                    <EmptyState
+                      icon={<MessageChatSquare className="h-5 w-5 text-muted-foreground/50" />}
+                      title="No messages yet"
+                    />
                   ) : (
                   <div className="space-y-3 max-w-4xl mx-auto">
                     {messages.map((message) => {
