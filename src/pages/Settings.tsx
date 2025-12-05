@@ -8,10 +8,9 @@ import { ProfileSettings } from '@/components/settings/ProfileSettings';
 import { NotificationSettings } from '@/components/settings/NotificationSettings';
 import { SubscriptionSettings } from '@/components/settings/SubscriptionSettings';
 import { UsageSettings } from '@/components/settings/UsageSettings';
-import { ApiKeySettings } from '@/components/settings/ApiKeySettings';
 import { TeamSettings } from '@/components/settings/TeamSettings';
 
-export type SettingsTab = 'general' | 'profile' | 'team' | 'notifications' | 'billing' | 'usage' | 'api-keys';
+export type SettingsTab = 'general' | 'profile' | 'team' | 'notifications' | 'billing' | 'usage';
 
 interface SettingsProps {
   onMenuClick?: () => void;
@@ -33,7 +32,7 @@ const Settings: React.FC<SettingsProps> = ({ onMenuClick }) => {
       return;
     }
     
-    if (tabParam && ['general', 'profile', 'team', 'notifications', 'billing', 'usage', 'api-keys'].includes(tabParam)) {
+    if (tabParam && ['general', 'profile', 'team', 'notifications', 'billing', 'usage'].includes(tabParam)) {
       setActiveTab(tabParam as SettingsTab);
     }
   }, [tabParam]);
@@ -72,8 +71,6 @@ const Settings: React.FC<SettingsProps> = ({ onMenuClick }) => {
         return <UsageSettings />;
       case 'notifications':
         return <NotificationSettings />;
-      case 'api-keys':
-        return <ApiKeySettings />;
       default:
         return <GeneralSettings />;
     }

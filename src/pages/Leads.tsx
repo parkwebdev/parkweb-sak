@@ -8,7 +8,7 @@ import { LeadCard } from '@/components/leads/LeadCard';
 import { LeadsTable } from '@/components/leads/LeadsTable';
 import { LeadDetailsSheet } from '@/components/leads/LeadDetailsSheet';
 import { CreateLeadDialog } from '@/components/leads/CreateLeadDialog';
-import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog';
+import { DeleteLeadDialog } from '@/components/leads/DeleteLeadDialog';
 import type { Tables } from '@/integrations/supabase/types';
 import { AnimatedList } from '@/components/ui/animated-list';
 import { AnimatedItem } from '@/components/ui/animated-item';
@@ -18,7 +18,7 @@ interface LeadsProps {
 }
 
 const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
-  const { leads, loading, createLead, updateLead, deleteLead, deleteLeads } = useLeads();
+  const { leads, loading, createLead, updateLead, deleteLead, deleteLeads, getLeadsWithConversations } = useLeads();
   const [selectedLead, setSelectedLead] = useState<Tables<'leads'> | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -29,8 +29,11 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
   // Bulk selection state
   const [selectedLeadIds, setSelectedLeadIds] = useState<Set<string>>(new Set());
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [deleteConfirmValue, setDeleteConfirmValue] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
+  
+  // Single lead delete from details sheet
+  const [singleDeleteLeadId, setSingleDeleteLeadId] = useState<string | null>(null);
+  const [isSingleDeleteOpen, setIsSingleDeleteOpen] = useState(false);
 
   const filteredLeads = leads.filter((lead) => {
     const matchesSearch = 
@@ -90,13 +93,30 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
     setSelectedLeadIds(newSelected);
   };
 
-  const handleBulkDelete = async () => {
+  const handleBulkDelete = async (deleteConversations: boolean) => {
     setIsDeleting(true);
     try {
-      await deleteLeads(Array.from(selectedLeadIds));
+      await deleteLeads(Array.from(selectedLeadIds), deleteConversations);
       setSelectedLeadIds(new Set());
       setIsDeleteDialogOpen(false);
-      setDeleteConfirmValue('');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleSingleDelete = (leadId: string) => {
+    setSingleDeleteLeadId(leadId);
+    setIsSingleDeleteOpen(true);
+  };
+
+  const handleSingleDeleteConfirm = async (deleteConversation: boolean) => {
+    if (!singleDeleteLeadId) return;
+    setIsDeleting(true);
+    try {
+      await deleteLead(singleDeleteLeadId, deleteConversation);
+      setSingleDeleteLeadId(null);
+      setIsSingleDeleteOpen(false);
+      setIsDetailsOpen(false);
     } finally {
       setIsDeleting(false);
     }
@@ -277,7 +297,7 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
         open={isDetailsOpen}
         onOpenChange={setIsDetailsOpen}
         onUpdate={updateLead}
-        onDelete={deleteLead}
+        onDelete={handleSingleDelete}
       />
 
       <CreateLeadDialog
@@ -288,15 +308,21 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
         }}
       />
 
-      <DeleteConfirmationDialog
+      <DeleteLeadDialog
         open={isDeleteDialogOpen}
         onOpenChange={setIsDeleteDialogOpen}
-        title={`Delete ${selectedLeadIds.size} lead${selectedLeadIds.size > 1 ? 's' : ''}?`}
-        description="This action cannot be undone. All selected leads and their associated data will be permanently deleted."
-        confirmationText="delete"
-        confirmationValue={deleteConfirmValue}
-        onConfirmationValueChange={setDeleteConfirmValue}
+        leadIds={Array.from(selectedLeadIds)}
+        hasConversations={getLeadsWithConversations(Array.from(selectedLeadIds))}
         onConfirm={handleBulkDelete}
+        isDeleting={isDeleting}
+      />
+
+      <DeleteLeadDialog
+        open={isSingleDeleteOpen}
+        onOpenChange={setIsSingleDeleteOpen}
+        leadIds={singleDeleteLeadId ? [singleDeleteLeadId] : []}
+        hasConversations={singleDeleteLeadId ? getLeadsWithConversations([singleDeleteLeadId]) : false}
+        onConfirm={handleSingleDeleteConfirm}
         isDeleting={isDeleting}
       />
     </main>

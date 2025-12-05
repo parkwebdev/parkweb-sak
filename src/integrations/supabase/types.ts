@@ -156,45 +156,6 @@ export type Database = {
           },
         ]
       }
-      api_keys: {
-        Row: {
-          created_at: string
-          id: string
-          key: string
-          key_hash: string | null
-          key_preview: string
-          last_used_at: string | null
-          name: string
-          permissions: string[] | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          key: string
-          key_hash?: string | null
-          key_preview: string
-          last_used_at?: string | null
-          name: string
-          permissions?: string[] | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          key?: string
-          key_hash?: string | null
-          key_preview?: string
-          last_used_at?: string | null
-          name?: string
-          permissions?: string[] | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       article_feedback: {
         Row: {
           article_id: string
