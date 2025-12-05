@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { CopyButton } from '@/components/ui/copy-button';
-import { Plus, Trash01, Key01, AlertCircle } from '@untitledui/icons';
+import { Trash01, Key01, AlertCircle } from '@untitledui/icons';
 import { useAgentApiKeys } from '@/hooks/useAgentApiKeys';
 import { AnimatedList } from '@/components/ui/animated-list';
 import { AnimatedItem } from '@/components/ui/animated-item';
@@ -65,7 +65,6 @@ export const AgentApiKeyManager = ({ agentId }: AgentApiKeyManagerProps) => {
           API keys authenticate programmatic access to this agent.
         </p>
         <Button onClick={() => setShowCreateDialog(true)} size="sm">
-          <Plus className="h-4 w-4 mr-2" />
           Create Key
         </Button>
       </div>
