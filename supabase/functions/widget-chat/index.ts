@@ -90,9 +90,51 @@ function parseUserAgent(userAgent: string | null): { device: string; browser: st
 function isWidgetRequest(req: Request): boolean {
   const origin = req.headers.get('origin');
   const referer = req.headers.get('referer');
-  // Widget requests come from embedded iframes or the widget page
-  // They typically have an origin or referer set
   return !!(origin || referer);
+}
+
+// Call a tool endpoint with the provided arguments
+async function callToolEndpoint(
+  tool: { name: string; endpoint_url: string; headers: any; timeout_ms: number },
+  args: any
+): Promise<{ success: boolean; result?: any; error?: string }> {
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), tool.timeout_ms || 10000);
+
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      ...(tool.headers || {}),
+    };
+
+    console.log(`Calling tool ${tool.name} at ${tool.endpoint_url} with args:`, args);
+
+    const response = await fetch(tool.endpoint_url, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(args),
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Tool ${tool.name} returned error:`, response.status, errorText);
+      return { success: false, error: `HTTP ${response.status}: ${errorText.substring(0, 200)}` };
+    }
+
+    const result = await response.json();
+    console.log(`Tool ${tool.name} returned:`, result);
+    return { success: true, result };
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      console.error(`Tool ${tool.name} timed out after ${tool.timeout_ms}ms`);
+      return { success: false, error: 'Request timed out' };
+    }
+    console.error(`Tool ${tool.name} error:`, error);
+    return { success: false, error: error.message || 'Unknown error' };
+  }
 }
 
 serve(async (req) => {
@@ -173,6 +215,31 @@ serve(async (req) => {
     if (agentError) throw agentError;
 
     const deploymentConfig = (agent.deployment_config as any) || {};
+
+    // Fetch enabled custom tools for this agent
+    const { data: agentTools, error: toolsError } = await supabase
+      .from('agent_tools')
+      .select('id, name, description, parameters, endpoint_url, headers, timeout_ms')
+      .eq('agent_id', agentId)
+      .eq('enabled', true);
+
+    if (toolsError) {
+      console.error('Error fetching tools:', toolsError);
+    }
+
+    // Filter to only tools with valid endpoint URLs
+    const enabledTools = (agentTools || []).filter(tool => tool.endpoint_url);
+    console.log(`Found ${enabledTools.length} enabled tools with endpoints for agent ${agentId}`);
+
+    // Format tools for OpenAI/Lovable AI API
+    const formattedTools = enabledTools.length > 0 ? enabledTools.map(tool => ({
+      type: 'function' as const,
+      function: {
+        name: tool.name,
+        description: tool.description,
+        parameters: tool.parameters || { type: 'object', properties: {} },
+      }
+    })) : undefined;
 
     // Capture request metadata
     const ipAddress = req.headers.get('cf-connecting-ip') || 
@@ -461,27 +528,36 @@ When answering, you can naturally reference the information from the knowledge b
       }
     }
 
-    // Call Lovable AI Gateway with enhanced prompt
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    // Build the initial AI request
+    const aiRequestBody: any = {
+      model: agent.model || 'google/gemini-2.5-flash',
+      messages: [
+        {
+          role: 'system',
+          content: systemPrompt,
+        },
+        ...messages,
+      ],
+      stream: false, // Non-streaming for easier message persistence
+      temperature: agent.temperature || 0.7,
+      max_tokens: agent.max_tokens || 2000,
+      top_p: deploymentConfig.top_p || 1.0,
+    };
+
+    // Add tools if available
+    if (formattedTools && formattedTools.length > 0) {
+      aiRequestBody.tools = formattedTools;
+      aiRequestBody.tool_choice = 'auto';
+    }
+
+    // Call Lovable AI Gateway
+    let response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${LOVABLE_API_KEY}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        model: agent.model || 'google/gemini-2.5-flash',
-        messages: [
-          {
-            role: 'system',
-            content: systemPrompt,
-          },
-          ...messages,
-        ],
-        stream: false, // Non-streaming for easier message persistence
-        temperature: agent.temperature || 0.7,
-        max_tokens: agent.max_tokens || 2000,
-        top_p: deploymentConfig.top_p || 1.0,
-      }),
+      body: JSON.stringify(aiRequestBody),
     });
 
     if (!response.ok) {
@@ -508,8 +584,88 @@ When answering, you can naturally reference the information from the knowledge b
       throw new Error('AI Gateway error');
     }
 
-    const aiResponse = await response.json();
-    const assistantContent = aiResponse.choices?.[0]?.message?.content || 'I apologize, but I was unable to generate a response.';
+    let aiResponse = await response.json();
+    let assistantMessage = aiResponse.choices?.[0]?.message;
+    let assistantContent = assistantMessage?.content || '';
+    const toolsUsed: { name: string; success: boolean }[] = [];
+
+    // Handle tool calls if AI decided to use tools
+    if (assistantMessage?.tool_calls && assistantMessage.tool_calls.length > 0) {
+      console.log(`AI requested ${assistantMessage.tool_calls.length} tool call(s)`);
+      
+      const toolResults: any[] = [];
+      
+      for (const toolCall of assistantMessage.tool_calls) {
+        const toolName = toolCall.function?.name;
+        const toolArgs = JSON.parse(toolCall.function?.arguments || '{}');
+        
+        // Find the tool configuration
+        const tool = enabledTools.find(t => t.name === toolName);
+        
+        if (tool && tool.endpoint_url) {
+          const result = await callToolEndpoint({
+            name: tool.name,
+            endpoint_url: tool.endpoint_url,
+            headers: tool.headers || {},
+            timeout_ms: tool.timeout_ms || 10000,
+          }, toolArgs);
+
+          toolsUsed.push({ name: toolName, success: result.success });
+
+          toolResults.push({
+            role: 'tool',
+            tool_call_id: toolCall.id,
+            content: result.success 
+              ? JSON.stringify(result.result) 
+              : JSON.stringify({ error: result.error }),
+          });
+        } else {
+          console.error(`Tool ${toolName} not found or has no endpoint`);
+          toolResults.push({
+            role: 'tool',
+            tool_call_id: toolCall.id,
+            content: JSON.stringify({ error: `Tool ${toolName} is not configured` }),
+          });
+          toolsUsed.push({ name: toolName, success: false });
+        }
+      }
+
+      // Call AI again with tool results
+      const followUpMessages = [
+        ...aiRequestBody.messages,
+        assistantMessage,
+        ...toolResults,
+      ];
+
+      console.log('Calling AI with tool results for final response');
+
+      const followUpResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...aiRequestBody,
+          messages: followUpMessages,
+          tools: undefined, // Don't pass tools again
+          tool_choice: undefined,
+        }),
+      });
+
+      if (followUpResponse.ok) {
+        const followUpData = await followUpResponse.json();
+        assistantContent = followUpData.choices?.[0]?.message?.content || assistantContent || 'I apologize, but I was unable to generate a response.';
+      } else {
+        console.error('Follow-up AI call failed:', await followUpResponse.text());
+        assistantContent = assistantContent || 'I apologize, but I encountered an error processing the tool results.';
+      }
+    }
+
+    // Fallback if no content
+    if (!assistantContent) {
+      assistantContent = 'I apologize, but I was unable to generate a response.';
+    }
 
     // Save the assistant message to database
     const { data: assistantMsg, error: assistantMsgError } = await supabase.from('messages').insert({
@@ -520,6 +676,7 @@ When answering, you can naturally reference the information from the knowledge b
         source: 'ai',
         model: agent.model,
         knowledge_sources: sources.length > 0 ? sources : undefined,
+        tools_used: toolsUsed.length > 0 ? toolsUsed : undefined,
       }
     }).select('id').single();
 
@@ -566,6 +723,7 @@ When answering, you can naturally reference the information from the knowledge b
         userMessageId,
         assistantMessageId,
         sources: sources.length > 0 ? sources : undefined,
+        toolsUsed: toolsUsed.length > 0 ? toolsUsed : undefined,
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
