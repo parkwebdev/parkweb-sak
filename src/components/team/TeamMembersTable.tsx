@@ -19,6 +19,7 @@ import {
 import { DotsHorizontal as MoreHorizontal, Settings01 as Settings, Trash01 as Trash, X } from '@untitledui/icons';
 import { TeamMember } from '@/types/team';
 import { AnimatedTableRow } from '@/components/ui/animated-table-row';
+import { Spinner } from '@/components/ui/spinner';
 
 interface TeamMembersTableProps {
   teamMembers: TeamMember[];
@@ -71,39 +72,8 @@ export const TeamMembersTable: React.FC<TeamMembersTableProps> = ({
 
   if (loading) {
     return (
-      <div className="w-full bg-card border border-border rounded-xl overflow-hidden">
-        <div className="w-full overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Team Member</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead className="w-24">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {[1, 2, 3].map((i) => (
-                <TableRow key={i}>
-                  <TableCell>
-                    <div className="flex items-center space-x-3">
-                      <div className="h-8 w-8 rounded-full bg-muted animate-pulse" />
-                      <div>
-                        <div className="h-4 w-32 bg-muted rounded animate-pulse mb-1" />
-                        <div className="h-3 w-48 bg-muted rounded animate-pulse" />
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="h-6 w-20 bg-muted rounded animate-pulse" />
-                  </TableCell>
-                  <TableCell>
-                    <div className="h-8 w-8 bg-muted rounded animate-pulse" />
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+      <div className="w-full bg-card border border-border rounded-xl p-8 flex items-center justify-center">
+        <Spinner size="lg" />
       </div>
     );
   }

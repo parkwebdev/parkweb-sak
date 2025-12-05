@@ -9,6 +9,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { KeyboardShortcutsDropdown } from '@/components/KeyboardShortcutsDropdown';
+import { Spinner } from '@/components/ui/spinner';
 
 interface UserProfile {
   display_name: string | null;
@@ -76,9 +77,7 @@ export const UserAccountCard: React.FC<UserAccountCardProps> = ({ isCollapsed = 
       <div className={`relative flex w-full gap-3 bg-card rounded-xl transition-all ${
         isCollapsed ? 'p-1.5 justify-center' : 'border shadow-sm p-3 border-border'
       }`}>
-        <div className="animate-pulse">
-          <div className={`bg-muted rounded-full ${isCollapsed ? 'h-6 w-6' : 'h-8 w-8'}`} />
-        </div>
+        <Spinner size="sm" />
       </div>
     );
   }

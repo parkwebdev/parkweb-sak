@@ -10,6 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { AnimatedList } from '@/components/ui/animated-list';
 import { AnimatedItem } from '@/components/ui/animated-item';
+import { Spinner } from '@/components/ui/spinner';
 
 export const GeneralSettings: React.FC = () => {
   const { user } = useAuth();
@@ -153,22 +154,8 @@ export const GeneralSettings: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="space-y-4">
-        <Card>
-          <CardContent className="space-y-4 py-8">
-            <div className="space-y-6">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="flex items-center justify-between">
-                  <div className="space-y-2">
-                    <div className="h-4 w-32 bg-muted rounded animate-pulse" />
-                    <div className="h-3 w-48 bg-muted rounded animate-pulse" />
-                  </div>
-                  <div className="h-6 w-12 bg-muted rounded animate-pulse" />
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+      <div className="flex items-center justify-center py-12">
+        <Spinner size="lg" />
       </div>
     );
   }

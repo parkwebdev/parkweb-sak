@@ -204,16 +204,16 @@ export const CreateScheduledReportDialog = ({ open, onOpenChange }: CreateSchedu
             )}
           </div>
 
-          {/* Actions */}
           <div className="flex justify-end gap-2 pt-4">
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
             <Button 
               onClick={handleSubmit} 
-              disabled={loading || !name || recipients.length === 0}
+              disabled={!name || recipients.length === 0}
+              loading={loading}
             >
-              {loading ? 'Creating...' : 'Create Schedule'}
+              Create Schedule
             </Button>
           </div>
         </div>

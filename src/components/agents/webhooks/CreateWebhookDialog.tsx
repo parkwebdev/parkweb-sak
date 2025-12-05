@@ -408,8 +408,8 @@ export const CreateWebhookDialog = ({ open, onOpenChange, agentId }: CreateWebho
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={loading}>
-            {loading ? 'Creating...' : 'Create Webhook'}
+          <Button onClick={handleSubmit} loading={loading}>
+            Create Webhook
           </Button>
         </DialogFooter>
       </DialogContent>

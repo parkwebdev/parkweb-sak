@@ -183,8 +183,8 @@ export const CreateAgentDialog = ({ open, onOpenChange, onSubmit }: CreateAgentD
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
               Cancel
             </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? 'Creating...' : 'Create Agent'}
+            <Button type="submit" loading={loading}>
+              Create Agent
             </Button>
           </DialogFooter>
         </form>
