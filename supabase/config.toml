@@ -51,7 +51,7 @@ schedule = "0 3 * * *"
 verify_jwt = true
 
 [functions.handle-signup]
-verify_jwt = false
+verify_jwt = true
 
 [functions.get-invoices]
 verify_jwt = true

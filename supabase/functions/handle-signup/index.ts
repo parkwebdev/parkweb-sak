@@ -13,14 +13,52 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    // Verify JWT token from Authorization header
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return new Response(
+        JSON.stringify({ error: "Missing or invalid authorization header", success: false }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    const token = authHeader.replace("Bearer ", "");
+    
+    // Create client with anon key to verify JWT
+    const supabaseAuth = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_ANON_KEY") ?? ""
+    );
+
+    // Verify the token and get user
+    const { data: { user }, error: authError } = await supabaseAuth.auth.getUser(token);
+    
+    if (authError || !user) {
+      console.error("JWT verification failed:", authError);
+      return new Response(
+        JSON.stringify({ error: "Invalid or expired token", success: false }),
+        { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Use verified user data instead of request body
+    const email = user.email;
+    const user_id = user.id;
+
+    if (!email) {
+      return new Response(
+        JSON.stringify({ error: "User email not found", success: false }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    console.log(`Processing signup completion for verified user: ${email}`);
+
+    // Create service role client for database operations
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
-
-    const { email, user_id }: { email: string; user_id: string } = await req.json();
-
-    console.log(`Processing signup completion for: ${email}`);
 
     // Check if this email has a pending invitation
     const { data: invitation, error: invitationError } = await supabase
