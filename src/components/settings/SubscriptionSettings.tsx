@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -38,6 +38,7 @@ export const SubscriptionSettings = () => {
   const [loading, setLoading] = useState(true);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [invoicesLoading, setInvoicesLoading] = useState(true);
+  const hasFetchedInvoicesRef = useRef(false);
 
   useEffect(() => {
     const fetchSubscription = async () => {
@@ -67,14 +68,7 @@ export const SubscriptionSettings = () => {
 
     setInvoicesLoading(true);
     try {
-      // Force refresh session to get a fresh token before calling edge function
-      const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
-      if (refreshError || !refreshData.session) {
-        console.warn('Failed to refresh session for fetching invoices:', refreshError?.message);
-        setInvoicesLoading(false);
-        return;
-      }
-
+      // Simply call the edge function - Supabase client handles auth automatically
       const { data, error } = await supabase.functions.invoke('get-invoices');
 
       if (error) throw error;
@@ -90,11 +84,10 @@ export const SubscriptionSettings = () => {
   };
 
   useEffect(() => {
-    // Only fetch invoices when we have a user and the component is mounted
-    if (user) {
-      // Small delay to ensure session is fully established
-      const timeoutId = setTimeout(fetchInvoices, 100);
-      return () => clearTimeout(timeoutId);
+    // Use ref guard to prevent duplicate fetches from React Strict Mode / re-renders
+    if (user && !hasFetchedInvoicesRef.current) {
+      hasFetchedInvoicesRef.current = true;
+      fetchInvoices();
     }
   }, [user]);
 
