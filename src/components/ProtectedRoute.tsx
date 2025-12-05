@@ -41,25 +41,15 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // After loading animation completes, show app with blur-to-clear transition
-  // Keep wrapper to prevent re-mount of children which would trigger PageTransition again
+  // After loading animation completes, show app immediately
   if (showBlurTransition) {
-    return (
-      <motion.div
-        initial={{ filter: "blur(8px)", opacity: 0.7 }}
-        animate={{ filter: "blur(0px)", opacity: 1 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
-        onAnimationComplete={() => {
-          setBlurComplete(true);
-          toast.success("Welcome back!", {
-            description: "You have been signed in successfully.",
-          });
-        }}
-        className="h-full bg-background"
-      >
-        {children}
-      </motion.div>
-    );
+    if (!blurComplete) {
+      setBlurComplete(true);
+      toast.success("Welcome back!", {
+        description: "You have been signed in successfully.",
+      });
+    }
+    return <>{children}</>;
   }
 
   return <>{children}</>;
