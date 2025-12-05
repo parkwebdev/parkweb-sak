@@ -129,6 +129,14 @@ const config: Config = {
             opacity: "0"
           }
         },
+        "ripple": {
+          "0%, 100%": {
+            transform: "translate(-50%, -50%) scale(1)",
+          },
+          "50%": {
+            transform: "translate(-50%, -50%) scale(0.9)",
+          },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -136,6 +144,7 @@ const config: Config = {
         "fade-in": "fade-in 0.3s ease-out",
         "ping": "ping 1s cubic-bezier(0, 0, 0.2, 1) infinite",
         "pulse-slow": "pulse-slow 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+        "ripple": "ripple var(--duration, 3s) ease calc(var(--i, 0) * 0.2s) infinite",
       },
     },
   },
