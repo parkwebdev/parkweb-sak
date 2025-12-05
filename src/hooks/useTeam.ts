@@ -42,35 +42,56 @@ export const useTeam = () => {
   };
 
   const fetchTeamMembers = async (): Promise<void> => {
+    if (!user) return;
+    
     try {
       setLoading(true);
       
+      // Use secure function that doesn't expose emails to non-owners
       const { data: profilesData, error: profilesError } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .rpc('get_team_profiles', { p_owner_id: user.id });
 
       if (profilesError) {
-        toast.error("Error", {
-          description: "Failed to load team members.",
-        });
+        // Fallback to direct query if user is viewing their own profile only
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('user_id', user.id);
+          
+        if (fallbackError) {
+          toast.error("Error", {
+            description: "Failed to load team members.",
+          });
+          return;
+        }
+        
+        // For single user, include their own email
+        const membersWithRoles = (fallbackData || []).map(profile => ({
+          ...profile,
+          role: currentUserRole,
+          permissions: [],
+        }));
+        setTeamMembers(membersWithRoles);
         return;
       }
 
-      // Fetch roles for all members
+      // Fetch roles for all team members
+      const userIds = (profilesData || []).map((p: any) => p.user_id);
       const { data: rolesData, error: rolesError } = await supabase
         .from('user_roles')
-        .select('user_id, role, permissions');
+        .select('user_id, role, permissions')
+        .in('user_id', userIds);
 
       if (rolesError) {
         logger.error('Error fetching roles', rolesError);
       }
 
       // Combine profile and role data
-      const membersWithRoles = (profilesData || []).map(profile => {
+      const membersWithRoles = (profilesData || []).map((profile: any) => {
         const roleData = rolesData?.find(r => r.user_id === profile.user_id);
         return {
           ...profile,
+          email: profile.user_id === user.id ? user.email : null, // Only show own email
           role: roleData?.role || 'member',
           permissions: roleData?.permissions || [],
         };
