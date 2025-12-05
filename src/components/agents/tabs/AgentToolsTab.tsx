@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Plus, Trash01, ChevronDown, Link03, Eye, FlipBackward, Lightbulb01 } from '@untitledui/icons';
+import { CreateToolDialog } from '@/components/agents/CreateToolDialog';
 import { CopyButton } from '@/components/ui/copy-button';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/lib/toast';
@@ -34,18 +33,10 @@ interface AgentToolsTabProps {
 export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) => {
   const [tools, setTools] = useState<AgentTool[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showAddForm, setShowAddForm] = useState(false);
   const [activeTab, setActiveTab] = useState<ToolsTab>('api-access');
   const [showUseCasesModal, setShowUseCasesModal] = useState(false);
   const [showToolUseCasesModal, setShowToolUseCasesModal] = useState(false);
-  const [newTool, setNewTool] = useState({
-    name: '',
-    description: '',
-    endpoint_url: '',
-    parameters: '{\n  "type": "object",\n  "properties": {},\n  "required": []\n}',
-    headers: '{}',
-    timeout_ms: 10000,
-  });
+  const [showCreateToolDialog, setShowCreateToolDialog] = useState(false);
 
   // Webhook state
   const { webhooks, loading: webhooksLoading, updateWebhook, deleteWebhook, testWebhook, fetchLogs } = useWebhooks(agentId);
@@ -97,47 +88,38 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
     }
   };
 
-  const addTool = async () => {
-    try {
-      if (!newTool.endpoint_url) {
-        toast.error('Endpoint URL is required');
-        return;
-      }
+  const addTool = async (newTool: {
+    name: string;
+    description: string;
+    endpoint_url: string;
+    parameters: string;
+    headers: string;
+    timeout_ms: number;
+  }) => {
+    const parameters = JSON.parse(newTool.parameters);
+    const headers = JSON.parse(newTool.headers);
+    
+    const { data, error } = await supabase
+      .from('agent_tools')
+      .insert({
+        agent_id: agentId,
+        name: newTool.name,
+        description: newTool.description,
+        endpoint_url: newTool.endpoint_url,
+        parameters,
+        headers,
+        timeout_ms: newTool.timeout_ms,
+      })
+      .select()
+      .single();
 
-      const parameters = JSON.parse(newTool.parameters);
-      const headers = JSON.parse(newTool.headers);
-      
-      const { data, error } = await supabase
-        .from('agent_tools')
-        .insert({
-          agent_id: agentId,
-          name: newTool.name,
-          description: newTool.description,
-          endpoint_url: newTool.endpoint_url,
-          parameters,
-          headers,
-          timeout_ms: newTool.timeout_ms,
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-      
-      setTools([data, ...tools]);
-      setNewTool({ 
-        name: '', 
-        description: '', 
-        endpoint_url: '',
-        parameters: '{\n  "type": "object",\n  "properties": {},\n  "required": []\n}',
-        headers: '{}',
-        timeout_ms: 10000,
-      });
-      setShowAddForm(false);
-      toast.success('Tool added successfully');
-    } catch (error) {
-      console.error('Error adding tool:', error);
+    if (error) {
       toast.error('Failed to add tool. Check JSON format.');
+      throw error;
     }
+    
+    setTools([data, ...tools]);
+    toast.success('Tool added successfully');
   };
 
   const toggleTool = async (id: string, enabled: boolean) => {
@@ -247,122 +229,35 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
       )}
 
       {activeTab === 'custom-tools' && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => setShowToolUseCasesModal(true)}
-              className="text-xs"
-            >
-              <Lightbulb01 className="h-3.5 w-3.5 mr-1.5" />
-              View Use Cases
-            </Button>
-            <Button onClick={() => setShowAddForm(!showAddForm)} size="sm">
-              {showAddForm ? 'Cancel' : 'Add Tool'}
+        <div className="space-y-6">
+          {/* Header Card - matching API Access style */}
+          <div className="p-5 rounded-lg bg-muted/30 border border-dashed space-y-3">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-medium">Custom Tools</Label>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setShowToolUseCasesModal(true)}
+                className="text-xs"
+              >
+                <Lightbulb01 className="h-3.5 w-3.5 mr-1.5" />
+                View Use Cases
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Tools let your agent call external APIs when it needs real-time data or to perform actions.
+            </p>
+            <Button onClick={() => setShowCreateToolDialog(true)} size="sm">
+              <Plus className="h-4 w-4 mr-1.5" />
+              Add Tool
             </Button>
           </div>
 
-          {showAddForm && (
-            <div className="space-y-4 p-5 rounded-lg bg-muted/30 border">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="tool-name" className="text-sm">Tool Name *</Label>
-                  <Input
-                    id="tool-name"
-                    value={newTool.name}
-                    onChange={(e) => setNewTool({ ...newTool, name: e.target.value })}
-                    placeholder="weather_lookup"
-                  />
-                  <p className="text-[10px] text-muted-foreground">Use snake_case, e.g. check_inventory</p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="tool-endpoint" className="text-sm">Endpoint URL *</Label>
-                  <Input
-                    id="tool-endpoint"
-                    value={newTool.endpoint_url}
-                    onChange={(e) => setNewTool({ ...newTool, endpoint_url: e.target.value })}
-                    placeholder="https://api.example.com/weather"
-                  />
-                  <p className="text-[10px] text-muted-foreground">Receives POST with tool arguments as JSON body</p>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="tool-description" className="text-sm">Description *</Label>
-                <Textarea
-                  id="tool-description"
-                  value={newTool.description}
-                  onChange={(e) => setNewTool({ ...newTool, description: e.target.value })}
-                  placeholder="Fetches current weather data for a given location. Returns temperature, conditions, and humidity."
-                  rows={2}
-                />
-                <p className="text-[10px] text-muted-foreground">Help the AI understand when to use this tool</p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="tool-parameters" className="text-sm">Parameters (JSON Schema)</Label>
-                <Textarea
-                  id="tool-parameters"
-                  value={newTool.parameters}
-                  onChange={(e) => setNewTool({ ...newTool, parameters: e.target.value })}
-                  placeholder='{"type": "object", "properties": {...}}'
-                  rows={5}
-                  className="font-mono text-xs"
-                />
-                <p className="text-[10px] text-muted-foreground">Define the arguments using JSON Schema format</p>
-              </div>
-
-              <Collapsible>
-                <CollapsibleTrigger asChild>
-                  <Button variant="ghost" size="sm" className="text-xs px-0 hover:bg-transparent">
-                    <ChevronDown className="h-3 w-3 mr-1" />
-                    Advanced Settings
-                  </Button>
-                </CollapsibleTrigger>
-                <CollapsibleContent className="space-y-4 pt-3">
-                  <div className="space-y-2">
-                    <Label htmlFor="tool-headers" className="text-sm">Headers (JSON)</Label>
-                    <Textarea
-                      id="tool-headers"
-                      value={newTool.headers}
-                      onChange={(e) => setNewTool({ ...newTool, headers: e.target.value })}
-                      placeholder='{"Authorization": "Bearer your_api_key"}'
-                      rows={2}
-                      className="font-mono text-xs"
-                    />
-                    <p className="text-[10px] text-muted-foreground">Optional custom headers for authentication</p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="tool-timeout" className="text-sm">Timeout (ms)</Label>
-                    <Input
-                      id="tool-timeout"
-                      type="number"
-                      value={newTool.timeout_ms}
-                      onChange={(e) => setNewTool({ ...newTool, timeout_ms: parseInt(e.target.value) || 10000 })}
-                      min={1000}
-                      max={30000}
-                    />
-                    <p className="text-[10px] text-muted-foreground">Request timeout (1-30 seconds)</p>
-                  </div>
-                </CollapsibleContent>
-              </Collapsible>
-
-              <Button onClick={addTool} className="w-full" size="sm" disabled={!newTool.name || !newTool.endpoint_url || !newTool.description}>
-                Add Tool
-              </Button>
-            </div>
-          )}
-
+          {/* Tools List */}
           {tools.length === 0 ? (
-            <div className="text-center py-12 rounded-lg border border-dashed bg-muted/30">
-              <p className="text-sm text-muted-foreground mb-2">
+            <div className="text-center py-8 rounded-lg border border-dashed bg-muted/30">
+              <p className="text-sm text-muted-foreground">
                 No tools configured yet.
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Tools let your agent call external APIs when it needs real-time data or actions.
               </p>
             </div>
           ) : (
@@ -438,6 +333,12 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
           <ToolUseCasesModal
             open={showToolUseCasesModal}
             onOpenChange={setShowToolUseCasesModal}
+          />
+
+          <CreateToolDialog
+            open={showCreateToolDialog}
+            onOpenChange={setShowCreateToolDialog}
+            onCreateTool={addTool}
           />
         </div>
       )}
