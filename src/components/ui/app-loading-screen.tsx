@@ -1,11 +1,13 @@
 "use client";
 import { cn } from "@/lib/utils";
 import { motion, useMotionValue, useSpring, AnimatePresence } from "motion/react";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import ChatPadLogo from "@/components/ChatPadLogo";
 
 interface AppLoadingScreenProps {
   isLoading: boolean;
+  minDisplayTime?: number;
+  onLoadingComplete?: () => void;
   className?: string;
 }
 
@@ -17,7 +19,15 @@ const pathColors = [
   "#FFB7C5",                   // Pink
 ];
 
-export function AppLoadingScreen({ isLoading, className }: AppLoadingScreenProps) {
+export function AppLoadingScreen({ 
+  isLoading, 
+  minDisplayTime = 2000,
+  onLoadingComplete,
+  className 
+}: AppLoadingScreenProps) {
+  const [showScreen, setShowScreen] = useState(true);
+  const [minTimeElapsed, setMinTimeElapsed] = useState(false);
+
   // Create motion values for each path
   const pathLength1 = useMotionValue(0);
   const pathLength2 = useMotionValue(0);
@@ -32,23 +42,40 @@ export function AppLoadingScreen({ isLoading, className }: AppLoadingScreenProps
   const spring4 = useSpring(pathLength4, { damping: 30, stiffness: 100 });
   const spring5 = useSpring(pathLength5, { damping: 30, stiffness: 100 });
 
+  // Minimum display time countdown
   useEffect(() => {
-    if (isLoading) {
-      // Staggered animation start
-      const delays = [0, 100, 200, 300, 400];
-      const pathLengths = [pathLength1, pathLength2, pathLength3, pathLength4, pathLength5];
-      
-      delays.forEach((delay, index) => {
-        setTimeout(() => {
-          pathLengths[index].set(1.2);
-        }, delay);
-      });
+    const timer = setTimeout(() => {
+      setMinTimeElapsed(true);
+    }, minDisplayTime);
+    return () => clearTimeout(timer);
+  }, [minDisplayTime]);
+
+  // Hide screen when both conditions are met
+  useEffect(() => {
+    if (!isLoading && minTimeElapsed) {
+      setShowScreen(false);
     }
-  }, [isLoading, pathLength1, pathLength2, pathLength3, pathLength4, pathLength5]);
+  }, [isLoading, minTimeElapsed]);
+
+  // Start path animations on mount
+  useEffect(() => {
+    const delays = [0, 100, 200, 300, 400];
+    const pathLengths = [pathLength1, pathLength2, pathLength3, pathLength4, pathLength5];
+    
+    delays.forEach((delay, index) => {
+      setTimeout(() => {
+        pathLengths[index].set(1.2);
+      }, delay);
+    });
+  }, [pathLength1, pathLength2, pathLength3, pathLength4, pathLength5]);
+
+  const handleExitComplete = () => {
+    onLoadingComplete?.();
+  };
 
   return (
-    <AnimatePresence>
-      {isLoading && (
+    <AnimatePresence onExitComplete={handleExitComplete}>
+      {showScreen && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
