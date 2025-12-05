@@ -33,20 +33,17 @@ export const AgentConfigHeader = ({
     <div className="border-b">
       {/* Hero Section with Dotted Grid */}
       <div className="relative overflow-hidden">
-        <div 
-          className="relative h-48 bg-neutral-100 dark:bg-neutral-950"
-          style={{
-            backgroundImage: 'radial-gradient(circle, rgba(0, 0, 0, 0.20) 1px, transparent 1px)',
-            backgroundSize: '12px 12px'
-          }}
-        >
-          {/* Gradient Overlay - stronger at bottom for text readability */}
-          <div className="absolute inset-0 bg-gradient-to-b from-neutral-100/20 via-neutral-100/40 to-neutral-100/70 dark:from-neutral-950/20 dark:via-neutral-950/40 dark:to-neutral-950/70" />
-          
+        <div className="relative h-48 bg-neutral-100 dark:bg-neutral-950">
+          {/* Dot Pattern Layer */}
           <div 
-            className="relative z-10 px-4 lg:px-8 py-4 h-full flex flex-col [background-image:radial-gradient(circle,_rgba(0,_0,_0,_0.20)_1px,_transparent_1px)] dark:[background-image:radial-gradient(circle,_rgba(255,_255,_255,_0.15)_1px,_transparent_1px)]"
+            className="absolute inset-0 [background-image:radial-gradient(circle,_rgba(0,_0,_0,_0.20)_1px,_transparent_1px)] dark:[background-image:radial-gradient(circle,_rgba(255,_255,_255,_0.15)_1px,_transparent_1px)]"
             style={{ backgroundSize: '12px 12px' }}
-          >
+          />
+          
+          {/* Gradient Overlay - stronger at bottom for text readability */}
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-neutral-100/50 to-neutral-100/90 dark:via-neutral-950/50 dark:to-neutral-950/90" />
+          
+          <div className="relative z-10 px-4 lg:px-8 py-4 h-full flex flex-col">
             {/* Top Row: Back button + Save controls */}
             <div className="flex items-center justify-between mb-auto">
               <Button
