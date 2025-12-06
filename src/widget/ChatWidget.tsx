@@ -1971,7 +1971,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
 {msg.type === 'text' && (
                                 <>
                                   <p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p>
-                                  <LinkPreviews content={msg.content} compact />
+                                  <LinkPreviews content={msg.content} />
                                 </>
                               )}
                             </div>
