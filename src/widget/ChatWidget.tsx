@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { X, Send01, MessageChatCircle, ChevronRight, Zap, BookOpen01, Microphone01, Attachment01, Image03, FileCheck02, ThumbsUp, ThumbsDown, Settings01, VolumeMax, VolumeX } from '@untitledui/icons';
+import { X, Send01, MessageChatCircle, ChevronRight, Zap, BookOpen01, Microphone01, Attachment01, Image03, FileCheck02, ThumbsUp, ThumbsDown, Settings01, VolumeMax, VolumeX, Check, CheckCircle, XCircle } from '@untitledui/icons';
 import { CategoryIcon } from './category-icons';
 import { HomeNavIcon, ChatNavIcon, HelpNavIcon } from './NavIcons';
 import { ChatBubbleIcon } from '@/components/agents/ChatBubbleIcon';
@@ -1975,12 +1975,19 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                               )}
                               <span className="text-xs opacity-70">{formatTimestamp(msg.timestamp)}</span>
                               {msg.role === 'user' && config.showReadReceipts && (
-                                <span 
-                                  className={`text-xs cursor-default ${msg.read_at ? 'text-info' : 'opacity-50'}`}
-                                  title={msg.read_at ? 'Read' : 'Sent'}
-                                >
-                                  ✓
-                                </span>
+                                (msg as any).failed ? (
+                                  <span className="text-destructive inline-flex items-center" title="Failed">
+                                    <XCircle size={12} />
+                                  </span>
+                                ) : msg.read_at ? (
+                                  <span className="text-info inline-flex items-center" title="Seen">
+                                    <CheckCircle size={12} />
+                                  </span>
+                                ) : (
+                                  <span className="opacity-50 inline-flex items-center" title="Sent">
+                                    <Check size={12} />
+                                  </span>
+                                )
                               )}
                             </div>
                           </div>
