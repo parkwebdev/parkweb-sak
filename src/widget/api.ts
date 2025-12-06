@@ -291,6 +291,33 @@ export async function updatePageVisit(
   }
 }
 
+// Mark messages as read
+export async function markMessagesRead(
+  conversationId: string,
+  readerType: 'user' | 'admin'
+): Promise<{ success: boolean; updated?: number }> {
+  try {
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/mark-messages-read`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ conversationId, readerType }),
+    });
+
+    if (!response.ok) {
+      console.error('Failed to mark messages as read');
+      return { success: false };
+    }
+
+    return response.json();
+  } catch (error) {
+    console.error('Error marking messages as read:', error);
+    return { success: false };
+  }
+}
+
 // Update message reaction (persist to database)
 export async function updateMessageReaction(
   messageId: string,
