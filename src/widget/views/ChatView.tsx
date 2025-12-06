@@ -140,16 +140,41 @@ export const ChatView = ({
         )}
 
         {/* Messages */}
-        {messages.map((msg, idx) => (
-          <MessageBubble
-            key={msg.id || idx}
-            message={msg}
-            primaryColor={config.primaryColor}
-            enableMessageReactions={config.enableMessageReactions}
-            onAddReaction={(emoji) => handleAddReaction(msg.id!, emoji)}
-            onRemoveReaction={(emoji) => handleRemoveReaction(msg.id!, emoji)}
-          />
-        ))}
+        {messages.map((msg, idx) => {
+          const prevMsg = messages[idx - 1];
+          const nextMsg = messages[idx + 1];
+          
+          // Get metadata for grouping logic
+          const msgMetadata = msg as typeof msg & { isHuman?: boolean };
+          const prevMsgMetadata = prevMsg as typeof prevMsg & { isHuman?: boolean };
+          const nextMsgMetadata = nextMsg as typeof nextMsg & { isHuman?: boolean };
+          
+          // Determine if this message continues from the previous one
+          const isContinuation = prevMsg && 
+            prevMsg.role === msg.role &&
+            !msg.isSystemNotice &&
+            !prevMsg.isSystemNotice &&
+            (msg.role === 'user' || prevMsgMetadata?.isHuman === msgMetadata?.isHuman);
+          
+          // Determine if this is the last message in its group
+          const isLastInGroup = !nextMsg || 
+            nextMsg.role !== msg.role ||
+            nextMsg.isSystemNotice ||
+            (msg.role !== 'user' && nextMsgMetadata?.isHuman !== msgMetadata?.isHuman);
+
+          return (
+            <MessageBubble
+              key={msg.id || idx}
+              message={msg}
+              primaryColor={config.primaryColor}
+              enableMessageReactions={config.enableMessageReactions}
+              onAddReaction={(emoji) => handleAddReaction(msg.id!, emoji)}
+              onRemoveReaction={(emoji) => handleRemoveReaction(msg.id!, emoji)}
+              isContinuation={isContinuation}
+              isLastInGroup={isLastInGroup}
+            />
+          );
+        })}
 
         {/* Typing indicator */}
         {(isTyping || isHumanTyping) && (
