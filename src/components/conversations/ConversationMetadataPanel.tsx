@@ -263,7 +263,7 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
           <Button
             variant="ghost"
             size="sm"
-            className={cn("h-7 w-7 p-0", isCollapsed && "mx-auto")}
+            className={cn("h-7 w-7 p-0 hover:px-1.5", isCollapsed && "mx-auto")}
             onClick={onToggleCollapse}
           >
             {isCollapsed ? (
