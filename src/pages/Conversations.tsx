@@ -493,11 +493,11 @@ const Conversations: React.FC = () => {
                       }`}
                     >
                       <div className="flex items-start gap-3">
-                        <div className="w-11 h-11 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 relative">
-                          <User01 size={20} className="text-primary" />
+                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 relative">
+                          <User01 size={16} className="text-primary" />
                           {/* Active visitor indicator */}
                           {getVisitorPresence(conv) && (
-                            <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-success rounded-full border-2 border-background" />
+                            <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-success rounded-full border-2 border-background" />
                           )}
                           {getPriorityIndicator(priority) && !getVisitorPresence(conv) && (
                             <div className="absolute -top-0.5 -right-0.5">
@@ -506,14 +506,9 @@ const Conversations: React.FC = () => {
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between gap-2 mb-0.5">
-                            <p className="font-medium text-sm truncate text-foreground">
-                              {metadata.lead_name || metadata.lead_email || 'Anonymous'}
-                            </p>
-                            <span className="text-[10px] text-muted-foreground whitespace-nowrap mt-0.5">
-                              {formatDistanceToNow(new Date(conv.updated_at), { addSuffix: true })}
-                            </span>
-                          </div>
+                          <p className="font-medium text-sm truncate text-foreground mb-0.5">
+                            {metadata.lead_name || metadata.lead_email || 'Anonymous'}
+                          </p>
                           <p className="text-xs text-muted-foreground truncate mb-1">
                             via {conv.agents?.name || 'Unknown'}
                           </p>
@@ -523,15 +518,13 @@ const Conversations: React.FC = () => {
                               {metadata.last_message_preview.length >= 60 && '...'}
                             </p>
                           )}
-                          <div className="flex items-center gap-1.5 flex-wrap">
+                          <div className="flex items-center gap-1.5">
                             <Badge variant="outline" className={`${getStatusColor(conv.status)} text-[10px] px-2 py-0.5`}>
                               {conv.status === 'human_takeover' ? 'Human' : conv.status === 'active' ? 'AI' : conv.status}
                             </Badge>
-                            {metadata.country && (
-                              <span className="text-[10px] text-muted-foreground">
-                                {metadata.country}
-                              </span>
-                            )}
+                            <span className="text-[10px] text-muted-foreground">
+                              • {formatDistanceToNow(new Date(conv.updated_at), { addSuffix: true })}
+                            </span>
                           </div>
                         </div>
                       </div>
