@@ -629,9 +629,9 @@ const Conversations: React.FC = () => {
                               <div
                                 className={`rounded-2xl px-4 py-2.5 ${
                                   isUser
-                                    ? 'bg-primary text-primary-foreground'
+                                    ? 'bg-muted text-foreground'
                                     : isHumanSent
-                                      ? 'bg-info/10 text-foreground border border-info/20'
+                                      ? 'bg-muted/50 text-foreground'
                                       : 'bg-muted text-foreground'
                                 }`}
                               >
