@@ -851,6 +851,13 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
 
           // Also stop typing indicator if it was showing
           setIsTyping(false);
+          
+          // Play notification sound for new human messages
+          try {
+            const audio = new Audio('/sounds/notification.mp3');
+            audio.volume = 0.5;
+            audio.play().catch(() => {});
+          } catch {}
         }
       },
       // Handle message updates (for real-time reaction sync AND read receipts)
