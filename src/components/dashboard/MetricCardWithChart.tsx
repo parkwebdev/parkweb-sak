@@ -23,36 +23,37 @@ export function MetricCardWithChart({
   const isPositive = change !== undefined && change >= 0;
 
   return (
-    <Card className={cn("flex flex-1 items-center justify-between gap-4 p-5", className)}>
+    <Card className={cn(
+      "flex flex-1 items-center justify-between gap-4 p-5 border-border/50 bg-card hover:border-border transition-colors",
+      className
+    )}>
       <div className="flex flex-col gap-1">
-        <span className="text-2xl font-semibold text-foreground">{title}</span>
-        <span className="text-sm text-muted-foreground">{subtitle}</span>
+        <span className="text-2xl font-semibold tracking-tight text-foreground">{title}</span>
+        <span className="text-sm font-medium text-muted-foreground">{subtitle}</span>
         {change !== undefined && (
-          <div className="mt-1 flex items-center gap-1">
-            {isPositive ? (
-              <ArrowUp className="h-3.5 w-3.5 text-success" />
-            ) : (
-              <ArrowDown className="h-3.5 w-3.5 text-destructive" />
-            )}
-            <span
-              className={cn(
-                "text-sm font-medium",
-                isPositive ? "text-success" : "text-destructive"
+          <div className="mt-1.5 flex items-center gap-1.5">
+            <div className={cn(
+              "flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-xs font-medium",
+              isPositive ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"
+            )}>
+              {isPositive ? (
+                <ArrowUp className="h-3 w-3" />
+              ) : (
+                <ArrowDown className="h-3 w-3" />
               )}
-            >
               {Math.abs(change).toFixed(1)}%
-            </span>
-            <span className="text-sm text-muted-foreground">{changeLabel}</span>
+            </div>
+            <span className="text-xs text-muted-foreground">{changeLabel}</span>
           </div>
         )}
       </div>
 
-      <div className="h-12 w-24">
+      <div className="h-14 w-28 shrink-0">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={chartData}>
             <defs>
               <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.25} />
                 <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
               </linearGradient>
             </defs>

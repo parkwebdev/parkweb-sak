@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Cube01 as Bot } from '@untitledui/icons';
@@ -8,6 +8,7 @@ import { DashboardTabs, DashboardTab } from '@/components/dashboard/DashboardTab
 import { MetricCardWithChart } from '@/components/dashboard/MetricCardWithChart';
 import { ConversationsDataTable, ConversationRow } from '@/components/dashboard/ConversationsDataTable';
 import { formatDistanceToNow } from 'date-fns';
+import { toast } from 'sonner';
 
 interface ConversationWithAgent {
   id: string;
@@ -53,16 +54,10 @@ export const Dashboard: React.FC = () => {
     conversionTrend: [] as number[],
   });
 
-  useEffect(() => {
-    if (user && !authLoading) {
-      fetchData();
-    }
-  }, [user, authLoading]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async (showLoading = true) => {
     if (!user) return;
 
-    setLoading(true);
+    if (showLoading) setLoading(true);
     try {
       // Fetch conversations with agent and lead info
       const { data: conversationsData, error: convError } = await supabase
@@ -137,9 +132,65 @@ export const Dashboard: React.FC = () => {
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
-  };
+  }, [user]);
+
+  // Initial data fetch
+  useEffect(() => {
+    if (user && !authLoading) {
+      fetchData();
+    }
+  }, [user, authLoading, fetchData]);
+
+  // Real-time subscription for conversations
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('dashboard-conversations')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'conversations',
+        },
+        () => {
+          // Refetch data without showing loading state
+          fetchData(false);
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'messages',
+        },
+        () => {
+          // Refetch when messages change (affects message counts)
+          fetchData(false);
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'leads',
+        },
+        () => {
+          // Refetch when leads change (affects conversion rate)
+          fetchData(false);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, fetchData]);
 
   // Filter conversations based on selected tab
   const filteredConversations = useMemo(() => {

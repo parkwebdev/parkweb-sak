@@ -8,7 +8,7 @@ import {
   ArrowUp,
   ArrowDown,
 } from "@untitledui/icons";
-import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -121,12 +121,14 @@ export function ConversationsDataTable({
   };
 
   return (
-    <Card className={cn("overflow-hidden", className)}>
-      <CardHeader className="border-b border-border pb-4">
-        <CardTitle className="text-base font-semibold">{title}</CardTitle>
-      </CardHeader>
+    <Card className={cn("overflow-hidden border-border/50", className)}>
+      {/* Table Header */}
+      <div className="flex items-center justify-between border-b border-border px-4 py-4 lg:px-6">
+        <h3 className="text-base font-semibold text-foreground">{title}</h3>
+      </div>
 
-      <div className="flex flex-col gap-3 border-b border-border px-4 py-3 sm:flex-row sm:items-center sm:justify-between lg:px-6">
+      {/* Search & Filters */}
+      <div className="flex flex-col gap-3 border-b border-border bg-muted/30 px-4 py-3 sm:flex-row sm:items-center sm:justify-between lg:px-6">
         <div className="relative flex-1 max-w-sm">
           <SearchLg className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -134,10 +136,10 @@ export function ConversationsDataTable({
             placeholder="Search conversations..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
+            className="pl-9 bg-background"
           />
         </div>
-        <Button variant="outline" size="sm">
+        <Button variant="outline" size="sm" className="shrink-0">
           <FilterLines className="mr-2 h-4 w-4" />
           Filters
         </Button>
