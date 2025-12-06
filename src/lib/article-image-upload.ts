@@ -1,17 +1,48 @@
+/**
+ * Article Image Upload Utilities
+ * 
+ * Handles image optimization and upload for help articles.
+ * Provides separate configurations for inline images and featured hero images.
+ * 
+ * @module lib/article-image-upload
+ */
+
 import { supabase } from '@/integrations/supabase/client';
 
-// Configuration for image optimization
+/**
+ * Configuration for inline article image optimization
+ * @internal
+ */
 const IMAGE_CONFIG = {
-  maxWidth: 800,        // Max width in pixels
-  maxHeight: 600,       // Max height in pixels  
-  quality: 0.6,         // WebP quality (0-1)
+  /** Maximum width in pixels */
+  maxWidth: 800,
+  /** Maximum height in pixels */
+  maxHeight: 600,
+  /** WebP compression quality (0-1) */
+  quality: 0.6,
 };
 
 /**
- * Resize and optimize image before upload
- * - Resizes to max dimensions while maintaining aspect ratio
- * - Converts to WebP for better compression
- * - Returns optimized File object
+ * Configuration for featured/hero image optimization (larger dimensions)
+ * @internal
+ */
+const FEATURED_IMAGE_CONFIG = {
+  /** Maximum width in pixels */
+  maxWidth: 1200,
+  /** Maximum height in pixels */
+  maxHeight: 600,
+  /** WebP compression quality (0-1) */
+  quality: 0.6,
+};
+
+/**
+ * Optimizes an inline article image by resizing and converting to WebP.
+ * Maintains aspect ratio while fitting within max dimensions.
+ * 
+ * @param file - Original image file
+ * @returns Promise resolving to optimized File object
+ * @throws Error if image fails to load
+ * @internal
  */
 const optimizeImage = async (file: File): Promise<File> => {
   return new Promise((resolve, reject) => {
@@ -68,45 +99,14 @@ const optimizeImage = async (file: File): Promise<File> => {
   });
 };
 
-export const uploadArticleImage = async (
-  file: File,
-  userId: string,
-  agentId: string
-): Promise<string> => {
-  // Optimize image before upload
-  const optimizedFile = await optimizeImage(file);
-  
-  const fileExt = optimizedFile.name.split('.').pop()?.toLowerCase() || 'webp';
-  const fileName = `${userId}/${agentId}/${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
-
-  const { error } = await supabase.storage
-    .from('article-images')
-    .upload(fileName, optimizedFile, {
-      cacheControl: '3600',
-      upsert: false,
-    });
-
-  if (error) {
-    console.error('Image upload error:', error);
-    throw new Error('Failed to upload image');
-  }
-
-  const { data: urlData } = supabase.storage
-    .from('article-images')
-    .getPublicUrl(fileName);
-
-  return urlData.publicUrl;
-};
-
-// Featured image config - larger for hero display
-const FEATURED_IMAGE_CONFIG = {
-  maxWidth: 1200,
-  maxHeight: 600,
-  quality: 0.6,
-};
-
 /**
- * Optimize featured image for hero display
+ * Optimizes a featured/hero image for article display.
+ * Uses larger dimensions than inline images for hero sections.
+ * 
+ * @param file - Original image file
+ * @returns Promise resolving to optimized File object
+ * @throws Error if image fails to load
+ * @internal
  */
 const optimizeFeaturedImage = async (file: File): Promise<File> => {
   return new Promise((resolve, reject) => {
@@ -161,6 +161,64 @@ const optimizeFeaturedImage = async (file: File): Promise<File> => {
   });
 };
 
+/**
+ * Uploads an optimized inline image to Supabase storage.
+ * Images are resized to max 800x600 and converted to WebP.
+ * 
+ * @param file - Image file to upload
+ * @param userId - User ID for storage path organization
+ * @param agentId - Agent ID for storage path organization
+ * @returns Promise resolving to the public URL of the uploaded image
+ * @throws Error if upload fails
+ * 
+ * @example
+ * const imageUrl = await uploadArticleImage(file, userId, agentId);
+ * editor.commands.setImage({ src: imageUrl });
+ */
+export const uploadArticleImage = async (
+  file: File,
+  userId: string,
+  agentId: string
+): Promise<string> => {
+  // Optimize image before upload
+  const optimizedFile = await optimizeImage(file);
+  
+  const fileExt = optimizedFile.name.split('.').pop()?.toLowerCase() || 'webp';
+  const fileName = `${userId}/${agentId}/${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
+
+  const { error } = await supabase.storage
+    .from('article-images')
+    .upload(fileName, optimizedFile, {
+      cacheControl: '3600',
+      upsert: false,
+    });
+
+  if (error) {
+    console.error('Image upload error:', error);
+    throw new Error('Failed to upload image');
+  }
+
+  const { data: urlData } = supabase.storage
+    .from('article-images')
+    .getPublicUrl(fileName);
+
+  return urlData.publicUrl;
+};
+
+/**
+ * Uploads an optimized featured/hero image to Supabase storage.
+ * Images are resized to max 1200x600 for hero display.
+ * 
+ * @param file - Image file to upload
+ * @param userId - User ID for storage path organization
+ * @param agentId - Agent ID for storage path organization
+ * @returns Promise resolving to the public URL of the uploaded image
+ * @throws Error if upload fails
+ * 
+ * @example
+ * const heroUrl = await uploadFeaturedImage(file, userId, agentId);
+ * setArticle({ ...article, featured_image: heroUrl });
+ */
 export const uploadFeaturedImage = async (
   file: File,
   userId: string,
@@ -190,6 +248,18 @@ export const uploadFeaturedImage = async (
   return urlData.publicUrl;
 };
 
+/**
+ * Deletes an article image from Supabase storage.
+ * 
+ * @param imageUrl - Public URL of the image to delete
+ * 
+ * @example
+ * await deleteArticleImage(article.featured_image);
+ * 
+ * @remarks
+ * Silently fails if the image path cannot be extracted or deletion fails.
+ * This is intentional to prevent blocking article updates.
+ */
 export const deleteArticleImage = async (imageUrl: string): Promise<void> => {
   // Extract the path from the public URL
   const urlParts = imageUrl.split('/article-images/');

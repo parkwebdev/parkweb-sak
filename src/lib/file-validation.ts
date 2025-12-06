@@ -1,7 +1,16 @@
-// Maximum file size: 10MB
+/**
+ * File Validation Utilities
+ * 
+ * Provides validation for file uploads including size limits, type checking,
+ * and batch validation. Used across file upload components.
+ * 
+ * @module lib/file-validation
+ */
+
+/** Maximum allowed file size in bytes (10MB) */
 export const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
-// Allowed file types
+/** Allowed image MIME types for upload */
 export const ALLOWED_IMAGE_TYPES = [
   'image/jpeg',
   'image/jpg',
@@ -10,6 +19,7 @@ export const ALLOWED_IMAGE_TYPES = [
   'image/webp',
 ];
 
+/** Allowed document MIME types for upload */
 export const ALLOWED_DOCUMENT_TYPES = [
   'application/pdf',
   'application/msword',
@@ -17,16 +27,34 @@ export const ALLOWED_DOCUMENT_TYPES = [
   'text/plain',
 ];
 
+/** Combined list of all allowed file MIME types */
 export const ALLOWED_FILE_TYPES = [
   ...ALLOWED_IMAGE_TYPES,
   ...ALLOWED_DOCUMENT_TYPES,
 ];
 
+/**
+ * Result of file validation check
+ */
 export interface FileValidationResult {
+  /** Whether the file passed validation */
   valid: boolean;
+  /** Error message if validation failed */
   error?: string;
 }
 
+/**
+ * Validates a single file against size, type, and name constraints.
+ * 
+ * @param file - The File object to validate
+ * @returns Validation result with valid flag and optional error message
+ * 
+ * @example
+ * const result = validateFile(uploadedFile);
+ * if (!result.valid) {
+ *   showError(result.error);
+ * }
+ */
 export const validateFile = (file: File): FileValidationResult => {
   // Check file size
   if (file.size > MAX_FILE_SIZE) {
@@ -55,6 +83,21 @@ export const validateFile = (file: File): FileValidationResult => {
   return { valid: true };
 };
 
+/**
+ * Validates an array of files for batch upload.
+ * Checks batch size limit and validates each file individually.
+ * 
+ * @param files - Array of File objects to validate
+ * @returns Validation result for the entire batch
+ * 
+ * @example
+ * const result = validateFiles(selectedFiles);
+ * if (!result.valid) {
+ *   toast.error(result.error);
+ *   return;
+ * }
+ * // Proceed with upload
+ */
 export const validateFiles = (files: File[]): FileValidationResult => {
   // Maximum 5 files at once
   if (files.length > 5) {
@@ -75,10 +118,35 @@ export const validateFiles = (files: File[]): FileValidationResult => {
   return { valid: true };
 };
 
+/**
+ * Checks if a file type is an image based on MIME type.
+ * 
+ * @param fileType - MIME type string to check
+ * @returns True if the file type is an allowed image type
+ * 
+ * @example
+ * if (isImageFile(file.type)) {
+ *   showImagePreview(file);
+ * }
+ */
 export const isImageFile = (fileType: string): boolean => {
   return ALLOWED_IMAGE_TYPES.includes(fileType);
 };
 
+/**
+ * Formats a byte size into a human-readable string.
+ * 
+ * @param bytes - Size in bytes
+ * @returns Formatted string with appropriate unit (Bytes, KB, or MB)
+ * 
+ * @example
+ * formatFileSize(1024)
+ * // => '1 KB'
+ * 
+ * @example
+ * formatFileSize(1536000)
+ * // => '1.46 MB'
+ */
 export const formatFileSize = (bytes: number): string => {
   if (bytes === 0) return '0 Bytes';
   const k = 1024;
