@@ -677,12 +677,19 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
                           <div className="flex gap-3">
                             {/* Timeline dot and line */}
                             <div className="flex flex-col items-center">
-                              <div className={cn(
-                                "w-2.5 h-2.5 rounded-full mt-1 flex-shrink-0",
-                                isCurrentlyActive 
-                                  ? "bg-success animate-pulse" 
-                                  : "bg-muted-foreground/40"
-                              )} />
+                              <div className="relative flex items-center justify-center mt-1 flex-shrink-0">
+                                {/* Solid dot */}
+                                <div className={cn(
+                                  "w-2.5 h-2.5 rounded-full",
+                                  isCurrentlyActive 
+                                    ? "bg-success" 
+                                    : "bg-muted-foreground/40"
+                                )} />
+                                {/* Expanding ring pulse */}
+                                {isCurrentlyActive && (
+                                  <div className="absolute w-2.5 h-2.5 rounded-full border-2 border-success animate-ping" />
+                                )}
+                              </div>
                               {!isLast && (
                                 <div className="w-px flex-1 bg-border mt-1.5 min-h-[16px]" />
                               )}
