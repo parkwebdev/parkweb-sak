@@ -15,6 +15,7 @@ import { useSecurityLog } from '@/hooks/useSecurityLog';
 import { PasswordStrengthIndicator } from '@/components/PasswordStrengthIndicator';
 import { Eye, EyeOff, User01, Key01, UsersPlus, CheckCircle, Mail01, ArrowLeft } from '@untitledui/icons';
 import { AnimatePresence, motion } from 'motion/react';
+import ChatPadLogo from '@/components/ChatPadLogo';
 
 const signupSteps: StepItem[] = [
   {
@@ -233,8 +234,6 @@ const Auth = () => {
     setTeamEmails('');
   };
 
-  const logoBlackUrl = 'https://mvaimvwdukpgvkifkfpa.supabase.co/storage/v1/object/public/logos/Icon%20Only%20-%20Black%20Square@2x.png';
-  const logoWhiteUrl = 'https://mvaimvwdukpgvkifkfpa.supabase.co/storage/v1/object/public/logos/Icon%20Only%20-%20White%20Square@2x.png';
 
   const CurrentStepIcon = activeTab === 'signup' ? stepIcons[currentStep] : Key01;
 
@@ -503,16 +502,7 @@ const Auth = () => {
         <div className="flex flex-col gap-12 px-8 pt-8">
           {/* Logo with text */}
           <div className="flex items-center gap-3">
-            <img 
-              src={logoBlackUrl} 
-              alt="ChatPad" 
-              className="h-8 w-8 object-contain dark:hidden"
-            />
-            <img 
-              src={logoWhiteUrl} 
-              alt="ChatPad" 
-              className="h-8 w-8 object-contain hidden dark:block"
-            />
+            <ChatPadLogo className="h-8 w-8 text-foreground" />
             <span className="text-lg font-semibold text-foreground">ChatPad</span>
           </div>
           
@@ -547,16 +537,7 @@ const Auth = () => {
         <div className="flex h-full w-full flex-col items-center gap-8 px-4 md:px-8">
           {/* Mobile Logo with text */}
           <div className="lg:hidden flex items-center gap-3">
-            <img 
-              src={logoBlackUrl} 
-              alt="ChatPad" 
-              className="h-8 w-8 object-contain dark:hidden"
-            />
-            <img 
-              src={logoWhiteUrl} 
-              alt="ChatPad" 
-              className="h-8 w-8 object-contain hidden dark:block"
-            />
+            <ChatPadLogo className="h-8 w-8 text-foreground" />
             <span className="text-lg font-semibold text-foreground">ChatPad</span>
           </div>
 
