@@ -734,7 +734,51 @@ const Conversations: React.FC = () => {
                                 </div>
                               )
                             )}
-                            <div>
+                            <div className="flex flex-col">
+                              {/* Name + Timestamp header row - only show if !isContinuation */}
+                              {!isContinuation && (
+                                <div className={`flex items-center gap-1.5 text-[11px] text-muted-foreground mb-1 ${isUser ? 'justify-end mr-1' : 'ml-1'}`}>
+                                  <span className="font-medium">
+                                    {isUser ? 'Visitor' : (isHumanSent ? formatSenderName(msgMetadata?.sender_name) : 'AI Agent')}
+                                  </span>
+                                  <span>•</span>
+                                  <span>{formatShortTime(new Date(message.created_at))}</span>
+                                  {/* Status badges for human messages */}
+                                  {isHumanSent && (
+                                    <>
+                                      {msgMetadata?.error || msgMetadata?.failed ? (
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <span className="text-destructive inline-flex items-center">
+                                              <XCircle size={12} />
+                                            </span>
+                                          </TooltipTrigger>
+                                          <TooltipContent>Failed</TooltipContent>
+                                        </Tooltip>
+                                      ) : msgMetadata?.read_at ? (
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <span className="text-info inline-flex items-center">
+                                              <CheckCircle size={12} />
+                                            </span>
+                                          </TooltipTrigger>
+                                          <TooltipContent>Seen</TooltipContent>
+                                        </Tooltip>
+                                      ) : (
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <span className="inline-flex items-center">
+                                              <Check size={12} />
+                                            </span>
+                                          </TooltipTrigger>
+                                          <TooltipContent>Sent</TooltipContent>
+                                        </Tooltip>
+                                      )}
+                                    </>
+                                  )}
+                                </div>
+                              )}
+                              {/* Message bubble - content only */}
                               <div
                                 className={`rounded-2xl px-4 py-2.5 ${
                                   isUser
@@ -746,10 +790,10 @@ const Conversations: React.FC = () => {
                               >
                                 <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</p>
                               </div>
-                              {/* Only show reactions/time/status for last message in group */}
-                              {isLastInGroup && (
+                              {/* Reactions row - only show for last message in group */}
+                              {isLastInGroup && reactions && reactions.length > 0 && (
                                 <div className="flex items-center gap-1 mt-1 px-1 flex-wrap">
-                                  {reactions && reactions.map((reaction, i) => (
+                                  {reactions.map((reaction, i) => (
                                     <button
                                       key={i}
                                       onClick={() => reaction.adminReacted ? handleRemoveReaction(reaction.emoji) : handleAddReaction(reaction.emoji)}
@@ -786,46 +830,31 @@ const Conversations: React.FC = () => {
                                       </div>
                                     </PopoverContent>
                                   </Popover>
-                                  {/* Time inline with reactions + message status for team messages */}
-                                  <span className={`text-[10px] text-muted-foreground ml-auto flex items-center gap-0.5 ${isUser ? 'order-first mr-auto ml-0' : ''}`}>
-                                    {isHumanSent && msgMetadata?.sender_name && (
-                                      <>{formatSenderName(msgMetadata.sender_name)} • </>
-                                    )}
-                                    {formatShortTime(new Date(message.created_at))}
-                                    {/* Message status for human/team messages: Failed, Sent, Seen */}
-                                    {isHumanSent && (
-                                      <>
-                                        {msgMetadata?.error || msgMetadata?.failed ? (
-                                          <Tooltip>
-                                            <TooltipTrigger asChild>
-                                              <span className="ml-1 text-destructive inline-flex items-center">
-                                                <XCircle size={12} />
-                                              </span>
-                                            </TooltipTrigger>
-                                            <TooltipContent>Failed</TooltipContent>
-                                          </Tooltip>
-                                        ) : msgMetadata?.read_at ? (
-                                          <Tooltip>
-                                            <TooltipTrigger asChild>
-                                              <span className="ml-1 text-info inline-flex items-center">
-                                                <CheckCircle size={12} />
-                                              </span>
-                                            </TooltipTrigger>
-                                            <TooltipContent>Seen</TooltipContent>
-                                          </Tooltip>
-                                        ) : (
-                                          <Tooltip>
-                                            <TooltipTrigger asChild>
-                                              <span className="ml-1 inline-flex items-center">
-                                                <Check size={12} />
-                                              </span>
-                                            </TooltipTrigger>
-                                            <TooltipContent>Sent</TooltipContent>
-                                          </Tooltip>
-                                        )}
-                                      </>
-                                    )}
-                                  </span>
+                                </div>
+                              )}
+                              {/* Add reaction button when no reactions exist */}
+                              {isLastInGroup && (!reactions || reactions.length === 0) && (
+                                <div className="flex items-center gap-1 mt-1 px-1">
+                                  <Popover>
+                                    <PopoverTrigger asChild>
+                                      <button className="text-xs bg-muted hover:bg-muted/80 rounded-full p-1 transition-colors opacity-50 hover:opacity-100">
+                                        <FaceSmile size={12} />
+                                      </button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto px-2 py-1 rounded-full" side="top" align="start">
+                                      <div className="flex gap-1">
+                                        {QUICK_EMOJIS.map((emoji) => (
+                                          <button
+                                            key={emoji}
+                                            onClick={() => handleAddReaction(emoji)}
+                                            className="text-lg p-1 hover:bg-muted rounded transition-transform hover:scale-110"
+                                          >
+                                            {emoji}
+                                          </button>
+                                        ))}
+                                      </div>
+                                    </PopoverContent>
+                                  </Popover>
                                 </div>
                               )}
                             </div>
