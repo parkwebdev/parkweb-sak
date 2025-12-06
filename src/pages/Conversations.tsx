@@ -726,7 +726,7 @@ const Conversations: React.FC = () => {
                           key={message.id}
                           className={`flex ${isUser ? 'justify-end' : 'justify-start'} ${
                             isNewMessage ? (isUser ? 'animate-slide-in-right' : 'animate-slide-in-left') : ''
-                          } ${isContinuation ? 'mt-px' : 'mt-1 first:mt-0'}`}
+                          } ${isContinuation ? 'mt-1' : 'mt-1 first:mt-0'}`}
                         >
                           <div className={`flex items-start gap-2 max-w-[75%] ${isContinuation && !isUser ? 'ml-10' : ''}`}>
                           {!isUser && !isContinuation && (
