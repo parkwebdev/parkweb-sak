@@ -8,7 +8,16 @@ import {
   ArrowDown,
   Trash01,
   Edit02,
+  Calendar,
+  Check,
 } from "@untitledui/icons";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { SimpleDeleteDialog } from "@/components/ui/simple-delete-dialog";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -48,10 +57,13 @@ interface ConversationsDataTableProps {
   tabs: TabConfig[];
   selectedTab: string;
   onTabChange: (tabId: string) => void;
+  onDelete?: (ids: string[]) => Promise<void>;
   title?: string;
   className?: string;
   storageKey?: string;
 }
+
+type DateFilter = "all" | "today" | "7days" | "30days";
 
 type SortColumn = "agentName" | "messageCount" | "duration" | "percentageOfTotal" | "status";
 type SortDirection = "asc" | "desc";
@@ -102,6 +114,7 @@ export function ConversationsDataTable({
   tabs,
   selectedTab,
   onTabChange,
+  onDelete,
   title = "Conversations",
   className,
   storageKey = "conversations",
@@ -115,7 +128,18 @@ export function ConversationsDataTable({
   });
   const [page, setPage] = useState(1);
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
+  const [dateFilter, setDateFilter] = useState<DateFilter>("all");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const itemsPerPage = 10;
+
+  const dateFilterOptions = [
+    { id: "all" as DateFilter, label: "All time" },
+    { id: "today" as DateFilter, label: "Today" },
+    { id: "7days" as DateFilter, label: "Last 7 days" },
+    { id: "30days" as DateFilter, label: "Last 30 days" },
+  ];
 
   useEffect(() => {
     saveSortState(storageKey, sortState);
@@ -126,13 +150,33 @@ export function ConversationsDataTable({
   }, [debouncedSearch]);
 
   const filteredData = useMemo(() => {
-    if (!debouncedSearch.trim()) return data;
-    const searchLower = debouncedSearch.toLowerCase();
-    return data.filter((row) =>
-      row.agentName.toLowerCase().includes(searchLower) ||
-      (row.leadName?.toLowerCase().includes(searchLower) ?? false)
-    );
-  }, [data, debouncedSearch]);
+    let filtered = data;
+
+    // Apply date filter
+    if (dateFilter !== "all") {
+      const now = new Date();
+      const cutoff = new Date();
+      if (dateFilter === "today") {
+        cutoff.setHours(0, 0, 0, 0);
+      } else if (dateFilter === "7days") {
+        cutoff.setDate(now.getDate() - 7);
+      } else if (dateFilter === "30days") {
+        cutoff.setDate(now.getDate() - 30);
+      }
+      filtered = filtered.filter((row) => new Date(row.createdAt) >= cutoff);
+    }
+
+    // Apply search filter
+    if (debouncedSearch.trim()) {
+      const searchLower = debouncedSearch.toLowerCase();
+      filtered = filtered.filter((row) =>
+        row.agentName.toLowerCase().includes(searchLower) ||
+        (row.leadName?.toLowerCase().includes(searchLower) ?? false)
+      );
+    }
+
+    return filtered;
+  }, [data, debouncedSearch, dateFilter]);
 
   const sortedData = useMemo(() => {
     return [...filteredData].sort((a, b) => {
@@ -191,6 +235,25 @@ export function ConversationsDataTable({
       newSelected.delete(id);
     }
     setSelectedRows(newSelected);
+  };
+
+  const handleDeleteClick = (id: string) => {
+    setDeleteTarget(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget || !onDelete) return;
+    setIsDeleting(true);
+    try {
+      await onDelete([deleteTarget]);
+      setDeleteDialogOpen(false);
+      setDeleteTarget(null);
+      selectedRows.delete(deleteTarget);
+      setSelectedRows(new Set(selectedRows));
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   // Sortable header with diamond icon
@@ -263,16 +326,32 @@ export function ConversationsDataTable({
               placeholder="Search"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              className="pl-9 pr-12 h-9 w-[200px] bg-background"
+              className="pl-9 pr-4 h-9 w-[200px] bg-background"
             />
-            <kbd className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground">
-              ⌘K
-            </kbd>
           </div>
-          <Button variant="outline" size="sm" className="h-9 gap-2">
-            <FilterLines className="h-4 w-4" />
-            Filters
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="h-9 gap-2">
+                <FilterLines className="h-4 w-4" />
+                {dateFilter === "all" ? "Filters" : dateFilterOptions.find(o => o.id === dateFilter)?.label}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-40">
+              {dateFilterOptions.map((option) => (
+                <DropdownMenuItem
+                  key={option.id}
+                  onClick={() => setDateFilter(option.id)}
+                  className="flex items-center justify-between"
+                >
+                  <span className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    {option.label}
+                  </span>
+                  {dateFilter === option.id && <Check className="h-4 w-4" />}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
@@ -380,6 +459,7 @@ export function ConversationsDataTable({
                           variant="ghost"
                           size="icon"
                           className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                          onClick={() => handleDeleteClick(row.id)}
                         >
                           <Trash01 className="h-4 w-4" />
                         </Button>
@@ -403,6 +483,16 @@ export function ConversationsDataTable({
           />
         </div>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <SimpleDeleteDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        title="Delete Conversation"
+        description="Are you sure you want to delete this conversation? This action cannot be undone."
+        onConfirm={handleConfirmDelete}
+        isDeleting={isDeleting}
+      />
     </Card>
   );
 }
