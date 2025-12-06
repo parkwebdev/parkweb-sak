@@ -442,8 +442,11 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
         reactions: [] 
       }]);
     } finally {
-      isActivelySendingRef.current = false;
       setIsTyping(false);
+      // Defer ref reset to next tick to ensure React effects have completed
+      setTimeout(() => {
+        isActivelySendingRef.current = false;
+      }, 0);
     }
   };
 
