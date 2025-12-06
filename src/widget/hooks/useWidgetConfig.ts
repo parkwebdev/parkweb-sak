@@ -45,7 +45,7 @@ export function useWidgetConfig(
   // Subscribe to real-time config changes (only when not in preview mode)
   useRealtimeConfig({
     agentId,
-    enabled: !previewMode && !parentHandlesConfig && !!agentId,
+    enabled: !previewMode && !!agentId,
     onConfigUpdate: handleConfigUpdate,
   });
 
