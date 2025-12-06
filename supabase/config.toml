@@ -74,3 +74,6 @@ verify_jwt = false
 
 [functions.mark-messages-read]
 verify_jwt = false
+
+[functions.fetch-link-preview]
+verify_jwt = false

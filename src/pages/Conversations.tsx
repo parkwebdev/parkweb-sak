@@ -7,6 +7,7 @@ import { Badge } from '@/components/Badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { SearchMd, MessageChatSquare, User01, Send01, FaceSmile, Globe01, Check, CheckCircle, XCircle } from '@untitledui/icons';
+import { LinkPreviews } from '@/components/chat/LinkPreviews';
 import { EmptyState } from '@/components/ui/empty-state';
 import { useConversations } from '@/hooks/useConversations';
 import { useAgents } from '@/hooks/useAgents';
@@ -790,7 +791,8 @@ const Conversations: React.FC = () => {
                                     : 'bg-muted text-foreground'
                                 }`}
                               >
-                                <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</p>
+<p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</p>
+                                <LinkPreviews content={message.content} />
                               </div>
                               {/* Reactions row - only show for last message in group */}
                               {isLastInGroup && reactions && reactions.length > 0 && (
