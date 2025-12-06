@@ -17,10 +17,10 @@ export const useConversations = () => {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchConversations = async () => {
+  const fetchConversations = async (showLoading = true) => {
     if (!user?.id) return;
     
-    setLoading(true);
+    if (showLoading) setLoading(true);
     try {
       const { data, error } = await supabase
         .from('conversations')
@@ -37,7 +37,7 @@ export const useConversations = () => {
       logger.error('Error fetching conversations:', error);
       toast.error('Failed to load conversations');
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   };
 
@@ -58,7 +58,7 @@ export const useConversations = () => {
           filter: `user_id=eq.${user.id}`
         },
         () => {
-          fetchConversations();
+          fetchConversations(false);
         }
       )
       .subscribe();
@@ -75,7 +75,7 @@ export const useConversations = () => {
         },
         () => {
           // Refetch conversations to update last message preview
-          fetchConversations();
+          fetchConversations(false);
         }
       )
       .subscribe();

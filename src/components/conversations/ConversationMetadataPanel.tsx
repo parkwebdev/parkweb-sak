@@ -680,17 +680,13 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
                             {/* Timeline dot and line */}
                             <div className="flex flex-col items-center">
                               <div className="relative flex items-center justify-center mt-1 flex-shrink-0">
-                                {/* Solid dot */}
+                                {/* Solid dot with pulse animation */}
                                 <div className={cn(
                                   "w-2.5 h-2.5 rounded-full",
                                   isCurrentlyActive 
-                                    ? "bg-success" 
+                                    ? "bg-success animate-pulse" 
                                     : "bg-muted-foreground/40"
                                 )} />
-                                {/* Expanding ring pulse */}
-                                {isCurrentlyActive && (
-                                  <div className="absolute w-2.5 h-2.5 rounded-full border-2 border-success animate-ping" />
-                                )}
                               </div>
                               {!isLast && (
                                 <div className="w-px flex-1 bg-border mt-1.5 min-h-[16px]" />
