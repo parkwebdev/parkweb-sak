@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Cube01 as Bot } from '@untitledui/icons';
@@ -147,6 +147,27 @@ export const Dashboard: React.FC = () => {
     }
   }, [user, authLoading, fetchData]);
 
+  // Debounced refetch to prevent rapid-fire updates on dashboard
+  const debouncedFetchRef = useRef<NodeJS.Timeout>();
+  
+  const debouncedFetch = useCallback(() => {
+    if (debouncedFetchRef.current) {
+      clearTimeout(debouncedFetchRef.current);
+    }
+    debouncedFetchRef.current = setTimeout(() => {
+      fetchData(false);
+    }, 300); // 300ms debounce to batch rapid updates
+  }, [fetchData]);
+
+  // Cleanup debounce timer
+  useEffect(() => {
+    return () => {
+      if (debouncedFetchRef.current) {
+        clearTimeout(debouncedFetchRef.current);
+      }
+    };
+  }, []);
+
   // Real-time subscription for conversations
   useEffect(() => {
     if (!user) return;
@@ -160,9 +181,7 @@ export const Dashboard: React.FC = () => {
           schema: 'public',
           table: 'conversations',
         },
-        () => {
-          fetchData(false);
-        }
+        debouncedFetch
       )
       .on(
         'postgres_changes',
@@ -171,9 +190,7 @@ export const Dashboard: React.FC = () => {
           schema: 'public',
           table: 'messages',
         },
-        () => {
-          fetchData(false);
-        }
+        debouncedFetch
       )
       .on(
         'postgres_changes',
@@ -182,16 +199,14 @@ export const Dashboard: React.FC = () => {
           schema: 'public',
           table: 'leads',
         },
-        () => {
-          fetchData(false);
-        }
+        debouncedFetch
       )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, fetchData]);
+  }, [user, debouncedFetch]);
 
   // Filter conversations based on selected tab
   const filteredConversations = useMemo(() => {
