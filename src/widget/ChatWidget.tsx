@@ -1888,7 +1888,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                       return (
                         <div 
                           key={idx} 
-                          className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} ${msgWithExtras.isHuman && !isContinuation ? 'items-start gap-2' : ''} ${isContinuation ? 'mt-0.5' : 'mt-3 first:mt-0'}`}
+                          className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} ${msgWithExtras.isHuman && !isContinuation ? 'items-start gap-2' : ''} ${isContinuation ? 'mt-px' : 'mt-3 first:mt-0'}`}
                         >
                           {/* Avatar for human messages - only show for first in group */}
                           {msgWithExtras.isHuman && !isContinuation && msgWithExtras.senderAvatar && (
@@ -1948,9 +1948,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                               className={`rounded-lg p-3 ${
                                 msg.role === 'user' 
                                   ? 'bg-muted' 
-                                  : msgWithExtras.isHuman 
-                                    ? 'bg-muted/50 text-foreground' 
-                                    : 'bg-muted'
+                                  : 'bg-muted'
                               }`}
                             >
                               {msg.type === 'audio' && msg.audioUrl && (

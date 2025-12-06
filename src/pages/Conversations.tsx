@@ -716,7 +716,7 @@ const Conversations: React.FC = () => {
                           key={message.id}
                           className={`flex ${isUser ? 'justify-end' : 'justify-start'} ${
                             isNewMessage ? (isUser ? 'animate-slide-in-right' : 'animate-slide-in-left') : ''
-                          } ${isContinuation ? 'mt-0.5' : 'mt-3 first:mt-0'}`}
+                          } ${isContinuation ? 'mt-px' : 'mt-3 first:mt-0'}`}
                         >
                           <div className={`flex items-start gap-2 max-w-[75%] ${isContinuation && !isUser ? 'ml-10' : ''}`}>
                           {!isUser && !isContinuation && (
@@ -726,11 +726,15 @@ const Conversations: React.FC = () => {
                                   alt={msgMetadata?.sender_name || 'Team member'} 
                                   className="w-8 h-8 rounded-full object-cover flex-shrink-0 mt-1"
                                 />
+                              ) : isHumanSent ? (
+                                <div className="w-8 h-8 rounded-full bg-info/10 flex items-center justify-center flex-shrink-0 mt-1">
+                                  <span className="text-info text-xs font-medium">
+                                    {(msgMetadata?.sender_name || 'T').charAt(0).toUpperCase()}
+                                  </span>
+                                </div>
                               ) : (
-                                <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-1 ${
-                                  isHumanSent ? 'bg-info/10' : 'bg-primary/10'
-                                }`}>
-                                  <User01 size={14} className={isHumanSent ? 'text-info' : 'text-primary'} />
+                                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-1">
+                                  <User01 size={14} className="text-primary" />
                                 </div>
                               )
                             )}
@@ -739,7 +743,7 @@ const Conversations: React.FC = () => {
                               {!isContinuation && (
                                 <div className={`flex items-center gap-1.5 text-[11px] text-muted-foreground mb-1 ${isUser ? 'justify-end mr-1' : 'ml-1'}`}>
                                   <span className="font-medium">
-                                    {isUser ? 'Visitor' : (isHumanSent ? formatSenderName(msgMetadata?.sender_name) : 'AI Agent')}
+                                    {isUser ? ((selectedConversation?.metadata as any)?.lead_name || 'Visitor') : (isHumanSent ? formatSenderName(msgMetadata?.sender_name) : 'AI Agent')}
                                   </span>
                                   <span>•</span>
                                   <span>{formatShortTime(new Date(message.created_at))}</span>
@@ -783,9 +787,7 @@ const Conversations: React.FC = () => {
                                 className={`rounded-2xl px-4 py-2.5 ${
                                   isUser
                                     ? 'bg-muted text-foreground'
-                                    : isHumanSent
-                                      ? 'bg-muted/50 text-foreground'
-                                      : 'bg-muted text-foreground'
+                                    : 'bg-muted text-foreground'
                                 }`}
                               >
                                 <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</p>

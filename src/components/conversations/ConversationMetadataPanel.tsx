@@ -524,8 +524,8 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
             </AccordionContent>
           </AccordionItem>
 
-          {/* User Journey (Referrer) - Conditional */}
-          {metadata.referrer_journey && (
+          {/* User Journey (Referrer + Visited Pages) - Conditional */}
+          {(metadata.referrer_journey || (metadata.visited_pages && metadata.visited_pages.filter(v => !v.url.includes('widget.html')).length > 0)) && (
             <AccordionItem value="journey" className="border-b px-4">
               <AccordionTrigger 
                 className="py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider hover:no-underline"
@@ -535,201 +535,200 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
               </AccordionTrigger>
               <AccordionContent className="pb-4">
                 <div className="space-y-2.5">
-                  {/* Entry Type Badge */}
-                  <div className="flex items-center gap-2.5 text-sm">
-                    <span className="text-muted-foreground text-xs">Source:</span>
-                    <Badge 
-                      variant="secondary" 
-                      className={cn(
-                        "text-xs capitalize",
-                        metadata.referrer_journey.entry_type === 'organic' && "bg-success/10 text-success",
-                        metadata.referrer_journey.entry_type === 'paid' && "bg-warning/10 text-warning",
-                        metadata.referrer_journey.entry_type === 'social' && "bg-info/10 text-info",
-                        metadata.referrer_journey.entry_type === 'email' && "bg-primary/10 text-primary",
-                        metadata.referrer_journey.entry_type === 'referral' && "bg-muted text-muted-foreground",
-                        metadata.referrer_journey.entry_type === 'direct' && "bg-muted text-muted-foreground",
-                      )}
-                    >
-                      {metadata.referrer_journey.entry_type || 'direct'}
-                    </Badge>
-                  </div>
-                  
-                  {/* Referrer URL */}
-                  {metadata.referrer_journey.referrer_url && (
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <div className="flex items-start gap-2.5 text-sm">
-                          <Link01 className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
-                          <div className="min-w-0 flex-1">
-                            <div className="text-xs text-muted-foreground">Referred from:</div>
-                            <div className="truncate text-xs">
-                              {(() => {
-                                try {
-                                  const url = new URL(metadata.referrer_journey.referrer_url!);
-                                  return url.hostname;
-                                } catch {
-                                  return metadata.referrer_journey.referrer_url;
-                                }
-                              })()}
+                  {metadata.referrer_journey && (
+                    <>
+                      {/* Entry Type Badge */}
+                      <div className="flex items-center gap-2.5 text-sm">
+                        <span className="text-muted-foreground text-xs">Source:</span>
+                        <Badge 
+                          variant="secondary" 
+                          className={cn(
+                            "text-xs capitalize",
+                            metadata.referrer_journey.entry_type === 'organic' && "bg-success/10 text-success",
+                            metadata.referrer_journey.entry_type === 'paid' && "bg-warning/10 text-warning",
+                            metadata.referrer_journey.entry_type === 'social' && "bg-info/10 text-info",
+                            metadata.referrer_journey.entry_type === 'email' && "bg-primary/10 text-primary",
+                            metadata.referrer_journey.entry_type === 'referral' && "bg-muted text-muted-foreground",
+                            metadata.referrer_journey.entry_type === 'direct' && "bg-muted text-muted-foreground",
+                          )}
+                        >
+                          {metadata.referrer_journey.entry_type || 'direct'}
+                        </Badge>
+                      </div>
+                      
+                      {/* Referrer URL */}
+                      {metadata.referrer_journey.referrer_url && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="flex items-start gap-2.5 text-sm">
+                              <Link01 className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+                              <div className="min-w-0 flex-1">
+                                <div className="text-xs text-muted-foreground">Referred from:</div>
+                                <div className="truncate text-xs">
+                                  {(() => {
+                                    try {
+                                      const url = new URL(metadata.referrer_journey.referrer_url!);
+                                      return url.hostname;
+                                    } catch {
+                                      return metadata.referrer_journey.referrer_url;
+                                    }
+                                  })()}
+                                </div>
+                              </div>
                             </div>
-                          </div>
+                          </TooltipTrigger>
+                          <TooltipContent side="left" className="max-w-xs">
+                            <div className="text-xs break-all">{metadata.referrer_journey.referrer_url}</div>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
+                      
+                      {/* Landing Page */}
+                      {metadata.referrer_journey.landing_page && !metadata.referrer_journey.landing_page.includes('widget.html') && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="flex items-start gap-2.5 text-sm">
+                              <Browser className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+                              <div className="min-w-0 flex-1">
+                                <span className="text-muted-foreground">Landing page:</span>{' '}
+                                <span className="truncate">
+                                  {(() => {
+                                    try {
+                                      const url = new URL(metadata.referrer_journey.landing_page!);
+                                      return url.pathname + url.search || '/';
+                                    } catch {
+                                      return metadata.referrer_journey.landing_page;
+                                    }
+                                  })()}
+                                </span>
+                              </div>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent side="left" className="max-w-xs">
+                            <div className="text-xs break-all">{metadata.referrer_journey.landing_page}</div>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
+                      
+                      {/* UTM Parameters */}
+                      {(metadata.referrer_journey.utm_source || metadata.referrer_journey.utm_campaign) && (
+                        <div className="mt-2 pt-2 border-t border-dashed space-y-1.5">
+                          {metadata.referrer_journey.utm_source && (
+                            <div className="flex items-center gap-2 text-xs">
+                              <span className="text-muted-foreground w-16">Source:</span>
+                              <span className="font-medium">{metadata.referrer_journey.utm_source}</span>
+                            </div>
+                          )}
+                          {metadata.referrer_journey.utm_medium && (
+                            <div className="flex items-center gap-2 text-xs">
+                              <span className="text-muted-foreground w-16">Medium:</span>
+                              <span className="font-medium">{metadata.referrer_journey.utm_medium}</span>
+                            </div>
+                          )}
+                          {metadata.referrer_journey.utm_campaign && (
+                            <div className="flex items-center gap-2 text-xs">
+                              <span className="text-muted-foreground w-16">Campaign:</span>
+                              <span className="font-medium">{metadata.referrer_journey.utm_campaign}</span>
+                            </div>
+                          )}
+                          {metadata.referrer_journey.utm_term && (
+                            <div className="flex items-center gap-2 text-xs">
+                              <span className="text-muted-foreground w-16">Term:</span>
+                              <span className="font-medium">{metadata.referrer_journey.utm_term}</span>
+                            </div>
+                          )}
+                          {metadata.referrer_journey.utm_content && (
+                            <div className="flex items-center gap-2 text-xs">
+                              <span className="text-muted-foreground w-16">Content:</span>
+                              <span className="font-medium">{metadata.referrer_journey.utm_content}</span>
+                            </div>
+                          )}
                         </div>
-                      </TooltipTrigger>
-                      <TooltipContent side="left" className="max-w-xs">
-                        <div className="text-xs break-all">{metadata.referrer_journey.referrer_url}</div>
-                      </TooltipContent>
-                    </Tooltip>
+                      )}
+                    </>
                   )}
                   
-                  {/* Landing Page */}
-                  {metadata.referrer_journey.landing_page && !metadata.referrer_journey.landing_page.includes('widget.html') && (
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <div className="flex items-start gap-2.5 text-sm">
-                          <Browser className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
-                          <div className="min-w-0 flex-1">
-                            <span className="text-muted-foreground">Landing page:</span>{' '}
-                            <span className="truncate">
-                              {(() => {
-                                try {
-                                  const url = new URL(metadata.referrer_journey.landing_page!);
-                                  return url.pathname + url.search || '/';
-                                } catch {
-                                  return metadata.referrer_journey.landing_page;
-                                }
-                              })()}
-                            </span>
-                          </div>
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent side="left" className="max-w-xs">
-                        <div className="text-xs break-all">{metadata.referrer_journey.landing_page}</div>
-                      </TooltipContent>
-                    </Tooltip>
-                  )}
-                  
-                  {/* UTM Parameters */}
-                  {(metadata.referrer_journey.utm_source || metadata.referrer_journey.utm_campaign) && (
-                    <div className="mt-2 pt-2 border-t border-dashed space-y-1.5">
-                      {metadata.referrer_journey.utm_source && (
-                        <div className="flex items-center gap-2 text-xs">
-                          <span className="text-muted-foreground w-16">Source:</span>
-                          <span className="font-medium">{metadata.referrer_journey.utm_source}</span>
-                        </div>
-                      )}
-                      {metadata.referrer_journey.utm_medium && (
-                        <div className="flex items-center gap-2 text-xs">
-                          <span className="text-muted-foreground w-16">Medium:</span>
-                          <span className="font-medium">{metadata.referrer_journey.utm_medium}</span>
-                        </div>
-                      )}
-                      {metadata.referrer_journey.utm_campaign && (
-                        <div className="flex items-center gap-2 text-xs">
-                          <span className="text-muted-foreground w-16">Campaign:</span>
-                          <span className="font-medium">{metadata.referrer_journey.utm_campaign}</span>
-                        </div>
-                      )}
-                      {metadata.referrer_journey.utm_term && (
-                        <div className="flex items-center gap-2 text-xs">
-                          <span className="text-muted-foreground w-16">Term:</span>
-                          <span className="font-medium">{metadata.referrer_journey.utm_term}</span>
-                        </div>
-                      )}
-                      {metadata.referrer_journey.utm_content && (
-                        <div className="flex items-center gap-2 text-xs">
-                          <span className="text-muted-foreground w-16">Content:</span>
-                          <span className="font-medium">{metadata.referrer_journey.utm_content}</span>
-                        </div>
-                      )}
+                  {/* Visited Pages - Inline within User Journey */}
+                  {metadata.visited_pages && metadata.visited_pages.filter(v => !v.url.includes('widget.html')).length > 0 && (
+                    <div className={cn(metadata.referrer_journey && "mt-4 pt-3 border-t border-dashed")}>
+                      <div className="text-xs text-muted-foreground mb-2">
+                        Pages Visited ({metadata.visited_pages.filter(v => !v.url.includes('widget.html')).length})
+                      </div>
+                      <div className="flex flex-col overflow-visible pl-1">
+                        {metadata.visited_pages
+                          .filter(visit => !visit.url.includes('widget.html'))
+                          .map((visit, index, filteredPages) => {
+                          const isLast = index === filteredPages.length - 1;
+                          const isCurrentlyActive = isLast && visit.duration_ms === 0;
+                          
+                          const formatDuration = (ms: number) => {
+                            const seconds = Math.floor(ms / 1000);
+                            if (seconds === 0) return '< 1s';
+                            if (seconds < 60) return `${seconds}s`;
+                            const minutes = Math.floor(seconds / 60);
+                            const remainingSeconds = seconds % 60;
+                            return remainingSeconds > 0 ? `${minutes}m ${remainingSeconds}s` : `${minutes}m`;
+                          };
+                          
+                          // Extract page name from URL
+                          let pageName = 'Page';
+                          let fullUrl = visit.url;
+                          try {
+                            const url = new URL(visit.url);
+                            if (url.pathname === '/') {
+                              pageName = 'Homepage';
+                            } else {
+                              const pathParts = url.pathname.split('/').filter(Boolean);
+                              const lastPart = pathParts[pathParts.length - 1] || 'Page';
+                              pageName = lastPart
+                                .replace(/-/g, ' ')
+                                .replace(/_/g, ' ')
+                                .split(' ')
+                                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                                .join(' ');
+                            }
+                          } catch {
+                            // Keep default if parsing fails
+                          }
+                          
+                          return (
+                            <Tooltip key={index}>
+                              <TooltipTrigger asChild>
+                                <div className="flex gap-3">
+                                  {/* Timeline dot and line */}
+                                  <div className="flex flex-col items-center">
+                                    <div className="relative flex items-center justify-center mt-1 flex-shrink-0">
+                                      {/* Solid dot with ring pulse animation */}
+                                      <div className={cn(
+                                        "w-2.5 h-2.5 rounded-full",
+                                        isCurrentlyActive 
+                                          ? "bg-success animate-pulse-ring" 
+                                          : "bg-muted-foreground/40"
+                                      )} />
+                                    </div>
+                                    {!isLast && (
+                                      <div className="w-px flex-1 bg-border mt-1.5 min-h-[16px]" />
+                                    )}
+                                  </div>
+                                  
+                                  {/* Page info */}
+                                  <div className="flex-1 pb-3 min-w-0">
+                                    <div className="font-medium text-sm truncate">{pageName}</div>
+                                    <div className="text-xs text-muted-foreground">
+                                      {isCurrentlyActive ? 'Currently viewing' : formatDuration(visit.duration_ms)}
+                                    </div>
+                                  </div>
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent side="left" className="max-w-xs">
+                                <div className="text-xs break-all">{fullUrl}</div>
+                              </TooltipContent>
+                            </Tooltip>
+                          );
+                        })}
+                      </div>
                     </div>
                   )}
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-          )}
-
-          {/* Visited Pages - Conditional */}
-          {metadata.visited_pages && metadata.visited_pages.filter(v => !v.url.includes('widget.html')).length > 0 && (
-            <AccordionItem value="pages" className="border-b px-4">
-              <AccordionTrigger 
-                className="py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider hover:no-underline"
-                showIcon={true}
-              >
-                Visited Pages ({metadata.visited_pages.filter(v => !v.url.includes('widget.html')).length})
-              </AccordionTrigger>
-              <AccordionContent className="pb-4 overflow-visible">
-                <div className="flex flex-col overflow-visible pl-1">
-                  {metadata.visited_pages
-                    .filter(visit => !visit.url.includes('widget.html'))
-                    .map((visit, index, filteredPages) => {
-                    const isLast = index === filteredPages.length - 1;
-                    const isCurrentlyActive = isLast && visit.duration_ms === 0;
-                    
-                    const formatDuration = (ms: number) => {
-                      const seconds = Math.floor(ms / 1000);
-                      if (seconds === 0) return '< 1s';
-                      if (seconds < 60) return `${seconds}s`;
-                      const minutes = Math.floor(seconds / 60);
-                      const remainingSeconds = seconds % 60;
-                      return remainingSeconds > 0 ? `${minutes}m ${remainingSeconds}s` : `${minutes}m`;
-                    };
-                    
-                    // Extract page name from URL
-                    let pageName = 'Page';
-                    let fullUrl = visit.url;
-                    try {
-                      const url = new URL(visit.url);
-                      if (url.pathname === '/') {
-                        pageName = 'Homepage';
-                      } else {
-                        const pathParts = url.pathname.split('/').filter(Boolean);
-                        const lastPart = pathParts[pathParts.length - 1] || 'Page';
-                        pageName = lastPart
-                          .replace(/-/g, ' ')
-                          .replace(/_/g, ' ')
-                          .split(' ')
-                          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-                          .join(' ');
-                      }
-                    } catch {
-                      // Keep default if parsing fails
-                    }
-                    
-                    return (
-                      <Tooltip key={index}>
-                        <TooltipTrigger asChild>
-                          <div className="flex gap-3">
-                            {/* Timeline dot and line */}
-                            <div className="flex flex-col items-center">
-                              <div className="relative flex items-center justify-center mt-1 flex-shrink-0">
-                                {/* Solid dot with ring pulse animation */}
-                                <div className={cn(
-                                  "w-2.5 h-2.5 rounded-full",
-                                  isCurrentlyActive 
-                                    ? "bg-success animate-pulse-ring" 
-                                    : "bg-muted-foreground/40"
-                                )} />
-                              </div>
-                              {!isLast && (
-                                <div className="w-px flex-1 bg-border mt-1.5 min-h-[16px]" />
-                              )}
-                            </div>
-                            
-                            {/* Page info */}
-                            <div className="flex-1 pb-3 min-w-0">
-                              <div className="font-medium text-sm truncate">{pageName}</div>
-                              <div className="text-xs text-muted-foreground">
-                                {isCurrentlyActive ? 'Currently viewing' : formatDuration(visit.duration_ms)}
-                              </div>
-                            </div>
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent side="left" className="max-w-xs">
-                          <div className="text-xs break-all">{fullUrl}</div>
-                        </TooltipContent>
-                      </Tooltip>
-                    );
-                  })}
                 </div>
               </AccordionContent>
             </AccordionItem>
