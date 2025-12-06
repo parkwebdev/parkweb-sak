@@ -18,6 +18,7 @@ import { TakeoverDialog } from '@/components/conversations/TakeoverDialog';
 import { supabase } from '@/integrations/supabase/client';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { playNotificationSound } from '@/lib/notification-sound';
+import { formatShortTime, formatSenderName } from '@/lib/time-formatting';
 
 type Conversation = Tables<'conversations'> & {
   agents?: { name: string };
@@ -26,31 +27,6 @@ type Conversation = Tables<'conversations'> & {
 type Message = Tables<'messages'>;
 
 const QUICK_EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '🎉'];
-
-// Format time as "11 hrs ago" or "5 mins ago"
-const formatShortTime = (date: Date): string => {
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMins = Math.floor(diffMs / 60000);
-  const diffHrs = Math.floor(diffMins / 60);
-  const diffDays = Math.floor(diffHrs / 24);
-  
-  if (diffMins < 1) return 'now';
-  if (diffMins < 60) return `${diffMins} min${diffMins > 1 ? 's' : ''} ago`;
-  if (diffHrs < 24) return `${diffHrs} hr${diffHrs > 1 ? 's' : ''} ago`;
-  if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-};
-
-// Format sender name as "Aaron C."
-const formatSenderName = (fullName: string | undefined): string => {
-  if (!fullName) return 'Team Member';
-  const parts = fullName.trim().split(' ');
-  if (parts.length === 1) return parts[0];
-  const firstName = parts[0];
-  const lastInitial = parts[parts.length - 1][0]?.toUpperCase() || '';
-  return lastInitial ? `${firstName} ${lastInitial}.` : firstName;
-};
 
 // Function to update message reaction via edge function
 async function updateMessageReaction(
