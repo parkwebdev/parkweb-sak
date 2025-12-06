@@ -638,8 +638,8 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
               <AccordionContent className="pb-4">
                 <div className="flex flex-col">
                   {metadata.visited_pages.map((visit, index) => {
-                    const isCurrentPage = visit.duration_ms === 0;
                     const isLast = index === metadata.visited_pages.length - 1;
+                    const isCurrentlyActive = isLast && visit.duration_ms === 0;
                     
                     const formatDuration = (ms: number) => {
                       const seconds = Math.floor(ms / 1000);
@@ -679,7 +679,7 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
                             <div className="flex flex-col items-center">
                               <div className={cn(
                                 "w-2.5 h-2.5 rounded-full mt-1 flex-shrink-0",
-                                isCurrentPage 
+                                isCurrentlyActive 
                                   ? "bg-success animate-pulse" 
                                   : "bg-muted-foreground/40"
                               )} />
@@ -692,7 +692,7 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
                             <div className="flex-1 pb-3 min-w-0">
                               <div className="font-medium text-sm truncate">{pageName}</div>
                               <div className="text-xs text-muted-foreground">
-                                {isCurrentPage ? 'Currently viewing' : formatDuration(visit.duration_ms)}
+                                {isCurrentlyActive ? 'Currently viewing' : formatDuration(visit.duration_ms)}
                               </div>
                             </div>
                           </div>
