@@ -1,16 +1,15 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/Badge';
 
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { SearchMd, MessageChatSquare, User01, Send01, FaceSmile } from '@untitledui/icons';
+import { SearchMd, MessageChatSquare, User01, Send01, FaceSmile, Globe01 } from '@untitledui/icons';
 import { EmptyState } from '@/components/ui/empty-state';
 import { useConversations } from '@/hooks/useConversations';
 import { useAgents } from '@/hooks/useAgents';
 import { ConversationMetadataPanel } from '@/components/conversations/ConversationMetadataPanel';
-import { ActiveVisitorsPanel } from '@/components/conversations/ActiveVisitorsPanel';
 import type { Tables } from '@/integrations/supabase/types';
 import { formatDistanceToNow } from 'date-fns';
 import { TakeoverDialog } from '@/components/conversations/TakeoverDialog';
@@ -109,6 +108,74 @@ const Conversations: React.FC = () => {
   const [isTypingBroadcast, setIsTypingBroadcast] = useState(false);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const typingChannelRef = useRef<RealtimeChannel | null>(null);
+
+  // Active visitor presence tracking
+  const [activeVisitors, setActiveVisitors] = useState<Record<string, { currentPage: string; visitorId: string }>>({});
+
+  // Format URL for display
+  const formatUrl = (url: string): string => {
+    try {
+      const parsed = new URL(url);
+      let path = parsed.pathname;
+      if (path === '/') return '/';
+      return path.length > 25 ? path.substring(0, 22) + '...' : path;
+    } catch {
+      return url.length > 25 ? url.substring(0, 22) + '...' : url;
+    }
+  };
+
+  // Subscribe to presence for all agents to track active visitors
+  useEffect(() => {
+    if (agents.length === 0) return;
+
+    const channels: RealtimeChannel[] = [];
+
+    agents.forEach(agent => {
+      const channel = supabase
+        .channel(`visitor-presence-${agent.id}`)
+        .on('presence', { event: 'sync' }, () => {
+          const state = channel.presenceState();
+          const visitors: Record<string, { currentPage: string; visitorId: string }> = {};
+          
+          Object.values(state).flat().forEach((presence: any) => {
+            if (presence.isWidgetOpen && presence.visitorId) {
+              visitors[presence.visitorId] = {
+                visitorId: presence.visitorId,
+                currentPage: presence.currentPage || 'Unknown',
+              };
+            }
+          });
+          
+          setActiveVisitors(prev => {
+            const newState = { ...prev };
+            // Remove visitors from this agent that are no longer present
+            Object.keys(newState).forEach(vid => {
+              const wasFromThisAgent = Object.values(state).flat().some((p: any) => p.visitorId === vid);
+              if (!wasFromThisAgent) return;
+              if (!visitors[vid]) delete newState[vid];
+            });
+            // Add/update visitors
+            Object.assign(newState, visitors);
+            return newState;
+          });
+        })
+        .subscribe();
+
+      channels.push(channel);
+    });
+
+    return () => {
+      channels.forEach(channel => supabase.removeChannel(channel));
+    };
+  }, [agents.map(a => a.id).join(',')]);
+
+  // Check if a conversation's visitor is currently active
+  const getVisitorPresence = (conversation: Conversation) => {
+    const metadata = (conversation.metadata as any) || {};
+    const sessionId = metadata.session_id;
+    if (!sessionId) return null;
+    return activeVisitors[sessionId] || null;
+  };
 
   // Load messages when conversation is selected
   useEffect(() => {
@@ -321,12 +388,6 @@ const Conversations: React.FC = () => {
           </div>
         </div>
 
-        {/* Active Visitors */}
-        <ActiveVisitorsPanel 
-          agentIds={agents.map(a => a.id)} 
-          agentNames={agentNames}
-        />
-
         {/* Conversation List */}
         <div className="flex-1 min-h-0 overflow-y-auto">
             {loading ? (
@@ -357,7 +418,11 @@ const Conversations: React.FC = () => {
                       <div className="flex items-start gap-3">
                         <div className="w-11 h-11 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 relative">
                           <User01 size={20} className="text-primary" />
-                          {getPriorityIndicator(priority) && (
+                          {/* Active visitor indicator */}
+                          {getVisitorPresence(conv) && (
+                            <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-success rounded-full border-2 border-background" />
+                          )}
+                          {getPriorityIndicator(priority) && !getVisitorPresence(conv) && (
                             <div className="absolute -top-0.5 -right-0.5">
                               {getPriorityIndicator(priority)}
                             </div>
@@ -399,44 +464,67 @@ const Conversations: React.FC = () => {
       <div className="flex-1 flex flex-col min-w-0 min-h-0">
         {selectedConversation ? (
           <>
-            {/* Chat Header - compact, no avatar */}
-            <div className="px-6 py-3 border-b flex items-center justify-between bg-background shrink-0">
-              <div>
-                <p className="font-medium text-sm text-foreground">
-                  {((selectedConversation.metadata as any)?.lead_name || 
-                    (selectedConversation.metadata as any)?.lead_email || 
-                    'Anonymous')}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {selectedConversation.agents?.name} • {selectedConversation.status.replace('_', ' ')}
-                </p>
-              </div>
+            {/* Chat Header - compact with active status */}
+            {(() => {
+              const visitorPresence = getVisitorPresence(selectedConversation);
+              const isActive = !!visitorPresence;
               
-              <div className="flex items-center gap-2">
-                {selectedConversation.status === 'active' && (
-                  <Button size="sm" variant="outline" onClick={() => setTakeoverDialogOpen(true)}>
-                    Take Over
-                  </Button>
-                )}
-                {selectedConversation.status === 'human_takeover' && (
-                  <Button size="sm" variant="outline" onClick={handleReturnToAI}>
-                    Return to AI
-                  </Button>
-                )}
-                {selectedConversation.status !== 'closed' && (
-                  <Button size="sm" variant="destructive" onClick={handleClose}>
-                    Close
-                  </Button>
-                )}
-                {selectedConversation.status === 'closed' && (
-                  <Button size="sm" variant="outline" onClick={handleReopen}>
-                    Re-open
-                  </Button>
-                )}
-              </div>
-            </div>
-
-            {/* Messages */}
+              return (
+                <div className="px-6 py-3 border-b flex items-center justify-between bg-background shrink-0">
+                  <div className="flex items-center gap-3">
+                    {/* Active indicator dot */}
+                    {isActive && (
+                      <div className="relative flex items-center justify-center">
+                        <div className="w-2.5 h-2.5 rounded-full bg-success" />
+                        <div className="absolute w-2.5 h-2.5 rounded-full border-2 border-success animate-ping" />
+                      </div>
+                    )}
+                    <div>
+                      <p className="font-medium text-sm text-foreground">
+                        {((selectedConversation.metadata as any)?.lead_name || 
+                          (selectedConversation.metadata as any)?.lead_email || 
+                          'Anonymous')}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {isActive ? (
+                          <span className="flex items-center gap-1">
+                            <span className="text-success">Active now</span>
+                            <span>•</span>
+                            <Globe01 className="h-3 w-3" />
+                            <span>{formatUrl(visitorPresence.currentPage)}</span>
+                          </span>
+                        ) : (
+                          <>{selectedConversation.agents?.name} • {selectedConversation.status.replace('_', ' ')}</>
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    {selectedConversation.status === 'active' && (
+                      <Button size="sm" variant="outline" onClick={() => setTakeoverDialogOpen(true)}>
+                        Take Over
+                      </Button>
+                    )}
+                    {selectedConversation.status === 'human_takeover' && (
+                      <Button size="sm" variant="outline" onClick={handleReturnToAI}>
+                        Return to AI
+                      </Button>
+                    )}
+                    {selectedConversation.status !== 'closed' && (
+                      <Button size="sm" variant="destructive" onClick={handleClose}>
+                        Close
+                      </Button>
+                    )}
+                    {selectedConversation.status === 'closed' && (
+                      <Button size="sm" variant="outline" onClick={handleReopen}>
+                        Re-open
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
             <div ref={messagesScrollRef} className="flex-1 min-h-0 overflow-y-auto px-6 py-4">
                   {loadingMessages ? (
                     <div className="text-center py-12 text-sm text-muted-foreground">
