@@ -710,6 +710,17 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     }
   }, [isAttachingFiles]);
 
+  // Immediately clear parent badge when widget opens
+  useEffect(() => {
+    if (isOpen && window.parent !== window) {
+      // Immediately notify parent to clear badge when widget opens
+      window.parent.postMessage({ 
+        type: 'chatpad-unread-count', 
+        count: 0 
+      }, '*');
+    }
+  }, [isOpen]);
+
   // Visitor presence tracking - broadcast to admin panel
   useEffect(() => {
     if (previewMode || !config) return;
@@ -1100,8 +1111,19 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     if (conversation) {
       isOpeningConversationRef.current = true; // Use instant scroll for existing conversations
       setActiveConversationId(conversationId);
-      setMessages(conversation.messages);
+      
+      // Mark all assistant messages as read immediately in local state
+      const messagesWithRead = conversation.messages.map(m => 
+        m.role === 'assistant' ? { ...m, read: true } : m
+      );
+      setMessages(messagesWithRead);
       setShowConversationList(false);
+      
+      // Also mark as read in database (for valid UUID conversation IDs)
+      const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(conversationId);
+      if (isValidUUID) {
+        markMessagesRead(conversationId, 'user');
+      }
     }
   };
 
@@ -2386,7 +2408,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                     <div className="relative flex items-center justify-center w-6 h-6 mb-1.5">
                       <ChatNavIcon active={currentView === 'messages'} hovered={hoveredNav === 'messages'} className="h-5 w-5" />
                       {messages.some(m => !m.read && m.role === 'assistant') && (
-                        <div className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-destructive rounded-full" />
+                        <div className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-destructive rounded-full border-2 border-white" />
                       )}
                     </div>
                     <span className="text-xs pl-0.5">Chat</span>
