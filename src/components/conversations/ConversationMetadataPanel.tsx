@@ -149,7 +149,7 @@ interface ConversationMetadata {
 
 interface ConversationMetadataPanelProps {
   conversation: Conversation;
-  onUpdateMetadata: (conversationId: string, metadata: Partial<ConversationMetadata>) => Promise<void>;
+  onUpdateMetadata: (conversationId: string, metadata: Partial<ConversationMetadata>, options?: { silent?: boolean }) => Promise<void>;
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
 }
@@ -196,10 +196,10 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
       clearTimeout(notesDebounceRef.current);
     }
     
-    // Debounce save (1 second after typing stops)
+    // Debounce save (1 second after typing stops) - silent to avoid toast
     notesDebounceRef.current = setTimeout(async () => {
       const currentMetadata = (conversation.metadata || {}) as ConversationMetadata;
-      await onUpdateMetadata(conversation.id, { ...currentMetadata, notes: value });
+      await onUpdateMetadata(conversation.id, { ...currentMetadata, notes: value }, { silent: true });
       setNotesSaved(true);
     }, 1000);
   }, [conversation.id, conversation.metadata, onUpdateMetadata]);

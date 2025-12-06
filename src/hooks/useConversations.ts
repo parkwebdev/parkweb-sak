@@ -125,7 +125,8 @@ export const useConversations = () => {
 
   const updateConversationMetadata = async (
     conversationId: string,
-    metadata: Record<string, any>
+    metadata: Record<string, any>,
+    options?: { silent?: boolean }
   ) => {
     try {
       // First fetch current conversation to merge metadata
@@ -158,7 +159,9 @@ export const useConversations = () => {
         )
       );
       
-      toast.success('Updated successfully');
+      if (!options?.silent) {
+        toast.success('Updated successfully');
+      }
     } catch (error) {
       logger.error('Error updating conversation metadata:', error);
       toast.error('Failed to update');
