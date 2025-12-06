@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   SearchLg,
@@ -39,10 +39,16 @@ interface ConversationsDataTableProps {
   data: ConversationRow[];
   title?: string;
   className?: string;
+  storageKey?: string;
 }
 
 type SortColumn = "agentName" | "messageCount" | "duration" | "percentageOfTotal" | "status";
 type SortDirection = "asc" | "desc";
+
+interface SortState {
+  column: SortColumn;
+  direction: SortDirection;
+}
 
 const statusConfig = {
   active: { label: "Active", variant: "default" as const, className: "bg-success/10 text-success border-success/20" },
@@ -50,32 +56,95 @@ const statusConfig = {
   closed: { label: "Closed", variant: "secondary" as const, className: "bg-muted text-muted-foreground" },
 };
 
+const STORAGE_PREFIX = "dashboard_table_sort_";
+
+// Custom hook for debounced value
+function useDebouncedValue<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
+
+// Load sort state from localStorage
+function loadSortState(key: string): SortState | null {
+  try {
+    const stored = localStorage.getItem(`${STORAGE_PREFIX}${key}`);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (parsed.column && parsed.direction) {
+        return parsed as SortState;
+      }
+    }
+  } catch {
+    // Ignore parsing errors
+  }
+  return null;
+}
+
+// Save sort state to localStorage
+function saveSortState(key: string, state: SortState): void {
+  try {
+    localStorage.setItem(`${STORAGE_PREFIX}${key}`, JSON.stringify(state));
+  } catch {
+    // Ignore storage errors
+  }
+}
+
 export function ConversationsDataTable({
   data,
   title = "Conversations",
   className,
+  storageKey = "conversations",
 }: ConversationsDataTableProps) {
   const navigate = useNavigate();
-  const [search, setSearch] = useState("");
-  const [sortColumn, setSortColumn] = useState<SortColumn>("messageCount");
-  const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
+  
+  // Search with debouncing
+  const [searchInput, setSearchInput] = useState("");
+  const debouncedSearch = useDebouncedValue(searchInput, 300);
+  
+  // Sorting with persistence
+  const [sortState, setSortState] = useState<SortState>(() => {
+    const stored = loadSortState(storageKey);
+    return stored || { column: "messageCount", direction: "desc" };
+  });
+  
   const [page, setPage] = useState(1);
   const itemsPerPage = 10;
 
+  // Persist sort state when it changes
+  useEffect(() => {
+    saveSortState(storageKey, sortState);
+  }, [sortState, storageKey]);
+
+  // Reset page when search changes
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch]);
+
   const filteredData = useMemo(() => {
-    return data.filter((row) => {
-      const searchLower = search.toLowerCase();
-      return (
-        row.agentName.toLowerCase().includes(searchLower) ||
-        (row.leadName?.toLowerCase().includes(searchLower) ?? false)
-      );
-    });
-  }, [data, search]);
+    if (!debouncedSearch.trim()) return data;
+    
+    const searchLower = debouncedSearch.toLowerCase();
+    return data.filter((row) => 
+      row.agentName.toLowerCase().includes(searchLower) ||
+      (row.leadName?.toLowerCase().includes(searchLower) ?? false)
+    );
+  }, [data, debouncedSearch]);
 
   const sortedData = useMemo(() => {
     return [...filteredData].sort((a, b) => {
       let comparison = 0;
-      switch (sortColumn) {
+      switch (sortState.column) {
         case "agentName":
           comparison = a.agentName.localeCompare(b.agentName);
           break;
@@ -91,9 +160,9 @@ export function ConversationsDataTable({
         default:
           comparison = 0;
       }
-      return sortDirection === "asc" ? comparison : -comparison;
+      return sortState.direction === "asc" ? comparison : -comparison;
     });
-  }, [filteredData, sortColumn, sortDirection]);
+  }, [filteredData, sortState]);
 
   const paginatedData = useMemo(() => {
     const start = (page - 1) * itemsPerPage;
@@ -102,18 +171,16 @@ export function ConversationsDataTable({
 
   const totalPages = Math.ceil(sortedData.length / itemsPerPage);
 
-  const handleSort = (column: SortColumn) => {
-    if (sortColumn === column) {
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
-    } else {
-      setSortColumn(column);
-      setSortDirection("desc");
-    }
-  };
+  const handleSort = useCallback((column: SortColumn) => {
+    setSortState((prev) => ({
+      column,
+      direction: prev.column === column && prev.direction === "desc" ? "asc" : "desc",
+    }));
+  }, []);
 
   const SortIcon = ({ column }: { column: SortColumn }) => {
-    if (sortColumn !== column) return null;
-    return sortDirection === "asc" ? (
+    if (sortState.column !== column) return null;
+    return sortState.direction === "asc" ? (
       <ArrowUp className="ml-1 h-3 w-3" />
     ) : (
       <ArrowDown className="ml-1 h-3 w-3" />
@@ -125,6 +192,11 @@ export function ConversationsDataTable({
       {/* Table Header */}
       <div className="flex items-center justify-between border-b border-border px-4 py-4 lg:px-6">
         <h3 className="text-base font-semibold text-foreground">{title}</h3>
+        {debouncedSearch && (
+          <span className="text-sm text-muted-foreground">
+            {filteredData.length} result{filteredData.length !== 1 ? "s" : ""}
+          </span>
+        )}
       </div>
 
       {/* Search & Filters */}
@@ -134,8 +206,8 @@ export function ConversationsDataTable({
           <Input
             type="search"
             placeholder="Search conversations..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
             className="pl-9 bg-background"
           />
         </div>
@@ -149,7 +221,7 @@ export function ConversationsDataTable({
         <TableHeader>
           <TableRow className="hover:bg-transparent">
             <TableHead
-              className="cursor-pointer select-none"
+              className="cursor-pointer select-none hover:text-foreground transition-colors"
               onClick={() => handleSort("agentName")}
             >
               <div className="flex items-center">
@@ -158,7 +230,7 @@ export function ConversationsDataTable({
               </div>
             </TableHead>
             <TableHead
-              className="cursor-pointer select-none"
+              className="cursor-pointer select-none hover:text-foreground transition-colors"
               onClick={() => handleSort("messageCount")}
             >
               <div className="flex items-center">
@@ -168,7 +240,7 @@ export function ConversationsDataTable({
             </TableHead>
             <TableHead>Duration</TableHead>
             <TableHead
-              className="cursor-pointer select-none min-w-[180px]"
+              className="cursor-pointer select-none min-w-[180px] hover:text-foreground transition-colors"
               onClick={() => handleSort("percentageOfTotal")}
             >
               <div className="flex items-center">
@@ -177,7 +249,7 @@ export function ConversationsDataTable({
               </div>
             </TableHead>
             <TableHead
-              className="cursor-pointer select-none"
+              className="cursor-pointer select-none hover:text-foreground transition-colors"
               onClick={() => handleSort("status")}
             >
               <div className="flex items-center">
@@ -192,7 +264,7 @@ export function ConversationsDataTable({
           {paginatedData.length === 0 ? (
             <TableRow>
               <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
-                No conversations found
+                {debouncedSearch ? "No matching conversations found" : "No conversations found"}
               </TableCell>
             </TableRow>
           ) : (
