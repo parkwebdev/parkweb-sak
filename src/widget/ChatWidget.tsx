@@ -1,20 +1,23 @@
 import { useState, useEffect, useRef, Suspense, useCallback } from 'react';
-import { fetchWidgetConfig, createLead, submitArticleFeedback, sendChatMessage, subscribeToMessages, unsubscribeFromMessages, subscribeToConversationStatus, unsubscribeFromConversationStatus, subscribeToTypingIndicator, unsubscribeFromTypingIndicator, fetchTakeoverAgent, updateMessageReaction, updatePageVisit, startVisitorPresence, updateVisitorPresence, stopVisitorPresence, markMessagesRead, fetchConversationMessages, type WidgetConfig, type ReferrerJourney } from './api';
-import type { RealtimeChannel } from '@supabase/supabase-js';
+import { createLead, submitArticleFeedback, sendChatMessage, updateMessageReaction, type WidgetConfig, type ReferrerJourney } from './api';
 
 // Types and constants extracted for maintainability
-import type { ViewType, ChatUser, Message, Conversation, PageVisit, ChatWidgetProps } from './types';
-import { WIDGET_CSS_VARS, VoiceInput, FileDropZone, MessageReactions, AudioPlayer, PhoneInputField, getIsMobileFullScreen, isInternalWidgetUrl, positionClasses } from './constants';
-import { 
-  detectEntryType, 
-  parseUtmParams, 
-  formatTimestamp, 
-  isValidUUID,
-  getSessionId,
-  hasTakeoverNoticeBeenShown,
-  setTakeoverNoticeShown,
-  clearTakeoverNotice
-} from './utils';
+import type { ViewType, ChatUser, Message, Conversation, ChatWidgetProps } from './types';
+import { WIDGET_CSS_VARS, VoiceInput, FileDropZone, MessageReactions, AudioPlayer, PhoneInputField, getIsMobileFullScreen, positionClasses } from './constants';
+import { formatTimestamp, isValidUUID, getSessionId } from './utils';
+
+// Extracted hooks for state management
+import {
+  useWidgetConfig,
+  useSoundSettings,
+  useVisitorAnalytics,
+  useParentMessages,
+  useRealtimeMessages,
+  useConversationStatus,
+  useTypingIndicator,
+  useVisitorPresence,
+  useConversations,
+} from './hooks';
 
 // UI Components
 import { CSSAnimatedList } from './CSSAnimatedList';
@@ -49,30 +52,23 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // If isLoading prop is provided, parent is handling config fetching (Intercom-style)
-  const parentHandlesConfig = isLoadingProp !== undefined && 'greeting' in configProp;
-  const isSimpleConfig = !parentHandlesConfig && 'agentId' in configProp && !('greeting' in configProp);
-  
-  const [config, setConfig] = useState<WidgetConfig | null>(
-    isSimpleConfig ? null : (configProp as WidgetConfig)
+  // Config management via extracted hook
+  const { config, loading, isContentLoading, agentId, parentHandlesConfig } = useWidgetConfig(
+    configProp,
+    isLoadingProp,
+    previewMode
   );
-  const [loading, setLoading] = useState(isSimpleConfig);
   
-  // Use the loading state from parent if provided (Intercom-style instant loading)
-  const isContentLoading = parentHandlesConfig ? isLoadingProp : loading;
   const [isOpen, setIsOpen] = useState(false);
   const [currentView, setCurrentView] = useState<ViewType>('home');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedArticle, setSelectedArticle] = useState<any | null>(null);
-  
-  const agentId = isSimpleConfig ? (configProp as any).agentId : (configProp as WidgetConfig).agentId;
   
   const [chatUser, setChatUser] = useState<ChatUser | null>(() => {
     const stored = localStorage.getItem(`chatpad_user_${agentId}`);
     return stored ? JSON.parse(stored) : null;
   });
   
-  const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [isTyping, setIsTyping] = useState(false);
   const [isRecordingAudio, setIsRecordingAudio] = useState(false);
   const [isAttachingFiles, setIsAttachingFiles] = useState(false);
@@ -91,9 +87,6 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
   const [showFeedbackComment, setShowFeedbackComment] = useState(false);
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
   
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [showConversationList, setShowConversationList] = useState(false);
   const [isHumanTakeover, setIsHumanTakeover] = useState(false);
   const [isHumanTyping, setIsHumanTyping] = useState(false);
   const [typingAgentName, setTypingAgentName] = useState<string | undefined>();
@@ -101,21 +94,9 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
   const [takeoverAgentAvatar, setTakeoverAgentAvatar] = useState<string | undefined>();
   const [unreadCount, setUnreadCount] = useState(0);
   const [headerScrollY, setHeaderScrollY] = useState(0);
-  const [pageVisits, setPageVisits] = useState<PageVisit[]>([]);
-  const currentPageRef = useRef<{ url: string; entered_at: string }>({ url: '', entered_at: '' });
-  const [referrerJourney, setReferrerJourney] = useState<ReferrerJourney | null>(null);
-  const referrerJourneySentRef = useRef(false);
-  // Parent page URL tracking (for iframe mode - parent window sends real page URL)
-  const parentPageUrlRef = useRef<string | null>(null);
-  const parentReferrerRef = useRef<string | null>(null);
-  const parentUtmParamsRef = useRef<Partial<ReferrerJourney> | null>(null);
   const homeContentRef = useRef<HTMLDivElement>(null);
-  const messagesContainerRef = useRef<HTMLDivElement>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const isOpeningConversationRef = useRef(false);
   
-  // Visitor presence tracking
-  const presenceChannelRef = useRef<RealtimeChannel | null>(null);
+  // Visitor ID state
   const [visitorId] = useState(() => {
     const stored = localStorage.getItem(`chatpad_visitor_id_${agentId}`);
     if (stored) return stored;
@@ -126,35 +107,109 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
 
   // Track hover state for nav icons
   const [hoveredNav, setHoveredNav] = useState<'home' | 'messages' | 'help' | null>(null);
-  
-  // Sound settings state (persisted in localStorage)
-  const [soundEnabled, setSoundEnabled] = useState<boolean>(() => {
-    const stored = localStorage.getItem(`chatpad_sound_enabled_${agentId}`);
-    return stored !== 'false'; // Default to true
-  });
   const [showSettingsDropdown, setShowSettingsDropdown] = useState(false);
 
-  // Load config on mount if simple config
-  useEffect(() => {
-    if (isSimpleConfig) {
-      fetchWidgetConfig((configProp as any).agentId)
-        .then(cfg => {
-          setConfig(cfg);
-          setLoading(false);
-        })
-        .catch(err => {
-          console.error('Failed to load config:', err);
-          setLoading(false);
-        });
-    }
-  }, []);
+  // Sound settings via extracted hook
+  const { soundEnabled, setSoundEnabled, playNotificationSound } = useSoundSettings(agentId);
 
-  // Sync config state when configProp changes (for preview mode OR parent handles config)
-  useEffect(() => {
-    if (!isSimpleConfig && (previewMode || parentHandlesConfig)) {
-      setConfig(configProp as WidgetConfig);
+  // Conversation management via extracted hook
+  const {
+    conversations,
+    setConversations,
+    messages,
+    setMessages,
+    activeConversationId,
+    setActiveConversationId,
+    showConversationList,
+    setShowConversationList,
+    messagesContainerRef,
+    messagesEndRef,
+    isOpeningConversationRef,
+  } = useConversations({
+    agentId,
+    chatUser,
+    previewMode,
+    isOpen,
+    currentView,
+  });
+
+  // Visitor analytics via extracted hook
+  const {
+    pageVisits,
+    setPageVisits,
+    referrerJourney,
+    setReferrerJourney,
+    currentPageRef,
+    parentPageUrlRef,
+    parentReferrerRef,
+    parentUtmParamsRef,
+  } = useVisitorAnalytics({
+    agentId,
+    visitorId,
+    previewMode,
+    activeConversationId,
+  });
+
+  // Parent window communication via extracted hook
+  const { notifyUnreadCount, notifyClose } = useParentMessages(
+    {
+      previewMode,
+      agentId,
+      visitorId,
+      activeConversationId,
+      referrerJourney,
+      setIsOpen,
+      setReferrerJourney,
+      setPageVisits,
+    },
+    {
+      parentPageUrlRef,
+      parentReferrerRef,
+      parentUtmParamsRef,
+      currentPageRef,
     }
-  }, [configProp, isSimpleConfig, previewMode, parentHandlesConfig]);
+  );
+
+  // Real-time message subscriptions via extracted hook
+  useRealtimeMessages({
+    activeConversationId,
+    isOpen,
+    currentView,
+    soundEnabled,
+    playNotificationSound,
+    setMessages,
+    setIsTyping,
+    setTakeoverAgentName,
+    setTakeoverAgentAvatar,
+  });
+
+  // Conversation status (takeover) via extracted hook
+  useConversationStatus({
+    agentId,
+    activeConversationId,
+    isHumanTakeover,
+    setIsHumanTakeover,
+    setTakeoverAgentName,
+    setTakeoverAgentAvatar,
+    setMessages,
+  });
+
+  // Typing indicator via extracted hook
+  useTypingIndicator({
+    activeConversationId,
+    setIsHumanTyping,
+    setTypingAgentName,
+  });
+
+  // Visitor presence via extracted hook
+  useVisitorPresence({
+    agentId,
+    visitorId,
+    isOpen,
+    previewMode,
+    config,
+    chatUser,
+  });
 
   // Update greeting when config changes in preview mode
   useEffect(() => {
@@ -169,419 +224,6 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     }
   }, [config?.greeting, previewMode]);
 
-
-  // Signal to parent that widget is ready to display (eliminates flicker on first open)
-  useEffect(() => {
-    if (window.parent !== window) {
-      window.parent.postMessage({ type: 'chatpad-widget-ready' }, '*');
-    }
-  }, []);
-
-// Helper to check if URL is internal widget URL (should not be tracked)
-  const isInternalWidgetUrl = (url: string): boolean => {
-    if (!url) return false;
-    try {
-      const urlObj = new URL(url);
-      return urlObj.pathname.includes('widget.html') || urlObj.pathname.includes('widget-entry');
-    } catch {
-      return url.includes('widget.html') || url.includes('widget-entry');
-    }
-  };
-
-  // Listen for parent page info messages (iframe mode - parent sends real page URL)
-  useEffect(() => {
-    if (previewMode) return;
-    
-    const handleParentMessage = (event: MessageEvent) => {
-      if (!event.data || typeof event.data !== 'object') return;
-      
-      if (event.data.type === 'chatpad-parent-page-info') {
-        const { url, referrer, utmParams } = event.data;
-        console.log('[Widget] Received parent page info:', { url, referrer, utmParams });
-        
-        // Skip tracking if this is the widget.html page itself
-        if (isInternalWidgetUrl(url)) {
-          console.log('[Widget] Skipping internal widget URL:', url);
-          return;
-        }
-        
-        const isFirstMessage = !parentPageUrlRef.current;
-        parentPageUrlRef.current = url;
-        parentReferrerRef.current = referrer;
-        parentUtmParamsRef.current = utmParams || {};
-        
-        // If this is the first parent page info, set up referrer journey
-        if (isFirstMessage && !referrerJourney) {
-          const entryType = (utmParams?.utm_medium && ['cpc', 'ppc', 'paid', 'cpm', 'display', 'retargeting'].includes(utmParams.utm_medium.toLowerCase())) 
-            ? 'paid' 
-            : detectEntryType(referrer);
-          
-          const journey: ReferrerJourney = {
-            referrer_url: referrer || null,
-            landing_page: url,
-            utm_source: utmParams?.utm_source || null,
-            utm_medium: utmParams?.utm_medium || null,
-            utm_campaign: utmParams?.utm_campaign || null,
-            utm_term: utmParams?.utm_term || null,
-            utm_content: utmParams?.utm_content || null,
-            entry_type: entryType,
-          };
-          
-          setReferrerJourney(journey);
-          console.log('[Widget] Set referrer journey from parent:', journey);
-          localStorage.setItem(`chatpad_referrer_journey_${agentId}`, JSON.stringify(journey));
-        }
-        
-        // Track page visit with parent URL
-        if (url) {
-          const now = new Date().toISOString();
-          
-          // Calculate duration for previous page
-          let previousDuration = 0;
-          if (currentPageRef.current.url && currentPageRef.current.entered_at) {
-            previousDuration = Date.now() - new Date(currentPageRef.current.entered_at).getTime();
-            setPageVisits(prev => {
-              const updated = [...prev];
-              const lastIndex = updated.findIndex(v => v.url === currentPageRef.current.url && v.duration_ms === 0);
-              if (lastIndex !== -1) {
-                updated[lastIndex] = { ...updated[lastIndex], duration_ms: previousDuration };
-              }
-              return updated;
-            });
-          }
-          
-          // Only add new page visit if URL changed
-          if (url !== currentPageRef.current.url) {
-            currentPageRef.current = { url, entered_at: now };
-            const newVisit = { url, entered_at: now, duration_ms: 0 };
-            setPageVisits(prev => [...prev, newVisit]);
-            
-            // Send real-time update if we have an active conversation
-            if (isValidUUID(activeConversationId)) {
-              updatePageVisit(activeConversationId, {
-                ...newVisit,
-                previous_duration_ms: previousDuration,
-              }, undefined, visitorId).catch(err => console.error('[Widget] Failed to send real-time page visit:', err));
-            }
-          }
-        }
-      }
-    };
-    
-    window.addEventListener('message', handleParentMessage);
-    return () => window.removeEventListener('message', handleParentMessage);
-  }, [agentId, previewMode, referrerJourney, activeConversationId]);
-
-  // Capture referrer journey on initial load (fallback for non-iframe mode or if parent doesn't send info)
-  useEffect(() => {
-    if (previewMode || referrerJourney) return;
-    
-    // In iframe mode, wait for parent to send page info
-    const isInIframe = window.parent !== window;
-    if (isInIframe) {
-      // Give parent 1 second to send page info before falling back
-      const timeout = setTimeout(() => {
-        if (!parentPageUrlRef.current && !referrerJourney) {
-          console.log('[Widget] No parent page info received, using fallback');
-          captureReferrerJourneyFallback();
-        }
-      }, 1000);
-      return () => clearTimeout(timeout);
-    }
-    
-    // Not in iframe, capture directly
-    captureReferrerJourneyFallback();
-  }, [agentId, previewMode]);
-  
-  // Helper function to capture referrer journey from window.location (fallback)
-  const captureReferrerJourneyFallback = useCallback(() => {
-    if (referrerJourney) return;
-    
-    const currentUrl = window.location.href;
-    const referrer = document.referrer || null;
-    const utmParams = parseUtmParams(currentUrl);
-    
-    // Determine entry type (UTM params can override referrer-based detection)
-    let entryType = utmParams.entry_type || detectEntryType(referrer);
-    
-    const journey: ReferrerJourney = {
-      referrer_url: referrer,
-      landing_page: currentUrl,
-      utm_source: utmParams.utm_source || null,
-      utm_medium: utmParams.utm_medium || null,
-      utm_campaign: utmParams.utm_campaign || null,
-      utm_term: utmParams.utm_term || null,
-      utm_content: utmParams.utm_content || null,
-      entry_type: entryType,
-    };
-    
-    setReferrerJourney(journey);
-    console.log('[Widget] Captured referrer journey (fallback):', journey);
-    
-    // Persist to localStorage
-    localStorage.setItem(`chatpad_referrer_journey_${agentId}`, JSON.stringify(journey));
-  }, [agentId, referrerJourney]);
-
-  // Load referrer journey from localStorage on mount
-  useEffect(() => {
-    if (previewMode || referrerJourney) return;
-    const stored = localStorage.getItem(`chatpad_referrer_journey_${agentId}`);
-    if (stored) {
-      try {
-        setReferrerJourney(JSON.parse(stored));
-      } catch { /* ignore */ }
-    }
-  }, [agentId, previewMode]);
-
-  // Page visit tracking - only for non-iframe mode (iframe mode handled by parent message listener)
-  useEffect(() => {
-    if (previewMode) return; // Don't track in preview mode
-    
-    // In iframe mode, page tracking is handled by parent postMessage
-    const isInIframe = window.parent !== window;
-    if (isInIframe) return;
-    
-    const trackPageVisit = (sendRealtime = false) => {
-      const now = new Date().toISOString();
-      const currentUrl = window.location.href;
-      
-      // Skip tracking if this is the widget.html page itself
-      if (isInternalWidgetUrl(currentUrl)) {
-        console.log('[Widget] Skipping internal widget URL in fallback:', currentUrl);
-        return;
-      }
-      
-      // Calculate duration for previous page
-      let previousDuration = 0;
-      if (currentPageRef.current.url && currentPageRef.current.entered_at) {
-        previousDuration = Date.now() - new Date(currentPageRef.current.entered_at).getTime();
-        setPageVisits(prev => {
-          // Update the last visit with duration
-          const updated = [...prev];
-          const lastIndex = updated.findIndex(v => v.url === currentPageRef.current.url && v.duration_ms === 0);
-          if (lastIndex !== -1) {
-            updated[lastIndex] = { ...updated[lastIndex], duration_ms: previousDuration };
-          }
-          return updated;
-        });
-      }
-      
-      // Start tracking new page
-      currentPageRef.current = { url: currentUrl, entered_at: now };
-      const newVisit = { url: currentUrl, entered_at: now, duration_ms: 0 };
-      setPageVisits(prev => [...prev, newVisit]);
-      
-      // Send real-time update if we have an active conversation
-      if (sendRealtime && isValidUUID(activeConversationId)) {
-        updatePageVisit(activeConversationId, {
-          ...newVisit,
-          previous_duration_ms: previousDuration,
-        }, undefined, visitorId).catch(err => console.error('[Widget] Failed to send real-time page visit:', err));
-      }
-    };
-    
-    // Track initial page (don't send real-time on initial load)
-    trackPageVisit(false);
-    
-    // Track SPA navigations (send real-time)
-    const handlePopState = () => trackPageVisit(true);
-    const handleHashChange = () => trackPageVisit(true);
-    
-    window.addEventListener('popstate', handlePopState);
-    window.addEventListener('hashchange', handleHashChange);
-    
-    // Update duration on unload
-    const handleBeforeUnload = () => {
-      if (currentPageRef.current.url && currentPageRef.current.entered_at) {
-        const duration = Date.now() - new Date(currentPageRef.current.entered_at).getTime();
-        // Try to update localStorage with final duration (best effort)
-        try {
-          const stored = localStorage.getItem(`chatpad_page_visits_${agentId}`);
-          if (stored) {
-            const visits = JSON.parse(stored);
-            const lastIndex = visits.findIndex((v: PageVisit) => v.url === currentPageRef.current.url && v.duration_ms === 0);
-            if (lastIndex !== -1) {
-              visits[lastIndex].duration_ms = duration;
-              localStorage.setItem(`chatpad_page_visits_${agentId}`, JSON.stringify(visits));
-            }
-          }
-        } catch { /* ignore */ }
-      }
-    };
-    
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    
-    return () => {
-      window.removeEventListener('popstate', handlePopState);
-      window.removeEventListener('hashchange', handleHashChange);
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-    };
-  }, [agentId, previewMode, activeConversationId]);
-
-  // Persist page visits to localStorage
-  useEffect(() => {
-    if (pageVisits.length > 0 && !previewMode) {
-      localStorage.setItem(`chatpad_page_visits_${agentId}`, JSON.stringify(pageVisits));
-    }
-  }, [pageVisits, agentId, previewMode]);
-
-  // Load page visits from localStorage on mount
-  useEffect(() => {
-    if (previewMode) return;
-    const stored = localStorage.getItem(`chatpad_page_visits_${agentId}`);
-    if (stored) {
-      try {
-        setPageVisits(JSON.parse(stored));
-      } catch { /* ignore */ }
-    }
-  }, [agentId, previewMode]);
-
-  // Send referrer journey to server when conversation is first created
-  useEffect(() => {
-    if (previewMode || !activeConversationId || referrerJourneySentRef.current || !referrerJourney) return;
-    
-    // Only send for valid database conversation IDs
-    if (!isValidUUID(activeConversationId)) return;
-    
-    // Send referrer journey once when conversation is created
-    updatePageVisit(activeConversationId, {
-      url: referrerJourney.landing_page,
-      entered_at: new Date().toISOString(),
-      duration_ms: 0,
-    }, referrerJourney, visitorId).then(() => {
-      referrerJourneySentRef.current = true;
-      console.log('[Widget] Sent referrer journey to server');
-    }).catch(err => console.error('[Widget] Failed to send referrer journey:', err));
-  }, [activeConversationId, referrerJourney, previewMode]);
-
-  // Initialize activeConversationId from chatUser if available (for returning users)
-  // This enables real-time subscriptions immediately on widget load
-  useEffect(() => {
-    if (chatUser?.conversationId && !activeConversationId) {
-      console.log('[Widget] Restoring conversation ID from chatUser:', chatUser.conversationId);
-      setActiveConversationId(chatUser.conversationId);
-    }
-  }, [chatUser?.conversationId]);
-
-  // Fetch messages from database when widget loads with existing conversationId
-  useEffect(() => {
-    if (!activeConversationId) return;
-    
-    // Only fetch if conversationId is valid UUID (database ID)
-    if (!isValidUUID(activeConversationId)) return;
-    
-    // Only fetch if we don't already have messages (to avoid refetching on every update)
-    if (messages.length > 0) return;
-    
-    const loadMessagesFromDB = async () => {
-      console.log('[Widget] Fetching messages from database for:', activeConversationId);
-      const dbMessages = await fetchConversationMessages(activeConversationId);
-      
-      if (dbMessages.length > 0) {
-        const formattedMessages: Message[] = dbMessages.map(msg => ({
-          id: msg.id,
-          role: msg.role as 'user' | 'assistant',
-          content: msg.content,
-          timestamp: new Date(msg.created_at),
-          type: 'text' as const,
-          reactions: (msg.metadata as any)?.reactions || [],
-          isHuman: (msg.metadata as any)?.sender_type === 'human',
-          senderName: (msg.metadata as any)?.sender_name,
-          senderAvatar: (msg.metadata as any)?.sender_avatar,
-          read_at: (msg.metadata as any)?.read_at,
-          read: !!((msg.metadata as any)?.read_at), // Properly set read status from DB
-          linkPreviews: (msg.metadata as any)?.link_previews, // Cached link previews
-        }));
-        
-        setMessages(formattedMessages);
-        console.log('[Widget] Loaded', formattedMessages.length, 'messages from database');
-      }
-    };
-    
-    loadMessagesFromDB();
-  }, [activeConversationId]);
-
-  // Load conversations from localStorage (with migration from old format)
-  useEffect(() => {
-    const stored = localStorage.getItem(`chatpad_conversations_${agentId}`);
-    const oldStored = localStorage.getItem(`chatpad_messages_${agentId}`);
-    
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        const conversationsWithDates = parsed.map((conv: any) => ({
-          ...conv,
-          messages: conv.messages.map((msg: any) => ({ ...msg, timestamp: new Date(msg.timestamp) }))
-        }));
-        setConversations(conversationsWithDates);
-      } catch (error) {
-        console.error('Error loading conversations:', error);
-      }
-    } else if (oldStored) {
-      // Migrate old messages format to conversations
-      try {
-        const parsed = JSON.parse(oldStored);
-        const messagesWithDates = parsed.map((msg: any) => ({ ...msg, timestamp: new Date(msg.timestamp) }));
-        if (messagesWithDates.length > 0) {
-          const migratedConversation: Conversation = {
-            id: 'migrated_' + Date.now(),
-            messages: messagesWithDates,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            preview: messagesWithDates[messagesWithDates.length - 1]?.content || 'Previous conversation'
-          };
-          setConversations([migratedConversation]);
-          localStorage.setItem(`chatpad_conversations_${agentId}`, JSON.stringify([migratedConversation]));
-          localStorage.removeItem(`chatpad_messages_${agentId}`);
-        }
-      } catch (error) {
-        console.error('Error migrating messages:', error);
-      }
-    }
-  }, [agentId]);
-
-  // Save conversations to localStorage and update active conversation
-  useEffect(() => {
-    if (activeConversationId && messages.length > 0) {
-      const existingIndex = conversations.findIndex(c => c.id === activeConversationId);
-      const lastMessage = messages[messages.length - 1];
-      const updatedConversation: Conversation = {
-        id: activeConversationId,
-        messages: messages,
-        createdAt: existingIndex >= 0 ? conversations[existingIndex].createdAt : new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        preview: lastMessage?.content.slice(0, 60) || 'New conversation'
-      };
-
-      const updatedConversations = existingIndex >= 0
-        ? conversations.map((c, i) => i === existingIndex ? updatedConversation : c)
-        : [updatedConversation, ...conversations];
-
-      setConversations(updatedConversations);
-      localStorage.setItem(`chatpad_conversations_${agentId}`, JSON.stringify(updatedConversations));
-    }
-  }, [messages, activeConversationId, agentId]);
-
-  // Auto-scroll (always enabled)
-  useEffect(() => {
-    if (currentView === 'messages' && activeConversationId) {
-      // Use requestAnimationFrame to wait for DOM to update after state changes
-      // This ensures messagesEndRef.current is available after showConversationList changes
-      const scrollToBottom = () => {
-        if (messagesEndRef.current) {
-          const behavior = isOpeningConversationRef.current ? 'instant' : 'smooth';
-          messagesEndRef.current.scrollIntoView({ behavior });
-          isOpeningConversationRef.current = false;
-        }
-      };
-      
-      // Double RAF ensures the DOM has painted after state changes
-      requestAnimationFrame(() => {
-        requestAnimationFrame(scrollToBottom);
-      });
-    }
-  }, [messages, currentView, activeConversationId]);
-
   // Scroll to bottom when file attachment opens
   useEffect(() => {
     if (isAttachingFiles && messagesEndRef.current) {
@@ -592,305 +234,21 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
   // Immediately clear parent badge when widget opens
   useEffect(() => {
     if (isOpen && window.parent !== window) {
-      // Immediately notify parent to clear badge when widget opens
-      window.parent.postMessage({ 
-        type: 'chatpad-unread-count', 
-        count: 0 
-      }, '*');
+      notifyUnreadCount(0);
     }
-  }, [isOpen]);
+  }, [isOpen, notifyUnreadCount]);
 
-  // Visitor presence tracking - broadcast to admin panel
+  // Calculate and notify unread count
   useEffect(() => {
-    if (previewMode || !config) return;
-    
-    const currentPage = window.location.href;
-    
-    // Start presence when widget opens
-    if (isOpen && !presenceChannelRef.current) {
-      presenceChannelRef.current = startVisitorPresence(agentId, visitorId, {
-        currentPage,
-        isWidgetOpen: true,
-        leadName: chatUser?.firstName ? `${chatUser.firstName} ${chatUser.lastName}`.trim() : undefined,
-        leadEmail: chatUser?.email,
-      });
-    }
-    
-    // Update presence when page changes or widget state changes
-    if (presenceChannelRef.current) {
-      updateVisitorPresence(presenceChannelRef.current, visitorId, {
-        currentPage,
-        isWidgetOpen: isOpen,
-        leadName: chatUser?.firstName ? `${chatUser.firstName} ${chatUser.lastName}`.trim() : undefined,
-        leadEmail: chatUser?.email,
-      });
-    }
-    
-    // Stop presence when widget closes
-    if (!isOpen && presenceChannelRef.current) {
-      stopVisitorPresence(presenceChannelRef.current);
-      presenceChannelRef.current = null;
-    }
-    
-    return () => {
-      if (presenceChannelRef.current) {
-        stopVisitorPresence(presenceChannelRef.current);
-        presenceChannelRef.current = null;
-      }
-    };
-  }, [isOpen, agentId, visitorId, chatUser, previewMode, config]);
-
-  // Mark messages as read when viewing conversation
-  useEffect(() => {
-    const hasValidConversation = isValidUUID(activeConversationId);
-    
-    if (currentView === 'messages' && hasValidConversation && isOpen) {
-      // Mark assistant messages as read by user after a short delay
-      const timer = setTimeout(async () => {
-        const result = await markMessagesRead(activeConversationId, 'user');
-        if (result.success && result.updated && result.updated > 0) {
-          console.log('[Widget] Marked', result.updated, 'messages as read');
-          // Update local message state to clear unread badge
-          setMessages(prev => prev.map(m => 
-            m.role === 'assistant' && !m.read 
-              ? { ...m, read: true } 
-              : m
-          ));
-          
-          // Persist read timestamp to localStorage to survive page navigation
-          const readKey = `chatpad_last_read_${agentId}_${activeConversationId}`;
-          localStorage.setItem(readKey, new Date().toISOString());
-          
-          // Immediately notify parent to clear badge
-          if (window.parent !== window) {
-            window.parent.postMessage({ type: 'chatpad-unread-count', count: 0 }, '*');
-          }
-        }
-      }, 500);
-      return () => clearTimeout(timer);
-    }
-  }, [currentView, activeConversationId, isOpen, messages.length, agentId]);
-
-  // Subscribe to real-time messages for human takeover
-  const realtimeChannelRef = useRef<RealtimeChannel | null>(null);
-  const statusChannelRef = useRef<RealtimeChannel | null>(null);
-  
-  useEffect(() => {
-    // Only subscribe if we have a valid database conversation ID (UUID format)
-    if (!isValidUUID(activeConversationId)) {
-      return;
-    }
-
-    console.log('[Widget] Setting up real-time subscription for:', activeConversationId);
-    
-    // Unsubscribe from previous channel if exists
-    if (realtimeChannelRef.current) {
-      unsubscribeFromMessages(realtimeChannelRef.current);
-      realtimeChannelRef.current = null;
-    }
-
-    // Subscribe to new messages and updates
-    realtimeChannelRef.current = subscribeToMessages(
-      activeConversationId, 
-      (newMessage) => {
-        // Check if this is a human message (not from AI)
-        const isHumanMessage = newMessage.metadata?.sender_type === 'human';
-        
-        console.log('[Widget] Processing new message:', { 
-          id: newMessage.id, 
-          isHuman: isHumanMessage,
-          content: newMessage.content.substring(0, 50)
-        });
-        
-        // Only add human messages to avoid duplicates (AI messages are added locally)
-        if (isHumanMessage) {
-          const senderName = newMessage.metadata?.sender_name;
-          const senderAvatar = newMessage.metadata?.sender_avatar;
-          
-          setMessages(prev => {
-            // Check if message already exists to prevent duplicates
-            if (prev.some(m => m.id === newMessage.id)) {
-              return prev;
-            }
-            
-            return [...prev, {
-              id: newMessage.id,
-              role: 'assistant' as const,
-              content: newMessage.content,
-              read: isOpen && currentView === 'messages',
-              timestamp: new Date(newMessage.created_at),
-              type: 'text' as const,
-              reactions: newMessage.metadata?.reactions || [],
-              isHuman: true,
-              senderName,
-              senderAvatar,
-            }];
-          });
-
-          // Update takeover agent info for the banner
-          if (senderName) {
-            setTakeoverAgentName(senderName);
-            setTakeoverAgentAvatar(senderAvatar);
-          }
-
-          // Also stop typing indicator if it was showing
-          setIsTyping(false);
-          
-          // Play notification sound for new human messages (if sound enabled)
-          if (soundEnabled) {
-            try {
-              const audio = new Audio('/sounds/notification.mp3');
-              audio.volume = 0.5;
-              audio.play().catch(() => {});
-            } catch {}
-          }
-        }
-      },
-      // Handle message updates (for real-time reaction sync AND read receipts)
-      (updatedMessage) => {
-        console.log('[Widget] Message updated:', updatedMessage.id, updatedMessage.metadata);
-        setMessages(prev => prev.map(msg => 
-          msg.id === updatedMessage.id 
-            ? { 
-                ...msg, 
-                reactions: updatedMessage.metadata?.reactions || [],
-                read_at: updatedMessage.metadata?.read_at,
-              }
-            : msg
-        ));
-      }
-    );
-
-    return () => {
-      if (realtimeChannelRef.current) {
-        unsubscribeFromMessages(realtimeChannelRef.current);
-        realtimeChannelRef.current = null;
-      }
-    };
-  }, [activeConversationId, isOpen, currentView]);
-
-  // Takeover notice helpers - use imported utilities with memoized wrappers
-  const checkTakeoverNoticeShown = useCallback((convId: string) => {
-    return hasTakeoverNoticeBeenShown(agentId, convId);
-  }, [agentId]);
-  
-  const markTakeoverNoticeShown = useCallback((convId: string) => {
-    setTakeoverNoticeShown(agentId, convId);
-  }, [agentId]);
-  
-  const resetTakeoverNotice = useCallback((convId: string) => {
-    clearTakeoverNotice(agentId, convId);
-  }, [agentId]);
-
-  // Subscribe to conversation status changes (for human takeover banner)
-  useEffect(() => {
-    if (!isValidUUID(activeConversationId)) {
-      setIsHumanTakeover(false);
-      return;
-    }
-
-    console.log('[Widget] Setting up status subscription for:', activeConversationId);
-    
-    if (statusChannelRef.current) {
-      unsubscribeFromConversationStatus(statusChannelRef.current);
-      statusChannelRef.current = null;
-    }
-
-    statusChannelRef.current = subscribeToConversationStatus(activeConversationId, async (status) => {
-      console.log('[Widget] Status changed to:', status);
-      const wasTakeover = isHumanTakeover;
-      setIsHumanTakeover(status === 'human_takeover');
-      
-      // Clear the takeover notice flag when returning to AI so next takeover shows notice again
-      if (status !== 'human_takeover') {
-        resetTakeoverNotice(activeConversationId);
-        return;
-      }
-      
-      // When takeover starts, show a system notice only once (persisted across page navigations)
-      if (status === 'human_takeover' && !wasTakeover) {
-        // Check if we already showed a notice for this conversation (persisted in localStorage)
-        if (checkTakeoverNoticeShown(activeConversationId)) {
-          return;
-        }
-        
-        // Mark that we've shown the notice for this conversation (persisted)
-        markTakeoverNoticeShown(activeConversationId);
-        
-        // Fetch agent info for personalized message
-        const agent = await fetchTakeoverAgent(activeConversationId);
-        const agentName = agent?.name || 'A team member';
-        setTakeoverAgentName(agent?.name);
-        setTakeoverAgentAvatar(agent?.avatar);
-        
-        // Add system notice (no emoji, no timestamp)
-        setMessages(prev => [...prev, {
-          role: 'assistant',
-          content: `${agentName} has joined the conversation`,
-          read: true,
-          timestamp: new Date(),
-          type: 'text',
-          reactions: [],
-          isSystemNotice: true,
-        }]);
-      }
-    });
-
-    return () => {
-      if (statusChannelRef.current) {
-        unsubscribeFromConversationStatus(statusChannelRef.current);
-        statusChannelRef.current = null;
-      }
-    };
-  }, [activeConversationId]);
-
-  // Subscribe to human typing indicators when in takeover mode
-  const typingChannelRef = useRef<RealtimeChannel | null>(null);
-  
-  useEffect(() => {
-    // Only subscribe to typing if in human takeover mode
-    if (!isValidUUID(activeConversationId) || !isHumanTakeover) {
-      setIsHumanTyping(false);
-      setTypingAgentName(undefined);
-      return;
-    }
-
-    console.log('[Widget] Setting up typing indicator subscription for:', activeConversationId);
-    
-    if (typingChannelRef.current) {
-      unsubscribeFromTypingIndicator(typingChannelRef.current);
-      typingChannelRef.current = null;
-    }
-
-    typingChannelRef.current = subscribeToTypingIndicator(
-      activeConversationId,
-      (isTyping, agentName) => {
-        console.log('[Widget] Typing indicator changed:', { isTyping, agentName });
-        setIsHumanTyping(isTyping);
-        setTypingAgentName(agentName);
-      }
-    );
-
-    return () => {
-      if (typingChannelRef.current) {
-        unsubscribeFromTypingIndicator(typingChannelRef.current);
-        typingChannelRef.current = null;
-      }
-    };
-  }, [activeConversationId, isHumanTakeover]);
-
-  // Track unread count and notify parent (respecting persisted read state)
-  useEffect(() => {
-    // Check if we have a persisted read timestamp for this conversation
+    // Get last read timestamp from localStorage for this conversation
     const readKey = `chatpad_last_read_${agentId}_${activeConversationId}`;
     const lastReadTimestamp = localStorage.getItem(readKey);
     const lastReadDate = lastReadTimestamp ? new Date(lastReadTimestamp) : null;
     
-    // Count unread messages that arrived AFTER the last read timestamp
+    // Count unread messages (assistant messages that arrived after last read)
     const unread = messages.filter(m => {
       if (m.role !== 'assistant') return false;
       if (m.read) return false;
-      // If we have a last read timestamp, only count messages after it
       if (lastReadDate && m.timestamp <= lastReadDate) return false;
       return true;
     }).length;
@@ -898,14 +256,8 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     setUnreadCount(unread);
     
     // Notify parent window of unread count for badge display
-    if (window.parent !== window) {
-      window.parent.postMessage({ 
-        type: 'chatpad-unread-count', 
-        count: unread 
-      }, '*');
-    }
-  }, [messages, agentId, activeConversationId]);
-
+    notifyUnreadCount(unread);
+  }, [messages, agentId, activeConversationId, notifyUnreadCount]);
 
   // Send resize notifications based on content
   useEffect(() => {
@@ -921,10 +273,8 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
         }
       };
 
-      // Initial resize
       handleResize();
 
-      // Observe content changes for resize
       const resizeObserver = new ResizeObserver(handleResize);
       const widgetElement = document.getElementById('chatpad-widget-root');
       if (widgetElement) {
@@ -937,31 +287,8 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     }
   }, [messages, currentView, selectedArticle, chatUser, previewMode]);
 
-  // Listen for messages from parent window (iframe mode)
-  useEffect(() => {
-    if (previewMode) return;
-
-    const handleParentMessage = (event: MessageEvent) => {
-      if (!event.data || typeof event.data !== 'object') return;
-
-      switch (event.data.type) {
-        case 'chatpad-widget-opened':
-          setIsOpen(true);
-          break;
-        case 'chatpad-widget-closed':
-          setIsOpen(false);
-          break;
-      }
-    };
-
-    window.addEventListener('message', handleParentMessage);
-    return () => window.removeEventListener('message', handleParentMessage);
-  }, [previewMode]);
-
   // Only return null for simple config loading, not when parent handles config (instant loading)
   if (!parentHandlesConfig && (loading || !config)) return null;
-
-  // positionClasses is now imported from constants
 
   // Calculate logo opacity based on scroll (graceful fade over 120px with easing)
   const logoOpacity = Math.max(0, 1 - Math.pow(headerScrollY / 120, 1.5));
@@ -989,7 +316,6 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
         setActiveConversationId('new');
         setShowConversationList(false);
       } else {
-        // Returning user - if they have a conversation ID, activate it for real-time subscription
         if (chatUser.conversationId) {
           setActiveConversationId(chatUser.conversationId);
         }
@@ -1014,31 +340,22 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
   const handleOpenConversation = (conversationId: string) => {
     const conversation = conversations.find(c => c.id === conversationId);
     if (conversation) {
-      isOpeningConversationRef.current = true; // Use instant scroll for existing conversations
+      isOpeningConversationRef.current = true;
       setActiveConversationId(conversationId);
       
-      // Mark all assistant messages as read immediately in local state
       const messagesWithRead = conversation.messages.map(m => 
         m.role === 'assistant' ? { ...m, read: true } : m
       );
       setMessages(messagesWithRead);
       setShowConversationList(false);
-      
-      // Also mark as read in database (for valid UUID conversation IDs)
-      if (isValidUUID(conversationId)) {
-        markMessagesRead(conversationId, 'user');
-      }
     }
   };
-
-  // formatTimestamp is now imported from utils
 
   const handleSendMessage = async () => {
     if (!messageInput.trim() && pendingFiles.length === 0) return;
 
     const userContent = pendingFiles.length > 0 ? (messageInput || 'Sent files') : messageInput;
     
-    // Create user message
     const newMessage: Message = {
       role: 'user',
       content: userContent,
@@ -1055,13 +372,11 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     setIsTyping(true);
 
     try {
-      // Build message history for context
       const messageHistory = [...messages, newMessage].map(m => ({
         role: m.role,
         content: m.content,
       }));
 
-      // Calculate current page duration and build final page visits array synchronously
       let finalPageVisits = [...pageVisits];
       if (currentPageRef.current.url && currentPageRef.current.entered_at) {
         const duration = Date.now() - new Date(currentPageRef.current.entered_at).getTime();
@@ -1069,18 +384,15 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
         if (lastIndex !== -1) {
           finalPageVisits[lastIndex] = { ...finalPageVisits[lastIndex], duration_ms: duration };
         }
-        // Update state for future use
         setPageVisits(finalPageVisits);
       }
 
-      // Log what we're sending for debugging
       console.log('[Widget] Sending message with:', {
         pageVisitsCount: finalPageVisits.length,
         referrerJourney: referrerJourney ? 'present' : 'null',
         conversationId: activeConversationId,
       });
 
-      // Call the real AI endpoint with page visits and referrer journey
       const response = await sendChatMessage(
         config.agentId,
         activeConversationId,
@@ -1091,19 +403,16 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
         visitorId
       );
 
-      // Update conversation ID if this was a new conversation
       if (response.conversationId && response.conversationId !== activeConversationId) {
         const oldConvId = activeConversationId;
         setActiveConversationId(response.conversationId);
         
-        // Update chatUser with new conversation ID
         if (chatUser) {
           const updatedUser = { ...chatUser, conversationId: response.conversationId };
           setChatUser(updatedUser);
           localStorage.setItem(`chatpad_user_${config.agentId}`, JSON.stringify(updatedUser));
         }
         
-        // Update local conversations array to use the database UUID
         if (oldConvId) {
           setConversations(prev => prev.map(conv => 
             conv.id === oldConvId 
@@ -1113,18 +422,15 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
         }
       }
 
-      // Handle human takeover status
       if (response.status === 'human_takeover') {
         setIsHumanTakeover(true);
         if (response.takenOverBy) {
           setTakeoverAgentName(response.takenOverBy.name);
           setTakeoverAgentAvatar(response.takenOverBy.avatar);
         }
-        // Update user message with ID for reactions
         if (response.userMessageId) {
           setMessages(prev => {
             const updated = [...prev];
-            // Find the most recent user message without an ID and set it
             for (let i = updated.length - 1; i >= 0; i--) {
               if (updated[i].role === 'user' && !updated[i].id) {
                 updated[i] = { ...updated[i], id: response.userMessageId };
@@ -1134,10 +440,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
             return updated;
           });
         }
-        // Note: System notice is now added via real-time status subscription, not here
-        // This prevents duplicate notices
       } else if (response.response) {
-        // Update user message with ID for reactions
         if (response.userMessageId) {
           setMessages(prev => {
             const updated = [...prev];
@@ -1151,7 +454,6 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
           });
         }
         
-        // Add AI response with message ID and cached link previews
         setMessages(prev => [...prev, { 
           id: response.assistantMessageId,
           role: 'assistant', 
@@ -1165,7 +467,6 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
       }
     } catch (error) {
       console.error('Error sending message:', error);
-      // Show error message to user
       setMessages(prev => [...prev, { 
         role: 'assistant', 
         content: 'Sorry, I encountered an error. Please try again.', 
@@ -1221,14 +522,10 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
 
   const cancelAudioRecording = () => {
     if (mediaRecorderRef.current && isRecordingAudio) {
-      // Remove the onstop handler to prevent message being sent
       mediaRecorderRef.current.onstop = null;
-      // Stop the recorder
       mediaRecorderRef.current.stop();
-      // Stop all audio tracks (turn off microphone)
       mediaRecorderRef.current.stream?.getTracks().forEach(track => track.stop());
     }
-    // Reset state
     setIsRecordingAudio(false);
     setRecordingTime(0);
     if (recordingIntervalRef.current) {
@@ -1241,8 +538,6 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
   const removeFile = (index: number) => {
     setPendingFiles(prev => prev.filter((_, i) => i !== index));
   };
-
-  // getSessionId is now imported from utils
 
   const handleSubmitFeedback = async () => {
     if (!selectedArticle || articleFeedback === null) return;
@@ -1270,7 +565,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
   const handleClose = () => {
     setIsOpen(false);
     if (isIframeMode) {
-      window.parent.postMessage({ type: 'chatpad-widget-close' }, '*');
+      notifyClose();
     }
   };
 
@@ -1347,62 +642,90 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                   
                   {/* Welcome text - visible over gradient, fades on scroll */}
                   <div 
-                    className="px-6 pb-4 transition-opacity duration-200"
-                    style={{ opacity: Math.max(0, 1 - headerScrollY / 100) }}
+                    className="px-6 pb-6 transition-opacity duration-300"
+                    style={{ opacity: logoOpacity }}
                   >
-                    <h2 className="text-3xl font-bold text-white drop-shadow-sm">
-                      {config.welcomeTitle} {config.welcomeEmoji}
+                    <h2 className="text-xl font-semibold text-white">
+                      {isContentLoading ? (
+                        <span className="inline-block w-32 h-6 bg-white/20 rounded animate-pulse" />
+                      ) : (
+                        config.greeting
+                      )}
                     </h2>
-                    <p className="text-white/90 text-base drop-shadow-sm">{config.welcomeSubtitle}</p>
                   </div>
                   
-                  {/* Content wrapper with gradient from transparent to white */}
-                  <div 
-                    className="relative z-20 flex-1 flex flex-col justify-start"
-                    style={{
-                      background: 'linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.5) 25%, rgba(255,255,255,0.85) 50%, white 75%)'
-                    }}
-                  >
-                    <div className="px-6 py-4 space-y-3">
+                  {/* Content area with white background */}
+                  <div className="bg-white rounded-t-2xl flex-1 min-h-[300px]">
+                    <div className="p-5 space-y-4">
                       {isContentLoading ? (
-                        // Loading spinner for dynamic content
-                        <div className="flex items-center justify-center py-8">
-                          <svg className="animate-spin h-6 w-6 text-primary" viewBox="0 0 24 24" fill="none">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                          </svg>
+                        // Skeleton loading state
+                        <div className="space-y-3">
+                          {[1, 2].map((i) => (
+                            <div key={i} className="p-4 border rounded-lg animate-pulse">
+                              <div className="flex items-start gap-3">
+                                <div className="p-2 rounded-lg bg-muted w-10 h-10" />
+                                <div className="flex-1 space-y-2">
+                                  <div className="h-4 bg-muted rounded w-24" />
+                                  <div className="h-3 bg-muted rounded w-40" />
+                                </div>
+                              </div>
+                            </div>
+                          ))}
                         </div>
                       ) : (
                         <>
-                          {config.announcements.length > 0 && (
-                            <CSSAnimatedList className="space-y-3 mb-6" staggerDelay={0.1}>
+                          {/* Announcements - show if there are active announcements */}
+                          {config.announcements && config.announcements.length > 0 && (
+                            <CSSAnimatedList className="space-y-3" staggerDelay={0.1}>
                               {config.announcements.map((announcement) => (
                                 <CSSAnimatedItem key={announcement.id}>
-                                  <div
-                                    className="rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
-                                    style={{ backgroundColor: announcement.background_color }}
+                                  <div 
+                                    className="rounded-lg overflow-hidden cursor-pointer transition-transform hover:scale-[1.02] active:scale-[0.98]"
+                                    style={{ 
+                                      backgroundColor: announcement.background_color || config.primaryColor,
+                                    }}
                                     onClick={() => {
-                                      if (announcement.action_type === 'start_chat') setCurrentView('messages');
-                                      else if (announcement.action_type === 'open_help') setCurrentView('help');
+                                      if (announcement.action_type === 'open_url' && announcement.action_url) {
+                                        window.open(announcement.action_url, '_blank', 'noopener,noreferrer');
+                                      } else if (announcement.action_type === 'start_chat') {
+                                        handleQuickActionClick('start_chat');
+                                      }
                                     }}
                                   >
-                                  {announcement.image_url && (
-                                    <div className="h-32 overflow-hidden">
-                                      <img src={announcement.image_url} alt="" className="w-full h-full object-cover" />
-                                    </div>
-                                  )}
-                                   <div className="p-4 flex items-center justify-between">
-                                     <div className="flex-1">
-                                       <h3 className="font-semibold text-base" style={{ color: announcement.title_color }}>{announcement.title}</h3>
-                                       {announcement.subtitle && <p className="text-sm text-muted-foreground mt-1">{announcement.subtitle}</p>}
+                                   <div className="p-4 flex items-center gap-4">
+                                     {announcement.image_url && (
+                                       <img 
+                                         src={announcement.image_url} 
+                                         alt="" 
+                                         className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
+                                       />
+                                     )}
+                                     <div className="flex-1 min-w-0">
+                                       <h4 
+                                         className="font-semibold text-sm truncate"
+                                         style={{ color: announcement.title_color || '#ffffff' }}
+                                       >
+                                         {announcement.title}
+                                       </h4>
+                                       {announcement.subtitle && (
+                                         <p 
+                                           className="text-xs mt-0.5 truncate opacity-90"
+                                           style={{ color: announcement.title_color || '#ffffff' }}
+                                         >
+                                           {announcement.subtitle}
+                                         </p>
+                                       )}
                                      </div>
-                                     <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                                     <ChevronRight 
+                                       className="h-5 w-5 flex-shrink-0 opacity-70"
+                                       style={{ color: announcement.title_color || '#ffffff' }}
+                                     />
+                                    </div>
                                    </div>
-                                  </div>
-                                 </CSSAnimatedItem>
-                              ))}
-                            </CSSAnimatedList>
-                          )}
+                                  </CSSAnimatedItem>
+                               ))}
+                             </CSSAnimatedList>
+                           )}
 
                           <CSSAnimatedList className="space-y-3" staggerDelay={0.1}>
                             {config.quickActions.map((action) => (
@@ -1482,9 +805,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                     <div className="absolute right-0 top-full mt-1 bg-card border rounded-lg shadow-lg p-2 z-50 min-w-[180px]">
                       <button
                         onClick={() => {
-                          const newValue = !soundEnabled;
-                          setSoundEnabled(newValue);
-                          localStorage.setItem(`chatpad_sound_enabled_${agentId}`, String(newValue));
+                          setSoundEnabled(!soundEnabled);
                           setShowSettingsDropdown(false);
                         }}
                         className="w-full flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors"
@@ -1578,10 +899,9 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                               const firstName = formData.get('firstName') as string;
                               const lastName = formData.get('lastName') as string;
                               const email = formData.get('email') as string;
-                              const honeypot = formData.get('website') as string; // Honeypot field
+                              const honeypot = formData.get('website') as string;
                               const customFieldData: Record<string, any> = {};
 
-                              // Spam check: if honeypot is filled, silently reject
                               if (honeypot) {
                                 console.log('Spam detected: honeypot filled');
                                 return;
@@ -1595,7 +915,6 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                               });
 
                               try {
-                                // Inline validation
                                 const errors: Record<string, string> = {};
                                 const trimmedFirstName = firstName.trim();
                                 const trimmedLastName = lastName.trim();
@@ -1621,9 +940,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                                 const userData = { firstName: trimmedFirstName, lastName: trimmedLastName, email: trimmedEmail, leadId, conversationId: conversationId || undefined };
                                 localStorage.setItem(`chatpad_user_${config.agentId}`, JSON.stringify(userData));
                                 setChatUser(userData);
-                                // Add greeting message for new user after form submission
                                 setMessages([{ role: 'assistant', content: config.greeting, read: true, timestamp: new Date(), type: 'text', reactions: [] }]);
-                                // Use the database conversation ID if available
                                 setActiveConversationId(conversationId || 'new');
                               } catch (error) {
                                 console.error('Error creating lead:', error);
@@ -1700,201 +1017,178 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                       if (msg.isSystemNotice) {
                         return (
                           <div key={idx} className="flex justify-center py-2">
-                            <div className="bg-muted/60 rounded-full px-4 py-1.5">
-                              <p className="text-xs text-muted-foreground">{msg.content}</p>
-                            </div>
+                            <p className="text-xs text-muted-foreground italic text-center">
+                              {msg.content}
+                            </p>
                           </div>
                         );
                       }
                       
-                      // Detect if this is a continuation of previous message (same sender)
-                      const prevMsg = idx > 0 ? messages[idx - 1] : null;
-                      const prevMsgWithExtras = prevMsg as (Message & { isHuman?: boolean; isSystemNotice?: boolean }) | null;
-                      const isContinuation = prevMsg && 
-                        !prevMsgWithExtras?.isSystemNotice &&
-                        prevMsg.role === msg.role &&
-                        (msg.role === 'user' || prevMsgWithExtras?.isHuman === msgWithExtras.isHuman);
-                      
-                      // Check if next message is from same sender (to know if we should show metadata)
-                      const nextMsg = idx < messages.length - 1 ? messages[idx + 1] : null;
-                      const nextMsgWithExtras = nextMsg as (Message & { isHuman?: boolean; isSystemNotice?: boolean }) | null;
-                      const isLastInGroup = !nextMsg || 
-                        nextMsgWithExtras?.isSystemNotice ||
-                        nextMsg.role !== msg.role ||
-                        (msg.role !== 'user' && nextMsgWithExtras?.isHuman !== msgWithExtras.isHuman);
-                      
                       return (
-                        <div 
-                          key={idx} 
-                          className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} ${msgWithExtras.isHuman && !isContinuation ? 'items-start gap-2' : ''} ${isContinuation ? 'mt-px' : 'mt-3 first:mt-0'}`}
-                        >
-                          {/* Avatar for human messages - only show for first in group */}
-                          {msgWithExtras.isHuman && !isContinuation && msgWithExtras.senderAvatar && (
-                            <img 
-                              src={msgWithExtras.senderAvatar} 
-                              alt={msgWithExtras.senderName || 'Team'} 
-                              className="w-7 h-7 rounded-full object-cover flex-shrink-0 mt-0.5"
-                              onError={(e) => {
-                                e.currentTarget.style.display = 'none';
-                                const fallback = e.currentTarget.nextElementSibling;
-                                if (fallback) fallback.classList.remove('hidden');
-                              }}
-                            />
-                          )}
-                          {/* Fallback avatar - shown when image fails or no avatar, only for first in group */}
-                          {msgWithExtras.isHuman && !isContinuation && (
-                            <div className={`w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 mt-0.5 ${msgWithExtras.senderAvatar ? 'hidden' : ''}`}>
-                              <span className="text-blue-600 text-xs font-medium">
-                                {(msgWithExtras.senderName || 'T').charAt(0).toUpperCase()}
-                              </span>
+                      <div key={idx} className={`flex items-start gap-2 ${msg.role === 'user' ? 'justify-end' : ''}`}>
+                        {msg.role === 'assistant' && (
+                          msgWithExtras.isHuman && msgWithExtras.senderAvatar ? (
+                            <Avatar className="w-7 h-7 flex-shrink-0">
+                              <AvatarImage src={msgWithExtras.senderAvatar} alt={msgWithExtras.senderName || 'Team member'} />
+                              <AvatarFallback className="text-xs bg-blue-100 text-blue-600">
+                                {(msgWithExtras.senderName || 'T')[0].toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                          ) : (
+                            <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${config.primaryColor}15` }}>
+                              <ChatBubbleIcon className="h-4 w-4" style={{ color: config.primaryColor }} />
                             </div>
+                          )
+                        )}
+                        <div className="flex flex-col gap-1 max-w-[80%]">
+                          {/* Human agent label */}
+                          {msg.role === 'assistant' && msgWithExtras.isHuman && msgWithExtras.senderName && (
+                            <span className="text-xs text-blue-600 font-medium">
+                              {msgWithExtras.senderName}
+                            </span>
                           )}
-                          <div className={`max-w-[80%] flex flex-col ${msgWithExtras.isHuman && isContinuation ? 'ml-9' : ''}`}>
-                            {/* Name + Timestamp header row - only show if !isContinuation */}
-                            {!isContinuation && (
-                              <div className={`flex items-center gap-1.5 text-[11px] opacity-70 mb-1 ${msg.role === 'user' ? 'justify-end mr-1' : 'ml-1'}`}>
-                                <span className="font-medium">
-                                  {msg.role === 'user' ? 'You' : (msgWithExtras.isHuman ? (() => {
-                                    const name = msgWithExtras.senderName || 'Team Member';
-                                    const parts = name.trim().split(' ');
-                                    if (parts.length === 1) return parts[0];
-                                    return `${parts[0]} ${parts[parts.length - 1].charAt(0).toUpperCase()}.`;
-                                  })() : config.agentName || 'Assistant')}
-                                </span>
-                                <span>•</span>
-                                <span>{formatTimestamp(msg.timestamp)}</span>
-                                {/* Status badges for user messages */}
-                                {msg.role === 'user' && config.showReadReceipts && (
-                                  (msg as any).failed ? (
-                                    <span className="text-destructive inline-flex items-center" title="Failed">
-                                      <XCircle size={12} />
-                                    </span>
-                                  ) : msg.read_at ? (
-                                    <span className="text-info inline-flex items-center" title="Seen">
-                                      <CheckCircle size={12} />
-                                    </span>
-                                  ) : (
-                                    <span className="opacity-50 inline-flex items-center" title="Sent">
-                                      <Check size={12} />
-                                    </span>
-                                  )
+                          <div 
+                            className={`rounded-lg p-3 ${
+                              msg.role === 'user' 
+                                ? 'text-foreground' 
+                                : msgWithExtras.isHuman 
+                                  ? 'bg-muted/50' 
+                                  : 'bg-muted'
+                            }`}
+                            style={msg.role === 'user' ? { 
+                              backgroundColor: `${config.primaryColor}12`
+                            } : undefined}
+                          >
+                            {msg.type === 'audio' && msg.audioUrl && (
+                              <Suspense fallback={<div className="h-8 flex items-center text-sm text-muted-foreground">Loading audio...</div>}>
+                                <AudioPlayer src={msg.audioUrl} />
+                              </Suspense>
+                            )}
+                            {msg.type === 'file' && msg.files && (
+                              <div className="space-y-2">
+                                {msg.files.map((file, i) => (
+                                  <div key={i} className="flex items-center gap-2">
+                                    {file.type?.startsWith('image/') ? (
+                                      <img src={file.url} alt={file.name} className="max-w-full rounded-lg" />
+                                    ) : (
+                                      <div className="flex items-center gap-2 text-sm">
+                                        <FileCheck02 className="h-4 w-4" />
+                                        <span>{file.name}</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                                {msg.content && msg.content !== 'Sent files' && (
+                                  <p className="text-sm whitespace-pre-wrap break-words mt-2">{msg.content}</p>
                                 )}
                               </div>
                             )}
-                            {/* Message bubble - content only */}
-                            <div 
-                              className={`rounded-lg p-3 ${
-                                msg.role === 'user' 
-                                  ? 'bg-muted' 
-                                  : 'bg-muted'
-                              }`}
-                            >
-                              {msg.type === 'audio' && msg.audioUrl && (
-                                <Suspense fallback={<div className="h-10 w-full bg-muted animate-pulse rounded" />}>
-                                  <AudioPlayer audioUrl={msg.audioUrl} primaryColor={config.primaryColor} />
-                                </Suspense>
-                              )}
-                              {msg.type === 'file' && msg.files && (
-                                <div className="space-y-2">
-                                  {msg.files.map((file, i) => (
-                                    <div key={i} className="flex items-center gap-2 text-xs">
-                                      {file.type.startsWith('image/') ? <Image03 className="h-4 w-4" /> : <FileCheck02 className="h-4 w-4" />}
-                                      <span>{file.name}</span>
-                                    </div>
-                                  ))}
-                                  {msg.content && <p className="text-sm mt-2">{msg.content}</p>}
-                                </div>
-                              )}
-{msg.type === 'text' && (
-                                <>
-                                  <p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p>
-                                  <LinkPreviews content={msg.content} cachedPreviews={msg.linkPreviews} />
-                                </>
-                              )}
-                            </div>
+                            {(msg.type === 'text' || !msg.type) && (
+                              <p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p>
+                            )}
                             
-                            {/* Reactions row - only show for last message in group */}
-                            {isLastInGroup && config.enableMessageReactions && (
-                              <div className="flex items-center gap-2 mt-1 px-1">
-                                <Suspense fallback={null}>
-                                  <MessageReactions
-                                    reactions={msg.reactions || []}
-                                    onAddReaction={async (emoji) => {
-                                      const newMessages = [...messages];
-                                      const reaction = newMessages[idx].reactions?.find(r => r.emoji === emoji);
-                                      if (reaction) {
-                                        if (!reaction.userReacted) {
-                                          reaction.count += 1;
-                                          reaction.userReacted = true;
-                                        }
-                                      } else {
-                                        newMessages[idx].reactions = [...(newMessages[idx].reactions || []), { emoji, count: 1, userReacted: true }];
-                                      }
-                                      setMessages(newMessages);
-                                      if (msg.id) {
-                                        await updateMessageReaction(msg.id, emoji, 'add', 'user');
-                                      }
-                                    }}
-                                    onRemoveReaction={async (emoji) => {
-                                      const newMessages = [...messages];
-                                      const reaction = newMessages[idx].reactions?.find(r => r.emoji === emoji);
-                                      if (reaction && reaction.userReacted) {
-                                        reaction.count -= 1;
-                                        reaction.userReacted = false;
-                                        if (reaction.count <= 0) {
-                                          newMessages[idx].reactions = newMessages[idx].reactions?.filter(r => r.emoji !== emoji);
-                                        }
-                                      }
-                                      setMessages(newMessages);
-                                      if (msg.id) {
-                                        await updateMessageReaction(msg.id, emoji, 'remove', 'user');
-                                      }
-                                    }}
-                                    primaryColor={config.primaryColor}
-                                    compact
-                                    isUserMessage={msg.role === 'user'}
-                                  />
-                                </Suspense>
+                            {/* Link previews for assistant messages */}
+                            {msg.role === 'assistant' && msg.linkPreviews && msg.linkPreviews.length > 0 && (
+                              <div className="mt-2">
+                                <LinkPreviews content={msg.content} cachedPreviews={msg.linkPreviews} />
                               </div>
                             )}
                           </div>
+                          
+                          {/* Message footer: timestamp + read receipt + reactions */}
+                          <div className="flex items-center gap-2 px-1">
+                            <span className="text-[10px] text-muted-foreground">
+                              {formatTimestamp(msg.timestamp)}
+                            </span>
+                            
+                            {/* Read receipt for user messages */}
+                            {msg.role === 'user' && (
+                              <div className="flex items-center" title={msg.read_at ? 'Read' : 'Sent'}>
+                                <Check className={`h-3 w-3 ${msg.read_at ? 'text-blue-500' : 'text-muted-foreground'}`} />
+                              </div>
+                            )}
+                            
+                            {/* Emoji reactions */}
+                            {config.enableMessageReactions && msg.id && (
+                              <Suspense fallback={null}>
+                                <MessageReactions
+                                  reactions={msg.reactions || []}
+                                  onReactionChange={async (emoji, add) => {
+                                    try {
+                                      await updateMessageReaction(msg.id!, emoji, add);
+                                      // Optimistically update local state
+                                      setMessages(prev => prev.map(m => {
+                                        if (m.id !== msg.id) return m;
+                                        const existing = m.reactions || [];
+                                        const reactionIndex = existing.findIndex(r => r.emoji === emoji);
+                                        if (add) {
+                                          if (reactionIndex >= 0) {
+                                            const updated = [...existing];
+                                            updated[reactionIndex] = { ...updated[reactionIndex], userReacted: true, count: updated[reactionIndex].count + 1 };
+                                            return { ...m, reactions: updated };
+                                          }
+                                          return { ...m, reactions: [...existing, { emoji, count: 1, userReacted: true }] };
+                                        } else {
+                                          if (reactionIndex >= 0) {
+                                            const updated = [...existing];
+                                            if (updated[reactionIndex].count <= 1) {
+                                              updated.splice(reactionIndex, 1);
+                                            } else {
+                                              updated[reactionIndex] = { ...updated[reactionIndex], userReacted: false, count: updated[reactionIndex].count - 1 };
+                                            }
+                                            return { ...m, reactions: updated };
+                                          }
+                                        }
+                                        return m;
+                                      }));
+                                    } catch (err) {
+                                      console.error('Failed to update reaction:', err);
+                                    }
+                                  }}
+                                  compact
+                                />
+                              </Suspense>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                      );
+                    );
                     })}
 
+                    {/* Takeover banner when human has joined */}
+                    {isHumanTakeover && (
+                      <div className="flex items-center justify-center gap-2 py-2 px-3 bg-blue-50 rounded-lg border border-blue-200">
+                        {takeoverAgentAvatar ? (
+                          <Avatar className="w-5 h-5">
+                            <AvatarImage src={takeoverAgentAvatar} alt={takeoverAgentName} />
+                            <AvatarFallback className="text-[10px] bg-blue-100 text-blue-600">
+                              {(takeoverAgentName || 'T')[0].toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                        ) : null}
+                        <span className="text-xs text-blue-700">
+                          You're now chatting with {takeoverAgentName || 'a team member'}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Typing indicator - show human typing OR AI typing */}
                     {(isTyping || isHumanTyping) && (
-                      <div className="flex justify-start items-start gap-2">
-                        {isHumanTyping && takeoverAgentAvatar && (
-                          <img 
-                            src={takeoverAgentAvatar} 
-                            alt={takeoverAgentName || 'Team'} 
-                            className="w-7 h-7 rounded-full object-cover flex-shrink-0"
-                          />
-                        )}
-                        {isHumanTyping && !takeoverAgentAvatar && (
-                          <div className="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                            <span className="text-blue-600 text-xs font-medium">
-                              {(takeoverAgentName || 'T').charAt(0).toUpperCase()}
-                            </span>
+                      <div className="flex items-start gap-2">
+                        <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${config.primaryColor}15` }}>
+                          <ChatBubbleIcon className="h-4 w-4" style={{ color: config.primaryColor }} />
+                        </div>
+                        <div className="bg-muted rounded-lg p-3">
+                          <div className="flex items-center gap-1.5">
+                            {isHumanTyping && typingAgentName && (
+                              <span className="text-xs text-blue-600 font-medium mr-1">{typingAgentName}</span>
+                            )}
+                            <div className="flex gap-1">
+                              <div className="w-2 h-2 rounded-full bg-muted-foreground/40 animate-bounce" style={{ animationDelay: '0ms' }} />
+                              <div className="w-2 h-2 rounded-full bg-muted-foreground/40 animate-bounce" style={{ animationDelay: '150ms' }} />
+                              <div className="w-2 h-2 rounded-full bg-muted-foreground/40 animate-bounce" style={{ animationDelay: '300ms' }} />
+                            </div>
                           </div>
-                        )}
-                        <div className={`rounded-lg p-3 flex items-center gap-2 ${
-                          isHumanTyping ? 'bg-blue-50 border border-blue-100' : 'bg-muted'
-                        }`}>
-                          <div className="flex gap-1">
-                            <div className={`w-2 h-2 rounded-full animate-bounce ${
-                              isHumanTyping ? 'bg-blue-400' : 'bg-foreground/40'
-                            }`} style={{ animationDelay: '0ms' }} />
-                            <div className={`w-2 h-2 rounded-full animate-bounce ${
-                              isHumanTyping ? 'bg-blue-400' : 'bg-foreground/40'
-                            }`} style={{ animationDelay: '150ms' }} />
-                            <div className={`w-2 h-2 rounded-full animate-bounce ${
-                              isHumanTyping ? 'bg-blue-400' : 'bg-foreground/40'
-                            }`} style={{ animationDelay: '300ms' }} />
-                          </div>
-                          {isHumanTyping && takeoverAgentName && (
-                            <span className="text-xs text-blue-600 ml-1">{takeoverAgentName} is typing...</span>
-                          )}
                         </div>
                       </div>
                     )}
@@ -2223,23 +1517,26 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                         ) : (
                           /* Standard layout for articles without featured image */
                           <div className="p-4">
-                            <Button 
-                              size="sm" 
-                              variant="ghost" 
-                              onClick={() => {
-                                setSelectedArticle(null);
-                                setArticleFeedback(null);
-                                setShowFeedbackComment(false);
-                                setFeedbackComment('');
-                                setFeedbackSubmitted(false);
-                              }}
-                              className="mb-3"
-                            >
-                              <ChevronRight className="h-4 w-4 rotate-180 mr-1" />
-                              Back
-                            </Button>
+                            {/* Back button and title */}
+                            <div className="flex items-center gap-2 mb-4">
+                              <Button 
+                                size="sm" 
+                                variant="ghost" 
+                                onClick={() => {
+                                  setSelectedArticle(null);
+                                  setArticleFeedback(null);
+                                  setShowFeedbackComment(false);
+                                  setFeedbackComment('');
+                                  setFeedbackSubmitted(false);
+                                }}
+                                className="h-8"
+                              >
+                                <ChevronRight className="h-4 w-4 rotate-180" />
+                              </Button>
+                              <h2 className="text-lg font-semibold">{selectedArticle.title}</h2>
+                            </div>
                             
-                            <h2 className="text-xl font-bold mb-4">{selectedArticle.title}</h2>
+                            {/* Article content */}
                             <div 
                               className="article-content max-w-none" 
                               dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(selectedArticle.content, {
@@ -2249,189 +1546,190 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                             />
                           </div>
                         )}
-                      </div>
-
-                      {/* Feedback Section - Pinned to Bottom */}
-                      <div className="p-4 border-t bg-muted/30">
-                        <p className="text-sm font-medium mb-3">Was this article helpful?</p>
-                        {!feedbackSubmitted ? (
-                          <div className="space-y-3">
-                            <div className="flex gap-2">
-                              <Button
-                                size="sm"
-                                variant={articleFeedback === 'helpful' ? 'default' : 'outline'}
-                                onClick={() => { 
-                                  setArticleFeedback('helpful'); 
-                                  setShowFeedbackComment(true); 
-                                }}
-                                className="flex-1"
-                                style={articleFeedback === 'helpful' ? { backgroundColor: config.primaryColor } : {}}
-                              >
-                                <ThumbsUp className="h-4 w-4 mr-2" />
-                                Yes
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant={articleFeedback === 'not_helpful' ? 'default' : 'outline'}
-                                onClick={() => { 
-                                  setArticleFeedback('not_helpful'); 
-                                  setShowFeedbackComment(true); 
-                                }}
-                                className="flex-1"
-                              >
-                                <ThumbsDown className="h-4 w-4 mr-2" />
-                                No
-                              </Button>
+                        
+                        {/* Feedback Section - always at bottom of content */}
+                        <div className="p-4 border-t bg-muted/30">
+                          {feedbackSubmitted ? (
+                            <div className="text-center py-4">
+                              <CheckCircle className="h-8 w-8 text-green-500 mx-auto mb-2" />
+                              <p className="text-sm font-medium">Thanks for your feedback!</p>
+                              <p className="text-xs text-muted-foreground mt-1">Your input helps us improve.</p>
                             </div>
-
-                            {showFeedbackComment && (
-                              <div className="space-y-2">
-                                <Textarea
-                                  value={feedbackComment}
-                                  onChange={(e) => setFeedbackComment(e.target.value)}
-                                  placeholder="Tell us more (optional)"
-                                  className="text-sm min-h-[80px]"
-                                />
-                                <Button 
-                                  size="sm" 
-                                  onClick={handleSubmitFeedback} 
-                                  style={{ backgroundColor: config.primaryColor }} 
-                                  className="w-full"
+                          ) : (
+                            <div className="space-y-3">
+                              <p className="text-sm font-medium text-center">Was this article helpful?</p>
+                              <div className="flex justify-center gap-3">
+                                <Button
+                                  size="sm"
+                                  variant={articleFeedback === 'helpful' ? 'default' : 'outline'}
+                                  onClick={() => {
+                                    setArticleFeedback('helpful');
+                                    setShowFeedbackComment(true);
+                                  }}
+                                  className="gap-1.5"
+                                  style={articleFeedback === 'helpful' ? { backgroundColor: config.primaryColor } : undefined}
                                 >
-                                  Submit Feedback
+                                  <ThumbsUp className="h-4 w-4" />
+                                  Yes
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant={articleFeedback === 'not_helpful' ? 'default' : 'outline'}
+                                  onClick={() => {
+                                    setArticleFeedback('not_helpful');
+                                    setShowFeedbackComment(true);
+                                  }}
+                                  className="gap-1.5"
+                                  style={articleFeedback === 'not_helpful' ? { backgroundColor: config.primaryColor } : undefined}
+                                >
+                                  <ThumbsDown className="h-4 w-4" />
+                                  No
                                 </Button>
                               </div>
-                            )}
-                          </div>
-                        ) : (
-                          <div className="text-center py-2">
-                            <p className="text-sm text-muted-foreground mb-2">Thank you for your feedback!</p>
-                          </div>
-                        )}
+                              
+                              {showFeedbackComment && (
+                                <div className="space-y-2 mt-3">
+                                  <Textarea
+                                    value={feedbackComment}
+                                    onChange={(e) => setFeedbackComment(e.target.value)}
+                                    placeholder={articleFeedback === 'helpful' ? "What did you find most helpful? (optional)" : "How can we improve this article? (optional)"}
+                                    className="text-sm resize-none"
+                                    rows={3}
+                                  />
+                                  <Button
+                                    size="sm"
+                                    onClick={handleSubmitFeedback}
+                                    className="w-full"
+                                    style={{ backgroundColor: config.primaryColor }}
+                                  >
+                                    Submit Feedback
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
-                   )}
-                 </div>
-               )}
-             </div>
-             )}
+                  )}
+                </div>
+              )}
 
-            {/* Bottom Navigation */}
-            {config.showBottomNav && (
-              <div className="border-t bg-background flex justify-around">
-                <button 
-                  onMouseEnter={() => setHoveredNav('home')}
-                  onMouseLeave={() => setHoveredNav(null)}
-                  onClick={() => {
-                    setCurrentView('home');
-                    setSelectedCategory(null);
-                    setSelectedArticle(null);
-                    setHelpSearchQuery('');
-                  }} 
-                  className={`flex-1 flex flex-col items-center justify-center h-auto py-2 transition-colors focus:outline-none focus-visible:ring-0 ${
-                    currentView === 'home' 
-                      ? 'text-foreground' 
-                      : 'text-muted-foreground'
-                  }`}
-                >
-                  <div className="flex items-center justify-center w-6 h-6 mb-1.5">
-                    <HomeNavIcon active={currentView === 'home'} hovered={hoveredNav === 'home'} className="h-5 w-5" />
-                  </div>
-                  <span className="text-xs pl-0.5">Home</span>
-                </button>
-                {config.enableMessagesTab && (
-                  <button 
-                    onMouseEnter={() => setHoveredNav('messages')}
-                    onMouseLeave={() => setHoveredNav(null)}
-                    onClick={() => {
-                      setCurrentView('messages');
-                      if (chatUser) {
-                        // Returning user - show conversation list
-                        setShowConversationList(true);
-                      } else {
-                        // New user - show contact form
-                        setActiveConversationId('new');
-                        setShowConversationList(false);
-                      }
-                    }}
-                    className={`flex-1 flex flex-col items-center justify-center h-auto py-2 relative transition-colors focus:outline-none focus-visible:ring-0 ${
-                      currentView === 'messages' 
-                        ? 'text-foreground' 
-                        : 'text-muted-foreground'
-                    }`}
-                  >
-                    <div className="relative flex items-center justify-center w-6 h-6 mb-1.5">
-                      <ChatNavIcon active={currentView === 'messages'} hovered={hoveredNav === 'messages'} className="h-5 w-5" />
-                      {messages.some(m => !m.read && m.role === 'assistant') && (
-                        <div className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-destructive rounded-full border-2 border-white" />
-                      )}
-                    </div>
-                    <span className="text-xs pl-0.5">Chat</span>
-                  </button>
-                )}
-                {config.enableHelpTab && config.helpArticles.length > 0 && (
-                  <button 
-                    onMouseEnter={() => setHoveredNav('help')}
-                    onMouseLeave={() => setHoveredNav(null)}
-                    onClick={() => setCurrentView('help')} 
-                    className={`flex-1 flex flex-col items-center justify-center h-auto py-2 transition-colors focus:outline-none focus-visible:ring-0 ${
-                      currentView === 'help' 
-                        ? 'text-foreground' 
-                        : 'text-muted-foreground'
-                    }`}
-                  >
-                    <div className="flex items-center justify-center w-6 h-6 mb-1.5">
-                      <HelpNavIcon active={currentView === 'help'} hovered={hoveredNav === 'help'} className="h-5 w-5" />
-                    </div>
-                    <span className="text-xs pl-0.5">Help</span>
-                  </button>
-                )}
               </div>
             )}
+
+            {/* Bottom Navigation */}
+            <div className="px-6 py-3 border-t bg-background flex justify-around items-center">
+              <button
+                onClick={() => setCurrentView('home')}
+                onMouseEnter={() => setHoveredNav('home')}
+                onMouseLeave={() => setHoveredNav(null)}
+                className="flex flex-col items-center gap-1 py-1"
+              >
+                <HomeNavIcon 
+                  isActive={currentView === 'home'} 
+                  isHovered={hoveredNav === 'home'}
+                  primaryColor={config.primaryColor}
+                />
+                <span className={`text-xs ${currentView === 'home' ? 'font-medium' : 'text-muted-foreground'}`} style={currentView === 'home' ? { color: config.primaryColor } : undefined}>
+                  Home
+                </span>
+              </button>
+
+              <button
+                onClick={() => {
+                  setCurrentView('messages');
+                  if (!chatUser) {
+                    setActiveConversationId('new');
+                    setShowConversationList(false);
+                  } else {
+                    if (chatUser.conversationId) {
+                      setActiveConversationId(chatUser.conversationId);
+                    }
+                    setShowConversationList(true);
+                  }
+                }}
+                onMouseEnter={() => setHoveredNav('messages')}
+                onMouseLeave={() => setHoveredNav(null)}
+                className="flex flex-col items-center gap-1 py-1 relative"
+              >
+                <div className="relative">
+                  <ChatNavIcon 
+                    isActive={currentView === 'messages'} 
+                    isHovered={hoveredNav === 'messages'}
+                    primaryColor={config.primaryColor}
+                  />
+                  {/* Unread badge */}
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 min-w-[16px] h-4 bg-red-500 text-white text-[10px] font-medium rounded-full flex items-center justify-center px-1">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
+                </div>
+                <span className={`text-xs ${currentView === 'messages' ? 'font-medium' : 'text-muted-foreground'}`} style={currentView === 'messages' ? { color: config.primaryColor } : undefined}>
+                  Messages
+                </span>
+              </button>
+
+              <button
+                onClick={() => setCurrentView('help')}
+                onMouseEnter={() => setHoveredNav('help')}
+                onMouseLeave={() => setHoveredNav(null)}
+                className="flex flex-col items-center gap-1 py-1"
+              >
+                <HelpNavIcon 
+                  isActive={currentView === 'help'} 
+                  isHovered={hoveredNav === 'help'}
+                  primaryColor={config.primaryColor}
+                />
+                <span className={`text-xs ${currentView === 'help' ? 'font-medium' : 'text-muted-foreground'}`} style={currentView === 'help' ? { color: config.primaryColor } : undefined}>
+                  Help
+                </span>
+              </button>
+            </div>
           </Card>
-        ) : (
-          <div className="relative">
-            {/* Widget Button */}
-            <Button
-              size="icon"
-              className="h-11 w-11 rounded-full shadow-lg hover:scale-110 transition-transform relative"
-              style={{ backgroundColor: config.primaryColor }}
-              onClick={() => setIsOpen(true)}
-            >
-              {/* Chat Icon */}
-              <ChatBubbleIcon className="h-6 w-6 relative z-10" />
-            </Button>
-          </div>
-        )}
-      </div>
+      ) : (
+        <button
+          onClick={() => setIsOpen(true)}
+          className="w-[50px] h-[50px] rounded-3xl flex items-center justify-center shadow-lg transition-transform hover:scale-105"
+          style={getGradientStyle()}
+        >
+          <ChatPadLogo className="h-6 w-6 text-white" />
+        </button>
+      )}
+    </div>
   );
 
-  // In iframe mode, render directly without fixed positioning
+  // For iframe mode, render widget content directly
   if (isIframeMode) {
-    return (
-      <div className="w-full h-full light" style={WIDGET_CSS_VARS}>
-        {widgetContent}
-      </div>
-    );
+    return widgetContent;
   }
 
-  // Contained preview mode: Use absolute positioning within parent canvas
+  // For contained preview mode (embed tab preview), render with absolute positioning
   if (containedPreview) {
     return (
-      <div className="absolute inset-0 pointer-events-none light" style={WIDGET_CSS_VARS}>
-        <div className={`absolute ${positionClasses[position]} pointer-events-auto`}>
-          {widgetContent}
-        </div>
+      <div className="absolute" style={{ 
+        ...positionClasses[position],
+        right: position.includes('right') ? '16px' : undefined,
+        left: position.includes('left') ? '16px' : undefined,
+        bottom: position.includes('bottom') ? '16px' : undefined,
+        top: position.includes('top') ? '16px' : undefined,
+      }}>
+        {widgetContent}
       </div>
     );
   }
 
-  // Preview mode: Use fixed positioning with position classes
+  // Default mode: fixed positioning for standalone widget
   return (
-    <div className="fixed inset-0 pointer-events-none z-[9999] light" style={WIDGET_CSS_VARS}>
-      <div className={`absolute ${positionClasses[position]} pointer-events-auto`}>
-        {widgetContent}
-      </div>
+    <div className="fixed z-[9999]" style={{ 
+      ...positionClasses[position],
+      right: position.includes('right') ? '16px' : undefined,
+      left: position.includes('left') ? '16px' : undefined,
+      bottom: position.includes('bottom') ? '16px' : undefined,
+      top: position.includes('top') ? '16px' : undefined,
+    }}>
+      {widgetContent}
     </div>
   );
 };
