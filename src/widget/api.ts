@@ -5,7 +5,14 @@ const SUPABASE_URL = 'https://mvaimvwdukpgvkifkfpa.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im12YWltdndkdWtwZ3ZraWZrZnBhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcxNzI3MTYsImV4cCI6MjA3Mjc0ODcxNn0.DmeecDZcGids_IjJQQepFVQK5wdEdV0eNXDCTRzQtQo';
 
 // Create a Supabase client for real-time subscriptions
-export const widgetSupabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// Uses unique storage key to prevent "Multiple GoTrueClient instances" warning
+export const widgetSupabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: {
+    storageKey: 'chatpad-widget-auth',
+    persistSession: false,
+    autoRefreshToken: false,
+  }
+});
 
 export interface WidgetConfig {
   // Agent info
