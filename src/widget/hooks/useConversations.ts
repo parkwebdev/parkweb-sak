@@ -40,28 +40,21 @@ export function useConversations(options: UseConversationsOptions) {
   
   // Wrapper that updates refs SYNCHRONOUSLY before React's async state update
   const setMessages = (setter: Message[] | ((prev: Message[]) => Message[])) => {
-    try {
-      // Calculate new value using our synchronous ref (NOT React state which is stale)
-      const current = messagesRef.current;
-      const next = typeof setter === 'function' ? setter(current) : setter;
-      
-      console.log('[Widget setMessages] current:', current?.length, 'next:', next?.length);
-      
-      // Validate that next is an array
-      if (!Array.isArray(next)) {
-        console.error('[Widget setMessages] ERROR: next is not an array!', next);
-        return;
-      }
-      
-      // Update refs IMMEDIATELY - this happens BEFORE the next line of code runs
-      messagesRef.current = next;
-      hasLocalMessagesRef.current = next.length > 0;
-      
-      // Now trigger React's async state update with the already-computed value
-      setMessagesInternal(next);
-    } catch (error) {
-      console.error('[Widget setMessages] ERROR:', error);
+    // Calculate new value using our synchronous ref (NOT React state which is stale)
+    const current = messagesRef.current;
+    const next = typeof setter === 'function' ? setter(current) : setter;
+    
+    // Validate that next is an array
+    if (!Array.isArray(next)) {
+      return;
     }
+    
+    // Update refs IMMEDIATELY - this happens BEFORE the next line of code runs
+    messagesRef.current = next;
+    hasLocalMessagesRef.current = next.length > 0;
+    
+    // Now trigger React's async state update with the already-computed value
+    setMessagesInternal(next);
   };
 
   // Initialize activeConversationId from chatUser if available (for returning users)
