@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
+import { SavedIndicator } from '@/components/settings/SavedIndicator';
 import {
   Select,
   SelectContent,
@@ -175,8 +176,42 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
   const metadata = (conversation.metadata || {}) as ConversationMetadata;
   const [newTag, setNewTag] = useState('');
   const [notes, setNotes] = useState(metadata.notes || '');
-  const [isEditingNotes, setIsEditingNotes] = useState(false);
+  const [notesSaved, setNotesSaved] = useState(false);
+  const notesDebounceRef = useRef<NodeJS.Timeout | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  
+  // Sync notes state when conversation changes
+  useEffect(() => {
+    setNotes((conversation.metadata as ConversationMetadata)?.notes || '');
+    setNotesSaved(false);
+  }, [conversation.id]);
+  
+  // Debounced auto-save for notes
+  const handleNotesChange = useCallback((value: string) => {
+    setNotes(value);
+    setNotesSaved(false);
+    
+    // Clear existing debounce timer
+    if (notesDebounceRef.current) {
+      clearTimeout(notesDebounceRef.current);
+    }
+    
+    // Debounce save (1 second after typing stops)
+    notesDebounceRef.current = setTimeout(async () => {
+      const currentMetadata = (conversation.metadata || {}) as ConversationMetadata;
+      await onUpdateMetadata(conversation.id, { ...currentMetadata, notes: value });
+      setNotesSaved(true);
+    }, 1000);
+  }, [conversation.id, conversation.metadata, onUpdateMetadata]);
+  
+  // Cleanup debounce timer on unmount
+  useEffect(() => {
+    return () => {
+      if (notesDebounceRef.current) {
+        clearTimeout(notesDebounceRef.current);
+      }
+    };
+  }, []);
 
   const handleAddTag = async (tag: string) => {
     if (!tag.trim()) return;
@@ -215,19 +250,6 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
         ...metadata,
         priority: priority as ConversationMetadata['priority'],
       });
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleSaveNotes = async () => {
-    setIsSaving(true);
-    try {
-      await onUpdateMetadata(conversation.id, {
-        ...metadata,
-        notes,
-      });
-      setIsEditingNotes(false);
     } finally {
       setIsSaving(false);
     }
@@ -849,53 +871,15 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
               Internal Notes
             </AccordionTrigger>
             <AccordionContent className="pb-4">
-              {isEditingNotes || !metadata.notes ? (
-                <div className="space-y-2">
-                  <Textarea
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    placeholder="Add internal notes about this conversation..."
-                    className="min-h-[80px] text-sm resize-none"
-                    disabled={isSaving}
-                  />
-                  <div className="flex justify-end gap-2">
-                    {metadata.notes && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => {
-                          setNotes(metadata.notes || '');
-                          setIsEditingNotes(false);
-                        }}
-                        disabled={isSaving}
-                      >
-                        Cancel
-                      </Button>
-                    )}
-                    <Button
-                      size="sm"
-                      onClick={handleSaveNotes}
-                      disabled={isSaving}
-                    >
-                      Save Notes
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  <p className="text-sm text-foreground whitespace-pre-wrap bg-muted/50 rounded-md p-3">
-                    {metadata.notes}
-                  </p>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-6 px-2 text-xs"
-                    onClick={() => setIsEditingNotes(true)}
-                  >
-                    Edit
-                  </Button>
-                </div>
-              )}
+              <div className="space-y-2">
+                <Textarea
+                  value={notes}
+                  onChange={(e) => handleNotesChange(e.target.value)}
+                  placeholder="Add internal notes about this conversation..."
+                  className="min-h-[80px] text-sm resize-none"
+                />
+                <SavedIndicator show={notesSaved} className="mt-1" />
+              </div>
             </AccordionContent>
           </AccordionItem>
         </Accordion>
