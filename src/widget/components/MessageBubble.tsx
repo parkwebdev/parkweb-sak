@@ -48,7 +48,7 @@ export const MessageBubble = ({
       : 'Assistant';
 
   return (
-    <div className={`flex items-start gap-2 ${isUser ? 'justify-end' : ''} ${isContinuation ? 'mt-0.5' : 'mt-2 first:mt-0'}`}>
+    <div className={`flex items-start gap-2 ${isUser ? 'justify-end' : ''} ${isContinuation ? 'mt-0.5' : 'mt-1.5 first:mt-0'}`}>
       {/* Avatar - only show for first message in group */}
       {!isUser && !isContinuation && (
         msgWithExtras.isHuman && msgWithExtras.senderAvatar ? (
@@ -163,9 +163,9 @@ export const MessageBubble = ({
           )}
         </div>
         
-        {/* Footer: Reactions - only show on last message in group */}
-        {isLastInGroup && (
-          <div className={`flex items-center gap-2 px-1 ${isUser ? 'justify-end' : ''}`}>
+        {/* Footer: Reactions - only show on last message in group, users can only react to assistant/team messages */}
+        {isLastInGroup && !isUser && (
+          <div className="flex items-center gap-2 px-1">
             {/* Emoji reactions */}
             {enableMessageReactions && message.id && (
               <Suspense fallback={null}>

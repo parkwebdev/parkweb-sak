@@ -726,7 +726,7 @@ const Conversations: React.FC = () => {
                           key={message.id}
                           className={`flex ${isUser ? 'justify-end' : 'justify-start'} ${
                             isNewMessage ? (isUser ? 'animate-slide-in-right' : 'animate-slide-in-left') : ''
-                          } ${isContinuation ? 'mt-px' : 'mt-2 first:mt-0'}`}
+                          } ${isContinuation ? 'mt-0.5' : 'mt-1.5 first:mt-0'}`}
                         >
                           <div className={`flex items-start gap-2 max-w-[75%] ${isContinuation && !isUser ? 'ml-10' : ''}`}>
                           {!isUser && !isContinuation && (
@@ -803,8 +803,8 @@ const Conversations: React.FC = () => {
 <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</p>
                                 <LinkPreviews content={message.content} />
                               </div>
-                              {/* Reactions row - only show for last message in group */}
-                              {isLastInGroup && reactions && reactions.length > 0 && (
+                              {/* Reactions row - only show for last message in group, team members can only react to user messages */}
+                              {isLastInGroup && isUser && reactions && reactions.length > 0 && (
                                 <div className="flex items-center gap-1 mt-1 px-1 flex-wrap">
                                   {reactions.map((reaction, i) => (
                                     <button
@@ -845,8 +845,8 @@ const Conversations: React.FC = () => {
                                   </Popover>
                                 </div>
                               )}
-                              {/* Add reaction button when no reactions exist */}
-                              {isLastInGroup && (!reactions || reactions.length === 0) && (
+                              {/* Add reaction button when no reactions exist - only for user messages */}
+                              {isLastInGroup && isUser && (!reactions || reactions.length === 0) && (
                                 <div className="flex items-center gap-1 mt-1 px-1">
                                   <Popover>
                                     <PopoverTrigger asChild>
