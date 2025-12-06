@@ -800,6 +800,9 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     };
   }, [activeConversationId, isOpen, currentView]);
 
+  // Track if we've shown the takeover notice for this conversation session
+  const shownTakeoverNoticeRef = useRef<string | null>(null);
+
   // Subscribe to conversation status changes (for human takeover banner)
   useEffect(() => {
     const isValidUUID = activeConversationId && 
@@ -822,8 +825,22 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
       const wasTakeover = isHumanTakeover;
       setIsHumanTakeover(status === 'human_takeover');
       
-      // When takeover starts, immediately show a system notice
+      // Reset the takeover notice flag when returning to AI
+      if (status !== 'human_takeover') {
+        shownTakeoverNoticeRef.current = null;
+        return;
+      }
+      
+      // When takeover starts, show a system notice only once per session
       if (status === 'human_takeover' && !wasTakeover) {
+        // Check if we already showed a notice for this conversation
+        if (shownTakeoverNoticeRef.current === activeConversationId) {
+          return;
+        }
+        
+        // Mark that we've shown the notice for this conversation
+        shownTakeoverNoticeRef.current = activeConversationId;
+        
         // Fetch agent info for personalized message
         const agent = await fetchTakeoverAgent(activeConversationId);
         const agentName = agent?.name || 'A team member';
@@ -831,21 +848,15 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
         setTakeoverAgentAvatar(agent?.avatar);
         
         // Add system notice (no emoji, no timestamp)
-        setMessages(prev => {
-          // Check if we already have a recent system notice to avoid duplicates
-          const lastMsg = prev[prev.length - 1];
-          if (lastMsg?.isSystemNotice) return prev;
-          
-          return [...prev, {
-            role: 'assistant',
-            content: `${agentName} has joined the conversation`,
-            read: true,
-            timestamp: new Date(),
-            type: 'text',
-            reactions: [],
-            isSystemNotice: true,
-          }];
-        });
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          content: `${agentName} has joined the conversation`,
+          read: true,
+          timestamp: new Date(),
+          type: 'text',
+          reactions: [],
+          isSystemNotice: true,
+        }]);
       }
     });
 

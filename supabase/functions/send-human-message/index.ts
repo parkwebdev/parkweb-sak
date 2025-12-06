@@ -83,7 +83,7 @@ serve(async (req) => {
 
     console.log(`Human message sent successfully: ${message.id}`);
 
-    // Update conversation updated_at and metadata
+    // Update conversation updated_at and metadata with last message preview
     const currentMetadata = (conversation.metadata as any) || {};
     await supabase
       .from('conversations')
@@ -95,6 +95,10 @@ serve(async (req) => {
           last_human_response_at: new Date().toISOString(),
           last_human_responder_id: senderId,
           last_human_responder_name: senderName,
+          // Store last message preview for conversation list
+          last_message_preview: content.trim().substring(0, 60),
+          last_message_role: 'human',
+          last_message_at: new Date().toISOString(),
         },
       })
       .eq('id', conversationId);

@@ -741,7 +741,7 @@ When answering, you can naturally reference the information from the knowledge b
 
     const assistantMessageId = assistantMsg?.id;
 
-    // Update conversation metadata (message count, last activity, page visits)
+    // Update conversation metadata (message count, last activity, page visits, last message preview)
     const currentMetadata = conversation?.metadata || {};
     
     // Merge page visits (keep existing ones, add new ones)
@@ -762,6 +762,10 @@ When answering, you can naturally reference the information from the knowledge b
           messages_count: (currentMetadata.messages_count || 0) + 2, // user + assistant
           first_message_at: currentMetadata.first_message_at || new Date().toISOString(),
           visited_pages: mergedPageVisits,
+          // Store last message preview for conversation list
+          last_message_preview: assistantContent.substring(0, 60),
+          last_message_role: 'assistant',
+          last_message_at: new Date().toISOString(),
         },
         updated_at: new Date().toISOString(),
       })

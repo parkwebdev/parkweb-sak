@@ -437,9 +437,15 @@ const Conversations: React.FC = () => {
                               {formatDistanceToNow(new Date(conv.updated_at), { addSuffix: true })}
                             </span>
                           </div>
-                          <p className="text-xs text-muted-foreground truncate mb-1.5">
+                          <p className="text-xs text-muted-foreground truncate mb-1">
                             via {conv.agents?.name || 'Unknown'}
                           </p>
+                          {metadata.last_message_preview && (
+                            <p className="text-xs text-muted-foreground/70 truncate mb-1.5">
+                              {metadata.last_message_preview}
+                              {metadata.last_message_preview.length >= 60 && '...'}
+                            </p>
+                          )}
                           <div className="flex items-center gap-1.5 flex-wrap">
                             <Badge variant="outline" className={`${getStatusColor(conv.status)} text-[10px] px-2 py-0.5`}>
                               {conv.status === 'human_takeover' ? 'Human' : conv.status === 'active' ? 'AI' : conv.status}
