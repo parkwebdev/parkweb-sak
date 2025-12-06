@@ -175,11 +175,15 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Check for API key authentication
+    // Check authentication - widget requests bypass API key validation
     const authHeader = req.headers.get('authorization');
     const isFromWidget = isWidgetRequest(req);
     
-    if (authHeader && authHeader.startsWith('Bearer ')) {
+    // Widget requests are allowed through without API key validation
+    if (isFromWidget) {
+      console.log('Request from widget origin - bypassing API key validation');
+    } else if (authHeader && authHeader.startsWith('Bearer ')) {
+      // Non-widget requests with API key - validate it
       const apiKey = authHeader.substring(7);
       
       // Hash the API key for comparison
@@ -216,7 +220,7 @@ serve(async (req) => {
       }
       
       console.log('API key authenticated successfully:', validation.key_id);
-    } else if (!isFromWidget) {
+    } else {
       // No API key and not from widget - reject
       console.log('Rejected: No API key and not from widget origin');
       return new Response(
@@ -224,7 +228,6 @@ serve(async (req) => {
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-    // If from widget without API key, allow through (existing behavior)
 
     // Get agent configuration and user_id
     const { data: agent, error: agentError } = await supabase
