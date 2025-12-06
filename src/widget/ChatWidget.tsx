@@ -96,6 +96,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     messagesEndRef,
     isOpeningConversationRef,
     clearMessagesAndFetch,
+    isActivelySendingRef,
   } = useConversations({
     agentId,
     chatUser,
@@ -319,6 +320,9 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
   const handleSendMessage = async () => {
     if (!messageInput.trim() && pendingFiles.length === 0) return;
 
+    // Mark as actively sending to prevent DB fetch from overwriting local messages
+    isActivelySendingRef.current = true;
+
     const userContent = pendingFiles.length > 0 ? (messageInput || 'Sent files') : messageInput;
     
     const newMessage: Message = {
@@ -433,6 +437,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
         reactions: [] 
       }]);
     } finally {
+      isActivelySendingRef.current = false;
       setIsTyping(false);
     }
   };
