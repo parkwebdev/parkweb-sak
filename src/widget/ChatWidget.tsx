@@ -1869,10 +1869,29 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                         );
                       }
                       
+                      // Detect if this is a continuation of previous message (same sender)
+                      const prevMsg = idx > 0 ? messages[idx - 1] : null;
+                      const prevMsgWithExtras = prevMsg as (Message & { isHuman?: boolean; isSystemNotice?: boolean }) | null;
+                      const isContinuation = prevMsg && 
+                        !prevMsgWithExtras?.isSystemNotice &&
+                        prevMsg.role === msg.role &&
+                        (msg.role === 'user' || prevMsgWithExtras?.isHuman === msgWithExtras.isHuman);
+                      
+                      // Check if next message is from same sender (to know if we should show metadata)
+                      const nextMsg = idx < messages.length - 1 ? messages[idx + 1] : null;
+                      const nextMsgWithExtras = nextMsg as (Message & { isHuman?: boolean; isSystemNotice?: boolean }) | null;
+                      const isLastInGroup = !nextMsg || 
+                        nextMsgWithExtras?.isSystemNotice ||
+                        nextMsg.role !== msg.role ||
+                        (msg.role !== 'user' && nextMsgWithExtras?.isHuman !== msgWithExtras.isHuman);
+                      
                       return (
-                        <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} ${msgWithExtras.isHuman ? 'items-start gap-2' : ''}`}>
-                          {/* Avatar for human messages */}
-                          {msgWithExtras.isHuman && msgWithExtras.senderAvatar && (
+                        <div 
+                          key={idx} 
+                          className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} ${msgWithExtras.isHuman && !isContinuation ? 'items-start gap-2' : ''} ${isContinuation ? 'mt-0.5' : 'mt-3 first:mt-0'}`}
+                        >
+                          {/* Avatar for human messages - only show for first in group */}
+                          {msgWithExtras.isHuman && !isContinuation && msgWithExtras.senderAvatar && (
                             <img 
                               src={msgWithExtras.senderAvatar} 
                               alt={msgWithExtras.senderName || 'Team'} 
@@ -1884,15 +1903,15 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                               }}
                             />
                           )}
-                          {/* Fallback avatar - shown when image fails or no avatar */}
-                          {msgWithExtras.isHuman && (
+                          {/* Fallback avatar - shown when image fails or no avatar, only for first in group */}
+                          {msgWithExtras.isHuman && !isContinuation && (
                             <div className={`w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 mt-0.5 ${msgWithExtras.senderAvatar ? 'hidden' : ''}`}>
                               <span className="text-blue-600 text-xs font-medium">
                                 {(msgWithExtras.senderName || 'T').charAt(0).toUpperCase()}
                               </span>
                             </div>
                           )}
-                          <div className="max-w-[80%]">
+                          <div className={`max-w-[80%] ${msgWithExtras.isHuman && isContinuation ? 'ml-9' : ''}`}>
                             <div 
                               className={`rounded-lg p-3 ${
                                 msg.role === 'user' 
@@ -1902,7 +1921,8 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                                     : 'bg-muted'
                               }`}
                             >
-                              {msgWithExtras.isHuman && (
+                              {/* Show sender name only for first message in human group */}
+                              {msgWithExtras.isHuman && !isContinuation && (
                                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1">
                                   <span className="font-medium">{(() => {
                                     const name = msgWithExtras.senderName || 'Team Member';
@@ -1931,65 +1951,70 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                               {msg.type === 'text' && <p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p>}
                             </div>
                             
-                            <div className="flex items-center gap-2 mt-1 px-1">
-                              {config.enableMessageReactions && (
-                                <Suspense fallback={null}>
-                                  <MessageReactions
-                                    reactions={msg.reactions || []}
-                                    onAddReaction={async (emoji) => {
-                                      const newMessages = [...messages];
-                                      const reaction = newMessages[idx].reactions?.find(r => r.emoji === emoji);
-                                      if (reaction) {
-                                        if (!reaction.userReacted) {
-                                          reaction.count += 1;
-                                          reaction.userReacted = true;
+                            {/* Only show reactions/time/status for last message in group */}
+                            {isLastInGroup && (
+                              <div className="flex items-center gap-2 mt-1 px-1">
+                                {config.enableMessageReactions && (
+                                  <Suspense fallback={null}>
+                                    <MessageReactions
+                                      reactions={msg.reactions || []}
+                                      onAddReaction={async (emoji) => {
+                                        const newMessages = [...messages];
+                                        const reaction = newMessages[idx].reactions?.find(r => r.emoji === emoji);
+                                        if (reaction) {
+                                          if (!reaction.userReacted) {
+                                            reaction.count += 1;
+                                            reaction.userReacted = true;
+                                          }
+                                        } else {
+                                          newMessages[idx].reactions = [...(newMessages[idx].reactions || []), { emoji, count: 1, userReacted: true }];
                                         }
-                                      } else {
-                                        newMessages[idx].reactions = [...(newMessages[idx].reactions || []), { emoji, count: 1, userReacted: true }];
-                                      }
-                                      setMessages(newMessages);
-                                      if (msg.id) {
-                                        await updateMessageReaction(msg.id, emoji, 'add', 'user');
-                                      }
-                                    }}
-                                    onRemoveReaction={async (emoji) => {
-                                      const newMessages = [...messages];
-                                      const reaction = newMessages[idx].reactions?.find(r => r.emoji === emoji);
-                                      if (reaction && reaction.userReacted) {
-                                        reaction.count -= 1;
-                                        reaction.userReacted = false;
-                                        if (reaction.count <= 0) {
-                                          newMessages[idx].reactions = newMessages[idx].reactions?.filter(r => r.emoji !== emoji);
+                                        setMessages(newMessages);
+                                        if (msg.id) {
+                                          await updateMessageReaction(msg.id, emoji, 'add', 'user');
                                         }
-                                      }
-                                      setMessages(newMessages);
-                                      if (msg.id) {
-                                        await updateMessageReaction(msg.id, emoji, 'remove', 'user');
-                                      }
-                                    }}
-                                    primaryColor={config.primaryColor}
-                                    compact
-                                    isUserMessage={msg.role === 'user'}
-                                  />
-                                </Suspense>
-                              )}
-                              <span className="text-xs opacity-70">{formatTimestamp(msg.timestamp)}</span>
-                              {msg.role === 'user' && config.showReadReceipts && (
-                                (msg as any).failed ? (
-                                  <span className="text-destructive inline-flex items-center" title="Failed">
-                                    <XCircle size={12} />
-                                  </span>
-                                ) : msg.read_at ? (
-                                  <span className="text-info inline-flex items-center" title="Seen">
-                                    <CheckCircle size={12} />
-                                  </span>
-                                ) : (
-                                  <span className="opacity-50 inline-flex items-center" title="Sent">
-                                    <Check size={12} />
-                                  </span>
-                                )
-                              )}
-                            </div>
+                                      }}
+                                      onRemoveReaction={async (emoji) => {
+                                        const newMessages = [...messages];
+                                        const reaction = newMessages[idx].reactions?.find(r => r.emoji === emoji);
+                                        if (reaction && reaction.userReacted) {
+                                          reaction.count -= 1;
+                                          reaction.userReacted = false;
+                                          if (reaction.count <= 0) {
+                                            newMessages[idx].reactions = newMessages[idx].reactions?.filter(r => r.emoji !== emoji);
+                                          }
+                                        }
+                                        setMessages(newMessages);
+                                        if (msg.id) {
+                                          await updateMessageReaction(msg.id, emoji, 'remove', 'user');
+                                        }
+                                      }}
+                                      primaryColor={config.primaryColor}
+                                      compact
+                                      isUserMessage={msg.role === 'user'}
+                                    />
+                                  </Suspense>
+                                )}
+                                <span className="text-xs opacity-70">
+                                  {msg.role === 'user' ? 'You • ' : ''}{formatTimestamp(msg.timestamp)}
+                                </span>
+                                {msg.role === 'user' && config.showReadReceipts && (
+                                  (msg as any).failed ? (
+                                    <span className="text-destructive inline-flex items-center" title="Failed">
+                                      <XCircle size={12} />
+                                    </span>
+                                  ) : msg.read_at ? (
+                                    <span className="text-info inline-flex items-center" title="Seen">
+                                      <CheckCircle size={12} />
+                                    </span>
+                                  ) : (
+                                    <span className="opacity-50 inline-flex items-center" title="Sent">
+                                      <Check size={12} />
+                                    </span>
+                                  )
+                                )}
+                              </div>
+                            )}
                           </div>
                       </div>
                       );

@@ -634,7 +634,7 @@ const Conversations: React.FC = () => {
                     />
                   ) : (
                   <div className="space-y-3 max-w-4xl mx-auto">
-                    {messages.map((message) => {
+                    {messages.map((message, msgIndex) => {
                       const isUser = message.role === 'user';
                       const msgMetadata = message.metadata as any;
                       const isHumanSent = msgMetadata?.sender_type === 'human';
@@ -697,15 +697,29 @@ const Conversations: React.FC = () => {
                       
                       const isNewMessage = newMessageIdsRef.current.has(message.id);
                       
+                      // Detect if this is a continuation of previous message (same sender)
+                      const prevMessage = msgIndex > 0 ? messages[msgIndex - 1] : null;
+                      const prevMsgMetadata = prevMessage?.metadata as { sender_type?: string } | null;
+                      const isContinuation = prevMessage && 
+                        prevMessage.role === message.role &&
+                        (message.role === 'user' || prevMsgMetadata?.sender_type === msgMetadata?.sender_type);
+                      
+                      // Check if next message is from same sender (to know if we should show metadata)
+                      const nextMessage = msgIndex < messages.length - 1 ? messages[msgIndex + 1] : null;
+                      const nextMsgMetadata = nextMessage?.metadata as { sender_type?: string } | null;
+                      const isLastInGroup = !nextMessage || 
+                        nextMessage.role !== message.role ||
+                        (message.role !== 'user' && nextMsgMetadata?.sender_type !== msgMetadata?.sender_type);
+                      
                       return (
                         <div
                           key={message.id}
                           className={`flex ${isUser ? 'justify-end' : 'justify-start'} ${
                             isNewMessage ? (isUser ? 'animate-slide-in-right' : 'animate-slide-in-left') : ''
-                          }`}
+                          } ${isContinuation ? 'mt-0.5' : 'mt-3 first:mt-0'}`}
                         >
-                          <div className="flex items-start gap-2 max-w-[75%]">
-                          {!isUser && (
+                          <div className={`flex items-start gap-2 max-w-[75%] ${isContinuation && !isUser ? 'ml-10' : ''}`}>
+                          {!isUser && !isContinuation && (
                               isHumanSent && msgMetadata?.sender_avatar ? (
                                 <img 
                                   src={msgMetadata.sender_avatar} 
@@ -732,86 +746,88 @@ const Conversations: React.FC = () => {
                               >
                                 <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</p>
                               </div>
-                              {/* Message reactions display + add + time */}
-                              <div className="flex items-center gap-1 mt-1 px-1 flex-wrap">
-                                {reactions && reactions.map((reaction, i) => (
-                                  <button
-                                    key={i}
-                                    onClick={() => reaction.adminReacted ? handleRemoveReaction(reaction.emoji) : handleAddReaction(reaction.emoji)}
-                                    className={`text-xs rounded-full px-1.5 py-0.5 transition-colors ${
-                                      reaction.adminReacted 
-                                        ? 'bg-primary/20 border border-primary/30' 
-                                        : 'bg-muted hover:bg-muted/80'
-                                    }`}
-                                  >
-                                    {reaction.emoji} {reaction.count > 1 && reaction.count}
-                                  </button>
-                                ))}
-                                {/* Add reaction button */}
-                                <Popover>
-                                  <PopoverTrigger asChild>
-                                    <button className="text-xs bg-muted hover:bg-muted/80 rounded-full p-1 transition-colors opacity-50 hover:opacity-100">
-                                      <FaceSmile size={12} />
+                              {/* Only show reactions/time/status for last message in group */}
+                              {isLastInGroup && (
+                                <div className="flex items-center gap-1 mt-1 px-1 flex-wrap">
+                                  {reactions && reactions.map((reaction, i) => (
+                                    <button
+                                      key={i}
+                                      onClick={() => reaction.adminReacted ? handleRemoveReaction(reaction.emoji) : handleAddReaction(reaction.emoji)}
+                                      className={`text-xs rounded-full px-1.5 py-0.5 transition-colors ${
+                                        reaction.adminReacted 
+                                          ? 'bg-primary/20 border border-primary/30' 
+                                          : 'bg-muted hover:bg-muted/80'
+                                      }`}
+                                    >
+                                      {reaction.emoji} {reaction.count > 1 && reaction.count}
                                     </button>
-                                  </PopoverTrigger>
-                                  <PopoverContent className="w-auto px-2 py-1 rounded-full" side="top" align="start">
-                                    <div className="flex gap-1">
-                                      {QUICK_EMOJIS.map((emoji) => {
-                                        const alreadyReacted = reactions?.find(r => r.emoji === emoji)?.adminReacted;
-                                        return (
-                                          <button
-                                            key={emoji}
-                                            onClick={() => alreadyReacted ? handleRemoveReaction(emoji) : handleAddReaction(emoji)}
-                                            className={`text-lg p-1 hover:bg-muted rounded transition-transform hover:scale-110 ${alreadyReacted ? 'bg-primary/20' : ''}`}
-                                          >
-                                            {emoji}
-                                          </button>
-                                        );
-                                      })}
-                                    </div>
-                                  </PopoverContent>
-                                </Popover>
-                                {/* Time inline with reactions + message status for team messages */}
-                                <span className={`text-[10px] text-muted-foreground ml-auto flex items-center gap-0.5 ${isUser ? 'order-first mr-auto ml-0' : ''}`}>
-                                  {isHumanSent && msgMetadata?.sender_name && (
-                                    <>{formatSenderName(msgMetadata.sender_name)} • </>
-                                  )}
-                                  {formatShortTime(new Date(message.created_at))}
-                                  {/* Message status for human/team messages: Failed, Sent, Seen */}
-                                  {isHumanSent && (
-                                    <>
-                                      {msgMetadata?.error || msgMetadata?.failed ? (
-                                        <Tooltip>
-                                          <TooltipTrigger asChild>
-                                            <span className="ml-1 text-destructive inline-flex items-center">
-                                              <XCircle size={12} />
-                                            </span>
-                                          </TooltipTrigger>
-                                          <TooltipContent>Failed</TooltipContent>
-                                        </Tooltip>
-                                      ) : msgMetadata?.read_at ? (
-                                        <Tooltip>
-                                          <TooltipTrigger asChild>
-                                            <span className="ml-1 text-info inline-flex items-center">
-                                              <CheckCircle size={12} />
-                                            </span>
-                                          </TooltipTrigger>
-                                          <TooltipContent>Seen</TooltipContent>
-                                        </Tooltip>
-                                      ) : (
-                                        <Tooltip>
-                                          <TooltipTrigger asChild>
-                                            <span className="ml-1 inline-flex items-center">
-                                              <Check size={12} />
-                                            </span>
-                                          </TooltipTrigger>
-                                          <TooltipContent>Sent</TooltipContent>
-                                        </Tooltip>
-                                      )}
-                                    </>
-                                  )}
-                                </span>
-                              </div>
+                                  ))}
+                                  {/* Add reaction button */}
+                                  <Popover>
+                                    <PopoverTrigger asChild>
+                                      <button className="text-xs bg-muted hover:bg-muted/80 rounded-full p-1 transition-colors opacity-50 hover:opacity-100">
+                                        <FaceSmile size={12} />
+                                      </button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto px-2 py-1 rounded-full" side="top" align="start">
+                                      <div className="flex gap-1">
+                                        {QUICK_EMOJIS.map((emoji) => {
+                                          const alreadyReacted = reactions?.find(r => r.emoji === emoji)?.adminReacted;
+                                          return (
+                                            <button
+                                              key={emoji}
+                                              onClick={() => alreadyReacted ? handleRemoveReaction(emoji) : handleAddReaction(emoji)}
+                                              className={`text-lg p-1 hover:bg-muted rounded transition-transform hover:scale-110 ${alreadyReacted ? 'bg-primary/20' : ''}`}
+                                            >
+                                              {emoji}
+                                            </button>
+                                          );
+                                        })}
+                                      </div>
+                                    </PopoverContent>
+                                  </Popover>
+                                  {/* Time inline with reactions + message status for team messages */}
+                                  <span className={`text-[10px] text-muted-foreground ml-auto flex items-center gap-0.5 ${isUser ? 'order-first mr-auto ml-0' : ''}`}>
+                                    {isHumanSent && msgMetadata?.sender_name && (
+                                      <>{formatSenderName(msgMetadata.sender_name)} • </>
+                                    )}
+                                    {formatShortTime(new Date(message.created_at))}
+                                    {/* Message status for human/team messages: Failed, Sent, Seen */}
+                                    {isHumanSent && (
+                                      <>
+                                        {msgMetadata?.error || msgMetadata?.failed ? (
+                                          <Tooltip>
+                                            <TooltipTrigger asChild>
+                                              <span className="ml-1 text-destructive inline-flex items-center">
+                                                <XCircle size={12} />
+                                              </span>
+                                            </TooltipTrigger>
+                                            <TooltipContent>Failed</TooltipContent>
+                                          </Tooltip>
+                                        ) : msgMetadata?.read_at ? (
+                                          <Tooltip>
+                                            <TooltipTrigger asChild>
+                                              <span className="ml-1 text-info inline-flex items-center">
+                                                <CheckCircle size={12} />
+                                              </span>
+                                            </TooltipTrigger>
+                                            <TooltipContent>Seen</TooltipContent>
+                                          </Tooltip>
+                                        ) : (
+                                          <Tooltip>
+                                            <TooltipTrigger asChild>
+                                              <span className="ml-1 inline-flex items-center">
+                                                <Check size={12} />
+                                              </span>
+                                            </TooltipTrigger>
+                                            <TooltipContent>Sent</TooltipContent>
+                                          </Tooltip>
+                                        )}
+                                      </>
+                                    )}
+                                  </span>
+                                </div>
+                              )}
                             </div>
                           </div>
                         </div>
