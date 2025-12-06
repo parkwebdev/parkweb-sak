@@ -4,8 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { Separator } from '@/components/ui/separator';
-import { SectionHeader } from '@/components/ui/section-header';
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import {
   Select,
   SelectContent,
@@ -245,6 +244,9 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
     }
   };
 
+  // Build accordion default values - always open contact and session
+  const defaultOpenSections = ['contact', 'session'];
+
   return (
     <div 
       className={cn(
@@ -280,10 +282,20 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
           isCollapsed ? "opacity-0 invisible" : "opacity-100 visible"
         )}
       >
-        <div className="p-4 space-y-6">
-            {/* Contact Info */}
-            <div>
-              <SectionHeader>Contact Info</SectionHeader>
+        <Accordion 
+          type="multiple" 
+          defaultValue={defaultOpenSections}
+          className="bg-transparent border-0 rounded-none px-0"
+        >
+          {/* Contact Info */}
+          <AccordionItem value="contact" className="border-b px-4">
+            <AccordionTrigger 
+              className="py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider hover:no-underline"
+              showIcon={true}
+            >
+              Contact Info
+            </AccordionTrigger>
+            <AccordionContent className="pb-4">
               <div className="space-y-2.5">
                 {metadata.lead_name && (
                   <div className="flex items-center gap-2.5 text-sm">
@@ -322,44 +334,49 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
                 {!metadata.lead_name && !metadata.lead_email && (
                   <p className="text-sm text-muted-foreground italic">No contact info</p>
                 )}
-              </div>
 
-              {/* Custom Fields */}
-              {metadata.custom_fields && Object.keys(metadata.custom_fields).length > 0 && (
-                <div className="mt-3 pt-3 border-t border-dashed space-y-2">
-                  {Object.entries(metadata.custom_fields).map(([key, value]) => {
-                    const IconComponent = getCustomFieldIcon(key);
-                    const lowerKey = key.toLowerCase();
-                    const isPhoneField = lowerKey.includes('phone') || lowerKey.includes('mobile') || lowerKey.includes('cell') || lowerKey.includes('tel');
-                    
-                    return (
-                      <div key={key} className="flex items-start gap-2.5 text-sm">
-                        <IconComponent className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
-                        <div className="min-w-0">
-                          <span className="text-muted-foreground">{key}:</span>{' '}
-                          {isPhoneField ? (
-                            <a 
-                              href={`tel:${String(value)}`}
-                              className="break-words text-primary hover:underline"
-                            >
-                              {String(value)}
-                            </a>
-                          ) : (
-                            <span className="break-words">{String(value)}</span>
-                          )}
+                {/* Custom Fields */}
+                {metadata.custom_fields && Object.keys(metadata.custom_fields).length > 0 && (
+                  <div className="mt-3 pt-3 border-t border-dashed space-y-2">
+                    {Object.entries(metadata.custom_fields).map(([key, value]) => {
+                      const IconComponent = getCustomFieldIcon(key);
+                      const lowerKey = key.toLowerCase();
+                      const isPhoneField = lowerKey.includes('phone') || lowerKey.includes('mobile') || lowerKey.includes('cell') || lowerKey.includes('tel');
+                      
+                      return (
+                        <div key={key} className="flex items-start gap-2.5 text-sm">
+                          <IconComponent className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+                          <div className="min-w-0">
+                            <span className="text-muted-foreground">{key}:</span>{' '}
+                            {isPhoneField ? (
+                              <a 
+                                href={`tel:${String(value)}`}
+                                className="break-words text-primary hover:underline"
+                              >
+                                {String(value)}
+                              </a>
+                            ) : (
+                              <span className="break-words">{String(value)}</span>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </AccordionContent>
+          </AccordionItem>
 
-            <Separator />
-
-            {/* Session Info */}
-            <div>
-              <SectionHeader>Session Info</SectionHeader>
+          {/* Session Info */}
+          <AccordionItem value="session" className="border-b px-4">
+            <AccordionTrigger 
+              className="py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider hover:no-underline"
+              showIcon={true}
+            >
+              Session Info
+            </AccordionTrigger>
+            <AccordionContent className="pb-4">
               <div className="space-y-2.5">
                 {/* Chat ID */}
                 <Tooltip>
@@ -482,185 +499,198 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
                   <TooltipContent>When this conversation began</TooltipContent>
                 </Tooltip>
               </div>
-            </div>
-            
-            {/* User Journey (Referrer) */}
-            {metadata.referrer_journey && (
-              <>
-                <Separator />
-                <div>
-                  <SectionHeader>User Journey</SectionHeader>
-                  <div className="space-y-2.5">
-                    {/* Entry Type Badge */}
-                    <div className="flex items-center gap-2.5 text-sm">
-                      <span className="text-muted-foreground text-xs">Source:</span>
-                      <Badge 
-                        variant="secondary" 
-                        className={cn(
-                          "text-xs capitalize",
-                          metadata.referrer_journey.entry_type === 'organic' && "bg-success/10 text-success",
-                          metadata.referrer_journey.entry_type === 'paid' && "bg-warning/10 text-warning",
-                          metadata.referrer_journey.entry_type === 'social' && "bg-info/10 text-info",
-                          metadata.referrer_journey.entry_type === 'email' && "bg-primary/10 text-primary",
-                          metadata.referrer_journey.entry_type === 'referral' && "bg-muted text-muted-foreground",
-                          metadata.referrer_journey.entry_type === 'direct' && "bg-muted text-muted-foreground",
-                        )}
-                      >
-                        {metadata.referrer_journey.entry_type || 'direct'}
-                      </Badge>
-                    </div>
-                    
-                    {/* Referrer URL */}
-                    {metadata.referrer_journey.referrer_url && (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <div className="flex items-start gap-2.5 text-sm">
-                            <Link01 className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
-                            <div className="min-w-0 flex-1">
-                              <div className="text-xs text-muted-foreground">Referred from:</div>
-                              <div className="truncate text-xs">
-                                {(() => {
-                                  try {
-                                    const url = new URL(metadata.referrer_journey.referrer_url!);
-                                    return url.hostname;
-                                  } catch {
-                                    return metadata.referrer_journey.referrer_url;
-                                  }
-                                })()}
-                              </div>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* User Journey (Referrer) - Conditional */}
+          {metadata.referrer_journey && (
+            <AccordionItem value="journey" className="border-b px-4">
+              <AccordionTrigger 
+                className="py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider hover:no-underline"
+                showIcon={true}
+              >
+                User Journey
+              </AccordionTrigger>
+              <AccordionContent className="pb-4">
+                <div className="space-y-2.5">
+                  {/* Entry Type Badge */}
+                  <div className="flex items-center gap-2.5 text-sm">
+                    <span className="text-muted-foreground text-xs">Source:</span>
+                    <Badge 
+                      variant="secondary" 
+                      className={cn(
+                        "text-xs capitalize",
+                        metadata.referrer_journey.entry_type === 'organic' && "bg-success/10 text-success",
+                        metadata.referrer_journey.entry_type === 'paid' && "bg-warning/10 text-warning",
+                        metadata.referrer_journey.entry_type === 'social' && "bg-info/10 text-info",
+                        metadata.referrer_journey.entry_type === 'email' && "bg-primary/10 text-primary",
+                        metadata.referrer_journey.entry_type === 'referral' && "bg-muted text-muted-foreground",
+                        metadata.referrer_journey.entry_type === 'direct' && "bg-muted text-muted-foreground",
+                      )}
+                    >
+                      {metadata.referrer_journey.entry_type || 'direct'}
+                    </Badge>
+                  </div>
+                  
+                  {/* Referrer URL */}
+                  {metadata.referrer_journey.referrer_url && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="flex items-start gap-2.5 text-sm">
+                          <Link01 className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+                          <div className="min-w-0 flex-1">
+                            <div className="text-xs text-muted-foreground">Referred from:</div>
+                            <div className="truncate text-xs">
+                              {(() => {
+                                try {
+                                  const url = new URL(metadata.referrer_journey.referrer_url!);
+                                  return url.hostname;
+                                } catch {
+                                  return metadata.referrer_journey.referrer_url;
+                                }
+                              })()}
                             </div>
                           </div>
-                        </TooltipTrigger>
-                        <TooltipContent side="left" className="max-w-xs">
-                          <div className="text-xs break-all">{metadata.referrer_journey.referrer_url}</div>
-                        </TooltipContent>
-                      </Tooltip>
-                    )}
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent side="left" className="max-w-xs">
+                        <div className="text-xs break-all">{metadata.referrer_journey.referrer_url}</div>
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
+                  
+                  {/* Landing Page */}
+                  {metadata.referrer_journey.landing_page && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="flex items-start gap-2.5 text-sm">
+                          <Browser className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+                          <div className="min-w-0 flex-1">
+                            <div className="text-xs text-muted-foreground">Landing page:</div>
+                            <div className="truncate text-xs">
+                              {(() => {
+                                try {
+                                  const url = new URL(metadata.referrer_journey.landing_page!);
+                                  return url.pathname + url.search || '/';
+                                } catch {
+                                  return metadata.referrer_journey.landing_page;
+                                }
+                              })()}
+                            </div>
+                          </div>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent side="left" className="max-w-xs">
+                        <div className="text-xs break-all">{metadata.referrer_journey.landing_page}</div>
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
+                  
+                  {/* UTM Parameters */}
+                  {(metadata.referrer_journey.utm_source || metadata.referrer_journey.utm_campaign) && (
+                    <div className="mt-2 pt-2 border-t border-dashed space-y-1.5">
+                      {metadata.referrer_journey.utm_source && (
+                        <div className="flex items-center gap-2 text-xs">
+                          <span className="text-muted-foreground w-16">Source:</span>
+                          <span className="font-medium">{metadata.referrer_journey.utm_source}</span>
+                        </div>
+                      )}
+                      {metadata.referrer_journey.utm_medium && (
+                        <div className="flex items-center gap-2 text-xs">
+                          <span className="text-muted-foreground w-16">Medium:</span>
+                          <span className="font-medium">{metadata.referrer_journey.utm_medium}</span>
+                        </div>
+                      )}
+                      {metadata.referrer_journey.utm_campaign && (
+                        <div className="flex items-center gap-2 text-xs">
+                          <span className="text-muted-foreground w-16">Campaign:</span>
+                          <span className="font-medium">{metadata.referrer_journey.utm_campaign}</span>
+                        </div>
+                      )}
+                      {metadata.referrer_journey.utm_term && (
+                        <div className="flex items-center gap-2 text-xs">
+                          <span className="text-muted-foreground w-16">Term:</span>
+                          <span className="font-medium">{metadata.referrer_journey.utm_term}</span>
+                        </div>
+                      )}
+                      {metadata.referrer_journey.utm_content && (
+                        <div className="flex items-center gap-2 text-xs">
+                          <span className="text-muted-foreground w-16">Content:</span>
+                          <span className="font-medium">{metadata.referrer_journey.utm_content}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          )}
+
+          {/* Visited Pages - Conditional */}
+          {metadata.visited_pages && metadata.visited_pages.length > 0 && (
+            <AccordionItem value="pages" className="border-b px-4">
+              <AccordionTrigger 
+                className="py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider hover:no-underline"
+                showIcon={true}
+              >
+                Visited Pages ({metadata.visited_pages.length})
+              </AccordionTrigger>
+              <AccordionContent className="pb-4">
+                <div className="space-y-2">
+                  {metadata.visited_pages.map((visit, index) => {
+                    const formatDuration = (ms: number) => {
+                      const seconds = Math.floor(ms / 1000);
+                      if (seconds < 60) return `${seconds}s`;
+                      const minutes = Math.floor(seconds / 60);
+                      const remainingSeconds = seconds % 60;
+                      return remainingSeconds > 0 ? `${minutes}m ${remainingSeconds}s` : `${minutes}m`;
+                    };
                     
-                    {/* Landing Page */}
-                    {metadata.referrer_journey.landing_page && (
-                      <Tooltip>
+                    // Extract pathname from URL for display
+                    let displayUrl = visit.url;
+                    try {
+                      const url = new URL(visit.url);
+                      displayUrl = url.pathname + url.search;
+                      if (displayUrl === '/') displayUrl = '/ (home)';
+                    } catch {
+                      // Keep original if parsing fails
+                    }
+                    
+                    return (
+                      <Tooltip key={index}>
                         <TooltipTrigger asChild>
                           <div className="flex items-start gap-2.5 text-sm">
                             <Browser className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
                             <div className="min-w-0 flex-1">
-                              <div className="text-xs text-muted-foreground">Landing page:</div>
-                              <div className="truncate text-xs">
-                                {(() => {
-                                  try {
-                                    const url = new URL(metadata.referrer_journey.landing_page!);
-                                    return url.pathname + url.search || '/';
-                                  } catch {
-                                    return metadata.referrer_journey.landing_page;
-                                  }
-                                })()}
+                              <div className="truncate text-xs">{displayUrl}</div>
+                              <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                                <span>{formatDuration(visit.duration_ms)}</span>
+                                <span>•</span>
+                                <span>{format(new Date(visit.entered_at), 'HH:mm')}</span>
                               </div>
                             </div>
                           </div>
                         </TooltipTrigger>
                         <TooltipContent side="left" className="max-w-xs">
-                          <div className="text-xs break-all">{metadata.referrer_journey.landing_page}</div>
+                          <div className="text-xs break-all">{visit.url}</div>
                         </TooltipContent>
                       </Tooltip>
-                    )}
-                    
-                    {/* UTM Parameters */}
-                    {(metadata.referrer_journey.utm_source || metadata.referrer_journey.utm_campaign) && (
-                      <div className="mt-2 pt-2 border-t border-dashed space-y-1.5">
-                        {metadata.referrer_journey.utm_source && (
-                          <div className="flex items-center gap-2 text-xs">
-                            <span className="text-muted-foreground w-16">Source:</span>
-                            <span className="font-medium">{metadata.referrer_journey.utm_source}</span>
-                          </div>
-                        )}
-                        {metadata.referrer_journey.utm_medium && (
-                          <div className="flex items-center gap-2 text-xs">
-                            <span className="text-muted-foreground w-16">Medium:</span>
-                            <span className="font-medium">{metadata.referrer_journey.utm_medium}</span>
-                          </div>
-                        )}
-                        {metadata.referrer_journey.utm_campaign && (
-                          <div className="flex items-center gap-2 text-xs">
-                            <span className="text-muted-foreground w-16">Campaign:</span>
-                            <span className="font-medium">{metadata.referrer_journey.utm_campaign}</span>
-                          </div>
-                        )}
-                        {metadata.referrer_journey.utm_term && (
-                          <div className="flex items-center gap-2 text-xs">
-                            <span className="text-muted-foreground w-16">Term:</span>
-                            <span className="font-medium">{metadata.referrer_journey.utm_term}</span>
-                          </div>
-                        )}
-                        {metadata.referrer_journey.utm_content && (
-                          <div className="flex items-center gap-2 text-xs">
-                            <span className="text-muted-foreground w-16">Content:</span>
-                            <span className="font-medium">{metadata.referrer_journey.utm_content}</span>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
+                    );
+                  })}
                 </div>
-              </>
-            )}
+              </AccordionContent>
+            </AccordionItem>
+          )}
 
-            {/* Visited Pages */}
-            {metadata.visited_pages && metadata.visited_pages.length > 0 && (
-              <>
-                <Separator />
-                <div>
-                  <SectionHeader>Visited Pages</SectionHeader>
-                  <div className="space-y-2">
-                    {metadata.visited_pages.map((visit, index) => {
-                      const formatDuration = (ms: number) => {
-                        const seconds = Math.floor(ms / 1000);
-                        if (seconds < 60) return `${seconds}s`;
-                        const minutes = Math.floor(seconds / 60);
-                        const remainingSeconds = seconds % 60;
-                        return remainingSeconds > 0 ? `${minutes}m ${remainingSeconds}s` : `${minutes}m`;
-                      };
-                      
-                      // Extract pathname from URL for display
-                      let displayUrl = visit.url;
-                      try {
-                        const url = new URL(visit.url);
-                        displayUrl = url.pathname + url.search;
-                        if (displayUrl === '/') displayUrl = '/ (home)';
-                      } catch {
-                        // Keep original if parsing fails
-                      }
-                      
-                      return (
-                        <Tooltip key={index}>
-                          <TooltipTrigger asChild>
-                            <div className="flex items-start gap-2.5 text-sm">
-                              <Browser className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
-                              <div className="min-w-0 flex-1">
-                                <div className="truncate text-xs">{displayUrl}</div>
-                                <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-                                  <span>{formatDuration(visit.duration_ms)}</span>
-                                  <span>•</span>
-                                  <span>{format(new Date(visit.entered_at), 'HH:mm')}</span>
-                                </div>
-                              </div>
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent side="left" className="max-w-xs">
-                            <div className="text-xs break-all">{visit.url}</div>
-                          </TooltipContent>
-                        </Tooltip>
-                      );
-                    })}
-                  </div>
-                </div>
-              </>
-            )}
-
-            <Separator />
-
-            {/* Priority */}
-            <div>
-              <SectionHeader>Priority</SectionHeader>
+          {/* Priority */}
+          <AccordionItem value="priority" className="border-b px-4">
+            <AccordionTrigger 
+              className="py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider hover:no-underline"
+              showIcon={true}
+            >
+              Priority
+            </AccordionTrigger>
+            <AccordionContent className="pb-4">
               <Select
                 value={metadata.priority || 'not_set'}
                 onValueChange={handlePriorityChange}
@@ -702,14 +732,18 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
                   </SelectItem>
                 </SelectContent>
               </Select>
-            </div>
+            </AccordionContent>
+          </AccordionItem>
 
-            <Separator />
-
-            {/* Tags */}
-            <div>
-              <SectionHeader>Tags</SectionHeader>
-              
+          {/* Tags */}
+          <AccordionItem value="tags" className="border-b px-4">
+            <AccordionTrigger 
+              className="py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider hover:no-underline"
+              showIcon={true}
+            >
+              Tags {(metadata.tags?.length || 0) > 0 && `(${metadata.tags?.length})`}
+            </AccordionTrigger>
+            <AccordionContent className="pb-4">
               {/* Existing Tags */}
               <div className="flex flex-wrap gap-1.5 mb-3">
                 {(metadata.tags || []).map((tag) => (
@@ -772,28 +806,18 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
                   </button>
                 ))}
               </div>
-            </div>
+            </AccordionContent>
+          </AccordionItem>
 
-            <Separator />
-
-            {/* Notes */}
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Internal Notes
-                </h4>
-                {!isEditingNotes && metadata.notes && (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-6 px-2 text-xs"
-                    onClick={() => setIsEditingNotes(true)}
-                  >
-                    Edit
-                  </Button>
-                )}
-              </div>
-
+          {/* Notes */}
+          <AccordionItem value="notes" className="border-b-0 px-4">
+            <AccordionTrigger 
+              className="py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider hover:no-underline"
+              showIcon={true}
+            >
+              Internal Notes
+            </AccordionTrigger>
+            <AccordionContent className="pb-4">
               {isEditingNotes || !metadata.notes ? (
                 <div className="space-y-2">
                   <Textarea
@@ -827,13 +851,24 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
                   </div>
                 </div>
               ) : (
-                <p className="text-sm text-foreground whitespace-pre-wrap bg-muted/50 rounded-md p-3">
-                  {metadata.notes}
-                </p>
+                <div className="space-y-2">
+                  <p className="text-sm text-foreground whitespace-pre-wrap bg-muted/50 rounded-md p-3">
+                    {metadata.notes}
+                  </p>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-6 px-2 text-xs"
+                    onClick={() => setIsEditingNotes(true)}
+                  >
+                    Edit
+                  </Button>
+                </div>
               )}
-            </div>
-          </div>
-        </div>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
       </div>
+    </div>
   );
 };
