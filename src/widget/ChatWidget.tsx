@@ -92,6 +92,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     setActiveConversationId,
     showConversationList,
     setShowConversationList,
+    isLoadingMessages,
     messagesContainerRef,
     messagesEndRef,
     isOpeningConversationRef,
@@ -586,6 +587,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                     isAttachingFiles={isAttachingFiles}
                     setIsAttachingFiles={setIsAttachingFiles}
                     formLoadTime={formLoadTime}
+                    isLoadingMessages={isLoadingMessages}
                     messagesContainerRef={messagesContainerRef}
                     messagesEndRef={messagesEndRef}
                     onSendMessage={handleSendMessage}
