@@ -68,10 +68,21 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
   const { conversations } = useConversations();
   const { agents } = useAgents();
   
-  // Count new conversations (active status, created in last 24 hours)
-  const newConversationsCount = conversations.filter(conv => {
-    const isRecent = new Date(conv.created_at).getTime() > Date.now() - 24 * 60 * 60 * 1000;
-    return conv.status === 'active' && isRecent;
+  // Count unread conversations for admin
+  const unreadConversationsCount = conversations.filter(conv => {
+    const metadata = conv.metadata as any;
+    const lastReadAt = metadata?.admin_last_read_at;
+    const lastMessageAt = metadata?.last_message_at;
+    
+    // Never read by admin and has messages - unread
+    if (!lastReadAt && lastMessageAt) return true;
+    
+    // New messages since last read
+    if (lastReadAt && lastMessageAt && new Date(lastMessageAt) > new Date(lastReadAt)) {
+      return true;
+    }
+    
+    return false;
   }).length;
 
   // Check if we're on an agents page to keep accordion open
@@ -189,8 +200,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
                       title={isCollapsed ? item.label : ''}
                     >
                       <div className={`items-center flex gap-2 my-auto ${isCollapsed ? 'justify-center' : 'w-full flex-1 shrink basis-[0%]'}`}>
-                        <div className={`items-center flex my-auto ${isCollapsed ? '' : 'w-[18px] pr-0.5'}`}>
+                        <div className={`items-center flex my-auto relative ${isCollapsed ? '' : 'w-[18px] pr-0.5'}`}>
                           <item.icon size={14} className="self-stretch my-auto" />
+                          {/* Collapsed state unread indicator */}
+                          {isCollapsed && item.id === 'conversations' && unreadConversationsCount > 0 && (
+                            <span className="absolute -top-1 -right-1 w-2 h-2 bg-destructive rounded-full" />
+                          )}
                         </div>
                         {!isCollapsed && (
                           <div className="flex items-center justify-between flex-1">
@@ -199,9 +214,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
                             }`}>
                               {item.label}
                             </div>
-                            {item.id === 'conversations' && newConversationsCount > 0 && (
-                              <div className="bg-primary text-primary-foreground text-[10px] font-semibold rounded-full h-5 min-w-[20px] px-1.5 flex items-center justify-center">
-                                {newConversationsCount}
+                            {item.id === 'conversations' && unreadConversationsCount > 0 && (
+                              <div className="bg-destructive text-destructive-foreground text-[10px] font-semibold rounded-full h-5 min-w-[20px] px-1.5 flex items-center justify-center">
+                                {unreadConversationsCount}
                               </div>
                             )}
                           </div>
