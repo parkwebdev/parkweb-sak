@@ -1776,9 +1776,9 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                           <div 
                             className={`max-w-[80%] rounded-lg p-3 ${
                               msg.role === 'user' 
-                                ? 'bg-secondary text-secondary-foreground' 
+                                ? 'bg-muted' 
                                 : msgWithExtras.isHuman 
-                                  ? 'bg-info/10 text-info-foreground border border-info/20' 
+                                  ? 'bg-muted/50 text-foreground' 
                                   : 'bg-muted'
                             }`}
                           >
