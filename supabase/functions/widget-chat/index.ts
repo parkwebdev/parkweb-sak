@@ -6,6 +6,9 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// URL regex for extracting links from content
+const URL_REGEX = /https?:\/\/[^\s<>"')\]]+/gi;
+
 // Simple SHA-256 hash function for API key validation
 async function hashApiKey(key: string): Promise<string> {
   const encoder = new TextEncoder();
@@ -13,6 +16,52 @@ async function hashApiKey(key: string): Promise<string> {
   const hashBuffer = await crypto.subtle.digest('SHA-256', data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// Fetch link previews for URLs in content (max 3)
+async function fetchLinkPreviews(content: string, supabaseUrl: string, supabaseKey: string): Promise<any[]> {
+  const urls = Array.from(new Set(content.match(URL_REGEX) || [])).slice(0, 3);
+  if (urls.length === 0) return [];
+  
+  console.log(`Fetching link previews for ${urls.length} URLs`);
+  
+  const previews = await Promise.all(
+    urls.map(async (url) => {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        
+        const response = await fetch(`${supabaseUrl}/functions/v1/fetch-link-preview`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${supabaseKey}`,
+          },
+          body: JSON.stringify({ url }),
+          signal: controller.signal,
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) {
+          console.error(`Failed to fetch preview for ${url}: ${response.status}`);
+          return null;
+        }
+        
+        const data = await response.json();
+        // Only include valid previews (has title or is video)
+        if (data && (data.title || data.videoType)) {
+          return data;
+        }
+        return null;
+      } catch (error) {
+        console.error(`Error fetching preview for ${url}:`, error.message);
+        return null;
+      }
+    })
+  );
+  
+  return previews.filter(p => p !== null);
 }
 
 // Generate embedding for a query using Lovable AI
@@ -742,7 +791,11 @@ When answering, you can naturally reference the information from the knowledge b
       assistantContent = 'I apologize, but I was unable to generate a response.';
     }
 
-    // Save the assistant message to database
+    // Fetch link previews for assistant message content (server-side caching)
+    const linkPreviews = await fetchLinkPreviews(assistantContent, supabaseUrl, supabaseKey);
+    console.log(`Cached ${linkPreviews.length} link previews for assistant message`);
+
+    // Save the assistant message to database with cached link previews
     const { data: assistantMsg, error: assistantMsgError } = await supabase.from('messages').insert({
       conversation_id: activeConversationId,
       role: 'assistant',
@@ -752,6 +805,7 @@ When answering, you can naturally reference the information from the knowledge b
         model: agent.model,
         knowledge_sources: sources.length > 0 ? sources : undefined,
         tools_used: toolsUsed.length > 0 ? toolsUsed : undefined,
+        link_previews: linkPreviews.length > 0 ? linkPreviews : undefined,
       }
     }).select('id').single();
 
@@ -808,7 +862,7 @@ When answering, you can naturally reference the information from the knowledge b
       .then(() => console.log('API usage tracked'))
       .catch(err => console.error('Failed to track usage:', err));
 
-    // Return the response with conversation ID and message IDs
+    // Return the response with conversation ID, message IDs, and cached link previews
     return new Response(
       JSON.stringify({
         conversationId: activeConversationId,
@@ -817,6 +871,7 @@ When answering, you can naturally reference the information from the knowledge b
         assistantMessageId,
         sources: sources.length > 0 ? sources : undefined,
         toolsUsed: toolsUsed.length > 0 ? toolsUsed : undefined,
+        linkPreviews: linkPreviews.length > 0 ? linkPreviews : undefined,
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
