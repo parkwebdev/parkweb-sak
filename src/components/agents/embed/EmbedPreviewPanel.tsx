@@ -1,3 +1,4 @@
+import { Component, ReactNode } from 'react';
 import { ChatWidget } from '@/widget/ChatWidget';
 import type { EmbeddedChatConfig } from '@/hooks/useEmbeddedChatConfig';
 import { useHelpArticles } from '@/hooks/useHelpArticles';
@@ -104,14 +105,53 @@ export const EmbedPreviewPanel = ({ config }: EmbedPreviewPanelProps) => {
         <div 
           className="flex-1 relative overflow-hidden rounded-xl border bg-secondary dark:bg-muted shadow-inner"
         >
-          <ChatWidget 
-            key={`${config.agentId}-${config.position}`}
-            config={widgetConfig} 
-            previewMode={true}
-            containedPreview={true}
-          />
+          <PreviewErrorBoundary>
+            <ChatWidget 
+              key={`${config.agentId}-${config.position}`}
+              config={widgetConfig} 
+              previewMode={true}
+              containedPreview={true}
+            />
+          </PreviewErrorBoundary>
         </div>
       </div>
     </div>
   );
 };
+
+// Error boundary for preview
+class PreviewErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean; error: Error | null }> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: any) {
+    console.error('[Preview Error]', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="w-full h-full flex items-center justify-center bg-background p-4">
+          <div className="text-center">
+            <div className="text-destructive text-3xl mb-2">⚠️</div>
+            <p className="text-sm font-medium mb-1">Preview Error</p>
+            <p className="text-xs text-muted-foreground max-w-[200px]">{this.state.error?.message}</p>
+            <button 
+              onClick={() => this.setState({ hasError: false, error: null })}
+              className="mt-3 text-xs text-primary hover:underline"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
