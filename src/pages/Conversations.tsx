@@ -15,6 +15,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { TakeoverDialog } from '@/components/conversations/TakeoverDialog';
 import { supabase } from '@/integrations/supabase/client';
 import type { RealtimeChannel } from '@supabase/supabase-js';
+import { playNotificationSound } from '@/lib/notification-sound';
 
 type Conversation = Tables<'conversations'> & {
   agents?: { name: string };
@@ -188,7 +189,25 @@ const Conversations: React.FC = () => {
         .on(
           'postgres_changes',
           {
-            event: '*',
+            event: 'INSERT',
+            schema: 'public',
+            table: 'messages',
+            filter: `conversation_id=eq.${selectedConversation.id}`
+          },
+          (payload) => {
+            loadMessages(selectedConversation.id);
+            
+            // Play notification sound for user messages (not our own messages)
+            const newMessage = payload.new as any;
+            if (newMessage.role === 'user') {
+              playNotificationSound();
+            }
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
             schema: 'public',
             table: 'messages',
             filter: `conversation_id=eq.${selectedConversation.id}`
