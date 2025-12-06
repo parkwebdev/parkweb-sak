@@ -115,11 +115,11 @@ export const HomeView = ({
         </div>
         
         {/* Content area - container fades from transparent to white */}
-        <div className="relative flex-1 min-h-[300px]">
+        <div className="relative flex-1 flex flex-col">
           <div 
-            className="p-5 pt-8 space-y-4 rounded-t-3xl mt-6"
+            className="p-5 pt-8 space-y-4 flex-1"
             style={{
-              background: 'linear-gradient(to bottom, transparent 0%, white 60px, white 100%)'
+              background: 'linear-gradient(to bottom, transparent 0%, transparent 80px, white 160px, white 100%)'
             }}
           >
             {isContentLoading ? (
