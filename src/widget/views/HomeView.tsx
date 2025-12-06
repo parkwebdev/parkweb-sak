@@ -114,13 +114,14 @@ export const HomeView = ({
           )}
         </div>
         
-        {/* Content area with gradient fade at top */}
-        <div className="relative bg-transparent flex-1 min-h-[300px]">
-          {/* Gradient fade overlay - extends down into content */}
+        {/* Content area - container fades from transparent to white */}
+        <div className="relative flex-1 min-h-[300px]">
           <div 
-            className="absolute -top-16 left-0 right-0 h-40 bg-gradient-to-b from-transparent to-white pointer-events-none z-0" 
-          />
-          <div className="relative z-10 p-5 pt-8 space-y-4 bg-white rounded-t-3xl mt-6">
+            className="p-5 pt-8 space-y-4 rounded-t-3xl mt-6"
+            style={{
+              background: 'linear-gradient(to bottom, transparent 0%, white 60px, white 100%)'
+            }}
+          >
             {isContentLoading ? (
               // Skeleton loading state
               <div className="space-y-3">
