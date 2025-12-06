@@ -1783,8 +1783,13 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                             }`}
                           >
                             {msgWithExtras.isHuman && (
-                              <div className="flex items-center gap-1.5 text-xs text-blue-600 mb-1">
-                                <span className="font-medium">{msgWithExtras.senderName || 'Team Member'}</span>
+                              <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1">
+                                <span className="font-medium">{(() => {
+                                  const name = msgWithExtras.senderName || 'Team Member';
+                                  const parts = name.trim().split(' ');
+                                  if (parts.length === 1) return parts[0];
+                                  return `${parts[0]} ${parts[parts.length - 1].charAt(0).toUpperCase()}.`;
+                                })()}</span>
                               </div>
                             )}
                             {msg.type === 'audio' && msg.audioUrl && (
@@ -1857,7 +1862,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                             <span className="text-xs opacity-70">{formatTimestamp(msg.timestamp)}</span>
                             {msg.role === 'user' && config.showReadReceipts && (
                               <span className={`text-xs ${msg.read_at ? 'text-info' : 'opacity-50'}`}>
-                                ✓✓
+                                ✓
                               </span>
                             )}
                           </div>

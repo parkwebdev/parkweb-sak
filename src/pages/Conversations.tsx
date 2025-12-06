@@ -694,7 +694,7 @@ const Conversations: React.FC = () => {
                                   {/* Read receipt for human/team messages */}
                                   {isHumanSent && (
                                     <span className={`ml-1 ${msgMetadata?.read_at ? 'text-info' : ''}`}>
-                                      ✓✓
+                                      ✓
                                     </span>
                                   )}
                                 </span>
