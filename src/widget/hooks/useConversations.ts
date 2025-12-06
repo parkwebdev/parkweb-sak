@@ -81,8 +81,36 @@ export function useConversations(options: UseConversationsOptions) {
             linkPreviews: (msg.metadata as any)?.link_previews,
           }));
           
-          setMessages(formattedMessages);
-          console.log('[Widget] Loaded', formattedMessages.length, 'messages from database');
+          // MERGE with existing messages instead of overwriting
+          // This preserves local messages (greeting, optimistic updates) while adding DB messages
+          setMessages(prev => {
+            // If no local messages, just use DB messages
+            if (prev.length === 0) return formattedMessages;
+            
+            // Create a set of existing message IDs
+            const existingIds = new Set(prev.filter(m => m.id).map(m => m.id));
+            
+            // Keep local messages without IDs (like greeting, optimistic updates before ID assigned)
+            const localWithoutIds = prev.filter(m => !m.id);
+            
+            // Merge DB messages with local messages that have IDs (deduplicating)
+            const mergedWithIds = [...prev.filter(m => m.id)];
+            for (const dbMsg of formattedMessages) {
+              if (!existingIds.has(dbMsg.id)) {
+                mergedWithIds.push(dbMsg);
+              }
+            }
+            
+            // Sort messages with IDs by timestamp
+            mergedWithIds.sort((a, b) => 
+              new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+            );
+            
+            // Put local messages without IDs (like greeting) at the beginning
+            return [...localWithoutIds, ...mergedWithIds];
+          });
+          
+          console.log('[Widget] Merged', formattedMessages.length, 'DB messages with local state');
         } else {
           // Don't overwrite existing messages (like greeting) with empty array
           console.log('[Widget] No messages found in database, preserving local messages');
