@@ -372,10 +372,21 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error fetching link preview:', error);
     
-    if (error.name === 'AbortError') {
+    // For network errors (DNS, connection, timeout), return minimal preview data
+    // instead of an error so the UI can still show something useful
+    const { url } = await req.clone().json().catch(() => ({ url: '' }));
+    
+    if (url) {
+      const fallbackData: LinkPreviewData = {
+        url,
+        domain: getDomain(url),
+      };
+      
+      console.log(`Returning fallback preview for unreachable URL:`, url);
+      
       return new Response(
-        JSON.stringify({ error: 'Request timeout' }),
-        { status: 504, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify(fallbackData),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
