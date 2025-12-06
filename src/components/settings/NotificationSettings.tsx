@@ -16,6 +16,7 @@ interface NotificationPreferences {
   user_id: string;
   email_notifications: boolean;
   browser_notifications: boolean;
+  sound_notifications: boolean;
   conversation_notifications: boolean;
   lead_notifications: boolean;
   agent_notifications: boolean;
@@ -78,6 +79,7 @@ export const NotificationSettings: React.FC = () => {
           user_id: user.id,
           email_notifications: true,
           browser_notifications: true,
+          sound_notifications: true,
           conversation_notifications: true,
           lead_notifications: true,
           agent_notifications: true,
@@ -260,6 +262,15 @@ export const NotificationSettings: React.FC = () => {
             checked={preferences.browser_notifications}
             onCheckedChange={(checked) => updatePreference('browser_notifications', checked)}
             showSaved={showSaved.browser_notifications}
+          />
+
+          <ToggleSettingRow
+            id="sound-notifications"
+            label="Sound Notifications"
+            description="Play a sound when new messages arrive"
+            checked={preferences.sound_notifications}
+            onCheckedChange={(checked) => updatePreference('sound_notifications', checked)}
+            showSaved={showSaved.sound_notifications}
           />
         </CardContent>
       </Card>

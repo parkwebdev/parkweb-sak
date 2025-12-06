@@ -712,6 +712,7 @@ export type Database = {
           id: string
           lead_notifications: boolean | null
           report_notifications: boolean | null
+          sound_notifications: boolean | null
           team_notifications: boolean | null
           updated_at: string
           user_id: string
@@ -725,6 +726,7 @@ export type Database = {
           id?: string
           lead_notifications?: boolean | null
           report_notifications?: boolean | null
+          sound_notifications?: boolean | null
           team_notifications?: boolean | null
           updated_at?: string
           user_id: string
@@ -738,6 +740,7 @@ export type Database = {
           id?: string
           lead_notifications?: boolean | null
           report_notifications?: boolean | null
+          sound_notifications?: boolean | null
           team_notifications?: boolean | null
           updated_at?: string
           user_id?: string

@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { X, Send01, MessageChatCircle, ChevronRight, Zap, BookOpen01, Microphone01, Attachment01, Image03, FileCheck02, ThumbsUp, ThumbsDown } from '@untitledui/icons';
+import { X, Send01, MessageChatCircle, ChevronRight, Zap, BookOpen01, Microphone01, Attachment01, Image03, FileCheck02, ThumbsUp, ThumbsDown, Settings01, VolumeMax, VolumeX } from '@untitledui/icons';
 import { CategoryIcon } from './category-icons';
 import { HomeNavIcon, ChatNavIcon, HelpNavIcon } from './NavIcons';
 import { ChatBubbleIcon } from '@/components/agents/ChatBubbleIcon';
@@ -254,6 +254,13 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
 
   // Track hover state for nav icons
   const [hoveredNav, setHoveredNav] = useState<'home' | 'messages' | 'help' | null>(null);
+  
+  // Sound settings state (persisted in localStorage)
+  const [soundEnabled, setSoundEnabled] = useState<boolean>(() => {
+    const stored = localStorage.getItem(`chatpad_sound_enabled_${agentId}`);
+    return stored !== 'false'; // Default to true
+  });
+  const [showSettingsDropdown, setShowSettingsDropdown] = useState(false);
 
   // Load config on mount if simple config
   useEffect(() => {
@@ -862,12 +869,14 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
           // Also stop typing indicator if it was showing
           setIsTyping(false);
           
-          // Play notification sound for new human messages
-          try {
-            const audio = new Audio('/sounds/notification.mp3');
-            audio.volume = 0.5;
-            audio.play().catch(() => {});
-          } catch {}
+          // Play notification sound for new human messages (if sound enabled)
+          if (soundEnabled) {
+            try {
+              const audio = new Audio('/sounds/notification.mp3');
+              audio.volume = 0.5;
+              audio.play().catch(() => {});
+            } catch {}
+          }
         }
       },
       // Handle message updates (for real-time reaction sync AND read receipts)
@@ -1621,9 +1630,41 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                     </div>
                   </div>
                 </div>
-              <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground hover:bg-transparent h-8 w-8" onClick={handleClose}>
-                <X className="h-4 w-4" />
-              </Button>
+              <div className="flex items-center gap-1 relative">
+                <div className="relative">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="text-muted-foreground hover:text-foreground hover:bg-transparent h-8 w-8" 
+                    onClick={() => setShowSettingsDropdown(!showSettingsDropdown)}
+                  >
+                    <Settings01 className="h-4 w-4" />
+                  </Button>
+                  {showSettingsDropdown && (
+                    <div className="absolute right-0 top-full mt-1 bg-card border rounded-lg shadow-lg p-2 z-50 min-w-[180px]">
+                      <button
+                        onClick={() => {
+                          const newValue = !soundEnabled;
+                          setSoundEnabled(newValue);
+                          localStorage.setItem(`chatpad_sound_enabled_${agentId}`, String(newValue));
+                          setShowSettingsDropdown(false);
+                        }}
+                        className="w-full flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors"
+                      >
+                        {soundEnabled ? (
+                          <VolumeMax className="h-4 w-4" />
+                        ) : (
+                          <VolumeX className="h-4 w-4" />
+                        )}
+                        <span>Sound {soundEnabled ? 'On' : 'Off'}</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground hover:bg-transparent h-8 w-8" onClick={handleClose}>
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
               </div>
             )}
 
