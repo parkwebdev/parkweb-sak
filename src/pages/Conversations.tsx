@@ -734,9 +734,6 @@ const Conversations: React.FC = () => {
                     <Send01 size={16} />
                   </Button>
                 </form>
-                <p className="text-xs text-muted-foreground mt-2 text-center">
-                  Messages sent here will appear in the user's widget in real-time
-                </p>
               </div>
             )}
           </>
