@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, lazy, Suspense, useCallback } from 'react';
-import { fetchWidgetConfig, createLead, submitArticleFeedback, sendChatMessage, subscribeToMessages, unsubscribeFromMessages, subscribeToConversationStatus, unsubscribeFromConversationStatus, subscribeToTypingIndicator, unsubscribeFromTypingIndicator, fetchTakeoverAgent, updateMessageReaction, updatePageVisit, startVisitorPresence, updateVisitorPresence, stopVisitorPresence, markMessagesRead, type WidgetConfig, type ChatResponse, type ReferrerJourney } from './api';
+import { fetchWidgetConfig, createLead, submitArticleFeedback, sendChatMessage, subscribeToMessages, unsubscribeFromMessages, subscribeToConversationStatus, unsubscribeFromConversationStatus, subscribeToTypingIndicator, unsubscribeFromTypingIndicator, fetchTakeoverAgent, updateMessageReaction, updatePageVisit, startVisitorPresence, updateVisitorPresence, stopVisitorPresence, markMessagesRead, fetchConversationMessages, type WidgetConfig, type ChatResponse, type ReferrerJourney } from './api';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { CSSAnimatedList } from './CSSAnimatedList';
 import { CSSAnimatedItem } from './CSSAnimatedItem';
@@ -584,6 +584,43 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
       setActiveConversationId(chatUser.conversationId);
     }
   }, [chatUser?.conversationId]);
+
+  // Fetch messages from database when widget loads with existing conversationId
+  useEffect(() => {
+    if (!activeConversationId) return;
+    
+    // Only fetch if conversationId is valid UUID (database ID)
+    const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(activeConversationId);
+    if (!isValidUUID) return;
+    
+    // Only fetch if we don't already have messages (to avoid refetching on every update)
+    if (messages.length > 0) return;
+    
+    const loadMessagesFromDB = async () => {
+      console.log('[Widget] Fetching messages from database for:', activeConversationId);
+      const dbMessages = await fetchConversationMessages(activeConversationId);
+      
+      if (dbMessages.length > 0) {
+        const formattedMessages: Message[] = dbMessages.map(msg => ({
+          id: msg.id,
+          role: msg.role as 'user' | 'assistant',
+          content: msg.content,
+          timestamp: new Date(msg.created_at),
+          type: 'text' as const,
+          reactions: (msg.metadata as any)?.reactions || [],
+          isHuman: (msg.metadata as any)?.sender_type === 'human',
+          senderName: (msg.metadata as any)?.sender_name,
+          senderAvatar: (msg.metadata as any)?.sender_avatar,
+          read_at: (msg.metadata as any)?.read_at,
+        }));
+        
+        setMessages(formattedMessages);
+        console.log('[Widget] Loaded', formattedMessages.length, 'messages from database');
+      }
+    };
+    
+    loadMessagesFromDB();
+  }, [activeConversationId]);
 
   // Load conversations from localStorage (with migration from old format)
   useEffect(() => {

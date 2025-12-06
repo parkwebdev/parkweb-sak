@@ -74,8 +74,10 @@ export const useConversations = () => {
           table: 'messages'
         },
         () => {
-          // Refetch conversations to update last message preview
-          fetchConversations(false);
+          // Delay refetch to allow edge function to update last_message_preview metadata
+          setTimeout(() => {
+            fetchConversations(false);
+          }, 500);
         }
       )
       .subscribe();

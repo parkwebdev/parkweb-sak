@@ -566,8 +566,8 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
                         <div className="flex items-start gap-2.5 text-sm">
                           <Browser className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
                           <div className="min-w-0 flex-1">
-                            <div className="text-xs text-muted-foreground">Landing page:</div>
-                            <div className="truncate text-xs">
+                            <span className="text-muted-foreground">Landing page:</span>{' '}
+                            <span className="truncate">
                               {(() => {
                                 try {
                                   const url = new URL(metadata.referrer_journey.landing_page!);
@@ -576,7 +576,7 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
                                   return metadata.referrer_journey.landing_page;
                                 }
                               })()}
-                            </div>
+                            </span>
                           </div>
                         </div>
                       </TooltipTrigger>

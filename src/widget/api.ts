@@ -291,6 +291,33 @@ export async function updatePageVisit(
   }
 }
 
+// Fetch messages for a conversation from database
+export async function fetchConversationMessages(conversationId: string): Promise<Array<{
+  id: string;
+  role: string;
+  content: string;
+  metadata: any;
+  created_at: string;
+}>> {
+  try {
+    const { data, error } = await widgetSupabase
+      .from('messages')
+      .select('*')
+      .eq('conversation_id', conversationId)
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      console.error('[Widget API] Error fetching messages:', error);
+      return [];
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error('[Widget API] Error fetching messages:', error);
+    return [];
+  }
+}
+
 // Mark messages as read
 export async function markMessagesRead(
   conversationId: string,
