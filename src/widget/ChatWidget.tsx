@@ -2415,7 +2415,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                     <div className="relative flex items-center justify-center w-6 h-6 mb-1.5">
                       <ChatNavIcon active={currentView === 'messages'} hovered={hoveredNav === 'messages'} className="h-5 w-5" />
                       {messages.some(m => !m.read && m.role === 'assistant') && (
-                        <div className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-destructive rounded-full border-2 border-white" />
+                        <div className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-destructive rounded-full border-2 border-white" />
                       )}
                     </div>
                     <span className="text-xs pl-0.5">Chat</span>
