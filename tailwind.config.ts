@@ -142,7 +142,7 @@ const config: Config = {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "fade-in": "fade-in 0.3s ease-out",
-        "ping": "ping 1s cubic-bezier(0, 0, 0.2, 1) infinite",
+        "ping": "ping 2s cubic-bezier(0, 0, 0.2, 1) infinite",
         "pulse-slow": "pulse-slow 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite",
         "ripple": "ripple var(--duration, 3s) ease calc(var(--i, 0) * 0.2s) infinite",
       },
