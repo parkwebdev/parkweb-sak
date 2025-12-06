@@ -43,12 +43,13 @@ const formatShortTime = (date: Date): string => {
 };
 
 // Format sender name as "Aaron C."
-const formatSenderName = (fullName: string): string => {
+const formatSenderName = (fullName: string | undefined): string => {
+  if (!fullName) return 'Team Member';
   const parts = fullName.trim().split(' ');
   if (parts.length === 1) return parts[0];
   const firstName = parts[0];
-  const lastInitial = parts[parts.length - 1][0].toUpperCase();
-  return `${firstName} ${lastInitial}.`;
+  const lastInitial = parts[parts.length - 1][0]?.toUpperCase() || '';
+  return lastInitial ? `${firstName} ${lastInitial}.` : firstName;
 };
 
 // Function to update message reaction via edge function
