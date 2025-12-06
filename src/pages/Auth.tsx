@@ -5,7 +5,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { FeaturedIcon } from '@/components/ui/featured-icon';
-import { BackgroundPattern } from '@/components/ui/background-pattern';
 import { StepProgress, type StepItem } from '@/components/ui/step-progress';
 import { PaginationDots } from '@/components/ui/pagination-dots';
 import { toast } from '@/lib/toast';
@@ -52,6 +51,7 @@ const Auth = () => {
   const [teamEmails, setTeamEmails] = useState('');
   const [activeTab, setActiveTab] = useState<'signin' | 'signup'>('signin');
   const [currentStep, setCurrentStep] = useState(0);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const navigate = useNavigate();
   const { logAuthEvent } = useSecurityLog();
 
@@ -234,6 +234,35 @@ const Auth = () => {
     setTeamEmails('');
   };
 
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) {
+      toast.error("Error", { description: "Please enter your email address" });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth?tab=reset`,
+      });
+
+      if (error) {
+        toast.error("Reset failed", { description: error.message });
+        return;
+      }
+
+      toast.success("Check your email", { 
+        description: "We've sent you a password reset link" 
+      });
+      setShowForgotPassword(false);
+    } catch (error) {
+      toast.error("Error", { description: "An unexpected error occurred" });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
 
   const CurrentStepIcon = activeTab === 'signup' ? stepIcons[currentStep] : Key01;
 
@@ -249,16 +278,9 @@ const Auth = () => {
             className="space-y-6"
           >
             <div className="flex flex-col items-center gap-6 text-center">
-              <div className="relative">
-                <FeaturedIcon color="gray" theme="modern" size="xl" className="relative z-10">
-                  <User01 />
-                </FeaturedIcon>
-                <BackgroundPattern
-                  pattern="grid"
-                  size="lg"
-                  className="absolute top-1/2 left-1/2 z-0 -translate-x-1/2 -translate-y-1/2 text-muted-foreground"
-                />
-              </div>
+              <FeaturedIcon color="gray" theme="modern" size="xl">
+                <User01 />
+              </FeaturedIcon>
               <div className="z-10 flex flex-col gap-2">
                 <h1 className="text-2xl font-semibold text-foreground">Your details</h1>
                 <p className="text-sm text-muted-foreground">Please provide your name and email</p>
@@ -332,23 +354,16 @@ const Auth = () => {
             className="space-y-6"
           >
             <div className="flex flex-col items-center gap-6 text-center">
-              <div className="relative">
-                <FeaturedIcon color="gray" theme="modern" size="xl" className="relative z-10">
-                  <Key01 />
-                </FeaturedIcon>
-                <BackgroundPattern
-                  pattern="grid"
-                  size="lg"
-                  className="absolute top-1/2 left-1/2 z-0 -translate-x-1/2 -translate-y-1/2 text-muted-foreground"
-                />
-              </div>
-              <div className="z-10 flex flex-col gap-2">
+              <FeaturedIcon color="gray" theme="modern" size="xl">
+                <Key01 />
+              </FeaturedIcon>
+              <div className="flex flex-col gap-2">
                 <h1 className="text-2xl font-semibold text-foreground">Choose a password</h1>
                 <p className="text-sm text-muted-foreground">Must be at least 8 characters</p>
               </div>
             </div>
 
-            <div className="z-10 flex flex-col gap-4">
+            <div className="flex flex-col gap-4">
               <div className="space-y-2">
                 <Label htmlFor="signup-password">Password</Label>
                 <div className="relative">
@@ -405,23 +420,16 @@ const Auth = () => {
             className="space-y-6"
           >
             <div className="flex flex-col items-center gap-6 text-center">
-              <div className="relative">
-                <FeaturedIcon color="gray" theme="modern" size="xl" className="relative z-10">
-                  <UsersPlus />
-                </FeaturedIcon>
-                <BackgroundPattern
-                  pattern="grid"
-                  size="lg"
-                  className="absolute top-1/2 left-1/2 z-0 -translate-x-1/2 -translate-y-1/2 text-muted-foreground"
-                />
-              </div>
-              <div className="z-10 flex flex-col gap-2">
+              <FeaturedIcon color="gray" theme="modern" size="xl">
+                <UsersPlus />
+              </FeaturedIcon>
+              <div className="flex flex-col gap-2">
                 <h1 className="text-2xl font-semibold text-foreground">Invite your team</h1>
                 <p className="text-sm text-muted-foreground">Start collaborating with your team members</p>
               </div>
             </div>
 
-            <div className="z-10 flex flex-col gap-4">
+            <div className="flex flex-col gap-4">
               <div className="space-y-2">
                 <Label htmlFor="team-emails">Team email addresses (optional)</Label>
                 <Input
@@ -459,17 +467,10 @@ const Auth = () => {
             className="space-y-6"
           >
             <div className="flex flex-col items-center gap-6 text-center">
-              <div className="relative">
-                <FeaturedIcon color="success" theme="modern" size="xl" className="relative z-10">
-                  <CheckCircle />
-                </FeaturedIcon>
-                <BackgroundPattern
-                  pattern="grid"
-                  size="lg"
-                  className="absolute top-1/2 left-1/2 z-0 -translate-x-1/2 -translate-y-1/2 text-muted-foreground"
-                />
-              </div>
-              <div className="z-10 flex flex-col gap-2">
+              <FeaturedIcon color="success" theme="modern" size="xl">
+                <CheckCircle />
+              </FeaturedIcon>
+              <div className="flex flex-col gap-2">
                 <h1 className="text-2xl font-semibold text-foreground">You're all set!</h1>
                 <p className="text-sm text-muted-foreground">
                   We've sent a confirmation email to <span className="font-medium text-foreground">{email}</span>
@@ -477,7 +478,7 @@ const Auth = () => {
               </div>
             </div>
 
-            <div className="z-10 flex flex-col gap-4">
+            <div className="flex flex-col gap-4">
               <div className="rounded-lg border border-border bg-muted/50 p-4 text-center">
                 <p className="text-sm text-muted-foreground">
                   Please check your inbox and click the confirmation link to activate your account.
@@ -501,9 +502,8 @@ const Auth = () => {
       <div className="hidden lg:flex flex-col justify-between bg-muted/50 border-r border-border">
         <div className="flex flex-col gap-12 px-8 pt-8">
           {/* Logo with text */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center">
             <ChatPadLogo className="h-8 w-8 text-foreground" />
-            <span className="text-lg font-semibold text-foreground">ChatPad</span>
           </div>
           
           {/* Step Progress (only for signup) */}
@@ -536,14 +536,59 @@ const Auth = () => {
       <div className="flex h-full w-full flex-1 overflow-hidden py-8 md:py-12">
         <div className="flex h-full w-full flex-col items-center gap-8 px-4 md:px-8">
           {/* Mobile Logo with text */}
-          <div className="lg:hidden flex items-center gap-3">
+          <div className="lg:hidden flex items-center">
             <ChatPadLogo className="h-8 w-8 text-foreground" />
-            <span className="text-lg font-semibold text-foreground">ChatPad</span>
           </div>
 
           <div className="flex w-full max-w-sm flex-col gap-8 flex-1 justify-center">
             <AnimatePresence mode="wait">
-              {activeTab === 'signin' ? (
+              {showForgotPassword ? (
+                <motion.div
+                  key="forgot-password"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  className="space-y-6"
+                >
+                  <div className="flex flex-col items-center gap-6 text-center">
+                    <FeaturedIcon color="gray" theme="modern" size="xl">
+                      <Mail01 />
+                    </FeaturedIcon>
+                    <div className="flex flex-col gap-2">
+                      <h1 className="text-2xl font-semibold text-foreground">Forgot password?</h1>
+                      <p className="text-sm text-muted-foreground">No worries, we'll send you reset instructions.</p>
+                    </div>
+                  </div>
+
+                  <form onSubmit={handleForgotPassword} className="flex flex-col gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="reset-email">Email</Label>
+                      <Input
+                        id="reset-email"
+                        type="email"
+                        placeholder="Enter your email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        disabled={isLoading}
+                        className="h-11"
+                      />
+                    </div>
+
+                    <Button type="submit" className="w-full h-11" loading={isLoading}>
+                      Send reset link
+                    </Button>
+
+                    <button 
+                      type="button"
+                      onClick={() => setShowForgotPassword(false)}
+                      className="flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+                    >
+                      <ArrowLeft className="w-4 h-4" />
+                      Back to sign in
+                    </button>
+                  </form>
+                </motion.div>
+              ) : activeTab === 'signin' ? (
                 <motion.div
                   key="signin"
                   initial={{ opacity: 0, x: -20 }}
@@ -552,23 +597,16 @@ const Auth = () => {
                   className="space-y-6"
                 >
                   <div className="flex flex-col items-center gap-6 text-center">
-                    <div className="relative">
-                      <FeaturedIcon color="gray" theme="modern" size="xl" className="relative z-10">
-                        <Key01 />
-                      </FeaturedIcon>
-                      <BackgroundPattern
-                        pattern="grid"
-                        size="lg"
-                        className="absolute top-1/2 left-1/2 z-0 -translate-x-1/2 -translate-y-1/2 text-muted-foreground"
-                      />
-                    </div>
-                    <div className="z-10 flex flex-col gap-2">
+                    <FeaturedIcon color="gray" theme="modern" size="xl">
+                      <Key01 />
+                    </FeaturedIcon>
+                    <div className="flex flex-col gap-2">
                       <h1 className="text-2xl font-semibold text-foreground">Welcome back</h1>
                       <p className="text-sm text-muted-foreground">Welcome back! Please enter your details.</p>
                     </div>
                   </div>
 
-                  <form onSubmit={handleSignIn} className="z-10 flex flex-col gap-4">
+                  <form onSubmit={handleSignIn} className="flex flex-col gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="signin-email">Email</Label>
                       <Input
@@ -612,7 +650,11 @@ const Auth = () => {
                           Remember for 30 days
                         </Label>
                       </div>
-                      <button type="button" className="text-sm text-primary hover:text-primary/80">
+                      <button 
+                        type="button" 
+                        onClick={() => setShowForgotPassword(true)}
+                        className="text-sm text-primary hover:text-primary/80"
+                      >
                         Forgot password
                       </button>
                     </div>
