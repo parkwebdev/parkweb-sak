@@ -188,6 +188,18 @@ export interface ChatResponse {
   userMessageId?: string;
   assistantMessageId?: string;
   sources?: Array<{ source: string; type: string; similarity: number }>;
+  linkPreviews?: Array<{
+    url: string;
+    title?: string;
+    description?: string;
+    image?: string;
+    siteName?: string;
+    favicon?: string;
+    domain: string;
+    videoType?: string;
+    videoId?: string;
+    embedUrl?: string;
+  }>;
 }
 
 // Fetch the current takeover agent for a conversation

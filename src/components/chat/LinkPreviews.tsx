@@ -11,9 +11,10 @@ const previewCache = new Map<string, LinkPreviewData | null>();
 interface LinkPreviewsProps {
   content: string;
   compact?: boolean;
+  cachedPreviews?: LinkPreviewData[]; // Server-side cached previews from message metadata
 }
 
-export function LinkPreviews({ content, compact = false }: LinkPreviewsProps) {
+export function LinkPreviews({ content, compact = false, cachedPreviews }: LinkPreviewsProps) {
   const [previews, setPreviews] = useState<(LinkPreviewData | null)[]>([]);
   const [loading, setLoading] = useState(false);
   const fetchedRef = useRef(false);
@@ -21,7 +22,23 @@ export function LinkPreviews({ content, compact = false }: LinkPreviewsProps) {
   // Extract unique URLs from content
   const urls = Array.from(new Set(content.match(URL_REGEX) || [])).slice(0, 3); // Max 3 previews
 
+  // If we have cached previews from server, use them directly
+  if (cachedPreviews && cachedPreviews.length > 0) {
+    const validCached = cachedPreviews.filter(p => p && (p.title || p.videoType));
+    if (validCached.length > 0) {
+      return (
+        <div className="space-y-2">
+          {validCached.map((preview, i) => (
+            <LinkPreviewCard key={i} data={preview} compact={compact} />
+          ))}
+        </div>
+      );
+    }
+  }
+
   useEffect(() => {
+    // Skip client-side fetching if we have cached previews
+    if (cachedPreviews && cachedPreviews.length > 0) return;
     if (urls.length === 0 || fetchedRef.current) return;
     fetchedRef.current = true;
 
@@ -59,7 +76,7 @@ export function LinkPreviews({ content, compact = false }: LinkPreviewsProps) {
     };
 
     fetchPreviews();
-  }, [content]);
+  }, [content, cachedPreviews]);
 
   // Don't render anything if no URLs or all failed
   if (urls.length === 0) return null;

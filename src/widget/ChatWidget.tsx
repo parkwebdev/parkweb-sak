@@ -92,6 +92,7 @@ interface Message {
   isHuman?: boolean;
   senderName?: string;
   senderAvatar?: string;
+  linkPreviews?: Array<any>; // Cached link previews from message metadata
 }
 
 interface Conversation {
@@ -621,6 +622,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
           senderAvatar: (msg.metadata as any)?.sender_avatar,
           read_at: (msg.metadata as any)?.read_at,
           read: !!((msg.metadata as any)?.read_at), // Properly set read status from DB
+          linkPreviews: (msg.metadata as any)?.link_previews, // Cached link previews
         }));
         
         setMessages(formattedMessages);
@@ -1308,7 +1310,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
           });
         }
         
-        // Add AI response with message ID
+        // Add AI response with message ID and cached link previews
         setMessages(prev => [...prev, { 
           id: response.assistantMessageId,
           role: 'assistant', 
@@ -1316,7 +1318,8 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
           read: isOpen && currentView === 'messages', 
           timestamp: new Date(), 
           type: 'text', 
-          reactions: [] 
+          reactions: [],
+          linkPreviews: response.linkPreviews,
         }]);
       }
     } catch (error) {
@@ -1971,7 +1974,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
 {msg.type === 'text' && (
                                 <>
                                   <p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p>
-                                  <LinkPreviews content={msg.content} />
+                                  <LinkPreviews content={msg.content} cachedPreviews={msg.linkPreviews} />
                                 </>
                               )}
                             </div>
