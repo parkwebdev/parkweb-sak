@@ -49,7 +49,7 @@ export const MessageReactions: React.FC<MessageReactionsProps> = ({
   };
 
   return (
-    <div className="flex items-center gap-1 mt-1 flex-wrap">
+    <div className="flex items-center gap-1 flex-wrap">
       {reactions.map((reaction) => (
         <Button
           key={reaction.emoji}
