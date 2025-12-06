@@ -32,19 +32,24 @@ export function useConversations(options: UseConversationsOptions) {
   const fetchedConversationIdRef = useRef<string | null>(null);
   const isActivelySendingRef = useRef(false);
   
-  // REF-BASED FIX: Track if we have local messages synchronously
-  // This prevents stale closure issues where React batching causes messages.length to be 0
-  // even though setMessages was just called with the greeting
+  // SYNCHRONOUS SHADOW REF FIX: Track messages synchronously
+  // React's setState is async, but refs update immediately
+  // This prevents race conditions where useEffect runs before state is updated
+  const messagesRef = useRef<Message[]>([]);
   const hasLocalMessagesRef = useRef(false);
   
-  // Wrapper that updates the ref synchronously when messages are set
+  // Wrapper that updates refs SYNCHRONOUSLY before React's async state update
   const setMessages = (setter: Message[] | ((prev: Message[]) => Message[])) => {
-    setMessagesInternal(prev => {
-      const next = typeof setter === 'function' ? setter(prev) : setter;
-      // Update ref SYNCHRONOUSLY before React batches this
-      hasLocalMessagesRef.current = next.length > 0;
-      return next;
-    });
+    // Calculate new value using our synchronous ref (NOT React state which is stale)
+    const current = messagesRef.current;
+    const next = typeof setter === 'function' ? setter(current) : setter;
+    
+    // Update refs IMMEDIATELY - this happens BEFORE the next line of code runs
+    messagesRef.current = next;
+    hasLocalMessagesRef.current = next.length > 0;
+    
+    // Now trigger React's async state update with the already-computed value
+    setMessagesInternal(next);
   };
 
   // Initialize activeConversationId from chatUser if available (for returning users)
