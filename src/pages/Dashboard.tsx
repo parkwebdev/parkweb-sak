@@ -4,11 +4,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { Cube01 as Bot } from '@untitledui/icons';
 import { LoadingState } from '@/components/ui/loading-state';
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
-import { DashboardTabs, DashboardTab } from '@/components/dashboard/DashboardTabs';
 import { MetricCardWithChart } from '@/components/dashboard/MetricCardWithChart';
 import { ConversationsDataTable, ConversationRow } from '@/components/dashboard/ConversationsDataTable';
 import { formatDistanceToNow } from 'date-fns';
-import { toast } from 'sonner';
 
 interface ConversationWithAgent {
   id: string;
@@ -21,10 +19,16 @@ interface ConversationWithAgent {
   messages: { id: string }[];
 }
 
-const tabs: DashboardTab[] = [
+interface TabConfig {
+  id: string;
+  label: string;
+  count?: number;
+}
+
+const baseTabs: TabConfig[] = [
   { id: 'all', label: 'All' },
   { id: 'active', label: 'Active' },
-  { id: 'human_takeover', label: 'Human Takeover' },
+  { id: 'human_takeover', label: 'Human' },
   { id: 'closed', label: 'Closed' },
 ];
 
@@ -157,7 +161,6 @@ export const Dashboard: React.FC = () => {
           table: 'conversations',
         },
         () => {
-          // Refetch data without showing loading state
           fetchData(false);
         }
       )
@@ -169,7 +172,6 @@ export const Dashboard: React.FC = () => {
           table: 'messages',
         },
         () => {
-          // Refetch when messages change (affects message counts)
           fetchData(false);
         }
       )
@@ -181,7 +183,6 @@ export const Dashboard: React.FC = () => {
           table: 'leads',
         },
         () => {
-          // Refetch when leads change (affects conversion rate)
           fetchData(false);
         }
       )
@@ -214,8 +215,8 @@ export const Dashboard: React.FC = () => {
   }, [filteredConversations, conversations]);
 
   // Update tab counts
-  const tabsWithCounts: DashboardTab[] = useMemo(() => {
-    return tabs.map((tab) => ({
+  const tabsWithCounts: TabConfig[] = useMemo(() => {
+    return baseTabs.map((tab) => ({
       ...tab,
       count:
         tab.id === 'all'
@@ -255,15 +256,10 @@ export const Dashboard: React.FC = () => {
     <main className="flex-1 min-h-0 h-full overflow-y-auto">
       <div className="flex flex-col gap-6 lg:gap-8 pt-6 lg:pt-8 pb-8">
         {/* Header */}
-        <div className="flex flex-col gap-5 px-4 lg:px-8">
+        <div className="px-4 lg:px-8">
           <DashboardHeader
             title="Dashboard"
             onExport={() => console.log('Export report')}
-          />
-          <DashboardTabs
-            tabs={tabsWithCounts}
-            selectedTab={selectedTab}
-            onTabChange={setSelectedTab}
           />
         </div>
 
@@ -305,10 +301,13 @@ export const Dashboard: React.FC = () => {
               />
             </div>
 
-            {/* Data Table */}
+            {/* Data Table with Tabs Inside */}
             <div className="px-4 lg:px-8">
               <ConversationsDataTable
                 data={tableData}
+                tabs={tabsWithCounts}
+                selectedTab={selectedTab}
+                onTabChange={setSelectedTab}
                 title="Conversations"
               />
             </div>
