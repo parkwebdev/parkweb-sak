@@ -612,6 +612,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
           senderName: (msg.metadata as any)?.sender_name,
           senderAvatar: (msg.metadata as any)?.sender_avatar,
           read_at: (msg.metadata as any)?.read_at,
+          read: !!((msg.metadata as any)?.read_at), // Properly set read status from DB
         }));
         
         setMessages(formattedMessages);
@@ -778,11 +779,20 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
               ? { ...m, read: true } 
               : m
           ));
+          
+          // Persist read timestamp to localStorage to survive page navigation
+          const readKey = `chatpad_last_read_${agentId}_${activeConversationId}`;
+          localStorage.setItem(readKey, new Date().toISOString());
+          
+          // Immediately notify parent to clear badge
+          if (window.parent !== window) {
+            window.parent.postMessage({ type: 'chatpad-unread-count', count: 0 }, '*');
+          }
         }
       }, 500);
       return () => clearTimeout(timer);
     }
-  }, [currentView, activeConversationId, isOpen, messages.length]);
+  }, [currentView, activeConversationId, isOpen, messages.length, agentId]);
 
   // Subscribe to real-time messages for human takeover
   const realtimeChannelRef = useRef<RealtimeChannel | null>(null);
@@ -883,8 +893,18 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     };
   }, [activeConversationId, isOpen, currentView]);
 
-  // Track if we've shown the takeover notice for this conversation session
-  const shownTakeoverNoticeRef = useRef<string | null>(null);
+  // Check if takeover notice was already shown for a conversation (persisted in localStorage)
+  const hasTakeoverNoticeBeenShown = useCallback((convId: string) => {
+    return localStorage.getItem(`chatpad_takeover_noticed_${agentId}_${convId}`) === 'true';
+  }, [agentId]);
+  
+  const setTakeoverNoticeShown = useCallback((convId: string) => {
+    localStorage.setItem(`chatpad_takeover_noticed_${agentId}_${convId}`, 'true');
+  }, [agentId]);
+  
+  const clearTakeoverNotice = useCallback((convId: string) => {
+    localStorage.removeItem(`chatpad_takeover_noticed_${agentId}_${convId}`);
+  }, [agentId]);
 
   // Subscribe to conversation status changes (for human takeover banner)
   useEffect(() => {
@@ -908,21 +928,21 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
       const wasTakeover = isHumanTakeover;
       setIsHumanTakeover(status === 'human_takeover');
       
-      // Reset the takeover notice flag when returning to AI
+      // Clear the takeover notice flag when returning to AI so next takeover shows notice again
       if (status !== 'human_takeover') {
-        shownTakeoverNoticeRef.current = null;
+        clearTakeoverNotice(activeConversationId);
         return;
       }
       
-      // When takeover starts, show a system notice only once per session
+      // When takeover starts, show a system notice only once (persisted across page navigations)
       if (status === 'human_takeover' && !wasTakeover) {
-        // Check if we already showed a notice for this conversation
-        if (shownTakeoverNoticeRef.current === activeConversationId) {
+        // Check if we already showed a notice for this conversation (persisted in localStorage)
+        if (hasTakeoverNoticeBeenShown(activeConversationId)) {
           return;
         }
         
-        // Mark that we've shown the notice for this conversation
-        shownTakeoverNoticeRef.current = activeConversationId;
+        // Mark that we've shown the notice for this conversation (persisted)
+        setTakeoverNoticeShown(activeConversationId);
         
         // Fetch agent info for personalized message
         const agent = await fetchTakeoverAgent(activeConversationId);
@@ -989,9 +1009,22 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     };
   }, [activeConversationId, isHumanTakeover]);
 
-  // Track unread count and notify parent
+  // Track unread count and notify parent (respecting persisted read state)
   useEffect(() => {
-    const unread = messages.filter(m => m.role === 'assistant' && !m.read).length;
+    // Check if we have a persisted read timestamp for this conversation
+    const readKey = `chatpad_last_read_${agentId}_${activeConversationId}`;
+    const lastReadTimestamp = localStorage.getItem(readKey);
+    const lastReadDate = lastReadTimestamp ? new Date(lastReadTimestamp) : null;
+    
+    // Count unread messages that arrived AFTER the last read timestamp
+    const unread = messages.filter(m => {
+      if (m.role !== 'assistant') return false;
+      if (m.read) return false;
+      // If we have a last read timestamp, only count messages after it
+      if (lastReadDate && m.timestamp <= lastReadDate) return false;
+      return true;
+    }).length;
+    
     setUnreadCount(unread);
     
     // Notify parent window of unread count for badge display
@@ -1001,7 +1034,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
         count: unread 
       }, '*');
     }
-  }, [messages]);
+  }, [messages, agentId, activeConversationId]);
 
 
   // Send resize notifications based on content
