@@ -462,6 +462,19 @@ serve(async (req) => {
         } else {
           userMessageId = userMsg?.id;
         }
+        
+        // Update last_user_message_at immediately when user message is saved
+        const currentMeta = conversation?.metadata || {};
+        await supabase
+          .from('conversations')
+          .update({
+            metadata: {
+              ...currentMeta,
+              last_user_message_at: new Date().toISOString(),
+            },
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', activeConversationId);
       }
     }
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/lib/toast';
@@ -17,6 +17,25 @@ export const useConversations = () => {
   const { user } = useAuth();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
+  const soundEnabledRef = useRef<boolean>(true);
+
+  // Fetch user's sound notification preference
+  const fetchSoundPreference = useCallback(async () => {
+    if (!user?.id) return;
+    
+    try {
+      const { data } = await supabase
+        .from('notification_preferences')
+        .select('sound_notifications')
+        .eq('user_id', user.id)
+        .single();
+      
+      soundEnabledRef.current = data?.sound_notifications !== false;
+    } catch {
+      // Default to enabled if fetch fails
+      soundEnabledRef.current = true;
+    }
+  }, [user?.id]);
 
   const fetchConversations = async (showLoading = true) => {
     if (!user?.id) return;
@@ -44,6 +63,7 @@ export const useConversations = () => {
 
   useEffect(() => {
     fetchConversations();
+    fetchSoundPreference();
 
     // Set up real-time subscription
     if (!user?.id) return;
@@ -77,8 +97,8 @@ export const useConversations = () => {
         (payload) => {
           const newMessage = payload.new as any;
           
-          // Play notification sound for user messages only
-          if (newMessage.role === 'user') {
+          // Play notification sound for user messages only (if sound enabled)
+          if (newMessage.role === 'user' && soundEnabledRef.current) {
             playNotificationSound();
           }
           
@@ -88,11 +108,30 @@ export const useConversations = () => {
       )
       .subscribe();
 
+    // Subscribe to notification preference changes
+    const prefsChannel = supabase
+      .channel('notification-prefs-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'notification_preferences',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          const newPrefs = payload.new as any;
+          soundEnabledRef.current = newPrefs?.sound_notifications !== false;
+        }
+      )
+      .subscribe();
+
     return () => {
       supabase.removeChannel(conversationsChannel);
       supabase.removeChannel(messagesChannel);
+      supabase.removeChannel(prefsChannel);
     };
-  }, [user?.id]);
+  }, [user?.id, fetchSoundPreference]);
 
   const fetchMessages = async (conversationId: string): Promise<Message[]> => {
     try {
