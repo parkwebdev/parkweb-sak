@@ -7,6 +7,8 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { GlobalSearch } from "@/components/GlobalSearch";
 import { AnimatePresence } from "motion/react";
+import ErrorBoundary from "@/components/ErrorBoundary";
+import RouteErrorFallback from "@/components/RouteErrorFallback";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import WidgetPage from "./pages/WidgetPage";
@@ -70,19 +72,21 @@ const AnimatedRoutes = () => {
 };
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <ThemeProvider defaultTheme="dark" storageKey="app-ui-theme">
-      <TooltipProvider>
-        <Toaster />
-        <BrowserRouter>
-          <AuthProvider>
-            <GlobalSearch />
-            <AnimatedRoutes />
-          </AuthProvider>
-        </BrowserRouter>
-      </TooltipProvider>
-    </ThemeProvider>
-  </QueryClientProvider>
+  <ErrorBoundary fallback={<RouteErrorFallback />}>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider defaultTheme="dark" storageKey="app-ui-theme">
+        <TooltipProvider>
+          <Toaster />
+          <BrowserRouter>
+            <AuthProvider>
+              <GlobalSearch />
+              <AnimatedRoutes />
+            </AuthProvider>
+          </BrowserRouter>
+        </TooltipProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
+  </ErrorBoundary>
 );
 
 export default App;

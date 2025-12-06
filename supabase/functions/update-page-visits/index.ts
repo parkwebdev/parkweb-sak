@@ -6,6 +6,41 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Rate limiting: 60 requests per minute per IP
+const RATE_LIMIT_WINDOW_MS = 60 * 1000;
+const MAX_REQUESTS_PER_WINDOW = 60;
+
+// In-memory rate limit tracking (resets on cold start - acceptable for this use case)
+const rateLimitMap = new Map<string, { count: number; windowStart: number }>();
+
+function isRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const record = rateLimitMap.get(ip);
+
+  if (!record || now - record.windowStart > RATE_LIMIT_WINDOW_MS) {
+    // New window
+    rateLimitMap.set(ip, { count: 1, windowStart: now });
+    return false;
+  }
+
+  if (record.count >= MAX_REQUESTS_PER_WINDOW) {
+    return true;
+  }
+
+  record.count++;
+  return false;
+}
+
+// Cleanup old entries periodically to prevent memory leaks
+function cleanupRateLimitMap() {
+  const now = Date.now();
+  for (const [ip, record] of rateLimitMap.entries()) {
+    if (now - record.windowStart > RATE_LIMIT_WINDOW_MS * 2) {
+      rateLimitMap.delete(ip);
+    }
+  }
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -13,6 +48,25 @@ serve(async (req) => {
   }
 
   try {
+    // Get client IP for rate limiting
+    const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 
+                     req.headers.get('cf-connecting-ip') || 
+                     'unknown';
+
+    // Check rate limit
+    if (isRateLimited(clientIp)) {
+      console.log(`Rate limited IP: ${clientIp}`);
+      return new Response(
+        JSON.stringify({ error: 'Too many requests. Please try again later.' }),
+        { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Cleanup old entries periodically (every ~100 requests)
+    if (Math.random() < 0.01) {
+      cleanupRateLimitMap();
+    }
+
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
