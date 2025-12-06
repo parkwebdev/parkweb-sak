@@ -940,18 +940,24 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
         content: m.content,
       }));
 
-      // Update current page duration before sending
+      // Calculate current page duration and build final page visits array synchronously
+      let finalPageVisits = [...pageVisits];
       if (currentPageRef.current.url && currentPageRef.current.entered_at) {
         const duration = Date.now() - new Date(currentPageRef.current.entered_at).getTime();
-        setPageVisits(prev => {
-          const updated = [...prev];
-          const lastIndex = updated.findIndex(v => v.url === currentPageRef.current.url && v.duration_ms === 0);
-          if (lastIndex !== -1) {
-            updated[lastIndex] = { ...updated[lastIndex], duration_ms: duration };
-          }
-          return updated;
-        });
+        const lastIndex = finalPageVisits.findIndex(v => v.url === currentPageRef.current.url && v.duration_ms === 0);
+        if (lastIndex !== -1) {
+          finalPageVisits[lastIndex] = { ...finalPageVisits[lastIndex], duration_ms: duration };
+        }
+        // Update state for future use
+        setPageVisits(finalPageVisits);
       }
+
+      // Log what we're sending for debugging
+      console.log('[Widget] Sending message with:', {
+        pageVisitsCount: finalPageVisits.length,
+        referrerJourney: referrerJourney ? 'present' : 'null',
+        conversationId: activeConversationId,
+      });
 
       // Call the real AI endpoint with page visits and referrer journey
       const response = await sendChatMessage(
@@ -959,7 +965,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
         activeConversationId,
         messageHistory,
         chatUser?.leadId,
-        pageVisits.length > 0 ? pageVisits : undefined,
+        finalPageVisits.length > 0 ? finalPageVisits : undefined,
         referrerJourney || undefined
       );
 

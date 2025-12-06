@@ -166,6 +166,16 @@ serve(async (req) => {
   try {
     const { agentId, conversationId, messages, leadId, pageVisits, referrerJourney } = await req.json();
 
+    // Log incoming data for debugging
+    console.log('Received widget-chat request:', {
+      agentId,
+      conversationId: conversationId || 'new',
+      messagesCount: messages?.length || 0,
+      pageVisitsCount: pageVisits?.length || 0,
+      hasReferrerJourney: !!referrerJourney,
+      referrerJourney: referrerJourney || null,
+    });
+
     if (!agentId) {
       throw new Error('Agent ID is required');
     }
