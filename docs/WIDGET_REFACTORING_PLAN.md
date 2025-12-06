@@ -167,12 +167,16 @@ interface UseMessagesReturn {
   isSending: boolean;
   sendMessage: (content: string, attachments?: File[]) => Promise<void>;
   sendVoiceMessage: (blob: Blob) => Promise<void>;
+  markMessagesAsRead: (conversationId: string) => void;
+  lastReadTimestamp: string | null;
 }
 ```
 - Message fetching and sending
 - Real-time subscription for new messages
 - Optimistic updates
-- Read receipt tracking
+- Read receipt tracking with localStorage persistence
+- Load read status from database metadata on fetch
+- Persist last read timestamp to localStorage per conversation
 
 ### useMessageReactions.ts (~80 lines)
 ```typescript
@@ -263,13 +267,15 @@ interface UseTypingIndicatorReturn {
 interface UseHumanTakeoverReturn {
   isTakenOver: boolean;
   takeoverAgent: { name: string; avatar?: string } | null;
-  hasShownNotice: boolean;
-  markNoticeShown: () => void;
+  hasShownNotice: (agentId: string, conversationId: string) => boolean;
+  markNoticeShown: (agentId: string, conversationId: string) => void;
+  clearNotice: (agentId: string, conversationId: string) => void;
 }
 ```
 - Takeover status tracking
 - Agent info fetching
-- Notice deduplication via ref
+- Notice deduplication via localStorage (conversation-scoped)
+- Auto-clear notice when conversation returns to AI status
 
 ---
 
@@ -416,7 +422,6 @@ Critical refs that need careful handling during extraction:
 
 | Ref | Purpose | Target Location |
 |-----|---------|-----------------|
-| `shownTakeoverNoticeRef` | Prevents duplicate takeover notices | `useHumanTakeover.ts` |
 | `isOpeningConversationRef` | Instant vs smooth scroll | `ChatView.tsx` |
 | `referrerJourneySentRef` | Prevents duplicate server calls | `usePageTracking.ts` |
 | `currentPageRef` | Page visit duration tracking | `usePageTracking.ts` |
@@ -426,6 +431,8 @@ Critical refs that need careful handling during extraction:
 | `inputRef` | Focus management | `MessageInput.tsx` |
 | `messagesEndRef` | Auto-scroll target | `ChatView.tsx` |
 | `containerRef` | ResizeObserver target | `useWidgetResize.ts` |
+
+> **Note**: `shownTakeoverNoticeRef` was migrated to localStorage persistence. See [localStorage Persistence Keys](#localstorage-persistence-keys) section.
 
 ---
 
@@ -558,6 +565,19 @@ The widget operates in three distinct modes:
 - [ ] Close request from parent
 - [ ] Page URL tracking
 
+#### Unread Badge Persistence
+- [ ] Unread count persists across widget close/reopen
+- [ ] Unread count persists across page navigation
+- [ ] Badge clears when opening conversation
+- [ ] Badge clears when widget opens (for all unread)
+- [ ] Read status properly loaded from database on return visit
+
+#### Takeover Notice Behavior
+- [ ] Takeover notice shows only once per conversation
+- [ ] Takeover notice persists across widget close/reopen
+- [ ] Takeover notice clears when conversation returns to AI
+- [ ] Takeover notice shows again if re-taken-over after AI return
+
 ### Automated Tests (Future)
 - Unit tests for utility functions
 - Hook tests with React Testing Library
@@ -641,7 +661,7 @@ The widget operates in three distinct modes:
 - `chatUser` - Current user info
 - `activeConversationId` - Current conversation
 - `conversations` - All conversations
-- `messages` - Current conversation messages
+- `messages` - Current conversation messages (with read status from DB)
 - `showConversationList` - List view toggle
 
 ### Real-time State
@@ -672,12 +692,34 @@ The widget operates in three distinct modes:
 - `pageVisits` - Tracked page visits
 - `referrerJourney` - Traffic source info
 - `visitorId` - Unique visitor ID
-- `unreadCount` - Unread message count
+- `unreadCount` - Unread message count (persisted via localStorage)
 - `headerScrollY` - Scroll position
 
 ### Form State
 - `formErrors` - Validation errors
 - `formLoadTime` - Spam protection timestamp
+
+---
+
+## localStorage Persistence Keys
+
+The widget uses localStorage for persistence across sessions. All keys are scoped by agent and/or conversation ID.
+
+| Key Pattern | Purpose | Scope |
+|-------------|---------|-------|
+| `chatpad_user_${agentId}` | Stored chat user info (name, email, phone) | Per agent |
+| `chatpad_conversations_${agentId}` | Conversation list with metadata | Per agent |
+| `chatpad_messages_${agentId}_${conversationId}` | Cached messages for conversation | Per conversation |
+| `chatpad_last_read_${agentId}_${conversationId}` | Last read timestamp for unread tracking | Per conversation |
+| `chatpad_takeover_noticed_${agentId}_${conversationId}` | Whether takeover notice was shown | Per conversation |
+| `chatpad_visitor_id` | Unique visitor identifier for analytics | Global |
+| `chatpad_referrer_journey_${agentId}` | Referrer/UTM data on first visit | Per agent |
+
+### Persistence Behavior Notes
+
+- **Read timestamps**: Persisted when messages are marked as read, loaded on conversation open to restore unread counts
+- **Takeover notices**: Cleared automatically when conversation status changes from `human_takeover` to another status
+- **User data**: Persisted after contact form submission, used to identify returning users
 
 ---
 
