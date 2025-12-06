@@ -225,7 +225,7 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
       // Only pass the tags field to avoid overwriting real-time metadata updates
       await onUpdateMetadata(conversation.id, {
         tags: [...currentTags, tag.trim()],
-      });
+      }, { silent: true });
     } finally {
       setIsSaving(false);
       setNewTag('');
@@ -239,7 +239,7 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
       // Only pass the tags field to avoid overwriting real-time metadata updates
       await onUpdateMetadata(conversation.id, {
         tags: currentTags.filter(t => t !== tagToRemove),
-      });
+      }, { silent: true });
     } finally {
       setIsSaving(false);
     }
@@ -251,7 +251,7 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
       // Only pass the priority field to avoid overwriting real-time metadata updates
       await onUpdateMetadata(conversation.id, {
         priority: priority as ConversationMetadata['priority'],
-      });
+      }, { silent: true });
     } finally {
       setIsSaving(false);
     }
