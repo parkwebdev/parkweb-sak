@@ -116,16 +116,8 @@ export const MessageBubble = ({
 
         {/* Message bubble */}
         <div 
-          className={`rounded-lg p-3 ${
-            isUser 
-              ? 'text-foreground' 
-              : msgWithExtras.isHuman 
-                ? 'bg-muted/50' 
-                : 'bg-muted'
-          }`}
-          style={isUser ? { 
-            backgroundColor: `${primaryColor}12`
-          } : undefined}
+          className={`rounded-lg p-3 text-foreground ${isUser ? '' : 'bg-muted'}`}
+          style={isUser ? { backgroundColor: 'rgb(1 110 237 / 7%)' } : undefined}
         >
           {message.type === 'audio' && message.audioUrl && (
             <Suspense fallback={<div className="h-8 flex items-center text-sm text-muted-foreground">Loading audio...</div>}>
