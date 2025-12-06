@@ -1096,7 +1096,8 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
         messageHistory,
         chatUser?.leadId,
         finalPageVisits.length > 0 ? finalPageVisits : undefined,
-        referrerJourney || undefined
+        referrerJourney || undefined,
+        visitorId
       );
 
       // Update conversation ID if this was a new conversation

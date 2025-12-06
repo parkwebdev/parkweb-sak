@@ -164,7 +164,7 @@ serve(async (req) => {
   }
 
   try {
-    const { agentId, conversationId, messages, leadId, pageVisits, referrerJourney } = await req.json();
+    const { agentId, conversationId, messages, leadId, pageVisits, referrerJourney, visitorId } = await req.json();
 
     // Log incoming data for debugging
     console.log('Received widget-chat request:', {
@@ -174,6 +174,7 @@ serve(async (req) => {
       pageVisitsCount: pageVisits?.length || 0,
       hasReferrerJourney: !!referrerJourney,
       referrerJourney: referrerJourney || null,
+      visitorId: visitorId || null,
     });
 
     if (!agentId) {
@@ -305,6 +306,7 @@ serve(async (req) => {
         tags: [],
         messages_count: 0,
         visited_pages: [] as Array<{ url: string; entered_at: string; duration_ms: number }>,
+        visitor_id: visitorId || null,
       };
 
       // Add referrer journey if provided
