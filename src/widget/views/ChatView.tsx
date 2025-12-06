@@ -117,7 +117,7 @@ export const ChatView = ({
 
   return (
     <>
-      <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-4 space-y-3 messages-container min-h-0">
+      <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-4 messages-container min-h-0">
         {/* Loading indicator when fetching messages */}
         {isLoadingMessages && messages.length === 0 && chatUser && (
           <div className="flex items-center justify-center py-8">

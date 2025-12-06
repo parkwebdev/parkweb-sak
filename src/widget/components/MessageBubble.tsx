@@ -48,7 +48,7 @@ export const MessageBubble = ({
       : 'Assistant';
 
   return (
-    <div className={`flex items-start gap-2 ${isUser ? 'justify-end' : ''} ${isContinuation ? 'mt-0.5' : ''}`}>
+    <div className={`flex items-start gap-2 ${isUser ? 'justify-end' : ''} ${isContinuation ? 'mt-0.5' : 'mt-2 first:mt-0'}`}>
       {/* Avatar - only show for first message in group */}
       {!isUser && !isContinuation && (
         msgWithExtras.isHuman && msgWithExtras.senderAvatar ? (
