@@ -636,7 +636,7 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
                 Visited Pages ({metadata.visited_pages.filter(v => !v.url.includes('widget.html')).length})
               </AccordionTrigger>
               <AccordionContent className="pb-4 overflow-visible">
-                <div className="flex flex-col overflow-visible">
+                <div className="flex flex-col overflow-visible pl-1">
                   {metadata.visited_pages
                     .filter(visit => !visit.url.includes('widget.html'))
                     .map((visit, index, filteredPages) => {
