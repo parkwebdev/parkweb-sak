@@ -1774,11 +1774,13 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                             </div>
                           )}
                           <div 
-                            className={`max-w-[80%] rounded-lg p-3 ${msg.role === 'user' ? '' : msgWithExtras.isHuman ? 'bg-blue-50 border border-blue-100' : 'bg-muted'}`}
-                            style={msg.role === 'user' ? { 
-                              backgroundColor: `rgba(${hexToRgb(config.gradientStartColor)}, 0.12)`,
-                              color: 'inherit'
-                            } : undefined}
+                            className={`max-w-[80%] rounded-lg p-3 ${
+                              msg.role === 'user' 
+                                ? 'bg-secondary text-secondary-foreground' 
+                                : msgWithExtras.isHuman 
+                                  ? 'bg-info/10 text-info-foreground border border-info/20' 
+                                  : 'bg-muted'
+                            }`}
                           >
                             {msgWithExtras.isHuman && (
                               <div className="flex items-center gap-1.5 text-xs text-blue-600 mb-1">
