@@ -41,7 +41,7 @@ export const MessageBubble = ({
         msgWithExtras.isHuman && msgWithExtras.senderAvatar ? (
           <Avatar className="w-7 h-7 flex-shrink-0">
             <AvatarImage src={msgWithExtras.senderAvatar} alt={msgWithExtras.senderName || 'Team member'} />
-            <AvatarFallback className="text-xs bg-blue-100 text-blue-600">
+            <AvatarFallback className="text-xs bg-muted text-muted-foreground">
               {(msgWithExtras.senderName || 'T')[0].toUpperCase()}
             </AvatarFallback>
           </Avatar>
@@ -54,7 +54,7 @@ export const MessageBubble = ({
       <div className="flex flex-col gap-1 max-w-[80%]">
         {/* Human agent label */}
         {message.role === 'assistant' && msgWithExtras.isHuman && msgWithExtras.senderName && (
-          <span className="text-xs text-blue-600 font-medium">
+          <span className="text-xs text-muted-foreground font-medium">
             {msgWithExtras.senderName}
           </span>
         )}
@@ -115,7 +115,7 @@ export const MessageBubble = ({
           {/* Read receipt for user messages */}
           {message.role === 'user' && (
             <div className="flex items-center" title={message.read_at ? 'Read' : 'Sent'}>
-              <Check className={`h-3 w-3 ${message.read_at ? 'text-blue-500' : 'text-muted-foreground'}`} />
+              <Check className={`h-3 w-3 ${message.read_at ? 'text-primary' : 'text-muted-foreground'}`} />
             </div>
           )}
           
