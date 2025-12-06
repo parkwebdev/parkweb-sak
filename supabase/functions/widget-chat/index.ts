@@ -63,24 +63,29 @@ async function searchKnowledge(
 }
 
 // Geo-IP lookup using ip-api.com (free, no API key needed)
-async function getLocationFromIP(ip: string): Promise<{ country: string; city: string }> {
+async function getLocationFromIP(ip: string): Promise<{ country: string; city: string; countryCode: string; region: string }> {
   if (!ip || ip === 'unknown') {
-    return { country: 'Unknown', city: '' };
+    return { country: 'Unknown', city: '', countryCode: '', region: '' };
   }
   
   try {
-    const response = await fetch(`http://ip-api.com/json/${ip}?fields=country,city,status`, {
+    const response = await fetch(`http://ip-api.com/json/${ip}?fields=country,countryCode,city,regionName,status`, {
       signal: AbortSignal.timeout(3000), // 3 second timeout
     });
     const data = await response.json();
     if (data.status === 'success') {
-      console.log(`Geo-IP lookup for ${ip}: ${data.city}, ${data.country}`);
-      return { country: data.country || 'Unknown', city: data.city || '' };
+      console.log(`Geo-IP lookup for ${ip}: ${data.city}, ${data.regionName}, ${data.country} (${data.countryCode})`);
+      return { 
+        country: data.country || 'Unknown', 
+        city: data.city || '',
+        countryCode: data.countryCode || '',
+        region: data.regionName || '',
+      };
     }
   } catch (error) {
     console.error('Geo-IP lookup failed:', error);
   }
-  return { country: 'Unknown', city: '' };
+  return { country: 'Unknown', city: '', countryCode: '', region: '' };
 }
 
 // Parse user agent string for device info
@@ -286,7 +291,7 @@ serve(async (req) => {
     const { device, browser, os } = parseUserAgent(userAgent);
     
     // Get location from IP address via geo-IP lookup
-    const { country, city } = await getLocationFromIP(ipAddress);
+    const { country, city, countryCode, region } = await getLocationFromIP(ipAddress);
 
     // Create or get conversation
     let activeConversationId = conversationId;
@@ -297,6 +302,8 @@ serve(async (req) => {
         ip_address: ipAddress,
         country,
         city,
+        country_code: countryCode,
+        region,
         device,
         browser,
         os,

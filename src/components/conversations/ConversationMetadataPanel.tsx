@@ -130,6 +130,8 @@ interface ConversationMetadata {
   ip_address?: string;
   country?: string;
   city?: string;
+  country_code?: string;
+  region?: string;
   device_type?: 'desktop' | 'mobile' | 'tablet';
   device?: string;
   browser?: string;
@@ -400,28 +402,6 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
             </AccordionTrigger>
             <AccordionContent className="pb-4">
               <div className="space-y-2.5">
-                {/* Chat ID */}
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="flex items-center gap-2.5 text-sm group">
-                      <Hash01 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                      <span className="font-mono text-xs truncate max-w-[140px]">
-                        {conversation.id}
-                      </span>
-                      <button
-                        onClick={() => {
-                          navigator.clipboard.writeText(conversation.id);
-                          toast.success('Chat ID copied to clipboard');
-                        }}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:bg-muted rounded"
-                      >
-                        <Copy01 className="h-3 w-3 text-muted-foreground" />
-                      </button>
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent>Chat ID: {conversation.id}</TooltipContent>
-                </Tooltip>
-                
                 {/* Chat Duration */}
                 {metadata.session_started_at && (
                   <Tooltip>
@@ -447,30 +427,34 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
                   </TooltipTrigger>
                   <TooltipContent>Source channel for this conversation</TooltipContent>
                 </Tooltip>
+
+                {/* Location with country flag */}
                 {metadata.country && (
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <div className="flex items-center gap-2.5 text-sm">
-                        <Globe01 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                        {metadata.country_code ? (
+                          <img 
+                            src={`https://flagcdn.com/${metadata.country_code.toLowerCase()}.svg`}
+                            alt={metadata.country_code}
+                            className="h-3 w-auto flex-shrink-0"
+                          />
+                        ) : (
+                          <Globe01 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                        )}
                         <span>
-                          {metadata.city ? `${metadata.city}, ` : ''}{metadata.country}
+                          {metadata.country_code === 'US' 
+                            ? `${metadata.city || ''}${metadata.city && metadata.region ? ', ' : ''}${metadata.region || ''}`
+                            : `${metadata.city ? `${metadata.city}, ` : ''}${metadata.country}`
+                          }
                         </span>
                       </div>
                     </TooltipTrigger>
                     <TooltipContent>Visitor's geographic location</TooltipContent>
                   </Tooltip>
                 )}
-                {metadata.ip_address && (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div className="flex items-center gap-2.5 text-sm">
-                        <span className="text-muted-foreground text-xs w-4 text-center">IP</span>
-                        <span className="font-mono text-xs">{metadata.ip_address}</span>
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent>Visitor's IP address</TooltipContent>
-                  </Tooltip>
-                )}
+
+                {/* Device + Browser */}
                 {(metadata.device_type || metadata.device) && (
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -485,6 +469,8 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
                     <TooltipContent>Device and browser information</TooltipContent>
                   </Tooltip>
                 )}
+
+                {/* OS */}
                 {metadata.os && (
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -496,19 +482,8 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
                     <TooltipContent>Operating system</TooltipContent>
                   </Tooltip>
                 )}
-                {(metadata.referrer_url || metadata.referer_url) && (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div className="flex items-start gap-2.5 text-sm">
-                        <Link01 className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
-                        <span className="truncate text-xs text-muted-foreground">
-                          {metadata.referrer_url || metadata.referer_url}
-                        </span>
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent>Page where conversation started</TooltipContent>
-                  </Tooltip>
-                )}
+
+                {/* Started Time */}
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <div className="flex items-center gap-2.5 text-sm">
@@ -519,6 +494,41 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
                     </div>
                   </TooltipTrigger>
                   <TooltipContent>When this conversation began</TooltipContent>
+                </Tooltip>
+
+                {/* IP Address - moved to bottom */}
+                {metadata.ip_address && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="flex items-center gap-2.5 text-sm">
+                        <span className="text-muted-foreground text-xs w-4 text-center">IP</span>
+                        <span className="font-mono text-xs">{metadata.ip_address}</span>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>Visitor's IP address</TooltipContent>
+                  </Tooltip>
+                )}
+
+                {/* Chat ID - moved to bottom */}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center gap-2.5 text-sm group">
+                      <Hash01 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                      <span className="font-mono text-xs truncate max-w-[140px]">
+                        {conversation.id}
+                      </span>
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(conversation.id);
+                          toast.success('Chat ID copied to clipboard');
+                        }}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:bg-muted rounded"
+                      >
+                        <Copy01 className="h-3 w-3 text-muted-foreground" />
+                      </button>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>Chat ID: {conversation.id}</TooltipContent>
                 </Tooltip>
               </div>
             </AccordionContent>
