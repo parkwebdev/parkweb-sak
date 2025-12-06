@@ -275,7 +275,44 @@ serve(async (req) => {
     // Check for video embed before fetching (saves network request for known video platforms)
     const videoEmbed = detectVideoEmbed(url);
 
-    // Fetch the URL with timeout
+    // For known video platforms, return preview data directly without fetching
+    // This avoids rate limiting issues with YouTube, Vimeo, etc.
+    if (videoEmbed) {
+      const videoPreviewData: LinkPreviewData = {
+        url,
+        domain: getDomain(url),
+        videoType: videoEmbed.type,
+        videoId: videoEmbed.videoId,
+        embedUrl: videoEmbed.embedUrl,
+      };
+
+      // Add platform-specific metadata
+      if (videoEmbed.type === 'youtube') {
+        videoPreviewData.siteName = 'YouTube';
+        videoPreviewData.favicon = 'https://www.youtube.com/favicon.ico';
+        // YouTube thumbnail URL pattern
+        videoPreviewData.image = `https://i.ytimg.com/vi/${videoEmbed.videoId}/hqdefault.jpg`;
+      } else if (videoEmbed.type === 'vimeo') {
+        videoPreviewData.siteName = 'Vimeo';
+        videoPreviewData.favicon = 'https://vimeo.com/favicon.ico';
+      } else if (videoEmbed.type === 'loom') {
+        videoPreviewData.siteName = 'Loom';
+        videoPreviewData.favicon = 'https://www.loom.com/favicon.ico';
+        videoPreviewData.image = `https://cdn.loom.com/sessions/thumbnails/${videoEmbed.videoId}-with-play.gif`;
+      } else if (videoEmbed.type === 'wistia') {
+        videoPreviewData.siteName = 'Wistia';
+        videoPreviewData.favicon = 'https://wistia.com/favicon.ico';
+      }
+
+      console.log(`Video preview data generated:`, JSON.stringify(videoPreviewData, null, 2));
+
+      return new Response(
+        JSON.stringify(videoPreviewData),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // For non-video URLs, fetch the page to extract metadata
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 5000);
 
@@ -313,18 +350,11 @@ serve(async (req) => {
       cardType: extractTwitterCard(html),
     };
 
-    // Add video embed info if detected
-    if (videoEmbed) {
-      previewData.videoType = videoEmbed.type;
-      previewData.videoId = videoEmbed.videoId;
-      previewData.embedUrl = videoEmbed.embedUrl;
-    } else {
-      // Check for twitter:player (video card)
-      const twitterPlayer = extractTwitterPlayer(html);
-      if (twitterPlayer && previewData.cardType === 'player') {
-        previewData.videoType = 'twitter';
-        previewData.embedUrl = twitterPlayer;
-      }
+    // Check for twitter:player (video card) for non-standard video embeds
+    const twitterPlayer = extractTwitterPlayer(html);
+    if (twitterPlayer && previewData.cardType === 'player') {
+      previewData.videoType = 'twitter';
+      previewData.embedUrl = twitterPlayer;
     }
 
     // Truncate description if too long
