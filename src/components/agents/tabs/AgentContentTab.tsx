@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAnnouncements, type Announcement, type AnnouncementInsert } from '@/hooks/useAnnouncements';
 import { useNewsItems, type NewsItem, type NewsItemInsert } from '@/hooks/useNewsItems';
@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Trash01, Edit02, Image03, ChevronRight } from '@untitledui/icons';
+import { Trash01, Edit02, Image03, ChevronRight, Upload01, XClose } from '@untitledui/icons';
 import { EmptyState } from '@/components/ui/empty-state';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
@@ -21,6 +21,9 @@ import { DeleteConfirmationDialog } from '@/components/DeleteConfirmationDialog'
 import { SavedIndicator } from '@/components/settings/SavedIndicator';
 import { AgentSettingsLayout } from '@/components/agents/AgentSettingsLayout';
 import { format } from 'date-fns';
+import { uploadAnnouncementImage, deleteAnnouncementImage } from '@/lib/announcement-image-upload';
+import { toast } from '@/lib/toast';
+import { Spinner } from '@/components/ui/spinner';
 
 type ContentTab = 'announcements' | 'news';
 
@@ -225,22 +228,32 @@ const AnnouncementDialog = ({
   onSave, 
   onClose,
   open,
+  agentId,
+  userId,
 }: { 
   announcement?: Announcement;
   onSave: (data: AnnouncementFormData) => void;
   onClose: () => void;
   open: boolean;
+  agentId: string;
+  userId: string;
 }) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(announcement?.image_url || null);
+  const [originalImageUrl, setOriginalImageUrl] = useState<string | null>(announcement?.image_url || null);
+  
   const [formData, setFormData] = useState<AnnouncementFormData>(
     announcement ? {
       title: announcement.title,
       subtitle: announcement.subtitle || '',
       image_url: announcement.image_url || '',
-      title_color: announcement.title_color,
-      background_color: announcement.background_color,
+      title_color: announcement.title_color || '#2563eb',
+      background_color: announcement.background_color || '#f8fafc',
       action_type: announcement.action_type as 'open_url' | 'start_chat' | 'open_help',
       action_url: announcement.action_url || '',
-      is_active: announcement.is_active,
+      is_active: announcement.is_active ?? true,
     } : {
       title: '',
       subtitle: '',
@@ -253,10 +266,64 @@ const AnnouncementDialog = ({
     }
   );
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
+      return;
+    }
+    
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image must be less than 5MB');
+      return;
+    }
+    
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+  };
+
+  const handleRemoveImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+    setFormData({ ...formData, image_url: '' });
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
-    onClose();
+    
+    try {
+      setIsUploading(true);
+      let finalImageUrl = formData.image_url;
+      
+      // Upload new image if selected
+      if (imageFile) {
+        finalImageUrl = await uploadAnnouncementImage(imageFile, userId, agentId);
+        
+        // Delete old image if replacing
+        if (originalImageUrl && originalImageUrl !== finalImageUrl) {
+          await deleteAnnouncementImage(originalImageUrl);
+        }
+      } else if (!imagePreview && originalImageUrl) {
+        // Image was removed, delete from storage
+        await deleteAnnouncementImage(originalImageUrl);
+        finalImageUrl = '';
+      }
+      
+      onSave({ ...formData, image_url: finalImageUrl });
+      onClose();
+    } catch (error) {
+      console.error('Error saving announcement:', error);
+      toast.error('Failed to save announcement');
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   return (
@@ -293,14 +360,37 @@ const AnnouncementDialog = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="image_url">Image URL</Label>
-            <Input
-              id="image_url"
-              type="url"
-              value={formData.image_url}
-              onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-              placeholder="https://example.com/image.jpg"
-            />
+            <Label>Image</Label>
+            {imagePreview ? (
+              <div className="relative w-full h-32 rounded-lg overflow-hidden border bg-muted">
+                <img 
+                  src={imagePreview} 
+                  alt="Preview" 
+                  className="w-full h-full object-cover"
+                />
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="icon"
+                  className="absolute top-2 right-2 h-7 w-7"
+                  onClick={handleRemoveImage}
+                >
+                  <XClose className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <label className="flex flex-col items-center justify-center h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-accent/50 transition-colors">
+                <Upload01 className="h-8 w-8 text-muted-foreground mb-2" />
+                <span className="text-sm text-muted-foreground">Click to upload</span>
+                <input 
+                  ref={fileInputRef}
+                  type="file" 
+                  accept="image/*" 
+                  onChange={handleFileSelect}
+                  className="hidden"
+                />
+              </label>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -394,10 +484,10 @@ const AnnouncementDialog = ({
               className="rounded-lg overflow-hidden border"
               style={{ backgroundColor: formData.background_color }}
             >
-              {formData.image_url && (
+              {imagePreview && (
                 <div className="h-32 overflow-hidden">
                   <img 
-                    src={formData.image_url} 
+                    src={imagePreview} 
                     alt="" 
                     className="w-full h-full object-cover"
                     onError={(e) => {
@@ -426,10 +516,11 @@ const AnnouncementDialog = ({
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose}>
+            <Button type="button" variant="outline" onClick={onClose} disabled={isUploading}>
               Cancel
             </Button>
-            <Button type="submit">
+            <Button type="submit" disabled={isUploading}>
+              {isUploading && <Spinner className="mr-2 h-4 w-4" />}
               {announcement ? 'Save Changes' : 'Create Announcement'}
             </Button>
           </DialogFooter>
@@ -753,6 +844,8 @@ export const AgentContentTab = () => {
           setIsCreateAnnouncementOpen(false);
         }}
         open={!!editingAnnouncement || isCreateAnnouncementOpen}
+        agentId={agentId as string}
+        userId={user?.id || ''}
       />
 
       <NewsDialog

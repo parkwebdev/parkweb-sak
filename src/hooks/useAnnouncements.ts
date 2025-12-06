@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/lib/toast';
+import { deleteAnnouncementImage } from '@/lib/announcement-image-upload';
 import type { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
 
 export type Announcement = Tables<'announcements'>;
@@ -79,6 +80,14 @@ export const useAnnouncements = (agentId: string) => {
 
   const deleteAnnouncement = async (id: string) => {
     try {
+      // Find the announcement to get its image_url for cleanup
+      const announcement = announcements.find(a => a.id === id);
+      
+      // Delete image from storage if exists
+      if (announcement?.image_url) {
+        await deleteAnnouncementImage(announcement.image_url);
+      }
+      
       const { error } = await supabase
         .from('announcements')
         .delete()
