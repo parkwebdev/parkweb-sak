@@ -103,11 +103,11 @@ export const HomeView = ({
           ) : (
             <>
               {/* Large title with emoji */}
-              <h2 className="text-2xl font-bold text-white">
+              <h2 className="text-3xl font-bold text-white">
                 {config.welcomeTitle || 'Hi'} {config.welcomeEmoji && <span>{config.welcomeEmoji}</span>}
               </h2>
               {/* Smaller subtitle below */}
-              <p className="text-base font-medium text-white/90 mt-1">
+              <p className="text-lg font-medium text-white/80 mt-1">
                 {config.welcomeSubtitle || 'How can we help you today?'}
               </p>
             </>
@@ -145,10 +145,7 @@ export const HomeView = ({
                     {config.announcements.map((announcement) => (
                       <CSSAnimatedItem key={announcement.id}>
                         <div 
-                          className="rounded-lg overflow-hidden cursor-pointer transition-transform hover:scale-[1.02] active:scale-[0.98]"
-                          style={{ 
-                            backgroundColor: announcement.background_color || config.primaryColor,
-                          }}
+                          className="rounded-lg overflow-hidden cursor-pointer transition-transform hover:scale-[1.02] active:scale-[0.98] bg-white border shadow-sm"
                           onClick={() => {
                             if (announcement.action_type === 'open_url' && announcement.action_url) {
                               window.open(announcement.action_url, '_blank', 'noopener,noreferrer');
@@ -166,25 +163,16 @@ export const HomeView = ({
                               />
                             )}
                             <div className="flex-1 min-w-0">
-                              <h4 
-                                className="font-semibold text-sm truncate"
-                                style={{ color: announcement.title_color || '#ffffff' }}
-                              >
+                              <h4 className="font-semibold text-sm truncate text-foreground">
                                 {announcement.title}
                               </h4>
                               {announcement.subtitle && (
-                                <p 
-                                  className="text-xs mt-0.5 truncate opacity-90"
-                                  style={{ color: announcement.title_color || '#ffffff' }}
-                                >
+                                <p className="text-xs mt-0.5 truncate text-muted-foreground">
                                   {announcement.subtitle}
                                 </p>
                               )}
                             </div>
-                            <ChevronRight 
-                              className="h-5 w-5 flex-shrink-0 opacity-70"
-                              style={{ color: announcement.title_color || '#ffffff' }}
-                            />
+                            <ChevronRight className="h-5 w-5 flex-shrink-0 text-muted-foreground" />
                           </div>
                         </div>
                       </CSSAnimatedItem>
