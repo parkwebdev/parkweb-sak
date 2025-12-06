@@ -685,11 +685,21 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
 
   // Auto-scroll (always enabled)
   useEffect(() => {
-    if (currentView === 'messages' && activeConversationId && messagesEndRef.current) {
-      // Use instant scroll when opening existing conversation, smooth for new messages
-      const behavior = isOpeningConversationRef.current ? 'instant' : 'smooth';
-      messagesEndRef.current.scrollIntoView({ behavior });
-      isOpeningConversationRef.current = false;
+    if (currentView === 'messages' && activeConversationId) {
+      // Use requestAnimationFrame to wait for DOM to update after state changes
+      // This ensures messagesEndRef.current is available after showConversationList changes
+      const scrollToBottom = () => {
+        if (messagesEndRef.current) {
+          const behavior = isOpeningConversationRef.current ? 'instant' : 'smooth';
+          messagesEndRef.current.scrollIntoView({ behavior });
+          isOpeningConversationRef.current = false;
+        }
+      };
+      
+      // Double RAF ensures the DOM has painted after state changes
+      requestAnimationFrame(() => {
+        requestAnimationFrame(scrollToBottom);
+      });
     }
   }, [messages, currentView, activeConversationId]);
 
