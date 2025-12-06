@@ -1,8 +1,42 @@
+/**
+ * Report Export Utilities
+ * 
+ * Generates analytics reports in CSV and PDF formats for download.
+ * Supports configurable sections including KPIs, conversation stats,
+ * lead stats, agent performance, and usage metrics.
+ * 
+ * @module lib/report-export
+ */
+
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { format } from 'date-fns';
 import { ReportConfig } from '@/components/analytics/ReportBuilder';
 
+/**
+ * Generates a CSV report from analytics data and triggers download.
+ * 
+ * @param data - Analytics data object containing metrics and statistics
+ * @param config - Report configuration specifying which sections to include
+ * @param startDate - Start of the reporting period
+ * @param endDate - End of the reporting period
+ * @param orgName - Organization name for the report header
+ * 
+ * @example
+ * generateCSVReport(
+ *   analyticsData,
+ *   { includeKPIs: true, includeConversations: true, includeTables: true },
+ *   new Date('2024-01-01'),
+ *   new Date('2024-01-31'),
+ *   'Acme Corp'
+ * );
+ * // Downloads: analytics_report_2024-01-31.csv
+ * 
+ * @remarks
+ * - Automatically triggers browser download
+ * - Sections are included based on config flags
+ * - Data is formatted as comma-separated values with proper escaping
+ */
 export const generateCSVReport = (
   data: any,
   config: ReportConfig,
@@ -75,6 +109,31 @@ export const generateCSVReport = (
   document.body.removeChild(link);
 };
 
+/**
+ * Generates a PDF report from analytics data and triggers download.
+ * Uses jsPDF with autoTable plugin for formatted tables.
+ * 
+ * @param data - Analytics data object containing metrics and statistics
+ * @param config - Report configuration specifying which sections to include
+ * @param startDate - Start of the reporting period
+ * @param endDate - End of the reporting period
+ * @param orgName - Organization name for the report header
+ * 
+ * @example
+ * await generatePDFReport(
+ *   analyticsData,
+ *   { includeKPIs: true, includeAgentPerformance: true, includeTables: true },
+ *   new Date('2024-01-01'),
+ *   new Date('2024-01-31'),
+ *   'Acme Corp'
+ * );
+ * // Downloads: analytics_report_2024-01-31.pdf
+ * 
+ * @remarks
+ * - Automatically handles page breaks for long reports
+ * - Tables limited to 20 rows to prevent overflow
+ * - Uses grid theme for table styling
+ */
 export const generatePDFReport = async (
   data: any,
   config: ReportConfig,
