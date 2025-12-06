@@ -142,6 +142,11 @@ export function useConversations(options: UseConversationsOptions) {
     setActiveConversationId(conversationId);
   };
 
+  // Allow external code to mark a conversation as already fetched (prevents DB overwrite)
+  const markConversationFetched = (conversationId: string) => {
+    fetchedConversationIdRef.current = conversationId;
+  };
+
   return {
     messages,
     setMessages,
@@ -155,5 +160,6 @@ export function useConversations(options: UseConversationsOptions) {
     isOpeningConversationRef,
     clearMessagesAndFetch,
     isActivelySendingRef,
+    markConversationFetched,
   };
 }
