@@ -1,6 +1,6 @@
 import { Suspense, RefObject } from 'react';
 import { updateMessageReaction } from '../api';
-import { MessageBubble, ContactForm, MessageInput, TakeoverBanner, TypingIndicator } from '../components';
+import { MessageBubble, ContactForm, MessageInput, TypingIndicator } from '../components';
 import { FileDropZone } from '../constants';
 import type { Message, ChatUser } from '../types';
 import type { WidgetConfig } from '../api';
@@ -150,14 +150,6 @@ export const ChatView = ({
             onRemoveReaction={(emoji) => handleRemoveReaction(msg.id!, emoji)}
           />
         ))}
-
-        {/* Takeover banner when human has joined */}
-        {isHumanTakeover && (
-          <TakeoverBanner
-            agentName={takeoverAgentName}
-            agentAvatar={takeoverAgentAvatar}
-          />
-        )}
 
         {/* Typing indicator */}
         {(isTyping || isHumanTyping) && (
