@@ -6,10 +6,18 @@ This document outlines the comprehensive plan to refactor the `ChatWidget.tsx` f
 
 ### File Statistics
 - **Current file**: `src/widget/ChatWidget.tsx`
-- **Line count**: ~2,489 lines
-- **State variables**: 40+
-- **useEffect hooks**: 20+
+- **Line count**: ~2,603 lines
+- **State variables**: 50+
+- **useEffect hooks**: 25+
 - **Render modes**: 3 (iframe, containedPreview, default)
+
+### Already Extracted Files
+The following files have already been extracted from ChatWidget:
+- `src/widget/api.ts` - API functions and types
+- `src/widget/NavIcons.tsx` - Navigation icon components with fill animation
+- `src/widget/CSSAnimatedItem.tsx` - CSS-only animated list item
+- `src/widget/CSSAnimatedList.tsx` - CSS-only animated list container
+- `src/widget/category-icons.tsx` - Help category icon mapping
 
 ### Key Pain Points
 1. **High cognitive load** - Difficult to understand the entire component at once
@@ -27,6 +35,11 @@ src/widget/
 ├── ChatWidget.tsx              # Main orchestrator (~200 lines)
 ├── types.ts                    # All TypeScript interfaces
 ├── constants.ts                # CSS vars, position classes, lazy imports
+├── api.ts                      # ✅ Already extracted
+├── NavIcons.tsx                # ✅ Already extracted
+├── CSSAnimatedItem.tsx         # ✅ Already extracted
+├── CSSAnimatedList.tsx         # ✅ Already extracted
+├── category-icons.tsx          # ✅ Already extracted
 ├── utils/
 │   ├── detection.ts            # isIframeMode, getIsMobileFullScreen, isInternalWidgetUrl
 │   ├── formatting.ts           # formatShortTime, message formatting
@@ -44,7 +57,10 @@ src/widget/
 │   ├── useParentMessages.ts    # postMessage communication with parent
 │   ├── useWidgetResize.ts      # ResizeObserver for iframe height
 │   ├── useTypingIndicator.ts   # Supabase presence for typing
-│   └── useHumanTakeover.ts     # Takeover detection and notices
+│   ├── useHumanTakeover.ts     # Takeover detection and notices
+│   ├── useSoundSettings.ts     # Sound preference persistence
+│   ├── useVisitorAnalytics.ts  # Visitor ID, presence tracking
+│   └── useLinkPreviews.ts      # Handle cached previews from message metadata
 ├── views/
 │   ├── HomeView.tsx            # Home screen with announcements (~250 lines)
 │   ├── MessagesView.tsx        # Conversation list (~150 lines)
@@ -65,6 +81,7 @@ src/widget/
     ├── TakeoverBanner.tsx      # Human takeover notice (~60 lines)
     ├── TypingIndicator.tsx     # Agent typing dots (~50 lines)
     ├── AnnouncementCard.tsx    # Single announcement (~60 lines)
+    ├── SettingsDropdown.tsx    # Sound settings dropdown (~60 lines)
     └── FloatingButton.tsx      # Chat open/close button (~80 lines)
 ```
 
@@ -88,19 +105,37 @@ Does NOT contain:
 - Direct Supabase calls
 
 ### 2. types.ts
-**Target: ~150 lines**
+**Target: ~200 lines**
 
 ```typescript
 // Core types
 export interface WidgetConfig { ... }
 export interface Conversation { ... }
-export interface Message { ... }
+export interface Message { 
+  id?: string;
+  role: 'user' | 'assistant';
+  content: string;
+  read?: boolean;
+  read_at?: string;
+  timestamp: Date;
+  type?: 'text' | 'audio' | 'file';
+  audioUrl?: string;
+  files?: FileAttachment[];
+  reactions?: MessageReaction[];
+  isSystemNotice?: boolean;
+  isHuman?: boolean;
+  senderName?: string;
+  senderAvatar?: string;
+  linkPreviews?: LinkPreviewData[]; // Server-side cached previews
+}
 export interface ChatUser { ... }
 export interface ReferrerJourney { ... }
 export interface CustomField { ... }
 export interface HelpCategory { ... }
 export interface HelpArticle { ... }
 export interface Announcement { ... }
+export interface LinkPreviewData { ... }
+export interface PageVisit { ... }
 
 // View types
 export type WidgetView = 'home' | 'messages' | 'chat' | 'help';
@@ -121,11 +156,11 @@ export const WIDGET_CSS_VARS = { ... };
 export const POSITION_CLASSES = { ... };
 
 // Lazy-loaded components
-export const LazyBubbleBackground = lazy(() => import('./components/BubbleBackground'));
 export const LazyVoiceInput = lazy(() => import('./components/VoiceInput'));
 export const LazyFileDropZone = lazy(() => import('./components/FileDropZone'));
 export const LazyAudioPlayer = lazy(() => import('./components/AudioPlayer'));
 export const LazyMessageReactions = lazy(() => import('./components/MessageReactions'));
+export const LazyPhoneInputField = lazy(() => import('./components/PhoneInputField'));
 ```
 
 ---
@@ -159,7 +194,7 @@ interface UseConversationsReturn {
 - LocalStorage persistence
 - Real-time subscription for status changes
 
-### useMessages.ts (~200 lines)
+### useMessages.ts (~250 lines)
 ```typescript
 interface UseMessagesReturn {
   messages: Message[];
@@ -172,6 +207,7 @@ interface UseMessagesReturn {
 }
 ```
 - Message fetching and sending
+- **Server-side link preview caching** - previews from `message.metadata.link_previews`
 - Real-time subscription for new messages
 - Optimistic updates
 - Read receipt tracking with localStorage persistence
@@ -215,17 +251,20 @@ interface UseFileAttachmentReturn {
 - Supabase storage upload
 - Progress tracking
 
-### usePageTracking.ts (~150 lines)
+### usePageTracking.ts (~200 lines)
 ```typescript
 interface UsePageTrackingReturn {
+  pageVisits: PageVisit[];
+  referrerJourney: ReferrerJourney | null;
   trackPageVisit: (url: string) => void;
   sendReferrerJourney: () => void;
 }
 ```
 - Page visit duration tracking
 - Referrer journey capture (fallback included)
-- Debounced server updates
-- Internal URL filtering
+- Debounced server updates via `update-page-visits` edge function
+- Internal URL filtering (widget.html excluded)
+- Parent postMessage integration for iframe mode
 
 ### useParentMessages.ts (~120 lines)
 ```typescript
@@ -277,6 +316,40 @@ interface UseHumanTakeoverReturn {
 - Notice deduplication via localStorage (conversation-scoped)
 - Auto-clear notice when conversation returns to AI status
 
+### useSoundSettings.ts (~50 lines)
+```typescript
+interface UseSoundSettingsReturn {
+  soundEnabled: boolean;
+  setSoundEnabled: (enabled: boolean) => void;
+  showSettingsDropdown: boolean;
+  setShowSettingsDropdown: (show: boolean) => void;
+}
+```
+- Sound preference persistence to localStorage
+- Settings dropdown visibility state
+
+### useVisitorAnalytics.ts (~80 lines)
+```typescript
+interface UseVisitorAnalyticsReturn {
+  visitorId: string;
+  startPresence: () => void;
+  updatePresence: (data: object) => void;
+  stopPresence: () => void;
+}
+```
+- Unique visitor ID generation and persistence
+- Supabase Realtime Presence for active visitor tracking
+- Presence channel management
+
+### useLinkPreviews.ts (~60 lines)
+```typescript
+interface UseLinkPreviewsReturn {
+  getCachedPreviews: (message: Message) => LinkPreviewData[] | undefined;
+}
+```
+- Extract cached previews from message metadata
+- Fallback detection for legacy messages without cached previews
+
 ---
 
 ## View Specifications
@@ -286,7 +359,7 @@ interface UseHumanTakeoverReturn {
 - Quick intro for new users (contact form trigger)
 - Recent conversations preview
 - Help categories preview
-- BubbleBackground (lazy-loaded)
+- BubbleBackground (CSS-only, eager loaded)
 
 ### MessagesView.tsx (~150 lines)
 - Conversation list with previews
@@ -300,6 +373,7 @@ interface UseHumanTakeoverReturn {
 - Typing indicator
 - Contact form overlay (conditional)
 - MessageInput component
+- **LinkPreviews** with cached previews from message metadata
 
 ### HelpView.tsx (~100 lines)
 - Sub-view routing (categories → articles → article)
@@ -329,6 +403,7 @@ Complex form handling:
 - Takeover notice rendering
 - Audio player for voice messages
 - Link/HTML sanitization with DOMPurify
+- **LinkPreviews** component with cached previews
 
 ### MessageInput.tsx (~180 lines)
 - Text input with auto-resize
@@ -343,6 +418,7 @@ Complex form handling:
 - Status indicator
 - Close button (X icon)
 - Gradient background integration
+- Settings dropdown trigger
 
 ### WidgetNav.tsx (~80 lines)
 - Bottom navigation tabs
@@ -359,6 +435,10 @@ Complex form handling:
 - Agent name display
 - Animated dots
 - Blue styling for human agents
+
+### SettingsDropdown.tsx (~60 lines)
+- Sound toggle (volume icon with on/off state)
+- Dropdown positioning
 
 ### FloatingButton.tsx (~80 lines)
 - Fixed position (configurable corner)
@@ -428,9 +508,17 @@ Critical refs that need careful handling during extraction:
 | `messageChannelRef` | Supabase subscription cleanup | `useMessages.ts` |
 | `conversationChannelRef` | Supabase subscription cleanup | `useConversations.ts` |
 | `presenceChannelRef` | Typing indicator cleanup | `useTypingIndicator.ts` |
+| `parentPageUrlRef` | Parent window URL tracking | `useParentMessages.ts` |
+| `parentReferrerRef` | Parent window referrer | `useParentMessages.ts` |
+| `parentUtmParamsRef` | Parent window UTM params | `useParentMessages.ts` |
 | `inputRef` | Focus management | `MessageInput.tsx` |
 | `messagesEndRef` | Auto-scroll target | `ChatView.tsx` |
+| `homeContentRef` | Home scroll container | `HomeView.tsx` |
+| `messagesContainerRef` | Messages scroll container | `ChatView.tsx` |
 | `containerRef` | ResizeObserver target | `useWidgetResize.ts` |
+| `mediaRecorderRef` | MediaRecorder instance | `useAudioRecording.ts` |
+| `chunksRef` | Audio recording chunks | `useAudioRecording.ts` |
+| `recordingIntervalRef` | Timer interval | `useAudioRecording.ts` |
 
 > **Note**: `shownTakeoverNoticeRef` was migrated to localStorage persistence. See [localStorage Persistence Keys](#localstorage-persistence-keys) section.
 
@@ -479,15 +567,18 @@ The widget operates in three distinct modes:
 1. `useWidgetConfig.ts` - Config fetching
 2. `useParentMessages.ts` - postMessage handling
 3. `useWidgetResize.ts` - ResizeObserver
-4. `usePageTracking.ts` - Analytics
-5. `useTypingIndicator.ts` - Presence
-6. `useHumanTakeover.ts` - Takeover detection
-7. `useAudioRecording.ts` - Voice recording
-8. `useFileAttachment.ts` - File uploads
-9. `useConversations.ts` - Conversation CRUD
-10. `useMessages.ts` - Message handling
-11. `useMessageReactions.ts` - Reactions
-12. **Test**: All hooks work correctly
+4. `usePageTracking.ts` - Analytics (incl. parent URL tracking)
+5. `useVisitorAnalytics.ts` - Visitor ID and presence
+6. `useSoundSettings.ts` - Sound preferences
+7. `useTypingIndicator.ts` - Presence
+8. `useHumanTakeover.ts` - Takeover detection
+9. `useAudioRecording.ts` - Voice recording
+10. `useFileAttachment.ts` - File uploads
+11. `useConversations.ts` - Conversation CRUD
+12. `useMessages.ts` - Message handling (with link preview caching)
+13. `useMessageReactions.ts` - Reactions
+14. `useLinkPreviews.ts` - Cached preview extraction
+15. **Test**: All hooks work correctly
 
 ### Phase 3: Extract UI Components (5-6 hours)
 1. `FloatingButton.tsx`
@@ -499,7 +590,8 @@ The widget operates in three distinct modes:
 7. `MessageBubble.tsx`
 8. `MessageInput.tsx`
 9. `ContactForm.tsx`
-10. **Test**: All components render correctly
+10. `SettingsDropdown.tsx`
+11. **Test**: All components render correctly
 
 ### Phase 4: Extract View Components (3-4 hours)
 1. `HomeView.tsx`
@@ -532,6 +624,7 @@ The widget operates in three distinct modes:
 - [ ] Voice messages record and send
 - [ ] File attachments upload
 - [ ] Conversations persist across sessions
+- [ ] Link previews render from cached metadata
 
 #### Render Modes
 - [ ] Iframe mode: Height updates, postMessage works
@@ -540,10 +633,11 @@ The widget operates in three distinct modes:
 
 #### Real-time Features
 - [ ] New messages appear instantly
-- [ ] Typing indicators show/hide
+- [ ] Typing indicators show/hide (bidirectional)
 - [ ] Human takeover banner appears
 - [ ] Message reactions sync
 - [ ] Read receipts update
+- [ ] Link previews cached server-side
 
 #### Help Center
 - [ ] Categories display with icons
@@ -563,7 +657,7 @@ The widget operates in three distinct modes:
 - [ ] Widget ready handshake
 - [ ] Unread badge updates
 - [ ] Close request from parent
-- [ ] Page URL tracking
+- [ ] Page URL tracking from parent
 
 #### Unread Badge Persistence
 - [ ] Unread count persists across widget close/reopen
@@ -578,6 +672,18 @@ The widget operates in three distinct modes:
 - [ ] Takeover notice clears when conversation returns to AI
 - [ ] Takeover notice shows again if re-taken-over after AI return
 
+#### Sound Settings
+- [ ] Sound preference persists across sessions
+- [ ] Settings dropdown opens/closes correctly
+- [ ] Sound toggle updates immediately
+
+#### Visitor Analytics
+- [ ] Visitor ID persists across sessions
+- [ ] Page visits tracked correctly
+- [ ] Referrer journey captured
+- [ ] UTM parameters parsed
+- [ ] Internal widget URLs filtered out
+
 ### Automated Tests (Future)
 - Unit tests for utility functions
 - Hook tests with React Testing Library
@@ -590,7 +696,7 @@ The widget operates in three distinct modes:
 
 ### Current State
 - Widget bundle: ~50KB gzipped
-- Lazy-loaded extras: ~40KB (BubbleBackground, VoiceInput, etc.)
+- Lazy-loaded extras: ~40KB (VoiceInput, FileDropZone, AudioPlayer, etc.)
 
 ### Target
 - No increase to initial bundle
@@ -608,9 +714,9 @@ The widget operates in three distinct modes:
 
 | Metric | Current | Target |
 |--------|---------|--------|
-| ChatWidget.tsx lines | 2,489 | <200 |
-| Largest component | 2,489 | <300 |
-| Files in widget directory | 8 | 35-40 |
+| ChatWidget.tsx lines | 2,603 | <200 |
+| Largest component | 2,603 | <300 |
+| Files in widget directory | 6 | 35-40 |
 | Bundle size (gzipped) | ~50KB | ≤50KB |
 | Unit test coverage | 0% | >60% |
 
@@ -699,6 +805,13 @@ The widget operates in three distinct modes:
 - `formErrors` - Validation errors
 - `formLoadTime` - Spam protection timestamp
 
+### Sound & Settings State
+- `soundEnabled` - Sound preference (persisted via localStorage)
+- `showSettingsDropdown` - Settings menu visibility
+
+### Navigation State
+- `hoveredNav` - Hovered nav icon ('home' | 'messages' | 'help' | null)
+
 ---
 
 ## localStorage Persistence Keys
@@ -707,19 +820,55 @@ The widget uses localStorage for persistence across sessions. All keys are scope
 
 | Key Pattern | Purpose | Scope |
 |-------------|---------|-------|
-| `chatpad_user_${agentId}` | Stored chat user info (name, email, phone) | Per agent |
+| `chatpad_user_${agentId}` | Stored chat user info (name, email, phone, leadId) | Per agent |
 | `chatpad_conversations_${agentId}` | Conversation list with metadata | Per agent |
 | `chatpad_messages_${agentId}_${conversationId}` | Cached messages for conversation | Per conversation |
 | `chatpad_last_read_${agentId}_${conversationId}` | Last read timestamp for unread tracking | Per conversation |
 | `chatpad_takeover_noticed_${agentId}_${conversationId}` | Whether takeover notice was shown | Per conversation |
-| `chatpad_visitor_id` | Unique visitor identifier for analytics | Global |
+| `chatpad_visitor_id_${agentId}` | Unique visitor identifier for analytics | Per agent |
 | `chatpad_referrer_journey_${agentId}` | Referrer/UTM data on first visit | Per agent |
+| `chatpad_sound_enabled_${agentId}` | Sound preference (true/false) | Per agent |
 
 ### Persistence Behavior Notes
 
 - **Read timestamps**: Persisted when messages are marked as read, loaded on conversation open to restore unread counts
 - **Takeover notices**: Cleared automatically when conversation status changes from `human_takeover` to another status
 - **User data**: Persisted after contact form submission, used to identify returning users
+- **Sound settings**: Defaults to `true` if not set, persisted when user toggles
+- **Visitor ID**: Generated once on first visit, persisted indefinitely for analytics continuity
+
+---
+
+## Production Readiness Checklist
+
+### Performance
+- [ ] Bundle size verified ≤50KB gzipped
+- [ ] First contentful paint <200ms
+- [ ] Time to interactive <500ms
+- [ ] No layout shifts during load
+
+### Features
+- [ ] All render modes working (iframe, contained, default)
+- [ ] Contact form with spam protection
+- [ ] Message sending with optimistic updates
+- [ ] Voice messages and file attachments
+- [ ] Real-time message sync
+- [ ] Human takeover with personalization
+- [ ] Help center with search
+- [ ] Link previews (server-side cached)
+- [ ] Sound settings
+
+### Security
+- [ ] XSS protection via DOMPurify
+- [ ] Spam protection (honeypot, timing, rate limit)
+- [ ] Phone validation with libphonenumber-js
+- [ ] Conversation/visitor ID validation on server
+
+### Analytics
+- [ ] Visitor ID tracking
+- [ ] Page visit tracking with duration
+- [ ] Referrer journey capture
+- [ ] UTM parameter parsing
 
 ---
 
