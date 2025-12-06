@@ -40,6 +40,8 @@ export const AnimatedItem = ({
     <motion.div
       className={cn(className)}
       variants={itemVariants}
+      initial="hidden"
+      animate="visible"
     >
       {children}
     </motion.div>
