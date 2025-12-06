@@ -253,7 +253,7 @@ export const Dashboard: React.FC = () => {
   }
 
   return (
-    <main className="flex-1 min-h-0 h-full overflow-y-auto">
+    <main className="flex-1 min-h-0 h-full overflow-y-auto bg-muted/30">
       <div className="flex flex-col gap-6 lg:gap-8 pt-6 lg:pt-8 pb-8">
         {/* Header */}
         <div className="px-4 lg:px-8">
