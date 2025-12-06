@@ -36,3 +36,6 @@ export { useVisitorPresence } from './useVisitorPresence';
 
 /** Conversation CRUD operations and localStorage persistence */
 export { useConversations } from './useConversations';
+
+/** Real-time config updates via Supabase */
+export { useRealtimeConfig } from './useRealtimeConfig';
