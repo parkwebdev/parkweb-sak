@@ -104,6 +104,7 @@ const Conversations: React.FC = () => {
     localStorage.setItem('conversations_metadata_collapsed', String(metadataPanelCollapsed));
   }, [metadataPanelCollapsed]);
   const messagesScrollRef = useRef<HTMLDivElement>(null);
+  const isInitialLoadRef = useRef(true);
   
   // Typing indicator state
   const [isTypingBroadcast, setIsTypingBroadcast] = useState(false);
@@ -181,7 +182,8 @@ const Conversations: React.FC = () => {
   // Load messages when conversation is selected
   useEffect(() => {
     if (selectedConversation) {
-      loadMessages(selectedConversation.id);
+      isInitialLoadRef.current = true;
+      loadMessages(selectedConversation.id, true);
 
       // Set up real-time subscription for messages
       const channel = supabase
@@ -195,10 +197,22 @@ const Conversations: React.FC = () => {
             filter: `conversation_id=eq.${selectedConversation.id}`
           },
           (payload) => {
-            loadMessages(selectedConversation.id);
+            const newMessage = payload.new as Message;
+            
+            // Incremental append - no full refetch, no flicker
+            setMessages(prev => {
+              // Avoid duplicates (real-time + optimistic update race)
+              if (prev.some(m => m.id === newMessage.id)) return prev;
+              // Remove any pending optimistic message with matching content
+              const withoutTemp = prev.filter(m => {
+                if (!m.id.startsWith('temp-')) return true;
+                const tempMeta = m.metadata as any;
+                return !(tempMeta?.pending && m.content === newMessage.content);
+              });
+              return [...withoutTemp, newMessage];
+            });
             
             // Play notification sound for user messages (not our own messages)
-            const newMessage = payload.new as any;
             if (newMessage.role === 'user') {
               playNotificationSound();
             }
@@ -212,8 +226,12 @@ const Conversations: React.FC = () => {
             table: 'messages',
             filter: `conversation_id=eq.${selectedConversation.id}`
           },
-          () => {
-            loadMessages(selectedConversation.id);
+          (payload) => {
+            const updatedMessage = payload.new as Message;
+            // Incremental update - only update the affected message
+            setMessages(prev => 
+              prev.map(m => m.id === updatedMessage.id ? updatedMessage : m)
+            );
           }
         )
         .subscribe();
@@ -234,8 +252,8 @@ const Conversations: React.FC = () => {
     }
   }, [conversations]);
 
-  const loadMessages = async (conversationId: string) => {
-    setLoadingMessages(true);
+  const loadMessages = async (conversationId: string, showLoading = true) => {
+    if (showLoading) setLoadingMessages(true);
     try {
       const msgs = await fetchMessages(conversationId);
       setMessages(msgs);
@@ -249,7 +267,8 @@ const Conversations: React.FC = () => {
         }
       }).catch(err => console.error('Failed to mark messages as read:', err));
     } finally {
-      setLoadingMessages(false);
+      if (showLoading) setLoadingMessages(false);
+      isInitialLoadRef.current = false;
     }
   };
 
@@ -316,13 +335,32 @@ const Conversations: React.FC = () => {
     // Immediately stop typing indicator
     stopTypingIndicator();
     
-    setSendingMessage(true);
-    const success = await sendHumanMessage(selectedConversation.id, messageInput.trim());
+    const content = messageInput.trim();
+    const tempId = `temp-${Date.now()}`;
     
-    if (success) {
-      setMessageInput('');
-      // Messages will update via real-time subscription
+    // Optimistic update: show message instantly
+    const tempMessage: Message = {
+      id: tempId,
+      conversation_id: selectedConversation.id,
+      role: 'assistant',
+      content,
+      created_at: new Date().toISOString(),
+      metadata: { sender_type: 'human', pending: true }
+    };
+    
+    setMessages(prev => [...prev, tempMessage]);
+    setMessageInput('');
+    
+    setSendingMessage(true);
+    const success = await sendHumanMessage(selectedConversation.id, content);
+    
+    if (!success) {
+      // Rollback optimistic update on failure
+      setMessages(prev => prev.filter(m => m.id !== tempId));
+      setMessageInput(content); // Restore input
     }
+    // On success, real-time subscription will replace temp message with real one
+    
     setSendingMessage(false);
   };
 
