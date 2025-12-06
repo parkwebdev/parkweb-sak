@@ -580,29 +580,25 @@ The widget operates in three distinct modes:
 14. `useLinkPreviews.ts` - Cached preview extraction
 15. **Test**: All hooks work correctly
 
-### Phase 3: Extract UI Components (5-6 hours)
-1. `FloatingButton.tsx`
-2. `WidgetHeader.tsx`
-3. `WidgetNav.tsx`
-4. `TakeoverBanner.tsx`
-5. `TypingIndicator.tsx`
-6. `AnnouncementCard.tsx`
-7. `MessageBubble.tsx`
-8. `MessageInput.tsx`
-9. `ContactForm.tsx`
-10. `SettingsDropdown.tsx`
-11. **Test**: All components render correctly
+### Phase 3: Extract UI Components (5-6 hours) ✅ COMPLETE
+1. `FloatingButton.tsx` ✅
+2. `WidgetHeader.tsx` ✅
+3. `WidgetNav.tsx` ✅
+4. `TakeoverBanner.tsx` ✅
+5. `TypingIndicator.tsx` ✅
+6. `MessageBubble.tsx` ✅
+7. `MessageInput.tsx` ✅
+8. `ContactForm.tsx` ✅
+9. `components/index.ts` ✅ (barrel export)
+10. **Test**: All components render correctly
 
-### Phase 4: Extract View Components (3-4 hours)
-1. `HomeView.tsx`
-2. `MessagesView.tsx`
-3. `ChatView.tsx`
-4. `help/HelpView.tsx`
-5. `help/CategoryList.tsx`
-6. `help/ArticleList.tsx`
-7. `help/ArticleContent.tsx`
-8. `help/ArticleFeedback.tsx`
-9. **Test**: All views function correctly
+### Phase 4: Extract View Components (3-4 hours) ✅ COMPLETE
+1. `HomeView.tsx` ✅
+2. `MessagesView.tsx` ✅
+3. `ChatView.tsx` ✅
+4. `HelpView.tsx` ✅ (consolidated help view with all sub-views)
+5. `views/index.ts` ✅ (barrel export)
+6. **Test**: All views function correctly
 
 ### Phase 5: Final Cleanup (2-3 hours)
 1. Reduce ChatWidget.tsx to orchestrator only

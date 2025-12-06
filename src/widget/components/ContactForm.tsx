@@ -1,0 +1,167 @@
+import { Suspense, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { PhoneInputField } from '../constants';
+import { createLead } from '../api';
+import type { ChatUser } from '../types';
+
+interface CustomField {
+  id: string;
+  label: string;
+  fieldType: 'text' | 'email' | 'phone' | 'select' | 'textarea';
+  required: boolean;
+  options?: string[];
+}
+
+interface ContactFormProps {
+  agentId: string;
+  primaryColor: string;
+  title: string;
+  subtitle?: string;
+  customFields: CustomField[];
+  formLoadTime: number;
+  greeting: string;
+  onSubmit: (userData: ChatUser, conversationId?: string) => void;
+}
+
+export const ContactForm = ({
+  agentId,
+  primaryColor,
+  title,
+  subtitle,
+  customFields,
+  formLoadTime,
+  greeting,
+  onSubmit,
+}: ContactFormProps) => {
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const firstName = formData.get('firstName') as string;
+    const lastName = formData.get('lastName') as string;
+    const email = formData.get('email') as string;
+    const honeypot = formData.get('website') as string;
+    const customFieldData: Record<string, any> = {};
+
+    if (honeypot) {
+      console.log('Spam detected: honeypot filled');
+      return;
+    }
+
+    customFields.forEach(field => {
+      const value = formData.get(field.id);
+      if (value) {
+        customFieldData[field.label] = value;
+      }
+    });
+
+    try {
+      const errors: Record<string, string> = {};
+      const trimmedFirstName = firstName.trim();
+      const trimmedLastName = lastName.trim();
+      const trimmedEmail = email.trim();
+      
+      if (!trimmedFirstName || trimmedFirstName.length > 50) {
+        errors.firstName = 'First name is required (max 50 chars)';
+      }
+      if (!trimmedLastName || trimmedLastName.length > 50) {
+        errors.lastName = 'Last name is required (max 50 chars)';
+      }
+      if (!trimmedEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail) || trimmedEmail.length > 255) {
+        errors.email = 'Valid email is required';
+      }
+      
+      if (Object.keys(errors).length > 0) {
+        setFormErrors(errors);
+        return;
+      }
+      setFormErrors({});
+
+      const { leadId, conversationId } = await createLead(agentId, { 
+        firstName: trimmedFirstName, 
+        lastName: trimmedLastName, 
+        email: trimmedEmail, 
+        customFields: customFieldData, 
+        _formLoadTime: formLoadTime 
+      });
+      
+      const userData: ChatUser = { 
+        firstName: trimmedFirstName, 
+        lastName: trimmedLastName, 
+        email: trimmedEmail, 
+        leadId, 
+        conversationId: conversationId || undefined 
+      };
+      
+      onSubmit(userData, conversationId);
+    } catch (error) {
+      console.error('Error creating lead:', error);
+    }
+  };
+
+  return (
+    <div className="flex items-start">
+      <div className="bg-muted rounded-lg p-3 w-full">
+        <p className="text-base font-semibold mb-1.5">{title}</p>
+        {subtitle && (
+          <p className="text-sm text-muted-foreground mb-4">{subtitle}</p>
+        )}
+        <form className="space-y-2" onSubmit={handleSubmit}>
+          {/* Honeypot field - hidden from users, bots fill it */}
+          <input 
+            name="website" 
+            type="text" 
+            tabIndex={-1} 
+            autoComplete="off"
+            className="absolute -left-[9999px] h-0 w-0 opacity-0 pointer-events-none"
+            aria-hidden="true"
+          />
+          <Input name="firstName" placeholder="First name" className="h-8 text-sm" required />
+          {formErrors.firstName && <p className="text-xs text-destructive">{formErrors.firstName}</p>}
+          <Input name="lastName" placeholder="Last name" className="h-8 text-sm" required />
+          {formErrors.lastName && <p className="text-xs text-destructive">{formErrors.lastName}</p>}
+          <Input name="email" type="email" placeholder="Email" className="h-8 text-sm" required />
+          {formErrors.email && <p className="text-xs text-destructive">{formErrors.email}</p>}
+          
+          {customFields.map(field => (
+            <div key={field.id}>
+              {field.fieldType === 'select' ? (
+                <Select name={field.id} required={field.required}>
+                  <SelectTrigger className="h-8 text-sm">
+                    <SelectValue placeholder={field.label} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {field.options?.map(opt => (
+                      <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : field.fieldType === 'textarea' ? (
+                <Textarea name={field.id} placeholder={field.label} className="text-sm" required={field.required} />
+              ) : field.fieldType === 'phone' ? (
+                <Suspense fallback={<Input placeholder={field.label} className="h-8 text-sm" disabled />}>
+                  <PhoneInputField 
+                    name={field.id}
+                    placeholder={field.label}
+                    className="h-8 text-sm"
+                    required={field.required}
+                  />
+                </Suspense>
+              ) : (
+                <Input name={field.id} type={field.fieldType === 'email' ? 'email' : 'text'} placeholder={field.label} className="h-8 text-sm" required={field.required} />
+              )}
+            </div>
+          ))}
+          
+          <Button type="submit" size="sm" className="w-full h-8" style={{ backgroundColor: primaryColor }}>
+            Start Chat
+          </Button>
+        </form>
+      </div>
+    </div>
+  );
+};
