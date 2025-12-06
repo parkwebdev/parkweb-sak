@@ -1,8 +1,8 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { createLead, sendChatMessage, type WidgetConfig, type ReferrerJourney } from './api';
 
 // Types and constants extracted for maintainability
-import type { ViewType, ChatUser, Message, Conversation, ChatWidgetProps } from './types';
+import type { ViewType, ChatUser, Message, ChatWidgetProps } from './types';
 import { WIDGET_CSS_VARS, getIsMobileFullScreen, positionClasses } from './constants';
 
 // Extracted hooks for state management
@@ -20,7 +20,6 @@ import {
 
 // View Components
 import { HomeView } from './views/HomeView';
-import { MessagesView } from './views/MessagesView';
 import { ChatView } from './views/ChatView';
 import { HelpView } from './views/HelpView';
 
@@ -87,8 +86,6 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
 
   // Conversation management via extracted hook
   const {
-    conversations,
-    setConversations,
     messages,
     setMessages,
     activeConversationId,
@@ -98,6 +95,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     messagesContainerRef,
     messagesEndRef,
     isOpeningConversationRef,
+    clearMessagesAndFetch,
   } = useConversations({
     agentId,
     chatUser,
@@ -313,17 +311,9 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
   };
 
   const handleOpenConversation = (conversationId: string) => {
-    const conversation = conversations.find(c => c.id === conversationId);
-    if (conversation) {
-      isOpeningConversationRef.current = true;
-      setActiveConversationId(conversationId);
-      
-      const messagesWithRead = conversation.messages.map(m => 
-        m.role === 'assistant' ? { ...m, read: true } : m
-      );
-      setMessages(messagesWithRead);
-      setShowConversationList(false);
-    }
+    isOpeningConversationRef.current = true;
+    clearMessagesAndFetch(conversationId);
+    setShowConversationList(false);
   };
 
   const handleSendMessage = async () => {
@@ -386,14 +376,6 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
           const updatedUser = { ...chatUser, conversationId: response.conversationId };
           setChatUser(updatedUser);
           localStorage.setItem(`chatpad_user_${config.agentId}`, JSON.stringify(updatedUser));
-        }
-        
-        if (oldConvId) {
-          setConversations(prev => prev.map(conv => 
-            conv.id === oldConvId 
-              ? { ...conv, id: response.conversationId } 
-              : conv
-          ));
         }
       }
 
@@ -578,45 +560,35 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
             <div className="flex-1 overflow-hidden bg-background flex flex-col min-h-0">
               {currentView === 'messages' && (
                 <div className="flex-1 flex flex-col widget-view-enter min-h-0">
-                  {/* Conversation List View - for returning users */}
-                  {showConversationList && chatUser ? (
-                    <MessagesView
-                      conversations={conversations}
-                      onOpenConversation={handleOpenConversation}
-                      onStartNewConversation={handleStartNewConversation}
-                    />
-                  ) : (
-                    /* Chat View - show contact form for new users OR active conversation */
-                    <ChatView
-                      config={config}
-                      messages={messages}
-                      setMessages={setMessages}
-                      chatUser={chatUser}
-                      setChatUser={setChatUser}
-                      messageInput={messageInput}
-                      setMessageInput={setMessageInput}
-                      pendingFiles={pendingFiles}
-                      setPendingFiles={setPendingFiles}
-                      isTyping={isTyping}
-                      isHumanTyping={isHumanTyping}
-                      typingAgentName={typingAgentName}
-                      isHumanTakeover={isHumanTakeover}
-                      takeoverAgentName={takeoverAgentName}
-                      takeoverAgentAvatar={takeoverAgentAvatar}
-                      isRecordingAudio={isRecordingAudio}
-                      recordingTime={recordingTime}
-                      isAttachingFiles={isAttachingFiles}
-                      setIsAttachingFiles={setIsAttachingFiles}
-                      formLoadTime={formLoadTime}
-                      messagesContainerRef={messagesContainerRef}
-                      messagesEndRef={messagesEndRef}
-                      onSendMessage={handleSendMessage}
-                      onStartRecording={startAudioRecording}
-                      onStopRecording={stopAudioRecording}
-                      onCancelRecording={cancelAudioRecording}
-                      onFormSubmit={handleFormSubmit}
-                    />
-                  )}
+                  <ChatView
+                    config={config}
+                    messages={messages}
+                    setMessages={setMessages}
+                    chatUser={chatUser}
+                    setChatUser={setChatUser}
+                    messageInput={messageInput}
+                    setMessageInput={setMessageInput}
+                    pendingFiles={pendingFiles}
+                    setPendingFiles={setPendingFiles}
+                    isTyping={isTyping}
+                    isHumanTyping={isHumanTyping}
+                    typingAgentName={typingAgentName}
+                    isHumanTakeover={isHumanTakeover}
+                    takeoverAgentName={takeoverAgentName}
+                    takeoverAgentAvatar={takeoverAgentAvatar}
+                    isRecordingAudio={isRecordingAudio}
+                    recordingTime={recordingTime}
+                    isAttachingFiles={isAttachingFiles}
+                    setIsAttachingFiles={setIsAttachingFiles}
+                    formLoadTime={formLoadTime}
+                    messagesContainerRef={messagesContainerRef}
+                    messagesEndRef={messagesEndRef}
+                    onSendMessage={handleSendMessage}
+                    onStartRecording={startAudioRecording}
+                    onStopRecording={stopAudioRecording}
+                    onCancelRecording={cancelAudioRecording}
+                    onFormSubmit={handleFormSubmit}
+                  />
                 </div>
               )}
 

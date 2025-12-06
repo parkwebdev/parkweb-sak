@@ -1,13 +1,14 @@
 /**
  * useConversations Hook
  * 
- * Manages conversation list and message state.
+ * Manages conversation and message state using database as source of truth.
+ * No localStorage for conversations/messages - only database.
  */
 
 import { useState, useEffect, useRef } from 'react';
 import { fetchConversationMessages, markMessagesRead } from '../api';
 import { isValidUUID } from '../utils';
-import type { Message, Conversation, ChatUser } from '../types';
+import type { Message, ChatUser } from '../types';
 
 interface UseConversationsOptions {
   agentId: string;
@@ -20,7 +21,6 @@ interface UseConversationsOptions {
 export function useConversations(options: UseConversationsOptions) {
   const { agentId, chatUser, previewMode, isOpen, currentView } = options;
 
-  const [conversations, setConversations] = useState<Conversation[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [showConversationList, setShowConversationList] = useState(false);
@@ -28,6 +28,7 @@ export function useConversations(options: UseConversationsOptions) {
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isOpeningConversationRef = useRef(false);
+  const fetchedConversationIdRef = useRef<string | null>(null);
 
   // Initialize activeConversationId from chatUser if available (for returning users)
   useEffect(() => {
@@ -37,17 +38,18 @@ export function useConversations(options: UseConversationsOptions) {
     }
   }, [chatUser?.conversationId, activeConversationId]);
 
-  // Fetch messages from database when widget loads with existing conversationId
+  // Fetch messages from database when activeConversationId changes
   useEffect(() => {
     if (!activeConversationId) return;
     
     // Only fetch if conversationId is valid UUID (database ID)
     if (!isValidUUID(activeConversationId)) return;
     
-    // Only fetch if we don't already have messages (to avoid refetching on every update)
-    if (messages.length > 0) return;
+    // Skip if we already fetched for this specific conversation
+    if (fetchedConversationIdRef.current === activeConversationId) return;
     
     const loadMessagesFromDB = async () => {
+      fetchedConversationIdRef.current = activeConversationId;
       console.log('[Widget] Fetching messages from database for:', activeConversationId);
       const dbMessages = await fetchConversationMessages(activeConversationId);
       
@@ -69,72 +71,14 @@ export function useConversations(options: UseConversationsOptions) {
         
         setMessages(formattedMessages);
         console.log('[Widget] Loaded', formattedMessages.length, 'messages from database');
+      } else {
+        setMessages([]);
+        console.log('[Widget] No messages found in database');
       }
     };
     
     loadMessagesFromDB();
-  }, [activeConversationId, messages.length]);
-
-  // Load conversations from localStorage (with migration from old format)
-  useEffect(() => {
-    const stored = localStorage.getItem(`chatpad_conversations_${agentId}`);
-    const oldStored = localStorage.getItem(`chatpad_messages_${agentId}`);
-    
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        const conversationsWithDates = parsed.map((conv: any) => ({
-          ...conv,
-          messages: conv.messages.map((msg: any) => ({ ...msg, timestamp: new Date(msg.timestamp) }))
-        }));
-        setConversations(conversationsWithDates);
-      } catch (error) {
-        console.error('Error loading conversations:', error);
-      }
-    } else if (oldStored) {
-      // Migrate old messages format to conversations
-      try {
-        const parsed = JSON.parse(oldStored);
-        const messagesWithDates = parsed.map((msg: any) => ({ ...msg, timestamp: new Date(msg.timestamp) }));
-        if (messagesWithDates.length > 0) {
-          const migratedConversation: Conversation = {
-            id: 'migrated_' + Date.now(),
-            messages: messagesWithDates,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            preview: messagesWithDates[messagesWithDates.length - 1]?.content || 'Previous conversation'
-          };
-          setConversations([migratedConversation]);
-          localStorage.setItem(`chatpad_conversations_${agentId}`, JSON.stringify([migratedConversation]));
-          localStorage.removeItem(`chatpad_messages_${agentId}`);
-        }
-      } catch (error) {
-        console.error('Error migrating messages:', error);
-      }
-    }
-  }, [agentId]);
-
-  // Save conversations to localStorage and update active conversation
-  useEffect(() => {
-    if (activeConversationId && messages.length > 0) {
-      const existingIndex = conversations.findIndex(c => c.id === activeConversationId);
-      const lastMessage = messages[messages.length - 1];
-      const updatedConversation: Conversation = {
-        id: activeConversationId,
-        messages: messages,
-        createdAt: existingIndex >= 0 ? conversations[existingIndex].createdAt : new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        preview: lastMessage?.content.slice(0, 60) || 'New conversation'
-      };
-
-      const updatedConversations = existingIndex >= 0
-        ? conversations.map((c, i) => i === existingIndex ? updatedConversation : c)
-        : [updatedConversation, ...conversations];
-
-      setConversations(updatedConversations);
-      localStorage.setItem(`chatpad_conversations_${agentId}`, JSON.stringify(updatedConversations));
-    }
-  }, [messages, activeConversationId, agentId]);
+  }, [activeConversationId]);
 
   // Auto-scroll (always enabled)
   useEffect(() => {
@@ -168,19 +112,20 @@ export function useConversations(options: UseConversationsOptions) {
               ? { ...m, read: true } 
               : m
           ));
-          
-          // Persist read timestamp to localStorage
-          const readKey = `chatpad_last_read_${agentId}_${activeConversationId}`;
-          localStorage.setItem(readKey, new Date().toISOString());
         }
       }, 500);
       return () => clearTimeout(timer);
     }
-  }, [currentView, activeConversationId, isOpen, messages.length, agentId]);
+  }, [currentView, activeConversationId, isOpen, messages.length]);
+
+  // Reset fetched ref when clearing messages (switching conversations)
+  const clearMessagesAndFetch = (conversationId: string) => {
+    fetchedConversationIdRef.current = null; // Reset to allow fresh fetch
+    setMessages([]);
+    setActiveConversationId(conversationId);
+  };
 
   return {
-    conversations,
-    setConversations,
     messages,
     setMessages,
     activeConversationId,
@@ -190,5 +135,6 @@ export function useConversations(options: UseConversationsOptions) {
     messagesContainerRef,
     messagesEndRef,
     isOpeningConversationRef,
+    clearMessagesAndFetch,
   };
 }
