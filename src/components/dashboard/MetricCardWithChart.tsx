@@ -69,16 +69,15 @@ export function MetricCardWithChart({
           >
             <defs>
               <linearGradient id={`gradient-${id}`} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="currentColor" stopOpacity={0.3} />
-                <stop offset="95%" stopColor="currentColor" stopOpacity={0} />
+                <stop offset="5%" stopColor={isPositive ? "hsl(var(--success))" : "hsl(var(--destructive))"} stopOpacity={0.3} />
+                <stop offset="95%" stopColor={isPositive ? "hsl(var(--success))" : "hsl(var(--destructive))"} stopOpacity={0} />
               </linearGradient>
             </defs>
             <Area
               isAnimationActive={false}
-              className={chartColor}
               dataKey="value"
               type="monotone"
-              stroke="currentColor"
+              stroke={isPositive ? "hsl(var(--success))" : "hsl(var(--destructive))"}
               strokeWidth={2}
               fill={`url(#gradient-${id})`}
               fillOpacity={0.2}
