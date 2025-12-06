@@ -62,6 +62,27 @@ async function searchKnowledge(
   return data || [];
 }
 
+// Geo-IP lookup using ip-api.com (free, no API key needed)
+async function getLocationFromIP(ip: string): Promise<{ country: string; city: string }> {
+  if (!ip || ip === 'unknown') {
+    return { country: 'Unknown', city: '' };
+  }
+  
+  try {
+    const response = await fetch(`http://ip-api.com/json/${ip}?fields=country,city,status`, {
+      signal: AbortSignal.timeout(3000), // 3 second timeout
+    });
+    const data = await response.json();
+    if (data.status === 'success') {
+      console.log(`Geo-IP lookup for ${ip}: ${data.city}, ${data.country}`);
+      return { country: data.country || 'Unknown', city: data.city || '' };
+    }
+  } catch (error) {
+    console.error('Geo-IP lookup failed:', error);
+  }
+  return { country: 'Unknown', city: '' };
+}
+
 // Parse user agent string for device info
 function parseUserAgent(userAgent: string | null): { device: string; browser: string; os: string } {
   if (!userAgent) return { device: 'unknown', browser: 'unknown', os: 'unknown' };
@@ -143,7 +164,7 @@ serve(async (req) => {
   }
 
   try {
-    const { agentId, conversationId, messages, leadId } = await req.json();
+    const { agentId, conversationId, messages, leadId, pageVisits } = await req.json();
 
     if (!agentId) {
       throw new Error('Agent ID is required');
@@ -243,13 +264,15 @@ serve(async (req) => {
 
     // Capture request metadata
     const ipAddress = req.headers.get('cf-connecting-ip') || 
-                      req.headers.get('x-forwarded-for')?.split(',')[0] || 
+                      req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 
                       req.headers.get('x-real-ip') || 
                       'unknown';
-    const country = req.headers.get('cf-ipcountry') || 'unknown';
     const userAgent = req.headers.get('user-agent');
     const referer = req.headers.get('referer') || null;
     const { device, browser, os } = parseUserAgent(userAgent);
+    
+    // Get location from IP address via geo-IP lookup
+    const { country, city } = await getLocationFromIP(ipAddress);
 
     // Create or get conversation
     let activeConversationId = conversationId;
@@ -259,6 +282,7 @@ serve(async (req) => {
       const conversationMetadata = {
         ip_address: ipAddress,
         country,
+        city,
         device,
         browser,
         os,
@@ -267,6 +291,7 @@ serve(async (req) => {
         lead_id: leadId || null,
         tags: [],
         messages_count: 0,
+        visited_pages: [] as Array<{ url: string; entered_at: string; duration_ms: number }>,
       };
 
       const { data: newConversation, error: createError } = await supabase
@@ -686,8 +711,19 @@ When answering, you can naturally reference the information from the knowledge b
 
     const assistantMessageId = assistantMsg?.id;
 
-    // Update conversation metadata (message count, last activity)
+    // Update conversation metadata (message count, last activity, page visits)
     const currentMetadata = conversation?.metadata || {};
+    
+    // Merge page visits (keep existing ones, add new ones)
+    let mergedPageVisits = currentMetadata.visited_pages || [];
+    if (pageVisits && Array.isArray(pageVisits)) {
+      // Only add page visits that aren't already tracked
+      const existingUrls = new Set(mergedPageVisits.map((v: any) => `${v.url}-${v.entered_at}`));
+      const newVisits = pageVisits.filter((v: any) => !existingUrls.has(`${v.url}-${v.entered_at}`));
+      mergedPageVisits = [...mergedPageVisits, ...newVisits];
+      console.log(`Merged ${newVisits.length} new page visits, total: ${mergedPageVisits.length}`);
+    }
+    
     await supabase
       .from('conversations')
       .update({
@@ -695,6 +731,7 @@ When answering, you can naturally reference the information from the knowledge b
           ...currentMetadata,
           messages_count: (currentMetadata.messages_count || 0) + 2, // user + assistant
           first_message_at: currentMetadata.first_message_at || new Date().toISOString(),
+          visited_pages: mergedPageVisits,
         },
         updated_at: new Date().toISOString(),
       })

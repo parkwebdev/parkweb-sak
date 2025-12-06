@@ -31,7 +31,12 @@ import {
   ChevronLeft,
   MessageChatCircle,
   MessageTextSquare01,
+  Copy01,
+  Hash01,
+  Browser,
+  ClockStopwatch,
 } from '@untitledui/icons';
+import { toast } from 'sonner';
 
 // Helper to get appropriate icon for custom field based on field name
 const getCustomFieldIcon = (fieldName: string) => {
@@ -98,6 +103,12 @@ const getChannelLabel = (channel: string): string => {
   }
 };
 
+interface PageVisit {
+  url: string;
+  entered_at: string;
+  duration_ms: number;
+}
+
 interface ConversationMetadata {
   lead_id?: string;
   lead_name?: string;
@@ -109,9 +120,11 @@ interface ConversationMetadata {
   country?: string;
   city?: string;
   device_type?: 'desktop' | 'mobile' | 'tablet';
+  device?: string;
   browser?: string;
   os?: string;
   referrer_url?: string;
+  referer_url?: string; // Alternative spelling from edge function
   session_started_at?: string;
   first_message_at?: string;
   messages_count?: number;
@@ -119,6 +132,7 @@ interface ConversationMetadata {
   priority?: 'not_set' | 'low' | 'normal' | 'high' | 'urgent';
   assigned_to?: string;
   notes?: string;
+  visited_pages?: PageVisit[];
 }
 
 interface ConversationMetadataPanelProps {
@@ -335,6 +349,43 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
             <div>
               <SectionHeader>Session Info</SectionHeader>
               <div className="space-y-2.5">
+                {/* Chat ID */}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex items-center gap-2.5 text-sm group">
+                      <Hash01 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                      <span className="font-mono text-xs truncate max-w-[140px]">
+                        {conversation.id}
+                      </span>
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(conversation.id);
+                          toast.success('Chat ID copied to clipboard');
+                        }}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:bg-muted rounded"
+                      >
+                        <Copy01 className="h-3 w-3 text-muted-foreground" />
+                      </button>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>Chat ID: {conversation.id}</TooltipContent>
+                </Tooltip>
+                
+                {/* Chat Duration */}
+                {metadata.session_started_at && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="flex items-center gap-2.5 text-sm">
+                        <ClockStopwatch className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                        <span>
+                          Duration: {formatDistanceToNow(new Date(metadata.session_started_at))}
+                        </span>
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent>Time since conversation started</TooltipContent>
+                  </Tooltip>
+                )}
+                
                 {/* Channel */}
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -369,13 +420,13 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
                     <TooltipContent>Visitor's IP address</TooltipContent>
                   </Tooltip>
                 )}
-                {metadata.device_type && (
+                {(metadata.device_type || metadata.device) && (
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <div className="flex items-center gap-2.5 text-sm">
                         <Monitor01 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                         <span className="capitalize">
-                          {getDeviceIcon()} {metadata.device_type}
+                          {getDeviceIcon()} {metadata.device_type || metadata.device}
                           {metadata.browser && ` • ${metadata.browser}`}
                         </span>
                       </div>
@@ -394,13 +445,13 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
                     <TooltipContent>Operating system</TooltipContent>
                   </Tooltip>
                 )}
-                {metadata.referrer_url && (
+                {(metadata.referrer_url || metadata.referer_url) && (
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <div className="flex items-start gap-2.5 text-sm">
                         <Link01 className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
                         <span className="truncate text-xs text-muted-foreground">
-                          {metadata.referrer_url}
+                          {metadata.referrer_url || metadata.referer_url}
                         </span>
                       </div>
                     </TooltipTrigger>
@@ -420,6 +471,58 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
                 </Tooltip>
               </div>
             </div>
+            
+            {/* Visited Pages */}
+            {metadata.visited_pages && metadata.visited_pages.length > 0 && (
+              <>
+                <Separator />
+                <div>
+                  <SectionHeader>Visited Pages</SectionHeader>
+                  <div className="space-y-2">
+                    {metadata.visited_pages.map((visit, index) => {
+                      const formatDuration = (ms: number) => {
+                        const seconds = Math.floor(ms / 1000);
+                        if (seconds < 60) return `${seconds}s`;
+                        const minutes = Math.floor(seconds / 60);
+                        const remainingSeconds = seconds % 60;
+                        return remainingSeconds > 0 ? `${minutes}m ${remainingSeconds}s` : `${minutes}m`;
+                      };
+                      
+                      // Extract pathname from URL for display
+                      let displayUrl = visit.url;
+                      try {
+                        const url = new URL(visit.url);
+                        displayUrl = url.pathname + url.search;
+                        if (displayUrl === '/') displayUrl = '/ (home)';
+                      } catch {
+                        // Keep original if parsing fails
+                      }
+                      
+                      return (
+                        <Tooltip key={index}>
+                          <TooltipTrigger asChild>
+                            <div className="flex items-start gap-2.5 text-sm">
+                              <Browser className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+                              <div className="min-w-0 flex-1">
+                                <div className="truncate text-xs">{displayUrl}</div>
+                                <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                                  <span>{formatDuration(visit.duration_ms)}</span>
+                                  <span>•</span>
+                                  <span>{format(new Date(visit.entered_at), 'HH:mm')}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent side="left" className="max-w-xs">
+                            <div className="text-xs break-all">{visit.url}</div>
+                          </TooltipContent>
+                        </Tooltip>
+                      );
+                    })}
+                  </div>
+                </div>
+              </>
+            )}
 
             <Separator />
 
