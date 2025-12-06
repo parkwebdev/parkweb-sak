@@ -218,7 +218,8 @@ export async function sendChatMessage(
   agentId: string, 
   conversationId: string | null, 
   messages: Array<{ role: string; content: string }>,
-  leadId?: string
+  leadId?: string,
+  pageVisits?: Array<{ url: string; entered_at: string; duration_ms: number }>
 ): Promise<ChatResponse> {
   const response = await fetch(`${SUPABASE_URL}/functions/v1/widget-chat`, {
     method: 'POST',
@@ -231,6 +232,7 @@ export async function sendChatMessage(
       conversationId,
       messages,
       leadId,
+      pageVisits,
     }),
   });
 

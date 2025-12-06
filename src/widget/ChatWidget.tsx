@@ -100,6 +100,12 @@ interface Conversation {
   preview: string;
 }
 
+interface PageVisit {
+  url: string;
+  entered_at: string;
+  duration_ms: number;
+}
+
 // Detect mobile full-screen mode (matches media query in chatpad-widget.js)
 const getIsMobileFullScreen = () => {
   if (typeof window === 'undefined') return false;
@@ -168,6 +174,8 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
   const [takeoverAgentAvatar, setTakeoverAgentAvatar] = useState<string | undefined>();
   const [unreadCount, setUnreadCount] = useState(0);
   const [headerScrollY, setHeaderScrollY] = useState(0);
+  const [pageVisits, setPageVisits] = useState<PageVisit[]>([]);
+  const currentPageRef = useRef<{ url: string; entered_at: string }>({ url: '', entered_at: '' });
   const homeContentRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -218,6 +226,89 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
       window.parent.postMessage({ type: 'chatpad-widget-ready' }, '*');
     }
   }, []);
+
+  // Page visit tracking - track pages the user visits while widget is loaded
+  useEffect(() => {
+    if (previewMode) return; // Don't track in preview mode
+    
+    const trackPageVisit = () => {
+      const now = new Date().toISOString();
+      const currentUrl = window.location.href;
+      
+      // Save duration for previous page if exists
+      if (currentPageRef.current.url && currentPageRef.current.entered_at) {
+        const duration = Date.now() - new Date(currentPageRef.current.entered_at).getTime();
+        setPageVisits(prev => {
+          // Update the last visit with duration
+          const updated = [...prev];
+          const lastIndex = updated.findIndex(v => v.url === currentPageRef.current.url && v.duration_ms === 0);
+          if (lastIndex !== -1) {
+            updated[lastIndex] = { ...updated[lastIndex], duration_ms: duration };
+          }
+          return updated;
+        });
+      }
+      
+      // Start tracking new page
+      currentPageRef.current = { url: currentUrl, entered_at: now };
+      setPageVisits(prev => [...prev, { url: currentUrl, entered_at: now, duration_ms: 0 }]);
+    };
+    
+    // Track initial page
+    trackPageVisit();
+    
+    // Track SPA navigations
+    const handlePopState = () => trackPageVisit();
+    const handleHashChange = () => trackPageVisit();
+    
+    window.addEventListener('popstate', handlePopState);
+    window.addEventListener('hashchange', handleHashChange);
+    
+    // Update duration on unload
+    const handleBeforeUnload = () => {
+      if (currentPageRef.current.url && currentPageRef.current.entered_at) {
+        const duration = Date.now() - new Date(currentPageRef.current.entered_at).getTime();
+        // Try to update localStorage with final duration (best effort)
+        try {
+          const stored = localStorage.getItem(`chatpad_page_visits_${agentId}`);
+          if (stored) {
+            const visits = JSON.parse(stored);
+            const lastIndex = visits.findIndex((v: PageVisit) => v.url === currentPageRef.current.url && v.duration_ms === 0);
+            if (lastIndex !== -1) {
+              visits[lastIndex].duration_ms = duration;
+              localStorage.setItem(`chatpad_page_visits_${agentId}`, JSON.stringify(visits));
+            }
+          }
+        } catch { /* ignore */ }
+      }
+    };
+    
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      window.removeEventListener('hashchange', handleHashChange);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [agentId, previewMode]);
+
+  // Persist page visits to localStorage
+  useEffect(() => {
+    if (pageVisits.length > 0 && !previewMode) {
+      localStorage.setItem(`chatpad_page_visits_${agentId}`, JSON.stringify(pageVisits));
+    }
+  }, [pageVisits, agentId, previewMode]);
+
+  // Load page visits from localStorage on mount
+  useEffect(() => {
+    if (previewMode) return;
+    const stored = localStorage.getItem(`chatpad_page_visits_${agentId}`);
+    if (stored) {
+      try {
+        setPageVisits(JSON.parse(stored));
+      } catch { /* ignore */ }
+    }
+  }, [agentId, previewMode]);
 
   // Initialize activeConversationId from chatUser if available (for returning users)
   // This enables real-time subscriptions immediately on widget load
@@ -675,12 +766,26 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
         content: m.content,
       }));
 
-      // Call the real AI endpoint
+      // Update current page duration before sending
+      if (currentPageRef.current.url && currentPageRef.current.entered_at) {
+        const duration = Date.now() - new Date(currentPageRef.current.entered_at).getTime();
+        setPageVisits(prev => {
+          const updated = [...prev];
+          const lastIndex = updated.findIndex(v => v.url === currentPageRef.current.url && v.duration_ms === 0);
+          if (lastIndex !== -1) {
+            updated[lastIndex] = { ...updated[lastIndex], duration_ms: duration };
+          }
+          return updated;
+        });
+      }
+
+      // Call the real AI endpoint with page visits
       const response = await sendChatMessage(
         config.agentId,
         activeConversationId,
         messageHistory,
-        chatUser?.leadId
+        chatUser?.leadId,
+        pageVisits.length > 0 ? pageVisits : undefined
       );
 
       // Update conversation ID if this was a new conversation
