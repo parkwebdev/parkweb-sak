@@ -232,6 +232,10 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
   const currentPageRef = useRef<{ url: string; entered_at: string }>({ url: '', entered_at: '' });
   const [referrerJourney, setReferrerJourney] = useState<ReferrerJourney | null>(null);
   const referrerJourneySentRef = useRef(false);
+  // Parent page URL tracking (for iframe mode - parent window sends real page URL)
+  const parentPageUrlRef = useRef<string | null>(null);
+  const parentReferrerRef = useRef<string | null>(null);
+  const parentUtmParamsRef = useRef<Partial<ReferrerJourney> | null>(null);
   const homeContentRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -293,9 +297,108 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     }
   }, []);
 
-  // Capture referrer journey on initial load
+  // Listen for parent page info messages (iframe mode - parent sends real page URL)
+  useEffect(() => {
+    if (previewMode) return;
+    
+    const handleParentMessage = (event: MessageEvent) => {
+      if (!event.data || typeof event.data !== 'object') return;
+      
+      if (event.data.type === 'chatpad-parent-page-info') {
+        const { url, referrer, utmParams } = event.data;
+        console.log('[Widget] Received parent page info:', { url, referrer, utmParams });
+        
+        const isFirstMessage = !parentPageUrlRef.current;
+        parentPageUrlRef.current = url;
+        parentReferrerRef.current = referrer;
+        parentUtmParamsRef.current = utmParams || {};
+        
+        // If this is the first parent page info, set up referrer journey
+        if (isFirstMessage && !referrerJourney) {
+          const entryType = (utmParams?.utm_medium && ['cpc', 'ppc', 'paid', 'cpm', 'display', 'retargeting'].includes(utmParams.utm_medium.toLowerCase())) 
+            ? 'paid' 
+            : detectEntryType(referrer);
+          
+          const journey: ReferrerJourney = {
+            referrer_url: referrer || null,
+            landing_page: url,
+            utm_source: utmParams?.utm_source || null,
+            utm_medium: utmParams?.utm_medium || null,
+            utm_campaign: utmParams?.utm_campaign || null,
+            utm_term: utmParams?.utm_term || null,
+            utm_content: utmParams?.utm_content || null,
+            entry_type: entryType,
+          };
+          
+          setReferrerJourney(journey);
+          console.log('[Widget] Set referrer journey from parent:', journey);
+          localStorage.setItem(`chatpad_referrer_journey_${agentId}`, JSON.stringify(journey));
+        }
+        
+        // Track page visit with parent URL
+        if (url) {
+          const now = new Date().toISOString();
+          
+          // Calculate duration for previous page
+          let previousDuration = 0;
+          if (currentPageRef.current.url && currentPageRef.current.entered_at) {
+            previousDuration = Date.now() - new Date(currentPageRef.current.entered_at).getTime();
+            setPageVisits(prev => {
+              const updated = [...prev];
+              const lastIndex = updated.findIndex(v => v.url === currentPageRef.current.url && v.duration_ms === 0);
+              if (lastIndex !== -1) {
+                updated[lastIndex] = { ...updated[lastIndex], duration_ms: previousDuration };
+              }
+              return updated;
+            });
+          }
+          
+          // Only add new page visit if URL changed
+          if (url !== currentPageRef.current.url) {
+            currentPageRef.current = { url, entered_at: now };
+            const newVisit = { url, entered_at: now, duration_ms: 0 };
+            setPageVisits(prev => [...prev, newVisit]);
+            
+            // Send real-time update if we have an active conversation
+            if (activeConversationId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(activeConversationId)) {
+              updatePageVisit(activeConversationId, {
+                ...newVisit,
+                previous_duration_ms: previousDuration,
+              }).catch(err => console.error('[Widget] Failed to send real-time page visit:', err));
+            }
+          }
+        }
+      }
+    };
+    
+    window.addEventListener('message', handleParentMessage);
+    return () => window.removeEventListener('message', handleParentMessage);
+  }, [agentId, previewMode, referrerJourney, activeConversationId]);
+
+  // Capture referrer journey on initial load (fallback for non-iframe mode or if parent doesn't send info)
   useEffect(() => {
     if (previewMode || referrerJourney) return;
+    
+    // In iframe mode, wait for parent to send page info
+    const isInIframe = window.parent !== window;
+    if (isInIframe) {
+      // Give parent 1 second to send page info before falling back
+      const timeout = setTimeout(() => {
+        if (!parentPageUrlRef.current && !referrerJourney) {
+          console.log('[Widget] No parent page info received, using fallback');
+          captureReferrerJourneyFallback();
+        }
+      }, 1000);
+      return () => clearTimeout(timeout);
+    }
+    
+    // Not in iframe, capture directly
+    captureReferrerJourneyFallback();
+  }, [agentId, previewMode]);
+  
+  // Helper function to capture referrer journey from window.location (fallback)
+  const captureReferrerJourneyFallback = useCallback(() => {
+    if (referrerJourney) return;
     
     const currentUrl = window.location.href;
     const referrer = document.referrer || null;
@@ -316,11 +419,11 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     };
     
     setReferrerJourney(journey);
-    console.log('[Widget] Captured referrer journey:', journey);
+    console.log('[Widget] Captured referrer journey (fallback):', journey);
     
     // Persist to localStorage
     localStorage.setItem(`chatpad_referrer_journey_${agentId}`, JSON.stringify(journey));
-  }, [agentId, previewMode]);
+  }, [agentId, referrerJourney]);
 
   // Load referrer journey from localStorage on mount
   useEffect(() => {
@@ -333,9 +436,13 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     }
   }, [agentId, previewMode]);
 
-  // Page visit tracking - track pages the user visits while widget is loaded
+  // Page visit tracking - only for non-iframe mode (iframe mode handled by parent message listener)
   useEffect(() => {
     if (previewMode) return; // Don't track in preview mode
+    
+    // In iframe mode, page tracking is handled by parent postMessage
+    const isInIframe = window.parent !== window;
+    if (isInIframe) return;
     
     const trackPageVisit = (sendRealtime = false) => {
       const now = new Date().toISOString();
