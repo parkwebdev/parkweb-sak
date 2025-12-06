@@ -766,6 +766,8 @@ When answering, you can naturally reference the information from the knowledge b
           last_message_preview: assistantContent.substring(0, 60),
           last_message_role: 'assistant',
           last_message_at: new Date().toISOString(),
+          // Track when the visitor/user last sent a message (for unread badge logic)
+          last_user_message_at: new Date().toISOString(),
         },
         updated_at: new Date().toISOString(),
       })

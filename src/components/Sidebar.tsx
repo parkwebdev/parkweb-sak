@@ -72,13 +72,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
   const unreadConversationsCount = conversations.filter(conv => {
     const metadata = conv.metadata as any;
     const lastReadAt = metadata?.admin_last_read_at;
-    const lastMessageAt = metadata?.last_message_at;
+    const lastUserMessageAt = metadata?.last_user_message_at;
     
-    // Never read by admin and has messages - unread
-    if (!lastReadAt && lastMessageAt) return true;
+    // Never read by admin and has user messages - unread
+    if (!lastReadAt && lastUserMessageAt) return true;
     
-    // New messages since last read
-    if (lastReadAt && lastMessageAt && new Date(lastMessageAt) > new Date(lastReadAt)) {
+    // New user messages since last read
+    if (lastReadAt && lastUserMessageAt && new Date(lastUserMessageAt) > new Date(lastReadAt)) {
       return true;
     }
     
