@@ -1773,100 +1773,99 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                               </span>
                             </div>
                           )}
-                          <div 
-                            className={`max-w-[80%] rounded-lg p-3 ${
-                              msg.role === 'user' 
-                                ? 'bg-muted' 
-                                : msgWithExtras.isHuman 
-                                  ? 'bg-muted/50 text-foreground' 
-                                  : 'bg-muted'
-                            }`}
-                          >
-                            {msgWithExtras.isHuman && (
-                              <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1">
-                                <span className="font-medium">{(() => {
-                                  const name = msgWithExtras.senderName || 'Team Member';
-                                  const parts = name.trim().split(' ');
-                                  if (parts.length === 1) return parts[0];
-                                  return `${parts[0]} ${parts[parts.length - 1].charAt(0).toUpperCase()}.`;
-                                })()}</span>
-                              </div>
-                            )}
-                            {msg.type === 'audio' && msg.audioUrl && (
-                            <Suspense fallback={<div className="h-10 w-full bg-muted animate-pulse rounded" />}>
-                              <AudioPlayer audioUrl={msg.audioUrl} primaryColor={config.primaryColor} />
-                            </Suspense>
-                          )}
-                          {msg.type === 'file' && msg.files && (
-                            <div className="space-y-2">
-                              {msg.files.map((file, i) => (
-                                <div key={i} className="flex items-center gap-2 text-xs">
-                                  {file.type.startsWith('image/') ? <Image03 className="h-4 w-4" /> : <FileCheck02 className="h-4 w-4" />}
-                                  <span>{file.name}</span>
+                          <div className="max-w-[80%]">
+                            <div 
+                              className={`rounded-lg p-3 ${
+                                msg.role === 'user' 
+                                  ? 'bg-muted' 
+                                  : msgWithExtras.isHuman 
+                                    ? 'bg-muted/50 text-foreground' 
+                                    : 'bg-muted'
+                              }`}
+                            >
+                              {msgWithExtras.isHuman && (
+                                <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1">
+                                  <span className="font-medium">{(() => {
+                                    const name = msgWithExtras.senderName || 'Team Member';
+                                    const parts = name.trim().split(' ');
+                                    if (parts.length === 1) return parts[0];
+                                    return `${parts[0]} ${parts[parts.length - 1].charAt(0).toUpperCase()}.`;
+                                  })()}</span>
                                 </div>
-                              ))}
-                              {msg.content && <p className="text-sm mt-2">{msg.content}</p>}
+                              )}
+                              {msg.type === 'audio' && msg.audioUrl && (
+                                <Suspense fallback={<div className="h-10 w-full bg-muted animate-pulse rounded" />}>
+                                  <AudioPlayer audioUrl={msg.audioUrl} primaryColor={config.primaryColor} />
+                                </Suspense>
+                              )}
+                              {msg.type === 'file' && msg.files && (
+                                <div className="space-y-2">
+                                  {msg.files.map((file, i) => (
+                                    <div key={i} className="flex items-center gap-2 text-xs">
+                                      {file.type.startsWith('image/') ? <Image03 className="h-4 w-4" /> : <FileCheck02 className="h-4 w-4" />}
+                                      <span>{file.name}</span>
+                                    </div>
+                                  ))}
+                                  {msg.content && <p className="text-sm mt-2">{msg.content}</p>}
+                                </div>
+                              )}
+                              {msg.type === 'text' && <p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p>}
                             </div>
-                          )}
-                          {msg.type === 'text' && <p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p>}
-                          
-                          {config.enableMessageReactions && (
-                            <Suspense fallback={null}>
-                              <MessageReactions
-                                reactions={msg.reactions || []}
-                                onAddReaction={async (emoji) => {
-                                  // Optimistic update
-                                  const newMessages = [...messages];
-                                  const reaction = newMessages[idx].reactions?.find(r => r.emoji === emoji);
-                                  if (reaction) {
-                                    if (!reaction.userReacted) {
-                                      reaction.count += 1;
-                                      reaction.userReacted = true;
+                            
+                            {config.enableMessageReactions && (
+                              <Suspense fallback={null}>
+                                <MessageReactions
+                                  reactions={msg.reactions || []}
+                                  onAddReaction={async (emoji) => {
+                                    const newMessages = [...messages];
+                                    const reaction = newMessages[idx].reactions?.find(r => r.emoji === emoji);
+                                    if (reaction) {
+                                      if (!reaction.userReacted) {
+                                        reaction.count += 1;
+                                        reaction.userReacted = true;
+                                      }
+                                    } else {
+                                      newMessages[idx].reactions = [...(newMessages[idx].reactions || []), { emoji, count: 1, userReacted: true }];
                                     }
-                                  } else {
-                                    newMessages[idx].reactions = [...(newMessages[idx].reactions || []), { emoji, count: 1, userReacted: true }];
-                                  }
-                                  setMessages(newMessages);
-                                  
-                                  // Persist to database if we have a message ID
-                                  if (msg.id) {
-                                    await updateMessageReaction(msg.id, emoji, 'add', 'user');
-                                  }
-                                }}
-                                onRemoveReaction={async (emoji) => {
-                                  // Optimistic update
-                                  const newMessages = [...messages];
-                                  const reaction = newMessages[idx].reactions?.find(r => r.emoji === emoji);
-                                  if (reaction && reaction.userReacted) {
-                                    reaction.count -= 1;
-                                    reaction.userReacted = false;
-                                    if (reaction.count <= 0) {
-                                      newMessages[idx].reactions = newMessages[idx].reactions?.filter(r => r.emoji !== emoji);
+                                    setMessages(newMessages);
+                                    if (msg.id) {
+                                      await updateMessageReaction(msg.id, emoji, 'add', 'user');
                                     }
-                                  }
-                                  setMessages(newMessages);
-                                  
-                                  // Persist to database if we have a message ID
-                                  if (msg.id) {
-                                    await updateMessageReaction(msg.id, emoji, 'remove', 'user');
-                                  }
-                                }}
-                              primaryColor={config.primaryColor}
-                                compact
-                                isUserMessage={msg.role === 'user'}
-                              />
-                            </Suspense>
-                          )}
-                          
-                          <div className="flex items-center justify-between gap-2 mt-1">
-                            <span className="text-xs opacity-70">{formatTimestamp(msg.timestamp)}</span>
-                            {msg.role === 'user' && config.showReadReceipts && (
-                              <span className={`text-xs ${msg.read_at ? 'text-info' : 'opacity-50'}`}>
-                                ✓
-                              </span>
+                                  }}
+                                  onRemoveReaction={async (emoji) => {
+                                    const newMessages = [...messages];
+                                    const reaction = newMessages[idx].reactions?.find(r => r.emoji === emoji);
+                                    if (reaction && reaction.userReacted) {
+                                      reaction.count -= 1;
+                                      reaction.userReacted = false;
+                                      if (reaction.count <= 0) {
+                                        newMessages[idx].reactions = newMessages[idx].reactions?.filter(r => r.emoji !== emoji);
+                                      }
+                                    }
+                                    setMessages(newMessages);
+                                    if (msg.id) {
+                                      await updateMessageReaction(msg.id, emoji, 'remove', 'user');
+                                    }
+                                  }}
+                                  primaryColor={config.primaryColor}
+                                  compact
+                                  isUserMessage={msg.role === 'user'}
+                                />
+                              </Suspense>
                             )}
+                            
+                            <div className="flex items-center justify-between gap-2 mt-1 px-1">
+                              <span className="text-xs opacity-70">{formatTimestamp(msg.timestamp)}</span>
+                              {msg.role === 'user' && config.showReadReceipts && (
+                                <span 
+                                  className={`text-xs cursor-default ${msg.read_at ? 'text-info' : 'opacity-50'}`}
+                                  title={msg.read_at ? 'Read' : 'Sent'}
+                                >
+                                  ✓
+                                </span>
+                              )}
+                            </div>
                           </div>
-                        </div>
                       </div>
                       );
                     })}
