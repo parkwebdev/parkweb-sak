@@ -64,7 +64,7 @@ export function LinkPreviews({ content, compact = false }: LinkPreviewsProps) {
   // Don't render anything if no URLs or all failed
   if (urls.length === 0) return null;
   
-  const validPreviews = previews.filter((p): p is LinkPreviewData => p !== null && !!p.title);
+  const validPreviews = previews.filter((p): p is LinkPreviewData => p !== null && (!!p.title || !!p.videoType));
   
   if (loading) {
     return (
