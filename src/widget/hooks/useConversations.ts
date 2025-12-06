@@ -57,6 +57,14 @@ export function useConversations(options: UseConversationsOptions) {
       return;
     }
     
+    // Skip fetch if we already have local messages (e.g., greeting just set)
+    // This prevents race conditions where DB fetch overwrites locally-set messages
+    if (messages.length > 0) {
+      console.log('[Widget] Skipping DB fetch - local messages already exist:', messages.length);
+      fetchedConversationIdRef.current = activeConversationId;
+      return;
+    }
+    
     const loadMessagesFromDB = async () => {
       fetchedConversationIdRef.current = activeConversationId;
       setIsLoadingMessages(true);
@@ -84,6 +92,12 @@ export function useConversations(options: UseConversationsOptions) {
           // MERGE with existing messages instead of overwriting
           // This preserves local messages (greeting, optimistic updates) while adding DB messages
           setMessages(prev => {
+            // NEVER overwrite existing messages with empty DB result
+            if (formattedMessages.length === 0) {
+              console.log('[Widget] DB returned empty, preserving', prev.length, 'local messages');
+              return prev;
+            }
+            
             // If no local messages, just use DB messages
             if (prev.length === 0) return formattedMessages;
             
