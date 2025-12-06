@@ -19,6 +19,14 @@ serve(async (req) => {
 
     const { conversationId, pageVisit, referrerJourney } = await req.json();
 
+    // Log incoming data for debugging
+    console.log('Received update-page-visits request:', {
+      conversationId,
+      hasPageVisit: !!pageVisit,
+      hasReferrerJourney: !!referrerJourney,
+      referrerJourney: referrerJourney || null,
+    });
+
     if (!conversationId) {
       return new Response(
         JSON.stringify({ error: 'Conversation ID is required' }),
