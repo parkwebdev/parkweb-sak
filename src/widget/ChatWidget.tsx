@@ -1911,7 +1911,39 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                               </span>
                             </div>
                           )}
-                          <div className={`max-w-[80%] ${msgWithExtras.isHuman && isContinuation ? 'ml-9' : ''}`}>
+                          <div className={`max-w-[80%] flex flex-col ${msgWithExtras.isHuman && isContinuation ? 'ml-9' : ''}`}>
+                            {/* Name + Timestamp header row - only show if !isContinuation */}
+                            {!isContinuation && (
+                              <div className={`flex items-center gap-1.5 text-[11px] opacity-70 mb-1 ${msg.role === 'user' ? 'justify-end mr-1' : 'ml-1'}`}>
+                                <span className="font-medium">
+                                  {msg.role === 'user' ? 'You' : (msgWithExtras.isHuman ? (() => {
+                                    const name = msgWithExtras.senderName || 'Team Member';
+                                    const parts = name.trim().split(' ');
+                                    if (parts.length === 1) return parts[0];
+                                    return `${parts[0]} ${parts[parts.length - 1].charAt(0).toUpperCase()}.`;
+                                  })() : config.agentName || 'Assistant')}
+                                </span>
+                                <span>•</span>
+                                <span>{formatTimestamp(msg.timestamp)}</span>
+                                {/* Status badges for user messages */}
+                                {msg.role === 'user' && config.showReadReceipts && (
+                                  (msg as any).failed ? (
+                                    <span className="text-destructive inline-flex items-center" title="Failed">
+                                      <XCircle size={12} />
+                                    </span>
+                                  ) : msg.read_at ? (
+                                    <span className="text-info inline-flex items-center" title="Seen">
+                                      <CheckCircle size={12} />
+                                    </span>
+                                  ) : (
+                                    <span className="opacity-50 inline-flex items-center" title="Sent">
+                                      <Check size={12} />
+                                    </span>
+                                  )
+                                )}
+                              </div>
+                            )}
+                            {/* Message bubble - content only */}
                             <div 
                               className={`rounded-lg p-3 ${
                                 msg.role === 'user' 
@@ -1921,17 +1953,6 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                                     : 'bg-muted'
                               }`}
                             >
-                              {/* Show sender name only for first message in human group */}
-                              {msgWithExtras.isHuman && !isContinuation && (
-                                <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1">
-                                  <span className="font-medium">{(() => {
-                                    const name = msgWithExtras.senderName || 'Team Member';
-                                    const parts = name.trim().split(' ');
-                                    if (parts.length === 1) return parts[0];
-                                    return `${parts[0]} ${parts[parts.length - 1].charAt(0).toUpperCase()}.`;
-                                  })()}</span>
-                                </div>
-                              )}
                               {msg.type === 'audio' && msg.audioUrl && (
                                 <Suspense fallback={<div className="h-10 w-full bg-muted animate-pulse rounded" />}>
                                   <AudioPlayer audioUrl={msg.audioUrl} primaryColor={config.primaryColor} />
@@ -1951,68 +1972,48 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                               {msg.type === 'text' && <p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p>}
                             </div>
                             
-                            {/* Only show reactions/time/status for last message in group */}
-                            {isLastInGroup && (
+                            {/* Reactions row - only show for last message in group */}
+                            {isLastInGroup && config.enableMessageReactions && (
                               <div className="flex items-center gap-2 mt-1 px-1">
-                                {config.enableMessageReactions && (
-                                  <Suspense fallback={null}>
-                                    <MessageReactions
-                                      reactions={msg.reactions || []}
-                                      onAddReaction={async (emoji) => {
-                                        const newMessages = [...messages];
-                                        const reaction = newMessages[idx].reactions?.find(r => r.emoji === emoji);
-                                        if (reaction) {
-                                          if (!reaction.userReacted) {
-                                            reaction.count += 1;
-                                            reaction.userReacted = true;
-                                          }
-                                        } else {
-                                          newMessages[idx].reactions = [...(newMessages[idx].reactions || []), { emoji, count: 1, userReacted: true }];
+                                <Suspense fallback={null}>
+                                  <MessageReactions
+                                    reactions={msg.reactions || []}
+                                    onAddReaction={async (emoji) => {
+                                      const newMessages = [...messages];
+                                      const reaction = newMessages[idx].reactions?.find(r => r.emoji === emoji);
+                                      if (reaction) {
+                                        if (!reaction.userReacted) {
+                                          reaction.count += 1;
+                                          reaction.userReacted = true;
                                         }
-                                        setMessages(newMessages);
-                                        if (msg.id) {
-                                          await updateMessageReaction(msg.id, emoji, 'add', 'user');
+                                      } else {
+                                        newMessages[idx].reactions = [...(newMessages[idx].reactions || []), { emoji, count: 1, userReacted: true }];
+                                      }
+                                      setMessages(newMessages);
+                                      if (msg.id) {
+                                        await updateMessageReaction(msg.id, emoji, 'add', 'user');
+                                      }
+                                    }}
+                                    onRemoveReaction={async (emoji) => {
+                                      const newMessages = [...messages];
+                                      const reaction = newMessages[idx].reactions?.find(r => r.emoji === emoji);
+                                      if (reaction && reaction.userReacted) {
+                                        reaction.count -= 1;
+                                        reaction.userReacted = false;
+                                        if (reaction.count <= 0) {
+                                          newMessages[idx].reactions = newMessages[idx].reactions?.filter(r => r.emoji !== emoji);
                                         }
-                                      }}
-                                      onRemoveReaction={async (emoji) => {
-                                        const newMessages = [...messages];
-                                        const reaction = newMessages[idx].reactions?.find(r => r.emoji === emoji);
-                                        if (reaction && reaction.userReacted) {
-                                          reaction.count -= 1;
-                                          reaction.userReacted = false;
-                                          if (reaction.count <= 0) {
-                                            newMessages[idx].reactions = newMessages[idx].reactions?.filter(r => r.emoji !== emoji);
-                                          }
-                                        }
-                                        setMessages(newMessages);
-                                        if (msg.id) {
-                                          await updateMessageReaction(msg.id, emoji, 'remove', 'user');
-                                        }
-                                      }}
-                                      primaryColor={config.primaryColor}
-                                      compact
-                                      isUserMessage={msg.role === 'user'}
-                                    />
-                                  </Suspense>
-                                )}
-                                <span className="text-xs opacity-70">
-                                  {msg.role === 'user' ? 'You • ' : ''}{formatTimestamp(msg.timestamp)}
-                                </span>
-                                {msg.role === 'user' && config.showReadReceipts && (
-                                  (msg as any).failed ? (
-                                    <span className="text-destructive inline-flex items-center" title="Failed">
-                                      <XCircle size={12} />
-                                    </span>
-                                  ) : msg.read_at ? (
-                                    <span className="text-info inline-flex items-center" title="Seen">
-                                      <CheckCircle size={12} />
-                                    </span>
-                                  ) : (
-                                    <span className="opacity-50 inline-flex items-center" title="Sent">
-                                      <Check size={12} />
-                                    </span>
-                                  )
-                                )}
+                                      }
+                                      setMessages(newMessages);
+                                      if (msg.id) {
+                                        await updateMessageReaction(msg.id, emoji, 'remove', 'user');
+                                      }
+                                    }}
+                                    primaryColor={config.primaryColor}
+                                    compact
+                                    isUserMessage={msg.role === 'user'}
+                                  />
+                                </Suspense>
                               </div>
                             )}
                           </div>
