@@ -1061,7 +1061,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                           >
                             {msg.type === 'audio' && msg.audioUrl && (
                               <Suspense fallback={<div className="h-8 flex items-center text-sm text-muted-foreground">Loading audio...</div>}>
-                                <AudioPlayer src={msg.audioUrl} />
+                                <AudioPlayer audioUrl={msg.audioUrl} primaryColor={config.primaryColor} />
                               </Suspense>
                             )}
                             {msg.type === 'file' && msg.files && (
@@ -1113,39 +1113,49 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                               <Suspense fallback={null}>
                                 <MessageReactions
                                   reactions={msg.reactions || []}
-                                  onReactionChange={async (emoji, add) => {
+                                  onAddReaction={async (emoji: string) => {
                                     try {
-                                      await updateMessageReaction(msg.id!, emoji, add);
-                                      // Optimistically update local state
+                                      await updateMessageReaction(msg.id!, emoji, 'add', 'user');
                                       setMessages(prev => prev.map(m => {
                                         if (m.id !== msg.id) return m;
                                         const existing = m.reactions || [];
                                         const reactionIndex = existing.findIndex(r => r.emoji === emoji);
-                                        if (add) {
-                                          if (reactionIndex >= 0) {
-                                            const updated = [...existing];
-                                            updated[reactionIndex] = { ...updated[reactionIndex], userReacted: true, count: updated[reactionIndex].count + 1 };
-                                            return { ...m, reactions: updated };
+                                        if (reactionIndex >= 0) {
+                                          const updated = [...existing];
+                                          updated[reactionIndex] = { ...updated[reactionIndex], userReacted: true, count: updated[reactionIndex].count + 1 };
+                                          return { ...m, reactions: updated };
+                                        }
+                                        return { ...m, reactions: [...existing, { emoji, count: 1, userReacted: true }] };
+                                      }));
+                                    } catch (err) {
+                                      console.error('Failed to add reaction:', err);
+                                    }
+                                  }}
+                                  onRemoveReaction={async (emoji: string) => {
+                                    try {
+                                      await updateMessageReaction(msg.id!, emoji, 'remove', 'user');
+                                      setMessages(prev => prev.map(m => {
+                                        if (m.id !== msg.id) return m;
+                                        const existing = m.reactions || [];
+                                        const reactionIndex = existing.findIndex(r => r.emoji === emoji);
+                                        if (reactionIndex >= 0) {
+                                          const updated = [...existing];
+                                          if (updated[reactionIndex].count <= 1) {
+                                            updated.splice(reactionIndex, 1);
+                                          } else {
+                                            updated[reactionIndex] = { ...updated[reactionIndex], userReacted: false, count: updated[reactionIndex].count - 1 };
                                           }
-                                          return { ...m, reactions: [...existing, { emoji, count: 1, userReacted: true }] };
-                                        } else {
-                                          if (reactionIndex >= 0) {
-                                            const updated = [...existing];
-                                            if (updated[reactionIndex].count <= 1) {
-                                              updated.splice(reactionIndex, 1);
-                                            } else {
-                                              updated[reactionIndex] = { ...updated[reactionIndex], userReacted: false, count: updated[reactionIndex].count - 1 };
-                                            }
-                                            return { ...m, reactions: updated };
-                                          }
+                                          return { ...m, reactions: updated };
                                         }
                                         return m;
                                       }));
                                     } catch (err) {
-                                      console.error('Failed to update reaction:', err);
+                                      console.error('Failed to remove reaction:', err);
                                     }
                                   }}
+                                  primaryColor={config.primaryColor}
                                   compact
+                                  isUserMessage={msg.role === 'user'}
                                 />
                               </Suspense>
                             )}
@@ -1627,9 +1637,8 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                 className="flex flex-col items-center gap-1 py-1"
               >
                 <HomeNavIcon 
-                  isActive={currentView === 'home'} 
-                  isHovered={hoveredNav === 'home'}
-                  primaryColor={config.primaryColor}
+                  active={currentView === 'home'} 
+                  hovered={hoveredNav === 'home'}
                 />
                 <span className={`text-xs ${currentView === 'home' ? 'font-medium' : 'text-muted-foreground'}`} style={currentView === 'home' ? { color: config.primaryColor } : undefined}>
                   Home
@@ -1655,9 +1664,8 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
               >
                 <div className="relative">
                   <ChatNavIcon 
-                    isActive={currentView === 'messages'} 
-                    isHovered={hoveredNav === 'messages'}
-                    primaryColor={config.primaryColor}
+                    active={currentView === 'messages'} 
+                    hovered={hoveredNav === 'messages'}
                   />
                   {/* Unread badge */}
                   {unreadCount > 0 && (
@@ -1678,9 +1686,8 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                 className="flex flex-col items-center gap-1 py-1"
               >
                 <HelpNavIcon 
-                  isActive={currentView === 'help'} 
-                  isHovered={hoveredNav === 'help'}
-                  primaryColor={config.primaryColor}
+                  active={currentView === 'help'} 
+                  hovered={hoveredNav === 'help'}
                 />
                 <span className={`text-xs ${currentView === 'help' ? 'font-medium' : 'text-muted-foreground'}`} style={currentView === 'help' ? { color: config.primaryColor } : undefined}>
                   Help
@@ -1708,13 +1715,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
   // For contained preview mode (embed tab preview), render with absolute positioning
   if (containedPreview) {
     return (
-      <div className="absolute" style={{ 
-        ...positionClasses[position],
-        right: position.includes('right') ? '16px' : undefined,
-        left: position.includes('left') ? '16px' : undefined,
-        bottom: position.includes('bottom') ? '16px' : undefined,
-        top: position.includes('top') ? '16px' : undefined,
-      }}>
+      <div className={`absolute ${positionClasses[position] || positionClasses['bottom-right']}`}>
         {widgetContent}
       </div>
     );
@@ -1722,13 +1723,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
 
   // Default mode: fixed positioning for standalone widget
   return (
-    <div className="fixed z-[9999]" style={{ 
-      ...positionClasses[position],
-      right: position.includes('right') ? '16px' : undefined,
-      left: position.includes('left') ? '16px' : undefined,
-      bottom: position.includes('bottom') ? '16px' : undefined,
-      top: position.includes('top') ? '16px' : undefined,
-    }}>
+    <div className={`fixed z-[9999] ${positionClasses[position] || positionClasses['bottom-right']}`}>
       {widgetContent}
     </div>
   );
