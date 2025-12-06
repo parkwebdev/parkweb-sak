@@ -13,6 +13,7 @@ interface HomeViewProps {
   isOpen: boolean;
   isIframeMode: boolean;
   isContentLoading: boolean;
+  logoOpacity: number;
   onClose: () => void;
   onQuickActionClick: (actionType: string) => void;
   onScrollChange: (scrollY: number) => void;
@@ -23,6 +24,7 @@ export const HomeView = ({
   isOpen,
   isIframeMode,
   isContentLoading,
+  logoOpacity,
   onClose,
   onQuickActionClick,
   onScrollChange,
@@ -68,6 +70,7 @@ export const HomeView = ({
         {/* Logo in top left - aligned with content text */}
         <ChatPadLogo 
           className="absolute top-4 left-6 h-8 w-8 text-white transition-opacity duration-300 z-10"
+          style={{ opacity: logoOpacity }}
         />
         
         {/* Close button in top right */}
@@ -88,7 +91,10 @@ export const HomeView = ({
         <div className="h-[140px]" />
         
         {/* Welcome text - visible over gradient */}
-        <div className="px-6 pb-6">
+        <div 
+          className="px-6 pb-6 transition-opacity duration-300"
+          style={{ opacity: logoOpacity }}
+        >
           <h2 className="text-xl font-semibold text-white">
             {isContentLoading ? (
               <span className="inline-block w-32 h-6 bg-white/20 rounded animate-pulse" />
