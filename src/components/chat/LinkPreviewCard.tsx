@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Globe02, LinkExternal01 } from '@untitledui/icons';
+import { VideoEmbed } from './VideoEmbed';
 
 export interface LinkPreviewData {
   url: string;
@@ -9,6 +10,11 @@ export interface LinkPreviewData {
   siteName?: string;
   favicon?: string;
   domain: string;
+  // Video fields
+  videoType?: 'youtube' | 'vimeo' | 'loom' | 'wistia' | 'twitter' | null;
+  videoId?: string;
+  embedUrl?: string;
+  cardType?: string;
 }
 
 interface LinkPreviewCardProps {
@@ -21,6 +27,31 @@ export function LinkPreviewCard({ data, compact = false }: LinkPreviewCardProps)
   const [faviconError, setFaviconError] = useState(false);
 
   const hasImage = data.image && !imageError;
+
+  // If this is a video link, render VideoEmbed instead
+  if (data.videoType && data.embedUrl && !compact) {
+    return (
+      <div className="mt-2">
+        <VideoEmbed 
+          embedUrl={data.embedUrl}
+          videoType={data.videoType}
+          title={data.title}
+          thumbnail={data.image}
+        />
+        {/* Show title below video as clickable link */}
+        {data.title && (
+          <a 
+            href={data.url} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="block mt-2 text-sm font-medium hover:underline line-clamp-1"
+          >
+            {data.title}
+          </a>
+        )}
+      </div>
+    );
+  }
 
   return (
     <a
