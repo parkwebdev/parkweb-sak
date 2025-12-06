@@ -560,7 +560,7 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
                   )}
                   
                   {/* Landing Page */}
-                  {metadata.referrer_journey.landing_page && (
+                  {metadata.referrer_journey.landing_page && !metadata.referrer_journey.landing_page.includes('widget.html') && (
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <div className="flex items-start gap-2.5 text-sm">
@@ -627,18 +627,20 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
           )}
 
           {/* Visited Pages - Conditional */}
-          {metadata.visited_pages && metadata.visited_pages.length > 0 && (
+          {metadata.visited_pages && metadata.visited_pages.filter(v => !v.url.includes('widget.html')).length > 0 && (
             <AccordionItem value="pages" className="border-b px-4">
               <AccordionTrigger 
                 className="py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider hover:no-underline"
                 showIcon={true}
               >
-                Visited Pages ({metadata.visited_pages.length})
+                Visited Pages ({metadata.visited_pages.filter(v => !v.url.includes('widget.html')).length})
               </AccordionTrigger>
-              <AccordionContent className="pb-4">
-                <div className="flex flex-col">
-                  {metadata.visited_pages.map((visit, index) => {
-                    const isLast = index === metadata.visited_pages.length - 1;
+              <AccordionContent className="pb-4 overflow-visible">
+                <div className="flex flex-col overflow-visible">
+                  {metadata.visited_pages
+                    .filter(visit => !visit.url.includes('widget.html'))
+                    .map((visit, index, filteredPages) => {
+                    const isLast = index === filteredPages.length - 1;
                     const isCurrentlyActive = isLast && visit.duration_ms === 0;
                     
                     const formatDuration = (ms: number) => {
