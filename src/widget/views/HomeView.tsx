@@ -95,17 +95,31 @@ export const HomeView = ({
           className="px-6 pb-6 transition-opacity duration-300"
           style={{ opacity: logoOpacity }}
         >
-          <h2 className="text-xl font-semibold text-white">
-            {isContentLoading ? (
-              <span className="inline-block w-32 h-6 bg-white/20 rounded animate-pulse" />
-            ) : (
-              config.greeting
-            )}
-          </h2>
+          {isContentLoading ? (
+            <div className="space-y-2">
+              <span className="inline-block w-24 h-8 bg-white/20 rounded animate-pulse" />
+              <span className="inline-block w-48 h-5 bg-white/20 rounded animate-pulse" />
+            </div>
+          ) : (
+            <>
+              {/* Large title with emoji */}
+              <h2 className="text-2xl font-bold text-white">
+                {config.welcomeTitle || 'Hi'} {config.welcomeEmoji && <span>{config.welcomeEmoji}</span>}
+              </h2>
+              {/* Smaller subtitle below */}
+              <p className="text-base font-medium text-white/90 mt-1">
+                {config.welcomeSubtitle || 'How can we help you today?'}
+              </p>
+            </>
+          )}
         </div>
         
-        {/* Content area with white background */}
-        <div className="bg-white rounded-t-2xl flex-1 min-h-[300px]">
+        {/* Content area with gradient fade at top */}
+        <div className="relative bg-white flex-1 min-h-[300px]">
+          {/* Gradient fade overlay at top */}
+          <div 
+            className="absolute -top-12 left-0 right-0 h-12 bg-gradient-to-b from-transparent to-white pointer-events-none z-10" 
+          />
           <div className="p-5 space-y-4">
             {isContentLoading ? (
               // Skeleton loading state
