@@ -73,16 +73,21 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
     const metadata = conv.metadata as any;
     const lastReadAt = metadata?.admin_last_read_at;
     const lastUserMessageAt = metadata?.last_user_message_at;
+    const lastMessageAt = metadata?.last_message_at;
+    const lastMessageRole = metadata?.last_message_role;
     
-    // Never read by admin and has user messages - unread
-    if (!lastReadAt && lastUserMessageAt) return true;
+    // Prefer last_user_message_at if available
+    // Fallback to last_message_at only if last message wasn't from human team member
+    const relevantMessageAt = lastUserMessageAt || 
+      (lastMessageRole !== 'human' ? lastMessageAt : null);
+    
+    if (!relevantMessageAt) return false;
+    
+    // Never read by admin - unread
+    if (!lastReadAt) return true;
     
     // New user messages since last read
-    if (lastReadAt && lastUserMessageAt && new Date(lastUserMessageAt) > new Date(lastReadAt)) {
-      return true;
-    }
-    
-    return false;
+    return new Date(relevantMessageAt) > new Date(lastReadAt);
   }).length;
 
   // Check if we're on an agents page to keep accordion open

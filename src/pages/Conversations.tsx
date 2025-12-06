@@ -333,16 +333,21 @@ const Conversations: React.FC = () => {
     const metadata = conv.metadata as any;
     const lastReadAt = metadata?.admin_last_read_at;
     const lastUserMessageAt = metadata?.last_user_message_at;
+    const lastMessageAt = metadata?.last_message_at;
+    const lastMessageRole = metadata?.last_message_role;
     
-    // Never read by admin and has user messages - show indicator
-    if (!lastReadAt && lastUserMessageAt) return 1;
+    // Prefer last_user_message_at if available
+    // Fallback to last_message_at only if last message wasn't from human team member
+    const relevantMessageAt = lastUserMessageAt || 
+      (lastMessageRole !== 'human' ? lastMessageAt : null);
+    
+    if (!relevantMessageAt) return 0;
+    
+    // Never read by admin - show indicator
+    if (!lastReadAt) return 1;
     
     // New user messages since last read
-    if (lastReadAt && lastUserMessageAt && new Date(lastUserMessageAt) > new Date(lastReadAt)) {
-      return 1;
-    }
-    
-    return 0;
+    return new Date(relevantMessageAt) > new Date(lastReadAt) ? 1 : 0;
   };
 
   const handleTakeover = async (reason?: string) => {
