@@ -726,7 +726,7 @@ const Conversations: React.FC = () => {
                           key={message.id}
                           className={`flex ${isUser ? 'justify-end' : 'justify-start'} ${
                             isNewMessage ? (isUser ? 'animate-slide-in-right' : 'animate-slide-in-left') : ''
-                          } ${isContinuation ? 'mt-0.5' : 'mt-1.5 first:mt-0'}`}
+                          } ${isContinuation ? 'mt-px' : 'mt-1 first:mt-0'}`}
                         >
                           <div className={`flex items-start gap-2 max-w-[75%] ${isContinuation && !isUser ? 'ml-10' : ''}`}>
                           {!isUser && !isContinuation && (
@@ -794,7 +794,7 @@ const Conversations: React.FC = () => {
                               )}
                               {/* Message bubble - content only */}
                               <div
-                                className={`rounded-2xl px-4 py-2.5 ${
+                                className={`rounded-lg px-3 py-2 ${
                                   isUser
                                     ? 'bg-muted text-foreground'
                                     : 'bg-muted text-foreground'
