@@ -115,12 +115,12 @@ export const HomeView = ({
         </div>
         
         {/* Content area with gradient fade at top */}
-        <div className="relative bg-white flex-1 min-h-[300px]">
-          {/* Gradient fade overlay - extends well above cards */}
+        <div className="relative bg-transparent flex-1 min-h-[300px]">
+          {/* Gradient fade overlay - extends down into content */}
           <div 
-            className="absolute -top-24 left-0 right-0 h-28 bg-gradient-to-b from-transparent via-transparent to-white pointer-events-none z-10" 
+            className="absolute -top-16 left-0 right-0 h-40 bg-gradient-to-b from-transparent to-white pointer-events-none z-0" 
           />
-          <div className="p-5 space-y-4">
+          <div className="relative z-10 p-5 pt-8 space-y-4 bg-white rounded-t-3xl mt-6">
             {isContentLoading ? (
               // Skeleton loading state
               <div className="space-y-3">
