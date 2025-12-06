@@ -751,6 +751,12 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
         const result = await markMessagesRead(activeConversationId, 'user');
         if (result.success && result.updated && result.updated > 0) {
           console.log('[Widget] Marked', result.updated, 'messages as read');
+          // Update local message state to clear unread badge
+          setMessages(prev => prev.map(m => 
+            m.role === 'assistant' && !m.read 
+              ? { ...m, read: true } 
+              : m
+          ));
         }
       }, 500);
       return () => clearTimeout(timer);
@@ -1812,49 +1818,48 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                               {msg.type === 'text' && <p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p>}
                             </div>
                             
-                            {config.enableMessageReactions && (
-                              <Suspense fallback={null}>
-                                <MessageReactions
-                                  reactions={msg.reactions || []}
-                                  onAddReaction={async (emoji) => {
-                                    const newMessages = [...messages];
-                                    const reaction = newMessages[idx].reactions?.find(r => r.emoji === emoji);
-                                    if (reaction) {
-                                      if (!reaction.userReacted) {
-                                        reaction.count += 1;
-                                        reaction.userReacted = true;
+                            <div className="flex items-center gap-2 mt-1 px-1">
+                              {config.enableMessageReactions && (
+                                <Suspense fallback={null}>
+                                  <MessageReactions
+                                    reactions={msg.reactions || []}
+                                    onAddReaction={async (emoji) => {
+                                      const newMessages = [...messages];
+                                      const reaction = newMessages[idx].reactions?.find(r => r.emoji === emoji);
+                                      if (reaction) {
+                                        if (!reaction.userReacted) {
+                                          reaction.count += 1;
+                                          reaction.userReacted = true;
+                                        }
+                                      } else {
+                                        newMessages[idx].reactions = [...(newMessages[idx].reactions || []), { emoji, count: 1, userReacted: true }];
                                       }
-                                    } else {
-                                      newMessages[idx].reactions = [...(newMessages[idx].reactions || []), { emoji, count: 1, userReacted: true }];
-                                    }
-                                    setMessages(newMessages);
-                                    if (msg.id) {
-                                      await updateMessageReaction(msg.id, emoji, 'add', 'user');
-                                    }
-                                  }}
-                                  onRemoveReaction={async (emoji) => {
-                                    const newMessages = [...messages];
-                                    const reaction = newMessages[idx].reactions?.find(r => r.emoji === emoji);
-                                    if (reaction && reaction.userReacted) {
-                                      reaction.count -= 1;
-                                      reaction.userReacted = false;
-                                      if (reaction.count <= 0) {
-                                        newMessages[idx].reactions = newMessages[idx].reactions?.filter(r => r.emoji !== emoji);
+                                      setMessages(newMessages);
+                                      if (msg.id) {
+                                        await updateMessageReaction(msg.id, emoji, 'add', 'user');
                                       }
-                                    }
-                                    setMessages(newMessages);
-                                    if (msg.id) {
-                                      await updateMessageReaction(msg.id, emoji, 'remove', 'user');
-                                    }
-                                  }}
-                                  primaryColor={config.primaryColor}
-                                  compact
-                                  isUserMessage={msg.role === 'user'}
-                                />
-                              </Suspense>
-                            )}
-                            
-                            <div className="flex items-center justify-between gap-2 mt-1 px-1">
+                                    }}
+                                    onRemoveReaction={async (emoji) => {
+                                      const newMessages = [...messages];
+                                      const reaction = newMessages[idx].reactions?.find(r => r.emoji === emoji);
+                                      if (reaction && reaction.userReacted) {
+                                        reaction.count -= 1;
+                                        reaction.userReacted = false;
+                                        if (reaction.count <= 0) {
+                                          newMessages[idx].reactions = newMessages[idx].reactions?.filter(r => r.emoji !== emoji);
+                                        }
+                                      }
+                                      setMessages(newMessages);
+                                      if (msg.id) {
+                                        await updateMessageReaction(msg.id, emoji, 'remove', 'user');
+                                      }
+                                    }}
+                                    primaryColor={config.primaryColor}
+                                    compact
+                                    isUserMessage={msg.role === 'user'}
+                                  />
+                                </Suspense>
+                              )}
                               <span className="text-xs opacity-70">{formatTimestamp(msg.timestamp)}</span>
                               {msg.role === 'user' && config.showReadReceipts && (
                                 <span 
@@ -2368,13 +2373,13 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                         : 'text-muted-foreground'
                     }`}
                   >
-                    <div className="flex items-center justify-center w-6 h-6 mb-1.5">
+                    <div className="relative flex items-center justify-center w-6 h-6 mb-1.5">
                       <ChatNavIcon active={currentView === 'messages'} hovered={hoveredNav === 'messages'} className="h-5 w-5" />
+                      {messages.some(m => !m.read && m.role === 'assistant') && (
+                        <div className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-destructive rounded-full" />
+                      )}
                     </div>
                     <span className="text-xs pl-0.5">Chat</span>
-                    {messages.some(m => !m.read && m.role === 'assistant') && (
-                      <div className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
-                    )}
                   </button>
                 )}
                 {config.enableHelpTab && config.helpArticles.length > 0 && (
