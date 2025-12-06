@@ -10,12 +10,16 @@ import {
   Edit02,
   Calendar,
   Check,
+  User01,
+  Cube01,
 } from "@untitledui/icons";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { SimpleDeleteDialog } from "@/components/ui/simple-delete-dialog";
 import { Card } from "@/components/ui/card";
@@ -64,6 +68,7 @@ interface ConversationsDataTableProps {
 }
 
 type DateFilter = "all" | "today" | "7days" | "30days";
+type StatusFilter = "all" | "active" | "human_takeover" | "closed";
 
 type SortColumn = "agentName" | "messageCount" | "duration" | "percentageOfTotal" | "status";
 type SortDirection = "asc" | "desc";
@@ -129,16 +134,32 @@ export function ConversationsDataTable({
   const [page, setPage] = useState(1);
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const [dateFilter, setDateFilter] = useState<DateFilter>("all");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [agentFilter, setAgentFilter] = useState<string>("all");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const itemsPerPage = 10;
+
+  // Derive unique agent names from data
+  const uniqueAgents = useMemo(() => {
+    const agents = new Set(data.map((row) => row.agentName));
+    return Array.from(agents).sort();
+  }, [data]);
 
   const dateFilterOptions = [
     { id: "all" as DateFilter, label: "All time" },
     { id: "today" as DateFilter, label: "Today" },
     { id: "7days" as DateFilter, label: "Last 7 days" },
     { id: "30days" as DateFilter, label: "Last 30 days" },
+  ];
+
+  const statusFilterOptions = [
+    { id: "all" as StatusFilter, label: "All statuses" },
+    { id: "active" as StatusFilter, label: "Active" },
+    { id: "human_takeover" as StatusFilter, label: "Human" },
+    { id: "closed" as StatusFilter, label: "Closed" },
   ];
 
   useEffect(() => {
@@ -166,6 +187,16 @@ export function ConversationsDataTable({
       filtered = filtered.filter((row) => new Date(row.createdAt) >= cutoff);
     }
 
+    // Apply status filter
+    if (statusFilter !== "all") {
+      filtered = filtered.filter((row) => row.status === statusFilter);
+    }
+
+    // Apply agent filter
+    if (agentFilter !== "all") {
+      filtered = filtered.filter((row) => row.agentName === agentFilter);
+    }
+
     // Apply search filter
     if (debouncedSearch.trim()) {
       const searchLower = debouncedSearch.toLowerCase();
@@ -176,7 +207,7 @@ export function ConversationsDataTable({
     }
 
     return filtered;
-  }, [data, debouncedSearch, dateFilter]);
+  }, [data, debouncedSearch, dateFilter, statusFilter, agentFilter]);
 
   const sortedData = useMemo(() => {
     return [...filteredData].sort((a, b) => {
@@ -256,6 +287,30 @@ export function ConversationsDataTable({
     }
   };
 
+  const handleBulkDeleteClick = () => {
+    if (selectedRows.size === 0) return;
+    setBulkDeleteDialogOpen(true);
+  };
+
+  const handleConfirmBulkDelete = async () => {
+    if (selectedRows.size === 0 || !onDelete) return;
+    setIsDeleting(true);
+    try {
+      await onDelete(Array.from(selectedRows));
+      setBulkDeleteDialogOpen(false);
+      setSelectedRows(new Set());
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  // Count active filters
+  const activeFilterCount = [
+    dateFilter !== "all",
+    statusFilter !== "all",
+    agentFilter !== "all",
+  ].filter(Boolean).length;
+
   // Sortable header with diamond icon
   const SortableHeader = ({ column, children }: { column: SortColumn; children: React.ReactNode }) => {
     const isActive = sortState.column === column;
@@ -333,21 +388,64 @@ export function ConversationsDataTable({
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="h-9 gap-2">
                 <FilterLines className="h-4 w-4" />
-                {dateFilter === "all" ? "Filters" : dateFilterOptions.find(o => o.id === dateFilter)?.label}
+                Filters
+                {activeFilterCount > 0 && (
+                  <span className="ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-medium text-primary-foreground">
+                    {activeFilterCount}
+                  </span>
+                )}
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-40">
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuLabel className="flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
+                Date
+              </DropdownMenuLabel>
               {dateFilterOptions.map((option) => (
                 <DropdownMenuItem
                   key={option.id}
                   onClick={() => setDateFilter(option.id)}
                   className="flex items-center justify-between"
                 >
-                  <span className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4" />
-                    {option.label}
-                  </span>
+                  {option.label}
                   {dateFilter === option.id && <Check className="h-4 w-4" />}
+                </DropdownMenuItem>
+              ))}
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel className="flex items-center gap-2">
+                <User01 className="h-4 w-4" />
+                Status
+              </DropdownMenuLabel>
+              {statusFilterOptions.map((option) => (
+                <DropdownMenuItem
+                  key={option.id}
+                  onClick={() => setStatusFilter(option.id)}
+                  className="flex items-center justify-between"
+                >
+                  {option.label}
+                  {statusFilter === option.id && <Check className="h-4 w-4" />}
+                </DropdownMenuItem>
+              ))}
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel className="flex items-center gap-2">
+                <Cube01 className="h-4 w-4" />
+                Agent
+              </DropdownMenuLabel>
+              <DropdownMenuItem
+                onClick={() => setAgentFilter("all")}
+                className="flex items-center justify-between"
+              >
+                All agents
+                {agentFilter === "all" && <Check className="h-4 w-4" />}
+              </DropdownMenuItem>
+              {uniqueAgents.map((agent) => (
+                <DropdownMenuItem
+                  key={agent}
+                  onClick={() => setAgentFilter(agent)}
+                  className="flex items-center justify-between"
+                >
+                  <span className="truncate">{agent}</span>
+                  {agentFilter === agent && <Check className="h-4 w-4" />}
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
@@ -484,6 +582,31 @@ export function ConversationsDataTable({
         </div>
       )}
 
+      {/* Bulk Action Bar */}
+      {selectedRows.size > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 shadow-lg">
+          <span className="text-sm font-medium text-foreground">
+            {selectedRows.size} selected
+          </span>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={handleBulkDeleteClick}
+            className="gap-2"
+          >
+            <Trash01 className="h-4 w-4" />
+            Delete Selected
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setSelectedRows(new Set())}
+          >
+            Clear
+          </Button>
+        </div>
+      )}
+
       {/* Delete Confirmation Dialog */}
       <SimpleDeleteDialog
         open={deleteDialogOpen}
@@ -491,6 +614,16 @@ export function ConversationsDataTable({
         title="Delete Conversation"
         description="Are you sure you want to delete this conversation? This action cannot be undone."
         onConfirm={handleConfirmDelete}
+        isDeleting={isDeleting}
+      />
+
+      {/* Bulk Delete Confirmation Dialog */}
+      <SimpleDeleteDialog
+        open={bulkDeleteDialogOpen}
+        onOpenChange={setBulkDeleteDialogOpen}
+        title="Delete Conversations"
+        description={`Are you sure you want to delete ${selectedRows.size} conversation${selectedRows.size > 1 ? 's' : ''}? This action cannot be undone.`}
+        onConfirm={handleConfirmBulkDelete}
         isDeleting={isDeleting}
       />
     </Card>

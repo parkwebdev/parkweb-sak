@@ -308,6 +308,13 @@ export const Dashboard: React.FC = () => {
                 tabs={tabsWithCounts}
                 selectedTab={selectedTab}
                 onTabChange={setSelectedTab}
+                onDelete={async (ids: string[]) => {
+                  const { error } = await supabase
+                    .from('conversations')
+                    .delete()
+                    .in('id', ids);
+                  if (error) throw error;
+                }}
                 title="Conversations"
               />
             </div>
