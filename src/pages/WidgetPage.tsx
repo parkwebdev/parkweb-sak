@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ChatWidget } from '@/widget/ChatWidget';
+import { ChatWidgetWrapper } from '@/widget/ChatWidgetWrapper';
 import type { WidgetConfig } from '@/widget/api';
 
 // Simple hook to get search params without react-router dependency for widget bundle
@@ -178,7 +178,7 @@ const WidgetPage = () => {
         '--foreground': '0 0% 3.9%',
       } as React.CSSProperties
     }>
-      <ChatWidget config={config} previewMode={false} isLoading={!isConfigLoaded} />
+      <ChatWidgetWrapper config={config} previewMode={false} isLoading={!isConfigLoaded} />
     </div>
   );
 };
