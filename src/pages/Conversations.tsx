@@ -328,17 +328,17 @@ const Conversations: React.FC = () => {
     }
   };
 
-  // Check if conversation has unread messages for admin
+  // Check if conversation has unread messages for admin (only user messages, not team responses)
   const getUnreadCount = (conv: Conversation): number => {
     const metadata = conv.metadata as any;
     const lastReadAt = metadata?.admin_last_read_at;
-    const lastMessageAt = metadata?.last_message_at;
+    const lastUserMessageAt = metadata?.last_user_message_at;
     
-    // Never read by admin and has messages - show indicator
-    if (!lastReadAt && lastMessageAt) return 1;
+    // Never read by admin and has user messages - show indicator
+    if (!lastReadAt && lastUserMessageAt) return 1;
     
-    // New messages since last read
-    if (lastReadAt && lastMessageAt && new Date(lastMessageAt) > new Date(lastReadAt)) {
+    // New user messages since last read
+    if (lastReadAt && lastUserMessageAt && new Date(lastUserMessageAt) > new Date(lastReadAt)) {
       return 1;
     }
     
