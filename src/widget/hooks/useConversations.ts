@@ -24,6 +24,7 @@ export function useConversations(options: UseConversationsOptions) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [showConversationList, setShowConversationList] = useState(false);
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -58,30 +59,36 @@ export function useConversations(options: UseConversationsOptions) {
     
     const loadMessagesFromDB = async () => {
       fetchedConversationIdRef.current = activeConversationId;
+      setIsLoadingMessages(true);
       console.log('[Widget] Fetching messages from database for:', activeConversationId);
-      const dbMessages = await fetchConversationMessages(activeConversationId);
       
-      if (dbMessages.length > 0) {
-        const formattedMessages: Message[] = dbMessages.map(msg => ({
-          id: msg.id,
-          role: msg.role as 'user' | 'assistant',
-          content: msg.content,
-          timestamp: new Date(msg.created_at),
-          type: 'text' as const,
-          reactions: (msg.metadata as any)?.reactions || [],
-          isHuman: (msg.metadata as any)?.sender_type === 'human',
-          senderName: (msg.metadata as any)?.sender_name,
-          senderAvatar: (msg.metadata as any)?.sender_avatar,
-          read_at: (msg.metadata as any)?.read_at,
-          read: !!((msg.metadata as any)?.read_at),
-          linkPreviews: (msg.metadata as any)?.link_previews,
-        }));
+      try {
+        const dbMessages = await fetchConversationMessages(activeConversationId);
         
-        setMessages(formattedMessages);
-        console.log('[Widget] Loaded', formattedMessages.length, 'messages from database');
-      } else {
-        // Don't overwrite existing messages (like greeting) with empty array
-        console.log('[Widget] No messages found in database, preserving local messages');
+        if (dbMessages.length > 0) {
+          const formattedMessages: Message[] = dbMessages.map(msg => ({
+            id: msg.id,
+            role: msg.role as 'user' | 'assistant',
+            content: msg.content,
+            timestamp: new Date(msg.created_at),
+            type: 'text' as const,
+            reactions: (msg.metadata as any)?.reactions || [],
+            isHuman: (msg.metadata as any)?.sender_type === 'human',
+            senderName: (msg.metadata as any)?.sender_name,
+            senderAvatar: (msg.metadata as any)?.sender_avatar,
+            read_at: (msg.metadata as any)?.read_at,
+            read: !!((msg.metadata as any)?.read_at),
+            linkPreviews: (msg.metadata as any)?.link_previews,
+          }));
+          
+          setMessages(formattedMessages);
+          console.log('[Widget] Loaded', formattedMessages.length, 'messages from database');
+        } else {
+          // Don't overwrite existing messages (like greeting) with empty array
+          console.log('[Widget] No messages found in database, preserving local messages');
+        }
+      } finally {
+        setIsLoadingMessages(false);
       }
     };
     
@@ -129,7 +136,9 @@ export function useConversations(options: UseConversationsOptions) {
   // Reset fetched ref when clearing messages (switching conversations)
   const clearMessagesAndFetch = (conversationId: string) => {
     fetchedConversationIdRef.current = null; // Reset to allow fresh fetch
-    setMessages([]);
+    isActivelySendingRef.current = false; // Ensure we don't block fetches when opening a conversation
+    setIsLoadingMessages(true); // Show loading state instead of blank
+    setMessages([]); // Clear messages before fetching new ones
     setActiveConversationId(conversationId);
   };
 
@@ -140,6 +149,7 @@ export function useConversations(options: UseConversationsOptions) {
     setActiveConversationId,
     showConversationList,
     setShowConversationList,
+    isLoadingMessages,
     messagesContainerRef,
     messagesEndRef,
     isOpeningConversationRef,
