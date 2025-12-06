@@ -715,8 +715,8 @@ const Conversations: React.FC = () => {
                   onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }}
                   className="flex gap-3 max-w-4xl mx-auto"
                 >
-                  <Input 
-                    placeholder="Type a message..." 
+                  <Input
+                    placeholder="Type a message..."
                     value={messageInput}
                     onChange={(e) => {
                       setMessageInput(e.target.value);
@@ -724,7 +724,7 @@ const Conversations: React.FC = () => {
                     }}
                     onKeyDown={handleKeyDown}
                     disabled={sendingMessage}
-                    className="flex-1"
+                    className="flex-1 h-9"
                   />
                   <Button 
                     type="submit" 
