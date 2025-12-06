@@ -1,19 +1,34 @@
 /**
  * Widget Utilities
  * 
- * Central export for all widget utility functions.
+ * Pure utility functions for the widget.
+ * No React dependencies - can be used anywhere.
+ * 
+ * @module widget/utils
  */
 
-// Referrer and UTM utilities
+/**
+ * Referrer and UTM tracking utilities
+ * @see {@link ./referrer}
+ */
 export { detectEntryType, parseUtmParams } from './referrer';
 
-// Formatting utilities
+/**
+ * Text and time formatting utilities
+ * @see {@link ./formatting}
+ */
 export { formatTimestamp, truncateMessage, formatSenderName } from './formatting';
 
-// Validation utilities
+/**
+ * Form and data validation utilities
+ * @see {@link ./validation}
+ */
 export { isValidUUID, isValidEmail, isNotEmpty, isValidPhone } from './validation';
 
-// Session utilities
+/**
+ * Session and visitor ID management utilities
+ * @see {@link ./session}
+ */
 export { 
   getSessionId, 
   getOrCreateVisitorId,
