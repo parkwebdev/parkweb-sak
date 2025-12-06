@@ -4,8 +4,17 @@ import type { RealtimeChannel } from '@supabase/supabase-js';
 
 // Types and constants extracted for maintainability
 import type { ViewType, ChatUser, Message, Conversation, PageVisit, ChatWidgetProps } from './types';
-import { WIDGET_CSS_VARS, VoiceInput, FileDropZone, MessageReactions, AudioPlayer, PhoneInputField, getIsMobileFullScreen, isInternalWidgetUrl } from './constants';
-import { detectEntryType, parseUtmParams } from './utils/referrer';
+import { WIDGET_CSS_VARS, VoiceInput, FileDropZone, MessageReactions, AudioPlayer, PhoneInputField, getIsMobileFullScreen, isInternalWidgetUrl, positionClasses } from './constants';
+import { 
+  detectEntryType, 
+  parseUtmParams, 
+  formatTimestamp, 
+  isValidUUID,
+  getSessionId,
+  hasTakeoverNoticeBeenShown,
+  setTakeoverNoticeShown,
+  clearTakeoverNotice
+} from './utils';
 
 // UI Components
 import { CSSAnimatedList } from './CSSAnimatedList';
@@ -248,7 +257,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
             setPageVisits(prev => [...prev, newVisit]);
             
             // Send real-time update if we have an active conversation
-            if (activeConversationId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(activeConversationId)) {
+            if (isValidUUID(activeConversationId)) {
               updatePageVisit(activeConversationId, {
                 ...newVisit,
                 previous_duration_ms: previousDuration,
@@ -363,7 +372,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
       setPageVisits(prev => [...prev, newVisit]);
       
       // Send real-time update if we have an active conversation
-      if (sendRealtime && activeConversationId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(activeConversationId)) {
+      if (sendRealtime && isValidUUID(activeConversationId)) {
         updatePageVisit(activeConversationId, {
           ...newVisit,
           previous_duration_ms: previousDuration,
@@ -432,8 +441,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     if (previewMode || !activeConversationId || referrerJourneySentRef.current || !referrerJourney) return;
     
     // Only send for valid database conversation IDs
-    const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(activeConversationId);
-    if (!isValidUUID) return;
+    if (!isValidUUID(activeConversationId)) return;
     
     // Send referrer journey once when conversation is created
     updatePageVisit(activeConversationId, {
@@ -460,8 +468,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     if (!activeConversationId) return;
     
     // Only fetch if conversationId is valid UUID (database ID)
-    const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(activeConversationId);
-    if (!isValidUUID) return;
+    if (!isValidUUID(activeConversationId)) return;
     
     // Only fetch if we don't already have messages (to avoid refetching on every update)
     if (messages.length > 0) return;
@@ -635,10 +642,9 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
 
   // Mark messages as read when viewing conversation
   useEffect(() => {
-    const isValidUUID = activeConversationId && 
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(activeConversationId);
+    const hasValidConversation = isValidUUID(activeConversationId);
     
-    if (currentView === 'messages' && isValidUUID && isOpen) {
+    if (currentView === 'messages' && hasValidConversation && isOpen) {
       // Mark assistant messages as read by user after a short delay
       const timer = setTimeout(async () => {
         const result = await markMessagesRead(activeConversationId, 'user');
@@ -671,10 +677,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
   
   useEffect(() => {
     // Only subscribe if we have a valid database conversation ID (UUID format)
-    const isValidUUID = activeConversationId && 
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(activeConversationId);
-    
-    if (!isValidUUID) {
+    if (!isValidUUID(activeConversationId)) {
       return;
     }
 
@@ -766,25 +769,22 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     };
   }, [activeConversationId, isOpen, currentView]);
 
-  // Check if takeover notice was already shown for a conversation (persisted in localStorage)
-  const hasTakeoverNoticeBeenShown = useCallback((convId: string) => {
-    return localStorage.getItem(`chatpad_takeover_noticed_${agentId}_${convId}`) === 'true';
+  // Takeover notice helpers - use imported utilities with memoized wrappers
+  const checkTakeoverNoticeShown = useCallback((convId: string) => {
+    return hasTakeoverNoticeBeenShown(agentId, convId);
   }, [agentId]);
   
-  const setTakeoverNoticeShown = useCallback((convId: string) => {
-    localStorage.setItem(`chatpad_takeover_noticed_${agentId}_${convId}`, 'true');
+  const markTakeoverNoticeShown = useCallback((convId: string) => {
+    setTakeoverNoticeShown(agentId, convId);
   }, [agentId]);
   
-  const clearTakeoverNotice = useCallback((convId: string) => {
-    localStorage.removeItem(`chatpad_takeover_noticed_${agentId}_${convId}`);
+  const resetTakeoverNotice = useCallback((convId: string) => {
+    clearTakeoverNotice(agentId, convId);
   }, [agentId]);
 
   // Subscribe to conversation status changes (for human takeover banner)
   useEffect(() => {
-    const isValidUUID = activeConversationId && 
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(activeConversationId);
-    
-    if (!isValidUUID) {
+    if (!isValidUUID(activeConversationId)) {
       setIsHumanTakeover(false);
       return;
     }
@@ -803,19 +803,19 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
       
       // Clear the takeover notice flag when returning to AI so next takeover shows notice again
       if (status !== 'human_takeover') {
-        clearTakeoverNotice(activeConversationId);
+        resetTakeoverNotice(activeConversationId);
         return;
       }
       
       // When takeover starts, show a system notice only once (persisted across page navigations)
       if (status === 'human_takeover' && !wasTakeover) {
         // Check if we already showed a notice for this conversation (persisted in localStorage)
-        if (hasTakeoverNoticeBeenShown(activeConversationId)) {
+        if (checkTakeoverNoticeShown(activeConversationId)) {
           return;
         }
         
         // Mark that we've shown the notice for this conversation (persisted)
-        setTakeoverNoticeShown(activeConversationId);
+        markTakeoverNoticeShown(activeConversationId);
         
         // Fetch agent info for personalized message
         const agent = await fetchTakeoverAgent(activeConversationId);
@@ -848,11 +848,8 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
   const typingChannelRef = useRef<RealtimeChannel | null>(null);
   
   useEffect(() => {
-    const isValidUUID = activeConversationId && 
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(activeConversationId);
-    
     // Only subscribe to typing if in human takeover mode
-    if (!isValidUUID || !isHumanTakeover) {
+    if (!isValidUUID(activeConversationId) || !isHumanTakeover) {
       setIsHumanTyping(false);
       setTypingAgentName(undefined);
       return;
@@ -964,12 +961,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
   // Only return null for simple config loading, not when parent handles config (instant loading)
   if (!parentHandlesConfig && (loading || !config)) return null;
 
-  const positionClasses = {
-    'bottom-right': 'bottom-4 right-4',
-    'bottom-left': 'bottom-4 left-4',
-    'top-right': 'top-4 right-4',
-    'top-left': 'top-4 left-4',
-  };
+  // positionClasses is now imported from constants
 
   // Calculate logo opacity based on scroll (graceful fade over 120px with easing)
   const logoOpacity = Math.max(0, 1 - Math.pow(headerScrollY / 120, 1.5));
@@ -1033,25 +1025,13 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
       setShowConversationList(false);
       
       // Also mark as read in database (for valid UUID conversation IDs)
-      const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(conversationId);
-      if (isValidUUID) {
+      if (isValidUUID(conversationId)) {
         markMessagesRead(conversationId, 'user');
       }
     }
   };
 
-  const formatTimestamp = (date: Date) => {
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-    
-    if (diffMins < 60) return `${diffMins}m ago`;
-    else if (diffHours < 24) return `${diffHours}h ago`;
-    else if (diffDays < 7) return `${diffDays}d ago`;
-    else return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  };
+  // formatTimestamp is now imported from utils
 
   const handleSendMessage = async () => {
     if (!messageInput.trim() && pendingFiles.length === 0) return;
@@ -1262,14 +1242,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     setPendingFiles(prev => prev.filter((_, i) => i !== index));
   };
 
-  const getSessionId = () => {
-    let sessionId = localStorage.getItem('chatpad_session_id');
-    if (!sessionId) {
-      sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      localStorage.setItem('chatpad_session_id', sessionId);
-    }
-    return sessionId;
-  };
+  // getSessionId is now imported from utils
 
   const handleSubmitFeedback = async () => {
     if (!selectedArticle || articleFeedback === null) return;

@@ -97,3 +97,19 @@ export const isInternalWidgetUrl = (url: string): boolean => {
     return url.includes('widget.html') || url.includes('widget-entry');
   }
 };
+
+// ============================================================================
+// Position Classes
+// ============================================================================
+
+/**
+ * CSS classes for widget positioning based on config.position value
+ */
+export const positionClasses = {
+  'bottom-right': 'bottom-4 right-4',
+  'bottom-left': 'bottom-4 left-4',
+  'top-right': 'top-4 right-4',
+  'top-left': 'top-4 left-4',
+} as const;
+
+export type WidgetPosition = keyof typeof positionClasses;
