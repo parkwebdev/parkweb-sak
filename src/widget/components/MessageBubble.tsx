@@ -81,7 +81,7 @@ export const MessageBubble = ({
             {isUser && (
               <>
                 <span>•</span>
-                {(message as any).error || (message as any).failed ? (
+                {message.failed ? (
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <span className="text-destructive inline-flex items-center">

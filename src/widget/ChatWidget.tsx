@@ -328,7 +328,10 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
 
     const userContent = pendingFiles.length > 0 ? (messageInput || 'Sent files') : messageInput;
     
+    // Create optimistic message with temp ID for tracking
+    const tempId = `temp-${Date.now()}`;
     const newMessage: Message = {
+      tempId,
       role: 'user',
       content: userContent,
       read: false,
@@ -434,14 +437,12 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
       }
     } catch (error) {
       console.error('Error sending message:', error);
-      setMessages(prev => [...prev, { 
-        role: 'assistant', 
-        content: 'Sorry, I encountered an error. Please try again.', 
-        read: true, 
-        timestamp: new Date(), 
-        type: 'text', 
-        reactions: [] 
-      }]);
+      // Mark the optimistic user message as failed
+      setMessages(prev => prev.map(msg => 
+        msg.tempId === tempId 
+          ? { ...msg, failed: true }
+          : msg
+      ));
     } finally {
       setIsTyping(false);
       // Defer ref reset to next tick to ensure React effects have completed
