@@ -18,7 +18,7 @@ const IMAGE_CONFIG = {
   /** Maximum height in pixels */
   maxHeight: 400,
   /** WebP compression quality (0-1) */
-  quality: 0.7,
+  quality: 0.6,
 };
 
 /**

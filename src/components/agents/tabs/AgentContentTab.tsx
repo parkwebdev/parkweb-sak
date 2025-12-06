@@ -80,10 +80,7 @@ const SortableAnnouncementCard = ({ announcement, onEdit, onDelete }: {
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1 min-w-0" {...attributes} {...listeners}>
-                  <h3 
-                    className="font-semibold text-base truncate"
-                    style={{ color: announcement.title_color }}
-                  >
+                  <h3 className="font-semibold text-base truncate">
                     {announcement.title}
                   </h3>
                   {announcement.subtitle && (
@@ -393,43 +390,6 @@ const AnnouncementDialog = ({
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="title_color">Title Color</Label>
-              <div className="flex gap-2">
-                <Input
-                  id="title_color"
-                  type="color"
-                  value={formData.title_color}
-                  onChange={(e) => setFormData({ ...formData, title_color: e.target.value })}
-                  className="w-12 h-10 p-1"
-                />
-                <Input
-                  value={formData.title_color}
-                  onChange={(e) => setFormData({ ...formData, title_color: e.target.value })}
-                  placeholder="#2563eb"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="background_color">Background Color</Label>
-              <div className="flex gap-2">
-                <Input
-                  id="background_color"
-                  type="color"
-                  value={formData.background_color}
-                  onChange={(e) => setFormData({ ...formData, background_color: e.target.value })}
-                  className="w-12 h-10 p-1"
-                />
-                <Input
-                  value={formData.background_color}
-                  onChange={(e) => setFormData({ ...formData, background_color: e.target.value })}
-                  placeholder="#f8fafc"
-                />
-              </div>
-            </div>
-          </div>
 
           <div className="space-y-2">
             <Label htmlFor="action_type">Action Type</Label>
