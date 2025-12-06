@@ -13,6 +13,11 @@ interface LinkPreviewData {
   siteName?: string;
   favicon?: string;
   domain: string;
+  // Video fields
+  videoType?: 'youtube' | 'vimeo' | 'loom' | 'wistia' | 'twitter' | null;
+  videoId?: string;
+  embedUrl?: string;
+  cardType?: string;
 }
 
 // Extract domain from URL
@@ -23,6 +28,87 @@ function getDomain(url: string): string {
   } catch {
     return url;
   }
+}
+
+// Detect video platform and extract embed info
+function detectVideoEmbed(url: string): { type: 'youtube' | 'vimeo' | 'loom' | 'wistia'; videoId: string; embedUrl: string } | null {
+  try {
+    const urlObj = new URL(url);
+    const hostname = urlObj.hostname.toLowerCase();
+    const pathname = urlObj.pathname;
+
+    // YouTube patterns
+    if (hostname.includes('youtube.com') || hostname.includes('youtu.be')) {
+      let videoId: string | null = null;
+      
+      if (hostname.includes('youtu.be')) {
+        videoId = pathname.slice(1).split('?')[0];
+      } else if (pathname.includes('/watch')) {
+        videoId = urlObj.searchParams.get('v');
+      } else if (pathname.includes('/embed/')) {
+        videoId = pathname.split('/embed/')[1]?.split('?')[0];
+      } else if (pathname.includes('/shorts/')) {
+        videoId = pathname.split('/shorts/')[1]?.split('?')[0];
+      }
+      
+      if (videoId) {
+        return {
+          type: 'youtube',
+          videoId,
+          embedUrl: `https://www.youtube.com/embed/${videoId}?autoplay=1`,
+        };
+      }
+    }
+
+    // Vimeo patterns
+    if (hostname.includes('vimeo.com')) {
+      let videoId: string | null = null;
+      
+      if (hostname.includes('player.vimeo.com')) {
+        videoId = pathname.split('/video/')[1]?.split('?')[0];
+      } else {
+        // Regular vimeo.com/VIDEO_ID
+        const match = pathname.match(/^\/(\d+)/);
+        if (match) videoId = match[1];
+      }
+      
+      if (videoId) {
+        return {
+          type: 'vimeo',
+          videoId,
+          embedUrl: `https://player.vimeo.com/video/${videoId}?autoplay=1`,
+        };
+      }
+    }
+
+    // Loom patterns
+    if (hostname.includes('loom.com')) {
+      const match = pathname.match(/\/share\/([a-zA-Z0-9]+)/);
+      if (match) {
+        return {
+          type: 'loom',
+          videoId: match[1],
+          embedUrl: `https://www.loom.com/embed/${match[1]}?autoplay=1`,
+        };
+      }
+    }
+
+    // Wistia patterns
+    if (hostname.includes('wistia.com') || hostname.includes('wi.st')) {
+      const match = pathname.match(/\/medias\/([a-zA-Z0-9]+)/);
+      if (match) {
+        return {
+          type: 'wistia',
+          videoId: match[1],
+          embedUrl: `https://fast.wistia.net/embed/iframe/${match[1]}?autoPlay=true`,
+        };
+      }
+    }
+  } catch {
+    // Invalid URL
+  }
+  
+  return null;
 }
 
 // Extract meta tag content from HTML
@@ -42,11 +128,42 @@ function extractMetaContent(html: string, property: string): string | undefined 
   const twitterMatch = html.match(twitterRegex);
   if (twitterMatch) return twitterMatch[1];
 
+  // Try reverse twitter
+  const twitterReverseRegex = new RegExp(`<meta[^>]+content=["']([^"']+)["'][^>]+name=["']twitter:${property}["']`, 'i');
+  const twitterReverseMatch = html.match(twitterReverseRegex);
+  if (twitterReverseMatch) return twitterReverseMatch[1];
+
   // Try regular meta name
   const nameRegex = new RegExp(`<meta[^>]+name=["']${property}["'][^>]+content=["']([^"']+)["']`, 'i');
   const nameMatch = html.match(nameRegex);
   if (nameMatch) return nameMatch[1];
 
+  return undefined;
+}
+
+// Extract Twitter card type
+function extractTwitterCard(html: string): string | undefined {
+  const patterns = [
+    /<meta[^>]+name=["']twitter:card["'][^>]+content=["']([^"']+)["']/i,
+    /<meta[^>]+content=["']([^"']+)["'][^>]+name=["']twitter:card["']/i,
+  ];
+  for (const pattern of patterns) {
+    const match = html.match(pattern);
+    if (match) return match[1];
+  }
+  return undefined;
+}
+
+// Extract twitter:player URL for video cards
+function extractTwitterPlayer(html: string): string | undefined {
+  const patterns = [
+    /<meta[^>]+name=["']twitter:player["'][^>]+content=["']([^"']+)["']/i,
+    /<meta[^>]+content=["']([^"']+)["'][^>]+name=["']twitter:player["']/i,
+  ];
+  for (const pattern of patterns) {
+    const match = html.match(pattern);
+    if (match) return match[1];
+  }
   return undefined;
 }
 
@@ -155,6 +272,9 @@ serve(async (req) => {
 
     console.log(`Fetching link preview for: ${url}`);
 
+    // Check for video embed before fetching (saves network request for known video platforms)
+    const videoEmbed = detectVideoEmbed(url);
+
     // Fetch the URL with timeout
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 5000);
@@ -190,7 +310,22 @@ serve(async (req) => {
       image: resolveImageUrl(extractMetaContent(html, 'image'), finalUrl),
       siteName: extractMetaContent(html, 'site_name'),
       favicon: extractFavicon(html, finalUrl),
+      cardType: extractTwitterCard(html),
     };
+
+    // Add video embed info if detected
+    if (videoEmbed) {
+      previewData.videoType = videoEmbed.type;
+      previewData.videoId = videoEmbed.videoId;
+      previewData.embedUrl = videoEmbed.embedUrl;
+    } else {
+      // Check for twitter:player (video card)
+      const twitterPlayer = extractTwitterPlayer(html);
+      if (twitterPlayer && previewData.cardType === 'player') {
+        previewData.videoType = 'twitter';
+        previewData.embedUrl = twitterPlayer;
+      }
+    }
 
     // Truncate description if too long
     if (previewData.description && previewData.description.length > 200) {
