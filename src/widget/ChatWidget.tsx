@@ -297,6 +297,17 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     }
   }, []);
 
+// Helper to check if URL is internal widget URL (should not be tracked)
+  const isInternalWidgetUrl = (url: string): boolean => {
+    if (!url) return false;
+    try {
+      const urlObj = new URL(url);
+      return urlObj.pathname.includes('widget.html') || urlObj.pathname.includes('widget-entry');
+    } catch {
+      return url.includes('widget.html') || url.includes('widget-entry');
+    }
+  };
+
   // Listen for parent page info messages (iframe mode - parent sends real page URL)
   useEffect(() => {
     if (previewMode) return;
@@ -307,6 +318,12 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
       if (event.data.type === 'chatpad-parent-page-info') {
         const { url, referrer, utmParams } = event.data;
         console.log('[Widget] Received parent page info:', { url, referrer, utmParams });
+        
+        // Skip tracking if this is the widget.html page itself
+        if (isInternalWidgetUrl(url)) {
+          console.log('[Widget] Skipping internal widget URL:', url);
+          return;
+        }
         
         const isFirstMessage = !parentPageUrlRef.current;
         parentPageUrlRef.current = url;
@@ -447,6 +464,12 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     const trackPageVisit = (sendRealtime = false) => {
       const now = new Date().toISOString();
       const currentUrl = window.location.href;
+      
+      // Skip tracking if this is the widget.html page itself
+      if (isInternalWidgetUrl(currentUrl)) {
+        console.log('[Widget] Skipping internal widget URL in fallback:', currentUrl);
+        return;
+      }
       
       // Calculate duration for previous page
       let previousDuration = 0;
