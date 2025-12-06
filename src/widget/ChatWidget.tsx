@@ -389,7 +389,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
               updatePageVisit(activeConversationId, {
                 ...newVisit,
                 previous_duration_ms: previousDuration,
-              }).catch(err => console.error('[Widget] Failed to send real-time page visit:', err));
+              }, undefined, visitorId).catch(err => console.error('[Widget] Failed to send real-time page visit:', err));
             }
           }
         }
@@ -504,7 +504,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
         updatePageVisit(activeConversationId, {
           ...newVisit,
           previous_duration_ms: previousDuration,
-        }).catch(err => console.error('[Widget] Failed to send real-time page visit:', err));
+        }, undefined, visitorId).catch(err => console.error('[Widget] Failed to send real-time page visit:', err));
       }
     };
     
@@ -577,7 +577,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
       url: referrerJourney.landing_page,
       entered_at: new Date().toISOString(),
       duration_ms: 0,
-    }, referrerJourney).then(() => {
+    }, referrerJourney, visitorId).then(() => {
       referrerJourneySentRef.current = true;
       console.log('[Widget] Sent referrer journey to server');
     }).catch(err => console.error('[Widget] Failed to send referrer journey:', err));

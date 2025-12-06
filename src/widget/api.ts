@@ -263,7 +263,8 @@ export async function sendChatMessage(
 export async function updatePageVisit(
   conversationId: string,
   pageVisit: { url: string; entered_at: string; duration_ms: number; previous_duration_ms?: number },
-  referrerJourney?: ReferrerJourney
+  referrerJourney?: ReferrerJourney,
+  visitorId?: string
 ): Promise<{ success: boolean }> {
   try {
     const response = await fetch(`${SUPABASE_URL}/functions/v1/update-page-visits`, {
@@ -276,6 +277,7 @@ export async function updatePageVisit(
         conversationId,
         pageVisit,
         referrerJourney,
+        visitorId,
       }),
     });
 
