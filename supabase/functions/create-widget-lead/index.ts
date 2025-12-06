@@ -65,7 +65,7 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { agentId, firstName, lastName, email, customFields, _formLoadTime } = await req.json();
+    const { agentId, firstName, lastName, email, customFields, _formLoadTime, referrerJourney } = await req.json();
 
     // Spam protection: Check timing (reject if submitted too fast)
     if (_formLoadTime) {
@@ -147,7 +147,7 @@ serve(async (req) => {
     const { country, city } = await getLocationFromIP(ipAddress);
 
     // Create conversation first
-    const conversationMetadata = {
+    const conversationMetadata: any = {
       ip_address: ipAddress,
       country,
       city,
@@ -163,6 +163,21 @@ serve(async (req) => {
       messages_count: 0,
       visited_pages: [] as Array<{ url: string; entered_at: string; duration_ms: number }>,
     };
+
+    // Add referrer journey if provided
+    if (referrerJourney) {
+      conversationMetadata.referrer_journey = {
+        referrer_url: referrerJourney.referrer_url || null,
+        landing_page: referrerJourney.landing_page || null,
+        utm_source: referrerJourney.utm_source || null,
+        utm_medium: referrerJourney.utm_medium || null,
+        utm_campaign: referrerJourney.utm_campaign || null,
+        utm_term: referrerJourney.utm_term || null,
+        utm_content: referrerJourney.utm_content || null,
+        entry_type: referrerJourney.entry_type || 'direct',
+      };
+      console.log('Added referrer journey to lead conversation:', conversationMetadata.referrer_journey);
+    }
 
     const { data: conversation, error: convError } = await supabase
       .from('conversations')

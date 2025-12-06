@@ -164,7 +164,7 @@ serve(async (req) => {
   }
 
   try {
-    const { agentId, conversationId, messages, leadId, pageVisits } = await req.json();
+    const { agentId, conversationId, messages, leadId, pageVisits, referrerJourney } = await req.json();
 
     if (!agentId) {
       throw new Error('Agent ID is required');
@@ -279,7 +279,7 @@ serve(async (req) => {
     
     if (!activeConversationId || activeConversationId === 'new' || activeConversationId.startsWith('conv_') || activeConversationId.startsWith('migrated_')) {
       // Create a new conversation in the database
-      const conversationMetadata = {
+      const conversationMetadata: any = {
         ip_address: ipAddress,
         country,
         city,
@@ -293,6 +293,21 @@ serve(async (req) => {
         messages_count: 0,
         visited_pages: [] as Array<{ url: string; entered_at: string; duration_ms: number }>,
       };
+
+      // Add referrer journey if provided
+      if (referrerJourney) {
+        conversationMetadata.referrer_journey = {
+          referrer_url: referrerJourney.referrer_url || null,
+          landing_page: referrerJourney.landing_page || null,
+          utm_source: referrerJourney.utm_source || null,
+          utm_medium: referrerJourney.utm_medium || null,
+          utm_campaign: referrerJourney.utm_campaign || null,
+          utm_term: referrerJourney.utm_term || null,
+          utm_content: referrerJourney.utm_content || null,
+          entry_type: referrerJourney.entry_type || 'direct',
+        };
+        console.log('Added referrer journey to new conversation:', conversationMetadata.referrer_journey);
+      }
 
       const { data: newConversation, error: createError } = await supabase
         .from('conversations')

@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef, lazy, Suspense } from 'react';
-import { fetchWidgetConfig, createLead, submitArticleFeedback, sendChatMessage, subscribeToMessages, unsubscribeFromMessages, subscribeToConversationStatus, unsubscribeFromConversationStatus, subscribeToTypingIndicator, unsubscribeFromTypingIndicator, fetchTakeoverAgent, updateMessageReaction, type WidgetConfig, type ChatResponse } from './api';
+import { useState, useEffect, useRef, lazy, Suspense, useCallback } from 'react';
+import { fetchWidgetConfig, createLead, submitArticleFeedback, sendChatMessage, subscribeToMessages, unsubscribeFromMessages, subscribeToConversationStatus, unsubscribeFromConversationStatus, subscribeToTypingIndicator, unsubscribeFromTypingIndicator, fetchTakeoverAgent, updateMessageReaction, updatePageVisit, type WidgetConfig, type ChatResponse, type ReferrerJourney } from './api';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { CSSAnimatedList } from './CSSAnimatedList';
 import { CSSAnimatedItem } from './CSSAnimatedItem';
@@ -106,6 +106,60 @@ interface PageVisit {
   duration_ms: number;
 }
 
+// Detect traffic source type from referrer URL
+function detectEntryType(referrer: string | null): ReferrerJourney['entry_type'] {
+  if (!referrer) return 'direct';
+  
+  const lowerRef = referrer.toLowerCase();
+  
+  // Search engines
+  if (/google\.|bing\.|yahoo\.|duckduckgo\.|baidu\.|yandex\./i.test(lowerRef)) {
+    return 'organic';
+  }
+  
+  // Social platforms
+  if (/facebook\.|instagram\.|twitter\.|x\.com|linkedin\.|tiktok\.|pinterest\.|reddit\.|youtube\./i.test(lowerRef)) {
+    return 'social';
+  }
+  
+  // Email providers (common webmail)
+  if (/mail\.|gmail\.|outlook\.|yahoo\.com\/mail|webmail\./i.test(lowerRef)) {
+    return 'email';
+  }
+  
+  // If there's a referrer but doesn't match above, it's a referral
+  return 'referral';
+}
+
+// Parse UTM parameters from URL
+function parseUtmParams(url: string): Partial<ReferrerJourney> {
+  try {
+    const urlObj = new URL(url);
+    const params = urlObj.searchParams;
+    
+    // Check if any utm params exist - if utm_source is present, likely paid
+    const utmSource = params.get('utm_source');
+    const utmMedium = params.get('utm_medium');
+    
+    // Detect paid traffic from utm parameters
+    let entryType: ReferrerJourney['entry_type'] | undefined;
+    if (utmMedium && ['cpc', 'ppc', 'paid', 'cpm', 'display', 'retargeting'].includes(utmMedium.toLowerCase())) {
+      entryType = 'paid';
+    }
+    
+    return {
+      utm_source: utmSource,
+      utm_medium: utmMedium,
+      utm_campaign: params.get('utm_campaign'),
+      utm_term: params.get('utm_term'),
+      utm_content: params.get('utm_content'),
+      ...(entryType ? { entry_type: entryType } : {}),
+    };
+  } catch {
+    return {};
+  }
+}
+
 // Detect mobile full-screen mode (matches media query in chatpad-widget.js)
 const getIsMobileFullScreen = () => {
   if (typeof window === 'undefined') return false;
@@ -176,6 +230,8 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
   const [headerScrollY, setHeaderScrollY] = useState(0);
   const [pageVisits, setPageVisits] = useState<PageVisit[]>([]);
   const currentPageRef = useRef<{ url: string; entered_at: string }>({ url: '', entered_at: '' });
+  const [referrerJourney, setReferrerJourney] = useState<ReferrerJourney | null>(null);
+  const referrerJourneySentRef = useRef(false);
   const homeContentRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -227,23 +283,64 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     }
   }, []);
 
+  // Capture referrer journey on initial load
+  useEffect(() => {
+    if (previewMode || referrerJourney) return;
+    
+    const currentUrl = window.location.href;
+    const referrer = document.referrer || null;
+    const utmParams = parseUtmParams(currentUrl);
+    
+    // Determine entry type (UTM params can override referrer-based detection)
+    let entryType = utmParams.entry_type || detectEntryType(referrer);
+    
+    const journey: ReferrerJourney = {
+      referrer_url: referrer,
+      landing_page: currentUrl,
+      utm_source: utmParams.utm_source || null,
+      utm_medium: utmParams.utm_medium || null,
+      utm_campaign: utmParams.utm_campaign || null,
+      utm_term: utmParams.utm_term || null,
+      utm_content: utmParams.utm_content || null,
+      entry_type: entryType,
+    };
+    
+    setReferrerJourney(journey);
+    console.log('[Widget] Captured referrer journey:', journey);
+    
+    // Persist to localStorage
+    localStorage.setItem(`chatpad_referrer_journey_${agentId}`, JSON.stringify(journey));
+  }, [agentId, previewMode]);
+
+  // Load referrer journey from localStorage on mount
+  useEffect(() => {
+    if (previewMode || referrerJourney) return;
+    const stored = localStorage.getItem(`chatpad_referrer_journey_${agentId}`);
+    if (stored) {
+      try {
+        setReferrerJourney(JSON.parse(stored));
+      } catch { /* ignore */ }
+    }
+  }, [agentId, previewMode]);
+
   // Page visit tracking - track pages the user visits while widget is loaded
   useEffect(() => {
     if (previewMode) return; // Don't track in preview mode
     
-    const trackPageVisit = () => {
+    const trackPageVisit = (sendRealtime = false) => {
       const now = new Date().toISOString();
       const currentUrl = window.location.href;
       
-      // Save duration for previous page if exists
+      // Calculate duration for previous page
+      let previousDuration = 0;
       if (currentPageRef.current.url && currentPageRef.current.entered_at) {
-        const duration = Date.now() - new Date(currentPageRef.current.entered_at).getTime();
+        previousDuration = Date.now() - new Date(currentPageRef.current.entered_at).getTime();
         setPageVisits(prev => {
           // Update the last visit with duration
           const updated = [...prev];
           const lastIndex = updated.findIndex(v => v.url === currentPageRef.current.url && v.duration_ms === 0);
           if (lastIndex !== -1) {
-            updated[lastIndex] = { ...updated[lastIndex], duration_ms: duration };
+            updated[lastIndex] = { ...updated[lastIndex], duration_ms: previousDuration };
           }
           return updated;
         });
@@ -251,15 +348,24 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
       
       // Start tracking new page
       currentPageRef.current = { url: currentUrl, entered_at: now };
-      setPageVisits(prev => [...prev, { url: currentUrl, entered_at: now, duration_ms: 0 }]);
+      const newVisit = { url: currentUrl, entered_at: now, duration_ms: 0 };
+      setPageVisits(prev => [...prev, newVisit]);
+      
+      // Send real-time update if we have an active conversation
+      if (sendRealtime && activeConversationId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(activeConversationId)) {
+        updatePageVisit(activeConversationId, {
+          ...newVisit,
+          previous_duration_ms: previousDuration,
+        }).catch(err => console.error('[Widget] Failed to send real-time page visit:', err));
+      }
     };
     
-    // Track initial page
-    trackPageVisit();
+    // Track initial page (don't send real-time on initial load)
+    trackPageVisit(false);
     
-    // Track SPA navigations
-    const handlePopState = () => trackPageVisit();
-    const handleHashChange = () => trackPageVisit();
+    // Track SPA navigations (send real-time)
+    const handlePopState = () => trackPageVisit(true);
+    const handleHashChange = () => trackPageVisit(true);
     
     window.addEventListener('popstate', handlePopState);
     window.addEventListener('hashchange', handleHashChange);
@@ -290,7 +396,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
       window.removeEventListener('hashchange', handleHashChange);
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
-  }, [agentId, previewMode]);
+  }, [agentId, previewMode, activeConversationId]);
 
   // Persist page visits to localStorage
   useEffect(() => {
@@ -309,6 +415,25 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
       } catch { /* ignore */ }
     }
   }, [agentId, previewMode]);
+
+  // Send referrer journey to server when conversation is first created
+  useEffect(() => {
+    if (previewMode || !activeConversationId || referrerJourneySentRef.current || !referrerJourney) return;
+    
+    // Only send for valid database conversation IDs
+    const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(activeConversationId);
+    if (!isValidUUID) return;
+    
+    // Send referrer journey once when conversation is created
+    updatePageVisit(activeConversationId, {
+      url: referrerJourney.landing_page,
+      entered_at: new Date().toISOString(),
+      duration_ms: 0,
+    }, referrerJourney).then(() => {
+      referrerJourneySentRef.current = true;
+      console.log('[Widget] Sent referrer journey to server');
+    }).catch(err => console.error('[Widget] Failed to send referrer journey:', err));
+  }, [activeConversationId, referrerJourney, previewMode]);
 
   // Initialize activeConversationId from chatUser if available (for returning users)
   // This enables real-time subscriptions immediately on widget load
@@ -779,13 +904,14 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
         });
       }
 
-      // Call the real AI endpoint with page visits
+      // Call the real AI endpoint with page visits and referrer journey
       const response = await sendChatMessage(
         config.agentId,
         activeConversationId,
         messageHistory,
         chatUser?.leadId,
-        pageVisits.length > 0 ? pageVisits : undefined
+        pageVisits.length > 0 ? pageVisits : undefined,
+        referrerJourney || undefined
       );
 
       // Update conversation ID if this was a new conversation

@@ -109,6 +109,17 @@ interface PageVisit {
   duration_ms: number;
 }
 
+interface ReferrerJourney {
+  referrer_url: string | null;
+  landing_page: string | null;
+  utm_source?: string | null;
+  utm_medium?: string | null;
+  utm_campaign?: string | null;
+  utm_term?: string | null;
+  utm_content?: string | null;
+  entry_type?: 'direct' | 'organic' | 'referral' | 'social' | 'paid' | 'email';
+}
+
 interface ConversationMetadata {
   lead_id?: string;
   lead_name?: string;
@@ -133,6 +144,7 @@ interface ConversationMetadata {
   assigned_to?: string;
   notes?: string;
   visited_pages?: PageVisit[];
+  referrer_journey?: ReferrerJourney;
 }
 
 interface ConversationMetadataPanelProps {
@@ -472,6 +484,126 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
               </div>
             </div>
             
+            {/* User Journey (Referrer) */}
+            {metadata.referrer_journey && (
+              <>
+                <Separator />
+                <div>
+                  <SectionHeader>User Journey</SectionHeader>
+                  <div className="space-y-2.5">
+                    {/* Entry Type Badge */}
+                    <div className="flex items-center gap-2.5 text-sm">
+                      <span className="text-muted-foreground text-xs">Source:</span>
+                      <Badge 
+                        variant="secondary" 
+                        className={cn(
+                          "text-xs capitalize",
+                          metadata.referrer_journey.entry_type === 'organic' && "bg-success/10 text-success",
+                          metadata.referrer_journey.entry_type === 'paid' && "bg-warning/10 text-warning",
+                          metadata.referrer_journey.entry_type === 'social' && "bg-info/10 text-info",
+                          metadata.referrer_journey.entry_type === 'email' && "bg-primary/10 text-primary",
+                          metadata.referrer_journey.entry_type === 'referral' && "bg-muted text-muted-foreground",
+                          metadata.referrer_journey.entry_type === 'direct' && "bg-muted text-muted-foreground",
+                        )}
+                      >
+                        {metadata.referrer_journey.entry_type || 'direct'}
+                      </Badge>
+                    </div>
+                    
+                    {/* Referrer URL */}
+                    {metadata.referrer_journey.referrer_url && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="flex items-start gap-2.5 text-sm">
+                            <Link01 className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+                            <div className="min-w-0 flex-1">
+                              <div className="text-xs text-muted-foreground">Referred from:</div>
+                              <div className="truncate text-xs">
+                                {(() => {
+                                  try {
+                                    const url = new URL(metadata.referrer_journey.referrer_url!);
+                                    return url.hostname;
+                                  } catch {
+                                    return metadata.referrer_journey.referrer_url;
+                                  }
+                                })()}
+                              </div>
+                            </div>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent side="left" className="max-w-xs">
+                          <div className="text-xs break-all">{metadata.referrer_journey.referrer_url}</div>
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
+                    
+                    {/* Landing Page */}
+                    {metadata.referrer_journey.landing_page && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="flex items-start gap-2.5 text-sm">
+                            <Browser className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+                            <div className="min-w-0 flex-1">
+                              <div className="text-xs text-muted-foreground">Landing page:</div>
+                              <div className="truncate text-xs">
+                                {(() => {
+                                  try {
+                                    const url = new URL(metadata.referrer_journey.landing_page!);
+                                    return url.pathname + url.search || '/';
+                                  } catch {
+                                    return metadata.referrer_journey.landing_page;
+                                  }
+                                })()}
+                              </div>
+                            </div>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent side="left" className="max-w-xs">
+                          <div className="text-xs break-all">{metadata.referrer_journey.landing_page}</div>
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
+                    
+                    {/* UTM Parameters */}
+                    {(metadata.referrer_journey.utm_source || metadata.referrer_journey.utm_campaign) && (
+                      <div className="mt-2 pt-2 border-t border-dashed space-y-1.5">
+                        {metadata.referrer_journey.utm_source && (
+                          <div className="flex items-center gap-2 text-xs">
+                            <span className="text-muted-foreground w-16">Source:</span>
+                            <span className="font-medium">{metadata.referrer_journey.utm_source}</span>
+                          </div>
+                        )}
+                        {metadata.referrer_journey.utm_medium && (
+                          <div className="flex items-center gap-2 text-xs">
+                            <span className="text-muted-foreground w-16">Medium:</span>
+                            <span className="font-medium">{metadata.referrer_journey.utm_medium}</span>
+                          </div>
+                        )}
+                        {metadata.referrer_journey.utm_campaign && (
+                          <div className="flex items-center gap-2 text-xs">
+                            <span className="text-muted-foreground w-16">Campaign:</span>
+                            <span className="font-medium">{metadata.referrer_journey.utm_campaign}</span>
+                          </div>
+                        )}
+                        {metadata.referrer_journey.utm_term && (
+                          <div className="flex items-center gap-2 text-xs">
+                            <span className="text-muted-foreground w-16">Term:</span>
+                            <span className="font-medium">{metadata.referrer_journey.utm_term}</span>
+                          </div>
+                        )}
+                        {metadata.referrer_journey.utm_content && (
+                          <div className="flex items-center gap-2 text-xs">
+                            <span className="text-muted-foreground w-16">Content:</span>
+                            <span className="font-medium">{metadata.referrer_journey.utm_content}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
+
             {/* Visited Pages */}
             {metadata.visited_pages && metadata.visited_pages.length > 0 && (
               <>
