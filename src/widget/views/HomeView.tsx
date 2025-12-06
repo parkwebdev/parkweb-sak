@@ -163,11 +163,11 @@ export const HomeView = ({
                               />
                             )}
                             <div className="flex-1 min-w-0">
-                              <h4 className="font-semibold text-sm truncate text-foreground">
+                              <h4 className="font-semibold text-sm line-clamp-2 text-foreground">
                                 {announcement.title}
                               </h4>
                               {announcement.subtitle && (
-                                <p className="text-xs mt-0.5 truncate text-muted-foreground">
+                                <p className="text-xs mt-0.5 line-clamp-2 text-muted-foreground">
                                   {announcement.subtitle}
                                 </p>
                               )}
