@@ -3,7 +3,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Check, FileCheck02 } from '@untitledui/icons';
 import { ChatBubbleIcon } from '@/components/agents/ChatBubbleIcon';
 import { LinkPreviews } from '@/components/chat/LinkPreviews';
-import { formatTimestamp } from '../utils';
+import { formatShortTime } from '@/lib/time-formatting';
 import { AudioPlayer, MessageReactions } from '../constants';
 import type { Message } from '../types';
 
@@ -13,6 +13,8 @@ interface MessageBubbleProps {
   enableMessageReactions: boolean;
   onAddReaction: (emoji: string) => Promise<void>;
   onRemoveReaction: (emoji: string) => Promise<void>;
+  isContinuation?: boolean;
+  isLastInGroup?: boolean;
 }
 
 export const MessageBubble = ({
@@ -21,6 +23,8 @@ export const MessageBubble = ({
   enableMessageReactions,
   onAddReaction,
   onRemoveReaction,
+  isContinuation = false,
+  isLastInGroup = true,
 }: MessageBubbleProps) => {
   const msgWithExtras = message as Message & { isHuman?: boolean; senderName?: string; senderAvatar?: string };
 
@@ -35,9 +39,17 @@ export const MessageBubble = ({
     );
   }
 
+  const isUser = message.role === 'user';
+  const displayName = isUser 
+    ? 'You' 
+    : msgWithExtras.isHuman && msgWithExtras.senderName 
+      ? msgWithExtras.senderName 
+      : 'Assistant';
+
   return (
-    <div className={`flex items-start gap-2 ${message.role === 'user' ? 'justify-end' : ''}`}>
-      {message.role === 'assistant' && (
+    <div className={`flex items-start gap-2 ${isUser ? 'justify-end' : ''} ${isContinuation ? 'mt-0.5' : ''}`}>
+      {/* Avatar - only show for first message in group */}
+      {!isUser && !isContinuation && (
         msgWithExtras.isHuman && msgWithExtras.senderAvatar ? (
           <Avatar className="w-7 h-7 flex-shrink-0">
             <AvatarImage src={msgWithExtras.senderAvatar} alt={msgWithExtras.senderName || 'Team member'} />
@@ -51,22 +63,32 @@ export const MessageBubble = ({
           </div>
         )
       )}
-      <div className="flex flex-col gap-1 max-w-[80%]">
-        {/* Human agent label */}
-        {message.role === 'assistant' && msgWithExtras.isHuman && msgWithExtras.senderName && (
-          <span className="text-xs text-muted-foreground font-medium">
-            {msgWithExtras.senderName}
-          </span>
+      
+      {/* Spacer for continuation messages (align with previous bubble) */}
+      {!isUser && isContinuation && (
+        <div className="w-7 flex-shrink-0" />
+      )}
+
+      <div className="flex flex-col gap-0.5 max-w-[80%]">
+        {/* Header: Name • Timestamp - only show for first message in group */}
+        {!isContinuation && (
+          <div className={`flex items-center gap-1.5 text-[11px] text-muted-foreground ${isUser ? 'justify-end' : ''}`}>
+            <span className="font-medium">{displayName}</span>
+            <span>•</span>
+            <span>{formatShortTime(message.timestamp)}</span>
+          </div>
         )}
+
+        {/* Message bubble */}
         <div 
           className={`rounded-lg p-3 ${
-            message.role === 'user' 
+            isUser 
               ? 'text-foreground' 
               : msgWithExtras.isHuman 
                 ? 'bg-muted/50' 
                 : 'bg-muted'
           }`}
-          style={message.role === 'user' ? { 
+          style={isUser ? { 
             backgroundColor: `${primaryColor}12`
           } : undefined}
         >
@@ -106,33 +128,31 @@ export const MessageBubble = ({
           )}
         </div>
         
-        {/* Message footer: timestamp + read receipt + reactions */}
-        <div className="flex items-center gap-2 px-1">
-          <span className="text-[10px] text-muted-foreground">
-            {formatTimestamp(message.timestamp)}
-          </span>
-          
-          {/* Read receipt for user messages */}
-          {message.role === 'user' && (
-            <div className="flex items-center" title={message.read_at ? 'Read' : 'Sent'}>
-              <Check className={`h-3 w-3 ${message.read_at ? 'text-primary' : 'text-muted-foreground'}`} />
-            </div>
-          )}
-          
-          {/* Emoji reactions */}
-          {enableMessageReactions && message.id && (
-            <Suspense fallback={null}>
-              <MessageReactions
-                reactions={message.reactions || []}
-                onAddReaction={onAddReaction}
-                onRemoveReaction={onRemoveReaction}
-                primaryColor={primaryColor}
-                compact
-                isUserMessage={message.role === 'user'}
-              />
-            </Suspense>
-          )}
-        </div>
+        {/* Footer: Read receipt + Reactions - only show on last message in group */}
+        {isLastInGroup && (
+          <div className={`flex items-center gap-2 px-1 ${isUser ? 'justify-end' : ''}`}>
+            {/* Read receipt for user messages */}
+            {isUser && (
+              <div className="flex items-center" title={message.read_at ? 'Read' : 'Sent'}>
+                <Check className={`h-3 w-3 ${message.read_at ? 'text-primary' : 'text-muted-foreground'}`} />
+              </div>
+            )}
+            
+            {/* Emoji reactions */}
+            {enableMessageReactions && message.id && (
+              <Suspense fallback={null}>
+                <MessageReactions
+                  reactions={message.reactions || []}
+                  onAddReaction={onAddReaction}
+                  onRemoveReaction={onRemoveReaction}
+                  primaryColor={primaryColor}
+                  compact
+                  isUserMessage={isUser}
+                />
+              </Suspense>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
