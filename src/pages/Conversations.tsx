@@ -396,7 +396,10 @@ const Conversations: React.FC = () => {
       }
     };
     
-    // Don't animate temp message - it will be replaced by real message
+    // Animate the optimistic message
+    newMessageIdsRef.current.add(tempId);
+    setTimeout(() => newMessageIdsRef.current.delete(tempId), 300);
+    
     setMessages(prev => [...prev, tempMessage]);
     setMessageInput('');
     

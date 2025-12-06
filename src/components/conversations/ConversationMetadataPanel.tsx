@@ -480,10 +480,8 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
                       <div className="flex items-center gap-2.5 text-sm">
                         <Globe01 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                         <span>
-                          {(metadata.country_code || getCountryCode(metadata.country)) === 'US' 
-                            ? `${metadata.city || ''}${metadata.city && metadata.region ? ', ' : ''}${metadata.region || ''}`
-                            : `${metadata.city ? `${metadata.city}, ` : ''}${metadata.country}`
-                          }
+                          {metadata.city || ''}{metadata.city && metadata.region ? ', ' : ''}{metadata.region || ''}
+                          {!metadata.city && !metadata.region && metadata.country}
                         </span>
                         {(metadata.country_code || getCountryCode(metadata.country)) && (
                           <img 
