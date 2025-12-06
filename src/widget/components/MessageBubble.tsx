@@ -1,8 +1,9 @@
 import { Suspense } from 'react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Check, FileCheck02 } from '@untitledui/icons';
+import { Check, CheckCircle, XCircle, FileCheck02 } from '@untitledui/icons';
 import { ChatBubbleIcon } from '@/components/agents/ChatBubbleIcon';
 import { LinkPreviews } from '@/components/chat/LinkPreviews';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { formatShortTime } from '@/lib/time-formatting';
 import { AudioPlayer, MessageReactions } from '../constants';
 import type { Message } from '../types';
@@ -70,12 +71,46 @@ export const MessageBubble = ({
       )}
 
       <div className="flex flex-col gap-0.5 max-w-[80%]">
-        {/* Header: Name • Timestamp - only show for first message in group */}
+        {/* Header: Name • Timestamp • Status - only show for first message in group */}
         {!isContinuation && (
           <div className={`flex items-center gap-1.5 text-[11px] text-muted-foreground ${isUser ? 'justify-end' : ''}`}>
             <span className="font-medium">{displayName}</span>
             <span>•</span>
             <span>{formatShortTime(message.timestamp)}</span>
+            {/* Status indicator for user messages */}
+            {isUser && (
+              <>
+                <span>•</span>
+                {(message as any).error || (message as any).failed ? (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="text-destructive inline-flex items-center">
+                        <XCircle className="h-3 w-3" />
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="text-xs">Failed</TooltipContent>
+                  </Tooltip>
+                ) : message.read_at ? (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="text-info inline-flex items-center">
+                        <CheckCircle className="h-3 w-3" />
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="text-xs">Seen</TooltipContent>
+                  </Tooltip>
+                ) : (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="inline-flex items-center">
+                        <Check className="h-3 w-3" />
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="text-xs">Sent</TooltipContent>
+                  </Tooltip>
+                )}
+              </>
+            )}
           </div>
         )}
 
@@ -128,16 +163,9 @@ export const MessageBubble = ({
           )}
         </div>
         
-        {/* Footer: Read receipt + Reactions - only show on last message in group */}
+        {/* Footer: Reactions - only show on last message in group */}
         {isLastInGroup && (
           <div className={`flex items-center gap-2 px-1 ${isUser ? 'justify-end' : ''}`}>
-            {/* Read receipt for user messages */}
-            {isUser && (
-              <div className="flex items-center" title={message.read_at ? 'Read' : 'Sent'}>
-                <Check className={`h-3 w-3 ${message.read_at ? 'text-primary' : 'text-muted-foreground'}`} />
-              </div>
-            )}
-            
             {/* Emoji reactions */}
             {enableMessageReactions && message.id && (
               <Suspense fallback={null}>
