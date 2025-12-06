@@ -63,95 +63,44 @@ ChatPad is a multi-tenant AI agent platform for building, deploying, and managin
 | **Tiptap** | Rich text editor |
 | **Recharts** | Charts and graphs |
 
-### Development Tools
-
-| Tool | Purpose |
-|------|---------|
-| **React Hook Form** | Form handling |
-| **Zod** | Schema validation |
-| **date-fns** | Date utilities |
-| **libphonenumber-js** | Phone validation |
-| **DOMPurify** | HTML sanitization |
-
 ---
 
 ## Core Features
 
 ### 1. Dashboard
-
 **Location:** `src/pages/Dashboard.tsx`
 
-Overview of key metrics:
-- Total conversations
-- Active agents
-- New leads
-- Usage metrics
+Overview of key metrics: conversations, agents, leads, usage.
 
 ### 2. AI Agents
-
 **Location:** `src/pages/Agents.tsx`, `src/pages/AgentConfig.tsx`
 
-Agent management:
-- Create and configure agents
-- Set AI model and parameters
-- Configure system prompts
-- Manage knowledge sources
-- Design help center content
-- Configure webhook integrations
-- Customize embed settings
+Create and configure agents with system prompts, knowledge sources, help center content, webhooks, and embed settings.
 
 ### 3. Conversations
-
 **Location:** `src/pages/Conversations.tsx`
 
-Conversation management:
-- View all conversations
-- Search and filter
-- Human takeover
-- Real-time messaging
-- View visitor metadata
+View, search, filter conversations with human takeover capability and real-time messaging.
 
 ### 4. Leads
-
 **Location:** `src/pages/Leads.tsx`
 
-Lead management:
-- View captured leads
-- Update lead status
-- View linked conversations
-- Export lead data
+Manage captured leads with status updates and conversation linking.
 
 ### 5. Analytics
-
 **Location:** `src/pages/Analytics.tsx`
 
-Performance tracking:
-- Conversation metrics
-- Lead conversion rates
-- Agent performance
-- Scheduled reports
+Track performance with metrics, charts, and scheduled reports.
 
 ### 6. Settings
-
 **Location:** `src/pages/Settings.tsx`
 
-Configuration:
-- Profile settings
-- Team management
-- API keys
-- Notification preferences
-- Subscription management
-- Custom domains
+Configure profile, team, notifications, API keys, subscriptions, and domains.
 
 ### 7. Widget
+**Location:** `src/pages/WidgetPage.tsx`, `src/widget/`
 
-**Location:** `src/pages/WidgetPage.tsx`, `src/widget/ChatWidget.tsx`
-
-Embeddable chat interface:
-- AI conversations
-- Help center
-- Contact forms
-- Announcements
+Embeddable chat interface with AI conversations, help center, and contact forms.
 
 ---
 
@@ -177,20 +126,6 @@ ChatPad uses a **user-based ownership** model with team sharing:
 │  Member 1    Member 2    Member 3               │
 │  (read/write access to owner's resources)       │
 └─────────────────────────────────────────────────┘
-```
-
-### Data Flow
-
-```
-┌──────────┐     ┌──────────────┐     ┌──────────┐
-│  Widget  │────▶│ Edge Function │────▶│ Database │
-└──────────┘     └──────────────┘     └──────────┘
-                        │
-                        ▼
-                 ┌──────────────┐
-                 │   AI Model   │
-                 │  (via RAG)   │
-                 └──────────────┘
 ```
 
 ### Real-time Architecture
@@ -238,7 +173,6 @@ chatpad/
 │   │   │   ├── tabs/              # Agent config tab content
 │   │   │   ├── embed/             # Widget embed settings
 │   │   │   └── webhooks/          # Webhook configuration
-│   │   │
 │   │   ├── analytics/             # Analytics components
 │   │   ├── chat/                  # Chat UI components
 │   │   ├── conversations/         # Conversation management
@@ -253,12 +187,6 @@ chatpad/
 │   │   └── AuthContext.tsx        # Authentication context
 │   │
 │   ├── hooks/                     # Custom React hooks
-│   │   ├── useAgents.ts           # Agent data management
-│   │   ├── useAuth.ts             # Authentication hook
-│   │   ├── useConversations.ts    # Conversation data
-│   │   ├── useLeads.ts            # Lead data management
-│   │   ├── useTeam.ts             # Team management
-│   │   └── ...
 │   │
 │   ├── integrations/
 │   │   └── supabase/
@@ -267,34 +195,21 @@ chatpad/
 │   │
 │   ├── lib/                       # Utility libraries
 │   │   ├── utils.ts               # General utilities
-│   │   ├── formatting.ts          # Date/number formatting
-│   │   ├── color-utils.ts         # Color manipulation
-│   │   └── ...
+│   │   ├── formatting.ts          # Date formatting
+│   │   ├── time-formatting.ts     # Time/name formatting (shared)
+│   │   └── color-utils.ts         # Color manipulation
 │   │
 │   ├── pages/                     # Route pages
-│   │   ├── Dashboard.tsx
-│   │   ├── Agents.tsx
-│   │   ├── AgentConfig.tsx
-│   │   ├── Conversations.tsx
-│   │   ├── Leads.tsx
-│   │   ├── Analytics.tsx
-│   │   ├── Settings.tsx
-│   │   ├── Auth.tsx
-│   │   └── WidgetPage.tsx         # Widget entry page
 │   │
-│   ├── types/                     # TypeScript types
-│   │   └── team.ts
-│   │
-│   ├── utils/                     # Utility functions
-│   │   ├── logger.ts              # Logging utility
-│   │   └── validation.ts          # Input validation
-│   │
-│   ├── widget/                    # Widget components
-│   │   ├── ChatWidget.tsx         # Main widget component
+│   ├── widget/                    # Widget (modular architecture)
+│   │   ├── ChatWidget.tsx         # Orchestrator (~530 lines)
+│   │   ├── types.ts               # TypeScript interfaces
+│   │   ├── constants.ts           # CSS vars, lazy imports
 │   │   ├── api.ts                 # Widget API functions
-│   │   ├── CSSBubbleBackground.tsx
-│   │   ├── CSSAnimatedList.tsx
-│   │   └── ...
+│   │   ├── hooks/                 # 9 custom hooks
+│   │   ├── components/            # 8 UI components
+│   │   ├── views/                 # 4 view components
+│   │   └── utils/                 # 5 utility modules
 │   │
 │   ├── App.tsx                    # Main app component
 │   ├── main.tsx                   # Main app entry
@@ -305,15 +220,10 @@ chatpad/
 ├── supabase/
 │   ├── config.toml                # Supabase configuration
 │   ├── functions/                 # Edge functions
-│   │   ├── widget-chat/
-│   │   ├── get-widget-config/
-│   │   ├── create-widget-lead/
-│   │   └── ...
 │   └── migrations/                # Database migrations (read-only)
 │
 ├── tailwind.config.ts             # Tailwind configuration
-├── vite.config.ts                 # Vite configuration
-└── package.json                   # Dependencies
+└── vite.config.ts                 # Vite configuration
 ```
 
 ---
@@ -322,52 +232,23 @@ chatpad/
 
 ### Layout Components
 
-**`AppLayout`** (`src/components/layout/AppLayout.tsx`)
-- Main application shell
-- Sidebar navigation
-- Header with search and notifications
+**`AppLayout`** - Main application shell with sidebar and header.
 
-**`AgentConfigLayout`** (`src/components/agents/AgentConfigLayout.tsx`)
-- Agent configuration page layout
-- Sticky tab navigation
-- Consistent header styling
+**`AgentConfigLayout`** - Agent configuration page with sticky tab navigation.
 
 ### Agent Components
 
-**`AgentCard`** (`src/components/agents/AgentCard.tsx`)
-- Agent list item display
-- Status badge
-- Quick actions
+**`AgentCard`** - Agent list item with status and quick actions.
 
-**`AgentSettingsLayout`** (`src/components/agents/AgentSettingsLayout.tsx`)
-- Side menu navigation for settings tabs
-- Dynamic descriptions
-- Reusable across Knowledge, Tools, Configure
+**`AgentSettingsLayout`** - Side menu navigation for settings tabs.
 
-### Conversation Components
+### Widget Components (Modular)
 
-**`ConversationsTable`** (`src/components/conversations/ConversationsTable.tsx`)
-- Conversation list with search/filter
-- Status indicators
-- Takeover actions
+**`ChatWidget`** - Orchestrator component (~530 lines).
 
-**`ConversationDetailsSheet`** (`src/components/conversations/ConversationDetailsSheet.tsx`)
-- Conversation detail sidebar
-- Message history
-- Takeover controls
-- Metadata display
+**`HomeView`**, **`ChatView`**, **`HelpView`**, **`MessagesView`** - View components.
 
-### Widget Components
-
-**`ChatWidget`** (`src/widget/ChatWidget.tsx`)
-- Main widget interface
-- Multi-view navigation (home, chat, help)
-- Real-time message handling
-
-**`CSSBubbleBackground`** (`src/widget/CSSBubbleBackground.tsx`)
-- Animated gradient background
-- Pure CSS animations (no JS)
-- Lava lamp effect
+**`MessageBubble`**, **`MessageInput`**, **`ContactForm`** - UI components.
 
 ---
 
@@ -376,49 +257,15 @@ chatpad/
 ### Running Locally
 
 ```bash
-# Install dependencies
 npm install
-
-# Start development server
 npm run dev
-
-# Build for production
-npm run build
-```
-
-### Environment Variables
-
-Create `.env` file:
-```
-VITE_SUPABASE_URL=your-project-url
-VITE_SUPABASE_ANON_KEY=your-anon-key
 ```
 
 ### Code Conventions
 
-**Components:**
-- PascalCase for component names
-- One component per file
-- Props interface defined inline or exported
-
-**Hooks:**
-- camelCase with `use` prefix
-- Located in `src/hooks/`
-- Return object with named values
-
-**Utilities:**
-- camelCase function names
-- Located in `src/lib/` or `src/utils/`
-- Pure functions where possible
-
-### State Management
-
-| Type | Tool | Use Case |
-|------|------|----------|
-| **Server State** | TanStack Query | API data |
-| **Global State** | React Context | Auth, theme |
-| **Local State** | useState/useReducer | Component state |
-| **URL State** | React Router | Navigation |
+- **Components**: PascalCase, one per file
+- **Hooks**: camelCase with `use` prefix, in `src/hooks/`
+- **Utilities**: camelCase, in `src/lib/` or `src/utils/`
 
 ### Styling Guidelines
 
@@ -432,27 +279,11 @@ Use Tailwind with design system tokens:
 <div className="bg-white text-black border-gray-200">
 ```
 
-### Testing the Widget
-
-1. Open `public/widget-test.html` in browser
-2. Or use the preview in Agent Config → Embed tab
-
-### Edge Function Development
-
-```bash
-# Deploy all functions
-supabase functions deploy
-
-# View logs
-supabase functions logs function-name
-```
-
 ---
 
 ## Related Documentation
 
-- [Database Schema](./DATABASE_SCHEMA.md) - Complete database reference
-- [Widget Architecture](./WIDGET_ARCHITECTURE.md) - Widget technical details
-- [Edge Functions](./EDGE_FUNCTIONS.md) - API documentation
-- [Architecture](./CHATPAD_ARCHITECTURE.md) - System architecture
-- [Security](./SECURITY.md) - Security implementation
+- [Database Schema](./DATABASE_SCHEMA.md)
+- [Widget Architecture](./WIDGET_ARCHITECTURE.md)
+- [Edge Functions](./EDGE_FUNCTIONS.md)
+- [Security](./SECURITY.md)
