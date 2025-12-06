@@ -508,7 +508,23 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
   const handleFormSubmit = (userData: ChatUser, conversationId?: string) => {
     localStorage.setItem(`chatpad_user_${config.agentId}`, JSON.stringify(userData));
     setChatUser(userData);
-    setMessages([{ role: 'assistant', content: config.greeting, read: true, timestamp: new Date(), type: 'text', reactions: [] }]);
+    
+    // Set greeting after form submission
+    setMessages([{ 
+      role: 'assistant', 
+      content: config.greeting, 
+      read: true, 
+      timestamp: new Date(), 
+      type: 'text', 
+      reactions: [] 
+    }]);
+    
+    // CRITICAL: Mark conversation as fetched BEFORE setting activeConversationId
+    // This prevents the useEffect from triggering a DB fetch that overwrites the greeting
+    if (conversationId) {
+      markConversationFetched(conversationId);
+    }
+    
     setActiveConversationId(conversationId || 'new');
   };
 
