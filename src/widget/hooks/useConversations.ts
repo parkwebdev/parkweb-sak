@@ -29,6 +29,7 @@ export function useConversations(options: UseConversationsOptions) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isOpeningConversationRef = useRef(false);
   const fetchedConversationIdRef = useRef<string | null>(null);
+  const isActivelySendingRef = useRef(false);
 
   // Initialize activeConversationId from chatUser if available (for returning users)
   useEffect(() => {
@@ -47,6 +48,13 @@ export function useConversations(options: UseConversationsOptions) {
     
     // Skip if we already fetched for this specific conversation
     if (fetchedConversationIdRef.current === activeConversationId) return;
+    
+    // Skip fetch if we're actively sending a message - messages are already in local state
+    if (isActivelySendingRef.current) {
+      console.log('[Widget] Skipping DB fetch - actively sending message');
+      fetchedConversationIdRef.current = activeConversationId;
+      return;
+    }
     
     const loadMessagesFromDB = async () => {
       fetchedConversationIdRef.current = activeConversationId;
@@ -136,5 +144,6 @@ export function useConversations(options: UseConversationsOptions) {
     messagesEndRef,
     isOpeningConversationRef,
     clearMessagesAndFetch,
+    isActivelySendingRef,
   };
 }
