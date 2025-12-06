@@ -71,15 +71,7 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { conversationId, pageVisit, referrerJourney } = await req.json();
-
-    // Log incoming data for debugging
-    console.log('Received update-page-visits request:', {
-      conversationId,
-      hasPageVisit: !!pageVisit,
-      hasReferrerJourney: !!referrerJourney,
-      referrerJourney: referrerJourney || null,
-    });
+    const { conversationId, pageVisit, referrerJourney, visitorId } = await req.json();
 
     if (!conversationId) {
       return new Response(
@@ -88,31 +80,72 @@ serve(async (req) => {
       );
     }
 
-    // Get current conversation metadata
+    // SECURITY FIX: Require visitorId for tracking
+    if (!visitorId) {
+      return new Response(
+        JSON.stringify({ error: 'Visitor ID is required' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Log incoming data for debugging
+    console.log('Received update-page-visits request:', {
+      conversationId,
+      hasPageVisit: !!pageVisit,
+      hasReferrerJourney: !!referrerJourney,
+      visitorId,
+    });
+
+    // Get current conversation with channel and metadata for validation
     const { data: conversation, error: fetchError } = await supabase
       .from('conversations')
-      .select('metadata')
+      .select('metadata, channel, status')
       .eq('id', conversationId)
       .single();
 
-    if (fetchError) {
-      console.error('Error fetching conversation:', fetchError);
+    if (fetchError || !conversation) {
+      console.error('Conversation not found:', conversationId, fetchError);
       return new Response(
         JSON.stringify({ error: 'Conversation not found' }),
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const currentMetadata = conversation.metadata || {};
+    // SECURITY FIX: Only allow updates to widget conversations
+    if (conversation.channel !== 'widget') {
+      console.warn(`Rejected page visit update for non-widget conversation ${conversationId}`);
+      return new Response(
+        JSON.stringify({ error: 'Invalid conversation type' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // SECURITY FIX: Validate visitorId matches the stored visitor
+    const currentMetadata = (conversation.metadata as Record<string, unknown>) || {};
+    const storedVisitorId = currentMetadata.visitor_id as string | undefined;
+    
+    if (storedVisitorId && storedVisitorId !== visitorId) {
+      console.warn(`Visitor ID mismatch for conversation ${conversationId}: got ${visitorId}, expected ${storedVisitorId}`);
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized: Visitor ID mismatch' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     let updatedMetadata = { ...currentMetadata };
+
+    // Store visitorId if not already set (for future validation)
+    if (!storedVisitorId) {
+      updatedMetadata.visitor_id = visitorId;
+    }
 
     // Add page visit if provided
     if (pageVisit && pageVisit.url && pageVisit.entered_at) {
-      const currentVisits = currentMetadata.visited_pages || [];
+      const currentVisits = (currentMetadata.visited_pages as Array<{ url: string; entered_at: string; duration_ms?: number }>) || [];
       
       // Check if this exact page visit already exists
       const exists = currentVisits.some(
-        (v: any) => v.url === pageVisit.url && v.entered_at === pageVisit.entered_at
+        (v) => v.url === pageVisit.url && v.entered_at === pageVisit.entered_at
       );
       
       if (!exists) {
@@ -147,7 +180,7 @@ serve(async (req) => {
         utm_content: referrerJourney.utm_content || null,
         entry_type: referrerJourney.entry_type || 'direct',
       };
-      console.log(`Added referrer journey to conversation ${conversationId}:`, updatedMetadata.referrer_journey);
+      console.log(`Added referrer journey to conversation ${conversationId}`);
     }
 
     // Update conversation metadata
@@ -174,7 +207,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in update-page-visits:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: (error as Error).message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

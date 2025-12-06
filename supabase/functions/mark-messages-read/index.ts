@@ -32,6 +32,79 @@ Deno.serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    // Fetch conversation to validate access
+    const { data: conversation, error: convError } = await supabase
+      .from('conversations')
+      .select('id, user_id, channel, status, metadata')
+      .eq('id', conversationId)
+      .single();
+
+    if (convError || !conversation) {
+      return new Response(
+        JSON.stringify({ error: 'Conversation not found' }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // SECURITY FIX: Different validation based on reader type
+    if (readerType === 'admin') {
+      // Admin readers must be authenticated
+      const authHeader = req.headers.get('authorization');
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        console.error('Admin reader type requires authentication');
+        return new Response(
+          JSON.stringify({ error: 'Admin reader type requires authentication' }),
+          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // Validate JWT and check access
+      const supabaseAuth = createClient(supabaseUrl, Deno.env.get('SUPABASE_ANON_KEY')!, {
+        global: { headers: { Authorization: authHeader } }
+      });
+
+      const { data: { user: authUser }, error: authError } = await supabaseAuth.auth.getUser();
+      if (authError || !authUser) {
+        console.error('Authentication failed:', authError?.message);
+        return new Response(
+          JSON.stringify({ error: 'Invalid authentication' }),
+          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // Check if admin has access to this conversation
+      const { data: hasAccess } = await supabaseAuth.rpc('has_account_access', {
+        account_owner_id: conversation.user_id
+      });
+
+      if (!hasAccess) {
+        console.error(`Admin ${authUser.id} denied access to conversation owned by ${conversation.user_id}`);
+        return new Response(
+          JSON.stringify({ error: 'Unauthorized: No access to this conversation' }),
+          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
+    if (readerType === 'user') {
+      // User readers: Only allow for widget conversations that are active
+      if (conversation.channel !== 'widget') {
+        console.warn(`User reader attempted on non-widget conversation ${conversationId}`);
+        return new Response(
+          JSON.stringify({ error: 'Invalid conversation type' }),
+          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      if (!['active', 'human_takeover'].includes(conversation.status)) {
+        console.warn(`User reader attempted on ${conversation.status} conversation ${conversationId}`);
+        return new Response(
+          JSON.stringify({ error: 'Conversation is not active' }),
+          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
     const now = new Date().toISOString();
 
     // Determine which messages to mark as read based on reader type

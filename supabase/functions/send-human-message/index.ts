@@ -12,7 +12,37 @@ serve(async (req) => {
   }
 
   try {
-    const { conversationId, content, senderId } = await req.json();
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+
+    // SECURITY FIX: Require and validate JWT authentication
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.error('Missing authorization header for send-human-message');
+      return new Response(
+        JSON.stringify({ error: 'Authentication required' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Validate JWT and get authenticated user
+    const supabaseAuth = createClient(supabaseUrl, Deno.env.get('SUPABASE_ANON_KEY')!, {
+      global: { headers: { Authorization: authHeader } }
+    });
+
+    const { data: { user: authUser }, error: authError } = await supabaseAuth.auth.getUser();
+    if (authError || !authUser) {
+      console.error('Authentication failed:', authError?.message);
+      return new Response(
+        JSON.stringify({ error: 'Invalid authentication' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // SECURITY FIX: Use authenticated user's ID - ignore any senderId from request body
+    const senderId = authUser.id;
+
+    const { conversationId, content } = await req.json();
 
     if (!conversationId) {
       throw new Error('Conversation ID is required');
@@ -20,18 +50,13 @@ serve(async (req) => {
     if (!content || !content.trim()) {
       throw new Error('Message content is required');
     }
-    if (!senderId) {
-      throw new Error('Sender ID is required');
-    }
 
-    console.log(`Sending human message to conversation ${conversationId}`);
+    console.log(`Sending human message to conversation ${conversationId} from authenticated user ${senderId}`);
 
-    // Initialize Supabase client with service role
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    // Initialize Supabase client with service role for database operations
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Verify conversation exists and is in human_takeover status
+    // Verify conversation exists and get owner info
     const { data: conversation, error: convError } = await supabase
       .from('conversations')
       .select('id, status, user_id, metadata')
@@ -41,6 +66,19 @@ serve(async (req) => {
     if (convError || !conversation) {
       console.error('Conversation not found:', convError);
       throw new Error('Conversation not found');
+    }
+
+    // SECURITY FIX: Validate user has access to this conversation
+    const { data: hasAccess } = await supabaseAuth.rpc('has_account_access', {
+      account_owner_id: conversation.user_id
+    });
+
+    if (!hasAccess) {
+      console.error(`User ${senderId} denied access to conversation owned by ${conversation.user_id}`);
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized: No access to this conversation' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     if (conversation.status !== 'human_takeover') {
@@ -84,14 +122,14 @@ serve(async (req) => {
     console.log(`Human message sent successfully: ${message.id}`);
 
     // Update conversation updated_at and metadata with last message preview
-    const currentMetadata = (conversation.metadata as any) || {};
+    const currentMetadata = (conversation.metadata as Record<string, unknown>) || {};
     await supabase
       .from('conversations')
       .update({
         updated_at: new Date().toISOString(),
         metadata: {
           ...currentMetadata,
-          messages_count: (currentMetadata.messages_count || 0) + 1,
+          messages_count: ((currentMetadata.messages_count as number) || 0) + 1,
           last_human_response_at: new Date().toISOString(),
           last_human_responder_id: senderId,
           last_human_responder_name: senderName,
@@ -105,12 +143,11 @@ serve(async (req) => {
 
     // Dispatch webhook event if configured
     try {
-      const appUrl = Deno.env.get('APP_URL') || supabaseUrl.replace('.supabase.co', '.functions.supabase.co');
       await fetch(`${supabaseUrl}/functions/v1/dispatch-webhook-event`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${supabaseKey}`,
+          'Authorization': `Bearer ${supabaseServiceKey}`,
         },
         body: JSON.stringify({
           userId: conversation.user_id,
@@ -146,7 +183,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Send human message error:', error);
     return new Response(
-      JSON.stringify({ error: error.message || 'Internal server error' }),
+      JSON.stringify({ error: (error as Error).message || 'Internal server error' }),
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
