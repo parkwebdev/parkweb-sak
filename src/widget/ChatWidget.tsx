@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { X, Send01, MessageChatCircle, ChevronRight, Zap, BookOpen01, Microphone01, Attachment01, Image03, FileCheck02, ThumbsUp, ThumbsDown, Settings01, VolumeMax, VolumeX, Check, CheckCircle, XCircle } from '@untitledui/icons';
+import { LinkPreviews } from '@/components/chat/LinkPreviews';
 import { CategoryIcon } from './category-icons';
 import { HomeNavIcon, ChatNavIcon, HelpNavIcon } from './NavIcons';
 import { ChatBubbleIcon } from '@/components/agents/ChatBubbleIcon';
@@ -1967,7 +1968,12 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                                   {msg.content && <p className="text-sm mt-2">{msg.content}</p>}
                                 </div>
                               )}
-                              {msg.type === 'text' && <p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p>}
+{msg.type === 'text' && (
+                                <>
+                                  <p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p>
+                                  <LinkPreviews content={msg.content} compact />
+                                </>
+                              )}
                             </div>
                             
                             {/* Reactions row - only show for last message in group */}
