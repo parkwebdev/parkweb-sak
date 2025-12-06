@@ -211,12 +211,12 @@ export function ConversationsDataTable({
                   <TableCell>{row.messageCount.toLocaleString()}</TableCell>
                   <TableCell className="text-muted-foreground">{row.duration}</TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-3">
-                      <Progress value={row.percentageOfTotal} className="h-2 flex-1" />
-                      <span className="w-12 text-sm text-muted-foreground">
-                        {row.percentageOfTotal.toFixed(1)}%
-                      </span>
-                    </div>
+                    <Progress 
+                      value={row.percentageOfTotal} 
+                      showLabel 
+                      labelPosition="right"
+                      className="h-2 flex-1"
+                    />
                   </TableCell>
                   <TableCell>
                     <Badge variant={config.variant} className={config.className}>

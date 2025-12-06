@@ -274,14 +274,13 @@ export const Dashboard: React.FC = () => {
           </div>
         ) : (
           <>
-            <div className="flex flex-col gap-4 px-4 md:flex-row md:flex-wrap lg:gap-6 lg:px-8">
+            <div className="grid grid-cols-1 gap-4 px-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6 lg:px-8">
               <MetricCardWithChart
                 title={stats.totalConversations.toLocaleString()}
                 subtitle="Total Conversations"
                 change={calculateChange(stats.conversationTrend)}
                 changeLabel="vs last period"
                 chartData={generateChartData(stats.conversationTrend)}
-                className="flex-1 md:min-w-[280px]"
               />
               <MetricCardWithChart
                 title={stats.activeConversations.toLocaleString()}
@@ -289,7 +288,6 @@ export const Dashboard: React.FC = () => {
                 change={calculateChange(stats.activeTrend)}
                 changeLabel="vs last period"
                 chartData={generateChartData(stats.activeTrend)}
-                className="flex-1 md:min-w-[280px]"
               />
               <MetricCardWithChart
                 title={stats.avgMessages.toLocaleString()}
@@ -297,7 +295,13 @@ export const Dashboard: React.FC = () => {
                 change={calculateChange(stats.messageTrend)}
                 changeLabel="vs last period"
                 chartData={generateChartData(stats.messageTrend)}
-                className="flex-1 md:min-w-[280px]"
+              />
+              <MetricCardWithChart
+                title={`${stats.conversionRate}%`}
+                subtitle="Conversion Rate"
+                change={calculateChange(stats.conversionTrend)}
+                changeLabel="vs last period"
+                chartData={generateChartData(stats.conversionTrend)}
               />
             </div>
 
