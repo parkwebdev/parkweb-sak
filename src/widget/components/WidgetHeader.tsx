@@ -24,8 +24,8 @@ export const WidgetHeader = ({
   return (
     <div className="p-4 flex items-center justify-between relative bg-background border-b">
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: `${primaryColor}15` }}>
-          <ChatBubbleIcon className="h-6 w-6" style={{ color: primaryColor }} />
+        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-foreground">
+          <ChatBubbleIcon className="h-6 w-6 text-background" />
         </div>
         <div>
           <h3 className="font-semibold text-foreground">{title}</h3>
