@@ -195,16 +195,24 @@ const Conversations: React.FC = () => {
           (payload) => {
             const newMessage = payload.new as Message;
             
-            // Mark as new for animation (not for initial load)
-            if (!isInitialLoadRef.current) {
-              newMessageIdsRef.current.add(newMessage.id);
-              setTimeout(() => newMessageIdsRef.current.delete(newMessage.id), 300);
-            }
-            
-            // Incremental append - no full refetch, no flicker
+            // Check if this replaces a pending optimistic message
             setMessages(prev => {
               // Avoid duplicates (real-time + optimistic update race)
               if (prev.some(m => m.id === newMessage.id)) return prev;
+              
+              // Check if we're replacing an optimistic temp message
+              const isReplacingOptimistic = prev.some(m => 
+                m.id.startsWith('temp-') && 
+                (m.metadata as any)?.pending && 
+                m.content === newMessage.content
+              );
+              
+              // Only animate if it's a genuinely new message (not during initial load, not replacing optimistic)
+              if (!isInitialLoadRef.current && !isReplacingOptimistic) {
+                newMessageIdsRef.current.add(newMessage.id);
+                setTimeout(() => newMessageIdsRef.current.delete(newMessage.id), 300);
+              }
+              
               // Remove any pending optimistic message with matching content
               const withoutTemp = prev.filter(m => {
                 if (!m.id.startsWith('temp-')) return true;
@@ -388,10 +396,7 @@ const Conversations: React.FC = () => {
       }
     };
     
-    // Mark temp message as new for animation
-    newMessageIdsRef.current.add(tempId);
-    setTimeout(() => newMessageIdsRef.current.delete(tempId), 300);
-    
+    // Don't animate temp message - it will be replaced by real message
     setMessages(prev => [...prev, tempMessage]);
     setMessageInput('');
     
@@ -718,7 +723,7 @@ const Conversations: React.FC = () => {
                           key={message.id}
                           className={`flex ${isUser ? 'justify-end' : 'justify-start'} ${
                             isNewMessage ? (isUser ? 'animate-slide-in-right' : 'animate-slide-in-left') : ''
-                          } ${isContinuation ? 'mt-px' : 'mt-3 first:mt-0'}`}
+                          } ${isContinuation ? 'mt-px' : 'mt-2 first:mt-0'}`}
                         >
                           <div className={`flex items-start gap-2 max-w-[75%] ${isContinuation && !isUser ? 'ml-10' : ''}`}>
                           {!isUser && !isContinuation && (

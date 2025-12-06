@@ -473,26 +473,25 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
                   <TooltipContent>Source channel for this conversation</TooltipContent>
                 </Tooltip>
 
-                {/* Location with country flag */}
+                {/* Location with globe icon and country flag */}
                 {metadata.country && (
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <div className="flex items-center gap-2.5 text-sm">
-                        {(metadata.country_code || getCountryCode(metadata.country)) ? (
-                          <img 
-                            src={`https://flagcdn.com/${(metadata.country_code || getCountryCode(metadata.country))!.toLowerCase()}.svg`}
-                            alt={metadata.country_code || getCountryCode(metadata.country) || ''}
-                            className="h-3 w-auto flex-shrink-0"
-                          />
-                        ) : (
-                          <Globe01 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                        )}
+                        <Globe01 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                         <span>
                           {(metadata.country_code || getCountryCode(metadata.country)) === 'US' 
                             ? `${metadata.city || ''}${metadata.city && metadata.region ? ', ' : ''}${metadata.region || ''}`
                             : `${metadata.city ? `${metadata.city}, ` : ''}${metadata.country}`
                           }
                         </span>
+                        {(metadata.country_code || getCountryCode(metadata.country)) && (
+                          <img 
+                            src={`https://flagcdn.com/${(metadata.country_code || getCountryCode(metadata.country))!.toLowerCase()}.svg`}
+                            alt={metadata.country_code || getCountryCode(metadata.country) || ''}
+                            className="h-3 w-auto flex-shrink-0"
+                          />
+                        )}
                       </div>
                     </TooltipTrigger>
                     <TooltipContent>Visitor's geographic location</TooltipContent>
