@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, lazy, Suspense, useCallback } from 'react';
-import { fetchWidgetConfig, createLead, submitArticleFeedback, sendChatMessage, subscribeToMessages, unsubscribeFromMessages, subscribeToConversationStatus, unsubscribeFromConversationStatus, subscribeToTypingIndicator, unsubscribeFromTypingIndicator, fetchTakeoverAgent, updateMessageReaction, updatePageVisit, startVisitorPresence, updateVisitorPresence, stopVisitorPresence, type WidgetConfig, type ChatResponse, type ReferrerJourney } from './api';
+import { fetchWidgetConfig, createLead, submitArticleFeedback, sendChatMessage, subscribeToMessages, unsubscribeFromMessages, subscribeToConversationStatus, unsubscribeFromConversationStatus, subscribeToTypingIndicator, unsubscribeFromTypingIndicator, fetchTakeoverAgent, updateMessageReaction, updatePageVisit, startVisitorPresence, updateVisitorPresence, stopVisitorPresence, markMessagesRead, type WidgetConfig, type ChatResponse, type ReferrerJourney } from './api';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { CSSAnimatedList } from './CSSAnimatedList';
 import { CSSAnimatedItem } from './CSSAnimatedItem';
@@ -76,6 +76,7 @@ interface Message {
   role: 'user' | 'assistant';
   content: string;
   read?: boolean;
+  read_at?: string; // ISO timestamp when message was read
   timestamp: Date;
   type?: 'text' | 'audio' | 'file';
   audioUrl?: string;
@@ -702,15 +703,22 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     };
   }, [isOpen, agentId, visitorId, chatUser, previewMode, config]);
 
-  // Mark messages as read
+  // Mark messages as read when viewing conversation
   useEffect(() => {
-    if (currentView === 'messages' && activeConversationId) {
-      const timer = setTimeout(() => {
-        setMessages(prev => prev.map(msg => ({ ...msg, read: true })));
-      }, 1000);
+    const isValidUUID = activeConversationId && 
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(activeConversationId);
+    
+    if (currentView === 'messages' && isValidUUID && isOpen) {
+      // Mark assistant messages as read by user after a short delay
+      const timer = setTimeout(async () => {
+        const result = await markMessagesRead(activeConversationId, 'user');
+        if (result.success && result.updated && result.updated > 0) {
+          console.log('[Widget] Marked', result.updated, 'messages as read');
+        }
+      }, 500);
       return () => clearTimeout(timer);
     }
-  }, [currentView, activeConversationId]);
+  }, [currentView, activeConversationId, isOpen, messages.length]);
 
   // Subscribe to real-time messages for human takeover
   const realtimeChannelRef = useRef<RealtimeChannel | null>(null);
@@ -781,12 +789,16 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
           setIsTyping(false);
         }
       },
-      // Handle message updates (for real-time reaction sync)
+      // Handle message updates (for real-time reaction sync AND read receipts)
       (updatedMessage) => {
-        console.log('[Widget] Message updated, syncing reactions:', updatedMessage.id);
+        console.log('[Widget] Message updated:', updatedMessage.id, updatedMessage.metadata);
         setMessages(prev => prev.map(msg => 
           msg.id === updatedMessage.id 
-            ? { ...msg, reactions: updatedMessage.metadata?.reactions || [] }
+            ? { 
+                ...msg, 
+                reactions: updatedMessage.metadata?.reactions || [],
+                read_at: updatedMessage.metadata?.read_at,
+              }
             : msg
         ));
       }
@@ -1804,7 +1816,11 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                           
                           <div className="flex items-center justify-between gap-2 mt-1">
                             <span className="text-xs opacity-70">{formatTimestamp(msg.timestamp)}</span>
-                            {msg.role === 'user' && config.showReadReceipts && msg.read && <span className="text-xs opacity-70">Read</span>}
+                            {msg.role === 'user' && config.showReadReceipts && (
+                              <span className={`text-xs ${msg.read_at ? 'text-info' : 'opacity-50'}`}>
+                                ✓✓
+                              </span>
+                            )}
                           </div>
                         </div>
                       </div>

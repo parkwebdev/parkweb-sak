@@ -220,6 +220,15 @@ const Conversations: React.FC = () => {
     try {
       const msgs = await fetchMessages(conversationId);
       setMessages(msgs);
+      
+      // Mark user messages as read by admin
+      supabase.functions.invoke('mark-messages-read', {
+        body: { conversationId, readerType: 'admin' }
+      }).then(({ data }) => {
+        if (data?.updated > 0) {
+          console.log('[Conversations] Marked', data.updated, 'messages as read');
+        }
+      }).catch(err => console.error('Failed to mark messages as read:', err));
     } finally {
       setLoadingMessages(false);
     }
@@ -676,12 +685,18 @@ const Conversations: React.FC = () => {
                                     </div>
                                   </PopoverContent>
                                 </Popover>
-                                {/* Time inline with reactions */}
+                                {/* Time inline with reactions + read receipt for team messages */}
                                 <span className={`text-[10px] text-muted-foreground ml-auto ${isUser ? 'order-first mr-auto ml-0' : ''}`}>
                                   {isHumanSent && msgMetadata?.sender_name && (
                                     <>{formatSenderName(msgMetadata.sender_name)} • </>
                                   )}
                                   {formatShortTime(new Date(message.created_at))}
+                                  {/* Read receipt for human/team messages */}
+                                  {isHumanSent && (
+                                    <span className={`ml-1 ${msgMetadata?.read_at ? 'text-info' : ''}`}>
+                                      ✓✓
+                                    </span>
+                                  )}
                                 </span>
                               </div>
                             </div>

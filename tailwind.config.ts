@@ -137,6 +137,17 @@ const config: Config = {
             transform: "translate(-50%, -50%) scale(0.9)",
           },
         },
+        "pulse-ring": {
+          "0%": {
+            boxShadow: "0 0 0 0 hsl(var(--success) / 0.7)",
+          },
+          "70%": {
+            boxShadow: "0 0 0 6px hsl(var(--success) / 0)",
+          },
+          "100%": {
+            boxShadow: "0 0 0 0 hsl(var(--success) / 0)",
+          },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -145,6 +156,7 @@ const config: Config = {
         "ping": "ping 2s cubic-bezier(0, 0, 0.2, 1) infinite",
         "pulse-slow": "pulse-slow 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite",
         "ripple": "ripple var(--duration, 3s) ease calc(var(--i, 0) * 0.2s) infinite",
+        "pulse-ring": "pulse-ring 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite",
       },
     },
   },

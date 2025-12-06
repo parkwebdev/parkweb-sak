@@ -680,11 +680,11 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
                             {/* Timeline dot and line */}
                             <div className="flex flex-col items-center">
                               <div className="relative flex items-center justify-center mt-1 flex-shrink-0">
-                                {/* Solid dot with pulse animation */}
+                                {/* Solid dot with ring pulse animation */}
                                 <div className={cn(
                                   "w-2.5 h-2.5 rounded-full",
                                   isCurrentlyActive 
-                                    ? "bg-success animate-pulse" 
+                                    ? "bg-success animate-pulse-ring" 
                                     : "bg-muted-foreground/40"
                                 )} />
                               </div>
