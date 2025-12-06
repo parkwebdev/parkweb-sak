@@ -259,6 +259,15 @@ const Conversations: React.FC = () => {
     }
   }, [conversations]);
 
+  // Track admin_last_read_at when conversation is selected
+  useEffect(() => {
+    if (selectedConversation?.id) {
+      updateConversationMetadata(selectedConversation.id, {
+        admin_last_read_at: new Date().toISOString()
+      }, { silent: true });
+    }
+  }, [selectedConversation?.id]);
+
   const loadMessages = async (conversationId: string, showLoading = true) => {
     if (showLoading) setLoadingMessages(true);
     try {
@@ -313,6 +322,23 @@ const Conversations: React.FC = () => {
       default:
         return null;
     }
+  };
+
+  // Check if conversation has unread messages for admin
+  const getUnreadCount = (conv: Conversation): number => {
+    const metadata = conv.metadata as any;
+    const lastReadAt = metadata?.admin_last_read_at;
+    const lastMessageAt = metadata?.last_message_at;
+    
+    // Never read by admin and has messages - show indicator
+    if (!lastReadAt && lastMessageAt) return 1;
+    
+    // New messages since last read
+    if (lastReadAt && lastMessageAt && new Date(lastMessageAt) > new Date(lastReadAt)) {
+      return 1;
+    }
+    
+    return 0;
   };
 
   const handleTakeover = async (reason?: string) => {
@@ -495,11 +521,15 @@ const Conversations: React.FC = () => {
                       <div className="flex items-start gap-3">
                         <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 relative">
                           <User01 size={16} className="text-primary" />
+                          {/* Unread messages indicator */}
+                          {getUnreadCount(conv) > 0 && !getVisitorPresence(conv) && (
+                            <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-destructive rounded-full border-2 border-background" />
+                          )}
                           {/* Active visitor indicator */}
                           {getVisitorPresence(conv) && (
                             <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-success rounded-full border-2 border-background" />
                           )}
-                          {getPriorityIndicator(priority) && !getVisitorPresence(conv) && (
+                          {getPriorityIndicator(priority) && !getVisitorPresence(conv) && !getUnreadCount(conv) && (
                             <div className="absolute -top-0.5 -right-0.5">
                               {getPriorityIndicator(priority)}
                             </div>
