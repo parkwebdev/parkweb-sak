@@ -6,7 +6,7 @@ import { Badge } from '@/components/Badge';
 
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { SearchMd, MessageChatSquare, User01, Send01, FaceSmile, Globe01, Check, CheckDone02, XCircle } from '@untitledui/icons';
+import { SearchMd, MessageChatSquare, User01, Send01, FaceSmile, Globe01, Check, CheckCircle, XCircle } from '@untitledui/icons';
 import { EmptyState } from '@/components/ui/empty-state';
 import { useConversations } from '@/hooks/useConversations';
 import { useAgents } from '@/hooks/useAgents';
@@ -590,25 +590,11 @@ const Conversations: React.FC = () => {
                         <div className="absolute w-2.5 h-2.5 rounded-full border-2 border-success animate-ping" />
                       </div>
                     )}
-                    <div>
-                      <p className="font-medium text-sm text-foreground">
-                        {((selectedConversation.metadata as any)?.lead_name || 
-                          (selectedConversation.metadata as any)?.lead_email || 
-                          'Anonymous')}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {isActive ? (
-                          <span className="flex items-center gap-1">
-                            <span className="text-success">Active now</span>
-                            <span>•</span>
-                            <Globe01 className="h-3 w-3" />
-                            <span>{formatUrl(visitorPresence.currentPage)}</span>
-                          </span>
-                        ) : (
-                          <>{selectedConversation.agents?.name} • {selectedConversation.status.replace('_', ' ')}</>
-                        )}
-                      </p>
-                    </div>
+                    <p className="font-medium text-sm text-foreground">
+                      {((selectedConversation.metadata as any)?.lead_name || 
+                        (selectedConversation.metadata as any)?.lead_email || 
+                        'Anonymous')}
+                    </p>
                   </div>
                   
                   <div className="flex items-center gap-2">
@@ -807,7 +793,7 @@ const Conversations: React.FC = () => {
                                         <Tooltip>
                                           <TooltipTrigger asChild>
                                             <span className="ml-1 text-info inline-flex items-center">
-                                              <CheckDone02 size={12} />
+                                              <CheckCircle size={12} />
                                             </span>
                                           </TooltipTrigger>
                                           <TooltipContent>Seen</TooltipContent>
