@@ -728,7 +728,8 @@ const Conversations: React.FC = () => {
                   />
                   <Button 
                     type="submit" 
-                    size="sm" 
+                    size="icon"
+                    className="h-9 w-9"
                     disabled={sendingMessage || !messageInput.trim()}
                   >
                     <Send01 size={16} />
