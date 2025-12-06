@@ -501,18 +501,19 @@ const Auth = () => {
       {/* Left Sidebar - Progress (hidden on mobile) */}
       <div className="hidden lg:flex flex-col justify-between bg-muted/50 border-r border-border">
         <div className="flex flex-col gap-12 px-8 pt-8">
-          {/* Logo */}
-          <div className="flex items-center gap-2">
+          {/* Logo with text */}
+          <div className="flex items-center gap-3">
             <img 
               src={logoBlackUrl} 
-              alt="Logo" 
+              alt="ChatPad" 
               className="h-8 w-8 object-contain dark:hidden"
             />
             <img 
               src={logoWhiteUrl} 
-              alt="Logo" 
+              alt="ChatPad" 
               className="h-8 w-8 object-contain hidden dark:block"
             />
+            <span className="text-lg font-semibold text-foreground">ChatPad</span>
           </div>
           
           {/* Step Progress (only for signup) */}
@@ -544,18 +545,19 @@ const Auth = () => {
       {/* Right Content Area */}
       <div className="flex h-full w-full flex-1 overflow-hidden py-8 md:py-12">
         <div className="flex h-full w-full flex-col items-center gap-8 px-4 md:px-8">
-          {/* Mobile Logo */}
-          <div className="lg:hidden flex items-center gap-2">
+          {/* Mobile Logo with text */}
+          <div className="lg:hidden flex items-center gap-3">
             <img 
               src={logoBlackUrl} 
-              alt="Logo" 
+              alt="ChatPad" 
               className="h-8 w-8 object-contain dark:hidden"
             />
             <img 
               src={logoWhiteUrl} 
-              alt="Logo" 
+              alt="ChatPad" 
               className="h-8 w-8 object-contain hidden dark:block"
             />
+            <span className="text-lg font-semibold text-foreground">ChatPad</span>
           </div>
 
           <div className="flex w-full max-w-sm flex-col gap-8 flex-1 justify-center">
