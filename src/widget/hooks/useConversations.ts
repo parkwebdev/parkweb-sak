@@ -21,7 +21,7 @@ interface UseConversationsOptions {
 export function useConversations(options: UseConversationsOptions) {
   const { agentId, chatUser, previewMode, isOpen, currentView } = options;
 
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessagesInternal] = useState<Message[]>([]);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
   const [showConversationList, setShowConversationList] = useState(false);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
@@ -31,6 +31,21 @@ export function useConversations(options: UseConversationsOptions) {
   const isOpeningConversationRef = useRef(false);
   const fetchedConversationIdRef = useRef<string | null>(null);
   const isActivelySendingRef = useRef(false);
+  
+  // REF-BASED FIX: Track if we have local messages synchronously
+  // This prevents stale closure issues where React batching causes messages.length to be 0
+  // even though setMessages was just called with the greeting
+  const hasLocalMessagesRef = useRef(false);
+  
+  // Wrapper that updates the ref synchronously when messages are set
+  const setMessages = (setter: Message[] | ((prev: Message[]) => Message[])) => {
+    setMessagesInternal(prev => {
+      const next = typeof setter === 'function' ? setter(prev) : setter;
+      // Update ref SYNCHRONOUSLY before React batches this
+      hasLocalMessagesRef.current = next.length > 0;
+      return next;
+    });
+  };
 
   // Initialize activeConversationId from chatUser if available (for returning users)
   useEffect(() => {
@@ -57,10 +72,10 @@ export function useConversations(options: UseConversationsOptions) {
       return;
     }
     
-    // Skip fetch if we already have local messages (e.g., greeting just set)
-    // This prevents race conditions where DB fetch overwrites locally-set messages
-    if (messages.length > 0) {
-      console.log('[Widget] Skipping DB fetch - local messages already exist:', messages.length);
+    // REF-BASED FIX: Check ref instead of messages.length to avoid stale closure issues
+    // The ref is updated synchronously when setMessages is called, so it's always current
+    if (hasLocalMessagesRef.current) {
+      console.log('[Widget] Skipping DB fetch - hasLocalMessagesRef is true');
       fetchedConversationIdRef.current = activeConversationId;
       return;
     }
@@ -179,6 +194,7 @@ export function useConversations(options: UseConversationsOptions) {
   const clearMessagesAndFetch = (conversationId: string) => {
     fetchedConversationIdRef.current = null; // Reset to allow fresh fetch
     isActivelySendingRef.current = false; // Ensure we don't block fetches when opening a conversation
+    hasLocalMessagesRef.current = false; // Reset ref to allow DB fetch
     setIsLoadingMessages(true); // Show loading state instead of blank
     setMessages([]); // Clear messages before fetching new ones
     setActiveConversationId(conversationId);
@@ -187,6 +203,7 @@ export function useConversations(options: UseConversationsOptions) {
   // Allow external code to mark a conversation as already fetched (prevents DB overwrite)
   const markConversationFetched = (conversationId: string) => {
     fetchedConversationIdRef.current = conversationId;
+    hasLocalMessagesRef.current = true; // Also set hasLocalMessages to prevent fetch
   };
 
   return {
