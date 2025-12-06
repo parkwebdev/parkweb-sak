@@ -47,7 +47,7 @@ export const useConversations = () => {
     // Set up real-time subscription
     if (!user?.id) return;
 
-    const channel = supabase
+    const conversationsChannel = supabase
       .channel('conversations-changes')
       .on(
         'postgres_changes',
@@ -63,8 +63,26 @@ export const useConversations = () => {
       )
       .subscribe();
 
+    // Subscribe to new messages for instant updates
+    const messagesChannel = supabase
+      .channel('messages-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages'
+        },
+        () => {
+          // Refetch conversations to update last message preview
+          fetchConversations();
+        }
+      )
+      .subscribe();
+
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(conversationsChannel);
+      supabase.removeChannel(messagesChannel);
     };
   }, [user?.id]);
 

@@ -172,9 +172,9 @@ const Conversations: React.FC = () => {
   // Check if a conversation's visitor is currently active
   const getVisitorPresence = (conversation: Conversation) => {
     const metadata = (conversation.metadata as any) || {};
-    const sessionId = metadata.session_id;
-    if (!sessionId) return null;
-    return activeVisitors[sessionId] || null;
+    const visitorId = metadata.visitor_id;
+    if (!visitorId) return null;
+    return activeVisitors[visitorId] || null;
   };
 
   // Load messages when conversation is selected

@@ -231,7 +231,8 @@ export async function sendChatMessage(
   messages: Array<{ role: string; content: string }>,
   leadId?: string,
   pageVisits?: Array<{ url: string; entered_at: string; duration_ms: number }>,
-  referrerJourney?: ReferrerJourney
+  referrerJourney?: ReferrerJourney,
+  visitorId?: string
 ): Promise<ChatResponse> {
   const response = await fetch(`${SUPABASE_URL}/functions/v1/widget-chat`, {
     method: 'POST',
@@ -246,6 +247,7 @@ export async function sendChatMessage(
       leadId,
       pageVisits,
       referrerJourney,
+      visitorId,
     }),
   });
 
