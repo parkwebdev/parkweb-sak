@@ -9,8 +9,10 @@ Technical documentation for the ChatPad embeddable chat widget.
 3. [Loading Strategy](#loading-strategy)
 4. [Widget Configuration](#widget-configuration)
 5. [Real-time Features](#real-time-features)
-6. [Performance Optimizations](#performance-optimizations)
-7. [Security](#security)
+6. [Server-Side Link Preview Caching](#server-side-link-preview-caching)
+7. [Visitor Analytics](#visitor-analytics)
+8. [Performance Optimizations](#performance-optimizations)
+9. [Security](#security)
 
 ---
 
@@ -28,6 +30,9 @@ The ChatPad widget is a high-performance, embeddable chat interface that can be 
 - **Voice Messages**: Audio recording and playback
 - **File Attachments**: Image and document uploads
 - **Message Reactions**: Emoji reactions with real-time sync
+- **Read Receipts**: Visual confirmation of message delivery and reading
+- **Link Previews**: Server-side cached previews for instant rendering
+- **Sound Settings**: User-controllable notification sounds
 
 ---
 
@@ -42,9 +47,12 @@ src/
 ├── main.tsx              # Main app entry (full application)
 ├── widget-entry.tsx      # Widget entry (minimal, no providers)
 └── widget/
-    ├── ChatWidget.tsx    # Main widget component
-    ├── api.ts            # Widget API functions
-    └── ...
+    ├── ChatWidget.tsx    # Main widget component (~2,600 lines)
+    ├── api.ts            # Widget API functions and types
+    ├── NavIcons.tsx      # Navigation icons with fill animation
+    ├── CSSAnimatedItem.tsx  # CSS-only animated list item
+    ├── CSSAnimatedList.tsx  # CSS-only animated list container
+    └── category-icons.tsx   # Help category icon mapping
 ```
 
 ### Build Configuration
@@ -218,6 +226,7 @@ interface WidgetConfig {
   enableVoiceMessages: boolean;
   enableFileAttachments: boolean;
   enableMessageReactions: boolean;
+  showReadReceipts: boolean;      // Show read/delivered indicators
 }
 
 interface CustomField {
@@ -278,7 +287,9 @@ const channel = supabase
     },
     (payload) => {
       // Add new message to state
-      setMessages(prev => [...prev, payload.new]);
+      // Extract cached link previews from metadata
+      const linkPreviews = payload.new.metadata?.link_previews;
+      setMessages(prev => [...prev, { ...payload.new, linkPreviews }]);
     }
   )
   .subscribe();
@@ -308,23 +319,210 @@ const channel = supabase
   .subscribe();
 ```
 
-### Typing Indicators
+### Typing Indicators (Bidirectional)
 
 Uses Supabase Realtime Presence for ephemeral typing states:
 
 ```typescript
-// Send typing indicator
+// Send typing indicator (user → agent)
 const channel = supabase.channel(`typing:${conversationId}`);
 channel.send({
   type: 'broadcast',
   event: 'typing',
-  payload: { userId, isTyping: true }
+  payload: { visitorId, isTyping: true }
 });
 
-// Receive typing indicator
+// Receive typing indicator (agent → user)
 channel.on('broadcast', { event: 'typing' }, (payload) => {
-  setTypingUsers(payload.payload);
+  if (payload.payload.senderType === 'agent') {
+    setIsHumanTyping(true);
+    setTypingAgentName(payload.payload.name);
+  }
 });
+```
+
+### Message Reactions (Bidirectional)
+
+Emoji reactions sync in real-time between widget and admin:
+
+```typescript
+// Update reaction via edge function
+await updateMessageReaction(messageId, emoji, visitorId);
+
+// Listen for reaction updates
+channel.on(
+  'postgres_changes',
+  { event: 'UPDATE', table: 'messages' },
+  (payload) => {
+    const reactions = payload.new.metadata?.reactions;
+    updateMessageReactions(payload.new.id, reactions);
+  }
+);
+```
+
+---
+
+## Server-Side Link Preview Caching
+
+Link previews are fetched once on the server when messages are created, eliminating client-side fetching delays.
+
+### Architecture
+
+```
+1. User/AI sends message with URL
+   └── widget-chat edge function
+
+2. Server extracts URLs (max 3)
+   └── URL_REGEX pattern matching
+
+3. Server fetches preview metadata
+   └── Calls fetch-link-preview edge function internally
+
+4. Previews stored in message metadata
+   └── message.metadata.link_previews = [...]
+
+5. Frontend renders cached previews instantly
+   └── No client-side fetching needed
+```
+
+### Implementation
+
+```typescript
+// widget-chat edge function
+const URL_REGEX = /https?:\/\/[^\s<>"{}|\\^`\[\]]+/gi;
+
+async function fetchLinkPreviews(content: string): Promise<LinkPreviewData[]> {
+  const urls = content.match(URL_REGEX);
+  if (!urls) return [];
+  
+  const uniqueUrls = [...new Set(urls)].slice(0, 3);
+  const previews = await Promise.all(
+    uniqueUrls.map(async (url) => {
+      const response = await supabase.functions.invoke('fetch-link-preview', {
+        body: { url }
+      });
+      return response.data;
+    })
+  );
+  
+  return previews.filter(p => p && p.title);
+}
+
+// Store in message metadata
+const messageMetadata = {
+  ...existingMetadata,
+  link_previews: await fetchLinkPreviews(assistantMessage)
+};
+```
+
+### Frontend Usage
+
+```typescript
+// LinkPreviews component
+interface LinkPreviewsProps {
+  content: string;
+  compact?: boolean;
+  cachedPreviews?: LinkPreviewData[];  // From message metadata
+}
+
+// If cachedPreviews provided, render instantly (no loading)
+// Fallback to client-side fetching for older messages without cache
+```
+
+### Benefits
+
+- **Instant rendering**: No loading flash on page refresh
+- **Reduced API calls**: Preview fetched once per URL, not per viewer
+- **Consistent experience**: All users see the same preview
+- **Offline support**: Cached data available without network
+
+---
+
+## Visitor Analytics
+
+### Visitor Identification
+
+Each widget visitor gets a unique, persistent identifier:
+
+```typescript
+const [visitorId] = useState(() => {
+  const stored = localStorage.getItem(`chatpad_visitor_id_${agentId}`);
+  if (stored) return stored;
+  const newId = `visitor_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+  localStorage.setItem(`chatpad_visitor_id_${agentId}`, newId);
+  return newId;
+});
+```
+
+### Page Visit Tracking
+
+Parent window sends page info via postMessage:
+
+```typescript
+// Parent window (chatpad-widget.js)
+function sendPageInfo() {
+  iframe.contentWindow.postMessage({
+    type: 'chatpad-parent-page-info',
+    url: window.location.href,
+    referrer: document.referrer,
+    utmParams: parseUtmParams(window.location.href)
+  }, '*');
+}
+
+// Widget receives and tracks
+window.addEventListener('message', (event) => {
+  if (event.data.type === 'chatpad-parent-page-info') {
+    trackPageVisit(event.data.url);
+    captureReferrerJourney(event.data);
+  }
+});
+```
+
+### Referrer Journey Capture
+
+```typescript
+interface ReferrerJourney {
+  referrer_url: string | null;
+  landing_page: string;
+  utm_source: string | null;
+  utm_medium: string | null;
+  utm_campaign: string | null;
+  utm_term: string | null;
+  utm_content: string | null;
+  entry_type: 'direct' | 'organic' | 'paid' | 'social' | 'referral' | 'email';
+}
+
+// Entry type detection
+function detectEntryType(referrer: string | null): EntryType {
+  if (!referrer) return 'direct';
+  if (/google\.|bing\.|yahoo\./.test(referrer)) return 'organic';
+  if (/facebook\.|instagram\.|twitter\./.test(referrer)) return 'social';
+  if (/mail\.|gmail\.|outlook\./.test(referrer)) return 'email';
+  return 'referral';
+}
+```
+
+### Real-Time Page Updates
+
+Page visits are sent to the server in real-time:
+
+```typescript
+// update-page-visits edge function
+await updatePageVisit(conversationId, {
+  url: currentUrl,
+  entered_at: timestamp,
+  duration_ms: previousPageDuration
+}, referrerJourney, visitorId);
+```
+
+### Internal URL Filtering
+
+Widget.html and internal URLs are excluded from analytics:
+
+```typescript
+function isInternalWidgetUrl(url: string): boolean {
+  return url.includes('widget.html') || url.includes('widget-entry');
+}
 ```
 
 ---
@@ -347,11 +545,11 @@ Heavy components load on demand:
 
 ```typescript
 // ChatWidget.tsx
-const BubbleBackground = lazy(() => import('./CSSBubbleBackground'));
 const VoiceInput = lazy(() => import('./VoiceInput'));
 const FileDropZone = lazy(() => import('./FileDropZone'));
 const MessageReactions = lazy(() => import('./MessageReactions'));
 const AudioPlayer = lazy(() => import('./AudioPlayer'));
+const PhoneInputField = lazy(() => import('./PhoneInputField'));
 ```
 
 ### CSS-Only Animations
@@ -476,6 +674,21 @@ if (!isValidPhoneNumber(value)) {
 }
 ```
 
+### Edge Function Authorization
+
+Server-side validation for all sensitive operations:
+
+```typescript
+// send-human-message - Uses JWT token, not request body
+const { data: { user } } = await supabase.auth.getUser();
+const senderId = user?.id; // From JWT, not trusted parameter
+
+// update-page-visits - Validates visitorId ownership
+if (conversation.metadata?.visitor_id !== visitorId) {
+  return new Response('Forbidden', { status: 403 });
+}
+```
+
 ---
 
 ## Embedding the Widget
@@ -543,10 +756,14 @@ if (window.innerWidth <= 480) {
 Session and conversation data stored locally:
 
 ```typescript
-// Keys
-`chatpad_session_${agentId}`      // Session ID
-`chatpad_user_${agentId}`         // Contact form data
-`chatpad_conversations_${agentId}` // Conversation history
+// Keys (all scoped by agentId)
+`chatpad_user_${agentId}`              // Contact form data + leadId
+`chatpad_conversations_${agentId}`     // Conversation history
+`chatpad_visitor_id_${agentId}`        // Unique visitor identifier
+`chatpad_referrer_journey_${agentId}`  // Referrer/UTM data on first visit
+`chatpad_sound_enabled_${agentId}`     // Sound preference (true/false)
+`chatpad_last_read_${agentId}_${conversationId}`     // Last read timestamp
+`chatpad_takeover_noticed_${agentId}_${conversationId}` // Takeover notice shown flag
 ```
 
 ### Database Linkage
@@ -562,10 +779,21 @@ When contact form is submitted:
 conversation.metadata = {
   lead_id: 'uuid',
   session_id: 'string',
+  visitor_id: 'string',
   ip_address: '1.2.3.4',
   country: 'US',
   device_type: 'mobile',
   browser: 'Safari',
-  referrer: 'https://...'
+  referrer: 'https://...',
+  page_visits: [...],
+  referrer_journey: {...}
 };
 ```
+
+---
+
+## Related Documentation
+
+- [Widget Refactoring Plan](./WIDGET_REFACTORING_PLAN.md) - Detailed refactoring strategy
+- [Animation & Motion Guide](./ANIMATION_MOTION_GUIDE.md) - CSS animation patterns
+- [Database Schema](./DATABASE_SCHEMA.md) - Conversations and messages tables
