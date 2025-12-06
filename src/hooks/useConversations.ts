@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/lib/toast';
 import { logger } from '@/utils/logger';
+import { playNotificationSound } from '@/lib/notification-sound';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Conversation = Tables<'conversations'> & {
@@ -73,7 +74,14 @@ export const useConversations = () => {
           schema: 'public',
           table: 'messages'
         },
-        () => {
+        (payload) => {
+          const newMessage = payload.new as any;
+          
+          // Play notification sound for user messages only
+          if (newMessage.role === 'user') {
+            playNotificationSound();
+          }
+          
           // Instant refetch - no artificial delay
           fetchConversations(false);
         }

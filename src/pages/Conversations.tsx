@@ -218,11 +218,6 @@ const Conversations: React.FC = () => {
               });
               return [...withoutTemp, newMessage];
             });
-            
-            // Play notification sound for user messages (not our own messages)
-            if (newMessage.role === 'user') {
-              playNotificationSound();
-            }
           }
         )
         .on(
