@@ -214,12 +214,24 @@ export async function fetchTakeoverAgent(conversationId: string): Promise<{ name
   }
 }
 
+export interface ReferrerJourney {
+  referrer_url: string | null;
+  landing_page: string;
+  utm_source?: string | null;
+  utm_medium?: string | null;
+  utm_campaign?: string | null;
+  utm_term?: string | null;
+  utm_content?: string | null;
+  entry_type: 'direct' | 'organic' | 'referral' | 'social' | 'paid' | 'email';
+}
+
 export async function sendChatMessage(
   agentId: string, 
   conversationId: string | null, 
   messages: Array<{ role: string; content: string }>,
   leadId?: string,
-  pageVisits?: Array<{ url: string; entered_at: string; duration_ms: number }>
+  pageVisits?: Array<{ url: string; entered_at: string; duration_ms: number }>,
+  referrerJourney?: ReferrerJourney
 ): Promise<ChatResponse> {
   const response = await fetch(`${SUPABASE_URL}/functions/v1/widget-chat`, {
     method: 'POST',
@@ -233,6 +245,7 @@ export async function sendChatMessage(
       messages,
       leadId,
       pageVisits,
+      referrerJourney,
     }),
   });
 
@@ -242,6 +255,38 @@ export async function sendChatMessage(
   }
 
   return response.json();
+}
+
+// Update page visits in real-time (without requiring a message)
+export async function updatePageVisit(
+  conversationId: string,
+  pageVisit: { url: string; entered_at: string; duration_ms: number; previous_duration_ms?: number },
+  referrerJourney?: ReferrerJourney
+): Promise<{ success: boolean }> {
+  try {
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/update-page-visits`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        conversationId,
+        pageVisit,
+        referrerJourney,
+      }),
+    });
+
+    if (!response.ok) {
+      console.error('Failed to update page visit');
+      return { success: false };
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error('Error updating page visit:', error);
+    return { success: false };
+  }
 }
 
 // Update message reaction (persist to database)

@@ -68,3 +68,6 @@ verify_jwt = false
 
 [functions.test-tool-endpoint]
 verify_jwt = true
+
+[functions.update-page-visits]
+verify_jwt = false
