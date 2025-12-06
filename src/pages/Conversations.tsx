@@ -797,7 +797,9 @@ const Conversations: React.FC = () => {
                                 className={`rounded-lg px-3 py-2 ${
                                   isUser
                                     ? 'bg-muted text-foreground'
-                                    : 'bg-muted text-foreground'
+                                    : isHumanSent
+                                      ? 'bg-muted/50 text-foreground'
+                                      : 'bg-muted text-foreground'
                                 }`}
                               >
 <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</p>
