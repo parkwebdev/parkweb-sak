@@ -320,75 +320,95 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
               Contact Info
             </AccordionTrigger>
             <AccordionContent className="pb-4">
-              <div className="space-y-2.5">
-                {metadata.lead_name && (
-                  <div className="flex items-center gap-2.5 text-sm">
-                    <User01 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                    <span className="truncate">{metadata.lead_name}</span>
-                  </div>
-                )}
-                {metadata.lead_email && (
-                  <div className="flex items-center gap-2.5 text-sm">
-                    <Mail01 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                    <a 
-                      href={`mailto:${metadata.lead_email}`}
-                      className="truncate text-primary hover:underline"
-                    >
-                      {metadata.lead_email}
-                    </a>
-                  </div>
-                )}
-                {metadata.lead_phone && (
-                  <div className="flex items-center gap-2.5 text-sm">
-                    <Phone01 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                    <a 
-                      href={`tel:${metadata.lead_phone}`}
-                      className="truncate text-primary hover:underline"
-                    >
-                      {metadata.lead_phone}
-                    </a>
-                  </div>
-                )}
-                {metadata.lead_company && (
-                  <div className="flex items-center gap-2.5 text-sm">
-                    <Building07 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                    <span className="truncate">{metadata.lead_company}</span>
-                  </div>
-                )}
-                {!metadata.lead_name && !metadata.lead_email && (
-                  <p className="text-sm text-muted-foreground italic">No contact info</p>
-                )}
+              {(() => {
+                // Separate phone-related custom fields from other custom fields
+                const customFields = metadata.custom_fields || {};
+                const phoneFieldEntries: [string, unknown][] = [];
+                const otherFieldEntries: [string, unknown][] = [];
 
-                {/* Custom Fields */}
-                {metadata.custom_fields && Object.keys(metadata.custom_fields).length > 0 && (
-                  <div className="mt-3 pt-3 border-t border-dashed space-y-2">
-                    {Object.entries(metadata.custom_fields).map(([key, value]) => {
-                      const IconComponent = getCustomFieldIcon(key);
-                      const lowerKey = key.toLowerCase();
-                      const isPhoneField = lowerKey.includes('phone') || lowerKey.includes('mobile') || lowerKey.includes('cell') || lowerKey.includes('tel');
-                      
-                      return (
-                        <div key={key} className="flex items-start gap-2.5 text-sm">
-                          <IconComponent className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
-                          <div className="min-w-0">
-                            <span className="text-muted-foreground">{key}:</span>{' '}
-                            {isPhoneField ? (
-                              <a 
-                                href={`tel:${String(value)}`}
-                                className="break-words text-primary hover:underline"
-                              >
-                                {String(value)}
-                              </a>
-                            ) : (
-                              <span className="break-words">{String(value)}</span>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
+                Object.entries(customFields).forEach(([key, value]) => {
+                  const lowerKey = key.toLowerCase();
+                  const isPhoneField = lowerKey.includes('phone') || lowerKey.includes('mobile') || lowerKey.includes('cell') || lowerKey.includes('tel');
+                  if (isPhoneField) {
+                    phoneFieldEntries.push([key, value]);
+                  } else {
+                    otherFieldEntries.push([key, value]);
+                  }
+                });
+
+                return (
+                  <div className="space-y-2.5">
+                    {metadata.lead_name && (
+                      <div className="flex items-center gap-2.5 text-sm">
+                        <User01 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                        <span className="truncate">{metadata.lead_name}</span>
+                      </div>
+                    )}
+                    {metadata.lead_email && (
+                      <div className="flex items-center gap-2.5 text-sm">
+                        <Mail01 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                        <a 
+                          href={`mailto:${metadata.lead_email}`}
+                          className="truncate text-primary hover:underline"
+                        >
+                          {metadata.lead_email}
+                        </a>
+                      </div>
+                    )}
+                    {/* Standard phone field */}
+                    {metadata.lead_phone && (
+                      <div className="flex items-center gap-2.5 text-sm">
+                        <Phone01 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                        <a 
+                          href={`tel:${metadata.lead_phone}`}
+                          className="truncate text-primary hover:underline"
+                        >
+                          {metadata.lead_phone}
+                        </a>
+                      </div>
+                    )}
+                    {/* Custom phone fields - displayed in main contact group */}
+                    {phoneFieldEntries.map(([key, value]) => (
+                      <div key={key} className="flex items-center gap-2.5 text-sm">
+                        <Phone01 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                        <a 
+                          href={`tel:${String(value)}`}
+                          className="truncate text-primary hover:underline"
+                        >
+                          {String(value)}
+                        </a>
+                      </div>
+                    ))}
+                    {metadata.lead_company && (
+                      <div className="flex items-center gap-2.5 text-sm">
+                        <Building07 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                        <span className="truncate">{metadata.lead_company}</span>
+                      </div>
+                    )}
+                    {!metadata.lead_name && !metadata.lead_email && phoneFieldEntries.length === 0 && (
+                      <p className="text-sm text-muted-foreground italic">No contact info</p>
+                    )}
+
+                    {/* Other Custom Fields - below dotted separator */}
+                    {otherFieldEntries.length > 0 && (
+                      <div className="mt-3 pt-3 border-t border-dashed space-y-2">
+                        {otherFieldEntries.map(([key, value]) => {
+                          const IconComponent = getCustomFieldIcon(key);
+                          return (
+                            <div key={key} className="flex items-start gap-2.5 text-sm">
+                              <IconComponent className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+                              <div className="min-w-0">
+                                <span className="text-muted-foreground">{key}:</span>{' '}
+                                <span className="break-words">{String(value)}</span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
+                );
+              })()}
             </AccordionContent>
           </AccordionItem>
 
