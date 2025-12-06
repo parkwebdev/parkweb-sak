@@ -36,6 +36,7 @@ export interface ChatUser {
  */
 export interface Message {
   id?: string; // Database message ID for reactions
+  tempId?: string; // Temporary ID for tracking optimistic messages
   role: 'user' | 'assistant';
   content: string;
   read?: boolean;
@@ -60,6 +61,7 @@ export interface Message {
   senderName?: string;
   senderAvatar?: string;
   linkPreviews?: Array<any>; // Cached link previews from message metadata
+  failed?: boolean; // Message failed to send
 }
 
 /**
