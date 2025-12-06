@@ -24,16 +24,16 @@ const StepProgress = React.forwardRef<HTMLDivElement, StepProgressProps>(
           const Icon = step.icon;
 
           return (
-            <div key={index} className="flex gap-3">
+            <div key={index} className="flex gap-4">
               {/* Indicator column */}
               <div className="flex flex-col items-center">
-                {/* Icon circle */}
+                {/* Icon box */}
                 <div
                   className={cn(
-                    "flex items-center justify-center w-10 h-10 rounded-full border-2 transition-colors",
-                    isComplete && "bg-primary border-primary text-primary-foreground",
+                    "flex items-center justify-center w-11 h-11 rounded-lg border transition-colors",
+                    isComplete && "border-primary/50 bg-primary/10 text-primary",
                     isCurrent && "border-primary bg-primary/10 text-primary",
-                    !isComplete && !isCurrent && "border-border bg-background text-muted-foreground"
+                    !isComplete && !isCurrent && "border-border bg-muted/50 text-muted-foreground"
                   )}
                 >
                   {isComplete ? (
@@ -46,19 +46,19 @@ const StepProgress = React.forwardRef<HTMLDivElement, StepProgressProps>(
                 {index < steps.length - 1 && (
                   <div
                     className={cn(
-                      "w-0.5 flex-1 min-h-[3rem] transition-colors",
-                      index < currentStep ? "bg-primary" : "bg-border"
+                      "w-px flex-1 min-h-[2rem] my-2 transition-colors",
+                      index < currentStep ? "bg-primary/50" : "bg-border"
                     )}
                   />
                 )}
               </div>
 
               {/* Text content */}
-              <div className="pb-8 pt-2">
+              <div className="pb-6 pt-2.5">
                 <p
                   className={cn(
                     "text-sm font-medium transition-colors",
-                    isComplete || isCurrent ? "text-foreground" : "text-muted-foreground"
+                    isCurrent ? "text-foreground" : "text-muted-foreground"
                   )}
                 >
                   {step.title}
