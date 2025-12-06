@@ -105,6 +105,7 @@ const Conversations: React.FC = () => {
   }, [metadataPanelCollapsed]);
   const messagesScrollRef = useRef<HTMLDivElement>(null);
   const isInitialLoadRef = useRef(true);
+  const newMessageIdsRef = useRef<Set<string>>(new Set());
   
   // Typing indicator state
   const [isTypingBroadcast, setIsTypingBroadcast] = useState(false);
@@ -198,6 +199,12 @@ const Conversations: React.FC = () => {
           },
           (payload) => {
             const newMessage = payload.new as Message;
+            
+            // Mark as new for animation (not for initial load)
+            if (!isInitialLoadRef.current) {
+              newMessageIdsRef.current.add(newMessage.id);
+              setTimeout(() => newMessageIdsRef.current.delete(newMessage.id), 300);
+            }
             
             // Incremental append - no full refetch, no flicker
             setMessages(prev => {
@@ -347,6 +354,10 @@ const Conversations: React.FC = () => {
       created_at: new Date().toISOString(),
       metadata: { sender_type: 'human', pending: true }
     };
+    
+    // Mark temp message as new for animation
+    newMessageIdsRef.current.add(tempId);
+    setTimeout(() => newMessageIdsRef.current.delete(tempId), 300);
     
     setMessages(prev => [...prev, tempMessage]);
     setMessageInput('');
@@ -670,10 +681,14 @@ const Conversations: React.FC = () => {
                         await updateMessageReaction(message.id, emoji, 'remove', 'admin');
                       };
                       
+                      const isNewMessage = newMessageIdsRef.current.has(message.id);
+                      
                       return (
                         <div
                           key={message.id}
-                          className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}
+                          className={`flex ${isUser ? 'justify-end' : 'justify-start'} ${
+                            isNewMessage ? (isUser ? 'animate-slide-in-right' : 'animate-slide-in-left') : ''
+                          }`}
                         >
                           <div className="flex items-start gap-2 max-w-[75%]">
                           {!isUser && (
