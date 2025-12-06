@@ -259,9 +259,13 @@ const Conversations: React.FC = () => {
     }
   }, [conversations]);
 
+  // Track which conversation we've marked as read to prevent duplicate updates
+  const lastMarkedReadRef = useRef<string | null>(null);
+
   // Track admin_last_read_at when conversation is selected
   useEffect(() => {
-    if (selectedConversation?.id) {
+    if (selectedConversation?.id && selectedConversation.id !== lastMarkedReadRef.current) {
+      lastMarkedReadRef.current = selectedConversation.id;
       updateConversationMetadata(selectedConversation.id, {
         admin_last_read_at: new Date().toISOString()
       }, { silent: true });
