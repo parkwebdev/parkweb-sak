@@ -26,6 +26,7 @@ import { HelpView } from './views/HelpView';
 // UI Components
 import { FloatingButton, WidgetHeader, WidgetNav } from './components';
 import { Card } from '@/components/ui/card';
+import { TooltipProvider } from '@/components/ui/tooltip';
 
 export const ChatWidget = ({ config: configProp, previewMode = false, containedPreview = false, isLoading: isLoadingProp = false }: ChatWidgetProps) => {
   // Mobile detection for removing border radius on full-screen mobile
@@ -655,22 +656,26 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
 
   // For iframe mode, render widget content directly
   if (isIframeMode) {
-    return widgetContent;
+    return <TooltipProvider>{widgetContent}</TooltipProvider>;
   }
 
   // For contained preview mode (embed tab preview), render with absolute positioning
   if (containedPreview) {
     return (
-      <div className={`absolute ${positionClasses[position] || positionClasses['bottom-right']}`}>
-        {widgetContent}
-      </div>
+      <TooltipProvider>
+        <div className={`absolute ${positionClasses[position] || positionClasses['bottom-right']}`}>
+          {widgetContent}
+        </div>
+      </TooltipProvider>
     );
   }
 
   // Default mode: fixed positioning for standalone widget
   return (
-    <div className={`fixed z-[9999] ${positionClasses[position] || positionClasses['bottom-right']}`}>
-      {widgetContent}
-    </div>
+    <TooltipProvider>
+      <div className={`fixed z-[9999] ${positionClasses[position] || positionClasses['bottom-right']}`}>
+        {widgetContent}
+      </div>
+    </TooltipProvider>
   );
 };
