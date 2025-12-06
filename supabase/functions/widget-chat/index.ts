@@ -583,7 +583,7 @@ When answering, you can naturally reference the information from the knowledge b
       ],
       stream: false, // Non-streaming for easier message persistence
       temperature: agent.temperature || 0.7,
-      max_tokens: agent.max_tokens || 2000,
+      max_completion_tokens: agent.max_tokens || 2000,
       top_p: deploymentConfig.top_p || 1.0,
     };
 
