@@ -72,8 +72,8 @@ export function useConversations(options: UseConversationsOptions) {
         setMessages(formattedMessages);
         console.log('[Widget] Loaded', formattedMessages.length, 'messages from database');
       } else {
-        setMessages([]);
-        console.log('[Widget] No messages found in database');
+        // Don't overwrite existing messages (like greeting) with empty array
+        console.log('[Widget] No messages found in database, preserving local messages');
       }
     };
     
