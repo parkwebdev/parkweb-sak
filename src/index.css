@@ -36,7 +36,7 @@
     --radius: 0.5rem;
     
     /* Status Colors */
-    --success: 120 61% 50%;
+    --success: 146 59.1% 46.9%;
     --success-foreground: 355 100% 97%;
     --warning: 38 92% 50%;
     --warning-foreground: 48 96% 5%;
@@ -80,7 +80,7 @@
     --ring: 0 0% 83.1%;
     
     /* Status Colors */
-    --success: 120 61% 50%;
+    --success: 146 59.1% 46.9%;
     --success-foreground: 144 61% 20%;
     --warning: 38 92% 50%;
     --warning-foreground: 48 96% 5%;
