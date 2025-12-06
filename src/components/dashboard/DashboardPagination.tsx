@@ -16,33 +16,35 @@ export function DashboardPagination({
   className,
 }: DashboardPaginationProps) {
   return (
-    <div
-      className={cn(
-        "flex items-center justify-between border-t border-border px-4 py-3 lg:px-6",
-        className
-      )}
-    >
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => onPageChange(page - 1)}
-        disabled={page <= 1}
-      >
-        <ChevronLeft className="mr-1 h-4 w-4" />
-        Previous
-      </Button>
+    <div className={cn("flex items-center justify-between px-5 py-3", className)}>
+      {/* Page indicator on the left */}
       <span className="text-sm text-muted-foreground">
         Page {page} of {totalPages}
       </span>
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => onPageChange(page + 1)}
-        disabled={page >= totalPages}
-      >
-        Next
-        <ChevronRight className="ml-1 h-4 w-4" />
-      </Button>
+
+      {/* Navigation buttons on the right */}
+      <div className="flex items-center gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => onPageChange(page - 1)}
+          disabled={page <= 1}
+          className="h-8 gap-1.5"
+        >
+          <ChevronLeft className="h-4 w-4" />
+          Previous
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => onPageChange(page + 1)}
+          disabled={page >= totalPages}
+          className="h-8 gap-1.5"
+        >
+          Next
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+      </div>
     </div>
   );
 }

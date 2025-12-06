@@ -1,18 +1,19 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  SearchLg,
+  SearchMd,
   FilterLines,
-  Eye,
-  MessageChatCircle,
+  ChevronSelectorVertical,
   ArrowUp,
   ArrowDown,
+  Trash01,
+  Edit02,
 } from "@untitledui/icons";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Table,
   TableBody,
@@ -22,6 +23,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { DashboardPagination } from "./DashboardPagination";
+import { AnimatedTableRow } from "@/components/ui/animated-table-row";
 import { cn } from "@/lib/utils";
 
 export interface ConversationRow {
@@ -35,8 +37,17 @@ export interface ConversationRow {
   createdAt: string;
 }
 
+interface TabConfig {
+  id: string;
+  label: string;
+  count?: number;
+}
+
 interface ConversationsDataTableProps {
   data: ConversationRow[];
+  tabs: TabConfig[];
+  selectedTab: string;
+  onTabChange: (tabId: string) => void;
   title?: string;
   className?: string;
   storageKey?: string;
@@ -51,91 +62,73 @@ interface SortState {
 }
 
 const statusConfig = {
-  active: { label: "Active", variant: "default" as const, className: "bg-success/10 text-success border-success/20" },
-  human_takeover: { label: "Human", variant: "default" as const, className: "bg-info/10 text-info border-info/20" },
-  closed: { label: "Closed", variant: "secondary" as const, className: "bg-muted text-muted-foreground" },
+  active: { label: "Active", className: "bg-success/10 text-success border-success/20" },
+  human_takeover: { label: "Human", className: "bg-info/10 text-info border-info/20" },
+  closed: { label: "Closed", className: "bg-muted text-muted-foreground border-border" },
 };
 
 const STORAGE_PREFIX = "dashboard_table_sort_";
 
-// Custom hook for debounced value
 function useDebouncedValue<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
-
-    return () => {
-      clearTimeout(timer);
-    };
+    const timer = setTimeout(() => setDebouncedValue(value), delay);
+    return () => clearTimeout(timer);
   }, [value, delay]);
 
   return debouncedValue;
 }
 
-// Load sort state from localStorage
 function loadSortState(key: string): SortState | null {
   try {
     const stored = localStorage.getItem(`${STORAGE_PREFIX}${key}`);
     if (stored) {
       const parsed = JSON.parse(stored);
-      if (parsed.column && parsed.direction) {
-        return parsed as SortState;
-      }
+      if (parsed.column && parsed.direction) return parsed as SortState;
     }
-  } catch {
-    // Ignore parsing errors
-  }
+  } catch {}
   return null;
 }
 
-// Save sort state to localStorage
 function saveSortState(key: string, state: SortState): void {
   try {
     localStorage.setItem(`${STORAGE_PREFIX}${key}`, JSON.stringify(state));
-  } catch {
-    // Ignore storage errors
-  }
+  } catch {}
 }
 
 export function ConversationsDataTable({
   data,
+  tabs,
+  selectedTab,
+  onTabChange,
   title = "Conversations",
   className,
   storageKey = "conversations",
 }: ConversationsDataTableProps) {
   const navigate = useNavigate();
-  
-  // Search with debouncing
   const [searchInput, setSearchInput] = useState("");
   const debouncedSearch = useDebouncedValue(searchInput, 300);
-  
-  // Sorting with persistence
   const [sortState, setSortState] = useState<SortState>(() => {
     const stored = loadSortState(storageKey);
     return stored || { column: "messageCount", direction: "desc" };
   });
-  
   const [page, setPage] = useState(1);
+  const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const itemsPerPage = 10;
 
-  // Persist sort state when it changes
   useEffect(() => {
     saveSortState(storageKey, sortState);
   }, [sortState, storageKey]);
 
-  // Reset page when search changes
   useEffect(() => {
     setPage(1);
   }, [debouncedSearch]);
 
   const filteredData = useMemo(() => {
     if (!debouncedSearch.trim()) return data;
-    
     const searchLower = debouncedSearch.toLowerCase();
-    return data.filter((row) => 
+    return data.filter((row) =>
       row.agentName.toLowerCase().includes(searchLower) ||
       (row.leadName?.toLowerCase().includes(searchLower) ?? false)
     );
@@ -178,157 +171,237 @@ export function ConversationsDataTable({
     }));
   }, []);
 
-  const SortIcon = ({ column }: { column: SortColumn }) => {
-    if (sortState.column !== column) return null;
-    return sortState.direction === "asc" ? (
-      <ArrowUp className="ml-1 h-3 w-3" />
-    ) : (
-      <ArrowDown className="ml-1 h-3 w-3" />
+  // Selection handlers
+  const allSelected = paginatedData.length > 0 && paginatedData.every(row => selectedRows.has(row.id));
+  const someSelected = paginatedData.some(row => selectedRows.has(row.id)) && !allSelected;
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedRows(new Set(paginatedData.map(row => row.id)));
+    } else {
+      setSelectedRows(new Set());
+    }
+  };
+
+  const handleSelectRow = (id: string, checked: boolean) => {
+    const newSelected = new Set(selectedRows);
+    if (checked) {
+      newSelected.add(id);
+    } else {
+      newSelected.delete(id);
+    }
+    setSelectedRows(newSelected);
+  };
+
+  // Sortable header with diamond icon
+  const SortableHeader = ({ column, children }: { column: SortColumn; children: React.ReactNode }) => {
+    const isActive = sortState.column === column;
+    return (
+      <button
+        onClick={() => handleSort(column)}
+        className="flex items-center gap-1 hover:text-foreground transition-colors group"
+      >
+        {children}
+        <span className={cn(
+          "transition-colors",
+          isActive ? "text-foreground" : "text-muted-foreground/50 group-hover:text-muted-foreground"
+        )}>
+          {isActive ? (
+            sortState.direction === "asc" ? (
+              <ArrowUp className="h-3.5 w-3.5" />
+            ) : (
+              <ArrowDown className="h-3.5 w-3.5" />
+            )
+          ) : (
+            <ChevronSelectorVertical className="h-3.5 w-3.5" />
+          )}
+        </span>
+      </button>
     );
   };
 
   return (
     <Card className={cn("overflow-hidden border-border/50", className)}>
-      {/* Table Header */}
-      <div className="flex items-center justify-between border-b border-border px-4 py-4 lg:px-6">
-        <h3 className="text-base font-semibold text-foreground">{title}</h3>
-        {debouncedSearch && (
-          <span className="text-sm text-muted-foreground">
-            {filteredData.length} result{filteredData.length !== 1 ? "s" : ""}
-          </span>
-        )}
+      {/* Header */}
+      <div className="px-5 pt-5 pb-4">
+        <h3 className="text-lg font-semibold text-foreground">{title}</h3>
       </div>
 
-      {/* Search & Filters */}
-      <div className="flex flex-col gap-3 border-b border-border bg-muted/30 px-4 py-3 sm:flex-row sm:items-center sm:justify-between lg:px-6">
-        <div className="relative flex-1 max-w-sm">
-          <SearchLg className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="Search conversations..."
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            className="pl-9 bg-background"
+      {/* Tabs + Search/Filter Row */}
+      <div className="px-5 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        {/* Segmented Tabs */}
+        <div className="flex items-center bg-muted/80 rounded-lg p-1">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => onTabChange(tab.id)}
+              className={cn(
+                "px-3 py-1.5 text-sm font-medium rounded-md transition-all whitespace-nowrap",
+                selectedTab === tab.id
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              {tab.label}
+              {tab.count !== undefined && (
+                <span className={cn(
+                  "ml-1.5 text-xs",
+                  selectedTab === tab.id ? "text-muted-foreground" : "text-muted-foreground/70"
+                )}>
+                  {tab.count}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+
+        {/* Search + Filters */}
+        <div className="flex items-center gap-2">
+          <div className="relative">
+            <SearchMd className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              className="pl-9 pr-12 h-9 w-[200px] bg-background"
+            />
+            <kbd className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground">
+              ⌘K
+            </kbd>
+          </div>
+          <Button variant="outline" size="sm" className="h-9 gap-2">
+            <FilterLines className="h-4 w-4" />
+            Filters
+          </Button>
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="border-t border-border/50">
+        <Table>
+          <TableHeader>
+            <TableRow className="hover:bg-transparent border-b border-border/50">
+              <TableHead className="w-12 pl-5">
+                <Checkbox
+                  checked={allSelected || someSelected}
+                  onCheckedChange={handleSelectAll}
+                />
+              </TableHead>
+              <TableHead className="text-xs font-medium text-muted-foreground">
+                <SortableHeader column="agentName">Agent / Lead</SortableHeader>
+              </TableHead>
+              <TableHead className="text-xs font-medium text-muted-foreground">
+                <SortableHeader column="messageCount">Messages</SortableHeader>
+              </TableHead>
+              <TableHead className="text-xs font-medium text-muted-foreground">Duration</TableHead>
+              <TableHead className="text-xs font-medium text-muted-foreground min-w-[180px]">
+                <SortableHeader column="percentageOfTotal">% of Total</SortableHeader>
+              </TableHead>
+              <TableHead className="text-xs font-medium text-muted-foreground">
+                <SortableHeader column="status">Status</SortableHeader>
+              </TableHead>
+              <TableHead className="w-24 text-xs font-medium text-muted-foreground pr-5">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {paginatedData.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">
+                  {debouncedSearch ? "No matching conversations found" : "No conversations found"}
+                </TableCell>
+              </TableRow>
+            ) : (
+              paginatedData.map((row, index) => {
+                const config = statusConfig[row.status];
+                return (
+                  <AnimatedTableRow
+                    key={row.id}
+                    index={index}
+                    className="group border-b border-border/30 hover:bg-muted/30"
+                  >
+                    <TableCell className="pl-5">
+                      <Checkbox
+                        checked={selectedRows.has(row.id)}
+                        onCheckedChange={(checked) => handleSelectRow(row.id, !!checked)}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-col">
+                        <span className="font-medium text-foreground">{row.agentName}</span>
+                        {row.leadName && (
+                          <span className="text-sm text-muted-foreground">{row.leadName}</span>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="font-medium tabular-nums">
+                      {row.messageCount.toLocaleString()}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground tabular-nums">
+                      {row.duration}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-3 w-32">
+                        <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-violet-500 rounded-full transition-all"
+                            style={{ width: `${Math.min(row.percentageOfTotal, 100)}%` }}
+                          />
+                        </div>
+                        <span className="text-sm tabular-nums text-muted-foreground w-12 text-right">
+                          {row.percentageOfTotal.toFixed(1)}%
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant="outline"
+                        className={cn("font-medium border", config.className)}
+                      >
+                        <span className={cn(
+                          "w-1.5 h-1.5 rounded-full mr-1.5",
+                          row.status === "active" && "bg-success",
+                          row.status === "human_takeover" && "bg-info",
+                          row.status === "closed" && "bg-muted-foreground"
+                        )} />
+                        {config.label}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="pr-5">
+                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                          onClick={() => navigate(`/conversations?id=${row.id}`)}
+                        >
+                          <Edit02 className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                        >
+                          <Trash01 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </AnimatedTableRow>
+                );
+              })
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="border-t border-border/50">
+          <DashboardPagination
+            page={page}
+            totalPages={totalPages}
+            onPageChange={setPage}
           />
         </div>
-        <Button variant="outline" size="sm" className="shrink-0">
-          <FilterLines className="mr-2 h-4 w-4" />
-          Filters
-        </Button>
-      </div>
-
-      <Table>
-        <TableHeader>
-          <TableRow className="hover:bg-transparent">
-            <TableHead
-              className="cursor-pointer select-none hover:text-foreground transition-colors"
-              onClick={() => handleSort("agentName")}
-            >
-              <div className="flex items-center">
-                Agent / Lead
-                <SortIcon column="agentName" />
-              </div>
-            </TableHead>
-            <TableHead
-              className="cursor-pointer select-none hover:text-foreground transition-colors"
-              onClick={() => handleSort("messageCount")}
-            >
-              <div className="flex items-center">
-                Messages
-                <SortIcon column="messageCount" />
-              </div>
-            </TableHead>
-            <TableHead>Duration</TableHead>
-            <TableHead
-              className="cursor-pointer select-none min-w-[180px] hover:text-foreground transition-colors"
-              onClick={() => handleSort("percentageOfTotal")}
-            >
-              <div className="flex items-center">
-                % of Total
-                <SortIcon column="percentageOfTotal" />
-              </div>
-            </TableHead>
-            <TableHead
-              className="cursor-pointer select-none hover:text-foreground transition-colors"
-              onClick={() => handleSort("status")}
-            >
-              <div className="flex items-center">
-                Status
-                <SortIcon column="status" />
-              </div>
-            </TableHead>
-            <TableHead className="w-[100px]">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {paginatedData.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
-                {debouncedSearch ? "No matching conversations found" : "No conversations found"}
-              </TableCell>
-            </TableRow>
-          ) : (
-            paginatedData.map((row) => {
-              const config = statusConfig[row.status];
-              return (
-                <TableRow key={row.id}>
-                  <TableCell>
-                    <div className="flex flex-col">
-                      <span className="font-medium text-foreground">{row.agentName}</span>
-                      {row.leadName && (
-                        <span className="text-sm text-muted-foreground">{row.leadName}</span>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>{row.messageCount.toLocaleString()}</TableCell>
-                  <TableCell className="text-muted-foreground">{row.duration}</TableCell>
-                  <TableCell>
-                    <Progress 
-                      value={row.percentageOfTotal} 
-                      showLabel 
-                      labelPosition="right"
-                      className="h-2 flex-1"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={config.variant} className={config.className}>
-                      {config.label}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0"
-                        onClick={() => navigate(`/conversations?id=${row.id}`)}
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0"
-                        onClick={() => navigate(`/conversations?id=${row.id}`)}
-                      >
-                        <MessageChatCircle className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              );
-            })
-          )}
-        </TableBody>
-      </Table>
-
-      {totalPages > 1 && (
-        <DashboardPagination
-          page={page}
-          totalPages={totalPages}
-          onPageChange={setPage}
-          className="bg-muted/30"
-        />
       )}
     </Card>
   );
