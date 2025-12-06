@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, lazy, Suspense, useCallback } from 'react';
-import { fetchWidgetConfig, createLead, submitArticleFeedback, sendChatMessage, subscribeToMessages, unsubscribeFromMessages, subscribeToConversationStatus, unsubscribeFromConversationStatus, subscribeToTypingIndicator, unsubscribeFromTypingIndicator, fetchTakeoverAgent, updateMessageReaction, updatePageVisit, type WidgetConfig, type ChatResponse, type ReferrerJourney } from './api';
+import { fetchWidgetConfig, createLead, submitArticleFeedback, sendChatMessage, subscribeToMessages, unsubscribeFromMessages, subscribeToConversationStatus, unsubscribeFromConversationStatus, subscribeToTypingIndicator, unsubscribeFromTypingIndicator, fetchTakeoverAgent, updateMessageReaction, updatePageVisit, startVisitorPresence, updateVisitorPresence, stopVisitorPresence, type WidgetConfig, type ChatResponse, type ReferrerJourney } from './api';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { CSSAnimatedList } from './CSSAnimatedList';
 import { CSSAnimatedItem } from './CSSAnimatedItem';
@@ -236,6 +236,16 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isOpeningConversationRef = useRef(false);
+  
+  // Visitor presence tracking
+  const presenceChannelRef = useRef<RealtimeChannel | null>(null);
+  const [visitorId] = useState(() => {
+    const stored = localStorage.getItem(`chatpad_visitor_id_${agentId}`);
+    if (stored) return stored;
+    const newId = `visitor_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+    localStorage.setItem(`chatpad_visitor_id_${agentId}`, newId);
+    return newId;
+  });
 
   // Track hover state for nav icons
   const [hoveredNav, setHoveredNav] = useState<'home' | 'messages' | 'help' | null>(null);
@@ -522,6 +532,45 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     }
   }, [isAttachingFiles]);
 
+  // Visitor presence tracking - broadcast to admin panel
+  useEffect(() => {
+    if (previewMode || !config) return;
+    
+    const currentPage = window.location.href;
+    
+    // Start presence when widget opens
+    if (isOpen && !presenceChannelRef.current) {
+      presenceChannelRef.current = startVisitorPresence(agentId, visitorId, {
+        currentPage,
+        isWidgetOpen: true,
+        leadName: chatUser?.firstName ? `${chatUser.firstName} ${chatUser.lastName}`.trim() : undefined,
+        leadEmail: chatUser?.email,
+      });
+    }
+    
+    // Update presence when page changes or widget state changes
+    if (presenceChannelRef.current) {
+      updateVisitorPresence(presenceChannelRef.current, visitorId, {
+        currentPage,
+        isWidgetOpen: isOpen,
+        leadName: chatUser?.firstName ? `${chatUser.firstName} ${chatUser.lastName}`.trim() : undefined,
+        leadEmail: chatUser?.email,
+      });
+    }
+    
+    // Stop presence when widget closes
+    if (!isOpen && presenceChannelRef.current) {
+      stopVisitorPresence(presenceChannelRef.current);
+      presenceChannelRef.current = null;
+    }
+    
+    return () => {
+      if (presenceChannelRef.current) {
+        stopVisitorPresence(presenceChannelRef.current);
+        presenceChannelRef.current = null;
+      }
+    };
+  }, [isOpen, agentId, visitorId, chatUser, previewMode, config]);
 
   // Mark messages as read
   useEffect(() => {

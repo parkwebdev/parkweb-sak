@@ -449,3 +449,63 @@ export function unsubscribeFromTypingIndicator(channel: RealtimeChannel) {
   console.log('[Widget] Unsubscribing from typing indicator');
   widgetSupabase.removeChannel(channel);
 }
+
+// Visitor presence tracking for admin panel
+export function startVisitorPresence(
+  agentId: string,
+  visitorId: string,
+  options: {
+    currentPage: string;
+    isWidgetOpen: boolean;
+    leadName?: string;
+    leadEmail?: string;
+  }
+): RealtimeChannel {
+  console.log('[Widget] Starting visitor presence for agent:', agentId);
+  
+  const channel = widgetSupabase.channel(`visitor-presence-${agentId}`);
+  
+  channel.subscribe(async (status) => {
+    if (status === 'SUBSCRIBED') {
+      await channel.track({
+        visitorId,
+        currentPage: options.currentPage,
+        isWidgetOpen: options.isWidgetOpen,
+        leadName: options.leadName,
+        leadEmail: options.leadEmail,
+        startedAt: new Date().toISOString(),
+      });
+    }
+  });
+
+  return channel;
+}
+
+export async function updateVisitorPresence(
+  channel: RealtimeChannel,
+  visitorId: string,
+  options: {
+    currentPage: string;
+    isWidgetOpen: boolean;
+    leadName?: string;
+    leadEmail?: string;
+  }
+): Promise<void> {
+  try {
+    await channel.track({
+      visitorId,
+      currentPage: options.currentPage,
+      isWidgetOpen: options.isWidgetOpen,
+      leadName: options.leadName,
+      leadEmail: options.leadEmail,
+      startedAt: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error('[Widget] Error updating presence:', error);
+  }
+}
+
+export function stopVisitorPresence(channel: RealtimeChannel) {
+  console.log('[Widget] Stopping visitor presence');
+  widgetSupabase.removeChannel(channel);
+}

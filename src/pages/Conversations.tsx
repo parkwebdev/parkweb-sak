@@ -8,7 +8,9 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { SearchMd, MessageChatSquare, User01, Send01, FaceSmile } from '@untitledui/icons';
 import { EmptyState } from '@/components/ui/empty-state';
 import { useConversations } from '@/hooks/useConversations';
+import { useAgents } from '@/hooks/useAgents';
 import { ConversationMetadataPanel } from '@/components/conversations/ConversationMetadataPanel';
+import { ActiveVisitorsPanel } from '@/components/conversations/ActiveVisitorsPanel';
 import type { Tables } from '@/integrations/supabase/types';
 import { formatDistanceToNow } from 'date-fns';
 import { TakeoverDialog } from '@/components/conversations/TakeoverDialog';
@@ -77,6 +79,13 @@ const Conversations: React.FC = () => {
     sendHumanMessage,
     reopenConversation,
   } = useConversations();
+
+  const { agents } = useAgents();
+  const agentNames = React.useMemo(() => {
+    const map: Record<string, string> = {};
+    agents.forEach(a => { map[a.id] = a.name; });
+    return map;
+  }, [agents]);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
@@ -311,6 +320,12 @@ const Conversations: React.FC = () => {
             />
           </div>
         </div>
+
+        {/* Active Visitors */}
+        <ActiveVisitorsPanel 
+          agentIds={agents.map(a => a.id)} 
+          agentNames={agentNames}
+        />
 
         {/* Conversation List */}
         <div className="flex-1 min-h-0 overflow-y-auto">

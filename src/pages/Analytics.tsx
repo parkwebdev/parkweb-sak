@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import { useTrafficAnalytics } from '@/hooks/useTrafficAnalytics';
 import { useAuth } from '@/hooks/useAuth';
 import { AnalyticsKPIs } from '@/components/analytics/AnalyticsKPIs';
 import { ComparisonView } from '@/components/analytics/ComparisonView';
@@ -8,6 +9,10 @@ import { ConversationChart } from '@/components/analytics/ConversationChart';
 import { LeadConversionChart } from '@/components/analytics/LeadConversionChart';
 import { AgentPerformanceChart } from '@/components/analytics/AgentPerformanceChart';
 import { UsageMetricsChart } from '@/components/analytics/UsageMetricsChart';
+import { TrafficSourceChart } from '@/components/analytics/TrafficSourceChart';
+import { LandingPagesTable } from '@/components/analytics/LandingPagesTable';
+import { PageVisitHeatmap } from '@/components/analytics/PageVisitHeatmap';
+import { ActiveVisitorsCard } from '@/components/analytics/ActiveVisitorsCard';
 import { ReportBuilder, ReportConfig } from '@/components/analytics/ReportBuilder';
 import { ScheduledReportsManager } from '@/components/analytics/ScheduledReportsManager';
 import { AnalyticsToolbar } from '@/components/analytics/AnalyticsToolbar';
@@ -61,6 +66,16 @@ const Analytics: React.FC = () => {
     loading,
     refetch,
   } = useAnalytics(startDate, endDate, filters);
+
+  // Fetch traffic analytics
+  const {
+    trafficSources,
+    landingPages,
+    pageVisits,
+    agents,
+    agentNames,
+    loading: trafficLoading,
+  } = useTrafficAnalytics(startDate, endDate, filters.agentId);
 
   // Comparison data
   const comparisonData = useAnalytics(
@@ -209,6 +224,7 @@ const Analytics: React.FC = () => {
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
           <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+          <TabsTrigger value="traffic">Traffic</TabsTrigger>
           <TabsTrigger value="reports">Reports</TabsTrigger>
           <TabsTrigger value="schedule">Schedule</TabsTrigger>
         </TabsList>
@@ -245,6 +261,28 @@ const Analytics: React.FC = () => {
               </AnimatedItem>
             </AnimatedList>
           )}
+        </TabsContent>
+
+        {/* Traffic Tab */}
+        <TabsContent value="traffic" className="space-y-6 mt-6">
+          {/* Active Visitors */}
+          <ActiveVisitorsCard 
+            agentIds={agents.map(a => a.id)} 
+            agentNames={agentNames}
+          />
+          
+          {/* Traffic Charts */}
+          <AnimatedList className="grid grid-cols-1 lg:grid-cols-2 gap-6" staggerDelay={0.1}>
+            <AnimatedItem>
+              <TrafficSourceChart data={trafficSources} loading={trafficLoading} />
+            </AnimatedItem>
+            <AnimatedItem>
+              <PageVisitHeatmap data={pageVisits} loading={trafficLoading} />
+            </AnimatedItem>
+          </AnimatedList>
+          
+          {/* Landing Pages Table - Full Width */}
+          <LandingPagesTable data={landingPages} loading={trafficLoading} />
         </TabsContent>
 
         {/* Reports Tab */}
