@@ -1,6 +1,13 @@
-import { useState, useEffect, useRef, lazy, Suspense, useCallback } from 'react';
-import { fetchWidgetConfig, createLead, submitArticleFeedback, sendChatMessage, subscribeToMessages, unsubscribeFromMessages, subscribeToConversationStatus, unsubscribeFromConversationStatus, subscribeToTypingIndicator, unsubscribeFromTypingIndicator, fetchTakeoverAgent, updateMessageReaction, updatePageVisit, startVisitorPresence, updateVisitorPresence, stopVisitorPresence, markMessagesRead, fetchConversationMessages, type WidgetConfig, type ChatResponse, type ReferrerJourney } from './api';
+import { useState, useEffect, useRef, Suspense, useCallback } from 'react';
+import { fetchWidgetConfig, createLead, submitArticleFeedback, sendChatMessage, subscribeToMessages, unsubscribeFromMessages, subscribeToConversationStatus, unsubscribeFromConversationStatus, subscribeToTypingIndicator, unsubscribeFromTypingIndicator, fetchTakeoverAgent, updateMessageReaction, updatePageVisit, startVisitorPresence, updateVisitorPresence, stopVisitorPresence, markMessagesRead, fetchConversationMessages, type WidgetConfig, type ReferrerJourney } from './api';
 import type { RealtimeChannel } from '@supabase/supabase-js';
+
+// Types and constants extracted for maintainability
+import type { ViewType, ChatUser, Message, Conversation, PageVisit, ChatWidgetProps } from './types';
+import { WIDGET_CSS_VARS, VoiceInput, FileDropZone, MessageReactions, AudioPlayer, PhoneInputField, getIsMobileFullScreen, isInternalWidgetUrl } from './constants';
+import { detectEntryType, parseUtmParams } from './utils/referrer';
+
+// UI Components
 import { CSSAnimatedList } from './CSSAnimatedList';
 import { CSSAnimatedItem } from './CSSAnimatedItem';
 import { Card } from '@/components/ui/card';
@@ -20,154 +27,8 @@ import ChatPadLogo from '@/components/ChatPadLogo';
 import { generateGradientPalette, hexToRgb } from '@/lib/color-utils';
 import DOMPurify from 'isomorphic-dompurify';
 
-// Shared CSS variables to ensure consistent light mode styling across render modes
-const WIDGET_CSS_VARS = {
-  colorScheme: 'light',
-  '--background': '0 0% 100%',
-  '--foreground': '0 0% 3.9%',
-  '--card': '0 0% 100%',
-  '--card-foreground': '0 0% 3.9%',
-  '--popover': '0 0% 100%',
-  '--popover-foreground': '0 0% 3.9%',
-  '--primary': '221.2 83.2% 53.3%',
-  '--primary-foreground': '0 0% 98%',
-  '--secondary': '0 0% 96.1%',
-  '--secondary-foreground': '0 0% 9%',
-  '--muted': '0 0% 96.1%',
-  '--muted-foreground': '0 0% 45.1%',
-  '--accent': '0 0% 96.1%',
-  '--accent-foreground': '0 0% 9%',
-  '--destructive': '0 84.2% 60.2%',
-  '--destructive-foreground': '0 0% 98%',
-  '--border': '0 0% 89.8%',
-  '--input': '0 0% 89.8%',
-  '--ring': '221.2 83.2% 53.3%',
-  '--radius': '0.5rem',
-} as React.CSSProperties;
-
 // Eager load CSSBubbleBackground (CSS-only, ~3KB) to prevent flicker on widget open
 import { CSSBubbleBackground } from '@/components/ui/css-bubble-background';
-// Lazy load heavy components to reduce initial bundle size
-const VoiceInput = lazy(() => import('@/components/molecule-ui/voice-input').then(m => ({ default: m.VoiceInput })));
-const FileDropZone = lazy(() => import('@/components/chat/FileDropZone').then(m => ({ default: m.FileDropZone })));
-
-const MessageReactions = lazy(() => import('@/components/chat/MessageReactions').then(m => ({ default: m.MessageReactions })));
-const AudioPlayer = lazy(() => import('@/components/chat/AudioPlayer').then(m => ({ default: m.AudioPlayer })));
-const PhoneInputField = lazy(() => import('@/components/ui/phone-input').then(m => ({ default: m.PhoneInputField })));
-
-interface ChatWidgetProps {
-  config: WidgetConfig | { agentId: string; position?: string; primaryColor?: string };
-  previewMode?: boolean;
-  containedPreview?: boolean;
-  isLoading?: boolean; // When true, show skeleton placeholders for dynamic content
-}
-
-type ViewType = 'home' | 'messages' | 'help';
-
-interface ChatUser {
-  firstName: string;
-  lastName: string;
-  email: string;
-  leadId: string;
-  conversationId?: string; // Database conversation ID
-}
-
-interface Message {
-  id?: string; // Database message ID for reactions
-  role: 'user' | 'assistant';
-  content: string;
-  read?: boolean;
-  read_at?: string; // ISO timestamp when message was read
-  timestamp: Date;
-  type?: 'text' | 'audio' | 'file';
-  audioUrl?: string;
-  files?: Array<{
-    name: string;
-    url: string;
-    type: string;
-    size: number;
-  }>;
-  reactions?: Array<{ emoji: string; count: number; userReacted: boolean; adminReacted?: boolean }>;
-  isSystemNotice?: boolean; // For takeover notices - no timestamp, no emoji, no avatar
-  isHuman?: boolean;
-  senderName?: string;
-  senderAvatar?: string;
-  linkPreviews?: Array<any>; // Cached link previews from message metadata
-}
-
-interface Conversation {
-  id: string;
-  messages: Message[];
-  createdAt: string;
-  updatedAt: string;
-  preview: string;
-}
-
-interface PageVisit {
-  url: string;
-  entered_at: string;
-  duration_ms: number;
-}
-
-// Detect traffic source type from referrer URL
-function detectEntryType(referrer: string | null): ReferrerJourney['entry_type'] {
-  if (!referrer) return 'direct';
-  
-  const lowerRef = referrer.toLowerCase();
-  
-  // Search engines
-  if (/google\.|bing\.|yahoo\.|duckduckgo\.|baidu\.|yandex\./i.test(lowerRef)) {
-    return 'organic';
-  }
-  
-  // Social platforms
-  if (/facebook\.|instagram\.|twitter\.|x\.com|linkedin\.|tiktok\.|pinterest\.|reddit\.|youtube\./i.test(lowerRef)) {
-    return 'social';
-  }
-  
-  // Email providers (common webmail)
-  if (/mail\.|gmail\.|outlook\.|yahoo\.com\/mail|webmail\./i.test(lowerRef)) {
-    return 'email';
-  }
-  
-  // If there's a referrer but doesn't match above, it's a referral
-  return 'referral';
-}
-
-// Parse UTM parameters from URL
-function parseUtmParams(url: string): Partial<ReferrerJourney> {
-  try {
-    const urlObj = new URL(url);
-    const params = urlObj.searchParams;
-    
-    // Check if any utm params exist - if utm_source is present, likely paid
-    const utmSource = params.get('utm_source');
-    const utmMedium = params.get('utm_medium');
-    
-    // Detect paid traffic from utm parameters
-    let entryType: ReferrerJourney['entry_type'] | undefined;
-    if (utmMedium && ['cpc', 'ppc', 'paid', 'cpm', 'display', 'retargeting'].includes(utmMedium.toLowerCase())) {
-      entryType = 'paid';
-    }
-    
-    return {
-      utm_source: utmSource,
-      utm_medium: utmMedium,
-      utm_campaign: params.get('utm_campaign'),
-      utm_term: params.get('utm_term'),
-      utm_content: params.get('utm_content'),
-      ...(entryType ? { entry_type: entryType } : {}),
-    };
-  } catch {
-    return {};
-  }
-}
-
-// Detect mobile full-screen mode (matches media query in chatpad-widget.js)
-const getIsMobileFullScreen = () => {
-  if (typeof window === 'undefined') return false;
-  return window.innerWidth <= 480;
-};
 
 export const ChatWidget = ({ config: configProp, previewMode = false, containedPreview = false, isLoading: isLoadingProp = false }: ChatWidgetProps) => {
   // Mobile detection for removing border radius on full-screen mobile
