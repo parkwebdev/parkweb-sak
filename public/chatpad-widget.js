@@ -223,6 +223,9 @@
       this.cachedConfig = null;
       // Config fetch in progress
       this.configFetching = false;
+      // Parent page tracking
+      this.currentParentUrl = window.location.href;
+      this.parentReferrer = document.referrer;
     }
     
     init() {
@@ -243,6 +246,10 @@
       
       // Listen for messages from iframe
       window.addEventListener('message', this.handleMessage.bind(this));
+      
+      // Listen for parent page navigation to track page visits
+      window.addEventListener('popstate', () => this.trackParentNavigation());
+      window.addEventListener('hashchange', () => this.trackParentNavigation());
       
       // INSTANT LOADING: Start fetching config and creating iframe immediately on page load
       this.preloadEverything();
@@ -447,6 +454,8 @@
           if (this.cachedConfig) {
             this.sendConfigToIframe();
           }
+          // Send initial parent page info
+          this.sendParentPageInfo();
           break;
           
         case 'chatpad-widget-close':
@@ -476,6 +485,44 @@
         case 'chatpad-unread-count':
           this.updateUnreadBadge(event.data.count);
           break;
+      }
+    }
+    
+    /**
+     * Send parent page info to iframe for accurate page tracking
+     */
+    sendParentPageInfo() {
+      if (!this.iframe?.contentWindow) return;
+      
+      // Extract UTM parameters from parent URL
+      let utmParams = {};
+      try {
+        const url = new URL(this.currentParentUrl);
+        utmParams = {
+          utm_source: url.searchParams.get('utm_source'),
+          utm_medium: url.searchParams.get('utm_medium'),
+          utm_campaign: url.searchParams.get('utm_campaign'),
+          utm_term: url.searchParams.get('utm_term'),
+          utm_content: url.searchParams.get('utm_content'),
+        };
+      } catch (e) { /* ignore */ }
+      
+      this.iframe.contentWindow.postMessage({
+        type: 'chatpad-parent-page-info',
+        url: this.currentParentUrl,
+        referrer: this.parentReferrer,
+        utmParams: utmParams,
+      }, '*');
+    }
+    
+    /**
+     * Track parent page navigation and send to iframe
+     */
+    trackParentNavigation() {
+      const newUrl = window.location.href;
+      if (newUrl !== this.currentParentUrl) {
+        this.currentParentUrl = newUrl;
+        this.sendParentPageInfo();
       }
     }
     
