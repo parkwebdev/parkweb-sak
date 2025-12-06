@@ -98,6 +98,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     isOpeningConversationRef,
     clearMessagesAndFetch,
     isActivelySendingRef,
+    markConversationFetched,
   } = useConversations({
     agentId,
     chatUser,
@@ -374,7 +375,10 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
       );
 
       if (response.conversationId && response.conversationId !== activeConversationId) {
-        const oldConvId = activeConversationId;
+        // CRITICAL: Mark as fetched BEFORE setting activeConversationId
+        // This prevents the useEffect from triggering a DB fetch that overwrites local messages
+        markConversationFetched(response.conversationId);
+        
         setActiveConversationId(response.conversationId);
         
         if (chatUser) {
