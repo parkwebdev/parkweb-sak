@@ -1,325 +1,586 @@
-# ChatWidget Refactoring Plan
+# Widget Refactoring Plan
 
-## Executive Summary
-
-The `src/widget/ChatWidget.tsx` file has grown to **2,489 lines**, making it difficult to maintain, test, and debug. This document outlines a comprehensive plan to refactor it into smaller, focused components without changing any functionality.
-
----
+This document outlines the comprehensive plan to refactor the `ChatWidget.tsx` file into smaller, more maintainable components.
 
 ## Current State Analysis
 
 ### File Statistics
-- **Total Lines**: 2,489
-- **State Variables**: 40+
-- **useEffect Hooks**: 20+
-- **Helper Functions**: 15+
-- **UI Sections**: 5 major views
+- **Current file**: `src/widget/ChatWidget.tsx`
+- **Line count**: ~2,489 lines
+- **State variables**: 40+
+- **useEffect hooks**: 20+
+- **Render modes**: 3 (iframe, containedPreview, default)
 
-### Current Structure Breakdown
-
-| Section | Lines (Approx) | Description |
-|---------|----------------|-------------|
-| Imports & Types | 1-110 | Dependencies, interfaces, types |
-| Helper Functions | 111-170 | `detectEntryType`, `parseUtmParams`, `getIsMobileFullScreen` |
-| State Declarations | 170-260 | 40+ useState hooks |
-| Effects & Subscriptions | 260-1060 | Real-time subscriptions, lifecycle management |
-| Event Handlers | 1060-1400 | Message sending, recording, form submission |
-| Render Logic | 1400-2489 | JSX for all views |
-
-### Pain Points
-
-1. **Cognitive Load**: Developers must understand 2,500 lines to make any change
-2. **Testing Difficulty**: Cannot unit test individual UI sections
-3. **Merge Conflicts**: High likelihood of conflicts with multiple developers
-4. **Code Reuse**: Duplicated patterns that could be shared
-5. **Performance**: React re-renders entire component on any state change
+### Key Pain Points
+1. **High cognitive load** - Difficult to understand the entire component at once
+2. **Testing challenges** - Hard to unit test individual sections
+3. **Merge conflicts** - Multiple developers editing the same large file
+4. **Performance concerns** - Entire component re-renders on any state change
 
 ---
 
 ## Proposed Architecture
 
 ### Directory Structure
-
 ```
 src/widget/
 ├── ChatWidget.tsx              # Main orchestrator (~200 lines)
-├── types.ts                    # Shared TypeScript interfaces
-├── constants.ts                # CSS variables, config defaults
+├── types.ts                    # All TypeScript interfaces
+├── constants.ts                # CSS vars, position classes, lazy imports
 ├── utils/
-│   ├── index.ts
-│   ├── traffic-detection.ts    # detectEntryType, parseUtmParams
-│   ├── formatting.ts           # formatTimestamp, sanitization
-│   └── validation.ts           # Form validation functions
+│   ├── detection.ts            # isIframeMode, getIsMobileFullScreen, isInternalWidgetUrl
+│   ├── formatting.ts           # formatShortTime, message formatting
+│   ├── gradient.ts             # generateBrandColorPalette
+│   ├── phone.ts                # parseAndFormatPhoneNumber, detectCountry
+│   └── validation.ts           # validateContactForm
 ├── hooks/
-│   ├── index.ts
-│   ├── useWidgetConfig.ts      # Config fetching & state
-│   ├── useConversations.ts     # Conversation CRUD & localStorage
-│   ├── useMessages.ts          # Message state & real-time sync
-│   ├── useRealtime.ts          # Supabase subscriptions
-│   ├── usePageTracking.ts      # Page visits & referrer journey
-│   ├── useVisitorPresence.ts   # Visitor presence broadcasting
+│   ├── useWidgetConfig.ts      # Config fetching and state
+│   ├── useConversations.ts     # Conversation CRUD operations
+│   ├── useMessages.ts          # Message sending, receiving, subscriptions
+│   ├── useMessageReactions.ts  # Reaction updates from subscription
 │   ├── useAudioRecording.ts    # Voice recording logic
-│   └── useContactForm.ts       # Form state & submission
+│   ├── useFileAttachment.ts    # File upload handling
+│   ├── usePageTracking.ts      # Analytics, page visits, referrer journey
+│   ├── useParentMessages.ts    # postMessage communication with parent
+│   ├── useWidgetResize.ts      # ResizeObserver for iframe height
+│   ├── useTypingIndicator.ts   # Supabase presence for typing
+│   └── useHumanTakeover.ts     # Takeover detection and notices
 ├── views/
-│   ├── index.ts
-│   ├── HomeView.tsx            # Home screen with announcements
-│   ├── MessagesView.tsx        # Chat interface container
-│   ├── HelpView.tsx            # Help center container
-│   └── ConversationList.tsx    # Previous conversations list
-├── components/
-│   ├── index.ts
-│   ├── WidgetHeader.tsx        # Header for non-home views
-│   ├── HomeHeader.tsx          # Gradient header with logo
-│   ├── BottomNav.tsx           # Navigation tabs
-│   ├── MessageBubble.tsx       # Individual message component
-│   ├── MessageList.tsx         # Messages container with scroll
-│   ├── MessageInput.tsx        # Input area with attachments
-│   ├── ContactForm.tsx         # New user contact form
-│   ├── TypingIndicator.tsx     # Typing dots animation
-│   ├── TakeoverBanner.tsx      # Human takeover notice
-│   ├── QuickActions.tsx        # Quick action cards
-│   ├── Announcements.tsx       # Announcement cards
-│   ├── CategoryList.tsx        # Help categories
-│   ├── ArticleList.tsx         # Articles in category
-│   ├── ArticleContent.tsx      # Article with feedback
-│   └── BrandingFooter.tsx      # "Powered by ChatPad"
-└── api.ts                      # (existing) API functions
+│   ├── HomeView.tsx            # Home screen with announcements (~250 lines)
+│   ├── MessagesView.tsx        # Conversation list (~150 lines)
+│   ├── ChatView.tsx            # Active conversation (~200 lines)
+│   └── help/
+│       ├── HelpView.tsx        # Help center orchestrator (~100 lines)
+│       ├── CategoryList.tsx    # Category grid (~80 lines)
+│       ├── ArticleList.tsx     # Articles in category (~80 lines)
+│       ├── ArticleContent.tsx  # Full article with hero (~120 lines)
+│       └── ArticleFeedback.tsx # Helpful/not helpful form (~80 lines)
+└── components/
+    ├── ContactForm.tsx         # User info collection (~300 lines)
+    ├── MessageBubble.tsx       # Single message display (~200 lines)
+    ├── MessageInput.tsx        # Text input with actions (~180 lines)
+    ├── MessageReactions.tsx    # Emoji reactions (lazy, existing)
+    ├── WidgetHeader.tsx        # Header with nav (~120 lines)
+    ├── WidgetNav.tsx           # Bottom navigation (~80 lines)
+    ├── TakeoverBanner.tsx      # Human takeover notice (~60 lines)
+    ├── TypingIndicator.tsx     # Agent typing dots (~50 lines)
+    ├── AnnouncementCard.tsx    # Single announcement (~60 lines)
+    └── FloatingButton.tsx      # Chat open/close button (~80 lines)
 ```
 
 ---
 
 ## Component Specifications
 
-### 1. Main Orchestrator: `ChatWidget.tsx`
+### 1. ChatWidget.tsx (Orchestrator)
+**Target: <200 lines**
 
-**Responsibility**: Compose views, manage top-level state, handle parent window communication
+Responsibilities:
+- Render mode detection (iframe vs containedPreview vs default)
+- Top-level state coordination
+- View routing (home, messages, chat, help)
+- Lazy component orchestration
+- CSS variable injection
 
-**Lines Target**: ~200 lines
+Does NOT contain:
+- Business logic (moved to hooks)
+- Complex UI rendering (moved to views/components)
+- Direct Supabase calls
 
-```tsx
-// Simplified structure
-export const ChatWidget = (props) => {
-  // 1. Top-level state: currentView, isOpen, config
-  // 2. Custom hooks for all feature logic
-  // 3. Parent window message handling
-  // 4. Render: switch on currentView
-};
-```
-
-### 2. Types: `types.ts`
-
-Extract all interfaces:
+### 2. types.ts
+**Target: ~150 lines**
 
 ```typescript
-export interface ChatUser { ... }
-export interface Message { ... }
+// Core types
+export interface WidgetConfig { ... }
 export interface Conversation { ... }
-export interface PageVisit { ... }
-export type ViewType = 'home' | 'messages' | 'help';
+export interface Message { ... }
+export interface ChatUser { ... }
+export interface ReferrerJourney { ... }
+export interface CustomField { ... }
+export interface HelpCategory { ... }
+export interface HelpArticle { ... }
+export interface Announcement { ... }
+
+// View types
+export type WidgetView = 'home' | 'messages' | 'chat' | 'help';
+export type HelpSubView = 'categories' | 'articles' | 'article';
+
+// Render modes
+export type RenderMode = 'iframe' | 'contained' | 'default';
 ```
 
-### 3. Custom Hooks
+### 3. constants.ts
+**Target: ~80 lines**
 
-#### `useWidgetConfig.ts`
-- Config fetching for simple config mode
-- Config state management
-- Loading states
+```typescript
+// CSS variable injection
+export const WIDGET_CSS_VARS = { ... };
 
-#### `useConversations.ts`
-- Conversation CRUD operations
-- localStorage persistence
-- Active conversation tracking
+// Position classes
+export const POSITION_CLASSES = { ... };
 
-#### `useMessages.ts`
-- Message state
-- Real-time subscription to new messages
-- Read receipts management
+// Lazy-loaded components
+export const LazyBubbleBackground = lazy(() => import('./components/BubbleBackground'));
+export const LazyVoiceInput = lazy(() => import('./components/VoiceInput'));
+export const LazyFileDropZone = lazy(() => import('./components/FileDropZone'));
+export const LazyAudioPlayer = lazy(() => import('./components/AudioPlayer'));
+export const LazyMessageReactions = lazy(() => import('./components/MessageReactions'));
+```
 
-#### `useRealtime.ts`
-- Supabase channel subscriptions
-- Status change handling
-- Typing indicator subscriptions
+---
 
-#### `usePageTracking.ts`
-- Page visit tracking
-- Referrer journey capture
-- Parent window URL syncing
+## Hooks Specifications
 
-#### `useVisitorPresence.ts`
-- Presence channel management
-- Visitor state broadcasting
+### useWidgetConfig.ts (~100 lines)
+```typescript
+interface UseWidgetConfigReturn {
+  config: WidgetConfig | null;
+  isLoading: boolean;
+  error: Error | null;
+  gradientPalette: string[];
+}
+```
+- Fetches config from edge function or receives via postMessage
+- Generates gradient palette from brand colors
+- Handles config updates
 
-#### `useAudioRecording.ts`
-- MediaRecorder management
-- Recording timer
-- Stop/cancel logic
+### useConversations.ts (~150 lines)
+```typescript
+interface UseConversationsReturn {
+  conversations: Conversation[];
+  activeConversation: Conversation | null;
+  createConversation: () => Promise<Conversation>;
+  selectConversation: (id: string) => void;
+  clearUnread: (id: string) => void;
+}
+```
+- CRUD operations for conversations
+- LocalStorage persistence
+- Real-time subscription for status changes
 
-#### `useContactForm.ts`
-- Form validation
-- Spam protection (honeypot, timing)
-- Lead creation
+### useMessages.ts (~200 lines)
+```typescript
+interface UseMessagesReturn {
+  messages: Message[];
+  isLoading: boolean;
+  isSending: boolean;
+  sendMessage: (content: string, attachments?: File[]) => Promise<void>;
+  sendVoiceMessage: (blob: Blob) => Promise<void>;
+}
+```
+- Message fetching and sending
+- Real-time subscription for new messages
+- Optimistic updates
+- Read receipt tracking
 
-### 4. View Components
+### useMessageReactions.ts (~80 lines)
+```typescript
+interface UseMessageReactionsReturn {
+  updateReaction: (messageId: string, emoji: string) => Promise<void>;
+}
+```
+- Extracts reaction handling from message subscription
+- Server-side reaction updates
 
-#### `HomeView.tsx` (~150 lines)
-- Gradient background with bubble animation
-- Welcome text with scroll fade
-- Announcements list
-- Quick actions list
-- Branding footer
+### useAudioRecording.ts (~120 lines)
+```typescript
+interface UseAudioRecordingReturn {
+  isRecording: boolean;
+  recordingTime: number;
+  startRecording: () => Promise<void>;
+  stopRecording: () => Promise<Blob>;
+  cancelRecording: () => void;
+}
+```
+- Controlled component pattern (state in hook)
+- MediaRecorder API handling
+- Timer management
 
-#### `MessagesView.tsx` (~100 lines)
-- Conditional: show conversation list OR active chat
-- Delegates to child components
+### useFileAttachment.ts (~100 lines)
+```typescript
+interface UseFileAttachmentReturn {
+  selectedFiles: File[];
+  addFiles: (files: FileList) => void;
+  removeFile: (index: number) => void;
+  clearFiles: () => void;
+  uploadFiles: () => Promise<string[]>;
+}
+```
+- File selection and validation
+- Supabase storage upload
+- Progress tracking
 
-#### `ConversationList.tsx` (~80 lines)
-- List of previous conversations
+### usePageTracking.ts (~150 lines)
+```typescript
+interface UsePageTrackingReturn {
+  trackPageVisit: (url: string) => void;
+  sendReferrerJourney: () => void;
+}
+```
+- Page visit duration tracking
+- Referrer journey capture (fallback included)
+- Debounced server updates
+- Internal URL filtering
+
+### useParentMessages.ts (~120 lines)
+```typescript
+interface UseParentMessagesReturn {
+  parentPageUrl: string | null;
+  sendUnreadCount: (count: number) => void;
+  sendWidgetReady: () => void;
+  sendCloseRequest: () => void;
+}
+```
+- postMessage listener for parent window
+- Widget open/close from parent
+- Unread badge notifications
+- Ready handshake signal
+
+### useWidgetResize.ts (~60 lines)
+```typescript
+interface UseWidgetResizeReturn {
+  containerRef: RefObject<HTMLDivElement>;
+}
+```
+- ResizeObserver for iframe height
+- Posts height to parent window
+
+### useTypingIndicator.ts (~100 lines)
+```typescript
+interface UseTypingIndicatorReturn {
+  isAgentTyping: boolean;
+  agentTypingInfo: { name: string; avatar?: string } | null;
+  setUserTyping: (isTyping: boolean) => void;
+}
+```
+- Supabase Presence channel
+- Debounced typing broadcasts
+- Agent typing detection
+
+### useHumanTakeover.ts (~80 lines)
+```typescript
+interface UseHumanTakeoverReturn {
+  isTakenOver: boolean;
+  takeoverAgent: { name: string; avatar?: string } | null;
+  hasShownNotice: boolean;
+  markNoticeShown: () => void;
+}
+```
+- Takeover status tracking
+- Agent info fetching
+- Notice deduplication via ref
+
+---
+
+## View Specifications
+
+### HomeView.tsx (~250 lines)
+- Announcements carousel with CSSAnimatedList
+- Quick intro for new users (contact form trigger)
+- Recent conversations preview
+- Help categories preview
+- BubbleBackground (lazy-loaded)
+
+### MessagesView.tsx (~150 lines)
+- Conversation list with previews
+- Unread indicators
 - "Start New Conversation" button
+- Empty state for no conversations
 
-#### `HelpView.tsx` (~100 lines)
-- Three-level navigation state
-- Search input
-- Delegates to CategoryList, ArticleList, ArticleContent
+### ChatView.tsx (~200 lines)
+- Message list with auto-scroll
+- Takeover banner (conditional)
+- Typing indicator
+- Contact form overlay (conditional)
+- MessageInput component
 
-### 5. UI Components
+### HelpView.tsx (~100 lines)
+- Sub-view routing (categories → articles → article)
+- Search functionality
+- Back navigation
+- Orchestrates help sub-components
 
-#### `MessageBubble.tsx` (~120 lines)
-- User vs assistant styling
-- Human takeover styling
-- System notice styling
-- Reactions display
-- Read receipts
-- Audio player integration
+---
 
-#### `MessageInput.tsx` (~80 lines)
-- Text input
-- Attachment button
+## Component Specifications
+
+### ContactForm.tsx (~300 lines)
+Complex form handling:
+- Standard fields (name, email, phone)
+- Custom fields (text, textarea, select, checkbox)
+- Phone input with country detection
+- Honeypot spam protection
+- Timing-based spam protection
+- Form validation (inline, no zod)
+- Disabled input state until form submitted
+
+### MessageBubble.tsx (~200 lines)
+- Role-based styling (user, assistant, human, system)
+- Avatar display for human messages
+- Read receipts with tooltips
+- Emoji reactions (lazy-loaded)
+- Takeover notice rendering
+- Audio player for voice messages
+- Link/HTML sanitization with DOMPurify
+
+### MessageInput.tsx (~180 lines)
+- Text input with auto-resize
+- File attachment button
 - Voice record button
 - Send button
-- Disabled state for contact form
+- Disabled state (no chatUser + enableContactForm)
+- Keyboard shortcuts (Enter to send)
 
-#### `ContactForm.tsx` (~150 lines)
-- Standard fields (name, email)
-- Custom fields rendering
-- Phone input with country detection
-- Validation & error display
-- Honeypot field
+### WidgetHeader.tsx (~120 lines)
+- Agent name and avatar
+- Status indicator
+- Close button (X icon)
+- Gradient background integration
 
-#### `TypingIndicator.tsx` (~40 lines)
-- Bouncing dots animation
-- Human vs AI styling
+### WidgetNav.tsx (~80 lines)
+- Bottom navigation tabs
+- Icon fill animation (existing pattern)
+- Unread badge on messages
+- Active state styling
+
+### TakeoverBanner.tsx (~60 lines)
+- Agent avatar and name
+- "You're chatting with [Name]" message
+- Styled banner at top of chat
+
+### TypingIndicator.tsx (~50 lines)
 - Agent name display
+- Animated dots
+- Blue styling for human agents
 
-#### `TakeoverBanner.tsx` (~30 lines)
-- Blue banner with avatar
-- Agent name display
+### FloatingButton.tsx (~80 lines)
+- Fixed position (configurable corner)
+- Open/close toggle
+- Unread count badge
+- ChatPad logo / X icon states
+
+---
+
+## Utility Specifications
+
+### utils/detection.ts (~50 lines)
+```typescript
+export function isIframeMode(): boolean;
+export function getIsMobileFullScreen(): boolean;
+export function isInternalWidgetUrl(url: string): boolean;
+export function getRenderMode(isIframe: boolean, containedPreview: boolean): RenderMode;
+```
+
+### utils/formatting.ts (~60 lines)
+```typescript
+export function formatShortTime(date: Date): string;
+export function formatSenderName(name: string): string;
+export function truncateMessage(content: string, maxLength: number): string;
+```
+
+### utils/gradient.ts (~80 lines)
+```typescript
+export function generateBrandColorPalette(
+  startColor: string,
+  endColor: string
+): string[];
+export function lightenColor(color: string, amount: number): string;
+export function darkenColor(color: string, amount: number): string;
+export function blendColors(color1: string, color2: string): string;
+```
+
+### utils/phone.ts (~100 lines)
+```typescript
+export function parseAndFormatPhoneNumber(value: string): {
+  formatted: string;
+  country: string | null;
+  countryFlag: string | null;
+};
+export function detectCountryFromNumber(value: string): string | null;
+```
+
+### utils/validation.ts (~60 lines)
+```typescript
+export function validateEmail(email: string): boolean;
+export function validateName(name: string): boolean;
+export function validatePhone(phone: string): boolean;
+export function validateRequiredField(value: string, field: CustomField): boolean;
+```
+
+---
+
+## Ref Migration Notes
+
+Critical refs that need careful handling during extraction:
+
+| Ref | Purpose | Target Location |
+|-----|---------|-----------------|
+| `shownTakeoverNoticeRef` | Prevents duplicate takeover notices | `useHumanTakeover.ts` |
+| `isOpeningConversationRef` | Instant vs smooth scroll | `ChatView.tsx` |
+| `referrerJourneySentRef` | Prevents duplicate server calls | `usePageTracking.ts` |
+| `currentPageRef` | Page visit duration tracking | `usePageTracking.ts` |
+| `messageChannelRef` | Supabase subscription cleanup | `useMessages.ts` |
+| `conversationChannelRef` | Supabase subscription cleanup | `useConversations.ts` |
+| `presenceChannelRef` | Typing indicator cleanup | `useTypingIndicator.ts` |
+| `inputRef` | Focus management | `MessageInput.tsx` |
+| `messagesEndRef` | Auto-scroll target | `ChatView.tsx` |
+| `containerRef` | ResizeObserver target | `useWidgetResize.ts` |
+
+---
+
+## Render Mode Handling
+
+The widget operates in three distinct modes:
+
+### 1. Iframe Mode (`isIframeMode = true`)
+- Embedded in parent website via iframe
+- Full container, no fixed positioning
+- Communicates via postMessage
+- Height updates sent to parent
+
+### 2. Contained Preview (`containedPreview = true`)
+- Admin embed tab preview
+- Absolute positioning relative to parent
+- No parent communication
+- Uses app color scheme
+
+### 3. Default Mode
+- Direct access (widget.html)
+- Fixed positioning with floating button
+- No parent communication
+- Standalone operation
+
+**Orchestrator must detect mode and pass to child components.**
 
 ---
 
 ## Refactoring Phases
 
-### Phase 1: Extract Types & Utils (Low Risk)
-**Estimated Effort**: 1-2 hours
-
+### Phase 1: Extract Types & Utils (2-3 hours)
 1. Create `types.ts` with all interfaces
-2. Create `utils/traffic-detection.ts`
-3. Create `utils/formatting.ts`
-4. Create `constants.ts` with CSS variables
-5. Update imports in ChatWidget.tsx
+2. Create `constants.ts` with CSS vars, lazy imports
+3. Create `utils/detection.ts`
+4. Create `utils/formatting.ts`
+5. Create `utils/gradient.ts`
+6. Create `utils/phone.ts`
+7. Create `utils/validation.ts`
+8. Update imports in ChatWidget.tsx
+9. **Test**: Widget functions identically
 
-**Testing**: Widget should function identically
+### Phase 2: Extract Custom Hooks (6-8 hours)
+1. `useWidgetConfig.ts` - Config fetching
+2. `useParentMessages.ts` - postMessage handling
+3. `useWidgetResize.ts` - ResizeObserver
+4. `usePageTracking.ts` - Analytics
+5. `useTypingIndicator.ts` - Presence
+6. `useHumanTakeover.ts` - Takeover detection
+7. `useAudioRecording.ts` - Voice recording
+8. `useFileAttachment.ts` - File uploads
+9. `useConversations.ts` - Conversation CRUD
+10. `useMessages.ts` - Message handling
+11. `useMessageReactions.ts` - Reactions
+12. **Test**: All hooks work correctly
 
-### Phase 2: Extract Custom Hooks (Medium Risk)
-**Estimated Effort**: 4-6 hours
+### Phase 3: Extract UI Components (5-6 hours)
+1. `FloatingButton.tsx`
+2. `WidgetHeader.tsx`
+3. `WidgetNav.tsx`
+4. `TakeoverBanner.tsx`
+5. `TypingIndicator.tsx`
+6. `AnnouncementCard.tsx`
+7. `MessageBubble.tsx`
+8. `MessageInput.tsx`
+9. `ContactForm.tsx`
+10. **Test**: All components render correctly
 
-1. `useAudioRecording.ts` - Most isolated, low dependencies
-2. `usePageTracking.ts` - Self-contained tracking logic
-3. `useVisitorPresence.ts` - Isolated presence logic
-4. `useContactForm.ts` - Form-specific logic
-5. `useConversations.ts` - Conversation state management
-6. `useMessages.ts` - Message state and subscriptions
-7. `useRealtime.ts` - All Supabase subscriptions
-8. `useWidgetConfig.ts` - Config fetching
+### Phase 4: Extract View Components (3-4 hours)
+1. `HomeView.tsx`
+2. `MessagesView.tsx`
+3. `ChatView.tsx`
+4. `help/HelpView.tsx`
+5. `help/CategoryList.tsx`
+6. `help/ArticleList.tsx`
+7. `help/ArticleContent.tsx`
+8. `help/ArticleFeedback.tsx`
+9. **Test**: All views function correctly
 
-**Testing**: Verify all real-time features, message sending, recording
-
-### Phase 3: Extract UI Components (Medium Risk)
-**Estimated Effort**: 3-4 hours
-
-1. `MessageBubble.tsx` - Most reused component
-2. `TypingIndicator.tsx` - Small, isolated
-3. `TakeoverBanner.tsx` - Small, isolated
-4. `MessageInput.tsx` - Input area
-5. `ContactForm.tsx` - Form component
-6. `BottomNav.tsx` - Navigation tabs
-7. `QuickActions.tsx` & `Announcements.tsx`
-8. `BrandingFooter.tsx`
-
-**Testing**: Verify all UI interactions, styling
-
-### Phase 4: Extract View Components (Medium Risk)
-**Estimated Effort**: 2-3 hours
-
-1. `HomeView.tsx` - Largest view
-2. `ConversationList.tsx`
-3. `HelpView.tsx` with sub-components
-4. `MessagesView.tsx` - Composition component
-
-**Testing**: Verify view transitions, scroll behavior
-
-### Phase 5: Final Cleanup (Low Risk)
-**Estimated Effort**: 1-2 hours
-
-1. Review ChatWidget.tsx (~200 lines target)
-2. Add barrel exports (`index.ts` files)
-3. Remove dead code
-4. Add JSDoc comments to hooks
+### Phase 5: Final Cleanup (2-3 hours)
+1. Reduce ChatWidget.tsx to orchestrator only
+2. Remove dead code
+3. Optimize imports
+4. Add JSDoc comments
+5. Final testing pass
 
 ---
 
-## Risk Mitigation
+## Testing Strategy
 
-### Testing Strategy
+### Manual Testing Checklist
 
-1. **Before Each Phase**: 
-   - Document current behavior with screenshots
-   - Test all user flows manually
+#### Core Functionality
+- [ ] Widget opens/closes correctly
+- [ ] Contact form submits and creates lead
+- [ ] Messages send and receive
+- [ ] Voice messages record and send
+- [ ] File attachments upload
+- [ ] Conversations persist across sessions
 
-2. **After Each Phase**:
-   - Verify same behavior
-   - Check bundle size hasn't increased significantly
-   - Test real-time features (human takeover, typing indicators)
+#### Render Modes
+- [ ] Iframe mode: Height updates, postMessage works
+- [ ] Contained preview: Absolute positioning correct
+- [ ] Default mode: Fixed positioning, floating button
 
-### Critical Paths to Test
+#### Real-time Features
+- [ ] New messages appear instantly
+- [ ] Typing indicators show/hide
+- [ ] Human takeover banner appears
+- [ ] Message reactions sync
+- [ ] Read receipts update
 
-- [ ] New user: Contact form → First message → AI response
-- [ ] Returning user: Conversation list → Open conversation → Continue chat
-- [ ] Human takeover: Banner appears → Human messages display → Typing indicator
-- [ ] Voice recording: Start → Stop → Message sent
-- [ ] File attachment: Attach → Preview → Send
-- [ ] Help center: Categories → Articles → Feedback
-- [ ] Real-time: Messages sync across widget instances
+#### Help Center
+- [ ] Categories display with icons
+- [ ] Articles list correctly
+- [ ] Article content renders (rich text)
+- [ ] Article feedback submits
+- [ ] Search works
 
-### Rollback Plan
+#### Edge Cases
+- [ ] Mobile full-screen mode
+- [ ] Returning user recognition
+- [ ] Closed conversation handling
+- [ ] Spam protection triggers
+- [ ] Phone number formatting
 
-Each phase is atomic. If issues arise:
-1. Revert the phase's commits
-2. Deploy previous working version
-3. Investigate in development environment
+#### Parent Communication
+- [ ] Widget ready handshake
+- [ ] Unread badge updates
+- [ ] Close request from parent
+- [ ] Page URL tracking
+
+### Automated Tests (Future)
+- Unit tests for utility functions
+- Hook tests with React Testing Library
+- Component snapshot tests
+- Integration tests for critical flows
 
 ---
 
 ## Bundle Size Considerations
 
-Current widget bundle: ~50KB gzipped
+### Current State
+- Widget bundle: ~50KB gzipped
+- Lazy-loaded extras: ~40KB (BubbleBackground, VoiceInput, etc.)
 
-**Goal**: No increase (ideally slight decrease from tree-shaking)
+### Target
+- No increase to initial bundle
+- Maintain lazy loading for heavy components
+- Tree-shaking friendly exports
 
-**Strategies**:
-- Keep all lazy loading in place
-- Don't add new dependencies
-- Use barrel exports sparingly (can prevent tree-shaking)
-- Consider dynamic imports for views if needed
+### Monitoring
+- Check bundle size after each phase
+- Use `vite-bundle-visualizer` if needed
+- Revert if bundle increases >5%
 
 ---
 
@@ -327,28 +588,47 @@ Current widget bundle: ~50KB gzipped
 
 | Metric | Current | Target |
 |--------|---------|--------|
-| ChatWidget.tsx lines | 2,489 | <250 |
-| Largest component | 2,489 | <200 |
-| Files in widget/ | 4 | 25-30 |
+| ChatWidget.tsx lines | 2,489 | <200 |
+| Largest component | 2,489 | <300 |
+| Files in widget directory | 8 | 35-40 |
 | Bundle size (gzipped) | ~50KB | ≤50KB |
-| Test coverage | 0% | Ready for unit tests |
+| Unit test coverage | 0% | >60% |
 
 ---
 
-## Timeline Estimate
+## Timeline
 
-| Phase | Duration | Dependencies |
-|-------|----------|--------------|
-| Phase 1: Types & Utils | 1-2 hours | None |
-| Phase 2: Custom Hooks | 4-6 hours | Phase 1 |
-| Phase 3: UI Components | 3-4 hours | Phase 2 |
-| Phase 4: View Components | 2-3 hours | Phase 3 |
-| Phase 5: Cleanup | 1-2 hours | Phase 4 |
-| **Total** | **11-17 hours** | |
+| Phase | Estimated Hours |
+|-------|-----------------|
+| Phase 1: Types & Utils | 2-3 |
+| Phase 2: Custom Hooks | 6-8 |
+| Phase 3: UI Components | 5-6 |
+| Phase 4: View Components | 3-4 |
+| Phase 5: Final Cleanup | 2-3 |
+| **Total** | **18-25 hours** |
 
 ---
 
-## Appendix: State Variable Inventory
+## Risk Mitigation
+
+### Before Each Phase
+1. Commit current working state
+2. Document expected behavior
+3. Prepare rollback plan
+
+### During Refactoring
+1. Make small, incremental changes
+2. Test after each extraction
+3. Keep ChatWidget.tsx functional at all times
+
+### If Issues Arise
+1. Git revert to last working commit
+2. Identify what broke
+3. Fix before proceeding
+
+---
+
+## State Variable Inventory
 
 ### Core Widget State
 - `config` - Widget configuration
@@ -398,6 +678,16 @@ Current widget bundle: ~50KB gzipped
 ### Form State
 - `formErrors` - Validation errors
 - `formLoadTime` - Spam protection timestamp
+
+---
+
+## Notes
+
+- This is a **code organization** refactor, not a feature change
+- **Zero functional changes** - widget must behave identically
+- Bundle size must remain ≤50KB gzipped
+- All existing memories and patterns remain valid
+- Prioritize maintainability over micro-optimizations
 
 ---
 
