@@ -197,12 +197,12 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
     }
     
     // Debounce save (1 second after typing stops) - silent to avoid toast
+    // Only pass the notes field to avoid overwriting real-time metadata updates
     notesDebounceRef.current = setTimeout(async () => {
-      const currentMetadata = (conversation.metadata || {}) as ConversationMetadata;
-      await onUpdateMetadata(conversation.id, { ...currentMetadata, notes: value }, { silent: true });
+      await onUpdateMetadata(conversation.id, { notes: value }, { silent: true });
       setNotesSaved(true);
     }, 1000);
-  }, [conversation.id, conversation.metadata, onUpdateMetadata]);
+  }, [conversation.id, onUpdateMetadata]);
   
   // Cleanup debounce timer on unmount
   useEffect(() => {
@@ -220,8 +220,8 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
     
     setIsSaving(true);
     try {
+      // Only pass the tags field to avoid overwriting real-time metadata updates
       await onUpdateMetadata(conversation.id, {
-        ...metadata,
         tags: [...currentTags, tag.trim()],
       });
     } finally {
@@ -234,8 +234,8 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
     const currentTags = metadata.tags || [];
     setIsSaving(true);
     try {
+      // Only pass the tags field to avoid overwriting real-time metadata updates
       await onUpdateMetadata(conversation.id, {
-        ...metadata,
         tags: currentTags.filter(t => t !== tagToRemove),
       });
     } finally {
@@ -246,8 +246,8 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
   const handlePriorityChange = async (priority: string) => {
     setIsSaving(true);
     try {
+      // Only pass the priority field to avoid overwriting real-time metadata updates
       await onUpdateMetadata(conversation.id, {
-        ...metadata,
         priority: priority as ConversationMetadata['priority'],
       });
     } finally {

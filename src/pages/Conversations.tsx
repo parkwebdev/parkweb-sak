@@ -5,7 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/Badge';
 
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { SearchMd, MessageChatSquare, User01, Send01, FaceSmile, Globe01 } from '@untitledui/icons';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { SearchMd, MessageChatSquare, User01, Send01, FaceSmile, Globe01, Check, CheckDone02, XCircle } from '@untitledui/icons';
 import { EmptyState } from '@/components/ui/empty-state';
 import { useConversations } from '@/hooks/useConversations';
 import { useAgents } from '@/hooks/useAgents';
@@ -784,17 +785,44 @@ const Conversations: React.FC = () => {
                                     </div>
                                   </PopoverContent>
                                 </Popover>
-                                {/* Time inline with reactions + read receipt for team messages */}
-                                <span className={`text-[10px] text-muted-foreground ml-auto ${isUser ? 'order-first mr-auto ml-0' : ''}`}>
+                                {/* Time inline with reactions + message status for team messages */}
+                                <span className={`text-[10px] text-muted-foreground ml-auto flex items-center gap-0.5 ${isUser ? 'order-first mr-auto ml-0' : ''}`}>
                                   {isHumanSent && msgMetadata?.sender_name && (
                                     <>{formatSenderName(msgMetadata.sender_name)} • </>
                                   )}
                                   {formatShortTime(new Date(message.created_at))}
-                                  {/* Read receipt for human/team messages */}
+                                  {/* Message status for human/team messages: Failed, Sent, Seen */}
                                   {isHumanSent && (
-                                    <span className={`ml-1 ${msgMetadata?.read_at ? 'text-info' : ''}`}>
-                                      ✓
-                                    </span>
+                                    <>
+                                      {msgMetadata?.error || msgMetadata?.failed ? (
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <span className="ml-1 text-destructive inline-flex items-center">
+                                              <XCircle size={12} />
+                                            </span>
+                                          </TooltipTrigger>
+                                          <TooltipContent>Failed</TooltipContent>
+                                        </Tooltip>
+                                      ) : msgMetadata?.read_at ? (
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <span className="ml-1 text-info inline-flex items-center">
+                                              <CheckDone02 size={12} />
+                                            </span>
+                                          </TooltipTrigger>
+                                          <TooltipContent>Seen</TooltipContent>
+                                        </Tooltip>
+                                      ) : (
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <span className="ml-1 inline-flex items-center">
+                                              <Check size={12} />
+                                            </span>
+                                          </TooltipTrigger>
+                                          <TooltipContent>Sent</TooltipContent>
+                                        </Tooltip>
+                                      )}
+                                    </>
                                   )}
                                 </span>
                               </div>
