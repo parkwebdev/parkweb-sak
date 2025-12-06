@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/Badge';
@@ -65,6 +66,21 @@ const Conversations: React.FC = () => {
     agents.forEach(a => { map[a.id] = a.name; });
     return map;
   }, [agents]);
+
+  // Fetch current user's profile for optimistic message updates
+  const { data: userProfile } = useQuery({
+    queryKey: ['profile', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data } = await supabase
+        .from('profiles')
+        .select('display_name, avatar_url')
+        .eq('user_id', user.id)
+        .single();
+      return data;
+    },
+    enabled: !!user?.id,
+  });
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
@@ -354,14 +370,22 @@ const Conversations: React.FC = () => {
     const content = messageInput.trim();
     const tempId = `temp-${Date.now()}`;
     
-    // Optimistic update: show message instantly
+    // Optimistic update: show message instantly with sender info to prevent flicker
+    const senderName = userProfile?.display_name || user?.email || 'Team Member';
+    const senderAvatar = userProfile?.avatar_url || null;
+    
     const tempMessage: Message = {
       id: tempId,
       conversation_id: selectedConversation.id,
       role: 'assistant',
       content,
       created_at: new Date().toISOString(),
-      metadata: { sender_type: 'human', pending: true }
+      metadata: { 
+        sender_type: 'human', 
+        pending: true,
+        sender_name: senderName,
+        sender_avatar: senderAvatar,
+      }
     };
     
     // Mark temp message as new for animation

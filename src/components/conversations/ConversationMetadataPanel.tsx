@@ -257,15 +257,40 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
     }
   };
 
-  const getDeviceIcon = () => {
-    switch (metadata.device_type) {
-      case 'mobile':
-        return '📱';
-      case 'tablet':
-        return '📱';
-      default:
-        return '💻';
-    }
+  // Map common country names to country codes for flag display
+  const getCountryCode = (countryName: string | undefined): string | null => {
+    if (!countryName) return null;
+    const countryMap: Record<string, string> = {
+      'United States': 'US',
+      'United Kingdom': 'GB',
+      'Canada': 'CA',
+      'Australia': 'AU',
+      'Germany': 'DE',
+      'France': 'FR',
+      'Spain': 'ES',
+      'Italy': 'IT',
+      'Netherlands': 'NL',
+      'Brazil': 'BR',
+      'Mexico': 'MX',
+      'Japan': 'JP',
+      'China': 'CN',
+      'India': 'IN',
+      'South Korea': 'KR',
+      'Russia': 'RU',
+      'Poland': 'PL',
+      'Sweden': 'SE',
+      'Norway': 'NO',
+      'Denmark': 'DK',
+      'Finland': 'FI',
+      'Ireland': 'IE',
+      'New Zealand': 'NZ',
+      'Singapore': 'SG',
+      'Portugal': 'PT',
+      'Belgium': 'BE',
+      'Austria': 'AT',
+      'Switzerland': 'CH',
+    };
+    return countryMap[countryName] || null;
   };
 
   // Build accordion default values - always open contact and session
@@ -453,17 +478,17 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <div className="flex items-center gap-2.5 text-sm">
-                        {metadata.country_code ? (
+                        {(metadata.country_code || getCountryCode(metadata.country)) ? (
                           <img 
-                            src={`https://flagcdn.com/${metadata.country_code.toLowerCase()}.svg`}
-                            alt={metadata.country_code}
+                            src={`https://flagcdn.com/${(metadata.country_code || getCountryCode(metadata.country))!.toLowerCase()}.svg`}
+                            alt={metadata.country_code || getCountryCode(metadata.country) || ''}
                             className="h-3 w-auto flex-shrink-0"
                           />
                         ) : (
                           <Globe01 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                         )}
                         <span>
-                          {metadata.country_code === 'US' 
+                          {(metadata.country_code || getCountryCode(metadata.country)) === 'US' 
                             ? `${metadata.city || ''}${metadata.city && metadata.region ? ', ' : ''}${metadata.region || ''}`
                             : `${metadata.city ? `${metadata.city}, ` : ''}${metadata.country}`
                           }
@@ -481,7 +506,7 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
                       <div className="flex items-center gap-2.5 text-sm">
                         <Monitor01 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                         <span className="capitalize">
-                          {getDeviceIcon()} {metadata.device_type || metadata.device}
+                          {metadata.device_type || metadata.device}
                           {metadata.browser && ` • ${metadata.browser}`}
                         </span>
                       </div>
