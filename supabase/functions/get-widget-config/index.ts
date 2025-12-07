@@ -98,7 +98,6 @@ Deno.serve(async (req) => {
     const deploymentConfig = (agent.deployment_config as any) || {};
     const embeddedChatConfig = deploymentConfig.embedded_chat || {};
     const enableNewsTab = agent.enable_news_tab || embeddedChatConfig.enableNewsTab || false;
-    const embeddedChatConfig = deploymentConfig.embedded_chat || {};
 
     // Transform quick actions to match widget format
     const quickActions = (embeddedChatConfig.quickActions || [
