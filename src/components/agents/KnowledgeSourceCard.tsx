@@ -2,7 +2,8 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { File06, Link03, Database01, Trash01, RefreshCcw01, CheckCircle, XCircle, Clock } from '@untitledui/icons';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { File06, Link03, Database01, Trash01, RefreshCcw01, CheckCircle, XCircle, Clock, AlertCircle } from '@untitledui/icons';
 import { formatDistanceToNow } from 'date-fns';
 import type { Tables } from '@/integrations/supabase/types';
 
@@ -10,6 +11,7 @@ interface KnowledgeSourceCardProps {
   source: Tables<'knowledge_sources'>;
   onDelete: (id: string) => void;
   onReprocess: (id: string) => void;
+  isOutdated?: boolean;
 }
 
 const typeIcons = {
@@ -37,6 +39,7 @@ export const KnowledgeSourceCard: React.FC<KnowledgeSourceCardProps> = ({
   source,
   onDelete,
   onReprocess,
+  isOutdated = false,
 }) => {
   const Icon = typeIcons[source.type as keyof typeof typeIcons] || Database01;
   const StatusIcon = statusIcons[source.status as keyof typeof statusIcons] || Clock;
@@ -75,6 +78,19 @@ export const KnowledgeSourceCard: React.FC<KnowledgeSourceCardProps> = ({
                   <StatusIcon className="h-3 w-3 mr-1" />
                   {source.status}
                 </Badge>
+                {isOutdated && source.status === 'ready' && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Badge variant="outline" className="text-warning border-warning">
+                        <AlertCircle className="h-3 w-3 mr-1" />
+                        Outdated
+                      </Badge>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>This source uses an older embedding model. Click "Retrain AI" to update.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                )}
               </div>
             </div>
           </div>
