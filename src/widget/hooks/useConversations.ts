@@ -185,20 +185,27 @@ export function useConversations(options: UseConversationsOptions) {
     const hasValidConversation = isValidUUID(activeConversationId);
     
     if (currentView === 'messages' && hasValidConversation && isOpen) {
+      // Immediately mark messages as read locally (optimistic update)
+      setMessages(prev => prev.map(m => 
+        m.role === 'assistant' && !m.read 
+          ? { ...m, read: true } 
+          : m
+      ));
+      
+      // Update localStorage timestamp immediately
+      const readKey = `chatpad_last_read_${agentId}_${activeConversationId}`;
+      localStorage.setItem(readKey, new Date().toISOString());
+      
+      // Then sync with server
       const timer = setTimeout(async () => {
         const result = await markMessagesRead(activeConversationId, 'user');
         if (result.success && result.updated && result.updated > 0) {
-          console.log('[Widget] Marked', result.updated, 'messages as read');
-          setMessages(prev => prev.map(m => 
-            m.role === 'assistant' && !m.read 
-              ? { ...m, read: true } 
-              : m
-          ));
+          console.log('[Widget] Server confirmed', result.updated, 'messages as read');
         }
       }, 500);
       return () => clearTimeout(timer);
     }
-  }, [currentView, activeConversationId, isOpen, messages.length]);
+  }, [currentView, activeConversationId, isOpen, agentId]); // Removed messages.length to prevent constant re-runs
 
   // Reset fetched ref when clearing messages (switching conversations)
   const clearMessagesAndFetch = (conversationId: string) => {
