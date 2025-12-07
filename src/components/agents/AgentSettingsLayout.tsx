@@ -45,6 +45,7 @@ interface AgentSettingsLayoutContentProps<T extends string = string> {
   menuItems: Array<{ id: T; label: string }>;
   title: string;
   description: string;
+  headerExtra?: React.ReactNode;
 }
 
 export const AgentSettingsLayout = <T extends string = string>({
@@ -55,6 +56,7 @@ export const AgentSettingsLayout = <T extends string = string>({
   menuItems,
   title,
   description,
+  headerExtra,
 }: AgentSettingsLayoutContentProps<T>) => {
   return (
     <div className="flex flex-col lg:flex-row gap-4 lg:gap-8 w-full h-full min-h-0 flex-1">
@@ -107,7 +109,10 @@ export const AgentSettingsLayout = <T extends string = string>({
       <div className="hidden lg:block w-56 flex-shrink-0">
         <div className="sticky top-8">
           <div className="mb-6">
-            <h2 className="text-base font-semibold text-foreground mb-1">{title}</h2>
+            <div className="flex items-center justify-between gap-2 mb-1">
+              <h2 className="text-base font-semibold text-foreground">{title}</h2>
+              {headerExtra}
+            </div>
             <AnimatePresence mode="wait">
               <motion.p 
                 key={description}

@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Trash01, ChevronDown, Link03, Eye, FlipBackward, Lightbulb01, Edit03 } from '@untitledui/icons';
+import { Trash01, ChevronDown, Link03, Eye, FlipBackward, Lightbulb01, Edit03, Tool02 } from '@untitledui/icons';
 import { EmptyState } from '@/components/ui/empty-state';
 import { CreateToolDialog } from '@/components/agents/CreateToolDialog';
 import { EditToolDialog } from '@/components/agents/EditToolDialog';
@@ -25,6 +25,7 @@ import { SavedIndicator } from '@/components/settings/SavedIndicator';
 import { AgentApiKeyManager } from '@/components/agents/AgentApiKeyManager';
 import { ApiUseCasesModal } from '@/components/agents/ApiUseCasesModal';
 import { ToolUseCasesModal } from '@/components/agents/ToolUseCasesModal';
+import { DebugConsole, useDebugLogs } from '@/components/agents/DebugConsole';
 
 type AgentTool = Tables<'agent_tools'>;
 type ToolsTab = 'api-access' | 'custom-tools' | 'webhooks';
@@ -42,6 +43,10 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
   const [showUseCasesModal, setShowUseCasesModal] = useState(false);
   const [showToolUseCasesModal, setShowToolUseCasesModal] = useState(false);
   const [showCreateToolDialog, setShowCreateToolDialog] = useState(false);
+  
+  // Debug mode state
+  const [debugMode, setDebugMode] = useState(false);
+  const { logs: debugLogs, log: debugLog, clear: clearDebugLogs } = useDebugLogs();
   
   // Edit tool state
   const [editingTool, setEditingTool] = useState<AgentTool | null>(null);
@@ -218,6 +223,16 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
     setTestResult(null);
     setTestLoading(true);
 
+    if (debugMode) {
+      debugLog.info(`Testing tool: ${tool.name}`, {
+        endpoint: tool.endpoint_url,
+        headers: tool.headers,
+        timeout: tool.timeout_ms || 10000,
+      });
+    }
+
+    const startTime = Date.now();
+
     try {
       const { data, error } = await supabase.functions.invoke('test-tool-endpoint', {
         body: {
@@ -228,10 +243,34 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
         },
       });
 
+      const duration = Date.now() - startTime;
+
       if (error) throw error;
+      
+      if (debugMode) {
+        if (data.success) {
+          debugLog.success(`Tool test completed in ${duration}ms`, {
+            status: data.status,
+            responseTime: `${duration}ms`,
+            response: data.response,
+          });
+        } else {
+          debugLog.error(`Tool test failed after ${duration}ms`, {
+            error: data.error,
+          });
+        }
+      }
+      
       setTestResult(data);
     } catch (error: any) {
       console.error('Error testing tool:', error);
+      
+      if (debugMode) {
+        debugLog.error(`Tool test error: ${error.message}`, {
+          stack: error.stack,
+        });
+      }
+      
       setTestResult({
         success: false,
         error: error.message || 'Failed to test tool endpoint',
@@ -260,7 +299,63 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
   };
 
   const handleTestWebhook = async (id: string) => {
-    await testWebhook(id);
+    const webhook = webhooks.find(w => w.id === id);
+    
+    if (debugMode && webhook) {
+      debugLog.info(`Testing webhook: ${webhook.name}`, {
+        url: webhook.url,
+        method: webhook.method,
+        events: webhook.events,
+      });
+    }
+    
+    const startTime = Date.now();
+    
+    try {
+      await testWebhook(id);
+      const duration = Date.now() - startTime;
+      
+      if (debugMode) {
+        debugLog.success(`Webhook test sent in ${duration}ms`, {
+          webhookId: id,
+          message: 'Check delivery logs for results',
+        });
+        
+        // Poll for webhook log result after a short delay
+        setTimeout(async () => {
+          try {
+            const { data: logs } = await supabase
+              .from('webhook_logs')
+              .select('*')
+              .eq('webhook_id', id)
+              .order('created_at', { ascending: false })
+              .limit(1);
+            
+            if (logs && logs.length > 0) {
+              const log = logs[0];
+              if (log.delivered) {
+                debugLog.success(`Webhook delivered successfully`, {
+                  status: log.response_status,
+                  response: log.response_body?.substring(0, 500),
+                  deliveredAt: log.delivered_at,
+                });
+              } else {
+                debugLog.error(`Webhook delivery failed`, {
+                  error: log.error_message,
+                  retryCount: log.retry_count,
+                });
+              }
+            }
+          } catch (err) {
+            // Silent fail on log fetch
+          }
+        }, 2000);
+      }
+    } catch (error: any) {
+      if (debugMode) {
+        debugLog.error(`Webhook test failed: ${error.message}`);
+      }
+    }
   };
 
   const handleUpdateWebhook = async (id: string, updates: any) => {
@@ -284,6 +379,20 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
       menuItems={menuItems}
       title="Tools"
       description={menuItems.find(item => item.id === activeTab)?.description || ''}
+      headerExtra={
+        <div className="flex items-center gap-2">
+          <Label htmlFor="debug-mode" className="text-xs text-muted-foreground cursor-pointer flex items-center gap-1.5">
+            <Tool02 className="h-3.5 w-3.5" />
+            Debug Mode
+          </Label>
+          <Switch
+            id="debug-mode"
+            checked={debugMode}
+            onCheckedChange={setDebugMode}
+            className="scale-90"
+          />
+        </div>
+      }
     >
       {activeTab === 'api-access' && (
         <div className="space-y-6">
@@ -595,6 +704,15 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
             onConfirm={handleDeleteWebhook}
           />
         </div>
+      )}
+
+      {/* Debug Console - shown when debug mode is enabled */}
+      {debugMode && (
+        <DebugConsole
+          logs={debugLogs}
+          onClear={clearDebugLogs}
+          className="mt-6"
+        />
       )}
 
       <ApiUseCasesModal
