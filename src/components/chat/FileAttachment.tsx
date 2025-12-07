@@ -1,7 +1,8 @@
 import React from 'react';
-import { X, File02, Image01 } from '@untitledui/icons';
+import { X } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import { isImageFile, formatFileSize } from '@/lib/file-validation';
+import { FileTypeIcon } from './FileTypeIcons';
 
 interface FileAttachmentProps {
   file: File;
@@ -40,16 +41,8 @@ export const FileAttachment: React.FC<FileAttachmentProps> = ({
           </div>
         </div>
       ) : (
-        <div className="relative flex items-center gap-2 p-3 border rounded-lg bg-background">
-          <div
-            className="p-2 rounded"
-            style={{ backgroundColor: `${primaryColor}15` }}
-          >
-            <File02
-              className="h-5 w-5"
-              style={{ color: primaryColor }}
-            />
-          </div>
+        <div className="relative flex items-center gap-3 p-3 border rounded-lg bg-background">
+          <FileTypeIcon fileName={file.name} width={40} height={40} />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium truncate">{file.name}</p>
             <p className="text-xs text-muted-foreground">
@@ -112,17 +105,9 @@ export const MessageFileAttachment: React.FC<MessageFileAttachmentProps> = ({
       href={fileUrl}
       target="_blank"
       rel="noopener noreferrer"
-      className="flex items-center gap-2 p-3 border rounded-lg bg-background/50 hover:bg-accent/50 transition-colors max-w-[280px]"
+      className="flex items-center gap-3 p-3 border rounded-lg bg-background/50 hover:bg-accent/50 transition-colors max-w-[280px]"
     >
-      <div
-        className="p-2 rounded shrink-0"
-        style={{ backgroundColor: `${primaryColor}15` }}
-      >
-        <File02
-          className="h-5 w-5"
-          style={{ color: primaryColor }}
-        />
-      </div>
+      <FileTypeIcon fileName={fileName} width={40} height={40} className="shrink-0" />
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium truncate">{fileName}</p>
         {fileSize && (
