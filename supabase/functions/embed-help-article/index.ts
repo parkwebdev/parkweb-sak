@@ -5,27 +5,22 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Nomic embedding model - 50% cheaper than OpenAI, 768 dimensions
-const EMBEDDING_MODEL = 'nomic-ai/nomic-embed-text-v1.5';
-
-// Generate embedding using Nomic model via OpenRouter
+// OpenAI text-embedding-3-small - 1536 dimensions
 async function generateEmbedding(text: string): Promise<number[]> {
-  const OPENROUTER_API_KEY = Deno.env.get('OPENROUTER_API_KEY');
-  if (!OPENROUTER_API_KEY) {
-    throw new Error('OPENROUTER_API_KEY not configured');
+  const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+  if (!OPENAI_API_KEY) {
+    throw new Error('OPENAI_API_KEY not configured');
   }
 
-  const response = await fetch('https://openrouter.ai/api/v1/embeddings', {
+  const response = await fetch('https://api.openai.com/v1/embeddings', {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-      'HTTP-Referer': 'https://chatpad.ai',
-      'X-Title': 'ChatPad',
+      'Authorization': `Bearer ${OPENAI_API_KEY}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
       input: text,
-      model: EMBEDDING_MODEL,
+      model: 'text-embedding-3-small',
     }),
   });
 
