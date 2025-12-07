@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { createLead, sendChatMessage, type WidgetConfig, type ReferrerJourney } from './api';
+import { supabase } from '@/integrations/supabase/client';
 
 // Types and constants extracted for maintainability
 import type { ViewType, ChatUser, Message, ChatWidgetProps } from './types';
@@ -329,6 +330,33 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
 
     const userContent = pendingFiles.length > 0 ? (messageInput || 'Sent files') : messageInput;
     
+    // Upload files to Supabase storage and get real URLs
+    let uploadedFiles: Array<{ name: string; url: string; type: string; size: number }> | undefined;
+    if (pendingFiles.length > 0) {
+      try {
+        uploadedFiles = await Promise.all(
+          pendingFiles.map(async (pf) => {
+            const fileName = `widget/${activeConversationId || 'temp'}/${Date.now()}-${pf.file.name}`;
+            const { data, error } = await supabase.storage
+              .from('conversation-files')
+              .upload(fileName, pf.file, { upsert: false });
+            
+            if (error) throw error;
+            
+            const { data: urlData } = supabase.storage
+              .from('conversation-files')
+              .getPublicUrl(data.path);
+            
+            return { name: pf.file.name, url: urlData.publicUrl, type: pf.file.type, size: pf.file.size };
+          })
+        );
+      } catch (uploadError) {
+        console.error('Error uploading files:', uploadError);
+        // Fall back to blob URLs if upload fails (will show broken on app side)
+        uploadedFiles = pendingFiles.map(pf => ({ name: pf.file.name, url: pf.preview, type: pf.file.type, size: pf.file.size }));
+      }
+    }
+    
     // Create optimistic message with temp ID for tracking
     const tempId = `temp-${Date.now()}`;
     const newMessage: Message = {
@@ -338,7 +366,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
       read: false,
       timestamp: new Date(),
       type: pendingFiles.length > 0 ? 'file' : 'text',
-      files: pendingFiles.length > 0 ? pendingFiles.map(pf => ({ name: pf.file.name, url: pf.preview, type: pf.file.type, size: pf.file.size })) : undefined,
+      files: uploadedFiles,
       reactions: [],
     };
     

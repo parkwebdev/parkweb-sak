@@ -2,8 +2,9 @@ import { Suspense, useRef, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Send01, Microphone01, Attachment01, X, FileCheck02, FaceSmile } from '@untitledui/icons';
+import { Send01, Microphone01, Attachment01, X, FaceSmile } from '@untitledui/icons';
 import { VoiceInput } from '../constants';
+import { FileTypeIcon } from '@/components/chat/FileTypeIcons';
 
 interface PendingFile {
   file: File;
@@ -97,13 +98,11 @@ export const MessageInput = ({
         <div className="p-2 flex gap-2 overflow-x-auto">
           {pendingFiles.map((pf, i) => (
             <div key={i} className="relative group flex-shrink-0">
-              <div className="relative w-16 h-16 rounded-lg overflow-hidden border">
-                {pf.preview ? (
-                  <img src={pf.preview} className="w-full h-full object-cover" />
+              <div className="relative w-16 h-16 rounded-lg overflow-hidden border flex items-center justify-center bg-muted">
+                {pf.file.type.startsWith('image/') ? (
+                  <img src={pf.preview} className="w-full h-full object-cover" alt={pf.file.name} />
                 ) : (
-                  <div className="w-full h-full bg-muted flex items-center justify-center">
-                    <FileCheck02 className="h-6 w-6 text-muted-foreground" />
-                  </div>
+                  <FileTypeIcon fileName={pf.file.name} width={32} height={32} />
                 )}
                 <Button 
                   size="icon"
