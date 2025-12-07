@@ -920,15 +920,15 @@ const Conversations: React.FC = () => {
                       onKeyDown={handleKeyDown}
                       disabled={sendingMessage}
                       rows={1}
-                      className="min-h-[36px] max-h-[120px] py-2 pr-11 resize-none"
+                      className="min-h-[40px] max-h-[120px] py-2.5 pr-12 resize-none"
                     />
                     <Button 
                       type="submit" 
                       size="icon"
-                      className="absolute right-1.5 bottom-1.5 h-7 w-7"
+                      className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
                       disabled={sendingMessage || !messageInput.trim()}
                     >
-                      <Send01 size={14} />
+                      <Send01 size={16} />
                     </Button>
                   </div>
                 </form>
