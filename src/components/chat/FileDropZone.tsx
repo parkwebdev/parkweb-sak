@@ -108,7 +108,7 @@ export const FileDropZone: React.FC<FileDropZoneProps> = ({
               ref={fileInputRef}
               type="file"
               multiple
-              accept="image/*,.pdf,.doc,.docx,.txt"
+              accept="image/*,.pdf,.doc,.docx,.txt,.xls,.xlsx,.csv,.ppt,.pptx"
               onChange={handleFileInput}
               className="hidden"
             />
@@ -138,7 +138,7 @@ export const FileDropZone: React.FC<FileDropZoneProps> = ({
               ref={fileInputRef}
               type="file"
               multiple
-              accept="image/*,.pdf,.doc,.docx,.txt"
+              accept="image/*,.pdf,.doc,.docx,.txt,.xls,.xlsx,.csv,.ppt,.pptx"
               onChange={handleFileInput}
               className="hidden"
             />
@@ -173,7 +173,7 @@ export const FileDropZone: React.FC<FileDropZoneProps> = ({
             onClick={handleSend}
             style={{ backgroundColor: primaryColor }}
           >
-            Send {selectedFiles.length} file{selectedFiles.length > 1 ? 's' : ''}
+            Attach {selectedFiles.length} file{selectedFiles.length > 1 ? 's' : ''}
           </Button>
         )}
       </div>

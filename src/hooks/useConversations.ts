@@ -275,18 +275,48 @@ export const useConversations = () => {
     }
   };
 
-  const sendHumanMessage = async (conversationId: string, content: string): Promise<boolean> => {
+  const sendHumanMessage = async (conversationId: string, content: string, files?: File[]): Promise<boolean> => {
     if (!user?.id) {
       toast.error('You must be logged in to send messages');
       return false;
     }
 
     try {
+      // Upload files to storage first if any
+      let uploadedFiles: { name: string; url: string; type: string; size: number }[] = [];
+      
+      if (files && files.length > 0) {
+        const uploadPromises = files.map(async (file) => {
+          const fileExt = file.name.split('.').pop();
+          const fileName = `${conversationId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+          
+          const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('conversation-files')
+            .upload(fileName, file);
+          
+          if (uploadError) throw uploadError;
+          
+          const { data: publicUrl } = supabase.storage
+            .from('conversation-files')
+            .getPublicUrl(fileName);
+          
+          return {
+            name: file.name,
+            url: publicUrl.publicUrl,
+            type: file.type,
+            size: file.size,
+          };
+        });
+        
+        uploadedFiles = await Promise.all(uploadPromises);
+      }
+
       const { data, error } = await supabase.functions.invoke('send-human-message', {
         body: {
           conversationId,
-          content,
+          content: content || (uploadedFiles.length > 0 ? `Sent ${uploadedFiles.length} file(s)` : ''),
           senderId: user.id,
+          files: uploadedFiles.length > 0 ? uploadedFiles : undefined,
         },
       });
 
