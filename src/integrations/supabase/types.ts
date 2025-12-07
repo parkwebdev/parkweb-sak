@@ -341,48 +341,6 @@ export type Database = {
           },
         ]
       }
-      custom_domains: {
-        Row: {
-          created_at: string | null
-          dns_configured: boolean | null
-          domain: string
-          id: string
-          is_primary: boolean | null
-          ssl_status: string | null
-          updated_at: string | null
-          user_id: string
-          verification_token: string
-          verified: boolean | null
-          verified_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          dns_configured?: boolean | null
-          domain: string
-          id?: string
-          is_primary?: boolean | null
-          ssl_status?: string | null
-          updated_at?: string | null
-          user_id: string
-          verification_token: string
-          verified?: boolean | null
-          verified_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          dns_configured?: boolean | null
-          domain?: string
-          id?: string
-          is_primary?: boolean | null
-          ssl_status?: string | null
-          updated_at?: string | null
-          user_id?: string
-          verification_token?: string
-          verified?: boolean | null
-          verified_at?: string | null
-        }
-        Relationships: []
-      }
       email_templates: {
         Row: {
           active: boolean | null
