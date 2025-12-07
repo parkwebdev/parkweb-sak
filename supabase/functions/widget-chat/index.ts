@@ -64,7 +64,110 @@ async function fetchLinkPreviews(content: string, supabaseUrl: string, supabaseK
   return previews.filter(p => p !== null);
 }
 
-// Generate embedding for a query using OpenRouter
+// Cost optimization: Nomic embedding model - 50% cheaper, 768 dimensions
+const EMBEDDING_MODEL = 'nomic-ai/nomic-embed-text-v1.5';
+
+// Normalize query for cache lookup (lowercase, trim, remove extra whitespace)
+function normalizeQuery(query: string): string {
+  return query.toLowerCase().trim().replace(/\s+/g, ' ').replace(/[^\w\s]/g, '');
+}
+
+// Hash query for cache key
+async function hashQuery(query: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(query);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// Check query embedding cache
+async function getCachedEmbedding(supabase: any, queryHash: string, agentId: string): Promise<number[] | null> {
+  const { data, error } = await supabase
+    .from('query_embedding_cache')
+    .select('embedding')
+    .eq('query_hash', queryHash)
+    .eq('agent_id', agentId)
+    .single();
+  
+  if (error || !data?.embedding) return null;
+  
+  // Update hit count and last used
+  supabase
+    .from('query_embedding_cache')
+    .update({ hit_count: supabase.rpc('increment', { x: 1 }), last_used_at: new Date().toISOString() })
+    .eq('query_hash', queryHash)
+    .eq('agent_id', agentId)
+    .then(() => {})
+    .catch(() => {});
+  
+  // Parse embedding string to array
+  try {
+    const embeddingStr = data.embedding as string;
+    const matches = embeddingStr.match(/[\d.-]+/g);
+    return matches ? matches.map(Number) : null;
+  } catch {
+    return null;
+  }
+}
+
+// Cache query embedding
+async function cacheQueryEmbedding(supabase: any, queryHash: string, normalized: string, embedding: number[], agentId: string): Promise<void> {
+  const embeddingVector = `[${embedding.join(',')}]`;
+  await supabase
+    .from('query_embedding_cache')
+    .upsert({
+      query_hash: queryHash,
+      query_normalized: normalized,
+      embedding: embeddingVector,
+      agent_id: agentId,
+    }, { onConflict: 'query_hash' })
+    .catch((err: any) => console.error('Failed to cache embedding:', err));
+}
+
+// Check response cache for high-confidence cached responses
+async function getCachedResponse(supabase: any, queryHash: string, agentId: string): Promise<{ content: string; similarity: number } | null> {
+  const { data, error } = await supabase
+    .from('response_cache')
+    .select('response_content, similarity_score')
+    .eq('query_hash', queryHash)
+    .eq('agent_id', agentId)
+    .gt('expires_at', new Date().toISOString())
+    .single();
+  
+  if (error || !data) return null;
+  
+  // Update hit count
+  supabase
+    .from('response_cache')
+    .update({ hit_count: supabase.rpc('increment', { x: 1 }), last_used_at: new Date().toISOString() })
+    .eq('query_hash', queryHash)
+    .eq('agent_id', agentId)
+    .then(() => {})
+    .catch(() => {});
+  
+  console.log('Cache HIT for response, similarity:', data.similarity_score);
+  return { content: data.response_content, similarity: data.similarity_score };
+}
+
+// Cache high-confidence response
+async function cacheResponse(supabase: any, queryHash: string, agentId: string, content: string, similarity: number): Promise<void> {
+  // Only cache responses with very high similarity (FAQ-style)
+  if (similarity < 0.92) return;
+  
+  await supabase
+    .from('response_cache')
+    .upsert({
+      query_hash: queryHash,
+      agent_id: agentId,
+      response_content: content,
+      similarity_score: similarity,
+      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days
+    }, { onConflict: 'query_hash,agent_id' })
+    .catch((err: any) => console.error('Failed to cache response:', err));
+}
+
+// Generate embedding for a query using Nomic model (50% cheaper)
 async function generateEmbedding(query: string, apiKey: string): Promise<number[]> {
   const response = await fetch('https://openrouter.ai/api/v1/embeddings', {
     method: 'POST',
@@ -75,7 +178,7 @@ async function generateEmbedding(query: string, apiKey: string): Promise<number[
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'openai/text-embedding-3-small',
+      model: EMBEDDING_MODEL,
       input: query,
     }),
   });
@@ -634,6 +737,8 @@ serve(async (req) => {
 
     let systemPrompt = agent.system_prompt || 'You are a helpful AI assistant.';
     let sources: any[] = [];
+    let queryHash: string | null = null;
+    let maxSimilarity = 0;
 
     // RAG: Search knowledge base if there are user messages
     if (messages && messages.length > 0) {
@@ -642,39 +747,102 @@ serve(async (req) => {
       
       if (lastUserMessage && lastUserMessage.content) {
         try {
-          console.log('Generating embedding for query:', lastUserMessage.content.substring(0, 100));
+          const queryContent = lastUserMessage.content;
+          const normalizedQuery = normalizeQuery(queryContent);
+          queryHash = await hashQuery(normalizedQuery + ':' + agentId);
           
-          // Generate embedding for the user's query
-          const queryEmbedding = await generateEmbedding(lastUserMessage.content, OPENROUTER_API_KEY);
+          console.log('Query normalized for cache lookup:', normalizedQuery.substring(0, 50));
+          
+          // COST OPTIMIZATION: Check response cache first for FAQ-style queries
+          const cachedResponse = await getCachedResponse(supabase, queryHash, agentId);
+          if (cachedResponse && cachedResponse.similarity > 0.92) {
+            console.log('CACHE HIT: Returning cached response, skipping AI call entirely');
+            
+            // Save user message
+            if (messages && messages.length > 0) {
+              await supabase.from('messages').insert({
+                conversation_id: activeConversationId,
+                role: 'user',
+                content: queryContent,
+                metadata: { source: 'widget' }
+              });
+            }
+            
+            // Save cached response as assistant message
+            await supabase.from('messages').insert({
+              conversation_id: activeConversationId,
+              role: 'assistant',
+              content: cachedResponse.content,
+              metadata: { source: 'cache', cache_similarity: cachedResponse.similarity }
+            });
+            
+            return new Response(
+              JSON.stringify({
+                conversationId: activeConversationId,
+                response: cachedResponse.content,
+                cached: true,
+                similarity: cachedResponse.similarity,
+              }),
+              { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+          }
+          
+          // COST OPTIMIZATION: Check embedding cache before generating new embedding
+          let queryEmbedding = await getCachedEmbedding(supabase, queryHash, agentId);
+          
+          if (queryEmbedding) {
+            console.log('Embedding CACHE HIT - saved 1 embedding API call');
+          } else {
+            console.log('Generating new embedding for query:', queryContent.substring(0, 100));
+            queryEmbedding = await generateEmbedding(queryContent, OPENROUTER_API_KEY);
+            
+            // Cache the embedding for future use
+            cacheQueryEmbedding(supabase, queryHash, normalizedQuery, queryEmbedding, agentId);
+          }
+          
+          // COST OPTIMIZATION: Dynamic threshold and count based on query length
+          // Shorter queries often need stricter matching, longer queries more lenient
+          const queryLength = queryContent.split(' ').length;
+          const matchThreshold = queryLength < 5 ? 0.80 : queryLength < 15 ? 0.75 : 0.70;
+          const matchCount = queryLength < 10 ? 3 : 5; // Fewer chunks for simple queries
+          
+          console.log(`Dynamic RAG params: threshold=${matchThreshold}, count=${matchCount} (query length: ${queryLength} words)`);
           
           // Search for relevant knowledge sources
           const knowledgeResults = await searchKnowledge(
             supabase,
             agentId,
             queryEmbedding,
-            0.7, // Match threshold
-            5    // Top 5 results
+            matchThreshold,
+            matchCount
           );
 
           console.log(`Found ${knowledgeResults.length} relevant knowledge sources`);
 
           // If relevant knowledge found, inject into system prompt
           if (knowledgeResults && knowledgeResults.length > 0) {
+            // Track max similarity for response caching decision
+            maxSimilarity = Math.max(...knowledgeResults.map((r: any) => r.similarity));
+            
             sources = knowledgeResults.map((result: any) => ({
               source: result.source,
               type: result.type,
               similarity: result.similarity,
             }));
 
-            const knowledgeContext = knowledgeResults
-              .map((result: any, index: number) => {
-                const chunkInfo = result.chunkIndex !== undefined ? ` - Section ${result.chunkIndex + 1}` : '';
-                return `[Source ${index + 1}: ${result.source}${chunkInfo} (${result.type}, relevance: ${(result.similarity * 100).toFixed(0)}%)]
+            // COST OPTIMIZATION: Only include chunks above a minimum relevance threshold
+            const relevantChunks = knowledgeResults.filter((r: any) => r.similarity > 0.72);
+            
+            if (relevantChunks.length > 0) {
+              const knowledgeContext = relevantChunks
+                .map((result: any, index: number) => {
+                  const chunkInfo = result.chunkIndex !== undefined ? ` - Section ${result.chunkIndex + 1}` : '';
+                  return `[Source ${index + 1}: ${result.source}${chunkInfo} (${result.type}, relevance: ${(result.similarity * 100).toFixed(0)}%)]
 ${result.content}`;
-              })
-              .join('\n\n---\n\n');
+                })
+                .join('\n\n---\n\n');
 
-            systemPrompt = `${agent.system_prompt || 'You are a helpful AI assistant.'}
+              systemPrompt = `${agent.system_prompt || 'You are a helpful AI assistant.'}
 
 KNOWLEDGE BASE CONTEXT:
 The following information from our knowledge base may be relevant to answering the user's question. Use this context to provide accurate, informed responses. If the context doesn't contain relevant information for the user's question, you can answer based on your general knowledge but mention that you're not finding specific information in the knowledge base.
@@ -684,6 +852,7 @@ ${knowledgeContext}
 ---
 
 When answering, you can naturally reference the information from the knowledge base. If you use specific information from the sources, you can mention where it came from (e.g., "According to our documentation..." or "Based on the information provided...").`;
+            }
           }
         } catch (ragError) {
           // Log RAG errors but don't fail the request
@@ -833,6 +1002,12 @@ When answering, you can naturally reference the information from the knowledge b
     // Fallback if no content
     if (!assistantContent) {
       assistantContent = 'I apologize, but I was unable to generate a response.';
+    }
+
+    // COST OPTIMIZATION: Cache high-confidence responses for FAQ-style queries
+    if (queryHash && maxSimilarity > 0.92 && sources.length > 0) {
+      console.log(`Caching response with similarity ${maxSimilarity.toFixed(2)} for future reuse`);
+      cacheResponse(supabase, queryHash, agentId, assistantContent, maxSimilarity);
     }
 
     // Fetch link previews for assistant message content (server-side caching)
