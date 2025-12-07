@@ -880,6 +880,21 @@ const Conversations: React.FC = () => {
                                   </Popover>
                                 </div>
                               )}
+                              {/* Display user reactions on assistant/team messages - read-only */}
+                              {isLastInGroup && !isUser && reactions && reactions.length > 0 && (
+                                <div className="flex items-center gap-1 mt-1 px-1 flex-wrap">
+                                  {reactions
+                                    .filter((r: any) => r.userReacted && r.count > 0)
+                                    .map((reaction: any, i: number) => (
+                                      <span 
+                                        key={i} 
+                                        className="text-xs bg-muted rounded-full px-1.5 py-0.5"
+                                      >
+                                        {reaction.emoji} {reaction.count > 1 && reaction.count}
+                                      </span>
+                                    ))}
+                                </div>
+                              )}
                             </div>
                           </div>
                         </div>

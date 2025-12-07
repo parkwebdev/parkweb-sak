@@ -155,10 +155,10 @@ export const MessageBubble = ({
           )}
         </div>
         
-        {/* Footer: Reactions - only show on last message in group, users can only react to assistant/team messages */}
+        {/* Footer: Reactions - only show on last message in group */}
         {isLastInGroup && !isUser && (
           <div className="flex items-center gap-2 px-1">
-            {/* Emoji reactions */}
+            {/* Emoji reactions for assistant/team messages - users can add reactions */}
             {enableMessageReactions && message.id && (
               <Suspense fallback={null}>
                 <MessageReactions
@@ -171,6 +171,22 @@ export const MessageBubble = ({
                 />
               </Suspense>
             )}
+          </div>
+        )}
+        
+        {/* Footer: Display team member reactions on user messages - read-only */}
+        {isLastInGroup && isUser && message.reactions && message.reactions.length > 0 && (
+          <div className="flex items-center gap-1 px-1 justify-end flex-wrap">
+            {message.reactions
+              .filter((r: any) => r.adminReacted && r.count > 0)
+              .map((reaction: any, i: number) => (
+                <span 
+                  key={i} 
+                  className="text-xs bg-muted rounded-full px-1.5 py-0.5"
+                >
+                  {reaction.emoji} {reaction.count > 1 && reaction.count}
+                </span>
+              ))}
           </div>
         )}
       </div>

@@ -452,8 +452,14 @@ export function subscribeToMessages(
         }
       }
     )
-    .subscribe((status) => {
+    .subscribe((status, err) => {
       console.log('[Widget] Subscription status:', status);
+      if (err) {
+        console.error('[Widget] Subscription error:', err);
+      }
+      if (status === 'CHANNEL_ERROR') {
+        console.error('[Widget] Channel error - real-time updates may not work');
+      }
     });
 
   return channel;
