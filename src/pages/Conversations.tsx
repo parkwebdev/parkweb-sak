@@ -910,7 +910,7 @@ const Conversations: React.FC = () => {
                   />
                   <Textarea
                     ref={messageTextareaRef}
-                    placeholder="Type a message... (Shift+Enter for new line)"
+                    placeholder="Type a message..."
                     value={messageInput}
                     onChange={(e) => {
                       setMessageInput(e.target.value);
