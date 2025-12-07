@@ -104,7 +104,12 @@ export const KnowledgeSourceCard: React.FC<KnowledgeSourceCardProps> = ({
             <p className="text-xs mt-1 text-muted-foreground">{getContentPreview()}</p>
           </div>
           <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>Added {formatDistanceToNow(new Date(source.created_at), { addSuffix: true })}</span>
+            <div className="flex items-center gap-3">
+              <span>Added {formatDistanceToNow(new Date(source.created_at), { addSuffix: true })}</span>
+              {metadata.chunks_count && (
+                <span className="text-primary font-medium">{metadata.chunks_count} chunks indexed</span>
+              )}
+            </div>
             {metadata.size && (
               <span>{(metadata.size / 1024).toFixed(2)} KB</span>
             )}

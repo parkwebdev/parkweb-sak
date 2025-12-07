@@ -90,17 +90,40 @@ async function generateEmbedding(query: string, apiKey: string): Promise<number[
   return data.data[0].embedding;
 }
 
-// Search for relevant knowledge sources
+// Search for relevant knowledge chunks (with fallback to legacy document search)
 async function searchKnowledge(
   supabase: any,
   agentId: string,
   queryEmbedding: number[],
   matchThreshold: number = 0.7,
   matchCount: number = 5
-) {
+): Promise<{ content: string; source: string; type: string; similarity: number; chunkIndex?: number }[]> {
+  const embeddingVector = `[${queryEmbedding.join(',')}]`;
+
+  // Try new chunk-level search first
+  const { data: chunkData, error: chunkError } = await supabase.rpc('search_knowledge_chunks', {
+    p_agent_id: agentId,
+    p_query_embedding: embeddingVector,
+    p_match_threshold: matchThreshold,
+    p_match_count: matchCount,
+  });
+
+  if (!chunkError && chunkData && chunkData.length > 0) {
+    console.log(`Found ${chunkData.length} relevant chunks via chunk-level search`);
+    return chunkData.map((chunk: any) => ({
+      content: chunk.content,
+      source: chunk.source_name,
+      type: chunk.source_type,
+      similarity: chunk.similarity,
+      chunkIndex: chunk.chunk_index,
+    }));
+  }
+
+  // Fallback to legacy document-level search for backwards compatibility
+  console.log('Falling back to document-level search');
   const { data, error } = await supabase.rpc('search_knowledge_sources', {
     p_agent_id: agentId,
-    p_query_embedding: `[${queryEmbedding.join(',')}]`,
+    p_query_embedding: embeddingVector,
     p_match_threshold: matchThreshold,
     p_match_count: matchCount,
   });
@@ -110,7 +133,12 @@ async function searchKnowledge(
     return [];
   }
 
-  return data || [];
+  return (data || []).map((d: any) => ({
+    content: d.content,
+    source: d.source,
+    type: d.type,
+    similarity: d.similarity,
+  }));
 }
 
 // Geo-IP lookup using ip-api.com (free, no API key needed)
@@ -640,10 +668,11 @@ serve(async (req) => {
 
             const knowledgeContext = knowledgeResults
               .map((result: any, index: number) => {
-                return `[Source ${index + 1}: ${result.source} (${result.type}, relevance: ${(result.similarity * 100).toFixed(0)}%)]
+                const chunkInfo = result.chunkIndex !== undefined ? ` - Section ${result.chunkIndex + 1}` : '';
+                return `[Source ${index + 1}: ${result.source}${chunkInfo} (${result.type}, relevance: ${(result.similarity * 100).toFixed(0)}%)]
 ${result.content}`;
               })
-              .join('\n\n');
+              .join('\n\n---\n\n');
 
             systemPrompt = `${agent.system_prompt || 'You are a helpful AI assistant.'}
 

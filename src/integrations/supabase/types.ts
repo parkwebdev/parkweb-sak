@@ -475,6 +475,57 @@ export type Database = {
           },
         ]
       }
+      knowledge_chunks: {
+        Row: {
+          agent_id: string
+          chunk_index: number
+          content: string
+          created_at: string | null
+          embedding: string | null
+          id: string
+          metadata: Json | null
+          source_id: string
+          token_count: number | null
+        }
+        Insert: {
+          agent_id: string
+          chunk_index: number
+          content: string
+          created_at?: string | null
+          embedding?: string | null
+          id?: string
+          metadata?: Json | null
+          source_id: string
+          token_count?: number | null
+        }
+        Update: {
+          agent_id?: string
+          chunk_index?: number
+          content?: string
+          created_at?: string | null
+          embedding?: string | null
+          id?: string
+          metadata?: Json | null
+          source_id?: string
+          token_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "knowledge_chunks_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "knowledge_chunks_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "knowledge_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       knowledge_sources: {
         Row: {
           agent_id: string
@@ -1283,6 +1334,23 @@ export type Database = {
       mark_token_used: {
         Args: { p_email: string; p_token: string }
         Returns: undefined
+      }
+      search_knowledge_chunks: {
+        Args: {
+          p_agent_id: string
+          p_match_count?: number
+          p_match_threshold?: number
+          p_query_embedding: string
+        }
+        Returns: {
+          chunk_id: string
+          chunk_index: number
+          content: string
+          similarity: number
+          source_id: string
+          source_name: string
+          source_type: string
+        }[]
       }
       search_knowledge_sources: {
         Args: {
