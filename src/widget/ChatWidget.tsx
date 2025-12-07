@@ -351,6 +351,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
       const messageHistory = [...messages, newMessage].map(m => ({
         role: m.role,
         content: m.content,
+        files: m.files, // Include file metadata
       }));
 
       let finalPageVisits = [...pageVisits];
