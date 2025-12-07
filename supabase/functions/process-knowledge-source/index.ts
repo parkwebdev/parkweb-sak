@@ -5,24 +5,83 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Chunk text into smaller pieces for embedding
-function chunkText(text: string, maxChunkSize: number = 1000): string[] {
-  const chunks: string[] = [];
-  const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
+// Improved chunking with semantic boundaries and overlap
+function chunkText(text: string, maxTokens: number = 500, overlapTokens: number = 50): { content: string; tokenCount: number }[] {
+  const chunks: { content: string; tokenCount: number }[] = [];
+  
+  // Rough token estimation: ~4 chars per token
+  const charsPerToken = 4;
+  const maxChars = maxTokens * charsPerToken;
+  const overlapChars = overlapTokens * charsPerToken;
+  
+  // Split by paragraphs first (double newlines)
+  const paragraphs = text.split(/\n\n+/).filter(p => p.trim());
   
   let currentChunk = '';
+  let currentTokens = 0;
   
-  for (const sentence of sentences) {
-    if ((currentChunk + sentence).length > maxChunkSize && currentChunk.length > 0) {
-      chunks.push(currentChunk.trim());
-      currentChunk = sentence;
+  for (const paragraph of paragraphs) {
+    const paragraphTokens = Math.ceil(paragraph.length / charsPerToken);
+    
+    // If single paragraph is too large, split by sentences
+    if (paragraphTokens > maxTokens) {
+      // Save current chunk if exists
+      if (currentChunk.trim()) {
+        chunks.push({
+          content: currentChunk.trim(),
+          tokenCount: currentTokens
+        });
+        // Keep overlap from end of current chunk
+        const overlapText = currentChunk.slice(-overlapChars);
+        currentChunk = overlapText;
+        currentTokens = Math.ceil(overlapText.length / charsPerToken);
+      }
+      
+      // Split large paragraph by sentences
+      const sentences = paragraph.match(/[^.!?]+[.!?]+/g) || [paragraph];
+      
+      for (const sentence of sentences) {
+        const sentenceTokens = Math.ceil(sentence.length / charsPerToken);
+        
+        if (currentTokens + sentenceTokens > maxTokens && currentChunk.trim()) {
+          chunks.push({
+            content: currentChunk.trim(),
+            tokenCount: currentTokens
+          });
+          // Keep overlap
+          const overlapText = currentChunk.slice(-overlapChars);
+          currentChunk = overlapText + sentence;
+          currentTokens = Math.ceil(currentChunk.length / charsPerToken);
+        } else {
+          currentChunk += sentence;
+          currentTokens += sentenceTokens;
+        }
+      }
+    } else if (currentTokens + paragraphTokens > maxTokens) {
+      // Current chunk is full, save it
+      if (currentChunk.trim()) {
+        chunks.push({
+          content: currentChunk.trim(),
+          tokenCount: currentTokens
+        });
+      }
+      // Start new chunk with overlap + new paragraph
+      const overlapText = currentChunk.slice(-overlapChars);
+      currentChunk = overlapText + '\n\n' + paragraph;
+      currentTokens = Math.ceil(currentChunk.length / charsPerToken);
     } else {
-      currentChunk += sentence;
+      // Add paragraph to current chunk
+      currentChunk += (currentChunk ? '\n\n' : '') + paragraph;
+      currentTokens += paragraphTokens;
     }
   }
   
-  if (currentChunk.length > 0) {
-    chunks.push(currentChunk.trim());
+  // Save remaining chunk
+  if (currentChunk.trim()) {
+    chunks.push({
+      content: currentChunk.trim(),
+      tokenCount: currentTokens
+    });
   }
   
   return chunks;
@@ -58,6 +117,40 @@ async function generateEmbedding(text: string): Promise<number[]> {
   return data.data[0].embedding;
 }
 
+// Batch generate embeddings with rate limiting
+async function generateEmbeddingsBatch(
+  chunks: { content: string; tokenCount: number }[],
+  batchSize: number = 5,
+  delayMs: number = 200
+): Promise<(number[] | null)[]> {
+  const embeddings: (number[] | null)[] = [];
+  
+  for (let i = 0; i < chunks.length; i += batchSize) {
+    const batch = chunks.slice(i, i + batchSize);
+    
+    // Process batch in parallel
+    const batchResults = await Promise.all(
+      batch.map(async (chunk) => {
+        try {
+          return await generateEmbedding(chunk.content);
+        } catch (error) {
+          console.error(`Failed to generate embedding for chunk:`, error);
+          return null;
+        }
+      })
+    );
+    
+    embeddings.push(...batchResults);
+    
+    // Rate limiting delay between batches
+    if (i + batchSize < chunks.length) {
+      await new Promise(resolve => setTimeout(resolve, delayMs));
+    }
+  }
+  
+  return embeddings;
+}
+
 // Fetch URL content
 async function fetchUrlContent(url: string): Promise<string> {
   try {
@@ -71,6 +164,15 @@ async function fetchUrlContent(url: string): Promise<string> {
     if (contentType.includes('application/json')) {
       const json = await response.json();
       return JSON.stringify(json, null, 2);
+    } else if (contentType.includes('text/html')) {
+      const html = await response.text();
+      // Basic HTML to text extraction
+      return html
+        .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+        .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
     } else if (contentType.includes('text/')) {
       return await response.text();
     } else {
@@ -112,9 +214,7 @@ Deno.serve(async (req) => {
       console.log('Fetching URL content:', source.source);
       content = await fetchUrlContent(source.source);
     } else if (source.type === 'pdf') {
-      // For PDFs stored in storage, we'd need to fetch and parse
-      // For now, we'll skip automatic PDF parsing and expect content to be provided
-      console.log('PDF processing not yet implemented, expecting content field');
+      console.log('PDF processing - expecting pre-extracted content');
       if (!content) {
         throw new Error('PDF content not provided');
       }
@@ -132,31 +232,66 @@ Deno.serve(async (req) => {
         .eq('id', sourceId);
     }
 
-    // Chunk the content
-    console.log('Chunking content...');
-    const chunks = chunkText(content, 1000);
+    // Delete any existing chunks for this source (for reprocessing)
+    await supabase
+      .from('knowledge_chunks')
+      .delete()
+      .eq('source_id', sourceId);
+
+    // Chunk the content with semantic boundaries
+    console.log('Chunking content with semantic boundaries...');
+    const chunks = chunkText(content, 500, 50);
     console.log(`Created ${chunks.length} chunks`);
 
-    // Generate embeddings for each chunk and store
-    // For simplicity, we'll generate an embedding for the full content
-    // In production, you'd want to chunk and store multiple embeddings
-    console.log('Generating embedding...');
-    const embedding = await generateEmbedding(content.substring(0, 8000)); // Limit to 8000 chars for embedding
+    // Generate embeddings for all chunks
+    console.log('Generating embeddings for all chunks...');
+    const embeddings = await generateEmbeddingsBatch(chunks, 5, 200);
 
-    // Convert embedding array to PostgreSQL vector format
-    const embeddingVector = `[${embedding.join(',')}]`;
+    // Store chunks with embeddings
+    console.log('Storing chunks in database...');
+    let successfulChunks = 0;
+    
+    for (let i = 0; i < chunks.length; i++) {
+      const chunk = chunks[i];
+      const embedding = embeddings[i];
+      
+      if (embedding) {
+        const embeddingVector = `[${embedding.join(',')}]`;
+        
+        const { error: insertError } = await supabase
+          .from('knowledge_chunks')
+          .insert({
+            source_id: sourceId,
+            agent_id: source.agent_id,
+            chunk_index: i,
+            content: chunk.content,
+            embedding: embeddingVector,
+            token_count: chunk.tokenCount,
+            metadata: {
+              original_length: chunk.content.length,
+            }
+          });
 
-    // Update the knowledge source with embedding
+        if (insertError) {
+          console.error(`Failed to insert chunk ${i}:`, insertError);
+        } else {
+          successfulChunks++;
+        }
+      }
+    }
+
+    // Update the knowledge source status and metadata
     const { error: updateError } = await supabase
       .from('knowledge_sources')
       .update({
-        embedding: embeddingVector,
         status: 'ready',
         metadata: {
           ...((source.metadata as any) || {}),
           processed_at: new Date().toISOString(),
-          chunks_count: chunks.length,
+          chunks_count: successfulChunks,
+          total_chunks: chunks.length,
           content_length: content.length,
+          chunking_version: 2, // Mark as using new chunk-level system
         },
       })
       .eq('id', sourceId);
@@ -165,13 +300,14 @@ Deno.serve(async (req) => {
       throw updateError;
     }
 
-    console.log('Knowledge source processed successfully');
+    console.log(`Knowledge source processed successfully: ${successfulChunks}/${chunks.length} chunks stored`);
 
     return new Response(
       JSON.stringify({
         success: true,
         sourceId,
-        chunks: chunks.length,
+        chunks: successfulChunks,
+        totalChunks: chunks.length,
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
