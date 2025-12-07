@@ -3,6 +3,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/Badge';
 
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -20,6 +21,8 @@ import { supabase } from '@/integrations/supabase/client';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { playNotificationSound } from '@/lib/notification-sound';
 import { formatShortTime, formatSenderName } from '@/lib/time-formatting';
+import { QuickEmojiButton } from '@/components/chat/QuickEmojiButton';
+import { useAutoResizeTextarea } from '@/hooks/useAutoResizeTextarea';
 
 type Conversation = Tables<'conversations'> & {
   agents?: { name: string };
@@ -99,6 +102,7 @@ const Conversations: React.FC = () => {
     localStorage.setItem('conversations_metadata_collapsed', String(metadataPanelCollapsed));
   }, [metadataPanelCollapsed]);
   const messagesScrollRef = useRef<HTMLDivElement>(null);
+  const messageTextareaRef = useRef<HTMLTextAreaElement>(null);
   const isInitialLoadRef = useRef(true);
   const newMessageIdsRef = useRef<Set<string>>(new Set());
   
@@ -429,6 +433,9 @@ const Conversations: React.FC = () => {
       messagesScrollRef.current.scrollTop = messagesScrollRef.current.scrollHeight;
     }
   }, [messages]);
+
+  // Auto-resize message textarea
+  useAutoResizeTextarea(messageTextareaRef, messageInput, { minRows: 1, maxRows: 5 });
 
   // Set up typing presence channel when conversation is in human takeover mode
   useEffect(() => {
@@ -881,10 +888,29 @@ const Conversations: React.FC = () => {
               <div className="px-6 py-4 border-t bg-background shrink-0">
                 <form 
                   onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }}
-                  className="flex gap-3 max-w-4xl mx-auto"
+                  className="flex items-end gap-3 max-w-4xl mx-auto"
                 >
-                  <Input
-                    placeholder="Type a message..."
+                  <QuickEmojiButton
+                    onEmojiSelect={(emoji) => {
+                      const textarea = messageTextareaRef.current;
+                      if (textarea) {
+                        const start = textarea.selectionStart;
+                        const end = textarea.selectionEnd;
+                        const newValue = messageInput.slice(0, start) + emoji + messageInput.slice(end);
+                        setMessageInput(newValue);
+                        setTimeout(() => {
+                          textarea.focus();
+                          textarea.setSelectionRange(start + emoji.length, start + emoji.length);
+                        }, 0);
+                      } else {
+                        setMessageInput(prev => prev + emoji);
+                      }
+                    }}
+                    disabled={sendingMessage}
+                  />
+                  <Textarea
+                    ref={messageTextareaRef}
+                    placeholder="Type a message... (Shift+Enter for new line)"
                     value={messageInput}
                     onChange={(e) => {
                       setMessageInput(e.target.value);
@@ -892,12 +918,13 @@ const Conversations: React.FC = () => {
                     }}
                     onKeyDown={handleKeyDown}
                     disabled={sendingMessage}
-                    className="flex-1 h-9"
+                    rows={1}
+                    className="flex-1 min-h-[36px] max-h-[120px] py-2 resize-none"
                   />
                   <Button 
                     type="submit" 
                     size="icon"
-                    className="h-9 w-9"
+                    className="h-9 w-9 shrink-0"
                     disabled={sendingMessage || !messageInput.trim()}
                   >
                     <Send01 size={16} />

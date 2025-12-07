@@ -1,7 +1,8 @@
-import { Suspense } from 'react';
+import { Suspense, useRef, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Send01, Microphone01, Attachment01, X, FileCheck02 } from '@untitledui/icons';
+import { Textarea } from '@/components/ui/textarea';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Send01, Microphone01, Attachment01, X, FileCheck02, FaceSmile } from '@untitledui/icons';
 import { VoiceInput } from '../constants';
 
 interface PendingFile {
@@ -28,6 +29,8 @@ interface MessageInputProps {
   onRemoveFile: (index: number) => void;
 }
 
+const QUICK_EMOJIS = ['😊', '👍', '❤️', '😂', '🎉', '👋', '🙏', '✨'];
+
 export const MessageInput = ({
   messageInput,
   onMessageChange,
@@ -46,10 +49,52 @@ export const MessageInput = ({
   pendingFiles,
   onRemoveFile,
 }: MessageInputProps) => {
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [emojiOpen, setEmojiOpen] = useState(false);
+
+  // Auto-resize textarea
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    textarea.style.height = 'auto';
+    const minHeight = 36; // Single line
+    const maxHeight = 120; // ~5 lines
+    const scrollHeight = textarea.scrollHeight;
+    const newHeight = Math.min(Math.max(scrollHeight, minHeight), maxHeight);
+    textarea.style.height = `${newHeight}px`;
+    textarea.style.overflowY = scrollHeight > maxHeight ? 'auto' : 'hidden';
+  }, [messageInput]);
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      onSend();
+    }
+  };
+
+  const handleEmojiSelect = (emoji: string) => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const newValue = messageInput.slice(0, start) + emoji + messageInput.slice(end);
+      onMessageChange(newValue);
+      // Restore cursor position after emoji
+      setTimeout(() => {
+        textarea.focus();
+        textarea.setSelectionRange(start + emoji.length, start + emoji.length);
+      }, 0);
+    } else {
+      onMessageChange(messageInput + emoji);
+    }
+    setEmojiOpen(false);
+  };
+
   return (
-    <>
+    <div className="border-t">
       {pendingFiles.length > 0 && (
-        <div className="p-2 border-t flex gap-2 overflow-x-auto">
+        <div className="p-2 flex gap-2 overflow-x-auto">
           {pendingFiles.map((pf, i) => (
             <div key={i} className="relative group flex-shrink-0">
               <div className="relative w-16 h-16 rounded-lg overflow-hidden border">
@@ -74,7 +119,7 @@ export const MessageInput = ({
         </div>
       )}
       
-      <div className="p-3 border-t">
+      <div className="p-3">
         {isRecordingAudio ? (
           <div className="flex items-center justify-center gap-3">
             <Suspense fallback={<div className="h-12 flex items-center justify-center text-muted-foreground text-sm">Loading...</div>}>
@@ -87,42 +132,81 @@ export const MessageInput = ({
             </Suspense>
           </div>
         ) : (
-          <div className="flex items-center gap-2">
-            <Input
+          <div className="flex items-end gap-2">
+            <Popover open={emojiOpen} onOpenChange={setEmojiOpen}>
+              <PopoverTrigger asChild>
+                <Button 
+                  type="button"
+                  size="icon" 
+                  variant="ghost" 
+                  disabled={disabled}
+                  className="h-9 w-9 shrink-0"
+                >
+                  <FaceSmile className="h-4 w-4 text-muted-foreground" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent 
+                className="w-auto p-2" 
+                side="top" 
+                align="start"
+                sideOffset={8}
+              >
+                <div className="flex gap-1">
+                  {QUICK_EMOJIS.map((emoji) => (
+                    <button
+                      key={emoji}
+                      type="button"
+                      onClick={() => handleEmojiSelect(emoji)}
+                      className="text-lg p-1 hover:bg-muted rounded transition-transform hover:scale-110"
+                    >
+                      {emoji}
+                    </button>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
+            
+            <Textarea
+              ref={textareaRef}
               value={messageInput}
               onChange={(e) => onMessageChange(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && onSend()}
+              onKeyDown={handleKeyDown}
               placeholder={placeholder}
               disabled={disabled}
-              className={`flex-1 h-9 text-sm placeholder:text-xs ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+              rows={1}
+              className={`flex-1 min-h-[36px] max-h-[120px] py-2 text-sm placeholder:text-xs resize-none ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
             />
+            
             {enableFileAttachments && (
               <Button 
+                type="button"
                 size="icon" 
                 variant="ghost" 
                 onClick={onAttachFiles}
                 disabled={disabled}
-                className={disabled ? 'opacity-50 cursor-not-allowed' : ''}
+                className={`h-9 w-9 shrink-0 ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 <Attachment01 className="h-4 w-4" />
               </Button>
             )}
             {enableVoiceMessages && (
               <Button 
+                type="button"
                 size="icon" 
                 variant="ghost" 
                 onClick={onStartRecording}
                 disabled={disabled}
-                className={disabled ? 'opacity-50 cursor-not-allowed' : ''}
+                className={`h-9 w-9 shrink-0 ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 <Microphone01 className="h-4 w-4" />
               </Button>
             )}
             <Button 
+              type="button"
               size="icon" 
-              className={`h-9 w-9 ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+              className={`h-9 w-9 shrink-0 ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
               onClick={onSend} 
-              disabled={disabled}
+              disabled={disabled || !messageInput.trim()}
               style={{ backgroundColor: primaryColor }}
             >
               <Send01 className="h-4 w-4" />
@@ -130,6 +214,6 @@ export const MessageInput = ({
           </div>
         )}
       </div>
-    </>
+    </div>
   );
 };
