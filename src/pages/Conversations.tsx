@@ -236,11 +236,17 @@ const Conversations: React.FC = () => {
             filter: `conversation_id=eq.${selectedConversation.id}`
           },
           (payload) => {
+            console.log('[Admin] Message UPDATE received:', {
+              messageId: payload.new?.id,
+              metadata: (payload.new as any)?.metadata,
+              reactions: (payload.new as any)?.metadata?.reactions,
+            });
             const updatedMessage = payload.new as Message;
             // Incremental update - only update the affected message
-            setMessages(prev => 
-              prev.map(m => m.id === updatedMessage.id ? updatedMessage : m)
-            );
+            setMessages(prev => {
+              console.log('[Admin] Updating message in state:', updatedMessage.id);
+              return prev.map(m => m.id === updatedMessage.id ? updatedMessage : m);
+            });
           }
         )
         .subscribe();
