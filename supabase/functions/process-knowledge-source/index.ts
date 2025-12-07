@@ -28,22 +28,24 @@ function chunkText(text: string, maxChunkSize: number = 1000): string[] {
   return chunks;
 }
 
-// Generate embeddings using Lovable AI
+// Generate embeddings using OpenRouter
 async function generateEmbedding(text: string): Promise<number[]> {
-  const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-  if (!LOVABLE_API_KEY) {
-    throw new Error('LOVABLE_API_KEY not configured');
+  const OPENROUTER_API_KEY = Deno.env.get('OPENROUTER_API_KEY');
+  if (!OPENROUTER_API_KEY) {
+    throw new Error('OPENROUTER_API_KEY not configured');
   }
 
-  const response = await fetch('https://ai.gateway.lovable.dev/v1/embeddings', {
+  const response = await fetch('https://openrouter.ai/api/v1/embeddings', {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+      'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+      'HTTP-Referer': 'https://chatpad.ai',
+      'X-Title': 'ChatPad',
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
       input: text,
-      model: 'text-embedding-3-small', // Using OpenAI's embedding model through Lovable AI
+      model: 'openai/text-embedding-3-small',
     }),
   });
 

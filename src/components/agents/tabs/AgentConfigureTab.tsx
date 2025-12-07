@@ -27,30 +27,51 @@ const MODELS = [
   { 
     value: 'google/gemini-2.5-pro', 
     label: 'Gemini 2.5 Pro',
-    description: 'Strongest reasoning and multimodal capabilities. Higher cost.',
+    description: 'Strongest reasoning and multimodal capabilities.',
     inputCostPer1M: 1.25,
     outputCostPer1M: 5.00
   },
   { 
-    value: 'google/gemini-3-pro-preview', 
-    label: 'Gemini 3 Pro (Preview)',
-    description: 'Next-generation model. Experimental preview.',
-    inputCostPer1M: 2.00,
-    outputCostPer1M: 8.00
-  },
-  { 
-    value: 'openai/gpt-5', 
-    label: 'GPT-5',
-    description: 'Powerful all-rounder with excellent reasoning.',
-    inputCostPer1M: 5.00,
+    value: 'anthropic/claude-sonnet-4', 
+    label: 'Claude Sonnet 4',
+    description: 'Most intelligent model with superior reasoning.',
+    inputCostPer1M: 3.00,
     outputCostPer1M: 15.00
   },
   { 
-    value: 'openai/gpt-5-mini', 
-    label: 'GPT-5 Mini',
-    description: 'Lower cost alternative with strong performance.',
+    value: 'anthropic/claude-3.5-haiku', 
+    label: 'Claude 3.5 Haiku',
+    description: 'Fast and efficient for quick responses.',
+    inputCostPer1M: 0.80,
+    outputCostPer1M: 4.00
+  },
+  { 
+    value: 'openai/gpt-4o', 
+    label: 'GPT-4o',
+    description: 'Powerful multimodal with excellent reasoning.',
+    inputCostPer1M: 2.50,
+    outputCostPer1M: 10.00
+  },
+  { 
+    value: 'openai/gpt-4o-mini', 
+    label: 'GPT-4o Mini',
+    description: 'Fast and cost-effective alternative.',
     inputCostPer1M: 0.15,
     outputCostPer1M: 0.60
+  },
+  { 
+    value: 'meta-llama/llama-3.3-70b-instruct', 
+    label: 'Llama 3.3 70B',
+    description: 'Open-source powerhouse with great performance.',
+    inputCostPer1M: 0.40,
+    outputCostPer1M: 0.40
+  },
+  { 
+    value: 'deepseek/deepseek-chat', 
+    label: 'DeepSeek V3',
+    description: 'Excellent reasoning at very low cost.',
+    inputCostPer1M: 0.14,
+    outputCostPer1M: 0.28
   },
 ];
 
