@@ -61,7 +61,7 @@ export const NewsView = ({ config, newsItems }: NewsViewProps) => {
   // Article detail view
   if (selectedArticle) {
     return (
-      <div className="flex flex-col h-full">
+      <div className="flex flex-col h-full animate-fade-in">
         {/* Back header */}
         <div className="flex items-center gap-2 py-2.5 px-4 border-b bg-muted/50">
           <button
