@@ -1,3 +1,4 @@
+import { Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -9,16 +10,18 @@ import { GlobalSearch } from "@/components/GlobalSearch";
 import { AnimatePresence } from "motion/react";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import RouteErrorFallback from "@/components/RouteErrorFallback";
-import Auth from "./pages/Auth";
-import NotFound from "./pages/NotFound";
-import WidgetPage from "./pages/WidgetPage";
-import DashboardWrapper from "./pages/DashboardWrapper";
-import AgentsWrapper from "./pages/AgentsWrapper";
-import AgentConfigWrapper from "./pages/AgentConfigWrapper";
-import ConversationsWrapper from "./pages/ConversationsWrapper";
-import LeadsWrapper from "./pages/LeadsWrapper";
-import AnalyticsWrapper from "./pages/AnalyticsWrapper";
-import SettingsWrapper from "./pages/SettingsWrapper";
+
+// Lazy load route components for code splitting
+const Auth = lazy(() => import("./pages/Auth"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const WidgetPage = lazy(() => import("./pages/WidgetPage"));
+const DashboardWrapper = lazy(() => import("./pages/DashboardWrapper"));
+const AgentsWrapper = lazy(() => import("./pages/AgentsWrapper"));
+const AgentConfigWrapper = lazy(() => import("./pages/AgentConfigWrapper"));
+const ConversationsWrapper = lazy(() => import("./pages/ConversationsWrapper"));
+const LeadsWrapper = lazy(() => import("./pages/LeadsWrapper"));
+const AnalyticsWrapper = lazy(() => import("./pages/AnalyticsWrapper"));
+const SettingsWrapper = lazy(() => import("./pages/SettingsWrapper"));
 
 const queryClient = new QueryClient();
 
@@ -26,48 +29,50 @@ const AnimatedRoutes = () => {
   const location = useLocation();
   
   return (
-    <AnimatePresence mode="wait">
-      <Routes location={location} key={location.pathname}>
-        <Route path="/login" element={<Auth />} />
-        <Route path="/widget" element={<WidgetPage />} />
-        <Route path="/" element={
-          <ProtectedRoute>
-            <DashboardWrapper />
-          </ProtectedRoute>
-        } />
-        <Route path="/agents" element={
-          <ProtectedRoute>
-            <AgentsWrapper />
-          </ProtectedRoute>
-        } />
-        <Route path="/agents/:agentId" element={
-          <ProtectedRoute>
-            <AgentConfigWrapper />
-          </ProtectedRoute>
-        } />
-        <Route path="/conversations" element={
-          <ProtectedRoute>
-            <ConversationsWrapper />
-          </ProtectedRoute>
-        } />
-        <Route path="/leads" element={
-          <ProtectedRoute>
-            <LeadsWrapper />
-          </ProtectedRoute>
-        } />
-        <Route path="/analytics" element={
-          <ProtectedRoute>
-            <AnalyticsWrapper />
-          </ProtectedRoute>
-        } />
-        <Route path="/settings" element={
-          <ProtectedRoute>
-            <SettingsWrapper />
-          </ProtectedRoute>
-        } />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </AnimatePresence>
+    <Suspense fallback={<div className="min-h-screen bg-background" />}>
+      <AnimatePresence mode="wait">
+        <Routes location={location} key={location.pathname}>
+          <Route path="/login" element={<Auth />} />
+          <Route path="/widget" element={<WidgetPage />} />
+          <Route path="/" element={
+            <ProtectedRoute>
+              <DashboardWrapper />
+            </ProtectedRoute>
+          } />
+          <Route path="/agents" element={
+            <ProtectedRoute>
+              <AgentsWrapper />
+            </ProtectedRoute>
+          } />
+          <Route path="/agents/:agentId" element={
+            <ProtectedRoute>
+              <AgentConfigWrapper />
+            </ProtectedRoute>
+          } />
+          <Route path="/conversations" element={
+            <ProtectedRoute>
+              <ConversationsWrapper />
+            </ProtectedRoute>
+          } />
+          <Route path="/leads" element={
+            <ProtectedRoute>
+              <LeadsWrapper />
+            </ProtectedRoute>
+          } />
+          <Route path="/analytics" element={
+            <ProtectedRoute>
+              <AnalyticsWrapper />
+            </ProtectedRoute>
+          } />
+          <Route path="/settings" element={
+            <ProtectedRoute>
+              <SettingsWrapper />
+            </ProtectedRoute>
+          } />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </AnimatePresence>
+    </Suspense>
   );
 };
 
