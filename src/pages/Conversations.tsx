@@ -908,27 +908,29 @@ const Conversations: React.FC = () => {
                     }}
                     disabled={sendingMessage}
                   />
-                  <Textarea
-                    ref={messageTextareaRef}
-                    placeholder="Type a message..."
-                    value={messageInput}
-                    onChange={(e) => {
-                      setMessageInput(e.target.value);
-                      handleTyping();
-                    }}
-                    onKeyDown={handleKeyDown}
-                    disabled={sendingMessage}
-                    rows={1}
-                    className="flex-1 min-h-[36px] max-h-[120px] py-2 resize-none"
-                  />
-                  <Button 
-                    type="submit" 
-                    size="icon"
-                    className="h-9 w-9 shrink-0"
-                    disabled={sendingMessage || !messageInput.trim()}
-                  >
-                    <Send01 size={16} />
-                  </Button>
+                  <div className="relative flex-1">
+                    <Textarea
+                      ref={messageTextareaRef}
+                      placeholder="Type a message..."
+                      value={messageInput}
+                      onChange={(e) => {
+                        setMessageInput(e.target.value);
+                        handleTyping();
+                      }}
+                      onKeyDown={handleKeyDown}
+                      disabled={sendingMessage}
+                      rows={1}
+                      className="min-h-[36px] max-h-[120px] py-2 pr-11 resize-none"
+                    />
+                    <Button 
+                      type="submit" 
+                      size="icon"
+                      className="absolute right-1.5 bottom-1.5 h-7 w-7"
+                      disabled={sendingMessage || !messageInput.trim()}
+                    >
+                      <Send01 size={14} />
+                    </Button>
+                  </div>
                 </form>
               </div>
             )}

@@ -140,7 +140,7 @@ export const MessageInput = ({
                   size="icon" 
                   variant="ghost" 
                   disabled={disabled}
-                  className="h-9 w-9 shrink-0"
+                  className="h-8 w-8 shrink-0"
                 >
                   <FaceSmile className="h-4 w-4 text-muted-foreground" />
                 </Button>
@@ -166,17 +166,6 @@ export const MessageInput = ({
               </PopoverContent>
             </Popover>
             
-            <Textarea
-              ref={textareaRef}
-              value={messageInput}
-              onChange={(e) => onMessageChange(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder={placeholder}
-              disabled={disabled}
-              rows={1}
-              className={`flex-1 min-h-[36px] max-h-[120px] py-2 text-sm placeholder:text-xs resize-none ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-            />
-            
             {enableFileAttachments && (
               <Button 
                 type="button"
@@ -184,7 +173,7 @@ export const MessageInput = ({
                 variant="ghost" 
                 onClick={onAttachFiles}
                 disabled={disabled}
-                className={`h-9 w-9 shrink-0 ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                className={`h-8 w-8 shrink-0 ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 <Attachment01 className="h-4 w-4" />
               </Button>
@@ -196,21 +185,34 @@ export const MessageInput = ({
                 variant="ghost" 
                 onClick={onStartRecording}
                 disabled={disabled}
-                className={`h-9 w-9 shrink-0 ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                className={`h-8 w-8 shrink-0 ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 <Microphone01 className="h-4 w-4" />
               </Button>
             )}
-            <Button 
-              type="button"
-              size="icon" 
-              className={`h-9 w-9 shrink-0 ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-              onClick={onSend} 
-              disabled={disabled || !messageInput.trim()}
-              style={{ backgroundColor: primaryColor }}
-            >
-              <Send01 className="h-4 w-4" />
-            </Button>
+            
+            <div className="relative flex-1">
+              <Textarea
+                ref={textareaRef}
+                value={messageInput}
+                onChange={(e) => onMessageChange(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder={placeholder}
+                disabled={disabled}
+                rows={1}
+                className={`min-h-[36px] max-h-[120px] py-2 pr-10 text-sm placeholder:text-xs resize-none ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+              />
+              <Button 
+                type="button"
+                size="icon" 
+                className="absolute right-1 bottom-1 h-7 w-7"
+                onClick={onSend} 
+                disabled={disabled || !messageInput.trim()}
+                style={{ backgroundColor: primaryColor }}
+              >
+                <Send01 className="h-3.5 w-3.5" />
+              </Button>
+            </div>
           </div>
         )}
       </div>
