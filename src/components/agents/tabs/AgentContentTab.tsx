@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { useAnnouncements, type Announcement, type AnnouncementInsert } from '@/hooks/useAnnouncements';
 import { useNewsItems, type NewsItem, type NewsItemInsert } from '@/hooks/useNewsItems';
 import { useAuth } from '@/hooks/useAuth';
+import { useTeam } from '@/hooks/useTeam';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -11,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Trash01, Edit02, Image03, ChevronRight, Upload01, XClose } from '@untitledui/icons';
 import { EmptyState } from '@/components/ui/empty-state';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
@@ -22,8 +24,10 @@ import { SavedIndicator } from '@/components/settings/SavedIndicator';
 import { AgentSettingsLayout } from '@/components/agents/AgentSettingsLayout';
 import { format } from 'date-fns';
 import { uploadAnnouncementImage, deleteAnnouncementImage } from '@/lib/announcement-image-upload';
+import { uploadFeaturedImage, deleteArticleImage } from '@/lib/article-image-upload';
 import { toast } from '@/lib/toast';
 import { Spinner } from '@/components/ui/spinner';
+import { RichTextEditor } from '@/components/ui/rich-text-editor';
 
 type ContentTab = 'announcements' | 'news';
 
@@ -43,8 +47,18 @@ interface NewsFormData {
   featured_image_url: string;
   body: string;
   author_name: string;
+  author_avatar: string;
   is_published: boolean;
 }
+
+// Helper to format author name as "FirstName L."
+const formatAuthorName = (displayName: string | null | undefined): string => {
+  if (!displayName) return '';
+  const parts = displayName.trim().split(' ');
+  const firstName = parts[0] || '';
+  const lastInitial = parts[1]?.[0] || '';
+  return lastInitial ? `${firstName} ${lastInitial}.` : firstName;
+};
 
 const SortableAnnouncementCard = ({ announcement, onEdit, onDelete }: {
   announcement: Announcement;
@@ -133,6 +147,12 @@ const SortableAnnouncementCard = ({ announcement, onEdit, onDelete }: {
   );
 };
 
+// Strip HTML tags for preview text
+const stripHtml = (html: string): string => {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  return doc.body.textContent || '';
+};
+
 const SortableNewsCard = ({ newsItem, onEdit, onDelete }: {
   newsItem: NewsItem;
   onEdit: () => void;
@@ -144,6 +164,8 @@ const SortableNewsCard = ({ newsItem, onEdit, onDelete }: {
     transform: CSS.Transform.toString(transform),
     transition,
   };
+
+  const previewText = stripHtml(newsItem.body).substring(0, 100);
 
   return (
     <div ref={setNodeRef} style={style}>
@@ -171,9 +193,22 @@ const SortableNewsCard = ({ newsItem, onEdit, onDelete }: {
                     {newsItem.title}
                   </h3>
                   <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
-                    {newsItem.body.substring(0, 100)}...
+                    {previewText}{previewText.length >= 100 ? '...' : ''}
                   </p>
                   <div className="flex items-center gap-3 mt-2">
+                    {newsItem.author_name && (
+                      <div className="flex items-center gap-1.5">
+                        <Avatar className="h-4 w-4">
+                          <AvatarImage src={newsItem.author_avatar || undefined} />
+                          <AvatarFallback className="text-[8px]">
+                            {newsItem.author_name[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="text-xs text-muted-foreground">
+                          {newsItem.author_name}
+                        </span>
+                      </div>
+                    )}
                     <span className={`text-xs px-2 py-0.5 rounded-full ${
                       newsItem.is_published 
                         ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' 
@@ -495,34 +530,114 @@ const NewsDialog = ({
   onSave, 
   onClose,
   open,
+  agentId,
+  userId,
 }: { 
   newsItem?: NewsItem;
   onSave: (data: NewsFormData) => void;
   onClose: () => void;
   open: boolean;
+  agentId: string;
+  userId: string;
 }) => {
-  const { user } = useAuth();
+  const { teamMembers } = useTeam();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(newsItem?.featured_image_url || null);
+  const [originalImageUrl, setOriginalImageUrl] = useState<string | null>(newsItem?.featured_image_url || null);
+  
   const [formData, setFormData] = useState<NewsFormData>(
     newsItem ? {
       title: newsItem.title,
       featured_image_url: newsItem.featured_image_url || '',
       body: newsItem.body,
       author_name: newsItem.author_name || '',
-      is_published: newsItem.is_published,
+      author_avatar: newsItem.author_avatar || '',
+      is_published: newsItem.is_published ?? false,
     } : {
       title: '',
       featured_image_url: '',
       body: '',
       author_name: '',
+      author_avatar: '',
       is_published: false,
     }
   );
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSave(formData);
-    onClose();
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
+      return;
+    }
+    
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image must be less than 5MB');
+      return;
+    }
+    
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
   };
+
+  const handleRemoveImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+    setFormData({ ...formData, featured_image_url: '' });
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleAuthorSelect = (memberUserId: string) => {
+    const member = teamMembers.find(m => m.user_id === memberUserId);
+    if (member) {
+      setFormData({
+        ...formData,
+        author_name: formatAuthorName(member.display_name),
+        author_avatar: member.avatar_url || '',
+      });
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    try {
+      setIsUploading(true);
+      let finalImageUrl = formData.featured_image_url;
+      
+      // Upload new image if selected
+      if (imageFile) {
+        finalImageUrl = await uploadFeaturedImage(imageFile, userId, agentId);
+        
+        // Delete old image if replacing
+        if (originalImageUrl && originalImageUrl !== finalImageUrl) {
+          await deleteArticleImage(originalImageUrl);
+        }
+      } else if (!imagePreview && originalImageUrl) {
+        // Image was removed, delete from storage
+        await deleteArticleImage(originalImageUrl);
+        finalImageUrl = '';
+      }
+      
+      onSave({ ...formData, featured_image_url: finalImageUrl });
+      onClose();
+    } catch (error) {
+      console.error('Error saving news item:', error);
+      toast.error('Failed to save news item');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  // Find current author in team members for display
+  const currentAuthorMember = teamMembers.find(
+    m => formatAuthorName(m.display_name) === formData.author_name
+  );
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -546,37 +661,95 @@ const NewsDialog = ({
             />
           </div>
 
+          {/* Featured Image Upload */}
           <div className="space-y-2">
-            <Label htmlFor="featured_image_url">Featured Image URL</Label>
-            <Input
-              id="featured_image_url"
-              type="url"
-              value={formData.featured_image_url}
-              onChange={(e) => setFormData({ ...formData, featured_image_url: e.target.value })}
-              placeholder="https://example.com/image.jpg"
-            />
+            <Label>Featured Image</Label>
+            {imagePreview ? (
+              <div className="relative w-full h-40 rounded-lg overflow-hidden border bg-muted">
+                <img 
+                  src={imagePreview} 
+                  alt="Preview" 
+                  className="w-full h-full object-cover"
+                />
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="icon"
+                  className="absolute top-2 right-2 h-7 w-7"
+                  onClick={handleRemoveImage}
+                >
+                  <XClose className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <label className="flex flex-col items-center justify-center h-40 border-2 border-dashed rounded-lg cursor-pointer hover:bg-accent/50 transition-colors">
+                <Upload01 className="h-8 w-8 text-muted-foreground mb-2" />
+                <span className="text-sm text-muted-foreground">Click to upload featured image</span>
+                <span className="text-xs text-muted-foreground mt-1">Recommended: 1200×600</span>
+                <input 
+                  ref={fileInputRef}
+                  type="file" 
+                  accept="image/*" 
+                  onChange={handleFileSelect}
+                  className="hidden"
+                />
+              </label>
+            )}
           </div>
 
+          {/* Rich Text Editor for Body */}
           <div className="space-y-2">
-            <Label htmlFor="body">Content *</Label>
-            <Textarea
-              id="body"
-              value={formData.body}
-              onChange={(e) => setFormData({ ...formData, body: e.target.value })}
+            <Label>Content *</Label>
+            <RichTextEditor
+              content={formData.body}
+              onChange={(html) => setFormData({ ...formData, body: html })}
               placeholder="Write your news article content here..."
-              rows={8}
-              required
+              agentId={agentId}
+              userId={userId}
+              minHeight="200px"
             />
           </div>
 
+          {/* Author Selection */}
           <div className="space-y-2">
-            <Label htmlFor="author_name">Author Name</Label>
-            <Input
-              id="author_name"
-              value={formData.author_name}
-              onChange={(e) => setFormData({ ...formData, author_name: e.target.value })}
-              placeholder={user?.email || 'Author name'}
-            />
+            <Label>Author</Label>
+            <Select
+              value={currentAuthorMember?.user_id || ''}
+              onValueChange={handleAuthorSelect}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select an author">
+                  {currentAuthorMember ? (
+                    <div className="flex items-center gap-2">
+                      <Avatar className="h-5 w-5">
+                        <AvatarImage src={currentAuthorMember.avatar_url || undefined} />
+                        <AvatarFallback className="text-[10px]">
+                          {currentAuthorMember.display_name?.[0] || '?'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span>{formatAuthorName(currentAuthorMember.display_name)}</span>
+                    </div>
+                  ) : formData.author_name ? (
+                    <span>{formData.author_name}</span>
+                  ) : null}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {teamMembers.map((member) => (
+                  <SelectItem key={member.user_id} value={member.user_id}>
+                    <div className="flex items-center gap-2">
+                      <Avatar className="h-5 w-5">
+                        <AvatarImage src={member.avatar_url || undefined} />
+                        <AvatarFallback className="text-[10px]">
+                          {member.display_name?.[0] || '?'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span>{formatAuthorName(member.display_name)}</span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="flex items-center justify-between p-4 border rounded-lg">
@@ -594,10 +767,11 @@ const NewsDialog = ({
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose}>
+            <Button type="button" variant="outline" onClick={onClose} disabled={isUploading}>
               Cancel
             </Button>
-            <Button type="submit">
+            <Button type="submit" disabled={isUploading}>
+              {isUploading && <Spinner className="mr-2 h-4 w-4" />}
               {newsItem ? 'Save Changes' : 'Create News Item'}
             </Button>
           </DialogFooter>
@@ -816,6 +990,8 @@ export const AgentContentTab = () => {
           setIsCreateNewsOpen(false);
         }}
         open={!!editingNewsItem || isCreateNewsOpen}
+        agentId={agentId as string}
+        userId={user?.id || ''}
       />
 
       <DeleteConfirmationDialog

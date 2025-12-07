@@ -652,6 +652,7 @@ export type Database = {
       news_items: {
         Row: {
           agent_id: string
+          author_avatar: string | null
           author_name: string | null
           body: string
           created_at: string | null
@@ -666,6 +667,7 @@ export type Database = {
         }
         Insert: {
           agent_id: string
+          author_avatar?: string | null
           author_name?: string | null
           body: string
           created_at?: string | null
@@ -680,6 +682,7 @@ export type Database = {
         }
         Update: {
           agent_id?: string
+          author_avatar?: string | null
           author_name?: string | null
           body?: string
           created_at?: string | null
