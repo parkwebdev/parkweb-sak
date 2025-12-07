@@ -351,7 +351,13 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
           })
         );
       } catch (uploadError) {
-        console.error('Error uploading files:', uploadError);
+        console.error('[Widget] Error uploading files to storage:', uploadError);
+        console.error('[Widget] Upload error details:', {
+          bucket: 'conversation-files',
+          conversationId: activeConversationId,
+          fileCount: pendingFiles.length,
+          fileNames: pendingFiles.map(pf => pf.file.name),
+        });
         // Fall back to blob URLs if upload fails (will show broken on app side)
         uploadedFiles = pendingFiles.map(pf => ({ name: pf.file.name, url: pf.preview, type: pf.file.type, size: pf.file.size }));
       }
