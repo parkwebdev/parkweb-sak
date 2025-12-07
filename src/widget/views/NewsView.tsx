@@ -14,6 +14,10 @@ interface NewsItem {
   author_name?: string;
   author_avatar?: string;
   published_at?: string;
+  cta_primary_label?: string;
+  cta_primary_url?: string;
+  cta_secondary_label?: string;
+  cta_secondary_url?: string;
 }
 
 interface NewsViewProps {
@@ -104,6 +108,33 @@ export const NewsView = ({ config, newsItems }: NewsViewProps) => {
               className="article-content max-w-none"
               dangerouslySetInnerHTML={{ __html: sanitizeHtml(selectedArticle.body) }}
             />
+
+            {/* CTA Buttons */}
+            {((selectedArticle.cta_primary_label && selectedArticle.cta_primary_url) || 
+              (selectedArticle.cta_secondary_label && selectedArticle.cta_secondary_url)) && (
+              <div className="flex gap-2 pt-4">
+                {selectedArticle.cta_primary_label && selectedArticle.cta_primary_url && (
+                  <a
+                    href={selectedArticle.cta_primary_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 inline-flex items-center justify-center px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-primary text-primary-foreground hover:bg-primary/90"
+                  >
+                    {selectedArticle.cta_primary_label}
+                  </a>
+                )}
+                {selectedArticle.cta_secondary_label && selectedArticle.cta_secondary_url && (
+                  <a
+                    href={selectedArticle.cta_secondary_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 inline-flex items-center justify-center px-4 py-2 rounded-lg text-sm font-medium transition-colors border border-input bg-background hover:bg-accent hover:text-accent-foreground"
+                  >
+                    {selectedArticle.cta_secondary_label}
+                  </a>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>

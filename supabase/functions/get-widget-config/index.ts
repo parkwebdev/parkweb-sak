@@ -59,7 +59,7 @@ Deno.serve(async (req) => {
       // Fetch published news items
       supabase
         .from('news_items')
-        .select('id, title, body, featured_image_url, author_name, author_avatar, published_at, order_index')
+        .select('id, title, body, featured_image_url, author_name, author_avatar, published_at, order_index, cta_primary_label, cta_primary_url, cta_secondary_label, cta_secondary_url')
         .eq('agent_id', agentId)
         .eq('is_published', true)
         .order('published_at', { ascending: false }),
@@ -181,6 +181,10 @@ Deno.serve(async (req) => {
         author_name: item.author_name,
         author_avatar: item.author_avatar,
         published_at: item.published_at,
+        cta_primary_label: item.cta_primary_label,
+        cta_primary_url: item.cta_primary_url,
+        cta_secondary_label: item.cta_secondary_label,
+        cta_secondary_url: item.cta_secondary_url,
       })),
     };
 

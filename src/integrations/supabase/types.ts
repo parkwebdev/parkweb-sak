@@ -659,6 +659,10 @@ export type Database = {
           author_name: string | null
           body: string
           created_at: string | null
+          cta_primary_label: string | null
+          cta_primary_url: string | null
+          cta_secondary_label: string | null
+          cta_secondary_url: string | null
           featured_image_url: string | null
           id: string
           is_published: boolean | null
@@ -674,6 +678,10 @@ export type Database = {
           author_name?: string | null
           body: string
           created_at?: string | null
+          cta_primary_label?: string | null
+          cta_primary_url?: string | null
+          cta_secondary_label?: string | null
+          cta_secondary_url?: string | null
           featured_image_url?: string | null
           id?: string
           is_published?: boolean | null
@@ -689,6 +697,10 @@ export type Database = {
           author_name?: string | null
           body?: string
           created_at?: string | null
+          cta_primary_label?: string | null
+          cta_primary_url?: string | null
+          cta_secondary_label?: string | null
+          cta_secondary_url?: string | null
           featured_image_url?: string | null
           id?: string
           is_published?: boolean | null
