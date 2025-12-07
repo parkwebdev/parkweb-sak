@@ -114,16 +114,23 @@ async function getCachedEmbedding(supabase: any, queryHash: string, agentId: str
 
 // Cache query embedding
 async function cacheQueryEmbedding(supabase: any, queryHash: string, normalized: string, embedding: number[], agentId: string): Promise<void> {
-  const embeddingVector = `[${embedding.join(',')}]`;
-  await supabase
-    .from('query_embedding_cache')
-    .upsert({
-      query_hash: queryHash,
-      query_normalized: normalized,
-      embedding: embeddingVector,
-      agent_id: agentId,
-    }, { onConflict: 'query_hash' })
-    .catch((err: any) => console.error('Failed to cache embedding:', err));
+  try {
+    const embeddingVector = `[${embedding.join(',')}]`;
+    const { error } = await supabase
+      .from('query_embedding_cache')
+      .upsert({
+        query_hash: queryHash,
+        query_normalized: normalized,
+        embedding: embeddingVector,
+        agent_id: agentId,
+      }, { onConflict: 'query_hash' });
+    
+    if (error) {
+      console.error('Failed to cache embedding:', error);
+    }
+  } catch (err) {
+    console.error('Failed to cache embedding:', err);
+  }
 }
 
 // Check response cache for high-confidence cached responses
@@ -153,19 +160,26 @@ async function getCachedResponse(supabase: any, queryHash: string, agentId: stri
 
 // Cache high-confidence response
 async function cacheResponse(supabase: any, queryHash: string, agentId: string, content: string, similarity: number): Promise<void> {
-  // Only cache responses with very high similarity (FAQ-style)
-  if (similarity < 0.92) return;
-  
-  await supabase
-    .from('response_cache')
-    .upsert({
-      query_hash: queryHash,
-      agent_id: agentId,
-      response_content: content,
-      similarity_score: similarity,
-      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days
-    }, { onConflict: 'query_hash,agent_id' })
-    .catch((err: any) => console.error('Failed to cache response:', err));
+  try {
+    // Only cache responses with very high similarity (FAQ-style)
+    if (similarity < 0.92) return;
+    
+    const { error } = await supabase
+      .from('response_cache')
+      .upsert({
+        query_hash: queryHash,
+        agent_id: agentId,
+        response_content: content,
+        similarity_score: similarity,
+        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days
+      }, { onConflict: 'query_hash,agent_id' });
+    
+    if (error) {
+      console.error('Failed to cache response:', error);
+    }
+  } catch (err) {
+    console.error('Failed to cache response:', err);
+  }
 }
 
 // Generate embedding for a query using OpenAI (matches stored embeddings)
