@@ -8,10 +8,10 @@ import { Badge } from '@/components/Badge';
 
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { SearchMd, MessageChatSquare, User01, Send01, FaceSmile, Globe01, Check, CheckCircle, XCircle, Download01 } from '@untitledui/icons';
+import { SearchMd, MessageChatSquare, User01, Send01, FaceSmile, Globe01, Check, CheckCircle, XCircle, Download01, Attachment01, XClose } from '@untitledui/icons';
 import { LinkPreviews } from '@/components/chat/LinkPreviews';
 import { FileTypeIcon } from '@/components/chat/FileTypeIcons';
-import { formatFileSize } from '@/lib/file-validation';
+import { formatFileSize, validateFiles } from '@/lib/file-validation';
 import { EmptyState } from '@/components/ui/empty-state';
 import { useConversations } from '@/hooks/useConversations';
 import { useAgents } from '@/hooks/useAgents';
@@ -25,6 +25,7 @@ import { playNotificationSound } from '@/lib/notification-sound';
 import { formatShortTime, formatSenderName } from '@/lib/time-formatting';
 import { QuickEmojiButton } from '@/components/chat/QuickEmojiButton';
 import { useAutoResizeTextarea } from '@/hooks/useAutoResizeTextarea';
+import { toast } from '@/lib/toast';
 
 type Conversation = Tables<'conversations'> & {
   agents?: { name: string };
@@ -94,6 +95,8 @@ const Conversations: React.FC = () => {
   const [takeoverDialogOpen, setTakeoverDialogOpen] = useState(false);
   const [messageInput, setMessageInput] = useState('');
   const [sendingMessage, setSendingMessage] = useState(false);
+  const [pendingFiles, setPendingFiles] = useState<{ files: File[]; urls: string[] } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [metadataPanelCollapsed, setMetadataPanelCollapsed] = useState(() => {
     const saved = localStorage.getItem('conversations_metadata_collapsed');
     return saved === 'true';
@@ -382,7 +385,8 @@ const Conversations: React.FC = () => {
   };
 
   const handleSendMessage = async () => {
-    if (!selectedConversation || !messageInput.trim() || sendingMessage) return;
+    if (!selectedConversation || sendingMessage) return;
+    if (!messageInput.trim() && !pendingFiles) return;
     
     // Immediately stop typing indicator
     stopTypingIndicator();
@@ -394,17 +398,26 @@ const Conversations: React.FC = () => {
     const senderName = userProfile?.display_name || user?.email || 'Team Member';
     const senderAvatar = userProfile?.avatar_url || null;
     
+    // Build file metadata for optimistic display
+    const fileMetadata = pendingFiles?.files.map((file, i) => ({
+      name: file.name,
+      url: pendingFiles.urls[i],
+      type: file.type,
+      size: file.size,
+    }));
+    
     const tempMessage: Message = {
       id: tempId,
       conversation_id: selectedConversation.id,
       role: 'assistant',
-      content,
+      content: content || (pendingFiles ? `Sent ${pendingFiles.files.length} file(s)` : ''),
       created_at: new Date().toISOString(),
       metadata: { 
         sender_type: 'human', 
         pending: true,
         sender_name: senderName,
         sender_avatar: senderAvatar,
+        files: fileMetadata,
       }
     };
     
@@ -415,17 +428,51 @@ const Conversations: React.FC = () => {
     setMessages(prev => [...prev, tempMessage]);
     setMessageInput('');
     
+    // Capture files before clearing state
+    const filesToSend = pendingFiles;
+    setPendingFiles(null);
+    
     setSendingMessage(true);
-    const success = await sendHumanMessage(selectedConversation.id, content);
+    const success = await sendHumanMessage(selectedConversation.id, content, filesToSend?.files);
     
     if (!success) {
       // Rollback optimistic update on failure
       setMessages(prev => prev.filter(m => m.id !== tempId));
       setMessageInput(content); // Restore input
+      setPendingFiles(filesToSend); // Restore files
     }
     // On success, real-time subscription will replace temp message with real one
     
     setSendingMessage(false);
+  };
+  
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return;
+    const files = Array.from(e.target.files);
+    
+    const validation = validateFiles(files);
+    if (!validation.valid) {
+      toast.error('Invalid file', { description: validation.error });
+      return;
+    }
+    
+    const urls = files.map(file => URL.createObjectURL(file));
+    setPendingFiles({ files, urls });
+    
+    // Reset input
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+  
+  const handleRemoveFile = (index: number) => {
+    if (!pendingFiles) return;
+    URL.revokeObjectURL(pendingFiles.urls[index]);
+    const newFiles = pendingFiles.files.filter((_, i) => i !== index);
+    const newUrls = pendingFiles.urls.filter((_, i) => i !== index);
+    if (newFiles.length === 0) {
+      setPendingFiles(null);
+    } else {
+      setPendingFiles({ files: newFiles, urls: newUrls });
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -968,6 +1015,38 @@ const Conversations: React.FC = () => {
             {/* Message Input */}
             {selectedConversation.status === 'human_takeover' && (
               <div className="px-6 py-4 border-t bg-background shrink-0">
+                {/* Pending Files Preview */}
+                {pendingFiles && pendingFiles.files.length > 0 && (
+                  <div className="max-w-4xl mx-auto mb-3">
+                    <div className="flex flex-wrap gap-2">
+                      {pendingFiles.files.map((file, index) => (
+                        <div 
+                          key={index}
+                          className="flex items-center gap-2 px-3 py-2 bg-muted rounded-lg text-sm"
+                        >
+                          {file.type.startsWith('image/') ? (
+                            <img 
+                              src={pendingFiles.urls[index]} 
+                              alt={file.name}
+                              className="w-8 h-8 object-cover rounded"
+                            />
+                          ) : (
+                            <FileTypeIcon fileName={file.name} width={20} height={20} />
+                          )}
+                          <span className="truncate max-w-[120px]">{file.name}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveFile(index)}
+                            className="p-0.5 hover:bg-accent rounded"
+                          >
+                            <XClose size={14} className="text-muted-foreground" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
                 <form 
                   onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }}
                   className="flex items-end gap-3 max-w-4xl mx-auto"
@@ -990,6 +1069,27 @@ const Conversations: React.FC = () => {
                     }}
                     disabled={sendingMessage}
                   />
+                  
+                  {/* File Upload Button */}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    accept="image/*,.pdf,.doc,.docx,.txt,.xls,.xlsx,.csv,.ppt,.pptx"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                  />
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={sendingMessage}
+                    className="h-10 w-10"
+                  >
+                    <Attachment01 size={18} />
+                  </Button>
+                  
                   <div className="relative flex-1">
                     <Textarea
                       ref={messageTextareaRef}
@@ -1008,7 +1108,7 @@ const Conversations: React.FC = () => {
                       type="submit" 
                       size="icon"
                       className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
-                      disabled={sendingMessage || !messageInput.trim()}
+                      disabled={sendingMessage || (!messageInput.trim() && !pendingFiles)}
                     >
                       <Send01 size={16} />
                     </Button>

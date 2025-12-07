@@ -87,13 +87,13 @@ serve(async (req) => {
     // SECURITY FIX: Use authenticated user's ID - ignore any senderId from request body
     const senderId = authUser.id;
 
-    const { conversationId, content } = await req.json();
+    const { conversationId, content, files } = await req.json();
 
     if (!conversationId) {
       throw new Error('Conversation ID is required');
     }
-    if (!content || !content.trim()) {
-      throw new Error('Message content is required');
+    if ((!content || !content.trim()) && (!files || files.length === 0)) {
+      throw new Error('Message content or files are required');
     }
 
     console.log(`Sending human message to conversation ${conversationId} from authenticated user ${senderId}`);
@@ -146,12 +146,14 @@ serve(async (req) => {
     console.log(`Cached ${linkPreviews.length} link previews for human message`);
 
     // Insert the message with human sender metadata
+    const messageContent = content?.trim() || (files && files.length > 0 ? `Sent ${files.length} file(s)` : '');
+    
     const { data: message, error: msgError } = await supabase
       .from('messages')
       .insert({
         conversation_id: conversationId,
         role: 'assistant', // Shows on the "bot" side in widget
-        content: content.trim(),
+        content: messageContent,
         metadata: {
           sender_type: 'human',
           sender_id: senderId,
@@ -159,6 +161,7 @@ serve(async (req) => {
           sender_avatar: senderAvatar,
           source: 'admin',
           link_previews: linkPreviews.length > 0 ? linkPreviews : undefined,
+          files: files && files.length > 0 ? files : undefined,
         },
       })
       .select()
