@@ -101,7 +101,7 @@ export const NewsView = ({ config, newsItems }: NewsViewProps) => {
 
             {/* Article body */}
             <div 
-              className="prose prose-sm max-w-none text-foreground"
+              className="article-content max-w-none"
               dangerouslySetInnerHTML={{ __html: sanitizeHtml(selectedArticle.body) }}
             />
           </div>
