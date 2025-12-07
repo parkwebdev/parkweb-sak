@@ -238,6 +238,73 @@ export const useKnowledgeSources = (agentId?: string) => {
     }
   };
 
+  const retrainAllSources = async (
+    onProgress?: (completed: number, total: number) => void
+  ): Promise<{ success: number; failed: number }> => {
+    const sourcesToRetrain = sources.filter(s => s.status !== 'processing');
+    const total = sourcesToRetrain.length;
+    
+    if (total === 0) {
+      toast.info('No sources to retrain');
+      return { success: 0, failed: 0 };
+    }
+
+    let completed = 0;
+    let failed = 0;
+
+    // Update all sources to processing status
+    const { error: updateError } = await supabase
+      .from('knowledge_sources')
+      .update({ status: 'processing' })
+      .eq('agent_id', agentId)
+      .in('id', sourcesToRetrain.map(s => s.id));
+
+    if (updateError) {
+      toast.error('Failed to start retraining', { description: updateError.message });
+      return { success: 0, failed: total };
+    }
+
+    await fetchSources();
+
+    // Process sources in batches of 3 to avoid rate limits
+    const batchSize = 3;
+    for (let i = 0; i < sourcesToRetrain.length; i += batchSize) {
+      const batch = sourcesToRetrain.slice(i, i + batchSize);
+      
+      await Promise.all(
+        batch.map(async (source) => {
+          try {
+            const { error } = await supabase.functions.invoke('process-knowledge-source', {
+              body: { sourceId: source.id, agentId },
+            });
+            
+            if (error) throw error;
+            completed++;
+          } catch (error) {
+            console.error(`Failed to retrain source ${source.id}:`, error);
+            failed++;
+          }
+          
+          onProgress?.(completed + failed, total);
+        })
+      );
+
+      // Small delay between batches
+      if (i + batchSize < sourcesToRetrain.length) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+    }
+
+    await fetchSources();
+    return { success: completed, failed };
+  };
+
+  const isSourceOutdated = (source: KnowledgeSource): boolean => {
+    const metadata = source.metadata as Record<string, any> | null;
+    if (!metadata) return true;
+    return metadata.embedding_model !== 'nomic-ai/nomic-embed-text-v1.5';
+  };
+
   return {
     sources,
     loading,
@@ -246,6 +313,8 @@ export const useKnowledgeSources = (agentId?: string) => {
     addTextSource,
     deleteSource,
     reprocessSource,
+    retrainAllSources,
+    isSourceOutdated,
     refetch: fetchSources,
   };
 };

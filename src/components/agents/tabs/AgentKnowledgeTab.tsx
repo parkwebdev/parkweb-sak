@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
-import { Database01 } from '@untitledui/icons';
+import { Database01, RefreshCcw01 } from '@untitledui/icons';
 import { useKnowledgeSources } from '@/hooks/useKnowledgeSources';
 import { KnowledgeSourceCard } from '@/components/agents/KnowledgeSourceCard';
 import { AddKnowledgeDialog } from '@/components/agents/AddKnowledgeDialog';
 import { HelpArticlesManager } from '@/components/agents/HelpArticlesManager';
 import { AgentSettingsLayout } from '@/components/agents/AgentSettingsLayout';
 import { LoadingState } from '@/components/ui/loading-state';
+import { toast } from '@/lib/toast';
 
 interface AgentKnowledgeTabProps {
   agentId: string;
@@ -17,9 +18,39 @@ interface AgentKnowledgeTabProps {
 type KnowledgeTab = 'knowledge-sources' | 'help-articles';
 
 export const AgentKnowledgeTab = ({ agentId, userId }: AgentKnowledgeTabProps) => {
-  const { sources, loading, deleteSource, reprocessSource } = useKnowledgeSources(agentId);
+  const { sources, loading, deleteSource, reprocessSource, retrainAllSources, isSourceOutdated } = useKnowledgeSources(agentId);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<KnowledgeTab>('knowledge-sources');
+  const [isRetraining, setIsRetraining] = useState(false);
+  const [retrainProgress, setRetrainProgress] = useState({ completed: 0, total: 0 });
+
+  const outdatedCount = sources.filter(isSourceOutdated).length;
+
+  const handleRetrainAll = async () => {
+    setIsRetraining(true);
+    setRetrainProgress({ completed: 0, total: sources.filter(s => s.status !== 'processing').length });
+    
+    try {
+      const { success, failed } = await retrainAllSources((completed, total) => {
+        setRetrainProgress({ completed, total });
+      });
+
+      if (failed === 0) {
+        toast.success('Retraining complete', {
+          description: `Successfully retrained ${success} knowledge sources.`,
+        });
+      } else {
+        toast.warning('Retraining completed with errors', {
+          description: `${success} succeeded, ${failed} failed.`,
+        });
+      }
+    } catch (error: any) {
+      toast.error('Retraining failed', { description: error.message });
+    } finally {
+      setIsRetraining(false);
+      setRetrainProgress({ completed: 0, total: 0 });
+    }
+  };
 
   const menuItems = [
     { 
@@ -48,7 +79,23 @@ export const AgentKnowledgeTab = ({ agentId, userId }: AgentKnowledgeTabProps) =
     >
       {activeTab === 'knowledge-sources' && (
         <div className="space-y-4">
-          <div className="flex items-center justify-end gap-4">
+          <div className="flex items-center justify-end gap-2">
+            {sources.length > 0 && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleRetrainAll}
+                disabled={isRetraining || sources.every(s => s.status === 'processing')}
+              >
+                <RefreshCcw01 className={`h-4 w-4 mr-2 ${isRetraining ? 'animate-spin' : ''}`} />
+                {isRetraining 
+                  ? `Retraining ${retrainProgress.completed}/${retrainProgress.total}...`
+                  : outdatedCount > 0 
+                    ? `Retrain AI (${outdatedCount} outdated)`
+                    : 'Retrain AI'
+                }
+              </Button>
+            )}
             <Button size="sm" onClick={() => setAddDialogOpen(true)}>
               Add Source
             </Button>
@@ -69,6 +116,7 @@ export const AgentKnowledgeTab = ({ agentId, userId }: AgentKnowledgeTabProps) =
                   source={source}
                   onDelete={deleteSource}
                   onReprocess={reprocessSource}
+                  isOutdated={isSourceOutdated(source)}
                 />
               ))}
             </div>
