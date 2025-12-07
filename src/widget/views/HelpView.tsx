@@ -96,7 +96,7 @@ export const HelpView = ({
               value={helpSearchQuery}
               onChange={(e) => setHelpSearchQuery(e.target.value)}
               placeholder="Search help articles..."
-              className="h-9"
+              className="h-9 placeholder:text-xs"
             />
           </div>
 
@@ -204,7 +204,7 @@ export const HelpView = ({
               value={helpSearchQuery}
               onChange={(e) => setHelpSearchQuery(e.target.value)}
               placeholder="Search in this category..."
-              className="h-9"
+              className="h-9 placeholder:text-xs"
             />
           </div>
 
