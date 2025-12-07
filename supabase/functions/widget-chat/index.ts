@@ -64,16 +64,18 @@ async function fetchLinkPreviews(content: string, supabaseUrl: string, supabaseK
   return previews.filter(p => p !== null);
 }
 
-// Generate embedding for a query using Lovable AI
+// Generate embedding for a query using OpenRouter
 async function generateEmbedding(query: string, apiKey: string): Promise<number[]> {
-  const response = await fetch('https://ai.gateway.lovable.dev/v1/embeddings', {
+  const response = await fetch('https://openrouter.ai/api/v1/embeddings', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${apiKey}`,
+      'HTTP-Referer': 'https://chatpad.ai',
+      'X-Title': 'ChatPad',
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'text-embedding-3-small',
+      model: 'openai/text-embedding-3-small',
       input: query,
     }),
   });
@@ -596,10 +598,10 @@ serve(async (req) => {
     const usagePercentage = (currentApiCalls / maxApiCalls) * 100;
     console.log(`API usage: ${currentApiCalls}/${maxApiCalls} (${usagePercentage.toFixed(1)}%)`);
 
-    // Get Lovable AI key
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY is not configured');
+    // Get OpenRouter API key
+    const OPENROUTER_API_KEY = Deno.env.get('OPENROUTER_API_KEY');
+    if (!OPENROUTER_API_KEY) {
+      throw new Error('OPENROUTER_API_KEY is not configured');
     }
 
     let systemPrompt = agent.system_prompt || 'You are a helpful AI assistant.';
@@ -615,7 +617,7 @@ serve(async (req) => {
           console.log('Generating embedding for query:', lastUserMessage.content.substring(0, 100));
           
           // Generate embedding for the user's query
-          const queryEmbedding = await generateEmbedding(lastUserMessage.content, LOVABLE_API_KEY);
+          const queryEmbedding = await generateEmbedding(lastUserMessage.content, OPENROUTER_API_KEY);
           
           // Search for relevant knowledge sources
           const knowledgeResults = await searchKnowledge(
@@ -683,11 +685,13 @@ When answering, you can naturally reference the information from the knowledge b
       aiRequestBody.tool_choice = 'auto';
     }
 
-    // Call Lovable AI Gateway
-    let response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    // Call OpenRouter API
+    let response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+        'HTTP-Referer': 'https://chatpad.ai',
+        'X-Title': 'ChatPad',
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(aiRequestBody),
@@ -772,10 +776,12 @@ When answering, you can naturally reference the information from the knowledge b
 
       console.log('Calling AI with tool results for final response');
 
-      const followUpResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      const followUpResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+          'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+          'HTTP-Referer': 'https://chatpad.ai',
+          'X-Title': 'ChatPad',
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
