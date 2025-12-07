@@ -304,7 +304,7 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
       )}
     >
       {/* Header - always visible */}
-      <div className="px-4 py-4 border-b flex items-center justify-between shrink-0 sticky top-0 z-10 bg-muted/50 backdrop-blur-md">
+      <div className="px-4 pt-4 pb-3 border-b flex items-center justify-between shrink-0 sticky top-0 z-10 bg-muted/50 backdrop-blur-md">
         {!isCollapsed && (
           <h3 className="font-semibold text-sm">Conversation Details</h3>
         )}
