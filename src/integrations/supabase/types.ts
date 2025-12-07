@@ -912,6 +912,91 @@ export type Database = {
         }
         Relationships: []
       }
+      query_embedding_cache: {
+        Row: {
+          agent_id: string | null
+          created_at: string | null
+          embedding: string | null
+          hit_count: number | null
+          id: string
+          last_used_at: string | null
+          query_hash: string
+          query_normalized: string
+        }
+        Insert: {
+          agent_id?: string | null
+          created_at?: string | null
+          embedding?: string | null
+          hit_count?: number | null
+          id?: string
+          last_used_at?: string | null
+          query_hash: string
+          query_normalized: string
+        }
+        Update: {
+          agent_id?: string | null
+          created_at?: string | null
+          embedding?: string | null
+          hit_count?: number | null
+          id?: string
+          last_used_at?: string | null
+          query_hash?: string
+          query_normalized?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "query_embedding_cache_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      response_cache: {
+        Row: {
+          agent_id: string
+          created_at: string | null
+          expires_at: string | null
+          hit_count: number | null
+          id: string
+          last_used_at: string | null
+          query_hash: string
+          response_content: string
+          similarity_score: number
+        }
+        Insert: {
+          agent_id: string
+          created_at?: string | null
+          expires_at?: string | null
+          hit_count?: number | null
+          id?: string
+          last_used_at?: string | null
+          query_hash: string
+          response_content: string
+          similarity_score: number
+        }
+        Update: {
+          agent_id?: string
+          created_at?: string | null
+          expires_at?: string | null
+          hit_count?: number | null
+          id?: string
+          last_used_at?: string | null
+          query_hash?: string
+          response_content?: string
+          similarity_score?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "response_cache_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       scheduled_reports: {
         Row: {
           active: boolean
@@ -1286,6 +1371,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_expired_caches: { Args: never; Returns: undefined }
       get_account_owner_id: { Args: never; Returns: string }
       get_current_user_role: {
         Args: never

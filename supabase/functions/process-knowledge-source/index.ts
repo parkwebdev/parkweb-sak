@@ -5,6 +5,10 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Nomic embedding model - 50% cheaper than OpenAI, 768 dimensions
+const EMBEDDING_MODEL = 'nomic-ai/nomic-embed-text-v1.5';
+const EMBEDDING_DIMENSIONS = 768;
+
 // Improved chunking with semantic boundaries and overlap
 function chunkText(text: string, maxTokens: number = 500, overlapTokens: number = 50): { content: string; tokenCount: number }[] {
   const chunks: { content: string; tokenCount: number }[] = [];
@@ -87,7 +91,7 @@ function chunkText(text: string, maxTokens: number = 500, overlapTokens: number 
   return chunks;
 }
 
-// Generate embeddings using OpenRouter
+// Generate embeddings using Nomic model via OpenRouter (50% cheaper)
 async function generateEmbedding(text: string): Promise<number[]> {
   const OPENROUTER_API_KEY = Deno.env.get('OPENROUTER_API_KEY');
   if (!OPENROUTER_API_KEY) {
@@ -104,7 +108,7 @@ async function generateEmbedding(text: string): Promise<number[]> {
     },
     body: JSON.stringify({
       input: text,
-      model: 'openai/text-embedding-3-small',
+      model: EMBEDDING_MODEL,
     }),
   });
 
@@ -195,6 +199,7 @@ Deno.serve(async (req) => {
 
     const { sourceId } = await req.json();
     console.log('Processing knowledge source:', sourceId);
+    console.log('Using embedding model:', EMBEDDING_MODEL, `(${EMBEDDING_DIMENSIONS} dimensions)`);
 
     // Get the knowledge source
     const { data: source, error: sourceError } = await supabase
@@ -269,6 +274,7 @@ Deno.serve(async (req) => {
             token_count: chunk.tokenCount,
             metadata: {
               original_length: chunk.content.length,
+              embedding_model: EMBEDDING_MODEL,
             }
           });
 
@@ -291,7 +297,9 @@ Deno.serve(async (req) => {
           chunks_count: successfulChunks,
           total_chunks: chunks.length,
           content_length: content.length,
-          chunking_version: 2, // Mark as using new chunk-level system
+          chunking_version: 2,
+          embedding_model: EMBEDDING_MODEL,
+          embedding_dimensions: EMBEDDING_DIMENSIONS,
         },
       })
       .eq('id', sourceId);
@@ -308,6 +316,7 @@ Deno.serve(async (req) => {
         sourceId,
         chunks: successfulChunks,
         totalChunks: chunks.length,
+        embeddingModel: EMBEDDING_MODEL,
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
