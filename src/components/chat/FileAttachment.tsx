@@ -82,21 +82,31 @@ export const MessageFileAttachment: React.FC<MessageFileAttachmentProps> = ({
 
   if (isImage) {
     return (
-      <a
-        href={fileUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="block max-w-[280px] rounded-lg overflow-hidden border"
-      >
-        <img
-          src={fileUrl}
-          alt={fileName}
-          className="w-full h-auto"
-        />
-        <div className="bg-muted/50 px-2 py-1 text-xs truncate">
-          {fileName}
+      <div className="flex items-center gap-3 p-3 border rounded-lg bg-background/50 max-w-[280px]">
+        <a href={fileUrl} target="_blank" rel="noopener noreferrer" className="shrink-0">
+          <img 
+            src={fileUrl} 
+            alt={fileName} 
+            className="w-12 h-12 object-cover rounded-md" 
+          />
+        </a>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium truncate">{fileName}</p>
+          {fileSize && (
+            <p className="text-xs text-muted-foreground">{formatFileSize(fileSize)}</p>
+          )}
         </div>
-      </a>
+        <a
+          href={fileUrl}
+          download={fileName}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="p-1.5 rounded-md hover:bg-accent transition-colors shrink-0"
+          title="Download"
+        >
+          <Download01 size={18} className="text-muted-foreground" />
+        </a>
+      </div>
     );
   }
 
