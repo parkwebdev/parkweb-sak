@@ -844,11 +844,11 @@ serve(async (req) => {
             cacheQueryEmbedding(supabase, queryHash, normalizedQuery, queryEmbedding, agentId);
           }
           
-          // COST OPTIMIZATION: Dynamic threshold and count based on query length
-          // Shorter queries often need stricter matching, longer queries more lenient
+          // RAG threshold tuned for OpenAI embeddings (industry standard: 0.40-0.50)
+          // Higher thresholds (0.70+) cause most semantically relevant content to be missed
           const queryLength = queryContent.split(' ').length;
-          const matchThreshold = queryLength < 5 ? 0.80 : queryLength < 15 ? 0.75 : 0.70;
-          const matchCount = queryLength < 10 ? 3 : 5; // Fewer chunks for simple queries
+          const matchThreshold = queryLength < 5 ? 0.50 : queryLength < 15 ? 0.45 : 0.40;
+          const matchCount = queryLength < 10 ? 5 : 7; // More context for better responses
           
           console.log(`Dynamic RAG params: threshold=${matchThreshold}, count=${matchCount} (query length: ${queryLength} words)`);
           
@@ -874,8 +874,8 @@ serve(async (req) => {
               similarity: result.similarity,
             }));
 
-            // COST OPTIMIZATION: Only include chunks above a minimum relevance threshold
-            const relevantChunks = knowledgeResults.filter((r: any) => r.similarity > 0.72);
+            // Secondary filter: exclude very low relevance matches
+            const relevantChunks = knowledgeResults.filter((r: any) => r.similarity > 0.35);
             
             if (relevantChunks.length > 0) {
               const knowledgeContext = relevantChunks
