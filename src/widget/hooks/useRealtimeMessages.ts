@@ -105,16 +105,23 @@ export function useRealtimeMessages(options: UseRealtimeMessagesOptions) {
       },
       // Handle message updates (for real-time reaction sync AND read receipts)
       (updatedMessage) => {
-        console.log('[Widget] Message updated:', updatedMessage.id, updatedMessage.metadata);
-        setMessages(prev => prev.map(msg => 
-          msg.id === updatedMessage.id 
-            ? { 
-                ...msg, 
-                reactions: updatedMessage.metadata?.reactions || [],
-                read_at: updatedMessage.metadata?.read_at,
-              }
-            : msg
-        ));
+        console.log('[Widget] Message UPDATE callback invoked:', {
+          messageId: updatedMessage.id,
+          metadata: updatedMessage.metadata,
+          reactions: updatedMessage.metadata?.reactions,
+        });
+        setMessages(prev => {
+          console.log('[Widget] Updating message in state:', updatedMessage.id, 'reactions:', updatedMessage.metadata?.reactions);
+          return prev.map(msg => 
+            msg.id === updatedMessage.id 
+              ? { 
+                  ...msg, 
+                  reactions: updatedMessage.metadata?.reactions || [],
+                  read_at: updatedMessage.metadata?.read_at,
+                }
+              : msg
+          );
+        });
       }
     );
 
