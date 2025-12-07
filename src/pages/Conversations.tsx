@@ -10,6 +10,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { SearchMd, MessageChatSquare, User01, Send01, FaceSmile, Globe01, Check, CheckCircle, XCircle } from '@untitledui/icons';
 import { LinkPreviews } from '@/components/chat/LinkPreviews';
+import { FileTypeIcon } from '@/components/chat/FileTypeIcons';
+import { formatFileSize } from '@/lib/file-validation';
 import { EmptyState } from '@/components/ui/empty-state';
 import { useConversations } from '@/hooks/useConversations';
 import { useAgents } from '@/hooks/useAgents';
@@ -810,7 +812,39 @@ const Conversations: React.FC = () => {
                                 className={`rounded-lg px-3 py-2 text-foreground ${isUser ? '' : 'bg-muted'}`}
                                 style={isUser ? { backgroundColor: 'rgb(1 110 237 / 7%)' } : undefined}
                               >
-<p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</p>
+                                {/* Check for file attachments in metadata */}
+                                {msgMetadata?.files && Array.isArray(msgMetadata.files) && msgMetadata.files.length > 0 && (
+                                  <div className="space-y-2 mb-2">
+                                    {msgMetadata.files.map((file: { name: string; url: string; type?: string; size?: number }, i: number) => (
+                                      <div key={i}>
+                                        {file.type?.startsWith('image/') ? (
+                                          <a href={file.url} target="_blank" rel="noopener noreferrer" className="block">
+                                            <img src={file.url} alt={file.name} className="max-w-full max-h-48 rounded-lg" />
+                                          </a>
+                                        ) : (
+                                          <a
+                                            href={file.url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="flex items-center gap-3 p-2 border rounded-lg bg-background/50 hover:bg-accent/50 transition-colors max-w-[280px]"
+                                          >
+                                            <FileTypeIcon fileName={file.name} width={36} height={36} className="shrink-0" />
+                                            <div className="flex-1 min-w-0">
+                                              <p className="text-sm font-medium truncate">{file.name}</p>
+                                              {file.size && (
+                                                <p className="text-xs text-muted-foreground">{formatFileSize(file.size)}</p>
+                                              )}
+                                            </div>
+                                          </a>
+                                        )}
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                                {/* Regular text content */}
+                                {message.content && message.content !== 'Sent files' && (
+                                  <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</p>
+                                )}
                                 <LinkPreviews content={message.content} />
                               </div>
                               {/* Reactions row - only show for last message in group, team members can only react to user messages */}

@@ -1,11 +1,12 @@
 import { Suspense } from 'react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Check, CheckCircle, XCircle, FileCheck02 } from '@untitledui/icons';
+import { Check, CheckCircle, XCircle } from '@untitledui/icons';
 import { ChatBubbleIcon } from '@/components/agents/ChatBubbleIcon';
 import { LinkPreviews } from '@/components/chat/LinkPreviews';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { formatShortTime } from '@/lib/time-formatting';
 import { AudioPlayer, MessageReactions } from '../constants';
+import { FileTypeIcon } from '@/components/chat/FileTypeIcons';
 import type { Message } from '../types';
 
 interface MessageBubbleProps {
@@ -127,14 +128,21 @@ export const MessageBubble = ({
           {message.type === 'file' && message.files && (
             <div className="space-y-2">
               {message.files.map((file, i) => (
-                <div key={i} className="flex items-center gap-2">
+                <div key={i}>
                   {file.type?.startsWith('image/') ? (
-                    <img src={file.url} alt={file.name} className="max-w-full rounded-lg" />
+                    <a href={file.url} target="_blank" rel="noopener noreferrer">
+                      <img src={file.url} alt={file.name} className="max-w-full rounded-lg" />
+                    </a>
                   ) : (
-                    <div className="flex items-center gap-2 text-sm">
-                      <FileCheck02 className="h-4 w-4" />
-                      <span>{file.name}</span>
-                    </div>
+                    <a
+                      href={file.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 p-2 border rounded-lg bg-background/50 hover:bg-accent/50 transition-colors"
+                    >
+                      <FileTypeIcon fileName={file.name} width={36} height={36} className="shrink-0" />
+                      <span className="text-sm font-medium truncate">{file.name}</span>
+                    </a>
                   )}
                 </div>
               ))}
