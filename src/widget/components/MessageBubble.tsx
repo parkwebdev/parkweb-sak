@@ -6,6 +6,7 @@ import { LinkPreviews } from '@/components/chat/LinkPreviews';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { formatShortTime } from '@/lib/time-formatting';
 import { formatFileSize } from '@/lib/file-validation';
+import { downloadFile } from '@/lib/file-download';
 import { AudioPlayer, MessageReactions } from '../constants';
 import { FileTypeIcon } from '@/components/chat/FileTypeIcons';
 import type { Message } from '../types';
@@ -145,16 +146,13 @@ export const MessageBubble = ({
                           <p className="text-xs text-muted-foreground">{formatFileSize(file.size)}</p>
                         )}
                       </div>
-                      <a
-                        href={file.url}
-                        download={file.name}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                      <button
+                        onClick={() => downloadFile(file.url, file.name)}
                         className="p-1.5 rounded-md hover:bg-accent transition-colors shrink-0"
                         title="Download"
                       >
                         <Download01 size={16} className="text-muted-foreground" />
-                      </a>
+                      </button>
                     </div>
                   ) : (
                     <div className="flex items-center gap-3 p-2 border rounded-lg bg-background/50">
@@ -165,16 +163,13 @@ export const MessageBubble = ({
                           <p className="text-xs text-muted-foreground">{formatFileSize(file.size)}</p>
                         )}
                       </div>
-                      <a
-                        href={file.url}
-                        download={file.name}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                      <button
+                        onClick={() => downloadFile(file.url, file.name)}
                         className="p-1.5 rounded-md hover:bg-accent transition-colors shrink-0"
                         title="Download"
                       >
                         <Download01 size={16} className="text-muted-foreground" />
-                      </a>
+                      </button>
                     </div>
                   )}
                 </div>

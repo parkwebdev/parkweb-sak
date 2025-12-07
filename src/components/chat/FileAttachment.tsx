@@ -2,6 +2,7 @@ import React from 'react';
 import { X, Download01 } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import { isImageFile, formatFileSize } from '@/lib/file-validation';
+import { downloadFile } from '@/lib/file-download';
 import { FileTypeIcon } from './FileTypeIcons';
 
 interface FileAttachmentProps {
@@ -96,16 +97,13 @@ export const MessageFileAttachment: React.FC<MessageFileAttachmentProps> = ({
             <p className="text-xs text-muted-foreground">{formatFileSize(fileSize)}</p>
           )}
         </div>
-        <a
-          href={fileUrl}
-          download={fileName}
-          target="_blank"
-          rel="noopener noreferrer"
+        <button
+          onClick={() => downloadFile(fileUrl, fileName)}
           className="p-1.5 rounded-md hover:bg-accent transition-colors shrink-0"
           title="Download"
         >
           <Download01 size={18} className="text-muted-foreground" />
-        </a>
+        </button>
       </div>
     );
   }
@@ -121,16 +119,13 @@ export const MessageFileAttachment: React.FC<MessageFileAttachmentProps> = ({
           </p>
         )}
       </div>
-      <a
-        href={fileUrl}
-        download={fileName}
-        target="_blank"
-        rel="noopener noreferrer"
+      <button
+        onClick={() => downloadFile(fileUrl, fileName)}
         className="p-1.5 rounded-md hover:bg-accent transition-colors shrink-0"
         title="Download"
       >
         <Download01 size={18} className="text-muted-foreground" />
-      </a>
+      </button>
     </div>
   );
 };

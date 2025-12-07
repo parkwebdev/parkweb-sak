@@ -18,6 +18,7 @@ import { useAgents } from '@/hooks/useAgents';
 import { ConversationMetadataPanel } from '@/components/conversations/ConversationMetadataPanel';
 import type { Tables } from '@/integrations/supabase/types';
 import { formatDistanceToNow } from 'date-fns';
+import { downloadFile } from '@/lib/file-download';
 import { TakeoverDialog } from '@/components/conversations/TakeoverDialog';
 import { supabase } from '@/integrations/supabase/client';
 import type { RealtimeChannel } from '@supabase/supabase-js';
@@ -879,16 +880,13 @@ const Conversations: React.FC = () => {
                                                 <p className="text-xs text-muted-foreground">{formatFileSize(file.size)}</p>
                                               )}
                                             </div>
-                                            <a
-                                              href={file.url}
-                                              download={file.name}
-                                              target="_blank"
-                                              rel="noopener noreferrer"
+                                            <button
+                                              onClick={() => downloadFile(file.url, file.name)}
                                               className="p-1.5 rounded-md hover:bg-accent transition-colors shrink-0"
                                               title="Download"
                                             >
                                               <Download01 size={16} className="text-muted-foreground" />
-                                            </a>
+                                            </button>
                                           </div>
                                         ) : (
                                           <div className="flex items-center gap-3 p-2 border rounded-lg bg-background/50 max-w-[280px]">
@@ -899,16 +897,13 @@ const Conversations: React.FC = () => {
                                                 <p className="text-xs text-muted-foreground">{formatFileSize(file.size)}</p>
                                               )}
                                             </div>
-                                            <a
-                                              href={file.url}
-                                              download={file.name}
-                                              target="_blank"
-                                              rel="noopener noreferrer"
+                                            <button
+                                              onClick={() => downloadFile(file.url, file.name)}
                                               className="p-1.5 rounded-md hover:bg-accent transition-colors shrink-0"
                                               title="Download"
                                             >
                                               <Download01 size={16} className="text-muted-foreground" />
-                                            </a>
+                                            </button>
                                           </div>
                                         )}
                                       </div>
