@@ -61,17 +61,7 @@ export const RichTextEditor = ({
     content,
     editorProps: {
       attributes: {
-        class: cn(
-          'prose prose-sm dark:prose-invert max-w-none focus:outline-none p-4',
-          'prose-headings:font-semibold prose-headings:text-foreground',
-          'prose-p:text-foreground prose-p:leading-relaxed',
-          'prose-a:text-primary prose-a:underline',
-          'prose-code:bg-muted prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-sm',
-          'prose-pre:bg-muted prose-pre:p-3 prose-pre:rounded-md',
-          'prose-ul:list-disc prose-ul:pl-4',
-          'prose-ol:list-decimal prose-ol:pl-4',
-          'prose-img:rounded-md prose-img:max-w-full',
-        ),
+        class: cn('article-content max-w-none focus:outline-none p-4'),
         style: `min-height: ${minHeight}`,
       },
       handleDrop: (view, event, slice, moved) => {
