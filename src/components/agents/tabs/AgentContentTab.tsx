@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAnnouncements, type Announcement, type AnnouncementInsert } from '@/hooks/useAnnouncements';
 import { useNewsItems, type NewsItem, type NewsItemInsert } from '@/hooks/useNewsItems';
@@ -276,27 +276,48 @@ const AnnouncementDialog = ({
   const [imagePreview, setImagePreview] = useState<string | null>(announcement?.image_url || null);
   const [originalImageUrl, setOriginalImageUrl] = useState<string | null>(announcement?.image_url || null);
   
-  const [formData, setFormData] = useState<AnnouncementFormData>(
-    announcement ? {
-      title: announcement.title,
-      subtitle: announcement.subtitle || '',
-      image_url: announcement.image_url || '',
-      title_color: announcement.title_color || '#2563eb',
-      background_color: announcement.background_color || '#f8fafc',
-      action_type: announcement.action_type as 'open_url' | 'start_chat' | 'open_help',
-      action_url: announcement.action_url || '',
-      is_active: announcement.is_active ?? true,
-    } : {
-      title: '',
-      subtitle: '',
-      image_url: '',
-      title_color: '#2563eb',
-      background_color: '#f8fafc',
-      action_type: 'open_url',
-      action_url: '',
-      is_active: true,
+  const [formData, setFormData] = useState<AnnouncementFormData>({
+    title: '',
+    subtitle: '',
+    image_url: '',
+    title_color: '#2563eb',
+    background_color: '#f8fafc',
+    action_type: 'open_url',
+    action_url: '',
+    is_active: true,
+  });
+
+  // Reset form when announcement prop changes (for edit mode)
+  useEffect(() => {
+    if (announcement) {
+      setFormData({
+        title: announcement.title,
+        subtitle: announcement.subtitle || '',
+        image_url: announcement.image_url || '',
+        title_color: announcement.title_color || '#2563eb',
+        background_color: announcement.background_color || '#f8fafc',
+        action_type: announcement.action_type as 'open_url' | 'start_chat' | 'open_help',
+        action_url: announcement.action_url || '',
+        is_active: announcement.is_active ?? true,
+      });
+      setImagePreview(announcement.image_url || null);
+      setOriginalImageUrl(announcement.image_url || null);
+    } else {
+      setFormData({
+        title: '',
+        subtitle: '',
+        image_url: '',
+        title_color: '#2563eb',
+        background_color: '#f8fafc',
+        action_type: 'open_url',
+        action_url: '',
+        is_active: true,
+      });
+      setImagePreview(null);
+      setOriginalImageUrl(null);
     }
-  );
+    setImageFile(null);
+  }, [announcement]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -547,23 +568,42 @@ const NewsDialog = ({
   const [imagePreview, setImagePreview] = useState<string | null>(newsItem?.featured_image_url || null);
   const [originalImageUrl, setOriginalImageUrl] = useState<string | null>(newsItem?.featured_image_url || null);
   
-  const [formData, setFormData] = useState<NewsFormData>(
-    newsItem ? {
-      title: newsItem.title,
-      featured_image_url: newsItem.featured_image_url || '',
-      body: newsItem.body,
-      author_name: newsItem.author_name || '',
-      author_avatar: newsItem.author_avatar || '',
-      is_published: newsItem.is_published ?? false,
-    } : {
-      title: '',
-      featured_image_url: '',
-      body: '',
-      author_name: '',
-      author_avatar: '',
-      is_published: false,
+  const [formData, setFormData] = useState<NewsFormData>({
+    title: '',
+    featured_image_url: '',
+    body: '',
+    author_name: '',
+    author_avatar: '',
+    is_published: false,
+  });
+
+  // Reset form when newsItem prop changes (for edit mode)
+  useEffect(() => {
+    if (newsItem) {
+      setFormData({
+        title: newsItem.title,
+        featured_image_url: newsItem.featured_image_url || '',
+        body: newsItem.body,
+        author_name: newsItem.author_name || '',
+        author_avatar: newsItem.author_avatar || '',
+        is_published: newsItem.is_published ?? false,
+      });
+      setImagePreview(newsItem.featured_image_url || null);
+      setOriginalImageUrl(newsItem.featured_image_url || null);
+    } else {
+      setFormData({
+        title: '',
+        featured_image_url: '',
+        body: '',
+        author_name: '',
+        author_avatar: '',
+        is_published: false,
+      });
+      setImagePreview(null);
+      setOriginalImageUrl(null);
     }
-  );
+    setImageFile(null);
+  }, [newsItem]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
