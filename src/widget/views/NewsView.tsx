@@ -180,9 +180,6 @@ export const NewsView = ({ config, newsItems }: NewsViewProps) => {
   // News list view
   return (
     <div className="flex flex-col h-full">
-      <div className="py-2.5 px-4 border-b bg-muted/50">
-        <h3 className="text-lg font-semibold">News Center</h3>
-      </div>
       <div className="flex-1 overflow-y-auto p-4">
         {newsItems.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center p-6">

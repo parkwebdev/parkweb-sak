@@ -89,9 +89,7 @@ export const HelpView = ({
                 </Button>
                 <h3 className="text-lg font-semibold">Search Results</h3>
               </div>
-            ) : (
-              <h3 className="text-lg font-semibold mb-3">Help Center</h3>
-            )}
+            ) : null}
             <Input
               value={helpSearchQuery}
               onChange={(e) => setHelpSearchQuery(e.target.value)}
