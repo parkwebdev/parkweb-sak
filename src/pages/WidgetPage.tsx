@@ -13,7 +13,7 @@ const getDefaultConfig = (agentId: string): WidgetConfig => ({
   agentId,
   userId: '',
   agentName: 'Assistant',
-  primaryColor: 'transparent',
+  primaryColor: '#000000',
   position: 'bottom-right',
   greeting: 'Hello! How can I help you today?',
   placeholder: 'Type your message...',
