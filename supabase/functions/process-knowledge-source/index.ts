@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.2';
+import { getDocument } from 'https://esm.sh/pdfjs-serverless@0.6.0';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -155,6 +156,31 @@ async function generateEmbeddingsBatch(
   return embeddings;
 }
 
+// Extract text from PDF using pdfjs-serverless
+async function extractPdfText(pdfData: Uint8Array): Promise<string> {
+  console.log('Extracting text from PDF...');
+  
+  const document = await getDocument({
+    data: pdfData,
+    useSystemFonts: true,
+  }).promise;
+
+  const textParts: string[] = [];
+  const numPages = document.numPages;
+  console.log(`PDF has ${numPages} pages`);
+
+  for (let pageNum = 1; pageNum <= numPages; pageNum++) {
+    const page = await document.getPage(pageNum);
+    const textContent = await page.getTextContent();
+    const pageText = textContent.items
+      .map((item: any) => item.str)
+      .join(' ');
+    textParts.push(pageText);
+  }
+
+  return textParts.join('\n\n');
+}
+
 // Fetch URL content
 async function fetchUrlContent(url: string): Promise<string> {
   try {
@@ -185,6 +211,24 @@ async function fetchUrlContent(url: string): Promise<string> {
   } catch (error) {
     throw new Error(`Error fetching URL: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
+}
+
+// Fetch PDF from storage and extract text
+async function fetchAndExtractPdf(supabase: any, storagePath: string): Promise<string> {
+  console.log('Downloading PDF from storage:', storagePath);
+  
+  const { data: fileData, error: downloadError } = await supabase.storage
+    .from('conversation-files')
+    .download(storagePath);
+
+  if (downloadError || !fileData) {
+    throw new Error(`Failed to download PDF: ${downloadError?.message || 'Unknown error'}`);
+  }
+
+  const arrayBuffer = await fileData.arrayBuffer();
+  const pdfData = new Uint8Array(arrayBuffer);
+  
+  return await extractPdfText(pdfData);
 }
 
 Deno.serve(async (req) => {
@@ -219,10 +263,9 @@ Deno.serve(async (req) => {
       console.log('Fetching URL content:', source.source);
       content = await fetchUrlContent(source.source);
     } else if (source.type === 'pdf') {
-      console.log('PDF processing - expecting pre-extracted content');
-      if (!content) {
-        throw new Error('PDF content not provided');
-      }
+      console.log('Processing PDF:', source.source);
+      // The 'source' field contains the storage path for PDFs
+      content = await fetchAndExtractPdf(supabase, source.source);
     }
 
     if (!content || content.length === 0) {
