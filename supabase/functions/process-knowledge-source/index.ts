@@ -1,5 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.2';
 import { getDocument } from 'https://esm.sh/pdfjs-serverless@0.6.0';
+import { Readability } from 'https://esm.sh/@mozilla/readability@0.5.0';
+import { parseHTML } from 'https://esm.sh/linkedom@0.18.4';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -181,10 +183,14 @@ async function extractPdfText(pdfData: Uint8Array): Promise<string> {
   return textParts.join('\n\n');
 }
 
-// Fetch URL content
+// Fetch URL content with Readability for clean HTML extraction
 async function fetchUrlContent(url: string): Promise<string> {
   try {
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; ChatPad/1.0; +https://chatpad.ai)',
+      },
+    });
     if (!response.ok) {
       throw new Error(`Failed to fetch URL: ${response.statusText}`);
     }
@@ -196,10 +202,45 @@ async function fetchUrlContent(url: string): Promise<string> {
       return JSON.stringify(json, null, 2);
     } else if (contentType.includes('text/html')) {
       const html = await response.text();
-      // Basic HTML to text extraction
+      
+      // Use Readability for intelligent content extraction
+      try {
+        console.log('Using Readability for content extraction from:', url);
+        const { document } = parseHTML(html);
+        const reader = new Readability(document, {
+          charThreshold: 50, // Lower threshold for smaller articles
+        });
+        const article = reader.parse();
+        
+        if (article && article.textContent) {
+          // Clean up the extracted text
+          const cleanedText = article.textContent
+            .replace(/\s+/g, ' ')
+            .replace(/\n\s*\n/g, '\n\n')
+            .trim();
+          
+          console.log(`Readability extracted ${cleanedText.length} chars from "${article.title || 'Untitled'}"`);
+          
+          // Return with title if available
+          if (article.title) {
+            return `# ${article.title}\n\n${cleanedText}`;
+          }
+          return cleanedText;
+        }
+        
+        console.log('Readability could not parse content, falling back to basic extraction');
+      } catch (readabilityError) {
+        console.error('Readability parsing failed, using fallback:', readabilityError);
+      }
+      
+      // Fallback: Basic HTML to text extraction
       return html
         .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
         .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+        .replace(/<nav[^>]*>[\s\S]*?<\/nav>/gi, '')
+        .replace(/<footer[^>]*>[\s\S]*?<\/footer>/gi, '')
+        .replace(/<header[^>]*>[\s\S]*?<\/header>/gi, '')
+        .replace(/<aside[^>]*>[\s\S]*?<\/aside>/gi, '')
         .replace(/<[^>]+>/g, ' ')
         .replace(/\s+/g, ' ')
         .trim();
