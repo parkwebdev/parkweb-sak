@@ -64,8 +64,9 @@ async function fetchLinkPreviews(content: string, supabaseUrl: string, supabaseK
   return previews.filter(p => p !== null);
 }
 
-// Cost optimization: Nomic embedding model - 50% cheaper, 768 dimensions
-const EMBEDDING_MODEL = 'nomic-ai/nomic-embed-text-v1.5';
+// OpenAI embedding model - compatible with stored embeddings (1536 dimensions)
+const EMBEDDING_MODEL = 'text-embedding-3-small';
+const EMBEDDING_DIMENSIONS = 1536;
 
 // Normalize query for cache lookup (lowercase, trim, remove extra whitespace)
 function normalizeQuery(query: string): string {
@@ -167,19 +168,23 @@ async function cacheResponse(supabase: any, queryHash: string, agentId: string, 
     .catch((err: any) => console.error('Failed to cache response:', err));
 }
 
-// Generate embedding for a query using Nomic model (50% cheaper)
-async function generateEmbedding(query: string, apiKey: string): Promise<number[]> {
-  const response = await fetch('https://openrouter.ai/api/v1/embeddings', {
+// Generate embedding for a query using OpenAI (matches stored embeddings)
+async function generateEmbedding(query: string): Promise<number[]> {
+  const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
+  if (!openaiApiKey) {
+    throw new Error('OPENAI_API_KEY not configured');
+  }
+
+  const response = await fetch('https://api.openai.com/v1/embeddings', {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${apiKey}`,
-      'HTTP-Referer': 'https://chatpad.ai',
-      'X-Title': 'ChatPad',
+      'Authorization': `Bearer ${openaiApiKey}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
       model: EMBEDDING_MODEL,
       input: query,
+      dimensions: EMBEDDING_DIMENSIONS,
     }),
   });
 
@@ -819,7 +824,7 @@ serve(async (req) => {
             console.log('Embedding CACHE HIT - saved 1 embedding API call');
           } else {
             console.log('Generating new embedding for query:', queryContent.substring(0, 100));
-            queryEmbedding = await generateEmbedding(queryContent, OPENROUTER_API_KEY);
+            queryEmbedding = await generateEmbedding(queryContent);
             
             // Cache the embedding for future use
             cacheQueryEmbedding(supabase, queryHash, normalizedQuery, queryEmbedding, agentId);
