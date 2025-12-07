@@ -49,6 +49,10 @@ interface NewsFormData {
   author_name: string;
   author_avatar: string;
   is_published: boolean;
+  cta_primary_label: string;
+  cta_primary_url: string;
+  cta_secondary_label: string;
+  cta_secondary_url: string;
 }
 
 // Helper to format author name as "FirstName L."
@@ -575,6 +579,10 @@ const NewsDialog = ({
     author_name: '',
     author_avatar: '',
     is_published: false,
+    cta_primary_label: '',
+    cta_primary_url: '',
+    cta_secondary_label: '',
+    cta_secondary_url: '',
   });
 
   // Reset form when newsItem prop changes (for edit mode)
@@ -587,6 +595,10 @@ const NewsDialog = ({
         author_name: newsItem.author_name || '',
         author_avatar: newsItem.author_avatar || '',
         is_published: newsItem.is_published ?? false,
+        cta_primary_label: newsItem.cta_primary_label || '',
+        cta_primary_url: newsItem.cta_primary_url || '',
+        cta_secondary_label: newsItem.cta_secondary_label || '',
+        cta_secondary_url: newsItem.cta_secondary_url || '',
       });
       setImagePreview(newsItem.featured_image_url || null);
       setOriginalImageUrl(newsItem.featured_image_url || null);
@@ -598,6 +610,10 @@ const NewsDialog = ({
         author_name: '',
         author_avatar: '',
         is_published: false,
+        cta_primary_label: '',
+        cta_primary_url: '',
+        cta_secondary_label: '',
+        cta_secondary_url: '',
       });
       setImagePreview(null);
       setOriginalImageUrl(null);
@@ -790,6 +806,50 @@ const NewsDialog = ({
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          {/* Call to Action Buttons */}
+          <div className="space-y-4">
+            <Label className="text-base font-medium">Call to Action Buttons</Label>
+            <div className="grid grid-cols-2 gap-4">
+              {/* Primary CTA */}
+              <div className="space-y-3 p-4 border rounded-lg">
+                <Label className="text-sm font-medium">Primary Button</Label>
+                <div className="space-y-2">
+                  <Input
+                    value={formData.cta_primary_label}
+                    onChange={(e) => setFormData({ ...formData, cta_primary_label: e.target.value })}
+                    placeholder="Button label"
+                  />
+                  <Input
+                    value={formData.cta_primary_url}
+                    onChange={(e) => setFormData({ ...formData, cta_primary_url: e.target.value })}
+                    placeholder="https://example.com"
+                    type="url"
+                  />
+                </div>
+              </div>
+              {/* Secondary CTA */}
+              <div className="space-y-3 p-4 border rounded-lg">
+                <Label className="text-sm font-medium">Secondary Button</Label>
+                <div className="space-y-2">
+                  <Input
+                    value={formData.cta_secondary_label}
+                    onChange={(e) => setFormData({ ...formData, cta_secondary_label: e.target.value })}
+                    placeholder="Button label"
+                  />
+                  <Input
+                    value={formData.cta_secondary_url}
+                    onChange={(e) => setFormData({ ...formData, cta_secondary_url: e.target.value })}
+                    placeholder="https://example.com"
+                    type="url"
+                  />
+                </div>
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Both label and URL are required for a button to appear
+            </p>
           </div>
 
           <div className="flex items-center justify-between p-4 border rounded-lg">
