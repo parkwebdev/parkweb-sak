@@ -58,6 +58,7 @@ export const useHelpArticles = (agentId: string) => {
           category: categoriesData?.find(c => c.id === article.category_id)?.name || '',
           order: article.order_index,
           featured_image: article.featured_image || undefined,
+          has_embedding: article.embedding !== null,
         }));
 
         setCategories(mappedCategories);
@@ -147,6 +148,7 @@ export const useHelpArticles = (agentId: string) => {
         category: article.category,
         featured_image: article.featured_image,
         order: newArticle.order_index,
+        has_embedding: false, // Will be embedded async
       }]);
 
       return newArticle.id;
@@ -500,6 +502,52 @@ export const useHelpArticles = (agentId: string) => {
     }
   };
 
+  const embedAllArticles = async (onProgress?: (current: number, total: number) => void) => {
+    const unembeddedArticles = articles.filter(a => !a.has_embedding);
+    const total = unembeddedArticles.length;
+    
+    if (total === 0) return 0;
+
+    let completed = 0;
+    
+    // Process in batches of 3 to avoid rate limiting
+    const batchSize = 3;
+    for (let i = 0; i < unembeddedArticles.length; i += batchSize) {
+      const batch = unembeddedArticles.slice(i, i + batchSize);
+      
+      await Promise.all(batch.map(async (article) => {
+        try {
+          await supabase.functions.invoke('embed-help-article', {
+            body: { 
+              articleId: article.id, 
+              title: article.title, 
+              content: article.content 
+            }
+          });
+          completed++;
+          onProgress?.(completed, total);
+        } catch (err) {
+          logger.error('Failed to embed article', { articleId: article.id, error: err });
+        }
+      }));
+    }
+
+    // Refresh articles to get updated embedding status
+    const { data: articlesData } = await supabase
+      .from('help_articles')
+      .select('id, embedding')
+      .eq('agent_id', agentId);
+
+    if (articlesData) {
+      setArticles(articles.map(a => ({
+        ...a,
+        has_embedding: articlesData.find(d => d.id === a.id)?.embedding !== null,
+      })));
+    }
+
+    return completed;
+  };
+
   return {
     articles,
     categories,
@@ -514,5 +562,6 @@ export const useHelpArticles = (agentId: string) => {
     moveArticleToCategory,
     importFromKnowledge,
     bulkImport,
+    embedAllArticles,
   };
 };
