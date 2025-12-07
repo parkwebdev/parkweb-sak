@@ -1,5 +1,5 @@
 import React from 'react';
-import { X } from '@untitledui/icons';
+import { X, Download01 } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import { isImageFile, formatFileSize } from '@/lib/file-validation';
 import { FileTypeIcon } from './FileTypeIcons';
@@ -101,12 +101,7 @@ export const MessageFileAttachment: React.FC<MessageFileAttachmentProps> = ({
   }
 
   return (
-    <a
-      href={fileUrl}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="flex items-center gap-3 p-3 border rounded-lg bg-background/50 hover:bg-accent/50 transition-colors max-w-[280px]"
-    >
+    <div className="flex items-center gap-3 p-3 border rounded-lg bg-background/50 max-w-[280px]">
       <FileTypeIcon fileName={fileName} width={40} height={40} className="shrink-0" />
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium truncate">{fileName}</p>
@@ -116,6 +111,16 @@ export const MessageFileAttachment: React.FC<MessageFileAttachmentProps> = ({
           </p>
         )}
       </div>
-    </a>
+      <a
+        href={fileUrl}
+        download={fileName}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="p-1.5 rounded-md hover:bg-accent transition-colors shrink-0"
+        title="Download"
+      >
+        <Download01 size={18} className="text-muted-foreground" />
+      </a>
+    </div>
   );
 };

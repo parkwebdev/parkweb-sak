@@ -1,10 +1,11 @@
 import { Suspense } from 'react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Check, CheckCircle, XCircle } from '@untitledui/icons';
+import { Check, CheckCircle, XCircle, Download01 } from '@untitledui/icons';
 import { ChatBubbleIcon } from '@/components/agents/ChatBubbleIcon';
 import { LinkPreviews } from '@/components/chat/LinkPreviews';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { formatShortTime } from '@/lib/time-formatting';
+import { formatFileSize } from '@/lib/file-validation';
 import { AudioPlayer, MessageReactions } from '../constants';
 import { FileTypeIcon } from '@/components/chat/FileTypeIcons';
 import type { Message } from '../types';
@@ -134,15 +135,25 @@ export const MessageBubble = ({
                       <img src={file.url} alt={file.name} className="max-w-full rounded-lg" />
                     </a>
                   ) : (
-                    <a
-                      href={file.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-3 p-2 border rounded-lg bg-background/50 hover:bg-accent/50 transition-colors"
-                    >
+                    <div className="flex items-center gap-3 p-2 border rounded-lg bg-background/50">
                       <FileTypeIcon fileName={file.name} width={36} height={36} className="shrink-0" />
-                      <span className="text-sm font-medium truncate">{file.name}</span>
-                    </a>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{file.name}</p>
+                        {file.size && (
+                          <p className="text-xs text-muted-foreground">{formatFileSize(file.size)}</p>
+                        )}
+                      </div>
+                      <a
+                        href={file.url}
+                        download={file.name}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-1.5 rounded-md hover:bg-accent transition-colors shrink-0"
+                        title="Download"
+                      >
+                        <Download01 size={16} className="text-muted-foreground" />
+                      </a>
+                    </div>
                   )}
                 </div>
               ))}

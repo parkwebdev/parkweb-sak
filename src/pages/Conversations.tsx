@@ -8,7 +8,7 @@ import { Badge } from '@/components/Badge';
 
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { SearchMd, MessageChatSquare, User01, Send01, FaceSmile, Globe01, Check, CheckCircle, XCircle } from '@untitledui/icons';
+import { SearchMd, MessageChatSquare, User01, Send01, FaceSmile, Globe01, Check, CheckCircle, XCircle, Download01 } from '@untitledui/icons';
 import { LinkPreviews } from '@/components/chat/LinkPreviews';
 import { FileTypeIcon } from '@/components/chat/FileTypeIcons';
 import { formatFileSize } from '@/lib/file-validation';
@@ -822,12 +822,7 @@ const Conversations: React.FC = () => {
                                             <img src={file.url} alt={file.name} className="max-w-full max-h-48 rounded-lg" />
                                           </a>
                                         ) : (
-                                          <a
-                                            href={file.url}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="flex items-center gap-3 p-2 border rounded-lg bg-background/50 hover:bg-accent/50 transition-colors max-w-[280px]"
-                                          >
+                                          <div className="flex items-center gap-3 p-2 border rounded-lg bg-background/50 max-w-[280px]">
                                             <FileTypeIcon fileName={file.name} width={36} height={36} className="shrink-0" />
                                             <div className="flex-1 min-w-0">
                                               <p className="text-sm font-medium truncate">{file.name}</p>
@@ -835,7 +830,17 @@ const Conversations: React.FC = () => {
                                                 <p className="text-xs text-muted-foreground">{formatFileSize(file.size)}</p>
                                               )}
                                             </div>
-                                          </a>
+                                            <a
+                                              href={file.url}
+                                              download={file.name}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              className="p-1.5 rounded-md hover:bg-accent transition-colors shrink-0"
+                                              title="Download"
+                                            >
+                                              <Download01 size={16} className="text-muted-foreground" />
+                                            </a>
+                                          </div>
                                         )}
                                       </div>
                                     ))}
