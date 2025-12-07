@@ -59,6 +59,7 @@ export interface EmbeddedChatConfig {
   showBottomNav: boolean;
   enableMessagesTab: boolean;
   enableHelpTab: boolean;
+  enableNewsTab: boolean;
   
   // Gradient
   useGradientHeader: boolean;
@@ -129,6 +130,7 @@ export const useEmbeddedChatConfig = (agentId: string) => {
     showBottomNav: true,
     enableMessagesTab: true,
     enableHelpTab: false,
+    enableNewsTab: false,
     
     // Gradient
     useGradientHeader: true,

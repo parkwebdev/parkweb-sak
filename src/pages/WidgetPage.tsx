@@ -30,6 +30,7 @@ const getDefaultConfig = (agentId: string): WidgetConfig => ({
   enableHomeTab: true,
   enableMessagesTab: true,
   enableHelpTab: true,
+  enableNewsTab: false,
   showBottomNav: true,
   enableContactForm: false,
   contactFormTitle: 'Quick intro before we chat 👋',
@@ -41,6 +42,7 @@ const getDefaultConfig = (agentId: string): WidgetConfig => ({
   announcements: [],
   helpCategories: [],
   helpArticles: [],
+  newsItems: [],
   enableVoiceMessages: true,
   enableFileAttachments: true,
   allowedFileTypes: ['image/*', 'application/pdf'],
@@ -114,6 +116,7 @@ const WidgetPage = () => {
           enableHomeTab: data.enableHomeTab,
           enableMessagesTab: data.enableMessagesTab,
           enableHelpTab: data.enableHelpTab,
+          enableNewsTab: data.enableNewsTab || false,
           useGradientHeader: data.useGradientHeader,
           gradientStartColor: data.gradientStartColor,
           gradientEndColor: data.gradientEndColor,
@@ -130,7 +133,8 @@ const WidgetPage = () => {
           contactFormSubtitle: data.contactFormSubtitle,
           announcements: data.announcements || [],
           helpArticles: data.helpArticles || [],
-          helpCategories: data.helpCategories || []
+          helpCategories: data.helpCategories || [],
+          newsItems: data.newsItems || [],
         };
         
         setConfig(widgetConfig);

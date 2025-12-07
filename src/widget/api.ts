@@ -46,6 +46,7 @@ export interface WidgetConfig {
   enableHomeTab: boolean;
   enableMessagesTab: boolean;
   enableHelpTab: boolean;
+  enableNewsTab: boolean;
   showBottomNav: boolean;
   
   // Contact form
@@ -101,6 +102,16 @@ export interface WidgetConfig {
     featured_image?: string;
   }>;
   
+  // News items
+  newsItems: Array<{
+    id: string;
+    title: string;
+    body: string;
+    featured_image_url?: string;
+    author_name?: string;
+    author_avatar?: string;
+    published_at?: string;
+  }>;
   // Features
   enableVoiceMessages: boolean;
   enableFileAttachments: boolean;

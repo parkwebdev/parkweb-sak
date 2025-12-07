@@ -125,6 +125,7 @@ export type Database = {
           created_at: string
           deployment_config: Json | null
           description: string | null
+          enable_news_tab: boolean | null
           id: string
           max_tokens: number | null
           model: string
@@ -139,6 +140,7 @@ export type Database = {
           created_at?: string
           deployment_config?: Json | null
           description?: string | null
+          enable_news_tab?: boolean | null
           id?: string
           max_tokens?: number | null
           model?: string
@@ -153,6 +155,7 @@ export type Database = {
           created_at?: string
           deployment_config?: Json | null
           description?: string | null
+          enable_news_tab?: boolean | null
           id?: string
           max_tokens?: number | null
           model?: string

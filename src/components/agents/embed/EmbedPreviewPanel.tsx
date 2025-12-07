@@ -45,6 +45,7 @@ export const EmbedPreviewPanel = ({ config }: EmbedPreviewPanelProps) => {
     enableHomeTab: true,
     enableMessagesTab: config.enableMessagesTab,
     enableHelpTab: config.enableHelpTab,
+    enableNewsTab: config.enableNewsTab || false,
     showBottomNav: config.showBottomNav,
     enableContactForm: config.enableContactForm,
     contactFormTitle: config.contactFormTitle,
@@ -86,6 +87,7 @@ export const EmbedPreviewPanel = ({ config }: EmbedPreviewPanelProps) => {
         order: art.order || 0,
       };
     }),
+    newsItems: [],
     enableVoiceMessages: true,
     enableFileAttachments: true,
     allowedFileTypes: ['image', 'document'],
