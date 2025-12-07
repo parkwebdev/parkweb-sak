@@ -925,7 +925,7 @@ const Conversations: React.FC = () => {
                     <Button 
                       type="submit" 
                       size="icon"
-                      className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 rounded-md"
+                      className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
                       disabled={sendingMessage || !messageInput.trim()}
                     >
                       <Send01 size={16} />
