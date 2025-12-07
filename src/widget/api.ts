@@ -251,7 +251,7 @@ export interface ReferrerJourney {
 export async function sendChatMessage(
   agentId: string, 
   conversationId: string | null, 
-  messages: Array<{ role: string; content: string }>,
+  messages: Array<{ role: string; content: string; files?: Array<{ name: string; url: string; type: string; size: number }> }>,
   leadId?: string,
   pageVisits?: Array<{ url: string; entered_at: string; duration_ms: number }>,
   referrerJourney?: ReferrerJourney,

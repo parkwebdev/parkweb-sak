@@ -416,7 +416,10 @@ serve(async (req) => {
             conversation_id: activeConversationId,
             role: 'user',
             content: lastUserMessage.content,
-            metadata: { source: 'widget' }
+            metadata: { 
+              source: 'widget',
+              files: lastUserMessage.files || undefined,
+            }
           });
 
           // Update conversation metadata
@@ -484,7 +487,10 @@ serve(async (req) => {
             conversation_id: activeConversationId,
             role: 'user',
             content: lastUserMessage.content,
-            metadata: { source: 'widget' }
+            metadata: { 
+              source: 'widget',
+              files: lastUserMessage.files || undefined,
+            }
           });
         }
       }
@@ -510,7 +516,10 @@ serve(async (req) => {
           conversation_id: activeConversationId,
           role: 'user',
           content: lastUserMessage.content,
-          metadata: { source: 'widget' }
+          metadata: { 
+            source: 'widget',
+            files: lastUserMessage.files || undefined,
+          }
         }).select('id').single();
         
         if (msgError) {
