@@ -131,9 +131,31 @@ export const MessageBubble = ({
               {message.files.map((file, i) => (
                 <div key={i}>
                   {file.type?.startsWith('image/') ? (
-                    <a href={file.url} target="_blank" rel="noopener noreferrer">
-                      <img src={file.url} alt={file.name} className="max-w-full rounded-lg" />
-                    </a>
+                    <div className="flex items-center gap-3 p-2 border rounded-lg bg-background/50">
+                      <a href={file.url} target="_blank" rel="noopener noreferrer" className="shrink-0">
+                        <img 
+                          src={file.url} 
+                          alt={file.name} 
+                          className="w-12 h-12 object-cover rounded-md" 
+                        />
+                      </a>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{file.name}</p>
+                        {file.size && (
+                          <p className="text-xs text-muted-foreground">{formatFileSize(file.size)}</p>
+                        )}
+                      </div>
+                      <a
+                        href={file.url}
+                        download={file.name}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-1.5 rounded-md hover:bg-accent transition-colors shrink-0"
+                        title="Download"
+                      >
+                        <Download01 size={16} className="text-muted-foreground" />
+                      </a>
+                    </div>
                   ) : (
                     <div className="flex items-center gap-3 p-2 border rounded-lg bg-background/50">
                       <FileTypeIcon fileName={file.name} width={36} height={36} className="shrink-0" />
