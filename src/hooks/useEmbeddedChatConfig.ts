@@ -26,6 +26,7 @@ export interface HelpArticle {
   category: string;
   order: number;
   featured_image?: string;
+  has_embedding?: boolean;
 }
 
 export interface HelpCategory {

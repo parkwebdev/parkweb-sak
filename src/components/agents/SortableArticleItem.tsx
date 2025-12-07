@@ -1,8 +1,9 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Button } from '@/components/ui/button';
-import { Edit05, Trash01, DotsGrid, Image01 } from '@untitledui/icons';
+import { Edit05, Trash01, DotsGrid, Image01, CheckCircle, Clock } from '@untitledui/icons';
 import type { HelpArticle } from '@/hooks/useEmbeddedChatConfig';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface SortableArticleItemProps {
   article: HelpArticle;
@@ -62,7 +63,21 @@ export const SortableArticleItem = ({ article, onEdit, onDelete }: SortableArtic
       )}
       
       <div className="flex-1 min-w-0">
-        <h5 className="font-medium text-sm">{article.title}</h5>
+        <div className="flex items-center gap-1.5">
+          <h5 className="font-medium text-sm">{article.title}</h5>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              {article.has_embedding ? (
+                <CheckCircle className="h-3.5 w-3.5 text-success flex-shrink-0" />
+              ) : (
+                <Clock className="h-3.5 w-3.5 text-warning flex-shrink-0" />
+              )}
+            </TooltipTrigger>
+            <TooltipContent side="top">
+              {article.has_embedding ? 'Embedded for RAG' : 'Pending embedding'}
+            </TooltipContent>
+          </Tooltip>
+        </div>
         <p className="text-xs text-muted-foreground/70 mt-1 line-clamp-2">
           {stripHtml(article.content)}
         </p>

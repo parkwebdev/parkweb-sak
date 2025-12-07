@@ -50,7 +50,8 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
     removeCategory, 
     moveArticleToCategory,
     reorderArticles, 
-    bulkImport 
+    bulkImport,
+    embedAllArticles
   } = useHelpArticles(agentId);
   
   // Configure sensors for drag and drop
@@ -72,6 +73,8 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
   const [bulkImportOpen, setBulkImportOpen] = useState(false);
   const [activeArticle, setActiveArticle] = useState<HelpArticle | null>(null);
   const [overCategoryName, setOverCategoryName] = useState<string | null>(null);
+  const [isEmbedding, setIsEmbedding] = useState(false);
+  const [embeddingProgress, setEmbeddingProgress] = useState({ current: 0, total: 0 });
   
   const [formData, setFormData] = useState({
     title: '',
@@ -336,6 +339,36 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
       {!loading && (
         <>
           <div className="flex items-center justify-end gap-2">
+            {/* Embed All Button - only show if there are unembedded articles */}
+            {articles.some(a => !a.has_embedding) && (
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={async () => {
+                  setIsEmbedding(true);
+                  const unembedded = articles.filter(a => !a.has_embedding);
+                  setEmbeddingProgress({ current: 0, total: unembedded.length });
+                  try {
+                    const count = await embedAllArticles((current, total) => {
+                      setEmbeddingProgress({ current, total });
+                    });
+                    toast.success(`Embedded ${count} articles for RAG`);
+                  } catch (error) {
+                    toast.error('Failed to embed articles');
+                  } finally {
+                    setIsEmbedding(false);
+                    setEmbeddingProgress({ current: 0, total: 0 });
+                  }
+                }}
+                disabled={isEmbedding}
+              >
+                {isEmbedding 
+                  ? `Embedding ${embeddingProgress.current}/${embeddingProgress.total}...` 
+                  : `Embed All (${articles.filter(a => !a.has_embedding).length})`
+                }
+              </Button>
+            )}
+            
             <Button size="sm" variant="outline" onClick={() => setBulkImportOpen(true)}>
               <Upload01 className="w-3.5 h-3.5 mr-1.5" />
               Import CSV
