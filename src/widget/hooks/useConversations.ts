@@ -99,20 +99,25 @@ export function useConversations(options: UseConversationsOptions) {
         const dbMessages = await fetchConversationMessages(activeConversationId);
         
         if (dbMessages.length > 0) {
-          const formattedMessages: Message[] = dbMessages.map(msg => ({
-            id: msg.id,
-            role: msg.role as 'user' | 'assistant',
-            content: msg.content,
-            timestamp: new Date(msg.created_at),
-            type: 'text' as const,
-            reactions: (msg.metadata as any)?.reactions || [],
-            isHuman: (msg.metadata as any)?.sender_type === 'human',
-            senderName: (msg.metadata as any)?.sender_name,
-            senderAvatar: (msg.metadata as any)?.sender_avatar,
-            read_at: (msg.metadata as any)?.read_at,
-            read: !!((msg.metadata as any)?.read_at),
-            linkPreviews: (msg.metadata as any)?.link_previews,
-          }));
+          const formattedMessages: Message[] = dbMessages.map(msg => {
+            const metadata = msg.metadata as any;
+            const files = metadata?.files;
+            return {
+              id: msg.id,
+              role: msg.role as 'user' | 'assistant',
+              content: msg.content,
+              timestamp: new Date(msg.created_at),
+              type: files?.length > 0 ? 'file' as const : 'text' as const,
+              files: files,
+              reactions: metadata?.reactions || [],
+              isHuman: metadata?.sender_type === 'human',
+              senderName: metadata?.sender_name,
+              senderAvatar: metadata?.sender_avatar,
+              read_at: metadata?.read_at,
+              read: !!(metadata?.read_at),
+              linkPreviews: metadata?.link_previews,
+            };
+          });
           
           // MERGE with existing messages instead of overwriting
           // This preserves local messages (greeting, optimistic updates) while adding DB messages
