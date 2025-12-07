@@ -14,7 +14,6 @@ import { useWebhooks } from '@/hooks/useWebhooks';
 import { toast } from '@/lib/toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ConditionBuilder } from './ConditionBuilder';
 import { ResponseActionBuilder } from './ResponseActionBuilder';
@@ -175,11 +174,11 @@ export const CreateWebhookDialog = ({ open, onOpenChange, agentId }: CreateWebho
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh]">
+      <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Create New Webhook</DialogTitle>
         </DialogHeader>
-        <ScrollArea className="max-h-[calc(90vh-180px)] pr-4">
+        <div className="flex-1 min-h-0 overflow-y-auto pr-4">
           <Tabs defaultValue="basic" className="w-full">
             <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="basic">Basic</TabsTrigger>
@@ -402,7 +401,7 @@ export const CreateWebhookDialog = ({ open, onOpenChange, agentId }: CreateWebho
               </div>
             </div>
           )}
-        </ScrollArea>
+        </div>
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>

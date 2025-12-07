@@ -86,6 +86,7 @@ export function useRealtimeMessages(options: UseRealtimeMessagesOptions) {
               isHuman: true,
               senderName,
               senderAvatar,
+              linkPreviews: newMessage.metadata?.link_previews,
             }];
           });
 
