@@ -1,7 +1,8 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.2';
-import { getDocument } from 'https://esm.sh/pdfjs-serverless@0.6.0';
-import { Readability } from 'https://esm.sh/@mozilla/readability@0.5.0';
-import { parseHTML } from 'https://esm.sh/linkedom@0.18.4';
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient } from "jsr:@supabase/supabase-js@2";
+import { Readability } from "npm:@mozilla/readability@0.5.0";
+import { DOMParser } from "npm:linkedom@0.18.4";
+import pdfParse from "npm:pdf-parse/lib/pdf-parse.js";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -156,29 +157,19 @@ async function generateEmbeddingsBatch(
   return embeddings;
 }
 
-// Extract text from PDF using pdfjs-serverless
+// Extract text from PDF using pdf-parse
 async function extractPdfText(pdfData: Uint8Array): Promise<string> {
-  console.log('Extracting text from PDF...');
+  console.log('Extracting text from PDF using pdf-parse...');
   
-  const document = await getDocument({
-    data: pdfData,
-    useSystemFonts: true,
-  }).promise;
-
-  const textParts: string[] = [];
-  const numPages = document.numPages;
-  console.log(`PDF has ${numPages} pages`);
-
-  for (let pageNum = 1; pageNum <= numPages; pageNum++) {
-    const page = await document.getPage(pageNum);
-    const textContent = await page.getTextContent();
-    const pageText = textContent.items
-      .map((item: any) => item.str)
-      .join(' ');
-    textParts.push(pageText);
+  try {
+    // pdf-parse expects a Buffer, convert Uint8Array
+    const result = await pdfParse(Buffer.from(pdfData));
+    console.log(`Extracted ${result.numpages} pages from PDF`);
+    return result.text || '';
+  } catch (error) {
+    console.error('PDF extraction error:', error);
+    throw new Error(`Failed to extract PDF text: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
-
-  return textParts.join('\n\n');
 }
 
 // Fetch URL content with Readability for clean HTML extraction
@@ -195,6 +186,13 @@ async function fetchUrlContent(url: string): Promise<string> {
     
     const contentType = response.headers.get('content-type') || '';
     
+    // Handle PDF URLs
+    if (contentType.includes('application/pdf') || url.toLowerCase().endsWith('.pdf')) {
+      console.log('URL points to a PDF, extracting text...');
+      const arrayBuffer = await response.arrayBuffer();
+      return await extractPdfText(new Uint8Array(arrayBuffer));
+    }
+    
     if (contentType.includes('application/json')) {
       const json = await response.json();
       return JSON.stringify(json, null, 2);
@@ -204,7 +202,8 @@ async function fetchUrlContent(url: string): Promise<string> {
       // Use Readability for intelligent content extraction
       try {
         console.log('Using Readability for content extraction from:', url);
-        const { document } = parseHTML(html);
+        const parser = new DOMParser();
+        const document = parser.parseFromString(html, 'text/html');
         const reader = new Readability(document, {
           charThreshold: 50, // Lower threshold for smaller articles
         });
