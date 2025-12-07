@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronLeft } from '@untitledui/icons';
+import { ChevronLeft, ChevronRight } from '@untitledui/icons';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { CSSAnimatedList } from '../CSSAnimatedList';
 import { CSSAnimatedItem } from '../CSSAnimatedItem';
@@ -50,6 +50,13 @@ export const NewsView = ({ config, newsItems }: NewsViewProps) => {
       ALLOWED_ATTR: ['href', 'target', 'rel', 'class', 'src', 'alt', 'width', 'height', 'style'],
     });
   };
+
+  // Calculate previous/next articles
+  const currentIndex = selectedArticle 
+    ? newsItems.findIndex(item => item.id === selectedArticle.id) 
+    : -1;
+  const previousArticle = currentIndex > 0 ? newsItems[currentIndex - 1] : null;
+  const nextArticle = currentIndex < newsItems.length - 1 ? newsItems[currentIndex + 1] : null;
 
   // Article detail view
   if (selectedArticle) {
@@ -137,6 +144,35 @@ export const NewsView = ({ config, newsItems }: NewsViewProps) => {
             )}
           </div>
         </div>
+
+        {/* Previous/Next Navigation */}
+        {(previousArticle || nextArticle) && (
+          <div className="flex items-center justify-between py-2 px-4 border-t bg-background">
+            {previousArticle ? (
+              <button
+                onClick={() => setSelectedArticle(previousArticle)}
+                className="group inline-flex items-center gap-0.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <ChevronLeft className="h-3 w-3 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200" />
+                <span>Previous</span>
+              </button>
+            ) : (
+              <div />
+            )}
+            
+            {nextArticle ? (
+              <button
+                onClick={() => setSelectedArticle(nextArticle)}
+                className="group inline-flex items-center gap-0.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <span>Next</span>
+                <ChevronRight className="h-3 w-3 opacity-0 translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200" />
+              </button>
+            ) : (
+              <div />
+            )}
+          </div>
+        )}
       </div>
     );
   }
