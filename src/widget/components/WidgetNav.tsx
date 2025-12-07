@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { HomeNavIcon, ChatNavIcon, HelpNavIcon } from '../NavIcons';
+import { HomeNavIcon, ChatNavIcon, HelpNavIcon, NewsNavIcon } from '../NavIcons';
 import type { ViewType } from '../types';
 
 interface WidgetNavProps {
@@ -8,6 +8,8 @@ interface WidgetNavProps {
   unreadCount: number;
   primaryColor: string;
   onMessagesClick?: () => void;
+  enableHelpTab?: boolean;
+  enableNewsTab?: boolean;
 }
 
 export const WidgetNav = ({
@@ -16,8 +18,10 @@ export const WidgetNav = ({
   unreadCount,
   primaryColor,
   onMessagesClick,
+  enableHelpTab = true,
+  enableNewsTab = false,
 }: WidgetNavProps) => {
-  const [hoveredNav, setHoveredNav] = useState<'home' | 'messages' | 'help' | null>(null);
+  const [hoveredNav, setHoveredNav] = useState<'home' | 'messages' | 'help' | 'news' | null>(null);
 
   const handleMessagesClick = () => {
     onViewChange('messages');
@@ -63,20 +67,39 @@ export const WidgetNav = ({
         </span>
       </button>
 
-      <button
-        onClick={() => onViewChange('help')}
-        onMouseEnter={() => setHoveredNav('help')}
-        onMouseLeave={() => setHoveredNav(null)}
-        className="flex flex-col items-center gap-1 py-1"
-      >
-        <HelpNavIcon 
-          active={currentView === 'help'} 
-          hovered={hoveredNav === 'help'}
-        />
-        <span className={`text-xs ${currentView === 'help' ? 'font-medium' : 'text-muted-foreground'}`} style={currentView === 'help' ? { color: primaryColor } : undefined}>
-          Help
-        </span>
-      </button>
+      {enableNewsTab && (
+        <button
+          onClick={() => onViewChange('news')}
+          onMouseEnter={() => setHoveredNav('news')}
+          onMouseLeave={() => setHoveredNav(null)}
+          className="flex flex-col items-center gap-1 py-1"
+        >
+          <NewsNavIcon 
+            active={currentView === 'news'} 
+            hovered={hoveredNav === 'news'}
+          />
+          <span className={`text-xs ${currentView === 'news' ? 'font-medium' : 'text-muted-foreground'}`} style={currentView === 'news' ? { color: primaryColor } : undefined}>
+            News
+          </span>
+        </button>
+      )}
+
+      {enableHelpTab && (
+        <button
+          onClick={() => onViewChange('help')}
+          onMouseEnter={() => setHoveredNav('help')}
+          onMouseLeave={() => setHoveredNav(null)}
+          className="flex flex-col items-center gap-1 py-1"
+        >
+          <HelpNavIcon 
+            active={currentView === 'help'} 
+            hovered={hoveredNav === 'help'}
+          />
+          <span className={`text-xs ${currentView === 'help' ? 'font-medium' : 'text-muted-foreground'}`} style={currentView === 'help' ? { color: primaryColor } : undefined}>
+            Help
+          </span>
+        </button>
+      )}
     </div>
   );
 };

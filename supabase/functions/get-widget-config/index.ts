@@ -26,11 +26,11 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // OPTIMIZED: Run all queries in parallel for faster response
-    const [agentResult, announcementsResult, categoriesResult, articlesResult] = await Promise.all([
+    const [agentResult, announcementsResult, categoriesResult, articlesResult, newsResult] = await Promise.all([
       // Fetch agent details and deployment config
       supabase
         .from('agents')
-        .select('name, deployment_config')
+        .select('name, deployment_config, enable_news_tab')
         .eq('id', agentId)
         .single(),
       
@@ -55,12 +55,21 @@ Deno.serve(async (req) => {
         .select('id, agent_id, category_id, title, content, icon, order_index, featured_image')
         .eq('agent_id', agentId)
         .order('order_index', { ascending: true }),
+      
+      // Fetch published news items
+      supabase
+        .from('news_items')
+        .select('id, title, body, featured_image_url, author_name, author_avatar, published_at, order_index')
+        .eq('agent_id', agentId)
+        .eq('is_published', true)
+        .order('published_at', { ascending: false }),
     ]);
 
     const { data: agent, error: agentError } = agentResult;
     const { data: announcements, error: announcementsError } = announcementsResult;
     const { data: categories, error: categoriesError } = categoriesResult;
     const { data: articles, error: articlesError } = articlesResult;
+    const { data: newsItems, error: newsError } = newsResult;
 
     if (agentError || !agent) {
       console.error('Agent fetch error:', agentError);
@@ -82,7 +91,13 @@ Deno.serve(async (req) => {
       console.error('Articles fetch error:', articlesError);
     }
 
+    if (newsError) {
+      console.error('News items fetch error:', newsError);
+    }
+
     const deploymentConfig = (agent.deployment_config as any) || {};
+    const embeddedChatConfig = deploymentConfig.embedded_chat || {};
+    const enableNewsTab = agent.enable_news_tab || embeddedChatConfig.enableNewsTab || false;
     const embeddedChatConfig = deploymentConfig.embedded_chat || {};
 
     // Transform quick actions to match widget format
@@ -149,6 +164,7 @@ Deno.serve(async (req) => {
       enableHomeTab: true, // Always enabled for widget
       enableMessagesTab: embeddedChatConfig.enableMessagesTab !== false,
       enableHelpTab: embeddedChatConfig.enableHelpTab !== false,
+      enableNewsTab: enableNewsTab,
       quickActions: quickActions,
       
       // Branding
@@ -158,6 +174,15 @@ Deno.serve(async (req) => {
       announcements: announcements || [],
       helpArticles: articles || [],
       helpCategories: categories || [],
+      newsItems: (newsItems || []).map(item => ({
+        id: item.id,
+        title: item.title,
+        body: item.body,
+        featured_image_url: item.featured_image_url,
+        author_name: item.author_name,
+        author_avatar: item.author_avatar,
+        published_at: item.published_at,
+      })),
     };
 
     return new Response(

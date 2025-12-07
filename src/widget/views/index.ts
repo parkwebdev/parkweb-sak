@@ -18,3 +18,6 @@ export { ChatView } from './ChatView';
 
 /** Help center with categories and articles */
 export { HelpView } from './HelpView';
+
+/** News/announcements feed view */
+export { NewsView } from './NewsView';

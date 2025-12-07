@@ -228,6 +228,14 @@ export const EmbedSettingsPanel = ({ config, onConfigChange, embedCode }: EmbedS
                   />
                 </div>
                 <div className="flex items-center justify-between">
+                  <Label htmlFor="news-tab" className="text-sm">News Tab</Label>
+                  <Switch
+                    id="news-tab"
+                    checked={config.enableNewsTab}
+                    onCheckedChange={(checked) => onConfigChange({ enableNewsTab: checked })}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
                   <Label htmlFor="help-tab" className="text-sm">Help Tab</Label>
                   <Switch
                     id="help-tab"

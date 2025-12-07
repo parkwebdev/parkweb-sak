@@ -22,6 +22,7 @@ import {
 import { HomeView } from './views/HomeView';
 import { ChatView } from './views/ChatView';
 import { HelpView } from './views/HelpView';
+import { NewsView } from './views/NewsView';
 
 // UI Components
 import { FloatingButton, WidgetHeader, WidgetNav } from './components';
@@ -631,6 +632,13 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                   helpArticles={config.helpArticles}
                 />
               )}
+
+              {currentView === 'news' && (
+                <NewsView
+                  config={config}
+                  newsItems={config.newsItems || []}
+                />
+              )}
             </div>
           )}
 
@@ -641,6 +649,8 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
             unreadCount={unreadCount}
             primaryColor={config.primaryColor}
             onMessagesClick={handleMessagesClick}
+            enableHelpTab={config.enableHelpTab}
+            enableNewsTab={config.enableNewsTab}
           />
         </Card>
       ) : (

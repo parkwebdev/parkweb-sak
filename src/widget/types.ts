@@ -14,7 +14,7 @@ import type { WidgetConfig } from './api';
 /**
  * Available view types in the widget navigation
  */
-export type ViewType = 'home' | 'messages' | 'help';
+export type ViewType = 'home' | 'messages' | 'help' | 'news';
 
 // ============================================================================
 // User & Conversation Types
