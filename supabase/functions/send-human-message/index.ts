@@ -6,6 +6,51 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// URL regex for extracting links from content
+const URL_REGEX = /https?:\/\/[^\s<>"')\]]+/gi;
+
+// Fetch link previews for URLs in content (max 3)
+async function fetchLinkPreviews(content: string, supabaseUrl: string, supabaseKey: string): Promise<any[]> {
+  const urls = Array.from(new Set(content.match(URL_REGEX) || [])).slice(0, 3);
+  if (urls.length === 0) return [];
+  
+  console.log(`Fetching link previews for ${urls.length} URLs`);
+  
+  const previews = await Promise.all(
+    urls.map(async (url) => {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        
+        const response = await fetch(`${supabaseUrl}/functions/v1/fetch-link-preview`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${supabaseKey}`,
+          },
+          body: JSON.stringify({ url }),
+          signal: controller.signal,
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) return null;
+        
+        const data = await response.json();
+        if (data && (data.title || data.videoType)) {
+          return data;
+        }
+        return null;
+      } catch (error) {
+        console.error(`Error fetching preview for ${url}:`, error.message);
+        return null;
+      }
+    })
+  );
+  
+  return previews.filter(p => p !== null);
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -96,6 +141,10 @@ serve(async (req) => {
     const senderName = senderProfile?.display_name || senderProfile?.email || 'Team Member';
     const senderAvatar = senderProfile?.avatar_url || null;
 
+    // Fetch link previews for any URLs in the message content
+    const linkPreviews = await fetchLinkPreviews(content.trim(), supabaseUrl, supabaseServiceKey);
+    console.log(`Cached ${linkPreviews.length} link previews for human message`);
+
     // Insert the message with human sender metadata
     const { data: message, error: msgError } = await supabase
       .from('messages')
@@ -109,6 +158,7 @@ serve(async (req) => {
           sender_name: senderName,
           sender_avatar: senderAvatar,
           source: 'admin',
+          link_previews: linkPreviews.length > 0 ? linkPreviews : undefined,
         },
       })
       .select()
@@ -175,6 +225,7 @@ serve(async (req) => {
           role: message.role,
           metadata: message.metadata,
         },
+        linkPreviews: linkPreviews.length > 0 ? linkPreviews : undefined,
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
