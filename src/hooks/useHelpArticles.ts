@@ -128,6 +128,17 @@ export const useHelpArticles = (agentId: string) => {
 
       if (error) throw error;
 
+      // Trigger embedding generation in background
+      supabase.functions.invoke('embed-help-article', {
+        body: { 
+          articleId: newArticle.id, 
+          title: article.title, 
+          content: article.content 
+        }
+      }).catch((err: Error) => {
+        logger.error('Failed to trigger article embedding', err);
+      });
+
       // Update local state
       setArticles([...articles, {
         id: newArticle.id,
@@ -197,6 +208,20 @@ export const useHelpArticles = (agentId: string) => {
         .eq('id', id);
 
       if (error) throw error;
+
+      // Re-embed if title or content changed
+      if (updates.title || updates.content) {
+        const currentArticle = articles.find(a => a.id === id);
+        supabase.functions.invoke('embed-help-article', {
+          body: { 
+            articleId: id, 
+            title: updates.title || currentArticle?.title || '',
+            content: updates.content || currentArticle?.content || ''
+          }
+        }).catch((err: Error) => {
+          logger.error('Failed to trigger article re-embedding', err);
+        });
+      }
 
       // Update local state
       setArticles(articles.map(a =>

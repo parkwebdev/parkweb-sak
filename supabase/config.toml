@@ -77,3 +77,6 @@ verify_jwt = false
 
 [functions.fetch-link-preview]
 verify_jwt = false
+
+[functions.embed-help-article]
+verify_jwt = true

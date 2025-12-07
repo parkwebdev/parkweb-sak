@@ -380,6 +380,7 @@ export type Database = {
           category_id: string
           content: string
           created_at: string | null
+          embedding: string | null
           featured_image: string | null
           icon: string | null
           id: string
@@ -393,6 +394,7 @@ export type Database = {
           category_id: string
           content: string
           created_at?: string | null
+          embedding?: string | null
           featured_image?: string | null
           icon?: string | null
           id?: string
@@ -406,6 +408,7 @@ export type Database = {
           category_id?: string
           content?: string
           created_at?: string | null
+          embedding?: string | null
           featured_image?: string | null
           icon?: string | null
           id?: string
@@ -1420,6 +1423,21 @@ export type Database = {
       mark_token_used: {
         Args: { p_email: string; p_token: string }
         Returns: undefined
+      }
+      search_help_articles: {
+        Args: {
+          p_agent_id: string
+          p_match_count?: number
+          p_match_threshold?: number
+          p_query_embedding: string
+        }
+        Returns: {
+          article_id: string
+          category_name: string
+          content: string
+          similarity: number
+          title: string
+        }[]
       }
       search_knowledge_chunks: {
         Args: {

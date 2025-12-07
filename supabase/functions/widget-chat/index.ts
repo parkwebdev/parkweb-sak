@@ -202,6 +202,7 @@ async function searchKnowledge(
   matchCount: number = 5
 ): Promise<{ content: string; source: string; type: string; similarity: number; chunkIndex?: number }[]> {
   const embeddingVector = `[${queryEmbedding.join(',')}]`;
+  const results: { content: string; source: string; type: string; similarity: number; chunkIndex?: number }[] = [];
 
   // Try new chunk-level search first
   const { data: chunkData, error: chunkError } = await supabase.rpc('search_knowledge_chunks', {
@@ -213,35 +214,59 @@ async function searchKnowledge(
 
   if (!chunkError && chunkData && chunkData.length > 0) {
     console.log(`Found ${chunkData.length} relevant chunks via chunk-level search`);
-    return chunkData.map((chunk: any) => ({
+    results.push(...chunkData.map((chunk: any) => ({
       content: chunk.content,
       source: chunk.source_name,
       type: chunk.source_type,
       similarity: chunk.similarity,
       chunkIndex: chunk.chunk_index,
-    }));
+    })));
+  } else {
+    // Fallback to legacy document-level search for backwards compatibility
+    console.log('Falling back to document-level search');
+    const { data, error } = await supabase.rpc('search_knowledge_sources', {
+      p_agent_id: agentId,
+      p_query_embedding: embeddingVector,
+      p_match_threshold: matchThreshold,
+      p_match_count: matchCount,
+    });
+
+    if (!error && data) {
+      results.push(...data.map((d: any) => ({
+        content: d.content,
+        source: d.source,
+        type: d.type,
+        similarity: d.similarity,
+      })));
+    }
   }
 
-  // Fallback to legacy document-level search for backwards compatibility
-  console.log('Falling back to document-level search');
-  const { data, error } = await supabase.rpc('search_knowledge_sources', {
-    p_agent_id: agentId,
-    p_query_embedding: embeddingVector,
-    p_match_threshold: matchThreshold,
-    p_match_count: matchCount,
-  });
+  // Also search Help Articles for RAG
+  try {
+    const { data: helpArticles, error: helpError } = await supabase.rpc('search_help_articles', {
+      p_agent_id: agentId,
+      p_query_embedding: embeddingVector,
+      p_match_threshold: matchThreshold,
+      p_match_count: 3, // Limit help articles to top 3
+    });
 
-  if (error) {
-    console.error('Knowledge search error:', error);
-    return [];
+    if (!helpError && helpArticles && helpArticles.length > 0) {
+      console.log(`Found ${helpArticles.length} relevant help articles`);
+      results.push(...helpArticles.map((article: any) => ({
+        content: article.content,
+        source: `Help: ${article.title}${article.category_name ? ` (${article.category_name})` : ''}`,
+        type: 'help_article',
+        similarity: article.similarity,
+      })));
+    }
+  } catch (helpSearchError) {
+    console.error('Help article search error (continuing without):', helpSearchError);
   }
 
-  return (data || []).map((d: any) => ({
-    content: d.content,
-    source: d.source,
-    type: d.type,
-    similarity: d.similarity,
-  }));
+  // Sort combined results by similarity and return top matches
+  return results
+    .sort((a, b) => b.similarity - a.similarity)
+    .slice(0, matchCount);
 }
 
 // Geo-IP lookup using ip-api.com (free, no API key needed)
