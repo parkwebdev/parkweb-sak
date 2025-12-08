@@ -210,7 +210,7 @@ export const KnowledgeSourceCard: React.FC<KnowledgeSourceCardProps> = ({
                   <span>{progress.isStalled ? 'Processing stalled' : 'Processing pages...'}</span>
                   <span>{progress.percentage}%</span>
                 </div>
-                <Progress value={progress.percentage} variant="success" animated className="h-2" />
+                <Progress value={progress.percentage} variant="success" animated={progress.percentage < 100} className="h-2" />
                 <div className="flex items-center gap-3 text-xs text-muted-foreground">
                   {progress.processing > 0 && (
                     <span className="flex items-center gap-1">
