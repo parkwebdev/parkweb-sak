@@ -37,7 +37,7 @@ export const ReportBuilder = ({ config, onConfigChange }: ReportBuilderProps) =>
           {/* Report Type */}
           <div className="space-y-3">
             <Label className="text-base">Report Type</Label>
-            <RadioGroup value={config.type} onValueChange={(v) => updateConfig('type', v as any)}>
+            <RadioGroup value={config.type} onValueChange={(v) => updateConfig('type', v as ReportConfig['type'])}>
               <RadioGroupItem value="summary">Summary - High-level overview</RadioGroupItem>
               <RadioGroupItem value="detailed">Detailed - Complete data analysis</RadioGroupItem>
               <RadioGroupItem value="comparison">Comparison - Period over period</RadioGroupItem>
@@ -86,7 +86,7 @@ export const ReportBuilder = ({ config, onConfigChange }: ReportBuilderProps) =>
           {/* Grouping */}
           <div className="space-y-3">
             <Label className="text-base">Data Grouping</Label>
-            <Select value={config.grouping} onValueChange={(v) => updateConfig('grouping', v as any)}>
+            <Select value={config.grouping} onValueChange={(v) => updateConfig('grouping', v as ReportConfig['grouping'])}>
               <SelectTrigger className="w-[200px]">
                 <SelectValue />
               </SelectTrigger>

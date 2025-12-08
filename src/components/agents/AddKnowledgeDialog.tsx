@@ -16,6 +16,7 @@ import { usePlanLimits } from '@/hooks/usePlanLimits';
 import { Upload01, Link03, File01, AlertCircle, Globe01, ChevronDown, ChevronUp } from '@untitledui/icons';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import type { KnowledgeType } from '@/types/metadata';
 
 interface AddKnowledgeDialogProps {
   open: boolean;
@@ -133,7 +134,7 @@ export const AddKnowledgeDialog: React.FC<AddKnowledgeDialogProps> = ({
 
     setUploading(true);
     try {
-      await addTextSource(textContent, agentId, userId, 'json' as any, {
+      await addTextSource(textContent, agentId, userId, 'json' as KnowledgeType, {
         name: textName || 'Custom Text',
       });
       setTextContent('');
