@@ -14,6 +14,29 @@ const corsHeaders = {
 const EMBEDDING_MODEL = 'text-embedding-3-small';
 const EMBEDDING_DIMENSIONS = 1536;
 
+// Self-chaining configuration
+const MAX_PROCESSING_TIME_MS = 60000; // 60 seconds max per invocation (safety margin for 150s limit)
+const URLS_PER_BATCH = 5; // Process 5 URLs per invocation before self-chaining
+
+// Track current batch context for beforeunload handler
+let currentBatchContext: {
+  parentSourceId: string;
+  batchId: string;
+  agentId: string;
+} | null = null;
+
+// Register beforeunload handler to detect forced shutdowns
+addEventListener('beforeunload', (ev: any) => {
+  console.log('Function shutdown due to:', ev.detail?.reason || 'unknown');
+  
+  // If we were processing a batch, it will be picked up by the stalled detection
+  // or next cron job - we can't reliably trigger a new function from here
+  if (currentBatchContext) {
+    console.log('Shutdown during batch processing:', currentBatchContext.batchId);
+    console.log('Batch will auto-resume on next check or cron job');
+  }
+});
+
 // Improved chunking with semantic boundaries and overlap
 function chunkText(text: string, maxTokens: number = 500, overlapTokens: number = 50): { content: string; tokenCount: number }[] {
   const chunks: { content: string; tokenCount: number }[] = [];
@@ -326,20 +349,73 @@ async function processUrlSource(
   }
 }
 
-// Process pending child sources in batches with rate limiting
-async function processPendingBatch(
+// Trigger next batch by calling this function again
+async function triggerNextBatch(
+  parentSourceId: string,
+  batchId: string,
+  agentId: string
+): Promise<void> {
+  const supabaseUrl = Deno.env.get('SUPABASE_URL');
+  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  
+  if (!supabaseUrl || !serviceRoleKey) {
+    console.error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY for self-chain');
+    return;
+  }
+
+  console.log('Triggering next batch (self-chaining)...');
+  
+  try {
+    const response = await fetch(`${supabaseUrl}/functions/v1/process-knowledge-source`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${serviceRoleKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        sourceId: parentSourceId,
+        batchId,
+        agentId,
+        continue: true, // Flag indicating this is a continuation
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Failed to trigger next batch:', response.status, errorText);
+    } else {
+      console.log('Next batch triggered successfully');
+    }
+  } catch (error) {
+    console.error('Error triggering next batch:', error);
+  }
+}
+
+// Helper function to sync urls_found with actual child count
+async function syncUrlsFound(supabase: any, parentSourceId: string): Promise<number> {
+  const { count } = await supabase
+    .from('knowledge_sources')
+    .select('id', { count: 'exact', head: true })
+    .contains('metadata', { parent_source_id: parentSourceId });
+  return count || 0;
+}
+
+// Process pending child sources in small batches with self-chaining
+async function processBatchAndContinue(
   supabase: any,
   parentSourceId: string,
   batchId: string,
   agentId: string
 ): Promise<void> {
-  const CONCURRENT_LIMIT = 1; // Process 1 URL at a time (reduced from 3 for CPU safety)
-  const DELAY_BETWEEN_BATCHES_MS = 5000; // 5 second delay between batches
-  const DELAY_BETWEEN_URLS_MS = 1000; // 1 second delay between individual URLs
+  const startTime = Date.now();
+  const DELAY_BETWEEN_URLS_MS = 1000; // 1 second delay between URLs
 
-  console.log(`Starting batch processing for parent ${parentSourceId}, batch ${batchId}`);
+  console.log(`Processing batch for parent ${parentSourceId}, batch ${batchId}`);
 
-  // Fetch existing parent metadata to preserve urls_found, child_sitemaps, etc.
+  // Set batch context for beforeunload handler
+  currentBatchContext = { parentSourceId, batchId, agentId };
+
+  // Fetch existing parent metadata
   const { data: parentSource } = await supabase
     .from('knowledge_sources')
     .select('metadata')
@@ -348,27 +424,32 @@ async function processPendingBatch(
 
   let parentMetadata = (parentSource?.metadata as Record<string, unknown>) || {};
 
-  // Helper function to sync urls_found with actual child count
-  async function syncUrlsFound(): Promise<number> {
-    const { count } = await supabase
-      .from('knowledge_sources')
-      .select('id', { count: 'exact', head: true })
-      .contains('metadata', { parent_source_id: parentSourceId });
-    return count || 0;
-  }
-
   let processed = 0;
   let errors = 0;
-  let hasMore = true;
+  let urlsProcessedThisBatch = 0;
 
-  while (hasMore) {
-    // Get next batch of pending sources
+  // Process URLs until time limit or batch limit reached
+  while (true) {
+    // Check time limit - stop well before edge function timeout
+    const elapsed = Date.now() - startTime;
+    if (elapsed > MAX_PROCESSING_TIME_MS) {
+      console.log(`Time limit reached (${elapsed}ms), will continue in next invocation`);
+      break;
+    }
+
+    // Check batch limit
+    if (urlsProcessedThisBatch >= URLS_PER_BATCH) {
+      console.log(`Batch limit reached (${urlsProcessedThisBatch} URLs), will continue in next invocation`);
+      break;
+    }
+
+    // Get next pending source
     const { data: pendingSources, error: fetchError } = await supabase
       .from('knowledge_sources')
       .select('id, source, agent_id')
       .eq('status', 'pending')
       .contains('metadata', { batch_id: batchId })
-      .limit(CONCURRENT_LIMIT);
+      .limit(1);
 
     if (fetchError) {
       console.error('Error fetching pending sources:', fetchError);
@@ -376,91 +457,97 @@ async function processPendingBatch(
     }
 
     if (!pendingSources || pendingSources.length === 0) {
-      hasMore = false;
-      console.log('No more pending sources to process');
-      break;
+      // All done!
+      console.log('No more pending sources - batch complete');
+      
+      // Sync urls_found and mark complete
+      const finalChildCount = await syncUrlsFound(supabase, parentSourceId);
+      
+      // Get final counts from current progress
+      const processedCount = (parentMetadata.processed_count as number || 0) + processed;
+      const errorCount = (parentMetadata.error_count as number || 0) + errors;
+      
+      await supabase
+        .from('knowledge_sources')
+        .update({
+          status: 'ready',
+          content: `Sitemap processed. ${processedCount} pages indexed successfully${errorCount > 0 ? `, ${errorCount} failed` : ''}.`,
+          metadata: {
+            ...parentMetadata,
+            is_sitemap: true,
+            batch_id: batchId,
+            urls_found: finalChildCount,
+            processed_count: processedCount,
+            error_count: errorCount,
+            remaining_count: 0,
+            completed_at: new Date().toISOString(),
+          },
+        })
+        .eq('id', parentSourceId);
+
+      console.log(`Batch processing complete: ${processedCount} processed, ${errorCount} errors`);
+      currentBatchContext = null;
+      return;
     }
 
-    console.log(`Processing batch of ${pendingSources.length} URLs...`);
-
-    // Process batch sequentially for CPU safety
-    for (const source of pendingSources) {
-      console.log(`Processing: ${source.source.substring(0, 80)}...`);
-      const result = await processUrlSource(supabase, source.id, source.agent_id, source.source);
-      
-      if (result.success) {
-        processed++;
-      } else {
-        errors++;
-        console.error(`Failed to process URL: ${result.error}`);
-      }
-      
-      // Delay between URLs
-      await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_URLS_MS));
-    }
-
-    // Get accurate count of remaining pending sources
-    const { count: remainingCount, error: countError } = await supabase
-      .from('knowledge_sources')
-      .select('id', { count: 'exact', head: true })
-      .eq('status', 'pending')
-      .contains('metadata', { batch_id: batchId });
-
-    const remaining = countError ? 0 : (remainingCount || 0);
+    const source = pendingSources[0];
+    console.log(`Processing: ${source.source.substring(0, 80)}...`);
     
-    // Sync urls_found with actual child count on each update
-    const actualChildCount = await syncUrlsFound();
+    const result = await processUrlSource(supabase, source.id, source.agent_id, source.source);
     
-    // Update parent source with progress, preserving existing metadata
-    parentMetadata = {
-      ...parentMetadata,
-      is_sitemap: true,
-      batch_id: batchId,
-      urls_found: actualChildCount, // Always sync with actual count
-      processed_count: processed,
-      error_count: errors,
-      remaining_count: remaining,
-      last_progress_at: new Date().toISOString(),
-    };
-    
-    await supabase
-      .from('knowledge_sources')
-      .update({ metadata: parentMetadata })
-      .eq('id', parentSourceId);
-
-    console.log(`Progress: ${processed} processed, ${errors} errors, ${remaining} remaining`);
-
-    // Check if done
-    if (remaining === 0) {
-      hasMore = false;
+    if (result.success) {
+      processed++;
     } else {
-      // Delay before next batch
-      await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_BATCHES_MS));
+      errors++;
+      console.error(`Failed to process URL: ${result.error}`);
     }
+    
+    urlsProcessedThisBatch++;
+
+    // Delay between URLs
+    await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_URLS_MS));
   }
 
-  // Final sync of urls_found before completion
-  const finalChildCount = await syncUrlsFound();
+  // Get accurate count of remaining pending sources
+  const { count: remainingCount } = await supabase
+    .from('knowledge_sources')
+    .select('id', { count: 'exact', head: true })
+    .eq('status', 'pending')
+    .contains('metadata', { batch_id: batchId });
 
-  // Final update to parent source, preserving existing metadata
+  const remaining = remainingCount || 0;
+  
+  // Sync urls_found with actual child count
+  const actualChildCount = await syncUrlsFound(supabase, parentSourceId);
+  
+  // Update parent source with progress
+  const updatedProcessedCount = (parentMetadata.processed_count as number || 0) + processed;
+  const updatedErrorCount = (parentMetadata.error_count as number || 0) + errors;
+  
+  parentMetadata = {
+    ...parentMetadata,
+    is_sitemap: true,
+    batch_id: batchId,
+    urls_found: actualChildCount,
+    processed_count: updatedProcessedCount,
+    error_count: updatedErrorCount,
+    remaining_count: remaining,
+    last_progress_at: new Date().toISOString(),
+  };
+  
   await supabase
     .from('knowledge_sources')
-    .update({
-      content: `Sitemap processed. ${processed} pages indexed successfully${errors > 0 ? `, ${errors} failed` : ''}.`,
-      metadata: {
-        ...parentMetadata,
-        is_sitemap: true,
-        batch_id: batchId,
-        urls_found: finalChildCount,
-        processed_count: processed,
-        error_count: errors,
-        remaining_count: 0,
-        completed_at: new Date().toISOString(),
-      },
-    })
+    .update({ metadata: parentMetadata })
     .eq('id', parentSourceId);
 
-  console.log(`Batch processing complete: ${processed} processed, ${errors} errors`);
+  console.log(`Progress: ${updatedProcessedCount} processed, ${updatedErrorCount} errors, ${remaining} remaining`);
+
+  // If there are more to process, trigger next batch
+  if (remaining > 0) {
+    await triggerNextBatch(parentSourceId, batchId, agentId);
+  }
+
+  currentBatchContext = null;
 }
 
 // Check if URL matches a glob pattern
@@ -727,12 +814,43 @@ Deno.serve(async (req) => {
     const body = await req.json();
     sourceId = body.sourceId;
     const resumeMode = body.resume === true;
+    const continueMode = body.continue === true;
+    const batchIdFromRequest = body.batchId;
+    const agentIdFromRequest = body.agentId;
     
-    console.log('Processing knowledge source:', sourceId, resumeMode ? '(RESUME MODE)' : '');
+    console.log('Processing knowledge source:', sourceId, 
+      resumeMode ? '(RESUME MODE)' : '',
+      continueMode ? '(CONTINUE MODE)' : ''
+    );
     console.log('Using embedding model:', EMBEDDING_MODEL, `(${EMBEDDING_DIMENSIONS} dimensions)`);
 
     if (!sourceId) {
       throw new Error('sourceId is required');
+    }
+
+    // Handle continue mode (self-chaining continuation)
+    if (continueMode && batchIdFromRequest && agentIdFromRequest) {
+      console.log('Continuing batch processing (self-chain):', batchIdFromRequest);
+      
+      EdgeRuntime.waitUntil(
+        processBatchAndContinue(supabase, sourceId, batchIdFromRequest, agentIdFromRequest)
+          .catch(error => {
+            console.error('Background batch processing failed:', error);
+          })
+      );
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          sourceId,
+          continued: true,
+          batchId: batchIdFromRequest,
+          message: 'Batch continuation started',
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
     }
 
     // Get the knowledge source
@@ -754,9 +872,9 @@ Deno.serve(async (req) => {
     if (resumeMode && sourceMetadata.is_sitemap && sourceMetadata.batch_id) {
       console.log('Resuming stalled sitemap processing, batch:', sourceMetadata.batch_id);
       
-      // Start background batch processing using EdgeRuntime.waitUntil
+      // Start background batch processing using self-chaining
       EdgeRuntime.waitUntil(
-        processPendingBatch(supabase, sourceId, sourceMetadata.batch_id, source.agent_id)
+        processBatchAndContinue(supabase, sourceId, sourceMetadata.batch_id, source.agent_id)
           .catch(error => {
             console.error('Background batch processing failed:', error);
           })
@@ -821,12 +939,11 @@ Deno.serve(async (req) => {
         throw updateError;
       }
 
-      console.log(`Sitemap parsed: ${urlCount} URLs queued (${filteredCount} filtered). Starting background batch processing...`);
+      console.log(`Sitemap parsed: ${urlCount} URLs queued (${filteredCount} filtered). Starting self-chaining batch processing...`);
 
-      // Start background batch processing using EdgeRuntime.waitUntil
-      // This allows the function to return immediately while processing continues
+      // Start background batch processing using self-chaining
       EdgeRuntime.waitUntil(
-        processPendingBatch(supabase, sourceId, batchId, source.agent_id)
+        processBatchAndContinue(supabase, sourceId, batchId, source.agent_id)
           .catch(error => {
             console.error('Background batch processing failed:', error);
           })
@@ -841,7 +958,7 @@ Deno.serve(async (req) => {
           urlsFiltered: filteredCount,
           childSitemaps: sitemapCount,
           batchId,
-          message: `Processing ${urlCount} pages in background...`,
+          message: `Processing ${urlCount} pages with self-chaining batches...`,
         }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
