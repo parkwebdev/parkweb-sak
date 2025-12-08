@@ -23,24 +23,36 @@ export interface WebhookResponseAction {
   config: Record<string, string>;
 }
 
+/** Response action with condition for webhook response handling */
+export interface ResponseAction {
+  condition: {
+    status_code?: number;
+    body_contains?: string;
+  };
+  action: {
+    type: string;
+    fields?: Array<{ field: string; value: string }>;
+  };
+}
+
 /** Supported authentication types for webhooks */
 export type WebhookAuthType = 'none' | 'api_key' | 'bearer_token' | 'basic_auth';
 
 /** Supported HTTP methods for webhooks */
 export type WebhookMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
-/** Webhook update payload for onSave callbacks */
+/** Webhook update payload for onSave callbacks - uses Record for JSON compatibility */
 export interface WebhookUpdates {
   name?: string;
   url?: string;
-  method?: WebhookMethod;
+  method?: string;
   events?: string[];
   active?: boolean;
-  auth_type?: WebhookAuthType;
+  auth_type?: string;
   auth_config?: Record<string, string>;
   headers?: Record<string, string>;
-  conditions?: WebhookConditions;
-  response_actions?: WebhookResponseAction[];
+  conditions?: Record<string, unknown>;
+  response_actions?: Record<string, unknown>;
 }
 
 /** Full webhook configuration from database */

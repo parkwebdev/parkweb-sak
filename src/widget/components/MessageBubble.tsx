@@ -246,8 +246,8 @@ export const MessageBubble = ({
         {isLastInGroup && isUser && message.reactions && message.reactions.length > 0 && (
           <div className="flex items-center gap-1 px-1 justify-end flex-wrap">
             {message.reactions
-              .filter((r: any) => r.adminReacted && r.count > 0)
-              .map((reaction: any, i: number) => (
+              .filter((r) => r.adminReacted && r.count > 0)
+              .map((reaction, i: number) => (
                 <span 
                   key={i} 
                   className="text-xs bg-muted rounded-full px-1.5 py-0.5"

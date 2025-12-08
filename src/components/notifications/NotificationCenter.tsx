@@ -16,16 +16,18 @@ import { toast } from '@/lib/toast';
 import { formatDistanceToNow } from 'date-fns';
 import { logger } from '@/utils/logger';
 
+import type { Json } from '@/integrations/supabase/types';
+
 interface Notification {
   id: string;
   user_id: string;
-  type: string; // Changed from union type to string to match DB
+  type: string;
   title: string;
   message: string;
   read: boolean;
   created_at: string;
   updated_at: string;
-  data?: any; // This matches the JSON type from the database
+  data?: Json;
 }
 
 interface NotificationCenterProps {

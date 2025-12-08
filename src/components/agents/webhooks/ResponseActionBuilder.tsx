@@ -3,12 +3,17 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Plus, Trash01 as Trash2 } from '@untitledui/icons';
 
-interface ResponseAction {
-  condition: {
-    status_code?: number;
-    body_contains?: string;
-  };
+/** Condition for when an action should be triggered */
+interface ResponseActionCondition {
+  status_code?: number;
+  body_contains?: string;
+}
+
+/** Response action with condition for webhook response handling */
+export interface ResponseAction {
+  condition: ResponseActionCondition;
   action: {
     type: string;
     updates: Record<string, string>;

@@ -13,7 +13,7 @@ interface EditAgentDialogProps {
   agent: Agent | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onUpdate: (id: string, updates: any) => Promise<any>;
+  onUpdate: (id: string, updates: Partial<Omit<Agent, 'id' | 'created_at' | 'updated_at' | 'user_id'>>) => Promise<Agent | null>;
 }
 
 export const EditAgentDialog = ({ agent, open, onOpenChange, onUpdate }: EditAgentDialogProps) => {

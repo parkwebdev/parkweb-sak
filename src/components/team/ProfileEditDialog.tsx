@@ -47,7 +47,11 @@ export const ProfileEditDialog: React.FC<ProfileEditDialogProps> = ({
     setLoading(true);
     
     try {
-      const updateData: any = {
+      const updateData: {
+        updated_at: string;
+        display_name?: string | null;
+        avatar_url?: string | null;
+      } = {
         updated_at: new Date().toISOString(),
       };
 
