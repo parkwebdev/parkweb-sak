@@ -42,3 +42,4 @@ export * from './metadata';
 export * from './webhooks';
 export * from './errors';
 export * from './team';
+export * from './report';
