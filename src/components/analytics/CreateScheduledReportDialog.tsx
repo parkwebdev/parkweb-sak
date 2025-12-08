@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { logger } from '@/utils/logger';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -74,7 +75,7 @@ export const CreateScheduledReportDialog = ({ open, onOpenChange }: CreateSchedu
       setTimeOfDay('09:00');
       onOpenChange(false);
     } catch (error) {
-      console.error('Error creating scheduled report:', error);
+      logger.error('Error creating scheduled report:', error);
     } finally {
       setLoading(false);
     }
