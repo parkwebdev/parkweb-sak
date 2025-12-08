@@ -27,8 +27,8 @@ const Progress = React.forwardRef<
   const formattedLabel = formatLabel ? formatLabel(displayValue) : `${displayValue.toFixed(1)}%`;
   const indicatorClass = indicatorVariants[variant];
   
-  const stripesClass = animated 
-    ? "bg-[length:1rem_1rem] bg-[linear-gradient(45deg,rgba(255,255,255,0.15)_25%,transparent_25%,transparent_50%,rgba(255,255,255,0.15)_50%,rgba(255,255,255,0.15)_75%,transparent_75%,transparent)] animate-progress-stripes" 
+  const animatedClass = animated 
+    ? "bg-[length:200%_100%] bg-gradient-to-r from-[hsl(var(--success))] via-[hsl(var(--success)/0.6)] to-[hsl(var(--success))] animate-progress-shimmer" 
     : "";
 
   if (showLabel) {
@@ -43,7 +43,7 @@ const Progress = React.forwardRef<
           {...props}
         >
           <ProgressPrimitive.Indicator
-            className={cn("h-full w-full flex-1 transition-all", indicatorClass, stripesClass)}
+            className={cn("h-full w-full flex-1 transition-all", animated ? animatedClass : indicatorClass)}
             style={{ transform: `translateX(-${100 - displayValue}%)` }}
           />
         </ProgressPrimitive.Root>
@@ -64,7 +64,7 @@ const Progress = React.forwardRef<
       {...props}
     >
       <ProgressPrimitive.Indicator
-        className={cn("h-full w-full flex-1 transition-all", indicatorClass, stripesClass)}
+        className={cn("h-full w-full flex-1 transition-all", animated ? animatedClass : indicatorClass)}
         style={{ transform: `translateX(-${100 - displayValue}%)` }}
       />
     </ProgressPrimitive.Root>
