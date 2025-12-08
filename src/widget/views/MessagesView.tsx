@@ -1,3 +1,12 @@
+/**
+ * MessagesView Component
+ * 
+ * Conversation list view showing all past conversations with previews.
+ * Allows users to open existing conversations or start new ones.
+ * 
+ * @module widget/views/MessagesView
+ */
+
 import { Button } from '@/components/ui/button';
 import { MessageChatCircle, ChevronRight } from '@untitledui/icons';
 import { formatTimestamp } from '../utils';

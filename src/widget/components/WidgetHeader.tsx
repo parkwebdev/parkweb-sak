@@ -1,8 +1,17 @@
+/**
+ * WidgetHeader Component
+ * 
+ * Header bar for the widget panel displaying agent name, online status,
+ * sound settings dropdown, and close button.
+ * 
+ * @module widget/components/WidgetHeader
+ */
+
 import { Button } from '@/components/ui/button';
 import { X, VolumeMax, VolumeX } from '@untitledui/icons';
 import { ChatBubbleIcon } from '@/components/agents/ChatBubbleIcon';
 
-// Custom sliders icon for settings
+/** Custom sliders icon for settings button */
 const SlidersIcon = ({ className }: { className?: string }) => (
   <svg width={24} height={24} viewBox="0 0 24 24" fill="none" className={className}>
     <path
@@ -15,7 +24,7 @@ const SlidersIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
-// Small CSS-only toggle switch
+/** Small CSS-only toggle switch for settings */
 const SmallToggle = ({ checked, onChange }: { checked: boolean; onChange: () => void }) => (
   <button
     type="button"
@@ -40,16 +49,30 @@ const SmallToggle = ({ checked, onChange }: { checked: boolean; onChange: () => 
   </button>
 );
 
+/** Props for the WidgetHeader component */
 interface WidgetHeaderProps {
+  /** Agent name to display */
   title: string;
+  /** Primary brand color */
   primaryColor: string;
+  /** Close button click handler */
   onClose: () => void;
+  /** Whether sound notifications are enabled */
   soundEnabled: boolean;
+  /** Sound toggle handler */
   onSoundToggle: () => void;
+  /** Whether settings dropdown is visible */
   showSettingsDropdown: boolean;
+  /** Settings button click handler */
   onSettingsToggle: () => void;
 }
 
+/**
+ * Widget header component with agent info and controls.
+ * 
+ * @param props - Component props
+ * @returns Header element with agent info, settings, and close button
+ */
 export const WidgetHeader = ({
   title,
   primaryColor,

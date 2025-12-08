@@ -1,8 +1,27 @@
 /**
  * useParentMessages Hook
  * 
- * Handles communication with parent window in iframe mode.
- * Listens for open/close commands and page info updates.
+ * Handles postMessage communication with parent window in iframe mode.
+ * Listens for open/close commands, page info updates, and notifies parent of events.
+ * 
+ * @module widget/hooks/useParentMessages
+ * 
+ * @example
+ * ```tsx
+ * const { notifyUnreadCount, notifyClose } = useParentMessages(
+ *   {
+ *     previewMode: false,
+ *     agentId: 'agent-123',
+ *     visitorId: 'visitor-456',
+ *     activeConversationId: 'conv-789',
+ *     referrerJourney: null,
+ *     setIsOpen,
+ *     setReferrerJourney,
+ *     setPageVisits
+ *   },
+ *   { parentPageUrlRef, parentReferrerRef, parentUtmParamsRef, currentPageRef }
+ * );
+ * ```
  */
 
 import { useEffect, useRef, useCallback } from 'react';
@@ -11,24 +30,45 @@ import { updatePageVisit, type ReferrerJourney } from '../api';
 import { isInternalWidgetUrl } from '../constants';
 import type { PageVisit } from '../types';
 
+/** Options for the useParentMessages hook */
 interface UseParentMessagesOptions {
+  /** Whether widget is in preview/editor mode */
   previewMode: boolean;
+  /** Agent ID for analytics */
   agentId: string;
+  /** Unique visitor identifier */
   visitorId: string;
+  /** Active conversation ID (UUID format) */
   activeConversationId: string | null;
+  /** Current referrer journey data */
   referrerJourney: ReferrerJourney | null;
+  /** Setter for widget open state */
   setIsOpen: (open: boolean) => void;
+  /** Setter for referrer journey data */
   setReferrerJourney: (journey: ReferrerJourney) => void;
+  /** State setter for page visits array */
   setPageVisits: React.Dispatch<React.SetStateAction<PageVisit[]>>;
 }
 
+/** Refs for tracking parent page information */
 interface ParentPageRefs {
+  /** Ref for current parent page URL */
   parentPageUrlRef: React.MutableRefObject<string | null>;
+  /** Ref for parent document referrer */
   parentReferrerRef: React.MutableRefObject<string | null>;
+  /** Ref for UTM parameters from parent */
   parentUtmParamsRef: React.MutableRefObject<Partial<ReferrerJourney> | null>;
+  /** Ref for current page tracking */
   currentPageRef: React.MutableRefObject<{ url: string; entered_at: string }>;
 }
 
+/**
+ * Hook for handling postMessage communication with parent window.
+ * 
+ * @param options - Configuration options for the hook
+ * @param refs - Refs for tracking parent page information
+ * @returns Functions to notify parent of events
+ */
 export function useParentMessages(
   options: UseParentMessagesOptions,
   refs: ParentPageRefs

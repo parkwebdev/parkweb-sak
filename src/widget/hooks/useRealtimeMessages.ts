@@ -1,7 +1,25 @@
 /**
  * useRealtimeMessages Hook
  * 
- * Manages real-time message subscriptions for human takeover.
+ * Manages real-time message subscriptions for human takeover conversations.
+ * Subscribes to Supabase Realtime for INSERT and UPDATE events on messages.
+ * 
+ * @module widget/hooks/useRealtimeMessages
+ * 
+ * @example
+ * ```tsx
+ * const channelRef = useRealtimeMessages({
+ *   activeConversationId: 'conv-123',
+ *   isOpen: true,
+ *   currentView: 'messages',
+ *   soundEnabled: true,
+ *   playNotificationSound: () => playSound(),
+ *   setMessages,
+ *   setIsTyping,
+ *   setTakeoverAgentName,
+ *   setTakeoverAgentAvatar
+ * });
+ * ```
  */
 
 import { useEffect, useRef } from 'react';
@@ -10,18 +28,34 @@ import { subscribeToMessages, unsubscribeFromMessages } from '../api';
 import { isValidUUID } from '../utils';
 import type { Message } from '../types';
 
+/** Options for the useRealtimeMessages hook */
 interface UseRealtimeMessagesOptions {
+  /** Active conversation ID (UUID format) */
   activeConversationId: string | null;
+  /** Whether widget panel is open */
   isOpen: boolean;
+  /** Current view tab name */
   currentView: string;
+  /** Whether sound notifications are enabled */
   soundEnabled: boolean;
+  /** Function to play notification sound */
   playNotificationSound: () => void;
+  /** State setter for messages array */
   setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
+  /** Setter for AI typing indicator */
   setIsTyping: (typing: boolean) => void;
+  /** Setter for takeover agent name */
   setTakeoverAgentName: (name: string | undefined) => void;
+  /** Setter for takeover agent avatar URL */
   setTakeoverAgentAvatar: (avatar: string | undefined) => void;
 }
 
+/**
+ * Hook for subscribing to real-time message updates.
+ * 
+ * @param options - Configuration options for subscriptions
+ * @returns Reference to the Supabase Realtime channel
+ */
 export function useRealtimeMessages(options: UseRealtimeMessagesOptions) {
   const {
     activeConversationId,

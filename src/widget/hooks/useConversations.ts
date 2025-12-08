@@ -1,8 +1,26 @@
 /**
  * useConversations Hook
  * 
- * Manages conversation and message state using database as source of truth.
- * No localStorage for conversations/messages - only database.
+ * Manages conversation and message state using the database as the source of truth.
+ * Handles message fetching, auto-scrolling, read receipts, and real-time updates.
+ * 
+ * @module widget/hooks/useConversations
+ * 
+ * @example
+ * ```tsx
+ * const {
+ *   messages,
+ *   setMessages,
+ *   activeConversationId,
+ *   messagesEndRef
+ * } = useConversations({
+ *   agentId: 'abc-123',
+ *   chatUser: currentUser,
+ *   previewMode: false,
+ *   isOpen: true,
+ *   currentView: 'messages'
+ * });
+ * ```
  */
 
 import { useState, useEffect, useRef } from 'react';
@@ -10,14 +28,26 @@ import { fetchConversationMessages, markMessagesRead } from '../api';
 import { isValidUUID } from '../utils';
 import type { Message, ChatUser } from '../types';
 
+/** Options for the useConversations hook */
 interface UseConversationsOptions {
+  /** Agent ID for the current widget instance */
   agentId: string;
+  /** Current chat user (from contact form submission) */
   chatUser: ChatUser | null;
+  /** Whether widget is in preview/editor mode */
   previewMode: boolean;
+  /** Whether widget panel is currently open */
   isOpen: boolean;
+  /** Current view tab (home, messages, help, news) */
   currentView: string;
 }
 
+/**
+ * Hook for managing conversation and message state.
+ * 
+ * @param options - Configuration options for the hook
+ * @returns Conversation state, setters, refs, and utility functions
+ */
 export function useConversations(options: UseConversationsOptions) {
   const { agentId, chatUser, previewMode, isOpen, currentView } = options;
 

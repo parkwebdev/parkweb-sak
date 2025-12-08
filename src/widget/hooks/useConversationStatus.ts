@@ -1,7 +1,23 @@
 /**
  * useConversationStatus Hook
  * 
- * Subscribes to conversation status changes for human takeover.
+ * Subscribes to conversation status changes for human takeover detection.
+ * Handles takeover notices, agent info fetching, and status transitions.
+ * 
+ * @module widget/hooks/useConversationStatus
+ * 
+ * @example
+ * ```tsx
+ * const { checkTakeoverNoticeShown, markTakeoverNoticeShown } = useConversationStatus({
+ *   agentId: 'agent-123',
+ *   activeConversationId: 'conv-123',
+ *   isHumanTakeover: false,
+ *   setIsHumanTakeover,
+ *   setTakeoverAgentName,
+ *   setTakeoverAgentAvatar,
+ *   setMessages
+ * });
+ * ```
  */
 
 import { useEffect, useRef, useCallback } from 'react';
@@ -10,16 +26,30 @@ import { subscribeToConversationStatus, unsubscribeFromConversationStatus, fetch
 import { isValidUUID, hasTakeoverNoticeBeenShown, setTakeoverNoticeShown, clearTakeoverNotice } from '../utils';
 import type { Message } from '../types';
 
+/** Options for the useConversationStatus hook */
 interface UseConversationStatusOptions {
+  /** Agent ID for localStorage keys */
   agentId: string;
+  /** Active conversation ID (UUID format) */
   activeConversationId: string | null;
+  /** Current human takeover state */
   isHumanTakeover: boolean;
+  /** Setter for human takeover state */
   setIsHumanTakeover: (takeover: boolean) => void;
+  /** Setter for takeover agent name */
   setTakeoverAgentName: (name: string | undefined) => void;
+  /** Setter for takeover agent avatar URL */
   setTakeoverAgentAvatar: (avatar: string | undefined) => void;
+  /** State setter for messages (to add system notices) */
   setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
 }
 
+/**
+ * Hook for subscribing to conversation status changes.
+ * 
+ * @param options - Configuration options for subscriptions
+ * @returns Takeover notice utility functions
+ */
 export function useConversationStatus(options: UseConversationStatusOptions) {
   const {
     agentId,

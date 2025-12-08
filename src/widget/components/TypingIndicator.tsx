@@ -1,11 +1,30 @@
+/**
+ * TypingIndicator Component
+ * 
+ * Displays animated bouncing dots to indicate someone is typing.
+ * Supports both AI and human typing indicators with agent name display.
+ * 
+ * @module widget/components/TypingIndicator
+ */
+
 import { ChatBubbleIcon } from '@/components/agents/ChatBubbleIcon';
 
+/** Props for the TypingIndicator component */
 interface TypingIndicatorProps {
+  /** Primary brand color for avatar background */
   primaryColor: string;
+  /** Whether a human agent is typing (vs AI) */
   isHumanTyping?: boolean;
+  /** Name of the typing human agent */
   typingAgentName?: string;
 }
 
+/**
+ * Animated typing indicator component.
+ * 
+ * @param props - Component props
+ * @returns Typing indicator with bouncing dots
+ */
 export const TypingIndicator = ({ primaryColor, isHumanTyping, typingAgentName }: TypingIndicatorProps) => {
   return (
     <div className="flex items-start gap-2">

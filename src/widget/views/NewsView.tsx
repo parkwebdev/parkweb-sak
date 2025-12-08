@@ -1,3 +1,12 @@
+/**
+ * NewsView Component
+ * 
+ * News/announcements view with article cards and detail view.
+ * Supports featured images, author info, and CTA buttons.
+ * 
+ * @module widget/views/NewsView
+ */
+
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight } from '@untitledui/icons';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';

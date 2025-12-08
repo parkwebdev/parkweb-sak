@@ -1,3 +1,12 @@
+/**
+ * ChatView Component
+ * 
+ * Main chat interface with message list, typing indicators, file attachments,
+ * contact form, and message input. Handles message reactions and auto-scrolling.
+ * 
+ * @module widget/views/ChatView
+ */
+
 import { Suspense, RefObject } from 'react';
 import { updateMessageReaction } from '../api';
 import { MessageBubble, ContactForm, MessageInput, TypingIndicator } from '../components';
