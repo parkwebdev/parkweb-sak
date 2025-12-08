@@ -15,6 +15,7 @@ import { AnimatedItem } from '@/components/ui/animated-item';
 import { uploadAvatar } from '@/lib/avatar-upload';
 import { LoadingState } from '@/components/ui/loading-state';
 import { Spinner } from '@/components/ui/spinner';
+import { logger } from '@/utils/logger';
 
 export const ProfileSettings: React.FC = () => {
   const [profile, setProfile] = useState({
@@ -52,7 +53,7 @@ export const ProfileSettings: React.FC = () => {
         .maybeSingle();
 
       if (error) {
-        console.error('Error fetching profile:', error);
+        logger.error('Error fetching profile:', error);
         return;
       }
 
@@ -71,7 +72,7 @@ export const ProfileSettings: React.FC = () => {
         });
       }
     } catch (error) {
-      console.error('Error in fetchProfile:', error);
+      logger.error('Error in fetchProfile:', error);
     } finally {
       setLoading(false);
     }
@@ -106,7 +107,7 @@ export const ProfileSettings: React.FC = () => {
         showSaved('display_name');
         setInitialProfile(profile);
       } catch (error) {
-        console.error('Error auto-saving display name:', error);
+        logger.error('Error auto-saving display name:', error);
       }
     }, 1000);
 
@@ -129,7 +130,7 @@ export const ProfileSettings: React.FC = () => {
         showSaved('email');
         setInitialProfile(profile);
       } catch (error) {
-        console.error('Error auto-saving email:', error);
+        logger.error('Error auto-saving email:', error);
       }
     }, 1000);
 
@@ -151,7 +152,7 @@ export const ProfileSettings: React.FC = () => {
         });
 
       if (error) {
-        console.error('Error updating profile:', error);
+        logger.error('Error updating profile:', error);
         toast.error("Update failed", {
           description: "Failed to update your profile.",
         });
@@ -162,7 +163,7 @@ export const ProfileSettings: React.FC = () => {
         description: "Your profile has been updated successfully.",
       });
     } catch (error) {
-      console.error('Error in handleSave:', error);
+      logger.error('Error in handleSave:', error);
     } finally {
       setUpdating(false);
     }
@@ -218,7 +219,7 @@ export const ProfileSettings: React.FC = () => {
       
       toast.success("Avatar updated", { description: "Your profile picture has been updated." });
     } catch (error: any) {
-      console.error('Avatar upload error:', error);
+      logger.error('Avatar upload error:', error);
       toast.error("Upload failed", { description: error.message || "Failed to upload avatar." });
     } finally {
       setAvatarUploading(false);
@@ -254,7 +255,7 @@ export const ProfileSettings: React.FC = () => {
       });
 
       if (error) {
-        console.error('Error updating password:', error);
+        logger.error('Error updating password:', error);
         toast.error("Password update failed", {
           description: error.message,
         });
@@ -266,7 +267,7 @@ export const ProfileSettings: React.FC = () => {
         description: "Your password has been updated successfully.",
       });
     } catch (error) {
-      console.error('Error in handlePasswordUpdate:', error);
+      logger.error('Error in handlePasswordUpdate:', error);
     } finally {
       setUpdating(false);
     }

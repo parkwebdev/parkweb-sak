@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { KeyboardShortcutsDropdown } from '@/components/KeyboardShortcutsDropdown';
 import { Spinner } from '@/components/ui/spinner';
+import { logger } from '@/utils/logger';
 
 interface UserProfile {
   display_name: string | null;
@@ -47,12 +48,12 @@ export const UserAccountCard: React.FC<UserAccountCardProps> = ({ isCollapsed = 
         .single();
 
       if (error) {
-        console.error('Error fetching profile:', error);
+        logger.error('Error fetching profile:', error);
       } else {
         setProfile(data);
       }
     } catch (error) {
-      console.error('Error in fetchProfile:', error);
+      logger.error('Error in fetchProfile:', error);
     } finally {
       setLoading(false);
     }

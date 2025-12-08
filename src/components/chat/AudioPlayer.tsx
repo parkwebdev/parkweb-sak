@@ -2,6 +2,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { PlayCircle as Play, PauseCircle as Pause } from '@untitledui/icons';
 import { formatDuration } from '@/lib/audio-recording';
+import { logger } from '@/utils/logger';
 
 interface AudioPlayerProps {
   audioUrl: string;
@@ -78,7 +79,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl, primaryColor
       sourceNodeRef.current.connect(analyserRef.current);
       analyserRef.current.connect(audioContextRef.current.destination);
     } catch (error) {
-      console.error('Error setting up audio analyser:', error);
+      logger.error('Error setting up audio analyser:', error);
     }
   };
 
@@ -108,7 +109,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl, primaryColor
       setWaveformData(filteredData);
       tempContext.close();
     } catch (error) {
-      console.error('Error generating waveform:', error);
+      logger.error('Error generating waveform:', error);
     }
   };
 

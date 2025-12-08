@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "motion/react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
+import { logger } from "@/utils/logger"
 
 interface CopyButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   content: string
@@ -26,7 +27,7 @@ const CopyButton = React.forwardRef<HTMLButtonElement, CopyButtonProps>(
         }
         setTimeout(() => setCopied(false), 2000)
       } catch (err) {
-        console.error("Failed to copy:", err)
+        logger.error("Failed to copy:", err)
         toast.error("Failed to copy")
       }
     }

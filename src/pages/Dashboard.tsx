@@ -275,7 +275,7 @@ export const Dashboard: React.FC = () => {
         <div className="px-4 lg:px-8">
           <DashboardHeader
             title="Dashboard"
-            onExport={() => console.log('Export report')}
+            onExport={() => logger.info('Export report triggered')}
           />
         </div>
 

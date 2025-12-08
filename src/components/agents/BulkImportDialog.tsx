@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Upload01, File06, AlertCircle, CheckCircle, Download01, ArrowLeft, ArrowRight } from '@untitledui/icons';
 import { cn } from '@/lib/utils';
+import { logger } from '@/utils/logger';
 
 interface BulkImportDialogProps {
   open: boolean;
@@ -229,7 +230,7 @@ export const BulkImportDialog = ({ open, onOpenChange, onImport, existingCategor
       })));
       handleClose();
     } catch (error) {
-      console.error('Import failed:', error);
+      logger.error('Import failed:', error);
     } finally {
       setImporting(false);
     }
