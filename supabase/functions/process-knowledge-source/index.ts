@@ -416,15 +416,66 @@ async function processPendingBatch(
   console.log(`Batch processing complete: ${processed} processed, ${errors} errors`);
 }
 
+// Check if URL matches a glob pattern
+function matchesPattern(url: string, pattern: string): boolean {
+  // Convert glob pattern to regex: /tag/* → /tag/.*
+  const escapedPattern = pattern
+    .replace(/[.+?^${}()|[\]\\]/g, '\\$&') // Escape special regex chars except *
+    .replace(/\*/g, '.*'); // Convert * to .*
+  const regex = new RegExp(escapedPattern);
+  return regex.test(url);
+}
+
+// Filter URLs based on include/exclude patterns and page limit
+function filterUrls(
+  urls: string[],
+  options: {
+    excludePatterns?: string[];
+    includePatterns?: string[];
+    pageLimit?: number;
+  }
+): string[] {
+  let filtered = urls;
+
+  // Apply exclude patterns
+  if (options.excludePatterns && options.excludePatterns.length > 0) {
+    filtered = filtered.filter(url => 
+      !options.excludePatterns!.some(pattern => matchesPattern(url, pattern))
+    );
+  }
+
+  // Apply include patterns (if specified, only include matching URLs)
+  if (options.includePatterns && options.includePatterns.length > 0) {
+    filtered = filtered.filter(url => 
+      options.includePatterns!.some(pattern => matchesPattern(url, pattern))
+    );
+  }
+
+  // Apply page limit
+  const limit = options.pageLimit || 200;
+  if (filtered.length > limit) {
+    console.log(`Limiting URLs from ${filtered.length} to ${limit}`);
+    filtered = filtered.slice(0, limit);
+  }
+
+  return filtered;
+}
+
 // Process a sitemap URL and create child sources
 async function processSitemap(
   supabase: any,
   sourceId: string,
   agentId: string,
   userId: string,
-  sitemapUrl: string
-): Promise<{ urlCount: number; sitemapCount: number; batchId: string }> {
+  sitemapUrl: string,
+  filterOptions?: {
+    excludePatterns?: string[];
+    includePatterns?: string[];
+    pageLimit?: number;
+  }
+): Promise<{ urlCount: number; sitemapCount: number; batchId: string; filteredCount: number }> {
   console.log('Processing sitemap:', sitemapUrl);
+  console.log('Filter options:', JSON.stringify(filterOptions));
   
   const response = await fetch(sitemapUrl, {
     headers: {
@@ -483,9 +534,14 @@ async function processSitemap(
   const pageUrls = allUrls.filter(url => !isSitemapUrl(url));
   console.log(`Page URLs (excluding sitemaps): ${pageUrls.length}`);
   
+  // Apply URL filtering based on options
+  const filteredUrls = filterUrls(pageUrls, filterOptions || {});
+  const filteredCount = pageUrls.length - filteredUrls.length;
+  console.log(`URLs after filtering: ${filteredUrls.length} (${filteredCount} filtered out)`);
+  
   // Create child knowledge sources for each URL
   const batchId = crypto.randomUUID();
-  const childSources = pageUrls.map(url => ({
+  const childSources = filteredUrls.map(url => ({
     agent_id: agentId,
     user_id: userId,
     type: 'url',
@@ -518,7 +574,7 @@ async function processSitemap(
   
   console.log(`Created ${insertedCount} child knowledge sources`);
   
-  return { urlCount: insertedCount, sitemapCount, batchId };
+  return { urlCount: insertedCount, sitemapCount, batchId, filteredCount };
 }
 
 // Fetch URL content with Readability for clean HTML extraction
@@ -649,12 +705,21 @@ Deno.serve(async (req) => {
     if (source.type === 'url' && isSitemapUrl(source.source)) {
       console.log('Detected sitemap URL, processing as sitemap...');
       
-      const { urlCount, sitemapCount, batchId } = await processSitemap(
+      // Extract filter options from source metadata
+      const sourceMetadata = (source.metadata as any) || {};
+      const filterOptions = {
+        excludePatterns: sourceMetadata.exclude_patterns || [],
+        includePatterns: sourceMetadata.include_patterns || [],
+        pageLimit: sourceMetadata.page_limit || 200,
+      };
+      
+      const { urlCount, sitemapCount, batchId, filteredCount } = await processSitemap(
         supabase,
         sourceId,
         source.agent_id,
         source.user_id,
-        source.source
+        source.source,
+        filterOptions
       );
       
       // Update the sitemap source with initial metadata
@@ -662,12 +727,13 @@ Deno.serve(async (req) => {
         .from('knowledge_sources')
         .update({
           status: 'processing',
-          content: `Sitemap parsed. Processing ${urlCount} page URLs${sitemapCount > 0 ? ` from ${sitemapCount} child sitemaps` : ''}...`,
+          content: `Sitemap parsed. Processing ${urlCount} page URLs${sitemapCount > 0 ? ` from ${sitemapCount} child sitemaps` : ''}${filteredCount > 0 ? ` (${filteredCount} filtered out)` : ''}...`,
           metadata: {
-            ...((source.metadata as any) || {}),
+            ...sourceMetadata,
             processed_at: new Date().toISOString(),
             is_sitemap: true,
             urls_found: urlCount,
+            urls_filtered: filteredCount,
             child_sitemaps: sitemapCount,
             batch_id: batchId,
             processed_count: 0,
@@ -681,7 +747,7 @@ Deno.serve(async (req) => {
         throw updateError;
       }
 
-      console.log(`Sitemap parsed: ${urlCount} URLs queued. Starting background batch processing...`);
+      console.log(`Sitemap parsed: ${urlCount} URLs queued (${filteredCount} filtered). Starting background batch processing...`);
 
       // Start background batch processing using EdgeRuntime.waitUntil
       // This allows the function to return immediately while processing continues
@@ -698,6 +764,7 @@ Deno.serve(async (req) => {
           sourceId,
           isSitemap: true,
           urlsFound: urlCount,
+          urlsFiltered: filteredCount,
           childSitemaps: sitemapCount,
           batchId,
           message: `Processing ${urlCount} pages in background...`,
