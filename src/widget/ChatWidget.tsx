@@ -1,3 +1,31 @@
+/**
+ * ChatWidget Component
+ * 
+ * Main widget component that orchestrates all chat functionality.
+ * Manages view navigation, message sending, real-time subscriptions,
+ * and coordinates between extracted hooks and sub-components.
+ * 
+ * @module widget/ChatWidget
+ * 
+ * @description
+ * This is the root component for the embedded chat widget that handles:
+ * - Multi-view navigation (Home, Messages, Help, News)
+ * - Real-time message sending and receiving
+ * - Contact form submission and lead creation
+ * - Human takeover detection and display
+ * - Visitor analytics and presence tracking
+ * - File attachments and voice recording
+ * - Parent window communication (iframe mode)
+ * 
+ * @example
+ * ```tsx
+ * // Embedded mode with agent ID only (config fetched from API)
+ * <ChatWidget config={{ agentId: 'agent-123' }} />
+ * 
+ * // Preview mode in admin panel with full config
+ * <ChatWidget config={fullConfig} previewMode containedPreview />
+ * ```
+ */
 import { useState, useEffect, useRef } from 'react';
 import { createLead, sendChatMessage, type WidgetConfig, type ReferrerJourney } from './api';
 import { supabase } from '@/integrations/supabase/client';
