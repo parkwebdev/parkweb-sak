@@ -1,11 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Progress } from '@/components/ui/progress';
-import { File06, Link03, Database01, Trash01, RefreshCcw01, CheckCircle, XCircle, Clock, AlertCircle, Globe01 } from '@untitledui/icons';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { File06, Link03, Database01, Trash01, RefreshCcw01, CheckCircle, XCircle, Clock, AlertCircle, Globe01, ChevronDown, ChevronUp } from '@untitledui/icons';
 import { formatDistanceToNow } from 'date-fns';
+import { SitemapChildPages } from './SitemapChildPages';
 import type { Tables } from '@/integrations/supabase/types';
 
 interface KnowledgeSourceCardProps {
@@ -13,6 +15,8 @@ interface KnowledgeSourceCardProps {
   onDelete: (id: string) => void;
   onReprocess: (id: string) => void;
   onResume?: (id: string) => void;
+  onRetryChild?: (id: string) => void;
+  onDeleteChild?: (id: string) => void;
   isOutdated?: boolean;
   childSources?: Tables<'knowledge_sources'>[];
 }
@@ -43,9 +47,12 @@ export const KnowledgeSourceCard: React.FC<KnowledgeSourceCardProps> = ({
   onDelete,
   onReprocess,
   onResume,
+  onRetryChild,
+  onDeleteChild,
   isOutdated = false,
   childSources = [],
 }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
   const metadata = source.metadata as Record<string, any> || {};
   const isSitemap = metadata.is_sitemap === true;
   
@@ -117,133 +124,171 @@ export const KnowledgeSourceCard: React.FC<KnowledgeSourceCardProps> = ({
     return 'No content preview available';
   };
 
+  const showChildPages = isSitemap && childSources.length > 0 && onRetryChild && onDeleteChild;
+
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-start justify-between">
-          <div className="flex items-start gap-3 flex-1">
-            <div className={`p-2 rounded-lg ${isSitemap ? 'bg-primary/10' : 'bg-accent'}`}>
-              <Icon className={`h-5 w-5 ${isSitemap ? 'text-primary' : 'text-accent-foreground'}`} />
-            </div>
-            <div className="flex-1 min-w-0">
-              <CardTitle className="text-base truncate">{getDisplayName()}</CardTitle>
-              <div className="flex items-center gap-2 mt-2 flex-wrap">
-                <Badge variant="outline">{isSitemap ? 'SITEMAP' : source.type.toUpperCase()}</Badge>
-                {!isSitemap && (
-                  <Badge variant={statusColors[source.status as keyof typeof statusColors] || 'secondary'}>
-                    <StatusIcon className="h-3 w-3 mr-1" />
-                    {source.status}
-                  </Badge>
-                )}
-                {isSitemap && progress && (
-                  <Badge variant={progress.isComplete ? 'default' : 'secondary'}>
-                    {progress.isComplete ? (
-                      <>
-                        <CheckCircle className="h-3 w-3 mr-1" />
-                        {progress.ready} pages indexed
-                      </>
-                    ) : (
-                      <>
-                        <Clock className="h-3 w-3 mr-1" />
-                        {progress.ready}/{progress.total} pages
-                      </>
-                    )}
-                  </Badge>
-                )}
-                {isSitemap && progress && progress.errors > 0 && (
-                  <Badge variant="destructive">
-                    <XCircle className="h-3 w-3 mr-1" />
-                    {progress.errors} failed
-                  </Badge>
-                )}
-                {isOutdated && source.status === 'ready' && (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Badge variant="outline" className="text-warning border-warning">
-                        <AlertCircle className="h-3 w-3 mr-1" />
-                        Outdated
-                      </Badge>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>This source uses an older embedding model. Click "Retrain AI" to update.</p>
-                    </TooltipContent>
-                  </Tooltip>
-                )}
+    <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
+      <Card>
+        <CardHeader>
+          <div className="flex items-start justify-between">
+            <div className="flex items-start gap-3 flex-1">
+              <div className={`p-2 rounded-lg ${isSitemap ? 'bg-primary/10' : 'bg-accent'}`}>
+                <Icon className={`h-5 w-5 ${isSitemap ? 'text-primary' : 'text-accent-foreground'}`} />
               </div>
+              <div className="flex-1 min-w-0">
+                <CardTitle className="text-base truncate">{getDisplayName()}</CardTitle>
+                <div className="flex items-center gap-2 mt-2 flex-wrap">
+                  <Badge variant="outline">{isSitemap ? 'SITEMAP' : source.type.toUpperCase()}</Badge>
+                  {!isSitemap && (
+                    <Badge variant={statusColors[source.status as keyof typeof statusColors] || 'secondary'}>
+                      <StatusIcon className="h-3 w-3 mr-1" />
+                      {source.status}
+                    </Badge>
+                  )}
+                  {isSitemap && progress && (
+                    <Badge variant={progress.isComplete ? 'default' : 'secondary'}>
+                      {progress.isComplete ? (
+                        <>
+                          <CheckCircle className="h-3 w-3 mr-1" />
+                          {progress.ready} pages indexed
+                        </>
+                      ) : (
+                        <>
+                          <Clock className="h-3 w-3 mr-1" />
+                          {progress.ready}/{progress.total} pages
+                        </>
+                      )}
+                    </Badge>
+                  )}
+                  {isSitemap && progress && progress.errors > 0 && (
+                    <Badge variant="destructive">
+                      <XCircle className="h-3 w-3 mr-1" />
+                      {progress.errors} failed
+                    </Badge>
+                  )}
+                  {isOutdated && source.status === 'ready' && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Badge variant="outline" className="text-warning border-warning">
+                          <AlertCircle className="h-3 w-3 mr-1" />
+                          Outdated
+                        </Badge>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>This source uses an older embedding model. Click "Retrain AI" to update.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => onReprocess(source.id)}
+                disabled={source.status === 'processing'}
+              >
+                <RefreshCcw01 className="h-4 w-4" />
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => onDelete(source.id)}
+              >
+                <Trash01 className="h-4 w-4" />
+              </Button>
             </div>
           </div>
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => onReprocess(source.id)}
-              disabled={source.status === 'processing'}
-            >
-              <RefreshCcw01 className="h-4 w-4" />
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => onDelete(source.id)}
-            >
-              <Trash01 className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-3 text-sm">
-          {/* Sitemap progress bar */}
-          {isSitemap && progress && !progress.isComplete && (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span>{progress.isStalled ? 'Processing stalled' : 'Processing pages...'}</span>
-                <span>{progress.percentage}%</span>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3 text-sm">
+            {/* Sitemap progress bar */}
+            {isSitemap && progress && !progress.isComplete && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>{progress.isStalled ? 'Processing stalled' : 'Processing pages...'}</span>
+                  <span>{progress.percentage}%</span>
+                </div>
+                <Progress value={progress.percentage} className="h-2" />
+                <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                  {progress.processing > 0 && (
+                    <span className="flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      {progress.processing} processing
+                    </span>
+                  )}
+                  {progress.pending > 0 && (
+                    <span>{progress.pending} pending</span>
+                  )}
+                  {progress.isStalled && onResume && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => onResume(source.id)}
+                      className="h-6 text-xs"
+                    >
+                      <RefreshCcw01 className="h-3 w-3 mr-1" />
+                      Resume
+                    </Button>
+                  )}
+                </div>
               </div>
-              <Progress value={progress.percentage} className="h-2" />
-              <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                {progress.processing > 0 && (
-                  <span className="flex items-center gap-1">
-                    <Clock className="h-3 w-3" />
-                    {progress.processing} processing
-                  </span>
-                )}
-                {progress.pending > 0 && (
-                  <span>{progress.pending} pending</span>
-                )}
-                {progress.isStalled && onResume && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => onResume(source.id)}
-                    className="h-6 text-xs"
-                  >
-                    <RefreshCcw01 className="h-3 w-3 mr-1" />
-                    Resume
-                  </Button>
+            )}
+            
+            {/* Sitemap info - show page count and status */}
+            {isSitemap && (
+              <p className="text-xs text-muted-foreground">{getContentPreview()}</p>
+            )}
+            
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <div className="flex items-center gap-3">
+                <span>Added {formatDistanceToNow(new Date(source.created_at), { addSuffix: true })}</span>
+                {!isSitemap && metadata.chunks_count && (
+                  <span className="text-primary font-medium">{metadata.chunks_count} chunks indexed</span>
                 )}
               </div>
-            </div>
-          )}
-          
-          {/* Sitemap info - show page count and status */}
-          {isSitemap && (
-            <p className="text-xs text-muted-foreground">{getContentPreview()}</p>
-          )}
-          
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <div className="flex items-center gap-3">
-              <span>Added {formatDistanceToNow(new Date(source.created_at), { addSuffix: true })}</span>
-              {!isSitemap && metadata.chunks_count && (
-                <span className="text-primary font-medium">{metadata.chunks_count} chunks indexed</span>
+              {metadata.size && (
+                <span>{(metadata.size / 1024).toFixed(2)} KB</span>
               )}
             </div>
-            {metadata.size && (
-              <span>{(metadata.size / 1024).toFixed(2)} KB</span>
+
+            {/* View Pages Toggle for Sitemaps */}
+            {showChildPages && (
+              <CollapsibleTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full text-xs text-muted-foreground hover:text-foreground"
+                >
+                  {isExpanded ? (
+                    <>
+                      <ChevronUp className="h-4 w-4 mr-1" />
+                      Hide Pages
+                    </>
+                  ) : (
+                    <>
+                      <ChevronDown className="h-4 w-4 mr-1" />
+                      View Pages ({childSources.length})
+                    </>
+                  )}
+                </Button>
+              </CollapsibleTrigger>
+            )}
+
+            {/* Expandable Child Pages Section */}
+            {showChildPages && (
+              <CollapsibleContent>
+                <SitemapChildPages
+                  childSources={childSources}
+                  onRetryChild={onRetryChild}
+                  onDeleteChild={onDeleteChild}
+                />
+              </CollapsibleContent>
             )}
           </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </Collapsible>
   );
 };

@@ -540,6 +540,64 @@ export const useKnowledgeSources = (agentId?: string) => {
     });
   };
 
+  // Delete a single child source (individual page from sitemap)
+  const deleteChildSource = async (sourceId: string) => {
+    try {
+      // Optimistic update
+      setSources((prev) => prev.filter((s) => s.id !== sourceId));
+
+      const { error } = await supabase
+        .from('knowledge_sources')
+        .delete()
+        .eq('id', sourceId);
+
+      if (error) {
+        await fetchSources();
+        throw error;
+      }
+
+      toast.success('Page deleted');
+    } catch (error: any) {
+      console.error('Error deleting child source:', error);
+      toast.error('Delete failed', { description: error.message });
+    }
+  };
+
+  // Retry processing a single child source
+  const retryChildSource = async (sourceId: string) => {
+    try {
+      // Optimistic update
+      setSources((prev) =>
+        prev.map((s) =>
+          s.id === sourceId ? { ...s, status: 'processing' } : s
+        )
+      );
+
+      const { error: updateError } = await supabase
+        .from('knowledge_sources')
+        .update({ status: 'processing' })
+        .eq('id', sourceId);
+
+      if (updateError) throw updateError;
+
+      toast.success('Retrying page...');
+
+      // Trigger reprocessing in background
+      supabase.functions.invoke('process-knowledge-source', {
+        body: { sourceId, agentId },
+      }).then(({ error: invokeError }) => {
+        if (invokeError) {
+          console.error('Edge function invocation failed:', invokeError);
+          markSourceAsError(sourceId, `Retry failed: ${invokeError.message}`);
+        }
+      });
+    } catch (error: any) {
+      console.error('Error retrying child source:', error);
+      toast.error('Retry failed', { description: error.message });
+      await fetchSources();
+    }
+  };
+
   return {
     sources,
     loading,
@@ -548,8 +606,10 @@ export const useKnowledgeSources = (agentId?: string) => {
     addSitemapSource,
     addTextSource,
     deleteSource,
+    deleteChildSource,
     reprocessSource,
     resumeProcessing,
+    retryChildSource,
     retrainAllSources,
     isSourceOutdated,
     getChildSources,
