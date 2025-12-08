@@ -9,6 +9,7 @@ import { formatFileSize } from '@/lib/file-validation';
 import { downloadFile } from '@/lib/file-download';
 import { AudioPlayer, MessageReactions } from '../constants';
 import { FileTypeIcon } from '@/components/chat/FileTypeIcons';
+import { stripUrlsFromContent } from '../utils/url-stripper';
 import type { Message } from '../types';
 
 interface MessageBubbleProps {
@@ -182,7 +183,10 @@ export const MessageBubble = ({
           {(message.type === 'text' || !message.type) && (
             <p className="text-sm whitespace-pre-wrap break-words">
               {message.role === 'assistant' 
-                ? message.content.replace(/\*\*(.*?)\*\*/g, '$1') 
+                ? stripUrlsFromContent(
+                    message.content.replace(/\*\*(.*?)\*\*/g, '$1'),
+                    !!(message.linkPreviews && message.linkPreviews.length > 0)
+                  )
                 : message.content}
             </p>
           )}
