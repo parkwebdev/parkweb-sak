@@ -5,6 +5,7 @@ import { toast } from '@/lib/toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Upload01 as Upload } from '@untitledui/icons';
 import { logger } from '@/utils/logger';
+import { getErrorMessage } from '@/types/errors';
 
 interface SimpleAvatarUploadProps {
   currentAvatarUrl?: string;
@@ -88,11 +89,11 @@ export const SimpleAvatarUpload: React.FC<SimpleAvatarUploadProps> = ({
         description: "Avatar uploaded successfully!",
       });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Avatar upload error', error);
       
       toast.error("Upload failed", {
-        description: error.message || "Failed to upload avatar. Please try again.",
+        description: getErrorMessage(error),
       });
     } finally {
       setUploading(false);

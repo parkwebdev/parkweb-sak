@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/lib/toast';
 import { logger } from '@/utils/logger';
+import { getErrorMessage } from '@/types/errors';
 import type { Tables } from '@/integrations/supabase/types';
 
 type KnowledgeSource = Tables<'knowledge_sources'>;
@@ -39,10 +40,10 @@ export const useKnowledgeSources = (agentId?: string) => {
 
       if (error) throw error;
       setSources(data || []);
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Error fetching knowledge sources', error);
       toast.error('Error loading knowledge sources', {
-        description: error.message,
+        description: getErrorMessage(error),
       });
     } finally {
       setLoading(false);
@@ -189,10 +190,10 @@ export const useKnowledgeSources = (agentId?: string) => {
       });
 
       return data.id;
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Error uploading document', error);
       toast.error('Upload failed', {
-        description: error.message,
+        description: getErrorMessage(error),
       });
       return null;
     }
@@ -239,10 +240,10 @@ export const useKnowledgeSources = (agentId?: string) => {
       });
 
       return data.id;
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Error adding URL source', error);
       toast.error('Failed to add URL', {
-        description: error.message,
+        description: getErrorMessage(error),
       });
       return null;
     }
@@ -298,10 +299,10 @@ export const useKnowledgeSources = (agentId?: string) => {
       });
 
       return data.id;
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Error adding sitemap source', error);
       toast.error('Failed to add sitemap', {
-        description: error.message,
+        description: getErrorMessage(error),
       });
       return null;
     }
@@ -312,7 +313,7 @@ export const useKnowledgeSources = (agentId?: string) => {
     agentId: string,
     userId: string,
     type: KnowledgeType = 'api',
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
   ): Promise<string | null> => {
     try {
       const { data, error } = await supabase
@@ -352,10 +353,10 @@ export const useKnowledgeSources = (agentId?: string) => {
       });
 
       return data.id;
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Error adding text source', error);
       toast.error('Failed to add content', {
-        description: error.message,
+        description: getErrorMessage(error),
       });
       return null;
     }
@@ -365,7 +366,7 @@ export const useKnowledgeSources = (agentId?: string) => {
     try {
       // Find the source to check if it's a sitemap (has children)
       const sourceToDelete = sources.find(s => s.id === sourceId);
-      const metadata = sourceToDelete?.metadata as Record<string, any> | null;
+      const metadata = sourceToDelete?.metadata as Record<string, unknown> | null;
       const isSitemap = metadata?.is_sitemap === true;
 
       // If it's a sitemap, first delete all child sources
@@ -386,7 +387,7 @@ export const useKnowledgeSources = (agentId?: string) => {
         // Remove the source itself
         if (s.id === sourceId) return false;
         // Also remove any child sources if this is a sitemap
-        const meta = s.metadata as Record<string, any> | null;
+        const meta = s.metadata as Record<string, unknown> | null;
         if (meta?.parent_source_id === sourceId) return false;
         return true;
       }));
@@ -405,10 +406,10 @@ export const useKnowledgeSources = (agentId?: string) => {
       toast.success('Source deleted', {
         description: 'Knowledge source has been removed.',
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Error deleting source', error);
       toast.error('Delete failed', {
-        description: error.message,
+        description: getErrorMessage(error),
       });
     }
   };
@@ -442,10 +443,10 @@ export const useKnowledgeSources = (agentId?: string) => {
           markSourceAsError(sourceId, `Reprocessing failed: ${invokeError.message}`);
         }
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Error reprocessing source', error);
       toast.error('Reprocess failed', {
-        description: error.message,
+        description: getErrorMessage(error),
       });
       // Revert optimistic update
       await fetchSources();
@@ -469,10 +470,10 @@ export const useKnowledgeSources = (agentId?: string) => {
           });
         }
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Error resuming processing', error);
       toast.error('Resume failed', {
-        description: error.message,
+        description: getErrorMessage(error),
       });
     }
   };
@@ -545,7 +546,7 @@ export const useKnowledgeSources = (agentId?: string) => {
   };
 
   const isSourceOutdated = (source: KnowledgeSource): boolean => {
-    const metadata = source.metadata as Record<string, any> | null;
+    const metadata = source.metadata as Record<string, unknown> | null;
     if (!metadata) return true;
     
     // Sitemap parents don't have embeddings themselves, so they can't be "outdated"
@@ -557,7 +558,7 @@ export const useKnowledgeSources = (agentId?: string) => {
   // Get child sources for a sitemap parent
   const getChildSources = (parentId: string): KnowledgeSource[] => {
     return sources.filter(s => {
-      const metadata = s.metadata as Record<string, any> | null;
+      const metadata = s.metadata as Record<string, unknown> | null;
       return metadata?.parent_source_id === parentId;
     });
   };
@@ -565,7 +566,7 @@ export const useKnowledgeSources = (agentId?: string) => {
   // Get only parent sources (not child sources from sitemaps)
   const getParentSources = (): KnowledgeSource[] => {
     return sources.filter(s => {
-      const metadata = s.metadata as Record<string, any> | null;
+      const metadata = s.metadata as Record<string, unknown> | null;
       return !metadata?.parent_source_id;
     });
   };
@@ -587,9 +588,9 @@ export const useKnowledgeSources = (agentId?: string) => {
       }
 
       toast.success('Page deleted');
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Error deleting child source', error);
-      toast.error('Delete failed', { description: error.message });
+      toast.error('Delete failed', { description: getErrorMessage(error) });
     }
   };
 
@@ -621,9 +622,9 @@ export const useKnowledgeSources = (agentId?: string) => {
           markSourceAsError(sourceId, `Retry failed: ${invokeError.message}`);
         }
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Error retrying child source', error);
-      toast.error('Retry failed', { description: error.message });
+      toast.error('Retry failed', { description: getErrorMessage(error) });
       await fetchSources();
     }
   };

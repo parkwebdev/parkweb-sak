@@ -67,7 +67,7 @@ export const HelpView = ({
       const sessionId = getSessionId();
       await submitArticleFeedback(selectedArticle.id, { sessionId, isHelpful: articleFeedback === 'helpful', comment: feedbackComment });
       setFeedbackSubmitted(true);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error submitting feedback:', error);
     }
   };

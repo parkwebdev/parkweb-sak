@@ -27,6 +27,7 @@ import { ApiUseCasesModal } from '@/components/agents/ApiUseCasesModal';
 import { ToolUseCasesModal } from '@/components/agents/ToolUseCasesModal';
 import { DebugConsole, useDebugLogs } from '@/components/agents/DebugConsole';
 import { logger } from '@/utils/logger';
+import { getErrorMessage } from '@/types/errors';
 
 type AgentTool = Tables<'agent_tools'>;
 type ToolsTab = 'api-access' | 'custom-tools' | 'webhooks';
@@ -263,18 +264,18 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
       }
       
       setTestResult(data);
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Error testing tool:', error);
       
       if (debugMode) {
-        debugLog.error(`Tool test error: ${error.message}`, {
-          stack: error.stack,
+        debugLog.error(`Tool test error: ${getErrorMessage(error)}`, {
+          stack: error instanceof Error ? error.stack : undefined,
         });
       }
       
       setTestResult({
         success: false,
-        error: error.message || 'Failed to test tool endpoint',
+        error: getErrorMessage(error),
       });
     } finally {
       setTestLoading(false);
@@ -352,9 +353,9 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
           }
         }, 2000);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (debugMode) {
-        debugLog.error(`Webhook test failed: ${error.message}`);
+        debugLog.error(`Webhook test failed: ${getErrorMessage(error)}`);
       }
     }
   };

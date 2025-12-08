@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/lib/toast';
 import { logger } from '@/utils/logger';
+import { getErrorMessage } from '@/types/errors';
 
 /**
  * Types and hook for managing embedded chat widget configuration.
@@ -174,13 +175,13 @@ export const useEmbeddedChatConfig = (agentId: string) => {
 
       if (error) throw error;
 
-      const deploymentConfig = agent.deployment_config as any;
+      const deploymentConfig = agent.deployment_config as Record<string, unknown> | null;
       const defaultConfig = getDefaultConfig();
       
       if (deploymentConfig?.embedded_chat) {
         setConfig({
           ...defaultConfig,
-          ...deploymentConfig.embedded_chat,
+          ...(deploymentConfig.embedded_chat as Partial<EmbeddedChatConfig>),
           agentId,
           userId: agent.user_id,
           agentName: agent.name,
@@ -189,7 +190,7 @@ export const useEmbeddedChatConfig = (agentId: string) => {
         // Backward compatibility with old "widget" naming
         setConfig({
           ...defaultConfig,
-          ...deploymentConfig.widget,
+          ...(deploymentConfig.widget as Partial<EmbeddedChatConfig>),
           agentId,
           userId: agent.user_id,
           agentName: agent.name,
@@ -202,7 +203,7 @@ export const useEmbeddedChatConfig = (agentId: string) => {
           agentName: agent.name,
         });
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Error loading embedded chat config', error);
     } finally {
       setLoading(false);
@@ -215,7 +216,7 @@ export const useEmbeddedChatConfig = (agentId: string) => {
       setConfig(updatedConfig);
 
       // Convert to plain object for JSON storage
-      const configForStorage: any = {
+      const configForStorage = {
         ...updatedConfig,
         quickActions: updatedConfig.quickActions.map(action => ({
           id: action.id,
@@ -240,16 +241,16 @@ export const useEmbeddedChatConfig = (agentId: string) => {
           deployment_config: {
             embedded_chat_enabled: true,
             embedded_chat: configForStorage,
-          },
+          } as unknown as Record<string, unknown>,
         })
         .eq('id', agentId);
 
       if (error) throw error;
 
       // Success - no toast needed (SavedIndicator shows feedback)
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error('Error saving configuration', {
-        description: error.message,
+        description: getErrorMessage(error),
       });
       throw error;
     }
