@@ -89,6 +89,10 @@ async function fetchLinkPreviews(content: string, supabaseUrl: string, supabaseK
 const EMBEDDING_MODEL = 'qwen/qwen3-embedding-8b';
 const EMBEDDING_DIMENSIONS = 1024;
 
+// PHASE 6: Context Window Optimization Constants
+const MAX_CONVERSATION_HISTORY = 10; // Limit to last 10 messages to reduce input tokens
+const MAX_RAG_CHUNKS = 3; // Limit RAG context to top 3 most relevant chunks
+
 // Model tiers for smart routing (cost optimization)
 const MODEL_TIERS = {
   lite: 'google/gemini-2.5-flash-lite',     // $0.015/M input, $0.06/M output - simple lookups
@@ -118,6 +122,22 @@ function selectModelTier(
   
   // Tier 2: Default balanced
   return { model: MODEL_TIERS.standard, tier: 'standard' };
+}
+
+// PHASE 6: Truncate conversation history to reduce input tokens
+function truncateConversationHistory(messages: any[]): any[] {
+  if (!messages || messages.length <= MAX_CONVERSATION_HISTORY) {
+    return messages;
+  }
+  
+  // Keep the last N messages
+  const truncated = messages.slice(-MAX_CONVERSATION_HISTORY);
+  
+  // Add a summary message at the beginning to provide context
+  const removedCount = messages.length - MAX_CONVERSATION_HISTORY;
+  console.log(`Truncated conversation history: removed ${removedCount} older messages, keeping last ${MAX_CONVERSATION_HISTORY}`);
+  
+  return truncated;
 }
 
 // Normalize query for cache lookup (lowercase, trim, remove extra whitespace)
@@ -342,7 +362,7 @@ async function searchKnowledge(
       p_agent_id: agentId,
       p_query_embedding: embeddingVector,
       p_match_threshold: matchThreshold,
-      p_match_count: 3, // Limit help articles to top 3
+      p_match_count: MAX_RAG_CHUNKS, // Phase 6: Limit help articles to top chunks
     });
 
     if (helpError) {
@@ -364,10 +384,10 @@ async function searchKnowledge(
     console.error('Help article search error (continuing without):', helpSearchError);
   }
 
-  // Sort combined results by similarity and return top matches
+  // PHASE 6: Sort combined results by similarity and return top MAX_RAG_CHUNKS (3 chunks)
   return results
     .sort((a, b) => b.similarity - a.similarity)
-    .slice(0, matchCount);
+    .slice(0, MAX_RAG_CHUNKS);
 }
 
 // Geo-IP lookup using ip-api.com (free, no API key needed)
@@ -931,11 +951,12 @@ serve(async (req) => {
             cacheQueryEmbedding(supabase, queryHash, normalizedQuery, queryEmbedding, agentId);
           }
           
-          // RAG threshold tuned for OpenAI embeddings (industry standard: 0.40-0.50)
+          // RAG threshold tuned for Qwen3 embeddings (industry standard: 0.40-0.50)
           // Higher thresholds (0.70+) cause most semantically relevant content to be missed
           const queryLength = queryContent.split(' ').length;
           const matchThreshold = queryLength < 5 ? 0.50 : queryLength < 15 ? 0.45 : 0.40;
-          const matchCount = queryLength < 10 ? 5 : 7; // More context for better responses
+          // PHASE 6: Limit match count to MAX_RAG_CHUNKS (3) to reduce input tokens
+          const matchCount = MAX_RAG_CHUNKS;
           
           console.log(`Dynamic RAG params: threshold=${matchThreshold}, count=${matchCount} (query length: ${queryLength} words)`);
           
@@ -1047,8 +1068,10 @@ Use this information to personalize your responses when appropriate (e.g., addre
       systemPrompt = systemPrompt + userContextSection;
     }
 
+    // PHASE 6: Truncate conversation history to reduce input tokens
+    let messagesToSend = truncateConversationHistory(messages);
+    
     // For greeting requests, add a special instruction and use empty messages
-    let messagesToSend = messages;
     if (isGreetingRequest) {
       console.log('Handling greeting request - generating personalized welcome');
       systemPrompt = systemPrompt + `
@@ -1099,8 +1122,13 @@ Generate a warm, personalized greeting using the user information provided above
       frequency_penalty: deploymentConfig.frequency_penalty || 0,
     };
 
-    // Built-in quick replies tool (always available)
-    const quickRepliesTool = {
+    // PHASE 7: Skip quick replies for lite model tier (reduces tool call overhead)
+    // Also check agent config for enable_quick_replies setting (defaults to true)
+    const enableQuickReplies = deploymentConfig.enable_quick_replies !== false;
+    const shouldIncludeQuickReplies = enableQuickReplies && modelTier !== 'lite';
+    
+    // Built-in quick replies tool (conditional based on tier and config)
+    const quickRepliesTool = shouldIncludeQuickReplies ? {
       type: 'function',
       function: {
         name: 'suggest_quick_replies',
@@ -1121,14 +1149,21 @@ Generate a warm, personalized greeting using the user information provided above
           required: ['suggestions']
         }
       }
-    };
+    } : null;
 
-    // Combine built-in tools with user-defined tools
-    const allTools = [quickRepliesTool, ...(formattedTools || [])];
+    // Combine built-in tools with user-defined tools (only include quick replies if enabled)
+    const allTools = [
+      ...(quickRepliesTool ? [quickRepliesTool] : []),
+      ...(formattedTools || [])
+    ];
     
-    // Add tools to request
-    aiRequestBody.tools = allTools;
-    aiRequestBody.tool_choice = 'auto';
+    // PHASE 7: Only add tools if there are any (skip entirely for lite model with no user tools)
+    if (allTools.length > 0) {
+      aiRequestBody.tools = allTools;
+      aiRequestBody.tool_choice = 'auto';
+    }
+    
+    console.log(`Quick replies: ${shouldIncludeQuickReplies ? 'enabled' : 'disabled'} (tier=${modelTier}, config=${enableQuickReplies})`);
 
     // Call OpenRouter API
     let response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
