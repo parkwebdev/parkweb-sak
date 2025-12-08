@@ -12,6 +12,7 @@ interface KnowledgeSourceCardProps {
   source: Tables<'knowledge_sources'>;
   onDelete: (id: string) => void;
   onReprocess: (id: string) => void;
+  onResume?: (id: string) => void;
   isOutdated?: boolean;
   childSources?: Tables<'knowledge_sources'>[];
 }
@@ -41,6 +42,7 @@ export const KnowledgeSourceCard: React.FC<KnowledgeSourceCardProps> = ({
   source,
   onDelete,
   onReprocess,
+  onResume,
   isOutdated = false,
   childSources = [],
 }) => {
@@ -61,6 +63,11 @@ export const KnowledgeSourceCard: React.FC<KnowledgeSourceCardProps> = ({
     const processing = childSources.filter(s => s.status === 'processing').length;
     const pending = childSources.filter(s => s.status === 'pending').length;
     
+    // Check if processing appears stalled (has pending/processing but no recent activity)
+    const lastProgressAt = metadata.last_progress_at;
+    const isStalled = (pending > 0 || processing > 0) && lastProgressAt && 
+      (Date.now() - new Date(lastProgressAt).getTime() > 60000); // Stalled if no progress for 1 minute
+    
     return {
       total,
       ready,
@@ -69,6 +76,7 @@ export const KnowledgeSourceCard: React.FC<KnowledgeSourceCardProps> = ({
       pending,
       percentage: total > 0 ? Math.round((ready / total) * 100) : 0,
       isComplete: pending === 0 && processing === 0,
+      isStalled,
     };
   };
 
@@ -192,7 +200,7 @@ export const KnowledgeSourceCard: React.FC<KnowledgeSourceCardProps> = ({
           {isSitemap && progress && !progress.isComplete && (
             <div className="space-y-2">
               <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span>Processing pages...</span>
+                <span>{progress.isStalled ? 'Processing stalled' : 'Processing pages...'}</span>
                 <span>{progress.percentage}%</span>
               </div>
               <Progress value={progress.percentage} className="h-2" />
@@ -205,6 +213,17 @@ export const KnowledgeSourceCard: React.FC<KnowledgeSourceCardProps> = ({
                 )}
                 {progress.pending > 0 && (
                   <span>{progress.pending} pending</span>
+                )}
+                {progress.isStalled && onResume && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => onResume(source.id)}
+                    className="h-6 text-xs"
+                  >
+                    <RefreshCcw01 className="h-3 w-3 mr-1" />
+                    Resume
+                  </Button>
                 )}
               </div>
             </div>
