@@ -269,12 +269,22 @@ async function processUrlSource(
       }
     }
 
-    // Update source status to ready
+    // Fetch existing metadata to preserve parent_source_id, batch_id, etc.
+    const { data: currentSource } = await supabase
+      .from('knowledge_sources')
+      .select('metadata')
+      .eq('id', sourceId)
+      .single();
+
+    const existingMetadata = (currentSource?.metadata as Record<string, unknown>) || {};
+
+    // Update source status to ready, preserving existing metadata
     await supabase
       .from('knowledge_sources')
       .update({
         status: 'ready',
         metadata: {
+          ...existingMetadata,
           processed_at: new Date().toISOString(),
           chunks_count: successfulChunks,
           total_chunks: chunks.length,
@@ -290,12 +300,22 @@ async function processUrlSource(
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     
-    // Update source status to error
+    // Fetch existing metadata to preserve parent_source_id, batch_id, etc.
+    const { data: currentSource } = await supabase
+      .from('knowledge_sources')
+      .select('metadata')
+      .eq('id', sourceId)
+      .single();
+
+    const existingMetadata = (currentSource?.metadata as Record<string, unknown>) || {};
+
+    // Update source status to error, preserving existing metadata
     await supabase
       .from('knowledge_sources')
       .update({
         status: 'error',
         metadata: {
+          ...existingMetadata,
           error: errorMessage,
           failed_at: new Date().toISOString(),
         },
