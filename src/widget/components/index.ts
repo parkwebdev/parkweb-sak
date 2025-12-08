@@ -30,3 +30,6 @@ export { MessageInput } from './MessageInput';
 
 /** Lead capture form for visitor information */
 export { ContactForm } from './ContactForm';
+
+/** AI-generated quick reply suggestion chips */
+export { QuickReplies } from './QuickReplies';

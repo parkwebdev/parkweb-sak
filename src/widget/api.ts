@@ -295,6 +295,7 @@ export interface ChatResponse {
     videoId?: string;
     embedUrl?: string;
   }>;
+  quickReplies?: string[];
 }
 
 /**

@@ -1048,11 +1048,36 @@ Generate a warm, personalized greeting using the user information provided above
       frequency_penalty: deploymentConfig.frequency_penalty || 0,
     };
 
-    // Add tools if available
-    if (formattedTools && formattedTools.length > 0) {
-      aiRequestBody.tools = formattedTools;
-      aiRequestBody.tool_choice = 'auto';
-    }
+    // Built-in quick replies tool (always available)
+    const quickRepliesTool = {
+      type: 'function',
+      function: {
+        name: 'suggest_quick_replies',
+        description: 'Suggest 2-4 relevant follow-up questions or actions the user might want to take next. Use this after every response to help guide the conversation.',
+        parameters: {
+          type: 'object',
+          properties: {
+            suggestions: {
+              type: 'array',
+              description: 'Array of 2-4 short, actionable suggestions (max 40 characters each)',
+              items: {
+                type: 'string'
+              },
+              minItems: 2,
+              maxItems: 4
+            }
+          },
+          required: ['suggestions']
+        }
+      }
+    };
+
+    // Combine built-in tools with user-defined tools
+    const allTools = [quickRepliesTool, ...(formattedTools || [])];
+    
+    // Add tools to request
+    aiRequestBody.tools = allTools;
+    aiRequestBody.tool_choice = 'auto';
 
     // Call OpenRouter API
     let response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -1094,6 +1119,7 @@ Generate a warm, personalized greeting using the user information provided above
     let assistantMessage = aiResponse.choices?.[0]?.message;
     let assistantContent = assistantMessage?.content || '';
     const toolsUsed: { name: string; success: boolean }[] = [];
+    let quickReplies: string[] = [];
 
     // Handle tool calls if AI decided to use tools
     if (assistantMessage?.tool_calls && assistantMessage.tool_calls.length > 0) {
@@ -1105,7 +1131,17 @@ Generate a warm, personalized greeting using the user information provided above
         const toolName = toolCall.function?.name;
         const toolArgs = JSON.parse(toolCall.function?.arguments || '{}');
         
-        // Find the tool configuration
+        // Handle built-in quick replies tool
+        if (toolName === 'suggest_quick_replies') {
+          console.log('AI suggested quick replies:', toolArgs.suggestions);
+          quickReplies = (toolArgs.suggestions || []).slice(0, 4).map((s: string) => 
+            s.length > 40 ? s.substring(0, 37) + '...' : s
+          );
+          // Don't add to toolResults - this is a client-side only tool
+          continue;
+        }
+        
+        // Find the user-defined tool configuration
         const tool = enabledTools.find(t => t.name === toolName);
         
         if (tool && tool.endpoint_url) {
@@ -1136,37 +1172,40 @@ Generate a warm, personalized greeting using the user information provided above
         }
       }
 
-      // Call AI again with tool results
-      const followUpMessages = [
-        ...aiRequestBody.messages,
-        assistantMessage,
-        ...toolResults,
-      ];
+      // Only call AI again if there were actual tool results (not just quick replies)
+      if (toolResults.length > 0) {
+        // Call AI again with tool results
+        const followUpMessages = [
+          ...aiRequestBody.messages,
+          assistantMessage,
+          ...toolResults,
+        ];
 
-      console.log('Calling AI with tool results for final response');
+        console.log('Calling AI with tool results for final response');
 
-      const followUpResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-          'HTTP-Referer': 'https://chatpad.ai',
-          'X-Title': 'ChatPad',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...aiRequestBody,
-          messages: followUpMessages,
-          tools: undefined, // Don't pass tools again
-          tool_choice: undefined,
-        }),
-      });
+        const followUpResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+            'HTTP-Referer': 'https://chatpad.ai',
+            'X-Title': 'ChatPad',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            ...aiRequestBody,
+            messages: followUpMessages,
+            tools: undefined, // Don't pass tools again
+            tool_choice: undefined,
+          }),
+        });
 
-      if (followUpResponse.ok) {
-        const followUpData = await followUpResponse.json();
-        assistantContent = followUpData.choices?.[0]?.message?.content || assistantContent || 'I apologize, but I was unable to generate a response.';
-      } else {
-        console.error('Follow-up AI call failed:', await followUpResponse.text());
-        assistantContent = assistantContent || 'I apologize, but I encountered an error processing the tool results.';
+        if (followUpResponse.ok) {
+          const followUpData = await followUpResponse.json();
+          assistantContent = followUpData.choices?.[0]?.message?.content || assistantContent || 'I apologize, but I was unable to generate a response.';
+        } else {
+          console.error('Follow-up AI call failed:', await followUpResponse.text());
+          assistantContent = assistantContent || 'I apologize, but I encountered an error processing the tool results.';
+        }
       }
     }
 
@@ -1259,7 +1298,7 @@ Generate a warm, personalized greeting using the user information provided above
       .then(() => console.log('API usage tracked'))
       .catch(err => console.error('Failed to track usage:', err));
 
-    // Return the response with conversation ID, message IDs, and cached link previews
+    // Return the response with conversation ID, message IDs, cached link previews, and quick replies
     return new Response(
       JSON.stringify({
         conversationId: activeConversationId,
@@ -1269,6 +1308,7 @@ Generate a warm, personalized greeting using the user information provided above
         sources: sources.length > 0 ? sources : undefined,
         toolsUsed: toolsUsed.length > 0 ? toolsUsed : undefined,
         linkPreviews: linkPreviews.length > 0 ? linkPreviews : undefined,
+        quickReplies: quickReplies.length > 0 ? quickReplies : undefined,
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
