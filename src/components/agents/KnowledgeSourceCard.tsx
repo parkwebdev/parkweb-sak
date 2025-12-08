@@ -114,9 +114,6 @@ export const KnowledgeSourceCard: React.FC<KnowledgeSourceCardProps> = ({
     if (source.content) {
       return source.content.substring(0, 150) + (source.content.length > 150 ? '...' : '');
     }
-    if (source.type === 'url') {
-      return source.source;
-    }
     return 'No content preview available';
   };
 
