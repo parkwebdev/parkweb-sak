@@ -103,6 +103,10 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
   const [headerScrollY, setHeaderScrollY] = useState(0);
   const [showSettingsDropdown, setShowSettingsDropdown] = useState(false);
   
+  // Refs for quick reply auto-send (must be before early return to maintain hooks order)
+  const quickReplyPendingRef = useRef<string | null>(null);
+  const handleSendMessageRef = useRef<(() => void) | null>(null);
+  
   // Visitor ID state
   const [visitorId] = useState(() => {
     const stored = localStorage.getItem(`chatpad_visitor_id_${agentId}`);
@@ -276,6 +280,17 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
       };
     }
   }, [messages, currentView, chatUser, previewMode]);
+
+  // Effect to auto-send quick reply (must be before early return to maintain hooks order)
+  useEffect(() => {
+    if (messageInput.trim() && !isActivelySendingRef.current) {
+      const shouldAutoSend = quickReplyPendingRef.current === messageInput;
+      if (shouldAutoSend) {
+        quickReplyPendingRef.current = null;
+        handleSendMessageRef.current?.();
+      }
+    }
+  }, [messageInput]);
 
   // Only return null for simple config loading, not when parent handles config
   if (!parentHandlesConfig && (loading || !config)) return null;
@@ -506,23 +521,8 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     }
   };
 
-  // Ref to store handleSendMessage for use in effect without dependency issues
-  const handleSendMessageRef = useRef(handleSendMessage);
+  // Update ref after handleSendMessage is defined
   handleSendMessageRef.current = handleSendMessage;
-  
-  // Ref to track pending quick reply for auto-send
-  const quickReplyPendingRef = useRef<string | null>(null);
-  
-  // Effect to send message when input is set from quick reply
-  useEffect(() => {
-    if (messageInput.trim() && !isActivelySendingRef.current) {
-      const shouldAutoSend = quickReplyPendingRef.current === messageInput;
-      if (shouldAutoSend) {
-        quickReplyPendingRef.current = null;
-        handleSendMessageRef.current();
-      }
-    }
-  }, [messageInput]);
   
   // Handle quick reply selection - set input and trigger auto-send
   const handleQuickReplySelectWithSend = (suggestion: string) => {
