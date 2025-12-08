@@ -295,6 +295,13 @@ export type Database = {
             referencedRelation: "conversations"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "conversation_takeovers_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "widget_conversations_secure"
+            referencedColumns: ["id"]
+          },
         ]
       }
       conversations: {
@@ -627,6 +634,13 @@ export type Database = {
             referencedRelation: "conversations"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "leads_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "widget_conversations_secure"
+            referencedColumns: ["id"]
+          },
         ]
       }
       messages: {
@@ -660,6 +674,13 @@ export type Database = {
             columns: ["conversation_id"]
             isOneToOne: false
             referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "widget_conversations_secure"
             referencedColumns: ["id"]
           },
         ]
@@ -1371,10 +1392,57 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      widget_conversations_secure: {
+        Row: {
+          agent_id: string | null
+          channel: string | null
+          created_at: string | null
+          expires_at: string | null
+          id: string | null
+          metadata: Json | null
+          status: Database["public"]["Enums"]["conversation_status"] | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          agent_id?: string | null
+          channel?: string | null
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string | null
+          metadata?: never
+          status?: Database["public"]["Enums"]["conversation_status"] | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          agent_id?: string | null
+          channel?: string | null
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string | null
+          metadata?: never
+          status?: Database["public"]["Enums"]["conversation_status"] | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversations_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       cleanup_expired_caches: { Args: never; Returns: undefined }
+      filter_widget_conversation_metadata: {
+        Args: { raw_metadata: Json }
+        Returns: Json
+      }
       get_account_owner_id: { Args: never; Returns: string }
       get_current_user_role: {
         Args: never
