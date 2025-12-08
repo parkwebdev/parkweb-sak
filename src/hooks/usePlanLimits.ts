@@ -57,14 +57,14 @@ export const usePlanLimits = () => {
 
       if (subError && subError.code !== 'PGRST116') throw subError;
 
-      // Default free plan limits
+      // Unlimited plan (owner account - no restrictions)
       let planLimits: PlanLimits = {
-        max_agents: 1,
-        max_conversations_per_month: 100,
-        max_api_calls_per_month: 1000,
-        max_knowledge_sources: 10,
-        max_team_members: 1,
-        max_webhooks: 0,
+        max_agents: 999999,
+        max_conversations_per_month: 999999,
+        max_api_calls_per_month: 999999,
+        max_knowledge_sources: 999999,
+        max_team_members: 999999,
+        max_webhooks: 999999,
       };
 
       let currentPlanName = 'Free';
