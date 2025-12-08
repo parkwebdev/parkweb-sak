@@ -106,6 +106,28 @@ function selectModelTier(query, ragSimilarity, conversationLength, requiresTools
 
 **Impact**: 40-60% cost reduction by routing ~70% of queries to cheaper models
 
+### Phase 5: Context Window Optimization
+
+**Goal**: Reduce input tokens by limiting conversation history and RAG context
+
+**Implementation**:
+- `MAX_CONVERSATION_HISTORY = 10`: Only send last 10 messages to AI
+- `MAX_RAG_CHUNKS = 3`: Limit knowledge base context to top 3 most relevant chunks
+- `truncateConversationHistory()`: Function to trim older messages
+
+**Impact**: 20-30% reduction in input tokens for long conversations
+
+### Phase 6: Quick Replies Optimization
+
+**Goal**: Reduce tool call overhead for simple queries
+
+**Implementation**:
+- Quick replies skipped for **Tier 1 (lite)** model queries
+- Configurable via `deployment_config.enable_quick_replies` (defaults to true)
+- When disabled or tier=lite, tool calls are eliminated entirely if no user tools configured
+
+**Impact**: Faster responses and lower cost for FAQ-style queries
+
 ## Expected Total Savings
 
 | Optimization | Estimated Savings |
@@ -113,6 +135,8 @@ function selectModelTier(query, ragSimilarity, conversationLength, requiresTools
 | Qwen3 embeddings | 50% on embeddings |
 | Aggressive caching | 30-50% fewer API calls |
 | Smart model routing | 40-60% on chat completions |
+| Context window optimization | 20-30% on input tokens |
+| Quick replies optimization | ~10% for simple queries |
 
 **Combined Savings**: 75-85%
 
