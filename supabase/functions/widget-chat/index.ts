@@ -93,6 +93,19 @@ const EMBEDDING_DIMENSIONS = 1024;
 const MAX_CONVERSATION_HISTORY = 10; // Limit to last 10 messages to reduce input tokens
 const MAX_RAG_CHUNKS = 3; // Limit RAG context to top 3 most relevant chunks
 
+// PHASE 8: Response Formatting Rules for Digestible AI Responses
+const RESPONSE_FORMATTING_RULES = `
+
+RESPONSE FORMATTING (CRITICAL - Follow these rules):
+- Be CONCISE: Max 2-3 short sentences per paragraph
+- Skip preamble like "I'd be happy to help" - just answer directly
+- Put links on their OWN LINE: "Learn more: [URL]" - never bury links in paragraphs
+- Use BULLET POINTS for any list of 2+ items
+- Lead with the ANSWER first, then add brief context if needed
+- Break up long responses with line breaks between points
+- If you're writing more than 50 words without a break, STOP and restructure
+- Never use phrases like "Here's what I found" or "Let me explain" - just explain`;
+
 // Model tiers for smart routing (cost optimization)
 const MODEL_TIERS = {
   lite: 'google/gemini-2.5-flash-lite',     // $0.015/M input, $0.06/M output - simple lookups
@@ -1006,10 +1019,12 @@ ${knowledgeContext}
 ---
 
 IMPORTANT GUIDELINES FOR RESPONSES:
-1. When referencing information from sources, you can naturally cite them (e.g., "According to our documentation..." or "Based on our help article...").
-2. **ALWAYS SHARE LINKS**: You MUST include the source URL in your response when using information from a source that has a URL. This is critical for user trust and verification. Format: "Learn more: [URL]" or include the link inline naturally. Users expect clickable links they can follow.
-3. **NEVER reference a knowledge source without including its link** if one is available. Every piece of sourced information should have an accompanying link.
-4. If multiple sources are relevant, include multiple links so users can explore all resources.`;
+1. When referencing information from sources, cite naturally (e.g., "According to our docs...").
+2. **LINKS ON THEIR OWN LINE**: Put source URLs on a separate line, never buried in paragraphs:
+   ✓ "Learn more: https://example.com"
+   ✗ "You can read about this at https://example.com to learn more."
+3. Include links for EVERY knowledge source referenced.
+4. Multiple relevant sources = multiple links on separate lines.`;
             }
           }
         } catch (ragError) {
@@ -1067,6 +1082,9 @@ Use this information to personalize your responses when appropriate (e.g., addre
     if (userContextSection) {
       systemPrompt = systemPrompt + userContextSection;
     }
+    
+    // PHASE 8: Append formatting rules for digestible responses
+    systemPrompt = systemPrompt + RESPONSE_FORMATTING_RULES;
 
     // PHASE 6: Truncate conversation history to reduce input tokens
     let messagesToSend = truncateConversationHistory(messages);
