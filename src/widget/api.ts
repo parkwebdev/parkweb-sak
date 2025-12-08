@@ -1,11 +1,32 @@
+/**
+ * @fileoverview Widget API Module
+ * 
+ * Provides all API functions for the embedded chat widget including:
+ * - Widget configuration fetching
+ * - Lead creation and management
+ * - Chat messaging with AI/human agents
+ * - Real-time subscriptions for messages, status, and typing indicators
+ * - Visitor presence tracking for admin panel
+ * - Article feedback submission
+ * - Page visit analytics updates
+ * 
+ * Uses Supabase for database operations and real-time subscriptions.
+ * All functions are designed to be called from the widget iframe context.
+ * 
+ * @module widget/api
+ */
+
 import { createClient } from '@supabase/supabase-js';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 
 const SUPABASE_URL = 'https://mvaimvwdukpgvkifkfpa.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im12YWltdndkdWtwZ3ZraWZrZnBhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcxNzI3MTYsImV4cCI6MjA3Mjc0ODcxNn0.DmeecDZcGids_IjJQQepFVQK5wdEdV0eNXDCTRzQtQo';
 
-// Create a Supabase client for real-time subscriptions
-// Uses unique storage key to prevent "Multiple GoTrueClient instances" warning
+/**
+ * Supabase client configured for widget use.
+ * Uses unique storage key to prevent "Multiple GoTrueClient instances" warning.
+ * Session persistence and auto-refresh are disabled for anonymous widget context.
+ */
 export const widgetSupabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
     storageKey: 'chatpad-widget-auth',
@@ -14,6 +35,10 @@ export const widgetSupabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   }
 });
 
+/**
+ * Complete widget configuration object containing all display,
+ * behavior, and content settings for the embedded chat widget.
+ */
 export interface WidgetConfig {
   // Agent info
   agentId: string;
@@ -122,6 +147,19 @@ export interface WidgetConfig {
   showBranding: boolean;
 }
 
+/**
+ * Fetches the complete widget configuration for an agent.
+ * 
+ * @param agentId - The unique identifier of the agent
+ * @returns Promise resolving to the complete widget configuration
+ * @throws Error if the fetch request fails
+ * 
+ * @example
+ * ```ts
+ * const config = await fetchWidgetConfig('agent-uuid');
+ * console.log(config.welcomeTitle);
+ * ```
+ */
 export const fetchWidgetConfig = async (agentId: string): Promise<WidgetConfig> => {
   const response = await fetch(
     `${SUPABASE_URL}/functions/v1/get-widget-config?agentId=${agentId}`,
@@ -140,6 +178,30 @@ export const fetchWidgetConfig = async (agentId: string): Promise<WidgetConfig> 
   return response.json();
 };
 
+/**
+ * Creates a new lead from the widget contact form submission.
+ * Also creates an associated conversation linked to the lead.
+ * 
+ * @param agentId - The agent ID to associate the lead with
+ * @param data - Lead data including name, email, and custom fields
+ * @param data.firstName - The lead's first name
+ * @param data.lastName - The lead's last name
+ * @param data.email - The lead's email address
+ * @param data.customFields - Additional custom form field values
+ * @param data._formLoadTime - Optional spam protection timestamp
+ * @returns Promise with the created lead ID and conversation ID
+ * @throws Error if lead creation fails
+ * 
+ * @example
+ * ```ts
+ * const { leadId, conversationId } = await createLead('agent-uuid', {
+ *   firstName: 'John',
+ *   lastName: 'Doe',
+ *   email: 'john@example.com',
+ *   customFields: { company: 'Acme Inc' }
+ * });
+ * ```
+ */
 export async function createLead(agentId: string, data: {
   firstName: string;
   lastName: string;
@@ -166,6 +228,26 @@ export async function createLead(agentId: string, data: {
   return response.json();
 }
 
+/**
+ * Submits user feedback for a help article.
+ * Used to track article helpfulness and collect improvement suggestions.
+ * 
+ * @param articleId - The help article ID
+ * @param data - Feedback data
+ * @param data.sessionId - The widget session ID for deduplication
+ * @param data.isHelpful - Whether the article was helpful
+ * @param data.comment - Optional feedback comment
+ * @throws Error if feedback submission fails
+ * 
+ * @example
+ * ```ts
+ * await submitArticleFeedback('article-uuid', {
+ *   sessionId: 'session-123',
+ *   isHelpful: true,
+ *   comment: 'Very helpful, thanks!'
+ * });
+ * ```
+ */
 export async function submitArticleFeedback(articleId: string, data: {
   sessionId: string;
   isHelpful: boolean;
@@ -189,6 +271,9 @@ export async function submitArticleFeedback(articleId: string, data: {
   }
 }
 
+/**
+ * Response object from chat message API calls.
+ */
 export interface ChatResponse {
   conversationId: string;
   response: string;
@@ -212,7 +297,21 @@ export interface ChatResponse {
   }>;
 }
 
-// Fetch the current takeover agent for a conversation
+/**
+ * Fetches the current takeover agent information for a conversation.
+ * Used to display agent name and avatar during human takeover.
+ * 
+ * @param conversationId - The conversation ID to check
+ * @returns Promise with agent info or null if no takeover is active
+ * 
+ * @example
+ * ```ts
+ * const agent = await fetchTakeoverAgent('conv-uuid');
+ * if (agent) {
+ *   console.log(`Chatting with ${agent.name}`);
+ * }
+ * ```
+ */
 export async function fetchTakeoverAgent(conversationId: string): Promise<{ name: string; avatar?: string } | null> {
   try {
     const response = await fetch(`${SUPABASE_URL}/functions/v1/get-takeover-agent`, {
@@ -236,6 +335,9 @@ export async function fetchTakeoverAgent(conversationId: string): Promise<{ name
   }
 }
 
+/**
+ * Referrer and UTM tracking data for visitor journey analytics.
+ */
 export interface ReferrerJourney {
   referrer_url: string | null;
   landing_page: string;
@@ -247,6 +349,32 @@ export interface ReferrerJourney {
   entry_type: 'direct' | 'organic' | 'referral' | 'social' | 'paid' | 'email';
 }
 
+/**
+ * Sends a chat message to the AI agent or human operator.
+ * Creates a new conversation if conversationId is null.
+ * Includes optional analytics data for visitor tracking.
+ * 
+ * @param agentId - The agent ID to send the message to
+ * @param conversationId - Existing conversation ID or null for new conversation
+ * @param messages - Array of message objects with role and content
+ * @param leadId - Optional lead ID to associate with the conversation
+ * @param pageVisits - Optional page visit analytics data
+ * @param referrerJourney - Optional referrer/UTM tracking data
+ * @param visitorId - Optional visitor ID for analytics
+ * @returns Promise with the chat response including AI response and metadata
+ * @throws Error if the message fails to send
+ * 
+ * @example
+ * ```ts
+ * const response = await sendChatMessage(
+ *   'agent-uuid',
+ *   null, // New conversation
+ *   [{ role: 'user', content: 'Hello!' }],
+ *   'lead-uuid'
+ * );
+ * console.log(response.response); // AI response
+ * ```
+ */
 export async function sendChatMessage(
   agentId: string, 
   conversationId: string | null, 
@@ -281,7 +409,25 @@ export async function sendChatMessage(
   return response.json();
 }
 
-// Update page visits in real-time (without requiring a message)
+/**
+ * Updates page visit analytics for an active conversation.
+ * Called in real-time as users navigate pages without requiring a message.
+ * 
+ * @param conversationId - The active conversation ID
+ * @param pageVisit - Page visit data including URL, timestamp, and duration
+ * @param referrerJourney - Optional referrer tracking data
+ * @param visitorId - Optional visitor ID for correlation
+ * @returns Promise indicating success or failure
+ * 
+ * @example
+ * ```ts
+ * await updatePageVisit('conv-uuid', {
+ *   url: '/pricing',
+ *   entered_at: new Date().toISOString(),
+ *   duration_ms: 5000
+ * });
+ * ```
+ */
 export async function updatePageVisit(
   conversationId: string,
   pageVisit: { url: string; entered_at: string; duration_ms: number; previous_duration_ms?: number },
@@ -315,7 +461,19 @@ export async function updatePageVisit(
   }
 }
 
-// Fetch messages for a conversation from database
+/**
+ * Fetches all messages for a conversation from the database.
+ * Used to restore conversation history when widget is reopened.
+ * 
+ * @param conversationId - The conversation ID to fetch messages for
+ * @returns Promise with array of message objects ordered by creation time
+ * 
+ * @example
+ * ```ts
+ * const messages = await fetchConversationMessages('conv-uuid');
+ * messages.forEach(msg => console.log(`${msg.role}: ${msg.content}`));
+ * ```
+ */
 export async function fetchConversationMessages(conversationId: string): Promise<Array<{
   id: string;
   role: string;
@@ -342,7 +500,20 @@ export async function fetchConversationMessages(conversationId: string): Promise
   }
 }
 
-// Mark messages as read
+/**
+ * Marks messages in a conversation as read.
+ * Updates read timestamps for either user or admin reader type.
+ * 
+ * @param conversationId - The conversation ID
+ * @param readerType - Whether the reader is 'user' or 'admin'
+ * @returns Promise with success status and count of updated messages
+ * 
+ * @example
+ * ```ts
+ * const result = await markMessagesRead('conv-uuid', 'user');
+ * console.log(`Marked ${result.updated} messages as read`);
+ * ```
+ */
 export async function markMessagesRead(
   conversationId: string,
   readerType: 'user' | 'admin'
@@ -369,7 +540,21 @@ export async function markMessagesRead(
   }
 }
 
-// Update message reaction (persist to database)
+/**
+ * Adds or removes an emoji reaction on a message.
+ * Persists to database and syncs in real-time.
+ * 
+ * @param messageId - The message ID to react to
+ * @param emoji - The emoji character to add/remove
+ * @param action - Whether to 'add' or 'remove' the reaction
+ * @param reactorType - Whether the reactor is 'user' or 'admin'
+ * @returns Promise with success status and updated reactions array
+ * 
+ * @example
+ * ```ts
+ * await updateMessageReaction('msg-uuid', '👍', 'add', 'user');
+ * ```
+ */
 export async function updateMessageReaction(
   messageId: string,
   emoji: string,
@@ -399,7 +584,24 @@ export async function updateMessageReaction(
   }
 }
 
-// Subscribe to real-time messages for a conversation (INSERT and UPDATE events)
+/**
+ * Subscribes to real-time message updates for a conversation.
+ * Receives INSERT events for new messages and UPDATE events for edits/reactions.
+ * 
+ * @param conversationId - The conversation ID to subscribe to
+ * @param onMessage - Callback fired when a new assistant message is received
+ * @param onMessageUpdate - Optional callback for message updates (reactions, etc.)
+ * @returns RealtimeChannel that can be passed to unsubscribeFromMessages
+ * 
+ * @example
+ * ```ts
+ * const channel = subscribeToMessages('conv-uuid', 
+ *   (msg) => console.log('New message:', msg.content),
+ *   (update) => console.log('Message updated:', update.id)
+ * );
+ * // Later: unsubscribeFromMessages(channel);
+ * ```
+ */
 export function subscribeToMessages(
   conversationId: string,
   onMessage: (message: { id: string; role: string; content: string; metadata: any; created_at: string }) => void,
@@ -464,12 +666,34 @@ export function subscribeToMessages(
   return channel;
 }
 
+/**
+ * Unsubscribes from a message subscription channel.
+ * Should be called when leaving a conversation or unmounting.
+ * 
+ * @param channel - The RealtimeChannel returned by subscribeToMessages
+ */
 export function unsubscribeFromMessages(channel: RealtimeChannel) {
   console.log('[Widget] Unsubscribing from messages');
   widgetSupabase.removeChannel(channel);
 }
 
-// Subscribe to real-time conversation status changes (for human takeover)
+/**
+ * Subscribes to conversation status changes (active, human_takeover, closed).
+ * Used to detect when a team member takes over or closes a conversation.
+ * 
+ * @param conversationId - The conversation ID to monitor
+ * @param onStatusChange - Callback fired when status changes
+ * @returns RealtimeChannel that can be passed to unsubscribeFromConversationStatus
+ * 
+ * @example
+ * ```ts
+ * const channel = subscribeToConversationStatus('conv-uuid', (status) => {
+ *   if (status === 'human_takeover') {
+ *     console.log('A team member has joined!');
+ *   }
+ * });
+ * ```
+ */
 export function subscribeToConversationStatus(
   conversationId: string,
   onStatusChange: (status: 'active' | 'human_takeover' | 'closed') => void
@@ -501,12 +725,33 @@ export function subscribeToConversationStatus(
   return channel;
 }
 
+/**
+ * Unsubscribes from a conversation status subscription.
+ * 
+ * @param channel - The RealtimeChannel returned by subscribeToConversationStatus
+ */
 export function unsubscribeFromConversationStatus(channel: RealtimeChannel) {
   console.log('[Widget] Unsubscribing from conversation status');
   widgetSupabase.removeChannel(channel);
 }
 
-// Subscribe to typing indicators using Supabase Presence
+/**
+ * Subscribes to typing indicators using Supabase Presence.
+ * Detects when a team member is typing a response.
+ * 
+ * @param conversationId - The conversation ID to monitor
+ * @param onTypingChange - Callback with typing state and optional agent name
+ * @returns RealtimeChannel that can be passed to unsubscribeFromTypingIndicator
+ * 
+ * @example
+ * ```ts
+ * const channel = subscribeToTypingIndicator('conv-uuid', (isTyping, agentName) => {
+ *   if (isTyping) {
+ *     console.log(`${agentName} is typing...`);
+ *   }
+ * });
+ * ```
+ */
 export function subscribeToTypingIndicator(
   conversationId: string,
   onTypingChange: (isTyping: boolean, agentName?: string) => void
@@ -531,12 +776,38 @@ export function subscribeToTypingIndicator(
   return channel;
 }
 
+/**
+ * Unsubscribes from a typing indicator subscription.
+ * 
+ * @param channel - The RealtimeChannel returned by subscribeToTypingIndicator
+ */
 export function unsubscribeFromTypingIndicator(channel: RealtimeChannel) {
   console.log('[Widget] Unsubscribing from typing indicator');
   widgetSupabase.removeChannel(channel);
 }
 
-// Visitor presence tracking for admin panel
+/**
+ * Starts visitor presence tracking for the admin panel.
+ * Allows admins to see active visitors on their site in real-time.
+ * 
+ * @param agentId - The agent ID to track visitors for
+ * @param visitorId - Unique identifier for this visitor session
+ * @param options - Presence metadata options
+ * @param options.currentPage - The page URL the visitor is on
+ * @param options.isWidgetOpen - Whether the widget is currently open
+ * @param options.leadName - Optional lead name if contact form was filled
+ * @param options.leadEmail - Optional lead email if contact form was filled
+ * @returns RealtimeChannel for updating or stopping presence
+ * 
+ * @example
+ * ```ts
+ * const channel = startVisitorPresence('agent-uuid', 'visitor-123', {
+ *   currentPage: '/pricing',
+ *   isWidgetOpen: true,
+ *   leadName: 'John Doe'
+ * });
+ * ```
+ */
 export function startVisitorPresence(
   agentId: string,
   visitorId: string,
@@ -567,6 +838,22 @@ export function startVisitorPresence(
   return channel;
 }
 
+/**
+ * Updates the visitor presence with new page or widget state.
+ * Called when visitor navigates to a new page or opens/closes the widget.
+ * 
+ * @param channel - The presence channel from startVisitorPresence
+ * @param visitorId - The visitor's unique identifier
+ * @param options - Updated presence metadata
+ * 
+ * @example
+ * ```ts
+ * await updateVisitorPresence(channel, 'visitor-123', {
+ *   currentPage: '/features',
+ *   isWidgetOpen: false
+ * });
+ * ```
+ */
 export async function updateVisitorPresence(
   channel: RealtimeChannel,
   visitorId: string,
@@ -591,6 +878,12 @@ export async function updateVisitorPresence(
   }
 }
 
+/**
+ * Stops visitor presence tracking and removes the channel.
+ * Called when the widget is fully unloaded.
+ * 
+ * @param channel - The presence channel to stop
+ */
 export function stopVisitorPresence(channel: RealtimeChannel) {
   console.log('[Widget] Stopping visitor presence');
   widgetSupabase.removeChannel(channel);
