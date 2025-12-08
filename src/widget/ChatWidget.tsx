@@ -506,35 +506,25 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     }
   };
 
-  // Handle quick reply selection - directly send the message
-  const handleQuickReplySelect = (suggestion: string) => {
-    // Clear quick replies from current message to prevent re-rendering
-    setMessages(prev => prev.map((msg, idx) => 
-      idx === prev.length - 1 && msg.quickReplies 
-        ? { ...msg, quickReplies: undefined }
-        : msg
-    ));
-    // Set input and trigger send on next tick after state updates
-    setMessageInput(suggestion);
-  };
+  // Ref to store handleSendMessage for use in effect without dependency issues
+  const handleSendMessageRef = useRef(handleSendMessage);
+  handleSendMessageRef.current = handleSendMessage;
   
-  // Effect to send message when input is set from quick reply
+  // Ref to track pending quick reply for auto-send
   const quickReplyPendingRef = useRef<string | null>(null);
   
+  // Effect to send message when input is set from quick reply
   useEffect(() => {
-    // If messageInput was just set and matches a pending quick reply, send it
     if (messageInput.trim() && !isActivelySendingRef.current) {
-      // Check if this looks like it was set programmatically (quick reply)
-      // by checking if it's a full sentence/question that wasn't being typed
       const shouldAutoSend = quickReplyPendingRef.current === messageInput;
       if (shouldAutoSend) {
         quickReplyPendingRef.current = null;
-        handleSendMessage();
+        handleSendMessageRef.current();
       }
     }
   }, [messageInput]);
   
-  // Override handleQuickReplySelect to use ref for tracking
+  // Handle quick reply selection - set input and trigger auto-send
   const handleQuickReplySelectWithSend = (suggestion: string) => {
     // Clear quick replies from current message
     setMessages(prev => prev.map((msg, idx) => 
