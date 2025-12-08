@@ -924,8 +924,9 @@ ${knowledgeContext}
 
 IMPORTANT GUIDELINES FOR RESPONSES:
 1. When referencing information from sources, you can naturally cite them (e.g., "According to our documentation..." or "Based on our help article...").
-2. **SHARE LINKS**: When a source has a URL and the information is directly relevant to the user's question, include the link in your response so they can learn more. Format links naturally in your response (e.g., "You can find more details here: [link]" or include the URL directly). Links you share will display with rich previews for the user.
-3. If you use specific information from a source with a URL, consider sharing that link so the user can explore further.`;
+2. **ALWAYS SHARE LINKS**: You MUST include the source URL in your response when using information from a source that has a URL. This is critical for user trust and verification. Format: "Learn more: [URL]" or include the link inline naturally. Users expect clickable links they can follow.
+3. **NEVER reference a knowledge source without including its link** if one is available. Every piece of sourced information should have an accompanying link.
+4. If multiple sources are relevant, include multiple links so users can explore all resources.`;
             }
           }
         } catch (ragError) {
@@ -1128,6 +1129,13 @@ Use this information to personalize your responses when appropriate (e.g., addre
     if (!assistantContent) {
       assistantContent = 'I apologize, but I was unable to generate a response.';
     }
+
+    // Add natural typing delay before responding (2-3 seconds, varied for realism)
+    const minDelay = 2000; // 2 seconds
+    const maxDelay = 3000; // 3 seconds
+    const typingDelay = Math.floor(Math.random() * (maxDelay - minDelay + 1)) + minDelay;
+    console.log(`Adding natural typing delay: ${typingDelay}ms`);
+    await new Promise(resolve => setTimeout(resolve, typingDelay));
 
     // COST OPTIMIZATION: Cache high-confidence responses for FAQ-style queries
     if (queryHash && maxSimilarity > 0.92 && sources.length > 0) {
