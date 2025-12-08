@@ -119,8 +119,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             user_id: user.id,
             email_notifications: true,
             browser_notifications: true,
-            onboarding_notifications: true,
-            scope_work_notifications: true,
           });
 
         if (error) {
