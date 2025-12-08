@@ -156,6 +156,10 @@ const config: Config = {
           "0%": { opacity: "0", transform: "translateX(12px)" },
           "100%": { opacity: "1", transform: "translateX(0)" },
         },
+        "progress-stripes": {
+          "0%": { backgroundPosition: "1rem 0" },
+          "100%": { backgroundPosition: "0 0" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -167,6 +171,7 @@ const config: Config = {
         "pulse-ring": "pulse-ring 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite",
         "slide-in-left": "slide-in-left 0.2s ease-out",
         "slide-in-right": "slide-in-right 0.2s ease-out",
+        "progress-stripes": "progress-stripes 1s linear infinite",
       },
     },
   },

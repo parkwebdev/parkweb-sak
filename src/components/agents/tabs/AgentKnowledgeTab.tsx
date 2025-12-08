@@ -132,7 +132,7 @@ export const AgentKnowledgeTab = ({ agentId, userId }: AgentKnowledgeTabProps) =
                     {sitemapProgress.processingCount} active, {sitemapProgress.pendingCount} queued
                   </span>
                 </div>
-                <Progress value={sitemapProgress.percentage} variant="success" className="h-1.5" />
+                <Progress value={sitemapProgress.percentage} variant="success" animated className="h-1.5" />
               </div>
             </div>
           )}

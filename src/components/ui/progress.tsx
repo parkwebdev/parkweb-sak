@@ -9,6 +9,7 @@ interface ProgressProps extends React.ComponentPropsWithoutRef<typeof ProgressPr
   labelPosition?: "left" | "right";
   formatLabel?: (value: number) => string;
   variant?: "default" | "success" | "warning" | "destructive";
+  animated?: boolean;
 }
 
 const indicatorVariants = {
@@ -21,10 +22,14 @@ const indicatorVariants = {
 const Progress = React.forwardRef<
   React.ElementRef<typeof ProgressPrimitive.Root>,
   ProgressProps
->(({ className, value, showLabel, labelPosition = "right", formatLabel, variant = "default", ...props }, ref) => {
+>(({ className, value, showLabel, labelPosition = "right", formatLabel, variant = "default", animated = false, ...props }, ref) => {
   const displayValue = value || 0;
   const formattedLabel = formatLabel ? formatLabel(displayValue) : `${displayValue.toFixed(1)}%`;
   const indicatorClass = indicatorVariants[variant];
+  
+  const stripesClass = animated 
+    ? "bg-[length:1rem_1rem] bg-[linear-gradient(45deg,rgba(255,255,255,0.15)_25%,transparent_25%,transparent_50%,rgba(255,255,255,0.15)_50%,rgba(255,255,255,0.15)_75%,transparent_75%,transparent)] animate-progress-stripes" 
+    : "";
 
   if (showLabel) {
     return (
@@ -38,7 +43,7 @@ const Progress = React.forwardRef<
           {...props}
         >
           <ProgressPrimitive.Indicator
-            className={cn("h-full w-full flex-1 transition-all", indicatorClass)}
+            className={cn("h-full w-full flex-1 transition-all", indicatorClass, stripesClass)}
             style={{ transform: `translateX(-${100 - displayValue}%)` }}
           />
         </ProgressPrimitive.Root>
@@ -59,7 +64,7 @@ const Progress = React.forwardRef<
       {...props}
     >
       <ProgressPrimitive.Indicator
-        className={cn("h-full w-full flex-1 transition-all", indicatorClass)}
+        className={cn("h-full w-full flex-1 transition-all", indicatorClass, stripesClass)}
         style={{ transform: `translateX(-${100 - displayValue}%)` }}
       />
     </ProgressPrimitive.Root>
