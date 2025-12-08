@@ -7,6 +7,7 @@ import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
 import { MetricCardWithChart } from '@/components/dashboard/MetricCardWithChart';
 import { ConversationsDataTable, ConversationRow } from '@/components/dashboard/ConversationsDataTable';
 import { formatDistanceToNow } from 'date-fns';
+import { logger } from '@/utils/logger';
 
 interface ConversationWithAgent {
   id: string;
@@ -134,7 +135,7 @@ export const Dashboard: React.FC = () => {
         conversionTrend: rateTrend,
       });
     } catch (error) {
-      console.error('Error fetching dashboard data:', error);
+      logger.error('Error fetching dashboard data:', error);
     } finally {
       if (showLoading) setLoading(false);
     }

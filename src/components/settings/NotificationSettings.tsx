@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { AnimatedList } from '@/components/ui/animated-list';
 import { AnimatedItem } from '@/components/ui/animated-item';
 import { LoadingState } from '@/components/ui/loading-state';
+import { logger } from '@/utils/logger';
 
 
 interface NotificationPreferences {
@@ -56,14 +57,14 @@ export const NotificationSettings: React.FC = () => {
           // No preferences found, create default ones
           await createDefaultPreferences();
         } else {
-          console.error('Error fetching notification preferences:', error);
+          logger.error('Error fetching notification preferences:', error);
         }
         return;
       }
 
       setPreferences(data);
     } catch (error) {
-      console.error('Error in fetchNotificationPreferences:', error);
+      logger.error('Error in fetchNotificationPreferences:', error);
     } finally {
       setLoading(false);
     }
@@ -90,13 +91,13 @@ export const NotificationSettings: React.FC = () => {
         .single();
 
       if (error) {
-        console.error('Error creating default preferences:', error);
+        logger.error('Error creating default preferences:', error);
         return;
       }
 
       setPreferences(data);
     } catch (error) {
-      console.error('Error in createDefaultPreferences:', error);
+      logger.error('Error in createDefaultPreferences:', error);
     }
   };
 
@@ -138,7 +139,7 @@ export const NotificationSettings: React.FC = () => {
             return;
           }
         } catch (error) {
-          console.error('Error requesting notification permission:', error);
+          logger.error('Error requesting notification permission:', error);
           toast.error("Permission request failed", {
             description: "Unable to request notification permission. Please enable notifications manually in your browser settings.",
           });
@@ -161,7 +162,7 @@ export const NotificationSettings: React.FC = () => {
           .eq('user_id', user.id);
 
         if (error) {
-          console.error('Error updating preference:', error);
+          logger.error('Error updating preference:', error);
         toast.error("Update failed", {
           description: "Failed to update notification preference.",
         });
@@ -171,7 +172,7 @@ export const NotificationSettings: React.FC = () => {
         // Show saved indicator
         setShowSaved(prev => ({ ...prev, [key]: true }));
       } catch (error) {
-        console.error('Error in updatePreference:', error);
+        logger.error('Error in updatePreference:', error);
           toast.error("Update failed", {
             description: "Failed to update notification preference.",
           });
@@ -369,7 +370,7 @@ export const NotificationSettings: React.FC = () => {
                     });
                   }
                 } catch (error) {
-                  console.error('Notification permission error:', error);
+                  logger.error('Notification permission error:', error);
                   toast.error("Error", {
                     description: "Failed to request notification permission.",
                   });

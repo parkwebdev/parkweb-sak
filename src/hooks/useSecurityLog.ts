@@ -1,6 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/lib/toast';
+import { logger } from '@/utils/logger';
 
 interface SecurityLogParams {
   action: string;
@@ -25,11 +26,11 @@ export const useSecurityLog = () => {
       });
 
       if (error) {
-        console.error('Failed to log security event:', error);
+        logger.error('Failed to log security event:', error);
         // Don't show error to user as this is background logging
       }
     } catch (error) {
-      console.error('Security logging error:', error);
+      logger.error('Security logging error:', error);
     }
   };
 

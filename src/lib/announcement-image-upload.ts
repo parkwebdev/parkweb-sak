@@ -7,6 +7,7 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
 
 /**
  * Configuration for announcement image optimization
@@ -114,7 +115,7 @@ export const uploadAnnouncementImage = async (
     });
 
   if (error) {
-    console.error('Announcement image upload error:', error);
+    logger.error('Announcement image upload error:', error);
     throw new Error('Failed to upload image');
   }
 
@@ -142,6 +143,6 @@ export const deleteAnnouncementImage = async (imageUrl: string): Promise<void> =
     .remove([filePath]);
 
   if (error) {
-    console.error('Announcement image delete error:', error);
+    logger.error('Announcement image delete error:', error);
   }
 };

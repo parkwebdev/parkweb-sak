@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
 
 interface AuthContextType {
   user: User | null;
@@ -100,7 +101,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           });
 
         if (error) {
-          console.error('Error creating profile:', error);
+          logger.error('Error creating profile:', error);
         }
       }
 
@@ -122,18 +123,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           });
 
         if (error) {
-          console.error('Error creating notification preferences:', error);
+          logger.error('Error creating notification preferences:', error);
         }
       }
     } catch (error) {
-      console.error('Error in createOrUpdateProfile:', error);
+      logger.error('Error in createOrUpdateProfile:', error);
     }
   };
 
   const signOut = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) {
-      console.error('Error signing out:', error);
+      logger.error('Error signing out:', error);
       throw error;
     }
   };

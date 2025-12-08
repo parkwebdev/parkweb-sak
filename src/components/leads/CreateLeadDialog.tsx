@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useState } from 'react';
 import type { Tables } from '@/integrations/supabase/types';
+import { logger } from '@/utils/logger';
 
 interface CreateLeadDialogProps {
   open: boolean;
@@ -32,7 +33,7 @@ export const CreateLeadDialog = ({ open, onOpenChange, onCreate }: CreateLeadDia
       setFormData({ name: '', email: '', phone: '', company: '' });
       onOpenChange(false);
     } catch (error) {
-      console.error('Error creating lead:', error);
+      logger.error('Error creating lead:', error);
     } finally {
       setIsSubmitting(false);
     }

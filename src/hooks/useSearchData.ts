@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import type { Tables } from '@/integrations/supabase/types';
+import { logger } from '@/utils/logger';
 
 export interface SearchResult {
   id: string;
@@ -219,7 +220,7 @@ export const useSearchData = () => {
 
       setSearchResults(results);
     } catch (error) {
-      console.error('Error fetching search data:', error);
+      logger.error('Error fetching search data:', error);
     } finally {
       setLoading(false);
     }

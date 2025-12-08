@@ -15,6 +15,7 @@ import { PasswordStrengthIndicator } from '@/components/PasswordStrengthIndicato
 import { Eye, EyeOff, User01, Key01, UsersPlus, CheckCircle, Mail01, ArrowLeft } from '@untitledui/icons';
 import { AnimatePresence, motion } from 'motion/react';
 import ChatPadLogo from '@/components/ChatPadLogo';
+import { logger } from '@/utils/logger';
 
 const signupSteps: StepItem[] = [
   {
@@ -212,7 +213,7 @@ const Auth = () => {
             body: { email, user_id: 'pending' }
           });
         } catch (err) {
-          console.error('Error processing signup completion:', err);
+          logger.error('Error processing signup completion:', err);
         }
       }
 

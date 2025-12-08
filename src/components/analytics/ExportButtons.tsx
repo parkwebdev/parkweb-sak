@@ -3,6 +3,7 @@ import { PdfIcon, CsvIcon } from './ExportIcons';
 import { generateCSVReport, generatePDFReport } from '@/lib/report-export';
 import { ReportConfig } from './ReportBuilder';
 import { toast } from '@/lib/toast';
+import { logger } from '@/utils/logger';
 
 interface ExportButtonsProps {
   data: any;
@@ -19,7 +20,7 @@ export const ExportButtons = ({ data, startDate, endDate, orgName, config }: Exp
       await generateCSVReport(data, config, startDate, endDate, orgName);
       toast.success('CSV exported successfully');
     } catch (error) {
-      console.error('Export error:', error);
+      logger.error('Export error:', error);
       toast.error('Failed to export CSV');
     }
   };
@@ -29,7 +30,7 @@ export const ExportButtons = ({ data, startDate, endDate, orgName, config }: Exp
       await generatePDFReport(data, config, startDate, endDate, orgName);
       toast.success('PDF exported successfully');
     } catch (error) {
-      console.error('Export error:', error);
+      logger.error('Export error:', error);
       toast.error('Failed to export PDF');
     }
   };

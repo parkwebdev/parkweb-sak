@@ -28,6 +28,7 @@ import { uploadFeaturedImage, deleteArticleImage } from '@/lib/article-image-upl
 import { toast } from '@/lib/toast';
 import { Spinner } from '@/components/ui/spinner';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
+import { logger } from '@/utils/logger';
 
 type ContentTab = 'announcements' | 'news';
 
@@ -376,7 +377,7 @@ const AnnouncementDialog = ({
       onSave({ ...formData, image_url: finalImageUrl });
       onClose();
     } catch (error) {
-      console.error('Error saving announcement:', error);
+      logger.error('Error saving announcement:', error);
       toast.error('Failed to save announcement');
     } finally {
       setIsUploading(false);
@@ -683,7 +684,7 @@ const NewsDialog = ({
       onSave({ ...formData, featured_image_url: finalImageUrl });
       onClose();
     } catch (error) {
-      console.error('Error saving news item:', error);
+      logger.error('Error saving news item:', error);
       toast.error('Failed to save news item');
     } finally {
       setIsUploading(false);

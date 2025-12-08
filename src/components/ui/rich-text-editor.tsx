@@ -8,6 +8,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { RichTextToolbar } from './rich-text-toolbar';
 import { uploadArticleImage } from '@/lib/article-image-upload';
 import { cn } from '@/lib/utils';
+import { logger } from '@/utils/logger';
 
 interface RichTextEditorProps {
   content: string;
@@ -109,13 +110,13 @@ export const RichTextEditor = ({
       // Validate file type
       const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
       if (!validTypes.includes(file.type)) {
-        console.error('Invalid file type');
+        logger.warn('Invalid file type');
         return;
       }
 
       // Validate file size (5MB max)
       if (file.size > 5 * 1024 * 1024) {
-        console.error('File too large');
+        logger.warn('File too large');
         return;
       }
 
@@ -124,7 +125,7 @@ export const RichTextEditor = ({
         const imageUrl = await uploadArticleImage(file, userId, agentId);
         editor.chain().focus().setImage({ src: imageUrl }).run();
       } catch (error) {
-        console.error('Failed to upload image:', error);
+        logger.error('Failed to upload image:', error);
       } finally {
         setIsUploading(false);
       }
