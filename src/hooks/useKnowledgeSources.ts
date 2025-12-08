@@ -37,11 +37,36 @@ export const useKnowledgeSources = (agentId?: string) => {
     fetchSources();
   }, [agentId]);
 
+  const markSourceAsError = async (sourceId: string, errorMessage: string) => {
+    try {
+      await supabase
+        .from('knowledge_sources')
+        .update({
+          status: 'error',
+          metadata: {
+            error: errorMessage,
+            failed_at: new Date().toISOString(),
+          },
+        })
+        .eq('id', sourceId);
+    } catch (e) {
+      console.error('Failed to mark source as error:', e);
+    }
+  };
+
   const uploadDocument = async (
     file: File,
     agentId: string,
     userId: string
   ): Promise<string | null> => {
+    // PDF processing is temporarily disabled
+    if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+      toast.error('PDF upload not supported', {
+        description: 'PDF processing is temporarily unavailable. Please add a URL or text content instead.',
+      });
+      return null;
+    }
+
     try {
       // Upload file to Supabase Storage
       const fileName = `${agentId}/${Date.now()}-${file.name}`;
@@ -76,10 +101,20 @@ export const useKnowledgeSources = (agentId?: string) => {
 
       if (error) throw error;
 
-      // Trigger processing
-      await supabase.functions.invoke('process-knowledge-source', {
+      // Trigger processing and handle invocation errors
+      const { error: invokeError } = await supabase.functions.invoke('process-knowledge-source', {
         body: { sourceId: data.id, agentId },
       });
+
+      if (invokeError) {
+        console.error('Edge function invocation failed:', invokeError);
+        await markSourceAsError(data.id, `Processing failed: ${invokeError.message}`);
+        toast.error('Processing failed', {
+          description: 'The document could not be processed. Please try again.',
+        });
+        await fetchSources();
+        return null;
+      }
 
       toast.success('Document uploaded', {
         description: 'Processing document...',
@@ -119,10 +154,20 @@ export const useKnowledgeSources = (agentId?: string) => {
 
       if (error) throw error;
 
-      // Trigger processing
-      await supabase.functions.invoke('process-knowledge-source', {
+      // Trigger processing and handle invocation errors
+      const { error: invokeError } = await supabase.functions.invoke('process-knowledge-source', {
         body: { sourceId: data.id, agentId },
       });
+
+      if (invokeError) {
+        console.error('Edge function invocation failed:', invokeError);
+        await markSourceAsError(data.id, `Processing failed: ${invokeError.message}`);
+        toast.error('Processing failed', {
+          description: 'The URL could not be processed. Please try again.',
+        });
+        await fetchSources();
+        return null;
+      }
 
       toast.success('URL added', {
         description: 'Processing content...',
@@ -166,10 +211,20 @@ export const useKnowledgeSources = (agentId?: string) => {
 
       if (error) throw error;
 
-      // Trigger processing
-      await supabase.functions.invoke('process-knowledge-source', {
+      // Trigger processing and handle invocation errors
+      const { error: invokeError } = await supabase.functions.invoke('process-knowledge-source', {
         body: { sourceId: data.id, agentId },
       });
+
+      if (invokeError) {
+        console.error('Edge function invocation failed:', invokeError);
+        await markSourceAsError(data.id, `Processing failed: ${invokeError.message}`);
+        toast.error('Processing failed', {
+          description: 'The content could not be processed. Please try again.',
+        });
+        await fetchSources();
+        return null;
+      }
 
       toast.success('Content added', {
         description: 'Processing content...',

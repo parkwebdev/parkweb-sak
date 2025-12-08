@@ -2,7 +2,8 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { Readability } from "npm:@mozilla/readability@0.5.0";
 import { DOMParser } from "npm:linkedom@0.18.4";
-import pdfParse from "npm:pdf-parse/lib/pdf-parse.js";
+
+console.log('process-knowledge-source function initialized');
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -157,23 +158,10 @@ async function generateEmbeddingsBatch(
   return embeddings;
 }
 
-// Extract text from PDF using pdf-parse
-async function extractPdfText(pdfData: Uint8Array): Promise<string> {
-  console.log('Extracting text from PDF using pdf-parse...');
-  
-  try {
-    // pdf-parse expects a Buffer, convert Uint8Array
-    const result = await pdfParse(Buffer.from(pdfData));
-    console.log(`Extracted ${result.numpages} pages from PDF`);
-    return result.text || '';
-  } catch (error) {
-    console.error('PDF extraction error:', error);
-    throw new Error(`Failed to extract PDF text: ${error instanceof Error ? error.message : 'Unknown error'}`);
-  }
-}
-
 // Fetch URL content with Readability for clean HTML extraction
 async function fetchUrlContent(url: string): Promise<string> {
+  console.log('Fetching URL content:', url);
+  
   try {
     const response = await fetch(url, {
       headers: {
@@ -181,16 +169,15 @@ async function fetchUrlContent(url: string): Promise<string> {
       },
     });
     if (!response.ok) {
-      throw new Error(`Failed to fetch URL: ${response.statusText}`);
+      throw new Error(`Failed to fetch URL: ${response.status} ${response.statusText}`);
     }
     
     const contentType = response.headers.get('content-type') || '';
+    console.log('Content-Type:', contentType);
     
-    // Handle PDF URLs
+    // Handle PDF URLs - return error since PDF parsing is not supported
     if (contentType.includes('application/pdf') || url.toLowerCase().endsWith('.pdf')) {
-      console.log('URL points to a PDF, extracting text...');
-      const arrayBuffer = await response.arrayBuffer();
-      return await extractPdfText(new Uint8Array(arrayBuffer));
+      throw new Error('PDF URL processing is not currently supported. Please upload the PDF file directly or use a different URL.');
     }
     
     if (contentType.includes('application/json')) {
@@ -201,7 +188,7 @@ async function fetchUrlContent(url: string): Promise<string> {
       
       // Use Readability for intelligent content extraction
       try {
-        console.log('Using Readability for content extraction from:', url);
+        console.log('Using Readability for content extraction');
         const parser = new DOMParser();
         const document = parser.parseFromString(html, 'text/html');
         const reader = new Readability(document, {
@@ -244,44 +231,39 @@ async function fetchUrlContent(url: string): Promise<string> {
     } else if (contentType.includes('text/')) {
       return await response.text();
     } else {
-      throw new Error('Unsupported content type');
+      throw new Error(`Unsupported content type: ${contentType}`);
     }
   } catch (error) {
+    console.error('Error fetching URL:', error);
     throw new Error(`Error fetching URL: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 
-// Fetch PDF from storage and extract text
-async function fetchAndExtractPdf(supabase: any, storagePath: string): Promise<string> {
-  console.log('Downloading PDF from storage:', storagePath);
-  
-  const { data: fileData, error: downloadError } = await supabase.storage
-    .from('conversation-files')
-    .download(storagePath);
-
-  if (downloadError || !fileData) {
-    throw new Error(`Failed to download PDF: ${downloadError?.message || 'Unknown error'}`);
-  }
-
-  const arrayBuffer = await fileData.arrayBuffer();
-  const pdfData = new Uint8Array(arrayBuffer);
-  
-  return await extractPdfText(pdfData);
-}
-
 Deno.serve(async (req) => {
+  console.log('Received request to process knowledge source');
+  
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Track sourceId for error handling
+  let sourceId: string | null = null;
+  let supabase: any = null;
+
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { sourceId } = await req.json();
+    const body = await req.json();
+    sourceId = body.sourceId;
+    
     console.log('Processing knowledge source:', sourceId);
     console.log('Using embedding model:', EMBEDDING_MODEL, `(${EMBEDDING_DIMENSIONS} dimensions)`);
+
+    if (!sourceId) {
+      throw new Error('sourceId is required');
+    }
 
     // Get the knowledge source
     const { data: source, error: sourceError } = await supabase
@@ -291,24 +273,27 @@ Deno.serve(async (req) => {
       .single();
 
     if (sourceError || !source) {
+      console.error('Failed to find source:', sourceError);
       throw new Error('Knowledge source not found');
     }
+
+    console.log('Source type:', source.type, '| Source:', source.source?.substring(0, 100));
 
     let content = source.content || '';
 
     // Fetch content based on type
     if (source.type === 'url' && !content) {
-      console.log('Fetching URL content:', source.source);
       content = await fetchUrlContent(source.source);
     } else if (source.type === 'pdf') {
-      console.log('Processing PDF:', source.source);
-      // The 'source' field contains the storage path for PDFs
-      content = await fetchAndExtractPdf(supabase, source.source);
+      // PDF file upload processing is not currently supported
+      throw new Error('PDF processing is not currently supported. Please delete this source and try adding a URL or text content instead.');
     }
 
     if (!content || content.length === 0) {
-      throw new Error('No content to process');
+      throw new Error('No content to process - the URL may be empty or inaccessible');
     }
+
+    console.log(`Content fetched: ${content.length} characters`);
 
     // Update content if it was fetched
     if (!source.content) {
@@ -319,10 +304,14 @@ Deno.serve(async (req) => {
     }
 
     // Delete any existing chunks for this source (for reprocessing)
-    await supabase
+    const { error: deleteError } = await supabase
       .from('knowledge_chunks')
       .delete()
       .eq('source_id', sourceId);
+    
+    if (deleteError) {
+      console.warn('Failed to delete existing chunks:', deleteError);
+    }
 
     // Chunk the content with semantic boundaries
     console.log('Chunking content with semantic boundaries...');
@@ -406,25 +395,23 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error('Error processing knowledge source:', error);
     
-    // Update status to error
-    try {
-      const { sourceId } = await req.json();
-      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-      const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-      const supabase = createClient(supabaseUrl, supabaseKey);
-      
-      await supabase
-        .from('knowledge_sources')
-        .update({
-          status: 'error',
-          metadata: {
-            error: error instanceof Error ? error.message : 'Unknown error',
-            failed_at: new Date().toISOString(),
-          },
-        })
-        .eq('id', sourceId);
-    } catch (e) {
-      console.error('Failed to update error status:', e);
+    // Update status to error if we have sourceId and supabase client
+    if (sourceId && supabase) {
+      try {
+        await supabase
+          .from('knowledge_sources')
+          .update({
+            status: 'error',
+            metadata: {
+              error: error instanceof Error ? error.message : 'Unknown error',
+              failed_at: new Date().toISOString(),
+            },
+          })
+          .eq('id', sourceId);
+        console.log('Updated source status to error');
+      } catch (e) {
+        console.error('Failed to update error status:', e);
+      }
     }
 
     return new Response(
