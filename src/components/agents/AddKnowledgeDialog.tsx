@@ -13,8 +13,9 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useKnowledgeSources } from '@/hooks/useKnowledgeSources';
 import { usePlanLimits } from '@/hooks/usePlanLimits';
-import { Upload01, Link03, File01, AlertCircle, Globe01 } from '@untitledui/icons';
+import { Upload01, Link03, File01, AlertCircle, Globe01, ChevronDown, ChevronUp } from '@untitledui/icons';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 interface AddKnowledgeDialogProps {
   open: boolean;
@@ -38,6 +39,12 @@ export const AddKnowledgeDialog: React.FC<AddKnowledgeDialogProps> = ({
   const [sitemapUrl, setSitemapUrl] = useState('');
   const [textContent, setTextContent] = useState('');
   const [textName, setTextName] = useState('');
+  
+  // Sitemap advanced options
+  const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
+  const [excludePatterns, setExcludePatterns] = useState('');
+  const [includePatterns, setIncludePatterns] = useState('');
+  const [pageLimit, setPageLimit] = useState(200);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -87,8 +94,28 @@ export const AddKnowledgeDialog: React.FC<AddKnowledgeDialogProps> = ({
 
     setUploading(true);
     try {
-      await addSitemapSource(sitemapUrl, agentId, userId);
+      // Parse patterns into arrays
+      const excludeArray = excludePatterns
+        .split(',')
+        .map(p => p.trim())
+        .filter(p => p.length > 0);
+      const includeArray = includePatterns
+        .split(',')
+        .map(p => p.trim())
+        .filter(p => p.length > 0);
+
+      await addSitemapSource(sitemapUrl, agentId, userId, {
+        excludePatterns: excludeArray,
+        includePatterns: includeArray,
+        pageLimit: pageLimit,
+      });
+      
+      // Reset form
       setSitemapUrl('');
+      setExcludePatterns('');
+      setIncludePatterns('');
+      setPageLimit(200);
+      setShowAdvancedOptions(false);
       onOpenChange(false);
     } finally {
       setUploading(false);
@@ -224,6 +251,61 @@ export const AddKnowledgeDialog: React.FC<AddKnowledgeDialogProps> = ({
                   We'll crawl all pages in your sitemap automatically. Supports sitemap index files with nested sitemaps.
                 </p>
               </div>
+
+              <Collapsible open={showAdvancedOptions} onOpenChange={setShowAdvancedOptions}>
+                <CollapsibleTrigger asChild>
+                  <Button variant="ghost" size="sm" type="button" className="flex items-center gap-1 px-0 text-muted-foreground hover:text-foreground">
+                    {showAdvancedOptions ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                    Advanced Options
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="space-y-4 pt-2">
+                  <div className="rounded-lg border bg-muted/30 p-4 space-y-4">
+                    <div>
+                      <Label htmlFor="exclude-patterns">Exclude Patterns</Label>
+                      <Input
+                        id="exclude-patterns"
+                        placeholder="/tag/*, /author/*, /category/*"
+                        value={excludePatterns}
+                        onChange={(e) => setExcludePatterns(e.target.value)}
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Comma-separated URL patterns to skip. Use * as wildcard.
+                      </p>
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="include-patterns">Include Patterns (optional)</Label>
+                      <Input
+                        id="include-patterns"
+                        placeholder="/blog/*, /docs/*"
+                        value={includePatterns}
+                        onChange={(e) => setIncludePatterns(e.target.value)}
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Only process URLs matching these patterns. Leave empty to include all.
+                      </p>
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="page-limit">Page Limit</Label>
+                      <Input
+                        id="page-limit"
+                        type="number"
+                        min={1}
+                        max={500}
+                        value={pageLimit}
+                        onChange={(e) => setPageLimit(Math.min(500, Math.max(1, parseInt(e.target.value) || 200)))}
+                        className="w-32"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Maximum number of pages to crawl (1-500).
+                      </p>
+                    </div>
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+
               <Button type="submit" disabled={!sitemapUrl} loading={uploading}>
                 Crawl Sitemap
               </Button>

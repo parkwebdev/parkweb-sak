@@ -225,7 +225,12 @@ export const useKnowledgeSources = (agentId?: string) => {
   const addSitemapSource = async (
     url: string,
     agentId: string,
-    userId: string
+    userId: string,
+    options?: {
+      excludePatterns?: string[];
+      includePatterns?: string[];
+      pageLimit?: number;
+    }
   ): Promise<string | null> => {
     try {
       const { data, error } = await supabase
@@ -239,6 +244,9 @@ export const useKnowledgeSources = (agentId?: string) => {
           metadata: {
             is_sitemap: true,
             added_at: new Date().toISOString(),
+            exclude_patterns: options?.excludePatterns || [],
+            include_patterns: options?.includePatterns || [],
+            page_limit: options?.pageLimit || 200,
           },
         })
         .select()

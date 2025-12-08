@@ -1,13 +1,14 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
-import { Database01, RefreshCcw01 } from '@untitledui/icons';
+import { Database01, RefreshCcw01, Globe01 } from '@untitledui/icons';
 import { useKnowledgeSources } from '@/hooks/useKnowledgeSources';
 import { KnowledgeSourceCard } from '@/components/agents/KnowledgeSourceCard';
 import { AddKnowledgeDialog } from '@/components/agents/AddKnowledgeDialog';
 import { HelpArticlesManager } from '@/components/agents/HelpArticlesManager';
 import { AgentSettingsLayout } from '@/components/agents/AgentSettingsLayout';
 import { LoadingState } from '@/components/ui/loading-state';
+import { Progress } from '@/components/ui/progress';
 import { toast } from '@/lib/toast';
 
 interface AgentKnowledgeTabProps {
@@ -27,6 +28,43 @@ export const AgentKnowledgeTab = ({ agentId, userId }: AgentKnowledgeTabProps) =
   // Get only parent sources (hide child sources from sitemaps in main list)
   const parentSources = getParentSources();
   const outdatedCount = parentSources.filter(isSourceOutdated).length;
+
+  // Calculate aggregate sitemap processing progress
+  const sitemapProgress = useMemo(() => {
+    const sitemapSources = parentSources.filter(s => {
+      const metadata = s.metadata as Record<string, any> | null;
+      return metadata?.is_sitemap;
+    });
+
+    let totalPages = 0;
+    let readyPages = 0;
+    let processingCount = 0;
+    let pendingCount = 0;
+    let errorCount = 0;
+
+    for (const sitemap of sitemapSources) {
+      const children = getChildSources(sitemap.id);
+      totalPages += children.length;
+      readyPages += children.filter(c => c.status === 'ready').length;
+      processingCount += children.filter(c => c.status === 'processing').length;
+      pendingCount += children.filter(c => c.status === 'pending').length;
+      errorCount += children.filter(c => c.status === 'error').length;
+    }
+
+    const isActive = processingCount > 0 || pendingCount > 0;
+    const processedPages = readyPages + errorCount;
+    const percentage = totalPages > 0 ? Math.round((processedPages / totalPages) * 100) : 0;
+
+    return {
+      isActive,
+      totalPages,
+      processedPages,
+      processingCount,
+      pendingCount,
+      errorCount,
+      percentage,
+    };
+  }, [parentSources, getChildSources]);
 
   const handleRetrainAll = async () => {
     setIsRetraining(true);
@@ -81,6 +119,24 @@ export const AgentKnowledgeTab = ({ agentId, userId }: AgentKnowledgeTabProps) =
     >
       {activeTab === 'knowledge-sources' && (
         <div className="space-y-4">
+          {/* Sitemap Processing Progress Banner */}
+          {sitemapProgress.isActive && (
+            <div className="flex items-center gap-3 rounded-lg border border-primary/20 bg-primary/5 p-3">
+              <Globe01 className="h-4 w-4 text-primary shrink-0" />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-4 mb-1">
+                  <span className="text-sm font-medium">
+                    Processing sitemap: {sitemapProgress.processedPages}/{sitemapProgress.totalPages} pages
+                  </span>
+                  <span className="text-xs text-muted-foreground whitespace-nowrap">
+                    {sitemapProgress.processingCount} active, {sitemapProgress.pendingCount} queued
+                  </span>
+                </div>
+                <Progress value={sitemapProgress.percentage} className="h-1.5" />
+              </div>
+            </div>
+          )}
+
           <div className="flex items-center justify-end gap-2">
             {sources.length > 0 && (
               <Button
