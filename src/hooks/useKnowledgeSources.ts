@@ -521,7 +521,7 @@ export const useKnowledgeSources = (agentId?: string) => {
   const isSourceOutdated = (source: KnowledgeSource): boolean => {
     const metadata = source.metadata as Record<string, any> | null;
     if (!metadata) return true;
-    return metadata.embedding_model !== 'nomic-ai/nomic-embed-text-v1.5';
+    return metadata.embedding_model !== 'text-embedding-3-small';
   };
 
   // Get child sources for a sitemap parent
