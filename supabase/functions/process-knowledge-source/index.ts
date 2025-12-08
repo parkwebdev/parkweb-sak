@@ -339,6 +339,15 @@ async function processPendingBatch(
 
   console.log(`Starting batch processing for parent ${parentSourceId}, batch ${batchId}`);
 
+  // Fetch existing parent metadata to preserve urls_found, child_sitemaps, etc.
+  const { data: parentSource } = await supabase
+    .from('knowledge_sources')
+    .select('metadata')
+    .eq('id', parentSourceId)
+    .single();
+
+  const parentMetadata = (parentSource?.metadata as Record<string, unknown>) || {};
+
   let processed = 0;
   let errors = 0;
   let hasMore = true;
@@ -390,11 +399,12 @@ async function processPendingBatch(
 
     const remaining = countError ? 0 : (remainingCount || 0);
     
-    // Update parent source with progress
+    // Update parent source with progress, preserving existing metadata
     await supabase
       .from('knowledge_sources')
       .update({
         metadata: {
+          ...parentMetadata,
           is_sitemap: true,
           batch_id: batchId,
           processed_count: processed,
@@ -416,12 +426,13 @@ async function processPendingBatch(
     }
   }
 
-  // Final update to parent source
+  // Final update to parent source, preserving existing metadata
   await supabase
     .from('knowledge_sources')
     .update({
       content: `Sitemap processed. ${processed} pages indexed successfully${errors > 0 ? `, ${errors} failed` : ''}.`,
       metadata: {
+        ...parentMetadata,
         is_sitemap: true,
         batch_id: batchId,
         processed_count: processed,
