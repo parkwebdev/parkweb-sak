@@ -1,4 +1,5 @@
 import { useState, ReactNode } from 'react';
+import { logger } from '@/utils/logger';
 import { AgentSettingsLayout } from '@/components/agents/AgentSettingsLayout';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -212,7 +213,7 @@ export const AgentIntegrationsTab = ({ agentId }: AgentIntegrationsTabProps) => 
   };
 
   const handleConnect = (integrationId: string) => {
-    console.log('Connect integration:', integrationId);
+    logger.info('Connect integration:', integrationId);
   };
 
   const IntegrationCard = ({ integration }: { integration: Integration }) => (
