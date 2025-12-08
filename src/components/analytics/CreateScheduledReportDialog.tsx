@@ -106,7 +106,7 @@ export const CreateScheduledReportDialog = ({ open, onOpenChange }: CreateSchedu
           {/* Frequency */}
           <div className="space-y-2">
             <Label>Frequency</Label>
-            <Select value={frequency} onValueChange={(v: any) => setFrequency(v)}>
+            <Select value={frequency} onValueChange={(v: 'daily' | 'weekly' | 'monthly') => setFrequency(v)}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>

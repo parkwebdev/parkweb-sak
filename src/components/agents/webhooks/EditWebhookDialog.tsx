@@ -16,17 +16,34 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ConditionBuilder } from './ConditionBuilder';
-import { ResponseActionBuilder } from './ResponseActionBuilder';
+import { ResponseActionBuilder, type ResponseAction } from './ResponseActionBuilder';
 import type { Tables } from '@/integrations/supabase/types';
 import { logger } from '@/utils/logger';
 
 type Webhook = Tables<'webhooks'>;
 
+/** Condition rule for webhook triggers */
+interface ConditionRule {
+  field: string;
+  operator: string;
+  value: string;
+}
+
+/** Local state type for webhook conditions */
+interface ConditionsState {
+  rules: ConditionRule[];
+  logic: string;
+}
+
+/** Webhook update payload */
+type WebhookUpdatePayload = Record<string, unknown>;
+
 interface EditWebhookDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   webhook: Webhook | null;
-  onSave: (id: string, updates: any) => Promise<void>;
+  // Using flexible type to support Supabase Json compatibility
+  onSave: (id: string, updates: Record<string, unknown>) => Promise<void>;
 }
 
 const AVAILABLE_EVENTS = [
@@ -57,11 +74,11 @@ export const EditWebhookDialog = ({ open, onOpenChange, webhook, onSave }: EditW
   const [customHeaders, setCustomHeaders] = useState<Array<{ key: string; value: string }>>([
     { key: '', value: '' },
   ]);
-  const [conditions, setConditions] = useState<{ rules: any[]; logic: string }>({
+  const [conditions, setConditions] = useState<ConditionsState>({
     rules: [],
     logic: 'AND',
   });
-  const [responseActions, setResponseActions] = useState<any[]>([]);
+  const [responseActions, setResponseActions] = useState<ResponseAction[]>([]);
 
   // Populate form when webhook changes
   useEffect(() => {
@@ -79,14 +96,14 @@ export const EditWebhookDialog = ({ open, onOpenChange, webhook, onSave }: EditW
       setCustomHeaders(headersArray.length > 0 ? headersArray : [{ key: '', value: '' }]);
       
       // Handle conditions
-      const webhookConditions = webhook.conditions as { rules?: any[]; logic?: string } | null;
+      const webhookConditions = webhook.conditions as unknown as ConditionsState | null;
       setConditions({
         rules: webhookConditions?.rules || [],
         logic: webhookConditions?.logic || 'AND',
       });
       
       // Handle response actions
-      const webhookActions = webhook.response_actions as { actions?: any[] } | null;
+      const webhookActions = webhook.response_actions as { actions?: ResponseAction[] } | null;
       setResponseActions(webhookActions?.actions || []);
     }
   }, [webhook]);
@@ -115,8 +132,8 @@ export const EditWebhookDialog = ({ open, onOpenChange, webhook, onSave }: EditW
         headers,
         auth_type: authType,
         auth_config: authConfig,
-        conditions: conditions.rules.length > 0 ? conditions : {},
-        response_actions: responseActions.length > 0 ? { actions: responseActions } : {},
+        conditions: (conditions.rules.length > 0 ? conditions : {}) as Record<string, string>,
+        response_actions: (responseActions.length > 0 ? { actions: responseActions } : {}) as Record<string, string>,
       });
 
       toast.success('Webhook updated successfully');

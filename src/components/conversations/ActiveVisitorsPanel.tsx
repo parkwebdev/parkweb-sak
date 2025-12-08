@@ -6,6 +6,7 @@ import { SectionHeader } from '@/components/ui/section-header';
 import { Globe01, Users01 } from '@untitledui/icons';
 import { supabase } from '@/integrations/supabase/client';
 import type { RealtimeChannel } from '@supabase/supabase-js';
+import type { VisitorPresenceState } from '@/types/report';
 import { cn } from '@/lib/utils';
 
 interface ActiveVisitor {
@@ -68,7 +69,8 @@ export const ActiveVisitorsPanel: React.FC<ActiveVisitorsPanelProps> = ({
           const state = channel.presenceState();
           const visitors: ActiveVisitor[] = [];
           
-          Object.values(state).flat().forEach((presence: any) => {
+          Object.values(state).flat().forEach((rawPresence) => {
+            const presence = rawPresence as VisitorPresenceState;
             if (presence.isWidgetOpen) {
               visitors.push({
                 visitorId: presence.visitorId,

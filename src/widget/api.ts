@@ -540,6 +540,14 @@ export async function markMessagesRead(
   }
 }
 
+/** Reaction structure returned from the API */
+export interface WidgetMessageReaction {
+  emoji: string;
+  count: number;
+  userReacted?: boolean;
+  adminReacted?: boolean;
+}
+
 /**
  * Adds or removes an emoji reaction on a message.
  * Persists to database and syncs in real-time.
@@ -560,7 +568,7 @@ export async function updateMessageReaction(
   emoji: string,
   action: 'add' | 'remove',
   reactorType: 'user' | 'admin'
-): Promise<{ success: boolean; reactions?: any[] }> {
+): Promise<{ success: boolean; reactions?: WidgetMessageReaction[] }> {
   try {
     const response = await fetch(`${SUPABASE_URL}/functions/v1/update-message-reaction`, {
       method: 'POST',

@@ -17,12 +17,25 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ConditionBuilder } from './ConditionBuilder';
-import { ResponseActionBuilder } from './ResponseActionBuilder';
+import { ResponseActionBuilder, type ResponseAction } from './ResponseActionBuilder';
 
 interface CreateWebhookDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   agentId?: string;
+}
+
+/** Condition rule for webhook triggers */
+interface ConditionRule {
+  field: string;
+  operator: string;
+  value: string;
+}
+
+/** Local state type for webhook conditions */
+interface ConditionsState {
+  rules: ConditionRule[];
+  logic: string;
 }
 
 const AVAILABLE_EVENTS = [
@@ -54,11 +67,11 @@ export const CreateWebhookDialog = ({ open, onOpenChange, agentId }: CreateWebho
   const [customHeaders, setCustomHeaders] = useState<Array<{ key: string; value: string }>>([
     { key: '', value: '' },
   ]);
-  const [conditions, setConditions] = useState<{ rules: any[]; logic: string }>({
+  const [conditions, setConditions] = useState<ConditionsState>({
     rules: [],
     logic: 'AND',
   });
-  const [responseActions, setResponseActions] = useState<any[]>([]);
+  const [responseActions, setResponseActions] = useState<ResponseAction[]>([]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,8 +97,8 @@ export const CreateWebhookDialog = ({ open, onOpenChange, agentId }: CreateWebho
         headers,
         auth_type: authType,
         auth_config: authConfig,
-        conditions: conditions.rules.length > 0 ? conditions : {},
-        response_actions: responseActions.length > 0 ? { actions: responseActions } : {},
+        conditions: (conditions.rules.length > 0 ? conditions : {}) as Record<string, string>,
+        response_actions: (responseActions.length > 0 ? { actions: responseActions } : {}) as Record<string, string>,
         active: true,
       });
 

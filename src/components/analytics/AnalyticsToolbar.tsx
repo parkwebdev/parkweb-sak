@@ -12,6 +12,13 @@ import { PdfIcon, CsvIcon } from './ExportIcons';
 import { useAgents } from '@/hooks/useAgents';
 import { format } from 'date-fns';
 
+/** Analytics filter configuration */
+export interface AnalyticsFilters {
+  agentId: string;
+  leadStatus: string;
+  conversationStatus: string;
+}
+
 interface AnalyticsToolbarProps {
   startDate: Date;
   endDate: Date;
@@ -21,12 +28,8 @@ interface AnalyticsToolbarProps {
   comparisonStartDate?: Date;
   comparisonEndDate?: Date;
   onComparisonDateChange: (start: Date, end: Date) => void;
-  filters: {
-    agentId: string;
-    leadStatus: string;
-    conversationStatus: string;
-  };
-  onFiltersChange: (filters: any) => void;
+  filters: AnalyticsFilters;
+  onFiltersChange: (filters: AnalyticsFilters) => void;
   onRefresh: () => void;
   onExportCSV: () => void;
   onExportPDF: () => void;
