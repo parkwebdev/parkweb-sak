@@ -905,3 +905,22 @@ All hooks are documented with JSDoc comments. Key data hooks:
 | `useAuth` | Authentication with input validation |
 
 See individual hook files in `src/hooks/` for detailed JSDoc documentation.
+
+---
+
+## TypeScript Type Definitions
+
+All shared types are exported from `src/types/`:
+
+| Module | Types | Purpose |
+|--------|-------|---------|
+| `metadata.ts` | `ConversationMetadata`, `MessageMetadata`, `KnowledgeSourceMetadata`, `AgentDeploymentConfig`, `LeadData`, `PlanLimits` | JSONB field type safety |
+| `team.ts` | `TeamMember`, `UserRole`, `AppPermission` | Team management types |
+| `webhooks.ts` | `WebhookConfig`, `WebhookConditions`, `ResponseAction`, `MessageReaction` | Webhook configuration types |
+| `report.ts` | `ReportData`, `ConversationStat`, `LeadStat`, `AgentPerformance`, `UsageMetric`, `VisitorPresenceState`, `TeamProfile`, `ScheduledReport` | Analytics and reporting types |
+| `errors.ts` | `getErrorMessage()`, `hasErrorMessage()`, `hasErrorCode()` | Error handling utilities |
+
+Import types via the barrel export:
+```typescript
+import { ConversationMetadata, ReportData, getErrorMessage } from '@/types';
+```
