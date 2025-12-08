@@ -13,6 +13,7 @@ import {
 } from '@untitledui/icons';
 import { AnimatedList } from '@/components/ui/animated-list';
 import { AnimatedItem } from '@/components/ui/animated-item';
+import { logger } from '@/utils/logger';
 
 interface ActivityItem {
   id: string;
@@ -102,7 +103,7 @@ export const RecentActivity: React.FC = () => {
       items.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
       setActivities(items.slice(0, 5));
     } catch (error) {
-      console.error('Error fetching activity:', error);
+      logger.error('Error fetching activity:', error);
     } finally {
       setLoading(false);
     }

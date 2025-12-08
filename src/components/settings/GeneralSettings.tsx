@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { AnimatedList } from '@/components/ui/animated-list';
 import { AnimatedItem } from '@/components/ui/animated-item';
 import { LoadingState } from '@/components/ui/loading-state';
+import { logger } from '@/utils/logger';
 
 export const GeneralSettings: React.FC = () => {
   const { user } = useAuth();
@@ -43,7 +44,7 @@ export const GeneralSettings: React.FC = () => {
         .single();
 
       if (error && error.code !== 'PGRST116') {
-        console.error('Error fetching preferences:', error);
+        logger.error('Error fetching preferences:', error);
         return;
       }
 
@@ -54,7 +55,7 @@ export const GeneralSettings: React.FC = () => {
         });
       }
     } catch (error) {
-      console.error('Error in fetchPreferences:', error);
+      logger.error('Error in fetchPreferences:', error);
     } finally {
       setLoading(false);
     }
@@ -108,7 +109,7 @@ export const GeneralSettings: React.FC = () => {
         }
 
         if (error) {
-          console.error('Error updating preference:', error);
+          logger.error('Error updating preference:', error);
           // Revert local state on error
           setPreferences({ ...preferences, [key]: prevValue });
           if (key === 'compact_mode') {
@@ -123,7 +124,7 @@ export const GeneralSettings: React.FC = () => {
         // Show saved indicator
         setShowSaved({ ...showSaved, [key]: true });
       } catch (error) {
-        console.error('Error in updatePreference:', error);
+        logger.error('Error in updatePreference:', error);
         // Revert local state on error
         setPreferences({ ...preferences, [key]: prevValue });
         if (key === 'compact_mode') {

@@ -31,6 +31,7 @@ import { DroppableCategoryCard } from './DroppableCategoryCard';
 import { DeleteCategoryDialog } from './DeleteCategoryDialog';
 import { SortableArticleItem } from './SortableArticleItem';
 import type { HelpArticle } from '@/hooks/useEmbeddedChatConfig';
+import { logger } from '@/utils/logger';
 
 interface HelpArticlesManagerProps {
   agentId: string;
@@ -232,7 +233,7 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
       setFormData({ ...formData, featured_image: imageUrl });
       toast.success('Featured image uploaded');
     } catch (error) {
-      console.error('Featured image upload error:', error);
+      logger.error('Featured image upload error:', error);
       toast.error('Failed to upload featured image');
     } finally {
       setFeaturedImageUploading(false);

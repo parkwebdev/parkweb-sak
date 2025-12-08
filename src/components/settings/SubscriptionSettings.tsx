@@ -14,6 +14,7 @@ import { toast } from '@/lib/toast';
 import { AnimatedTableRow } from '@/components/ui/animated-table-row';
 import { LoadingState } from '@/components/ui/loading-state';
 import { Spinner } from '@/components/ui/spinner';
+import { logger } from '@/utils/logger';
 
 type Subscription = Tables<'subscriptions'> & {
   plans?: Tables<'plans'>;
@@ -54,7 +55,7 @@ export const SubscriptionSettings = () => {
         if (error && error.code !== 'PGRST116') throw error;
         setSubscription(data);
       } catch (error) {
-        console.error('Error fetching subscription:', error);
+        logger.error('Error fetching subscription:', error);
       } finally {
         setLoading(false);
       }
@@ -76,7 +77,7 @@ export const SubscriptionSettings = () => {
         setInvoices(data.invoices);
       }
     } catch (error) {
-      console.error('Error fetching invoices:', error);
+      logger.error('Error fetching invoices:', error);
       toast.error('Failed to load billing history');
     } finally {
       setInvoicesLoading(false);

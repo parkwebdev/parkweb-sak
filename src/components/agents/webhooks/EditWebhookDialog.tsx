@@ -18,6 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ConditionBuilder } from './ConditionBuilder';
 import { ResponseActionBuilder } from './ResponseActionBuilder';
 import type { Tables } from '@/integrations/supabase/types';
+import { logger } from '@/utils/logger';
 
 type Webhook = Tables<'webhooks'>;
 
@@ -121,7 +122,7 @@ export const EditWebhookDialog = ({ open, onOpenChange, webhook, onSave }: EditW
       toast.success('Webhook updated successfully');
       onOpenChange(false);
     } catch (error) {
-      console.error('Error updating webhook:', error);
+      logger.error('Error updating webhook:', error);
       toast.error('Failed to update webhook');
     } finally {
       setLoading(false);
