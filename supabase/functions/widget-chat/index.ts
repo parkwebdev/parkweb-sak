@@ -905,7 +905,7 @@ When answering, you can naturally reference the information from the knowledge b
       }
     }
 
-    // Build the initial AI request
+    // Build the initial AI request with all behavior settings
     const aiRequestBody: any = {
       model: agent.model || 'google/gemini-2.5-flash',
       messages: [
@@ -919,6 +919,8 @@ When answering, you can naturally reference the information from the knowledge b
       temperature: agent.temperature || 0.7,
       max_completion_tokens: agent.max_tokens || 2000,
       top_p: deploymentConfig.top_p || 1.0,
+      presence_penalty: deploymentConfig.presence_penalty || 0,
+      frequency_penalty: deploymentConfig.frequency_penalty || 0,
     };
 
     // Add tools if available
