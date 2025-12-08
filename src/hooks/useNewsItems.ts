@@ -79,6 +79,9 @@ export const useNewsItems = (agentId: string) => {
 
   const deleteNewsItem = async (id: string) => {
     try {
+      // Get the news item first to find featured image to clean up
+      const itemToDelete = newsItems.find(item => item.id === id);
+      
       const { error } = await supabase
         .from('news_items')
         .delete()
@@ -86,12 +89,39 @@ export const useNewsItems = (agentId: string) => {
 
       if (error) throw error;
 
+      // Clean up featured image from storage
+      if (itemToDelete?.featured_image_url) {
+        const imagePath = extractStoragePath(itemToDelete.featured_image_url);
+        if (imagePath) {
+          const { error: storageError } = await supabase.storage
+            .from('article-images')
+            .remove([imagePath]);
+          
+          if (storageError) {
+            console.warn('Failed to delete news item image from storage:', storageError);
+          } else {
+            console.log(`Deleted featured image for news item ${id}`);
+          }
+        }
+      }
+
       setNewsItems(newsItems.filter(item => item.id !== id));
       toast.success('News item deleted successfully');
     } catch (error: any) {
       console.error('Error deleting news item:', error);
       toast.error('Failed to delete news item');
       throw error;
+    }
+  };
+
+  // Helper: Extract storage path from a public URL
+  const extractStoragePath = (url: string): string | null => {
+    try {
+      // URL format: https://<project>.supabase.co/storage/v1/object/public/article-images/<path>
+      const match = url.match(/\/article-images\/(.+)$/);
+      return match ? match[1] : null;
+    } catch {
+      return null;
     }
   };
 

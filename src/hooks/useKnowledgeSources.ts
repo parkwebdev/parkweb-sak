@@ -337,8 +337,33 @@ export const useKnowledgeSources = (agentId?: string) => {
 
   const deleteSource = async (sourceId: string) => {
     try {
+      // Find the source to check if it's a sitemap (has children)
+      const sourceToDelete = sources.find(s => s.id === sourceId);
+      const metadata = sourceToDelete?.metadata as Record<string, any> | null;
+      const isSitemap = metadata?.is_sitemap === true;
+
+      // If it's a sitemap, first delete all child sources
+      if (isSitemap) {
+        console.log(`Deleting sitemap children for source ${sourceId}`);
+        const { error: childDeleteError } = await supabase
+          .from('knowledge_sources')
+          .delete()
+          .contains('metadata', { parent_source_id: sourceId });
+        
+        if (childDeleteError) {
+          console.error('Failed to delete sitemap children:', childDeleteError);
+        }
+      }
+
       // Optimistic update - remove from local state immediately
-      setSources((prev) => prev.filter((s) => s.id !== sourceId));
+      setSources((prev) => prev.filter((s) => {
+        // Remove the source itself
+        if (s.id === sourceId) return false;
+        // Also remove any child sources if this is a sitemap
+        const meta = s.metadata as Record<string, any> | null;
+        if (meta?.parent_source_id === sourceId) return false;
+        return true;
+      }));
 
       const { error } = await supabase
         .from('knowledge_sources')
