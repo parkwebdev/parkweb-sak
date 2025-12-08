@@ -3,6 +3,20 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/lib/toast';
 import { logger } from '@/utils/logger';
 
+/**
+ * Hook for managing agent-level API keys with rate limiting.
+ * API keys are hashed before storage and validated server-side.
+ * 
+ * @param {string} agentId - Agent ID to scope API keys
+ * @returns {Object} API key management methods and state
+ * @returns {AgentApiKey[]} apiKeys - List of API keys (without secret)
+ * @returns {boolean} loading - Loading state
+ * @returns {Function} createApiKey - Create a new API key (returns secret once)
+ * @returns {Function} updateApiKey - Update key settings (name, rate limits)
+ * @returns {Function} revokeApiKey - Revoke an API key
+ * @returns {Function} refetch - Manually refresh API keys list
+ */
+
 interface AgentApiKey {
   id: string;
   agent_id: string;

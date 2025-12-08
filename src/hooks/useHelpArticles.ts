@@ -3,6 +3,26 @@ import { supabase } from '@/integrations/supabase/client';
 import type { HelpArticle, HelpCategory } from './useEmbeddedChatConfig';
 import { logger } from '@/utils/logger';
 
+/**
+ * Hook for managing help center articles and categories.
+ * Handles article CRUD, category management, drag-and-drop reordering,
+ * bulk import, and automatic embedding generation for RAG search.
+ * 
+ * @param {string} agentId - Agent ID to scope articles
+ * @returns {Object} Help article management methods and state
+ * @returns {HelpArticle[]} articles - List of help articles
+ * @returns {HelpCategory[]} categories - List of categories
+ * @returns {boolean} loading - Loading state
+ * @returns {Function} addArticle - Create a new article
+ * @returns {Function} updateArticle - Update an existing article
+ * @returns {Function} deleteArticle - Delete an article (cleans up storage images)
+ * @returns {Function} reorderArticles - Update article display order
+ * @returns {Function} addCategory - Create a new category
+ * @returns {Function} updateCategory - Update a category
+ * @returns {Function} removeCategory - Delete a category (with article handling)
+ * @returns {Function} moveArticleToCategory - Move article between categories
+ * @returns {Function} bulkImport - Import multiple articles at once
+ */
 export const useHelpArticles = (agentId: string) => {
   const [articles, setArticles] = useState<HelpArticle[]>([]);
   const [categories, setCategories] = useState<HelpCategory[]>([]);

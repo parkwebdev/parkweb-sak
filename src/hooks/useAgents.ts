@@ -9,6 +9,19 @@ type Agent = Tables<'agents'>;
 type AgentInsert = TablesInsert<'agents'>;
 type AgentUpdate = TablesUpdate<'agents'>;
 
+/**
+ * Hook for managing AI agents.
+ * Provides CRUD operations for agents with real-time updates.
+ * 
+ * @returns {Object} Agent management methods and state
+ * @returns {Agent[]} agents - List of user's agents
+ * @returns {boolean} loading - Loading state
+ * @returns {Function} createAgent - Create a new agent
+ * @returns {Function} updateAgent - Update an existing agent
+ * @returns {Function} deleteAgent - Delete an agent
+ * @returns {Function} updateDeploymentConfig - Update agent deployment settings
+ * @returns {Function} refetch - Manually refresh agents list
+ */
 export const useAgents = () => {
   const { user } = useAuth();
   const [agents, setAgents] = useState<Agent[]>([]);

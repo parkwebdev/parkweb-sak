@@ -8,6 +8,20 @@ type Lead = Tables<'leads'> & {
   conversations?: { id: string; created_at: string };
 };
 
+/**
+ * Hook for managing leads captured from widget contact forms.
+ * Provides CRUD operations with real-time updates and conversation linkage.
+ * 
+ * @returns {Object} Lead management methods and state
+ * @returns {Lead[]} leads - List of user's leads with linked conversations
+ * @returns {boolean} loading - Loading state
+ * @returns {Function} createLead - Create a new lead
+ * @returns {Function} updateLead - Update an existing lead
+ * @returns {Function} deleteLead - Delete a lead (optionally with linked conversation)
+ * @returns {Function} deleteLeads - Bulk delete leads
+ * @returns {Function} getLeadsWithConversations - Check if leads have linked conversations
+ * @returns {Function} refetch - Manually refresh leads list
+ */
 export const useLeads = () => {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);

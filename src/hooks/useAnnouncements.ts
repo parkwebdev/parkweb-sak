@@ -9,6 +9,20 @@ export type Announcement = Tables<'announcements'>;
 export type AnnouncementInsert = TablesInsert<'announcements'>;
 export type AnnouncementUpdate = TablesUpdate<'announcements'>;
 
+/**
+ * Hook for managing widget announcement banners.
+ * Announcements appear as cards in the widget home view.
+ * 
+ * @param {string} agentId - Agent ID to scope announcements
+ * @returns {Object} Announcement management methods and state
+ * @returns {Announcement[]} announcements - List of announcements ordered by index
+ * @returns {boolean} loading - Loading state
+ * @returns {Function} addAnnouncement - Create a new announcement
+ * @returns {Function} updateAnnouncement - Update an existing announcement
+ * @returns {Function} deleteAnnouncement - Delete an announcement (cleans up images)
+ * @returns {Function} reorderAnnouncements - Update display order
+ * @returns {Function} refetch - Manually refresh announcements list
+ */
 export const useAnnouncements = (agentId: string) => {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [loading, setLoading] = useState(true);

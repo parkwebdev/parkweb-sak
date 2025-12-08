@@ -3,6 +3,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/lib/toast';
 import { logger } from '@/utils/logger';
 
+/**
+ * Types and hook for managing embedded chat widget configuration.
+ * Handles all widget appearance, behavior, and content settings.
+ */
+
 export interface CustomField {
   id: string;
   label: string;

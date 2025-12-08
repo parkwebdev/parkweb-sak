@@ -5,6 +5,21 @@ import { supabase } from '@/integrations/supabase/client';
 import { TeamMember, InviteMemberData, UserRole } from '@/types/team';
 import { logger } from '@/utils/logger';
 
+/**
+ * Hook for managing team members and roles.
+ * Handles team invitations, role management, and member removal.
+ * Uses secure RPC functions to prevent email exposure between team members.
+ * 
+ * @returns {Object} Team management methods and state
+ * @returns {TeamMember[]} teamMembers - List of team members with profiles and roles
+ * @returns {boolean} loading - Loading state
+ * @returns {UserRole} currentUserRole - Current user's role
+ * @returns {boolean} canManageRoles - Whether current user can manage roles
+ * @returns {Function} fetchTeamMembers - Refresh team members list
+ * @returns {Function} inviteMember - Send team invitation email
+ * @returns {Function} removeMember - Remove a team member
+ * @returns {Function} updateMemberRole - Update a member's role and permissions
+ */
 export const useTeam = () => {
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [loading, setLoading] = useState(true);

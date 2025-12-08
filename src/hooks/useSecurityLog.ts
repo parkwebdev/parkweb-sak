@@ -11,6 +11,19 @@ interface SecurityLogParams {
   details?: Record<string, any>;
 }
 
+/**
+ * Hook for logging security events.
+ * Uses database RPC function to securely record actions.
+ * Provides type-specific logging helpers for common operations.
+ * 
+ * @returns {Object} Security logging methods
+ * @returns {Function} logSecurityEvent - Generic security event logger
+ * @returns {Function} logAgentEvent - Log agent-related events
+ * @returns {Function} logConversationEvent - Log conversation-related events
+ * @returns {Function} logLeadEvent - Log lead-related events
+ * @returns {Function} logTeamEvent - Log team-related events
+ * @returns {Function} logSettingsEvent - Log settings-related events
+ */
 export const useSecurityLog = () => {
   const { user } = useAuth();
 

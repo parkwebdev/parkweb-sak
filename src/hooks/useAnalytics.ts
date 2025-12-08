@@ -42,6 +42,24 @@ interface AnalyticsFilters {
   conversationStatus: string;
 }
 
+/**
+ * Hook for fetching analytics data with date range and filters.
+ * Provides conversation stats, lead stats, agent performance, and usage metrics.
+ * Subscribes to real-time updates for conversations and leads.
+ * 
+ * @param {Date} startDate - Start of date range
+ * @param {Date} endDate - End of date range
+ * @param {AnalyticsFilters} filters - Filter by agent, lead status, conversation status
+ * @returns {Object} Analytics data and state
+ * @returns {ConversationStats[]} conversationStats - Daily conversation statistics
+ * @returns {LeadStats[]} leadStats - Daily lead statistics by status
+ * @returns {AgentPerformance[]} agentPerformance - Per-agent performance metrics
+ * @returns {UsageMetrics[]} usageMetrics - Daily usage metrics
+ * @returns {any[]} conversations - Raw conversation data for tables
+ * @returns {any[]} leads - Raw lead data for tables
+ * @returns {boolean} loading - Loading state
+ * @returns {Function} refetch - Manually refresh all analytics
+ */
 export const useAnalytics = (
   startDate: Date,
   endDate: Date,
