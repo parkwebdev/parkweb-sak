@@ -18,13 +18,15 @@ interface AgentKnowledgeTabProps {
 type KnowledgeTab = 'knowledge-sources' | 'help-articles';
 
 export const AgentKnowledgeTab = ({ agentId, userId }: AgentKnowledgeTabProps) => {
-  const { sources, loading, deleteSource, reprocessSource, retrainAllSources, isSourceOutdated } = useKnowledgeSources(agentId);
+  const { sources, loading, deleteSource, reprocessSource, retrainAllSources, isSourceOutdated, getChildSources, getParentSources } = useKnowledgeSources(agentId);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<KnowledgeTab>('knowledge-sources');
   const [isRetraining, setIsRetraining] = useState(false);
   const [retrainProgress, setRetrainProgress] = useState({ completed: 0, total: 0 });
 
-  const outdatedCount = sources.filter(isSourceOutdated).length;
+  // Get only parent sources (hide child sources from sitemaps in main list)
+  const parentSources = getParentSources();
+  const outdatedCount = parentSources.filter(isSourceOutdated).length;
 
   const handleRetrainAll = async () => {
     setIsRetraining(true);
@@ -101,22 +103,23 @@ export const AgentKnowledgeTab = ({ agentId, userId }: AgentKnowledgeTabProps) =
             </Button>
           </div>
 
-          {sources.length === 0 ? (
+          {parentSources.length === 0 ? (
             <EmptyState
               icon={<Database01 className="h-5 w-5 text-muted-foreground/50" />}
               title="No knowledge sources configured yet"
-              description="Add documents, URLs, or custom content to enhance your agent's knowledge"
+              description="Add documents, URLs, sitemaps, or custom content to enhance your agent's knowledge"
               action={<Button onClick={() => setAddDialogOpen(true)} size="sm">Add Your First Source</Button>}
             />
           ) : (
             <div className="grid gap-3">
-              {sources.map((source) => (
+              {parentSources.map((source) => (
                 <KnowledgeSourceCard
                   key={source.id}
                   source={source}
                   onDelete={deleteSource}
                   onReprocess={reprocessSource}
                   isOutdated={isSourceOutdated(source)}
+                  childSources={getChildSources(source.id)}
                 />
               ))}
             </div>

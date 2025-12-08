@@ -222,6 +222,57 @@ export const useKnowledgeSources = (agentId?: string) => {
     }
   };
 
+  const addSitemapSource = async (
+    url: string,
+    agentId: string,
+    userId: string
+  ): Promise<string | null> => {
+    try {
+      const { data, error } = await supabase
+        .from('knowledge_sources')
+        .insert({
+          agent_id: agentId,
+          user_id: userId,
+          type: 'url' as KnowledgeType,
+          source: url,
+          status: 'processing',
+          metadata: {
+            is_sitemap: true,
+            added_at: new Date().toISOString(),
+          },
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Optimistic update - add to local state immediately
+      setSources((prev) => [data, ...prev]);
+
+      toast.success('Sitemap added', {
+        description: 'Discovering pages...',
+      });
+
+      // Trigger processing in background (don't await)
+      supabase.functions.invoke('process-knowledge-source', {
+        body: { sourceId: data.id, agentId },
+      }).then(({ error: invokeError }) => {
+        if (invokeError) {
+          console.error('Edge function invocation failed:', invokeError);
+          markSourceAsError(data.id, `Processing failed: ${invokeError.message}`);
+        }
+      });
+
+      return data.id;
+    } catch (error: any) {
+      console.error('Error adding sitemap source:', error);
+      toast.error('Failed to add sitemap', {
+        description: error.message,
+      });
+      return null;
+    }
+  };
+
   const addTextSource = async (
     content: string,
     agentId: string,
@@ -415,16 +466,35 @@ export const useKnowledgeSources = (agentId?: string) => {
     return metadata.embedding_model !== 'nomic-ai/nomic-embed-text-v1.5';
   };
 
+  // Get child sources for a sitemap parent
+  const getChildSources = (parentId: string): KnowledgeSource[] => {
+    return sources.filter(s => {
+      const metadata = s.metadata as Record<string, any> | null;
+      return metadata?.parent_source_id === parentId;
+    });
+  };
+
+  // Get only parent sources (not child sources from sitemaps)
+  const getParentSources = (): KnowledgeSource[] => {
+    return sources.filter(s => {
+      const metadata = s.metadata as Record<string, any> | null;
+      return !metadata?.parent_source_id;
+    });
+  };
+
   return {
     sources,
     loading,
     uploadDocument,
     addUrlSource,
+    addSitemapSource,
     addTextSource,
     deleteSource,
     reprocessSource,
     retrainAllSources,
     isSourceOutdated,
+    getChildSources,
+    getParentSources,
     refetch: fetchSources,
   };
 };

@@ -13,7 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useKnowledgeSources } from '@/hooks/useKnowledgeSources';
 import { usePlanLimits } from '@/hooks/usePlanLimits';
-import { Upload01, Link03, File01, AlertCircle } from '@untitledui/icons';
+import { Upload01, Link03, File01, AlertCircle, Globe01 } from '@untitledui/icons';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface AddKnowledgeDialogProps {
@@ -29,12 +29,13 @@ export const AddKnowledgeDialog: React.FC<AddKnowledgeDialogProps> = ({
   agentId,
   userId,
 }) => {
-  const { uploadDocument, addUrlSource, addTextSource } = useKnowledgeSources(agentId);
+  const { uploadDocument, addUrlSource, addTextSource, addSitemapSource } = useKnowledgeSources(agentId);
   const { canAddKnowledgeSource, showLimitWarning } = usePlanLimits();
   const limitCheck = canAddKnowledgeSource();
   
   const [uploading, setUploading] = useState(false);
   const [url, setUrl] = useState('');
+  const [sitemapUrl, setSitemapUrl] = useState('');
   const [textContent, setTextContent] = useState('');
   const [textName, setTextName] = useState('');
 
@@ -75,6 +76,25 @@ export const AddKnowledgeDialog: React.FC<AddKnowledgeDialogProps> = ({
     }
   };
 
+  const handleSitemapSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!limitCheck.allowed) {
+      showLimitWarning('knowledge sources', limitCheck, 'add');
+      return;
+    }
+    if (!sitemapUrl) return;
+
+    setUploading(true);
+    try {
+      await addSitemapSource(sitemapUrl, agentId, userId);
+      setSitemapUrl('');
+      onOpenChange(false);
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const handleTextSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!textContent) return;
@@ -103,7 +123,7 @@ export const AddKnowledgeDialog: React.FC<AddKnowledgeDialogProps> = ({
         <DialogHeader>
           <DialogTitle>Add Knowledge Source</DialogTitle>
           <DialogDescription>
-            Upload documents, add URLs, or paste content to train your agent
+            Upload documents, add URLs, crawl sitemaps, or paste content to train your agent
           </DialogDescription>
         </DialogHeader>
 
@@ -126,7 +146,7 @@ export const AddKnowledgeDialog: React.FC<AddKnowledgeDialogProps> = ({
         )}
 
         <Tabs defaultValue="upload" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="upload">
               <Upload01 className="h-4 w-4 mr-2" />
               Upload
@@ -134,6 +154,10 @@ export const AddKnowledgeDialog: React.FC<AddKnowledgeDialogProps> = ({
             <TabsTrigger value="url">
               <Link03 className="h-4 w-4 mr-2" />
               URL
+            </TabsTrigger>
+            <TabsTrigger value="sitemap">
+              <Globe01 className="h-4 w-4 mr-2" />
+              Sitemap
             </TabsTrigger>
             <TabsTrigger value="text">
               <File01 className="h-4 w-4 mr-2" />
@@ -180,6 +204,28 @@ export const AddKnowledgeDialog: React.FC<AddKnowledgeDialogProps> = ({
               </div>
               <Button type="submit" disabled={!url} loading={uploading}>
                 Add URL
+              </Button>
+            </form>
+          </TabsContent>
+
+          <TabsContent value="sitemap" className="space-y-4">
+            <form onSubmit={handleSitemapSubmit} className="space-y-4">
+              <div>
+                <Label htmlFor="sitemap-url">Sitemap URL</Label>
+                <Input
+                  id="sitemap-url"
+                  type="url"
+                  placeholder="https://example.com/sitemap.xml"
+                  value={sitemapUrl}
+                  onChange={(e) => setSitemapUrl(e.target.value)}
+                  required
+                />
+                <p className="text-xs text-muted-foreground mt-2">
+                  We'll crawl all pages in your sitemap automatically. Supports sitemap index files with nested sitemaps.
+                </p>
+              </div>
+              <Button type="submit" disabled={!sitemapUrl} loading={uploading}>
+                Crawl Sitemap
               </Button>
             </form>
           </TabsContent>
