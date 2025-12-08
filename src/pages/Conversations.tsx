@@ -17,7 +17,7 @@ import { useConversations } from '@/hooks/useConversations';
 import { useAgents } from '@/hooks/useAgents';
 import { ConversationMetadataPanel } from '@/components/conversations/ConversationMetadataPanel';
 import type { Tables } from '@/integrations/supabase/types';
-import type { ConversationMetadata, MessageMetadata } from '@/types/metadata';
+import type { ConversationMetadata, MessageMetadata, MessageReaction } from '@/types/metadata';
 import { formatDistanceToNow } from 'date-fns';
 import { downloadFile } from '@/lib/file-download';
 import { TakeoverDialog } from '@/components/conversations/TakeoverDialog';
@@ -711,9 +711,9 @@ const Conversations: React.FC = () => {
                   <div className="space-y-3 max-w-4xl mx-auto">
                     {messages.map((message, msgIndex) => {
                       const isUser = message.role === 'user';
-                      const msgMetadata = message.metadata as any;
-                      const isHumanSent = msgMetadata?.sender_type === 'human';
-                      const reactions = msgMetadata?.reactions as Array<{ emoji: string; count: number; userReacted?: boolean; adminReacted?: boolean }> | undefined;
+                      const msgMetadata = (message.metadata || {}) as MessageMetadata;
+                      const isHumanSent = msgMetadata.sender_type === 'human';
+                      const reactions = msgMetadata.reactions;
                       
                       const handleAddReaction = async (emoji: string) => {
                         // Check if admin already reacted with this emoji
@@ -723,9 +723,9 @@ const Conversations: React.FC = () => {
                         // Optimistic update
                         const updatedMessages = messages.map(m => {
                           if (m.id !== message.id) return m;
-                          const meta = (m.metadata as any) || {};
+                          const meta = (m.metadata || {}) as MessageMetadata;
                           const currentReactions = meta.reactions || [];
-                          const reactionIdx = currentReactions.findIndex((r: any) => r.emoji === emoji);
+                          const reactionIdx = currentReactions.findIndex((r: MessageReaction) => r.emoji === emoji);
                           
                           let newReactions;
                           if (reactionIdx >= 0) {
@@ -735,9 +735,9 @@ const Conversations: React.FC = () => {
                             newReactions = [...currentReactions, { emoji, count: 1, userReacted: false, adminReacted: true }];
                           }
                           
-                          return { ...m, metadata: { ...meta, reactions: newReactions } };
+                          return { ...m, metadata: { ...meta, reactions: newReactions } as unknown as Message['metadata'] };
                         });
-                        setMessages(updatedMessages);
+                        setMessages(updatedMessages as Message[]);
                         
                         // Persist to database
                         await updateMessageReaction(message.id, emoji, 'add', 'admin');
@@ -750,9 +750,9 @@ const Conversations: React.FC = () => {
                         // Optimistic update
                         const updatedMessages = messages.map(m => {
                           if (m.id !== message.id) return m;
-                          const meta = (m.metadata as any) || {};
+                          const meta = (m.metadata || {}) as MessageMetadata;
                           const currentReactions = meta.reactions || [];
-                          const reactionIdx = currentReactions.findIndex((r: any) => r.emoji === emoji);
+                          const reactionIdx = currentReactions.findIndex((r: MessageReaction) => r.emoji === emoji);
                           
                           if (reactionIdx < 0) return m;
                           
@@ -762,9 +762,9 @@ const Conversations: React.FC = () => {
                             newReactions = newReactions.filter((_, i) => i !== reactionIdx);
                           }
                           
-                          return { ...m, metadata: { ...meta, reactions: newReactions } };
+                          return { ...m, metadata: { ...meta, reactions: newReactions } as unknown as Message['metadata'] };
                         });
-                        setMessages(updatedMessages);
+                        setMessages(updatedMessages as Message[]);
                         
                         // Persist to database
                         await updateMessageReaction(message.id, emoji, 'remove', 'admin');
@@ -774,14 +774,14 @@ const Conversations: React.FC = () => {
                       
                       // Detect if this is a continuation of previous message (same sender)
                       const prevMessage = msgIndex > 0 ? messages[msgIndex - 1] : null;
-                      const prevMsgMetadata = prevMessage?.metadata as { sender_type?: string } | null;
+                      const prevMsgMetadata = (prevMessage?.metadata || null) as MessageMetadata | null;
                       const isContinuation = prevMessage && 
                         prevMessage.role === message.role &&
                         (message.role === 'user' || prevMsgMetadata?.sender_type === msgMetadata?.sender_type);
                       
                       // Check if next message is from same sender (to know if we should show metadata)
                       const nextMessage = msgIndex < messages.length - 1 ? messages[msgIndex + 1] : null;
-                      const nextMsgMetadata = nextMessage?.metadata as { sender_type?: string } | null;
+                      const nextMsgMetadata = (nextMessage?.metadata || null) as MessageMetadata | null;
                       const isLastInGroup = !nextMessage || 
                         nextMessage.role !== message.role ||
                         (message.role !== 'user' && nextMsgMetadata?.sender_type !== msgMetadata?.sender_type);
@@ -818,14 +818,14 @@ const Conversations: React.FC = () => {
                               {!isContinuation && (
                                 <div className={`flex items-center gap-1.5 text-[11px] text-muted-foreground mb-1 ${isUser ? 'justify-end mr-1' : 'ml-1'}`}>
                                   <span className="font-medium">
-                                    {isUser ? ((selectedConversation?.metadata as any)?.lead_name || 'Visitor') : (isHumanSent ? formatSenderName(msgMetadata?.sender_name) : 'AI Agent')}
+                                    {isUser ? (((selectedConversation?.metadata || {}) as ConversationMetadata).lead_name || 'Visitor') : (isHumanSent ? formatSenderName(msgMetadata.sender_name) : 'AI Agent')}
                                   </span>
                                   <span>•</span>
                                   <span>{formatShortTime(new Date(message.created_at))}</span>
                                   {/* Status badges for human messages */}
                                   {isHumanSent && (
                                     <>
-                                      {msgMetadata?.error || msgMetadata?.failed ? (
+                                      {(msgMetadata as Record<string, unknown>)?.error || (msgMetadata as Record<string, unknown>)?.failed ? (
                                         <Tooltip>
                                           <TooltipTrigger asChild>
                                             <span className="text-destructive inline-flex items-center">

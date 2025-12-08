@@ -167,6 +167,10 @@ export interface MessageMetadata {
   pending?: boolean;
   /** Timestamp when message was read by admin */
   read_at?: string;
+  /** Error message if message failed to send */
+  error?: string;
+  /** Whether message failed to send */
+  failed?: boolean;
 }
 
 /**

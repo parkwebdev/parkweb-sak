@@ -4,6 +4,11 @@ import { PlayCircle as Play, PauseCircle as Pause } from '@untitledui/icons';
 import { formatDuration } from '@/lib/audio-recording';
 import { logger } from '@/utils/logger';
 
+/** Window interface extended with webkit AudioContext for Safari compatibility */
+interface WindowWithWebkit extends Window {
+  webkitAudioContext?: typeof AudioContext;
+}
+
 interface AudioPlayerProps {
   audioUrl: string;
   primaryColor: string;
@@ -70,7 +75,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl, primaryColor
     if (!audioRef.current || audioContextRef.current) return;
 
     try {
-      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      audioContextRef.current = new (window.AudioContext || (window as WindowWithWebkit).webkitAudioContext!)();
       analyserRef.current = audioContextRef.current.createAnalyser();
       analyserRef.current.fftSize = 128;
       analyserRef.current.smoothingTimeConstant = 0.8;
@@ -87,7 +92,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ audioUrl, primaryColor
     if (!audioRef.current) return;
 
     try {
-      const tempContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const tempContext = new (window.AudioContext || (window as WindowWithWebkit).webkitAudioContext!)();
       const response = await fetch(audioUrl);
       const arrayBuffer = await response.arrayBuffer();
       const audioBuffer = await tempContext.decodeAudioData(arrayBuffer);
