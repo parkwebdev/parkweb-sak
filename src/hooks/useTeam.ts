@@ -4,6 +4,7 @@ import { toast } from '@/lib/toast';
 import { supabase } from '@/integrations/supabase/client';
 import { TeamMember, InviteMemberData, UserRole, AppPermission } from '@/types/team';
 import { logger } from '@/utils/logger';
+import type { TeamProfile } from '@/types/report';
 
 /**
  * Hook for managing team members and roles.
@@ -91,7 +92,8 @@ export const useTeam = () => {
       }
 
       // Fetch roles for all team members
-      const userIds = (profilesData || []).map((p: any) => p.user_id);
+      const profiles = (profilesData || []) as TeamProfile[];
+      const userIds = profiles.map((p) => p.user_id);
       const { data: rolesData, error: rolesError } = await supabase
         .from('user_roles')
         .select('user_id, role, permissions')
@@ -102,7 +104,7 @@ export const useTeam = () => {
       }
 
       // Combine profile and role data
-      const membersWithRoles = (profilesData || []).map((profile: any) => {
+      const membersWithRoles = profiles.map((profile) => {
         const roleData = rolesData?.find(r => r.user_id === profile.user_id);
         return {
           ...profile,

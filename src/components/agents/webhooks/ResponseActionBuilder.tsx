@@ -48,7 +48,7 @@ export const ResponseActionBuilder = ({ actions, onChange }: ResponseActionBuild
     onChange(newActions);
   };
 
-  const updateActionCondition = (index: number, key: string, value: any) => {
+  const updateActionCondition = (index: number, key: keyof ResponseAction['condition'], value: number | string) => {
     const newActions = [...actions];
     newActions[index] = {
       ...newActions[index],

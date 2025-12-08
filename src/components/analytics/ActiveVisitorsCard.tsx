@@ -6,6 +6,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { Users01, Globe01 } from '@untitledui/icons';
 import { supabase } from '@/integrations/supabase/client';
 import type { RealtimeChannel } from '@supabase/supabase-js';
+import type { VisitorPresenceState } from '@/types/report';
 
 interface ActiveVisitor {
   visitorId: string;
@@ -61,7 +62,8 @@ export const ActiveVisitorsCard: React.FC<ActiveVisitorsCardProps> = ({ agentIds
           const state = channel.presenceState();
           const visitors: ActiveVisitor[] = [];
           
-          Object.values(state).flat().forEach((presence: any) => {
+          Object.values(state).flat().forEach((rawPresence) => {
+            const presence = rawPresence as unknown as VisitorPresenceState;
             if (presence.isWidgetOpen) {
               visitors.push({
                 visitorId: presence.visitorId,

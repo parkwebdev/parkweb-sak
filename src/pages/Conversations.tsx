@@ -18,6 +18,7 @@ import { useAgents } from '@/hooks/useAgents';
 import { ConversationMetadataPanel } from '@/components/conversations/ConversationMetadataPanel';
 import type { Tables } from '@/integrations/supabase/types';
 import type { ConversationMetadata, MessageMetadata, MessageReaction } from '@/types/metadata';
+import type { VisitorPresenceState } from '@/types/report';
 import { formatDistanceToNow } from 'date-fns';
 import { downloadFile } from '@/lib/file-download';
 import { TakeoverDialog } from '@/components/conversations/TakeoverDialog';
@@ -147,7 +148,8 @@ const Conversations: React.FC = () => {
           const state = channel.presenceState();
           const visitors: Record<string, { currentPage: string; visitorId: string }> = {};
           
-          Object.values(state).flat().forEach((presence: any) => {
+          Object.values(state).flat().forEach((rawPresence) => {
+            const presence = rawPresence as unknown as VisitorPresenceState;
             if (presence.isWidgetOpen && presence.visitorId) {
               visitors[presence.visitorId] = {
                 visitorId: presence.visitorId,
@@ -160,7 +162,7 @@ const Conversations: React.FC = () => {
             const newState = { ...prev };
             // Remove visitors from this agent that are no longer present
             Object.keys(newState).forEach(vid => {
-              const wasFromThisAgent = Object.values(state).flat().some((p: any) => p.visitorId === vid);
+              const wasFromThisAgent = Object.values(state).flat().some((p) => (p as unknown as VisitorPresenceState).visitorId === vid);
               if (!wasFromThisAgent) return;
               if (!visitors[vid]) delete newState[vid];
             });

@@ -10,6 +10,7 @@ import { useScheduledReports } from '@/hooks/useScheduledReports';
 import { CreateScheduledReportDialog } from './CreateScheduledReportDialog';
 import { SavedIndicator } from '@/components/settings/SavedIndicator';
 import { format } from 'date-fns';
+
 import {
   Table,
   TableBody,
@@ -25,15 +26,16 @@ export const ScheduledReportsManager = () => {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [savedReportIds, setSavedReportIds] = useState<Set<string>>(new Set());
 
-  const getFrequencyDisplay = (report: any) => {
+  const getFrequencyDisplay = (report: typeof reports[number]) => {
     const time = report.time_of_day?.substring(0, 5) || '09:00';
     
     switch (report.frequency) {
       case 'daily':
         return `Daily at ${time}`;
-      case 'weekly':
+      case 'weekly': {
         const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-        return `Weekly on ${days[report.day_of_week]} at ${time}`;
+        return `Weekly on ${days[report.day_of_week ?? 0]} at ${time}`;
+      }
       case 'monthly':
         return `Monthly on day ${report.day_of_month} at ${time}`;
       default:

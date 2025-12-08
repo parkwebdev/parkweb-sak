@@ -61,7 +61,7 @@ export const GeneralSettings: React.FC = () => {
     }
   };
 
-  const updatePreference = async (key: keyof typeof preferences, value: any) => {
+  const updatePreference = async (key: keyof typeof preferences, value: boolean | string) => {
     if (!user) return;
 
     // Update local state immediately for responsive UI
@@ -71,7 +71,7 @@ export const GeneralSettings: React.FC = () => {
 
     // Apply compact mode immediately to body
     if (key === 'compact_mode') {
-      document.body.classList.toggle('compact-mode', value);
+      document.body.classList.toggle('compact-mode', value as boolean);
     }
 
     // Clear existing timer for this field
