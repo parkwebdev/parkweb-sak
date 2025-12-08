@@ -709,9 +709,14 @@ serve(async (req) => {
       );
     }
 
-    // Save the user message to database
+    // Check if this is a greeting request (special message to trigger AI greeting)
+    const isGreetingRequest = messages && messages.length === 1 && 
+      messages[0].role === 'user' && 
+      messages[0].content === '__GREETING_REQUEST__';
+    
+    // Save the user message to database (skip for greeting requests)
     let userMessageId: string | undefined;
-    if (messages && messages.length > 0) {
+    if (messages && messages.length > 0 && !isGreetingRequest) {
       const lastUserMessage = messages[messages.length - 1];
       if (lastUserMessage.role === 'user') {
         const { data: userMsg, error: msgError } = await supabase.from('messages').insert({
@@ -809,8 +814,8 @@ serve(async (req) => {
     let queryHash: string | null = null;
     let maxSimilarity = 0;
 
-    // RAG: Search knowledge base if there are user messages
-    if (messages && messages.length > 0) {
+    // RAG: Search knowledge base if there are user messages (skip for greeting requests)
+    if (messages && messages.length > 0 && !isGreetingRequest) {
       // Get the last user message for RAG search
       const lastUserMessage = messages.filter((m: any) => m.role === 'user').pop();
       
@@ -985,6 +990,25 @@ Use this information to personalize your responses when appropriate (e.g., addre
       systemPrompt = systemPrompt + userContextSection;
     }
 
+    // For greeting requests, add a special instruction and use empty messages
+    let messagesToSend = messages;
+    if (isGreetingRequest) {
+      console.log('Handling greeting request - generating personalized welcome');
+      systemPrompt = systemPrompt + `
+
+GREETING REQUEST:
+This is the start of a new conversation. The user has just filled out a contact form and is ready to chat.
+Generate a warm, personalized greeting using the user information provided above (if available).
+- If you know their name, address them personally
+- If you know their company or interests from custom fields, briefly acknowledge it
+- Keep it concise (1-2 sentences) and end with an invitation to ask questions
+- Be natural and friendly, not overly formal
+- Do NOT start with "Hello!" or "Hi there!" - be more creative and personal`;
+      
+      // Replace the greeting request with a user message asking for a greeting
+      messagesToSend = [{ role: 'user', content: 'Please greet me and ask how you can help.' }];
+    }
+
     // Build the initial AI request with all behavior settings
     const aiRequestBody: any = {
       model: agent.model || 'google/gemini-2.5-flash',
@@ -993,7 +1017,7 @@ Use this information to personalize your responses when appropriate (e.g., addre
           role: 'system',
           content: systemPrompt,
         },
-        ...messages,
+        ...messagesToSend,
       ],
       stream: false, // Non-streaming for easier message persistence
       temperature: agent.temperature || 0.7,

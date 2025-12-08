@@ -142,18 +142,6 @@ export const EmbedSettingsPanel = ({ config, onConfigChange, embedCode }: EmbedS
           <AccordionTrigger className="text-sm font-medium">Messages & Content</AccordionTrigger>
           <AccordionContent className="space-y-4 pt-4">
             <div className="space-y-2">
-              <Label htmlFor="greeting" className="text-sm">Greeting Message</Label>
-              <Textarea
-                id="greeting"
-                value={config.greeting}
-                onChange={(e) => onConfigChange({ greeting: e.target.value })}
-                placeholder="Hi! How can I help you today?"
-                rows={2}
-                className="text-sm"
-              />
-            </div>
-
-            <div className="space-y-2">
               <Label htmlFor="placeholder" className="text-sm">Input Placeholder</Label>
               <Input
                 id="placeholder"

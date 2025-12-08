@@ -142,7 +142,6 @@ Deno.serve(async (req) => {
       welcomeSubtitle: embeddedChatConfig.welcomeSubtitle || 'How can we help you today?',
       
       // Messages
-      greeting: embeddedChatConfig.greeting || 'Hello! How can I help you today?',
       placeholder: embeddedChatConfig.placeholder || 'Type your message...',
       showReadReceipts: embeddedChatConfig.showReadReceipts || false,
       

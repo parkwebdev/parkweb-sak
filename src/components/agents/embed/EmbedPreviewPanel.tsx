@@ -38,7 +38,6 @@ export const EmbedPreviewPanel = ({ config }: EmbedPreviewPanelProps) => {
     welcomeEmoji: config.welcomeEmoji,
     showTeamAvatars: false,
     teamAvatarUrls: [],
-    greeting: config.greeting,
     placeholder: config.placeholder,
     animation: config.animation,
     buttonAnimation: config.animation,

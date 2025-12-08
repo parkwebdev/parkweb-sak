@@ -22,7 +22,6 @@ interface ContactFormProps {
   subtitle?: string;
   customFields: CustomField[];
   formLoadTime: number;
-  greeting: string;
   onSubmit: (userData: ChatUser, conversationId?: string) => void;
 }
 
@@ -33,7 +32,6 @@ export const ContactForm = ({
   subtitle,
   customFields,
   formLoadTime,
-  greeting,
   onSubmit,
 }: ContactFormProps) => {
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});

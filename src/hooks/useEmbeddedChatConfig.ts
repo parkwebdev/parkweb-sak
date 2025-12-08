@@ -41,7 +41,6 @@ export interface EmbeddedChatConfig {
   userId: string;
   primaryColor: string;
   position: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
-  greeting: string;
   placeholder: string;
   showBranding: boolean;
   avatarUrl?: string;
@@ -91,7 +90,6 @@ export const useEmbeddedChatConfig = (agentId: string) => {
     userId: '',
     primaryColor: '#000000',
     position: 'bottom-right',
-    greeting: 'Hi! How can I help you today?',
     placeholder: 'Type your message...',
     showBranding: true,
     agentName: 'AI Assistant',
