@@ -237,6 +237,9 @@ export const useHelpArticles = (agentId: string) => {
 
   const deleteArticle = async (id: string) => {
     try {
+      // Get the article first to find images to clean up
+      const articleToDelete = articles.find(a => a.id === id);
+      
       const { error } = await supabase
         .from('help_articles')
         .delete()
@@ -244,11 +247,67 @@ export const useHelpArticles = (agentId: string) => {
 
       if (error) throw error;
 
+      // Clean up images from storage
+      if (articleToDelete) {
+        const imagesToDelete: string[] = [];
+        
+        // Add featured image if exists
+        if (articleToDelete.featured_image) {
+          const featuredPath = extractStoragePath(articleToDelete.featured_image);
+          if (featuredPath) imagesToDelete.push(featuredPath);
+        }
+        
+        // Extract inline images from content
+        const inlineImages = extractInlineImages(articleToDelete.content);
+        imagesToDelete.push(...inlineImages);
+        
+        // Delete all images from storage
+        if (imagesToDelete.length > 0) {
+          const { error: storageError } = await supabase.storage
+            .from('article-images')
+            .remove(imagesToDelete);
+          
+          if (storageError) {
+            logger.warn('Failed to delete article images from storage', storageError);
+          } else {
+            logger.info(`Deleted ${imagesToDelete.length} images for article ${id}`);
+          }
+        }
+      }
+
       setArticles(articles.filter(a => a.id !== id));
     } catch (error) {
       logger.error('Error deleting article', error);
       throw error;
     }
+  };
+
+  // Helper: Extract storage path from a public URL
+  const extractStoragePath = (url: string): string | null => {
+    try {
+      // URL format: https://<project>.supabase.co/storage/v1/object/public/article-images/<path>
+      const match = url.match(/\/article-images\/(.+)$/);
+      return match ? match[1] : null;
+    } catch {
+      return null;
+    }
+  };
+
+  // Helper: Extract inline image paths from HTML content
+  const extractInlineImages = (content: string): string[] => {
+    const paths: string[] = [];
+    const imgRegex = /<img[^>]+src="([^"]+)"/g;
+    let match;
+    
+    while ((match = imgRegex.exec(content)) !== null) {
+      const src = match[1];
+      if (src.includes('article-images')) {
+        const path = extractStoragePath(src);
+        if (path) paths.push(path);
+      }
+    }
+    
+    return paths;
   };
 
   const reorderArticles = async (reorderedArticles: HelpArticle[]) => {

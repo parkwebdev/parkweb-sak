@@ -219,9 +219,9 @@ async function searchKnowledge(
   queryEmbedding: number[],
   matchThreshold: number = 0.7,
   matchCount: number = 5
-): Promise<{ content: string; source: string; type: string; similarity: number; chunkIndex?: number }[]> {
+): Promise<{ content: string; source: string; type: string; similarity: number; chunkIndex?: number; sourceUrl?: string }[]> {
   const embeddingVector = `[${queryEmbedding.join(',')}]`;
-  const results: { content: string; source: string; type: string; similarity: number; chunkIndex?: number }[] = [];
+  const results: { content: string; source: string; type: string; similarity: number; chunkIndex?: number; sourceUrl?: string }[] = [];
 
   // Try new chunk-level search first
   const { data: chunkData, error: chunkError } = await supabase.rpc('search_knowledge_chunks', {
@@ -233,13 +233,29 @@ async function searchKnowledge(
 
   if (!chunkError && chunkData && chunkData.length > 0) {
     console.log(`Found ${chunkData.length} relevant chunks via chunk-level search`);
-    results.push(...chunkData.map((chunk: any) => ({
-      content: chunk.content,
-      source: chunk.source_name,
-      type: chunk.source_type,
-      similarity: chunk.similarity,
-      chunkIndex: chunk.chunk_index,
-    })));
+    
+    // Get source URLs for the chunks
+    const sourceIds = [...new Set(chunkData.map((c: any) => c.source_id))];
+    const { data: sourceData } = await supabase
+      .from('knowledge_sources')
+      .select('id, source, type')
+      .in('id', sourceIds);
+    
+    const sourceMap = new Map(sourceData?.map((s: any) => [s.id, s]) || []);
+    
+    results.push(...chunkData.map((chunk: any) => {
+      const sourceInfo = sourceMap.get(chunk.source_id);
+      // Include the source URL for URL-type sources
+      const sourceUrl = sourceInfo?.type === 'url' ? sourceInfo.source : undefined;
+      return {
+        content: chunk.content,
+        source: chunk.source_name,
+        type: chunk.source_type,
+        similarity: chunk.similarity,
+        chunkIndex: chunk.chunk_index,
+        sourceUrl,
+      };
+    }));
   } else {
     // Fallback to legacy document-level search for backwards compatibility
     console.log('Falling back to document-level search');
@@ -256,6 +272,8 @@ async function searchKnowledge(
         source: d.source,
         type: d.type,
         similarity: d.similarity,
+        // For URL sources, the source IS the URL
+        sourceUrl: d.type === 'url' ? d.source : undefined,
       })));
     }
   }
@@ -282,6 +300,7 @@ async function searchKnowledge(
         source: `Help: ${article.title}${article.category_name ? ` (${article.category_name})` : ''}`,
         type: 'help_article',
         similarity: article.similarity,
+        // Help articles don't have external URLs
       })));
     }
   } catch (helpSearchError) {
@@ -878,6 +897,7 @@ serve(async (req) => {
               source: result.source,
               type: result.type,
               similarity: result.similarity,
+              url: result.sourceUrl, // Include source URL for AI to reference
             }));
 
             // Secondary filter: exclude very low relevance matches
@@ -887,7 +907,8 @@ serve(async (req) => {
               const knowledgeContext = relevantChunks
                 .map((result: any, index: number) => {
                   const chunkInfo = result.chunkIndex !== undefined ? ` - Section ${result.chunkIndex + 1}` : '';
-                  return `[Source ${index + 1}: ${result.source}${chunkInfo} (${result.type}, relevance: ${(result.similarity * 100).toFixed(0)}%)]
+                  const urlInfo = result.sourceUrl ? ` | URL: ${result.sourceUrl}` : '';
+                  return `[Source ${index + 1}: ${result.source}${chunkInfo}${urlInfo} (${result.type}, relevance: ${(result.similarity * 100).toFixed(0)}%)]
 ${result.content}`;
                 })
                 .join('\n\n---\n\n');
@@ -901,7 +922,10 @@ ${knowledgeContext}
 
 ---
 
-When answering, you can naturally reference the information from the knowledge base. If you use specific information from the sources, you can mention where it came from (e.g., "According to our documentation..." or "Based on the information provided...").`;
+IMPORTANT GUIDELINES FOR RESPONSES:
+1. When referencing information from sources, you can naturally cite them (e.g., "According to our documentation..." or "Based on our help article...").
+2. **SHARE LINKS**: When a source has a URL and the information is directly relevant to the user's question, include the link in your response so they can learn more. Format links naturally in your response (e.g., "You can find more details here: [link]" or include the URL directly). Links you share will display with rich previews for the user.
+3. If you use specific information from a source with a URL, consider sharing that link so the user can explore further.`;
             }
           }
         } catch (ragError) {

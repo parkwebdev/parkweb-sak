@@ -210,10 +210,11 @@ export const KnowledgeSourceCard: React.FC<KnowledgeSourceCardProps> = ({
             </div>
           )}
           
-          <div>
-            <span className="text-muted-foreground">Preview:</span>
-            <p className="text-xs mt-1 text-muted-foreground">{getContentPreview()}</p>
-          </div>
+          {/* Sitemap info - show page count and status */}
+          {isSitemap && (
+            <p className="text-xs text-muted-foreground">{getContentPreview()}</p>
+          )}
+          
           <div className="flex items-center justify-between text-xs text-muted-foreground">
             <div className="flex items-center gap-3">
               <span>Added {formatDistanceToNow(new Date(source.created_at), { addSuffix: true })}</span>
