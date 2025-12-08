@@ -90,6 +90,9 @@ export interface EmbeddedChatConfig {
   // Help Articles
   helpArticles: HelpArticle[];
   helpCategories: HelpCategory[];
+  
+  // AI Behavior
+  enableQuickReplies: boolean;
 }
 
 export const useEmbeddedChatConfig = (agentId: string) => {
@@ -160,6 +163,9 @@ export const useEmbeddedChatConfig = (agentId: string) => {
     // Help Articles
     helpArticles: [],
     helpCategories: [],
+    
+    // AI Behavior
+    enableQuickReplies: true,
   });
 
   const [config, setConfig] = useState<EmbeddedChatConfig>(getDefaultConfig());
@@ -242,6 +248,8 @@ export const useEmbeddedChatConfig = (agentId: string) => {
           deployment_config: {
             embedded_chat_enabled: true,
             embedded_chat: configForStorage,
+            // Map camelCase to snake_case for backend compatibility
+            enable_quick_replies: configForStorage.enableQuickReplies,
           } as unknown as Json,
         })
         .eq('id', agentId);
