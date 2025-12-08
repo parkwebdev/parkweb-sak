@@ -158,6 +158,156 @@ async function generateEmbeddingsBatch(
   return embeddings;
 }
 
+// Check if URL is a sitemap
+function isSitemapUrl(url: string): boolean {
+  const lowerUrl = url.toLowerCase();
+  return lowerUrl.endsWith('.xml') || 
+         lowerUrl.includes('sitemap') ||
+         lowerUrl.endsWith('/sitemap');
+}
+
+// Parse sitemap XML and extract all URLs
+function parseSitemapXml(xml: string): string[] {
+  const urls: string[] = [];
+  
+  // Extract URLs from <loc> tags
+  const locMatches = xml.match(/<loc>(.*?)<\/loc>/gi) || [];
+  for (const match of locMatches) {
+    const url = match.replace(/<\/?loc>/gi, '').trim();
+    if (url && url.startsWith('http')) {
+      urls.push(url);
+    }
+  }
+  
+  return urls;
+}
+
+// Check if XML content is a sitemap index (contains other sitemaps)
+function isSitemapIndex(xml: string): boolean {
+  return xml.includes('<sitemapindex') || xml.includes('<sitemap>');
+}
+
+// Extract sitemap URLs from a sitemap index
+function extractSitemapUrls(xml: string): string[] {
+  const sitemapUrls: string[] = [];
+  
+  // Match <sitemap><loc>...</loc></sitemap> patterns
+  const sitemapBlocks = xml.match(/<sitemap>[\s\S]*?<\/sitemap>/gi) || [];
+  for (const block of sitemapBlocks) {
+    const locMatch = block.match(/<loc>(.*?)<\/loc>/i);
+    if (locMatch && locMatch[1]) {
+      sitemapUrls.push(locMatch[1].trim());
+    }
+  }
+  
+  return sitemapUrls;
+}
+
+// Process a sitemap URL and create child sources
+async function processSitemap(
+  supabase: any,
+  sourceId: string,
+  agentId: string,
+  userId: string,
+  sitemapUrl: string
+): Promise<{ urlCount: number; sitemapCount: number }> {
+  console.log('Processing sitemap:', sitemapUrl);
+  
+  const response = await fetch(sitemapUrl, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (compatible; ChatPad/1.0; +https://chatpad.ai)',
+    },
+  });
+  
+  if (!response.ok) {
+    throw new Error(`Failed to fetch sitemap: ${response.status} ${response.statusText}`);
+  }
+  
+  const xml = await response.text();
+  console.log(`Sitemap XML fetched: ${xml.length} characters`);
+  
+  let allUrls: string[] = [];
+  let sitemapCount = 0;
+  
+  // Check if this is a sitemap index
+  if (isSitemapIndex(xml)) {
+    console.log('Detected sitemap index, extracting child sitemaps...');
+    const childSitemaps = extractSitemapUrls(xml);
+    sitemapCount = childSitemaps.length;
+    console.log(`Found ${sitemapCount} child sitemaps`);
+    
+    // Fetch each child sitemap and extract URLs
+    for (const childSitemapUrl of childSitemaps) {
+      try {
+        console.log('Fetching child sitemap:', childSitemapUrl);
+        const childResponse = await fetch(childSitemapUrl, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (compatible; ChatPad/1.0; +https://chatpad.ai)',
+          },
+        });
+        
+        if (childResponse.ok) {
+          const childXml = await childResponse.text();
+          const childUrls = parseSitemapXml(childXml);
+          console.log(`Found ${childUrls.length} URLs in child sitemap`);
+          allUrls.push(...childUrls);
+        }
+        
+        // Small delay between sitemap fetches
+        await new Promise(resolve => setTimeout(resolve, 100));
+      } catch (error) {
+        console.error(`Failed to fetch child sitemap ${childSitemapUrl}:`, error);
+      }
+    }
+  } else {
+    // Regular sitemap - just extract URLs
+    allUrls = parseSitemapXml(xml);
+  }
+  
+  console.log(`Total URLs found in sitemap: ${allUrls.length}`);
+  
+  // Filter out sitemap URLs from the list (we only want page URLs)
+  const pageUrls = allUrls.filter(url => !isSitemapUrl(url));
+  console.log(`Page URLs (excluding sitemaps): ${pageUrls.length}`);
+  
+  // Create child knowledge sources for each URL
+  const batchId = crypto.randomUUID();
+  const childSources = pageUrls.map(url => ({
+    agent_id: agentId,
+    user_id: userId,
+    type: 'url',
+    source: url,
+    status: 'pending',
+    metadata: {
+      parent_source_id: sourceId,
+      batch_id: batchId,
+      added_at: new Date().toISOString(),
+    },
+  }));
+  
+  // Insert in batches of 50 to avoid payload limits
+  const BATCH_SIZE = 50;
+  let insertedCount = 0;
+  
+  for (let i = 0; i < childSources.length; i += BATCH_SIZE) {
+    const batch = childSources.slice(i, i + BATCH_SIZE);
+    const { data, error } = await supabase
+      .from('knowledge_sources')
+      .insert(batch)
+      .select('id');
+    
+    if (error) {
+      console.error(`Failed to insert batch ${i / BATCH_SIZE + 1}:`, error);
+    } else {
+      insertedCount += data?.length || 0;
+    }
+  }
+  
+  console.log(`Created ${insertedCount} child knowledge sources`);
+  
+  return { urlCount: insertedCount, sitemapCount };
+}
+
 // Fetch URL content with Readability for clean HTML extraction
 async function fetchUrlContent(url: string): Promise<string> {
   console.log('Fetching URL content:', url);
@@ -228,6 +378,9 @@ async function fetchUrlContent(url: string): Promise<string> {
         .replace(/<[^>]+>/g, ' ')
         .replace(/\s+/g, ' ')
         .trim();
+    } else if (contentType.includes('text/xml') || contentType.includes('application/xml')) {
+      // Return raw XML for sitemap processing
+      return await response.text();
     } else if (contentType.includes('text/')) {
       return await response.text();
     } else {
@@ -278,6 +431,54 @@ Deno.serve(async (req) => {
     }
 
     console.log('Source type:', source.type, '| Source:', source.source?.substring(0, 100));
+
+    // Check if this is a sitemap URL
+    if (source.type === 'url' && isSitemapUrl(source.source)) {
+      console.log('Detected sitemap URL, processing as sitemap...');
+      
+      const { urlCount, sitemapCount } = await processSitemap(
+        supabase,
+        sourceId,
+        source.agent_id,
+        source.user_id,
+        source.source
+      );
+      
+      // Update the sitemap source with metadata
+      const { error: updateError } = await supabase
+        .from('knowledge_sources')
+        .update({
+          status: 'ready',
+          content: `Sitemap processed. Found ${urlCount} page URLs${sitemapCount > 0 ? ` across ${sitemapCount} child sitemaps` : ''}.`,
+          metadata: {
+            ...((source.metadata as any) || {}),
+            processed_at: new Date().toISOString(),
+            is_sitemap: true,
+            urls_found: urlCount,
+            child_sitemaps: sitemapCount,
+          },
+        })
+        .eq('id', sourceId);
+
+      if (updateError) {
+        throw updateError;
+      }
+
+      console.log(`Sitemap processed successfully: ${urlCount} URLs queued for processing`);
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          sourceId,
+          isSitemap: true,
+          urlsFound: urlCount,
+          childSitemaps: sitemapCount,
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
 
     let content = source.content || '';
 
