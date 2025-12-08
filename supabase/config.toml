@@ -80,3 +80,7 @@ verify_jwt = false
 
 [functions.embed-help-article]
 verify_jwt = true
+
+[functions.cleanup-orphaned-sources]
+verify_jwt = false
+schedule = "0 4 * * *"
