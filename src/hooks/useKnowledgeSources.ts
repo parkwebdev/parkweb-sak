@@ -531,6 +531,10 @@ export const useKnowledgeSources = (agentId?: string) => {
   const isSourceOutdated = (source: KnowledgeSource): boolean => {
     const metadata = source.metadata as Record<string, any> | null;
     if (!metadata) return true;
+    
+    // Sitemap parents don't have embeddings themselves, so they can't be "outdated"
+    if (metadata.is_sitemap === true) return false;
+    
     return metadata.embedding_model !== 'text-embedding-3-small';
   };
 

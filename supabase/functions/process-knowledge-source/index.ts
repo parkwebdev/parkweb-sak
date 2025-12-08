@@ -400,6 +400,56 @@ async function syncUrlsFound(supabase: any, parentSourceId: string): Promise<num
   return count || 0;
 }
 
+// Mark stalled processing sources as errors (stuck for > 5 minutes)
+async function markStalledSourcesAsError(
+  supabase: any,
+  batchId: string
+): Promise<number> {
+  const STALLED_THRESHOLD_MINUTES = 5;
+  const cutoffTime = new Date(Date.now() - STALLED_THRESHOLD_MINUTES * 60 * 1000).toISOString();
+  
+  // Find sources that have been "processing" for too long
+  const { data: stalledSources, error: fetchError } = await supabase
+    .from('knowledge_sources')
+    .select('id, source')
+    .eq('status', 'processing')
+    .contains('metadata', { batch_id: batchId })
+    .lt('updated_at', cutoffTime);
+
+  if (fetchError || !stalledSources || stalledSources.length === 0) {
+    return 0;
+  }
+
+  console.log(`Found ${stalledSources.length} stalled sources, marking as error`);
+
+  for (const source of stalledSources) {
+    // Fetch existing metadata to preserve it
+    const { data: currentSource } = await supabase
+      .from('knowledge_sources')
+      .select('metadata')
+      .eq('id', source.id)
+      .single();
+
+    const existingMetadata = (currentSource?.metadata as Record<string, unknown>) || {};
+
+    await supabase
+      .from('knowledge_sources')
+      .update({
+        status: 'error',
+        metadata: {
+          ...existingMetadata,
+          error: `Processing timed out after ${STALLED_THRESHOLD_MINUTES} minutes`,
+          failed_at: new Date().toISOString(),
+        },
+      })
+      .eq('id', source.id);
+
+    console.log(`Marked stalled source as error: ${source.source.substring(0, 60)}...`);
+  }
+
+  return stalledSources.length;
+}
+
 // Process pending child sources in small batches with self-chaining
 async function processBatchAndContinue(
   supabase: any,
@@ -415,6 +465,12 @@ async function processBatchAndContinue(
   // Set batch context for beforeunload handler
   currentBatchContext = { parentSourceId, batchId, agentId };
 
+  // First, check for and mark any stalled processing sources as errors
+  const stalledCount = await markStalledSourcesAsError(supabase, batchId);
+  if (stalledCount > 0) {
+    console.log(`Recovered ${stalledCount} stalled sources by marking as error`);
+  }
+
   // Fetch existing parent metadata
   const { data: parentSource } = await supabase
     .from('knowledge_sources')
@@ -425,7 +481,7 @@ async function processBatchAndContinue(
   let parentMetadata = (parentSource?.metadata as Record<string, unknown>) || {};
 
   let processed = 0;
-  let errors = 0;
+  let errors = stalledCount; // Count stalled sources as errors
   let urlsProcessedThisBatch = 0;
 
   // Process URLs until time limit or batch limit reached
@@ -457,35 +513,59 @@ async function processBatchAndContinue(
     }
 
     if (!pendingSources || pendingSources.length === 0) {
+      // Check if there are still processing sources (not stalled yet)
+      const { count: processingCount } = await supabase
+        .from('knowledge_sources')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'processing')
+        .contains('metadata', { batch_id: batchId });
+
+      if (processingCount && processingCount > 0) {
+        console.log(`No pending sources, but ${processingCount} still processing - will check again next batch`);
+        break;
+      }
+
       // All done!
-      console.log('No more pending sources - batch complete');
+      console.log('No more pending or processing sources - batch complete');
       
       // Sync urls_found and mark complete
       const finalChildCount = await syncUrlsFound(supabase, parentSourceId);
       
-      // Get final counts from current progress
-      const processedCount = (parentMetadata.processed_count as number || 0) + processed;
-      const errorCount = (parentMetadata.error_count as number || 0) + errors;
+      // Get actual counts from database for accuracy
+      const { count: readyCount } = await supabase
+        .from('knowledge_sources')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'ready')
+        .contains('metadata', { parent_source_id: parentSourceId });
+
+      const { count: errorCount } = await supabase
+        .from('knowledge_sources')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'error')
+        .contains('metadata', { parent_source_id: parentSourceId });
+
+      const finalProcessedCount = readyCount || 0;
+      const finalErrorCount = errorCount || 0;
       
       await supabase
         .from('knowledge_sources')
         .update({
           status: 'ready',
-          content: `Sitemap processed. ${processedCount} pages indexed successfully${errorCount > 0 ? `, ${errorCount} failed` : ''}.`,
+          content: `Sitemap processed. ${finalProcessedCount} pages indexed successfully${finalErrorCount > 0 ? `, ${finalErrorCount} failed` : ''}.`,
           metadata: {
             ...parentMetadata,
             is_sitemap: true,
             batch_id: batchId,
             urls_found: finalChildCount,
-            processed_count: processedCount,
-            error_count: errorCount,
+            processed_count: finalProcessedCount,
+            error_count: finalErrorCount,
             remaining_count: 0,
             completed_at: new Date().toISOString(),
           },
         })
         .eq('id', parentSourceId);
 
-      console.log(`Batch processing complete: ${processedCount} processed, ${errorCount} errors`);
+      console.log(`Batch processing complete: ${finalProcessedCount} processed, ${finalErrorCount} errors`);
       currentBatchContext = null;
       return;
     }
