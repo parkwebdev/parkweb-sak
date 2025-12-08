@@ -478,7 +478,7 @@ export async function fetchConversationMessages(conversationId: string): Promise
   id: string;
   role: string;
   content: string;
-  metadata: any;
+  metadata: Record<string, unknown> | null;
   created_at: string;
 }>> {
   try {
@@ -604,8 +604,8 @@ export async function updateMessageReaction(
  */
 export function subscribeToMessages(
   conversationId: string,
-  onMessage: (message: { id: string; role: string; content: string; metadata: any; created_at: string }) => void,
-  onMessageUpdate?: (message: { id: string; metadata: any }) => void
+  onMessage: (message: { id: string; role: string; content: string; metadata: Record<string, unknown> | null; created_at: string }) => void,
+  onMessageUpdate?: (message: { id: string; metadata: Record<string, unknown> | null }) => void
 ): RealtimeChannel {
   console.log('[Widget] Subscribing to messages for conversation:', conversationId);
   
@@ -621,7 +621,7 @@ export function subscribeToMessages(
       },
       (payload) => {
         console.log('[Widget] New message received:', payload);
-        const newMessage = payload.new as any;
+        const newMessage = payload.new as { id: string; role: string; content: string; metadata: Record<string, unknown> | null; created_at: string };
         // Only notify for assistant messages (from human or AI)
         if (newMessage.role === 'assistant') {
           onMessage({
@@ -644,7 +644,7 @@ export function subscribeToMessages(
       },
       (payload) => {
         console.log('[Widget] Message updated:', payload);
-        const updatedMessage = payload.new as any;
+        const updatedMessage = payload.new as { id: string; metadata: Record<string, unknown> | null };
         if (onMessageUpdate) {
           onMessageUpdate({
             id: updatedMessage.id,
@@ -712,7 +712,7 @@ export function subscribeToConversationStatus(
       },
       (payload) => {
         console.log('[Widget] Conversation status changed:', payload);
-        const newStatus = (payload.new as any).status;
+        const newStatus = (payload.new as { status: 'active' | 'human_takeover' | 'closed' }).status;
         if (newStatus) {
           onStatusChange(newStatus);
         }

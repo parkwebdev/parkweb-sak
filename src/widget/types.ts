@@ -109,3 +109,31 @@ export interface ChatWidgetProps {
   containedPreview?: boolean;
   isLoading?: boolean; // When true, show skeleton placeholders for dynamic content
 }
+
+/** Simple config with only agentId for lazy loading */
+export interface SimpleWidgetConfig {
+  agentId: string;
+  position?: string;
+  primaryColor?: string;
+}
+
+/** Message metadata stored in messages.metadata for widget context */
+export interface WidgetMessageMetadata {
+  files?: Array<{ name: string; url: string; type: string; size: number }>;
+  reactions?: Array<{ emoji: string; count: number; userReacted: boolean; adminReacted?: boolean }>;
+  sender_type?: 'human' | 'ai';
+  sender_name?: string;
+  sender_avatar?: string;
+  read_at?: string;
+  link_previews?: Array<{
+    url: string;
+    title?: string;
+    description?: string;
+    image?: string;
+    siteName?: string;
+    favicon?: string;
+    domain: string;
+  }>;
+  pending?: boolean;
+  source?: string;
+}

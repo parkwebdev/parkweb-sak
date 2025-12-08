@@ -26,7 +26,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { fetchConversationMessages, markMessagesRead } from '../api';
 import { isValidUUID } from '../utils';
-import type { Message, ChatUser } from '../types';
+import type { Message, ChatUser, WidgetMessageMetadata } from '../types';
 
 /** Options for the useConversations hook */
 interface UseConversationsOptions {
@@ -130,8 +130,8 @@ export function useConversations(options: UseConversationsOptions) {
         
         if (dbMessages.length > 0) {
           const formattedMessages: Message[] = dbMessages.map(msg => {
-            const metadata = msg.metadata as any;
-            const files = metadata?.files;
+            const metadata = (msg.metadata || {}) as WidgetMessageMetadata;
+            const files = metadata.files;
             return {
               id: msg.id,
               role: msg.role as 'user' | 'assistant',

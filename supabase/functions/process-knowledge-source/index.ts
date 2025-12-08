@@ -299,7 +299,7 @@ async function processUrlSource(
       .eq('id', sourceId)
       .single();
 
-    const existingMetadata = (currentSource?.metadata as Record<string, unknown>) || {};
+    const existingMetadata: Record<string, unknown> = (currentSource?.metadata as Record<string, unknown>) || {};
 
     // Update source status to ready, preserving existing metadata
     await supabase
@@ -330,7 +330,7 @@ async function processUrlSource(
       .eq('id', sourceId)
       .single();
 
-    const existingMetadata = (currentSource?.metadata as Record<string, unknown>) || {};
+    const existingMetadata: Record<string, unknown> = (currentSource?.metadata as Record<string, unknown>) || {};
 
     // Update source status to error, preserving existing metadata
     await supabase
@@ -430,7 +430,7 @@ async function markStalledSourcesAsError(
       .eq('id', source.id)
       .single();
 
-    const existingMetadata = (currentSource?.metadata as Record<string, unknown>) || {};
+    const existingMetadata: Record<string, unknown> = (currentSource?.metadata as Record<string, unknown>) || {};
 
     await supabase
       .from('knowledge_sources')
@@ -478,7 +478,7 @@ async function processBatchAndContinue(
     .eq('id', parentSourceId)
     .single();
 
-  let parentMetadata = (parentSource?.metadata as Record<string, unknown>) || {};
+  let parentMetadata: Record<string, unknown> = (parentSource?.metadata as Record<string, unknown>) || {};
 
   let processed = 0;
   let errors = stalledCount; // Count stalled sources as errors

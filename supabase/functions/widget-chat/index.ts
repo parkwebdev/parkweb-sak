@@ -505,7 +505,7 @@ serve(async (req) => {
 
     if (agentError) throw agentError;
 
-    const deploymentConfig = (agent.deployment_config as any) || {};
+    const deploymentConfig = (agent.deployment_config || {}) as { embedded_chat?: Record<string, unknown> };
 
     // Fetch enabled custom tools for this agent
     const { data: agentTools, error: toolsError } = await supabase
@@ -762,8 +762,8 @@ serve(async (req) => {
     let maxApiCalls = 1000;
     
     if (subscription?.plans) {
-      const plan = subscription.plans as any;
-      const limits = plan.limits as any;
+      const plan = subscription.plans as { limits?: { max_api_calls_per_month?: number } };
+      const limits = plan.limits;
       maxApiCalls = limits?.max_api_calls_per_month || 1000;
     }
 

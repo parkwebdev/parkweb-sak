@@ -95,8 +95,8 @@ Deno.serve(async (req) => {
       console.error('News items fetch error:', newsError);
     }
 
-    const deploymentConfig = (agent.deployment_config as any) || {};
-    const embeddedChatConfig = deploymentConfig.embedded_chat || {};
+    const deploymentConfig = (agent.deployment_config || {}) as { embedded_chat?: Record<string, unknown> };
+    const embeddedChatConfig = (deploymentConfig.embedded_chat || {}) as Record<string, unknown>;
     const enableNewsTab = agent.enable_news_tab || embeddedChatConfig.enableNewsTab || false;
 
     // Transform quick actions to match widget format
