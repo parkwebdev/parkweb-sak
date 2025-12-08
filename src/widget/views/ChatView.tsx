@@ -138,19 +138,11 @@ export const ChatView = ({
             subtitle={config.contactFormSubtitle}
             customFields={config.customFields}
             formLoadTime={formLoadTime}
-            greeting={config.greeting}
             onSubmit={onFormSubmit}
           />
         )}
         
-        {/* Greeting for users who skip the form */}
-        {!chatUser && !config.enableContactForm && messages.length === 0 && (
-          <div className="flex items-start">
-            <div className="bg-muted rounded-lg p-3 max-w-[80%]">
-              <p className="text-sm whitespace-pre-wrap break-words">{config.greeting}</p>
-            </div>
-          </div>
-        )}
+        {/* AI greeting will be triggered when user sends first message or widget opens */}
 
         {/* Messages */}
         {messages.map((msg, idx) => {

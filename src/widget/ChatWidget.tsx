@@ -188,18 +188,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     chatUser,
   });
 
-  // Update greeting when config changes in preview mode
-  useEffect(() => {
-    if (previewMode && config && messages.length > 0) {
-      const firstMsg = messages[0];
-      if (firstMsg && firstMsg.role === 'assistant') {
-        setMessages(prev => [
-          { ...firstMsg, content: config.greeting },
-          ...prev.slice(1)
-        ]);
-      }
-    }
-  }, [config?.greeting, previewMode]);
+  // Preview mode greeting removed - AI generates personalized greetings now
 
   // Scroll to bottom when file attachment opens
   useEffect(() => {
@@ -543,27 +532,69 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     chunksRef.current = [];
   };
 
-  const handleFormSubmit = (userData: ChatUser, conversationId?: string) => {
+  const handleFormSubmit = async (userData: ChatUser, conversationId?: string) => {
     localStorage.setItem(`chatpad_user_${config.agentId}`, JSON.stringify(userData));
     setChatUser(userData);
     
-    // Set greeting after form submission
-    setMessages([{ 
-      role: 'assistant', 
-      content: config.greeting, 
-      read: true, 
-      timestamp: new Date(), 
-      type: 'text', 
-      reactions: [] 
-    }]);
+    // Clear messages and set up for AI greeting
+    setMessages([]);
     
     // CRITICAL: Mark conversation as fetched BEFORE setting activeConversationId
-    // This prevents the useEffect from triggering a DB fetch that overwrites the greeting
+    // This prevents the useEffect from triggering a DB fetch that overwrites messages
     if (conversationId) {
       markConversationFetched(conversationId);
     }
     
     setActiveConversationId(conversationId || 'new');
+    
+    // Trigger AI to generate personalized greeting using lead data
+    setIsTyping(true);
+    try {
+      const response = await sendChatMessage(
+        config.agentId,
+        conversationId || 'new',
+        [{ role: 'user', content: '__GREETING_REQUEST__' }],
+        userData.leadId,
+        pageVisits.length > 0 ? pageVisits : undefined,
+        referrerJourney || undefined,
+        visitorId
+      );
+      
+      if (response.conversationId && response.conversationId !== conversationId) {
+        markConversationFetched(response.conversationId);
+        setActiveConversationId(response.conversationId);
+        
+        const updatedUser = { ...userData, conversationId: response.conversationId };
+        setChatUser(updatedUser);
+        localStorage.setItem(`chatpad_user_${config.agentId}`, JSON.stringify(updatedUser));
+      }
+      
+      if (response.response) {
+        setMessages([{ 
+          id: response.assistantMessageId,
+          role: 'assistant', 
+          content: response.response, 
+          read: true, 
+          timestamp: new Date(), 
+          type: 'text', 
+          reactions: [],
+          linkPreviews: response.linkPreviews,
+        }]);
+      }
+    } catch (error) {
+      console.error('Error getting AI greeting:', error);
+      // Fallback to a simple greeting if AI fails
+      setMessages([{ 
+        role: 'assistant', 
+        content: `Welcome! How can I help you today?`, 
+        read: true, 
+        timestamp: new Date(), 
+        type: 'text', 
+        reactions: [] 
+      }]);
+    } finally {
+      setIsTyping(false);
+    }
   };
 
   // Loading state

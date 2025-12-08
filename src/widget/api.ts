@@ -34,8 +34,7 @@ export interface WidgetConfig {
   showTeamAvatars: boolean;
   teamAvatarUrls: string[];
   
-  // Greetings and messages
-  greeting: string;
+  // Messages
   placeholder: string;
   
   // Widget button
