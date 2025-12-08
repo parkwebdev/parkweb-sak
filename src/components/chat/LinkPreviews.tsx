@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { LinkPreviewCard, LinkPreviewData } from './LinkPreviewCard';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -17,25 +17,41 @@ interface LinkPreviewsProps {
 export function LinkPreviews({ content, compact = false, cachedPreviews }: LinkPreviewsProps) {
   const [previews, setPreviews] = useState<(LinkPreviewData | null)[]>([]);
   const [loading, setLoading] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const fetchedRef = useRef(false);
+  const carouselRef = useRef<HTMLDivElement>(null);
 
   // Extract unique URLs from content
-  const urls = Array.from(new Set(content.match(URL_REGEX) || [])).slice(0, 3); // Max 3 previews
+  const urls = Array.from(new Set(content.match(URL_REGEX) || [])).slice(0, 5); // Max 5 previews
+
+  // Get valid previews from cached or fetched data
+  const getValidPreviews = useCallback((previewList: (LinkPreviewData | null)[]): LinkPreviewData[] => {
+    return previewList.filter((p): p is LinkPreviewData => p !== null && (!!p.title || !!p.videoType));
+  }, []);
+
+  // Handle scroll to update current index
+  const handleScroll = useCallback(() => {
+    if (!carouselRef.current) return;
+    const scrollLeft = carouselRef.current.scrollLeft;
+    const cardWidth = carouselRef.current.offsetWidth;
+    const newIndex = Math.round(scrollLeft / cardWidth);
+    setCurrentIndex(newIndex);
+  }, []);
+
+  // Scroll to specific index
+  const scrollToIndex = useCallback((index: number) => {
+    if (!carouselRef.current) return;
+    const cardWidth = carouselRef.current.offsetWidth;
+    carouselRef.current.scrollTo({
+      left: cardWidth * index,
+      behavior: 'smooth'
+    });
+    setCurrentIndex(index);
+  }, []);
 
   // If we have cached previews from server, use them directly
-  if (cachedPreviews && cachedPreviews.length > 0) {
-    const validCached = cachedPreviews.filter(p => p && (p.title || p.videoType));
-    if (validCached.length > 0) {
-      return (
-        <div className="space-y-2">
-          {validCached.map((preview, i) => (
-            <LinkPreviewCard key={i} data={preview} compact={compact} />
-          ))}
-        </div>
-      );
-    }
-  }
-
+  const validCached = cachedPreviews ? getValidPreviews(cachedPreviews) : [];
+  
   useEffect(() => {
     // Skip client-side fetching if we have cached previews
     if (cachedPreviews && cachedPreviews.length > 0) return;
@@ -80,30 +96,59 @@ export function LinkPreviews({ content, compact = false, cachedPreviews }: LinkP
 
   // Don't render anything if no URLs or all failed
   if (urls.length === 0) return null;
-  
-  const validPreviews = previews.filter((p): p is LinkPreviewData => p !== null && (!!p.title || !!p.videoType));
+
+  // Use cached previews if available, otherwise use fetched previews
+  const displayPreviews = validCached.length > 0 ? validCached : getValidPreviews(previews);
   
   if (loading) {
     return (
-      <div className="mt-2 space-y-2">
-        {urls.slice(0, 1).map((url, i) => (
-          <div key={i} className="rounded-lg border border-border bg-muted/30 p-3 animate-pulse">
-            <div className="h-3 bg-muted rounded w-24 mb-2" />
-            <div className="h-4 bg-muted rounded w-3/4 mb-1" />
-            <div className="h-3 bg-muted rounded w-full" />
-          </div>
-        ))}
+      <div className="space-y-2">
+        <div className="rounded-lg border border-border bg-muted/30 p-3 animate-pulse">
+          <div className="h-3 bg-muted rounded w-24 mb-2" />
+          <div className="h-4 bg-muted rounded w-3/4 mb-1" />
+          <div className="h-3 bg-muted rounded w-full" />
+        </div>
       </div>
     );
   }
 
-  if (validPreviews.length === 0) return null;
+  if (displayPreviews.length === 0) return null;
 
+  // Single preview: show as-is without carousel
+  if (displayPreviews.length === 1) {
+    return <LinkPreviewCard data={displayPreviews[0]} compact={compact} />;
+  }
+
+  // Multiple previews: carousel mode
   return (
-    <div className="space-y-2">
-      {validPreviews.map((preview, i) => (
-        <LinkPreviewCard key={i} data={preview} compact={compact} />
-      ))}
+    <div className="relative">
+      {/* Carousel container with scroll snap */}
+      <div 
+        ref={carouselRef}
+        onScroll={handleScroll}
+        className="flex overflow-x-auto snap-x snap-mandatory gap-2 pb-1"
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+      >
+        {displayPreviews.map((preview, i) => (
+          <div key={i} className="snap-center shrink-0 w-full">
+            <LinkPreviewCard data={preview} compact={compact} />
+          </div>
+        ))}
+      </div>
+      
+      {/* Pagination dots */}
+      <div className="flex justify-center gap-1.5 mt-2">
+        {displayPreviews.map((_, i) => (
+          <button
+            key={i}
+            onClick={() => scrollToIndex(i)}
+            className={`w-1.5 h-1.5 rounded-full transition-colors ${
+              i === currentIndex ? 'bg-primary' : 'bg-muted-foreground/30'
+            }`}
+            aria-label={`Go to preview ${i + 1}`}
+          />
+        ))}
+      </div>
     </div>
   );
 }
