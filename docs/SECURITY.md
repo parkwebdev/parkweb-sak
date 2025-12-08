@@ -18,12 +18,84 @@ Security implementation details for the ChatPad platform.
 
 ChatPad implements defense-in-depth security with multiple layers:
 
-1. **Authentication**: Supabase Auth with JWT tokens
-2. **Authorization**: Row Level Security (RLS) policies
-3. **Input Validation**: Server-side validation and sanitization
-4. **XSS Protection**: DOMPurify sanitization
-5. **Spam Protection**: Honeypot, timing, and rate limiting
-6. **Audit Logging**: Security event tracking
+1. **Content Security Policy**: CSP headers to prevent XSS and injection attacks
+2. **Authentication**: Supabase Auth with JWT tokens
+3. **Authorization**: Row Level Security (RLS) policies
+4. **Input Validation**: Server-side validation and sanitization
+5. **XSS Protection**: DOMPurify sanitization
+6. **Spam Protection**: Honeypot, timing, and rate limiting
+7. **Audit Logging**: Security event tracking
+
+---
+
+## Content Security Policy (CSP)
+
+ChatPad implements CSP via meta tags with different policies for the admin app and embeddable widget:
+
+### Main Application (index.html)
+
+Strict policy with clickjacking protection:
+
+```
+default-src 'self';
+script-src 'self' 'unsafe-inline';
+style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+font-src 'self' https://fonts.gstatic.com;
+img-src 'self' data: blob: https://mvaimvwdukpgvkifkfpa.supabase.co;
+connect-src 'self' https://mvaimvwdukpgvkifkfpa.supabase.co wss://mvaimvwdukpgvkifkfpa.supabase.co;
+media-src 'self';
+frame-src 'self';
+frame-ancestors 'self';
+object-src 'none';
+base-uri 'self';
+form-action 'self';
+upgrade-insecure-requests;
+```
+
+### Embeddable Widget (widget.html)
+
+Permissive policy for embedding on customer sites:
+
+```
+default-src 'self';
+script-src 'self' 'unsafe-inline';
+style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+font-src 'self' https://fonts.gstatic.com;
+img-src 'self' data: blob: https://mvaimvwdukpgvkifkfpa.supabase.co https://*;
+connect-src 'self' https://mvaimvwdukpgvkifkfpa.supabase.co wss://mvaimvwdukpgvkifkfpa.supabase.co;
+media-src 'self' blob:;
+frame-src 'self';
+object-src 'none';
+base-uri 'self';
+upgrade-insecure-requests;
+```
+
+**Key Differences:**
+- Widget omits `frame-ancestors` to allow embedding anywhere
+- Widget allows `https://*` for `img-src` to display link preview images from external sites
+- Widget allows `blob:` for `media-src` to support voice recording playback
+
+### CSP Protection Benefits
+
+| Protection | Directive |
+|------------|-----------|
+| Block external malicious scripts | `script-src 'self'` |
+| Prevent data exfiltration | `connect-src` whitelist |
+| Block malicious iframes | `frame-src 'self'` |
+| Prevent clickjacking (admin) | `frame-ancestors 'self'` |
+| Block plugin exploits | `object-src 'none'` |
+| Prevent base tag hijacking | `base-uri 'self'` |
+| Block form data theft | `form-action 'self'` |
+| Enforce HTTPS | `upgrade-insecure-requests` |
+
+### Why 'unsafe-inline' is Required
+
+The `'unsafe-inline'` directive is necessary for:
+- **Vite**: Uses inline module scripts for dynamic imports
+- **Tailwind/Radix**: Inject inline styles for dynamic components  
+- **Motion/Framer**: Apply inline transforms for animations
+
+Without server-side rendering for nonces/hashes, this is the practical approach while still providing significant protection through source whitelisting.
 
 ---
 

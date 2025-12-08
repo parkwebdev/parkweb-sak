@@ -3,6 +3,21 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Content Security Policy - Permissive policy for embeddable widget -->
+    <!-- Note: No frame-ancestors directive so widget can be embedded on any site -->
+    <meta http-equiv="Content-Security-Policy" content="
+      default-src 'self';
+      script-src 'self' 'unsafe-inline';
+      style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+      font-src 'self' https://fonts.gstatic.com;
+      img-src 'self' data: blob: https://mvaimvwdukpgvkifkfpa.supabase.co https://*;
+      connect-src 'self' https://mvaimvwdukpgvkifkfpa.supabase.co wss://mvaimvwdukpgvkifkfpa.supabase.co;
+      media-src 'self' blob:;
+      frame-src 'self';
+      object-src 'none';
+      base-uri 'self';
+      upgrade-insecure-requests;
+    ">
     <title>ChatPad Widget</title>
     <!-- Optimized font loading: only 3 weights instead of 9 -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
