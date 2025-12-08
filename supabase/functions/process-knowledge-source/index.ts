@@ -346,7 +346,16 @@ async function processPendingBatch(
     .eq('id', parentSourceId)
     .single();
 
-  const parentMetadata = (parentSource?.metadata as Record<string, unknown>) || {};
+  let parentMetadata = (parentSource?.metadata as Record<string, unknown>) || {};
+
+  // Helper function to sync urls_found with actual child count
+  async function syncUrlsFound(): Promise<number> {
+    const { count } = await supabase
+      .from('knowledge_sources')
+      .select('id', { count: 'exact', head: true })
+      .contains('metadata', { parent_source_id: parentSourceId });
+    return count || 0;
+  }
 
   let processed = 0;
   let errors = 0;
@@ -399,20 +408,24 @@ async function processPendingBatch(
 
     const remaining = countError ? 0 : (remainingCount || 0);
     
+    // Sync urls_found with actual child count on each update
+    const actualChildCount = await syncUrlsFound();
+    
     // Update parent source with progress, preserving existing metadata
+    parentMetadata = {
+      ...parentMetadata,
+      is_sitemap: true,
+      batch_id: batchId,
+      urls_found: actualChildCount, // Always sync with actual count
+      processed_count: processed,
+      error_count: errors,
+      remaining_count: remaining,
+      last_progress_at: new Date().toISOString(),
+    };
+    
     await supabase
       .from('knowledge_sources')
-      .update({
-        metadata: {
-          ...parentMetadata,
-          is_sitemap: true,
-          batch_id: batchId,
-          processed_count: processed,
-          error_count: errors,
-          remaining_count: remaining,
-          last_progress_at: new Date().toISOString(),
-        },
-      })
+      .update({ metadata: parentMetadata })
       .eq('id', parentSourceId);
 
     console.log(`Progress: ${processed} processed, ${errors} errors, ${remaining} remaining`);
@@ -426,6 +439,9 @@ async function processPendingBatch(
     }
   }
 
+  // Final sync of urls_found before completion
+  const finalChildCount = await syncUrlsFound();
+
   // Final update to parent source, preserving existing metadata
   await supabase
     .from('knowledge_sources')
@@ -435,6 +451,7 @@ async function processPendingBatch(
         ...parentMetadata,
         is_sitemap: true,
         batch_id: batchId,
+        urls_found: finalChildCount,
         processed_count: processed,
         error_count: errors,
         remaining_count: 0,
@@ -949,13 +966,24 @@ Deno.serve(async (req) => {
     console.error('Error processing knowledge source:', error);
     
     // Update status to error if we have sourceId and supabase client
+    // IMPORTANT: Preserve existing metadata when marking as error
     if (sourceId && supabase) {
       try {
+        // Fetch existing metadata first
+        const { data: currentSource } = await supabase
+          .from('knowledge_sources')
+          .select('metadata')
+          .eq('id', sourceId)
+          .single();
+        
+        const existingMetadata = (currentSource?.metadata as Record<string, unknown>) || {};
+        
         await supabase
           .from('knowledge_sources')
           .update({
             status: 'error',
             metadata: {
+              ...existingMetadata,
               error: error instanceof Error ? error.message : 'Unknown error',
               failed_at: new Date().toISOString(),
             },

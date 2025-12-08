@@ -83,11 +83,21 @@ export const useKnowledgeSources = (agentId?: string) => {
 
   const markSourceAsError = async (sourceId: string, errorMessage: string) => {
     try {
+      // Fetch existing metadata first to preserve it
+      const { data: currentSource } = await supabase
+        .from('knowledge_sources')
+        .select('metadata')
+        .eq('id', sourceId)
+        .single();
+      
+      const existingMetadata = (currentSource?.metadata as Record<string, unknown>) || {};
+      
       await supabase
         .from('knowledge_sources')
         .update({
           status: 'error',
           metadata: {
+            ...existingMetadata,
             error: errorMessage,
             failed_at: new Date().toISOString(),
           },
