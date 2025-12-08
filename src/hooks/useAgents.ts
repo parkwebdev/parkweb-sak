@@ -3,7 +3,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/lib/toast';
 import { logger } from '@/utils/logger';
-import type { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
+import type { Tables, TablesInsert, TablesUpdate, Json } from '@/integrations/supabase/types';
+import type { AgentDeploymentConfig } from '@/types/metadata';
 
 type Agent = Tables<'agents'>;
 type AgentInsert = TablesInsert<'agents'>;
@@ -114,8 +115,8 @@ export const useAgents = () => {
     }
   };
 
-  const updateDeploymentConfig = async (id: string, config: any) => {
-    return updateAgent(id, { deployment_config: config });
+  const updateDeploymentConfig = async (id: string, config: AgentDeploymentConfig) => {
+    return updateAgent(id, { deployment_config: config as unknown as Json });
   };
 
   return {

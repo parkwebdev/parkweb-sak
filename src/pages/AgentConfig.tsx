@@ -36,9 +36,9 @@ const AgentConfig: React.FC<AgentConfigProps> = ({ onMenuClick }) => {
     }
   }, [agentId, agents]);
 
-  const handleUpdate = async (id: string, updates: Partial<Agent>) => {
-    if (!agent) return;
-    await updateAgent(id, updates);
+  const handleUpdate = async (id: string, updates: Partial<Agent>): Promise<Agent | null> => {
+    if (!agent) return null;
+    return await updateAgent(id, updates);
   };
 
   const handleSave = async () => {

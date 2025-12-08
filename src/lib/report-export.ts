@@ -12,6 +12,13 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { format } from 'date-fns';
 import { ReportConfig } from '@/components/analytics/ReportBuilder';
+import type { 
+  ReportData, 
+  ConversationStat, 
+  LeadStat, 
+  AgentPerformance, 
+  UsageMetric 
+} from '@/types/report';
 
 /**
  * Generates a CSV report from analytics data and triggers download.
@@ -38,12 +45,12 @@ import { ReportConfig } from '@/components/analytics/ReportBuilder';
  * - Data is formatted as comma-separated values with proper escaping
  */
 export const generateCSVReport = (
-  data: any,
+  data: ReportData,
   config: ReportConfig,
   startDate: Date,
   endDate: Date,
   orgName: string
-) => {
+): void => {
   let csvContent = `${orgName} Analytics Report\n`;
   csvContent += `Period: ${format(startDate, 'MMM d, yyyy')} - ${format(endDate, 'MMM d, yyyy')}\n`;
   csvContent += `Generated: ${format(new Date(), 'MMM d, yyyy HH:mm')}\n\n`;
@@ -62,7 +69,7 @@ export const generateCSVReport = (
   if (config.includeConversations && config.includeTables && data.conversationStats) {
     csvContent += 'CONVERSATION STATISTICS\n';
     csvContent += 'Date,Total,Active,Closed\n';
-    data.conversationStats.forEach((stat: any) => {
+    data.conversationStats.forEach((stat: ConversationStat) => {
       csvContent += `${stat.date},${stat.total},${stat.active},${stat.closed}\n`;
     });
     csvContent += '\n';
@@ -72,7 +79,7 @@ export const generateCSVReport = (
   if (config.includeLeads && config.includeTables && data.leadStats) {
     csvContent += 'LEAD STATISTICS\n';
     csvContent += 'Date,Total,New,Contacted,Qualified,Converted\n';
-    data.leadStats.forEach((stat: any) => {
+    data.leadStats.forEach((stat: LeadStat) => {
       csvContent += `${stat.date},${stat.total},${stat.new},${stat.contacted},${stat.qualified},${stat.converted}\n`;
     });
     csvContent += '\n';
@@ -82,7 +89,7 @@ export const generateCSVReport = (
   if (config.includeAgentPerformance && config.includeTables && data.agentPerformance) {
     csvContent += 'AGENT PERFORMANCE\n';
     csvContent += 'Agent,Conversations,Avg Response Time,Satisfaction Score\n';
-    data.agentPerformance.forEach((agent: any) => {
+    data.agentPerformance.forEach((agent: AgentPerformance) => {
       csvContent += `${agent.agent_name},${agent.total_conversations},${agent.avg_response_time},${agent.satisfaction_score}\n`;
     });
     csvContent += '\n';
@@ -92,7 +99,7 @@ export const generateCSVReport = (
   if (config.includeUsageMetrics && config.includeTables && data.usageMetrics) {
     csvContent += 'USAGE METRICS\n';
     csvContent += 'Date,Conversations,Messages,API Calls\n';
-    data.usageMetrics.forEach((metric: any) => {
+    data.usageMetrics.forEach((metric: UsageMetric) => {
       csvContent += `${metric.date},${metric.conversations},${metric.messages},${metric.api_calls}\n`;
     });
   }
@@ -135,12 +142,12 @@ export const generateCSVReport = (
  * - Uses grid theme for table styling
  */
 export const generatePDFReport = async (
-  data: any,
+  data: ReportData,
   config: ReportConfig,
   startDate: Date,
   endDate: Date,
   orgName: string
-) => {
+): Promise<void> => {
   const pdf = new jsPDF();
   let yPosition = 20;
 
@@ -193,7 +200,7 @@ export const generatePDFReport = async (
     autoTable(pdf, {
       startY: yPosition,
       head: [['Date', 'Total', 'Active', 'Closed']],
-      body: data.conversationStats.slice(0, 20).map((stat: any) => [
+      body: data.conversationStats.slice(0, 20).map((stat: ConversationStat) => [
         stat.date,
         stat.total,
         stat.active,
@@ -222,7 +229,7 @@ export const generatePDFReport = async (
     autoTable(pdf, {
       startY: yPosition,
       head: [['Agent', 'Conversations', 'Avg Response Time', 'Satisfaction']],
-      body: data.agentPerformance.map((agent: any) => [
+      body: data.agentPerformance.map((agent: AgentPerformance) => [
         agent.agent_name,
         agent.total_conversations,
         `${agent.avg_response_time}s`,

@@ -35,7 +35,7 @@ type ToolsTab = 'api-access' | 'custom-tools' | 'webhooks';
 interface AgentToolsTabProps {
   agentId: string;
   agent?: Tables<'agents'>;
-  onUpdate?: (id: string, updates: any) => Promise<any>;
+  onUpdate?: (id: string, updates: Partial<Tables<'agents'>>) => Promise<Tables<'agents'> | null>;
 }
 
 export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) => {
@@ -360,7 +360,7 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
     }
   };
 
-  const handleUpdateWebhook = async (id: string, updates: any) => {
+  const handleUpdateWebhook = async (id: string, updates: Partial<Omit<Tables<'webhooks'>, 'id' | 'created_at' | 'updated_at' | 'user_id' | 'agent_id'>>) => {
     await updateWebhook(id, updates);
   };
 
