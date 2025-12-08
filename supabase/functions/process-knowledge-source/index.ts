@@ -977,6 +977,36 @@ Deno.serve(async (req) => {
     if (source.type === 'url' && isSitemapUrl(source.source)) {
       console.log('Detected sitemap URL, processing as sitemap...');
       
+      // Delete existing child sources before reprocessing to prevent duplicates
+      console.log('Cleaning up existing child sources...');
+      const { data: existingChildren, error: fetchChildrenError } = await supabase
+        .from('knowledge_sources')
+        .select('id')
+        .contains('metadata', { parent_source_id: sourceId });
+      
+      if (!fetchChildrenError && existingChildren && existingChildren.length > 0) {
+        console.log(`Deleting ${existingChildren.length} existing child sources...`);
+        const childIds = existingChildren.map((c: { id: string }) => c.id);
+        
+        // Delete chunks for these children first (CASCADE should handle this, but being explicit)
+        await supabase
+          .from('knowledge_chunks')
+          .delete()
+          .in('source_id', childIds);
+        
+        // Delete the child sources
+        const { error: deleteChildrenError } = await supabase
+          .from('knowledge_sources')
+          .delete()
+          .in('id', childIds);
+        
+        if (deleteChildrenError) {
+          console.warn('Failed to delete some existing children:', deleteChildrenError);
+        } else {
+          console.log('Existing child sources deleted successfully');
+        }
+      }
+      
       // Extract filter options from source metadata
       const sourceMetadata = (source.metadata as any) || {};
       const filterOptions = {
