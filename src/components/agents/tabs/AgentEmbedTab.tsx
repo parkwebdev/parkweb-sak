@@ -7,12 +7,13 @@ import { EmbedPreviewPanel } from '../embed/EmbedPreviewPanel';
 import { SavedIndicator } from '@/components/settings/SavedIndicator';
 import { LoadingState } from '@/components/ui/loading-state';
 import type { Tables } from '@/integrations/supabase/types';
+import type { AgentDeploymentConfig } from '@/types/metadata';
 
 type Agent = Tables<'agents'>;
 
 interface AgentEmbedTabProps {
   agent: Agent;
-  onUpdate: (id: string, updates: any) => Promise<any>;
+  onUpdate: (id: string, updates: Partial<Agent>) => Promise<unknown>;
   onFormChange?: (hasChanges: boolean) => void;
 }
 
@@ -28,7 +29,7 @@ export const AgentEmbedTab = ({ agent, onUpdate, onFormChange }: AgentEmbedTabPr
 
   useEffect(() => {
     // Enable embedded chat by default
-    const deploymentConfig = (agent.deployment_config as any) || {};
+    const deploymentConfig = ((agent.deployment_config || {}) as AgentDeploymentConfig);
     if (!deploymentConfig.embedded_chat_enabled) {
       onUpdate(agent.id, {
         deployment_config: {

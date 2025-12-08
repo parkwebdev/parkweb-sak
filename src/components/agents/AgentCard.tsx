@@ -5,6 +5,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { DotsHorizontal, Play, PauseCircle, Trash01 } from '@untitledui/icons';
 import { useNavigate } from 'react-router-dom';
 import type { Tables } from '@/integrations/supabase/types';
+import type { AgentDeploymentConfig } from '@/types/metadata';
 
 type Agent = Tables<'agents'>;
 
@@ -23,7 +24,7 @@ export const AgentCard = ({ agent, onEdit, onDelete, onStatusChange }: AgentCard
     paused: 'bg-warning/10 text-warning border-warning/20',
   };
 
-  const deploymentConfig = agent.deployment_config as any;
+  const deploymentConfig = (agent.deployment_config || {}) as AgentDeploymentConfig;
   const isDeployed = deploymentConfig?.api_enabled || deploymentConfig?.widget_enabled || deploymentConfig?.hosted_page_enabled;
 
   return (

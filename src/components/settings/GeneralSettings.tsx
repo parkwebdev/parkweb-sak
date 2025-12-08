@@ -98,13 +98,16 @@ export const GeneralSettings: React.FC = () => {
             .eq('user_id', user.id);
           error = result.error;
         } else {
-          // Insert new record
+          // Insert new record with typed payload
+          const insertPayload: { user_id: string; compact_mode?: boolean; default_project_view?: string } = {
+            user_id: user.id,
+          };
+          if (key === 'compact_mode') insertPayload.compact_mode = value as boolean;
+          if (key === 'default_project_view') insertPayload.default_project_view = value as string;
+          
           const result = await supabase
             .from('user_preferences')
-            .insert({
-              user_id: user.id,
-              [key]: value,
-            } as any);
+            .insert(insertPayload);
           error = result.error;
         }
 

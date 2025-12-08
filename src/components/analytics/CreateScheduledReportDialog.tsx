@@ -51,7 +51,7 @@ export const CreateScheduledReportDialog = ({ open, onOpenChange }: CreateSchedu
     try {
       await createReport({
         name,
-        recipients: recipients as any,
+        recipients,
         frequency,
         day_of_week: frequency === 'weekly' ? dayOfWeek : null,
         day_of_month: frequency === 'monthly' ? dayOfMonth : null,

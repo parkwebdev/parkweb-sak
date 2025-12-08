@@ -5,6 +5,7 @@ import { toast } from '@/lib/toast';
 import { logger } from '@/utils/logger';
 import { playNotificationSound } from '@/lib/notification-sound';
 import type { Tables } from '@/integrations/supabase/types';
+import type { NotificationPreferencesData, ConversationMetadata } from '@/types/metadata';
 
 type Conversation = Tables<'conversations'> & {
   agents?: { name: string };
@@ -112,7 +113,7 @@ export const useConversations = () => {
           table: 'messages'
         },
         (payload) => {
-          const newMessage = payload.new as any;
+          const newMessage = payload.new as Message;
           
           // Play notification sound for user messages only (if sound enabled)
           if (newMessage.role === 'user' && soundEnabledRef.current) {
@@ -137,7 +138,7 @@ export const useConversations = () => {
           filter: `user_id=eq.${user.id}`
         },
         (payload) => {
-          const newPrefs = payload.new as any;
+          const newPrefs = payload.new as NotificationPreferencesData;
           soundEnabledRef.current = newPrefs?.sound_notifications !== false;
         }
       )
@@ -202,8 +203,9 @@ export const useConversations = () => {
 
       if (fetchError) throw fetchError;
 
+      const currentMetadata = (current?.metadata || {}) as Record<string, unknown>;
       const mergedMetadata = {
-        ...(current?.metadata as Record<string, any> || {}),
+        ...currentMetadata,
         ...metadata,
       };
 
@@ -218,7 +220,7 @@ export const useConversations = () => {
       setConversations(prev => 
         prev.map(conv => 
           conv.id === conversationId 
-            ? { ...conv, metadata: mergedMetadata }
+            ? { ...conv, metadata: mergedMetadata as typeof conv.metadata }
             : conv
         )
       );

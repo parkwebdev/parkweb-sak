@@ -46,13 +46,8 @@ const AgentConfig: React.FC<AgentConfigProps> = ({ onMenuClick }) => {
     
     setIsSaving(true);
     try {
-      // Call the appropriate tab's save function
-      if (activeTab === 'configure') {
-        await (AgentConfigureTab as any).handleSave?.();
-      } else if (activeTab === 'embed') {
-        await (AgentEmbedTab as any).handleSave?.();
-      }
-      
+      // Tabs auto-save, so this just updates the indicator
+      // The save operation is handled by individual tab components
       setHasUnsavedChanges(false);
       setShowSaved(true);
       
