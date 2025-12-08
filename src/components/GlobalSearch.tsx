@@ -72,7 +72,8 @@ export const GlobalSearch = () => {
             {Object.entries(groupedResults).map(([category, results]) => (
               <CommandGroup key={category} heading={category}>
                 {results.map((result) => {
-                  const IconComponent = result.iconName ? (Icons as any)[result.iconName] : null;
+                  const IconsRecord = Icons as Record<string, React.ComponentType<{ className?: string }>>;
+                  const IconComponent = result.iconName ? IconsRecord[result.iconName] : null;
                   
                   return (
                     <CommandItem

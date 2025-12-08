@@ -44,8 +44,8 @@ function Accordion({
         data-slot="accordion"
         className={cn("bg-primary-foreground rounded-lg border px-5", className)}
         {...props}
-        value={value as any}
-        onValueChange={setValue as any}
+        value={value as string & string[]}
+        onValueChange={setValue as ((value: string) => void) & ((value: string[]) => void)}
       />
     </AccordionProvider>
   )

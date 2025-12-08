@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Users01 as Users } from '@untitledui/icons';
 import { useTeam } from '@/hooks/useTeam';
 import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
-import { TeamMember } from '@/types/team';
+import { TeamMember, UserRole } from '@/types/team';
 import { LoadingState } from '@/components/ui/loading-state';
 
 interface TeamSettingsProps {
@@ -102,7 +102,7 @@ export const TeamSettings: React.FC<TeamSettingsProps> = ({ openMemberId }) => {
           setSelectedMember(null);
         }}
         onUpdate={async (member: TeamMember, role: string, permissions: string[]) => {
-          await updateMemberRole(member, role as any, permissions);
+          await updateMemberRole(member, role as UserRole, permissions);
         }}
       />
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useImperativeHandle, forwardRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Tables } from '@/integrations/supabase/types';
 import { Input } from '@/components/ui/input';
@@ -13,6 +13,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { AgentSettingsLayout } from '@/components/agents/AgentSettingsLayout';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
+import { AgentDeploymentConfig } from '@/types/metadata';
 
 type Agent = Tables<'agents'>;
 
@@ -77,8 +78,13 @@ const MODELS = [
 
 interface AgentConfigureTabProps {
   agent: Agent;
-  onUpdate: (id: string, updates: any) => Promise<any>;
+  onUpdate: (id: string, updates: Partial<Agent>) => Promise<Agent | null | void>;
   onFormChange?: (hasChanges: boolean) => void;
+}
+
+/** Handle type for imperative save method */
+export interface AgentConfigureTabHandle {
+  handleSave: () => Promise<void>;
 }
 
 const RESPONSE_LENGTH_PRESETS = [
@@ -155,10 +161,10 @@ const calculateEstimatedCost = (model: string, maxTokens: number) => {
   };
 };
 
-export const AgentConfigureTab: React.FC<AgentConfigureTabProps> = ({ agent, onUpdate, onFormChange }) => {
+export const AgentConfigureTab = forwardRef<AgentConfigureTabHandle, AgentConfigureTabProps>(({ agent, onUpdate, onFormChange }, ref) => {
   const [activeSection, setActiveSection] = useState<ConfigureSection>('identity');
   const [activeSlider, setActiveSlider] = useState<string | null>(null);
-  const deploymentConfig = (agent.deployment_config as any) || {};
+  const deploymentConfig = (agent.deployment_config || {}) as AgentDeploymentConfig & { top_p?: number; presence_penalty?: number; frequency_penalty?: number };
   
   const getInitialPreset = () => {
     const tokens = agent.max_tokens || 2000;
@@ -222,21 +228,23 @@ export const AgentConfigureTab: React.FC<AgentConfigureTabProps> = ({ agent, onU
     setFormData(newFormData);
   };
 
-  (AgentConfigureTab as any).handleSave = async () => {
-    if (hasChanges) {
-      const { top_p, presence_penalty, frequency_penalty, response_length_preset, system_prompt, ...coreFields } = formData;
-      await onUpdate(agent.id, {
-        ...coreFields,
-        system_prompt,
-        deployment_config: {
-          ...deploymentConfig,
-          top_p,
-          presence_penalty,
-          frequency_penalty,
-        },
-      });
+  useImperativeHandle(ref, () => ({
+    handleSave: async () => {
+      if (hasChanges) {
+        const { top_p, presence_penalty, frequency_penalty, response_length_preset, system_prompt, ...coreFields } = formData;
+        await onUpdate(agent.id, {
+          ...coreFields,
+          system_prompt,
+          deployment_config: {
+            ...deploymentConfig,
+            top_p,
+            presence_penalty,
+            frequency_penalty,
+          },
+        });
+      }
     }
-  };
+  }), [hasChanges, formData, agent.id, onUpdate, deploymentConfig]);
 
   const costEstimate = calculateEstimatedCost(formData.model, formData.max_tokens);
 
@@ -493,4 +501,4 @@ export const AgentConfigureTab: React.FC<AgentConfigureTabProps> = ({ agent, onU
       </AgentSettingsLayout>
     </TooltipProvider>
   );
-};
+});
