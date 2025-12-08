@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import type { Json } from '@/integrations/supabase/types';
 import { toast } from '@/lib/toast';
 import { logger } from '@/utils/logger';
 import { getErrorMessage } from '@/types/errors';
@@ -241,7 +242,7 @@ export const useEmbeddedChatConfig = (agentId: string) => {
           deployment_config: {
             embedded_chat_enabled: true,
             embedded_chat: configForStorage,
-          } as unknown as Record<string, unknown>,
+          } as unknown as Json,
         })
         .eq('id', agentId);
 
