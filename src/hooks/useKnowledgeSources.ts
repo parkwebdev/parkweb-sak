@@ -426,6 +426,31 @@ export const useKnowledgeSources = (agentId?: string) => {
     }
   };
 
+  const resumeProcessing = async (sourceId: string) => {
+    try {
+      toast.success('Resuming', {
+        description: 'Resuming sitemap processing...',
+      });
+
+      // Trigger resume processing in background
+      supabase.functions.invoke('process-knowledge-source', {
+        body: { sourceId, agentId, resume: true },
+      }).then(({ error: invokeError }) => {
+        if (invokeError) {
+          console.error('Edge function invocation failed:', invokeError);
+          toast.error('Resume failed', {
+            description: invokeError.message,
+          });
+        }
+      });
+    } catch (error: any) {
+      console.error('Error resuming processing:', error);
+      toast.error('Resume failed', {
+        description: error.message,
+      });
+    }
+  };
+
   const retrainAllSources = async (
     onProgress?: (completed: number, total: number) => void
   ): Promise<{ success: number; failed: number }> => {
@@ -524,6 +549,7 @@ export const useKnowledgeSources = (agentId?: string) => {
     addTextSource,
     deleteSource,
     reprocessSource,
+    resumeProcessing,
     retrainAllSources,
     isSourceOutdated,
     getChildSources,

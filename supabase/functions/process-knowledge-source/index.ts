@@ -313,9 +313,9 @@ async function processPendingBatch(
   batchId: string,
   agentId: string
 ): Promise<void> {
-  const CONCURRENT_LIMIT = 3; // Process 3 URLs at a time
-  const DELAY_BETWEEN_BATCHES_MS = 2000; // 2 second delay between batches
-  const DELAY_BETWEEN_URLS_MS = 500; // 0.5 second delay between individual URLs
+  const CONCURRENT_LIMIT = 1; // Process 1 URL at a time (reduced from 3 for CPU safety)
+  const DELAY_BETWEEN_BATCHES_MS = 5000; // 5 second delay between batches
+  const DELAY_BETWEEN_URLS_MS = 1000; // 1 second delay between individual URLs
 
   console.log(`Starting batch processing for parent ${parentSourceId}, batch ${batchId}`);
 
@@ -345,36 +345,32 @@ async function processPendingBatch(
 
     console.log(`Processing batch of ${pendingSources.length} URLs...`);
 
-    // Process batch concurrently
-    const results = await Promise.all(
-      pendingSources.map(async (source: any, index: number) => {
-        // Stagger start times slightly
-        await new Promise(resolve => setTimeout(resolve, index * DELAY_BETWEEN_URLS_MS));
-        
-        console.log(`Processing: ${source.source.substring(0, 80)}...`);
-        return processUrlSource(supabase, source.id, source.agent_id, source.source);
-      })
-    );
-
-    // Count results
-    for (const result of results) {
+    // Process batch sequentially for CPU safety
+    for (const source of pendingSources) {
+      console.log(`Processing: ${source.source.substring(0, 80)}...`);
+      const result = await processUrlSource(supabase, source.id, source.agent_id, source.source);
+      
       if (result.success) {
         processed++;
       } else {
         errors++;
         console.error(`Failed to process URL: ${result.error}`);
       }
+      
+      // Delay between URLs
+      await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_URLS_MS));
     }
 
-    // Update parent source with progress
-    const { data: remainingCount } = await supabase
+    // Get accurate count of remaining pending sources
+    const { count: remainingCount, error: countError } = await supabase
       .from('knowledge_sources')
       .select('id', { count: 'exact', head: true })
       .eq('status', 'pending')
       .contains('metadata', { batch_id: batchId });
 
-    const remaining = remainingCount?.length || 0;
+    const remaining = countError ? 0 : (remainingCount || 0);
     
+    // Update parent source with progress
     await supabase
       .from('knowledge_sources')
       .update({
@@ -391,8 +387,11 @@ async function processPendingBatch(
 
     console.log(`Progress: ${processed} processed, ${errors} errors, ${remaining} remaining`);
 
-    // Delay before next batch
-    if (hasMore) {
+    // Check if done
+    if (remaining === 0) {
+      hasMore = false;
+    } else {
+      // Delay before next batch
       await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_BATCHES_MS));
     }
   }
@@ -679,8 +678,9 @@ Deno.serve(async (req) => {
 
     const body = await req.json();
     sourceId = body.sourceId;
+    const resumeMode = body.resume === true;
     
-    console.log('Processing knowledge source:', sourceId);
+    console.log('Processing knowledge source:', sourceId, resumeMode ? '(RESUME MODE)' : '');
     console.log('Using embedding model:', EMBEDDING_MODEL, `(${EMBEDDING_DIMENSIONS} dimensions)`);
 
     if (!sourceId) {
@@ -700,6 +700,32 @@ Deno.serve(async (req) => {
     }
 
     console.log('Source type:', source.type, '| Source:', source.source?.substring(0, 100));
+
+    // Handle resume mode for stalled sitemaps
+    const sourceMetadata = (source.metadata as any) || {};
+    if (resumeMode && sourceMetadata.is_sitemap && sourceMetadata.batch_id) {
+      console.log('Resuming stalled sitemap processing, batch:', sourceMetadata.batch_id);
+      
+      // Start background batch processing using EdgeRuntime.waitUntil
+      EdgeRuntime.waitUntil(
+        processPendingBatch(supabase, sourceId, sourceMetadata.batch_id, source.agent_id)
+          .catch(error => {
+            console.error('Background batch processing failed:', error);
+          })
+      );
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          sourceId,
+          resumed: true,
+          message: 'Resuming sitemap processing...',
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
 
     // Check if this is a sitemap URL
     if (source.type === 'url' && isSitemapUrl(source.source)) {

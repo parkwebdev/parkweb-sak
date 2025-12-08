@@ -19,7 +19,7 @@ interface AgentKnowledgeTabProps {
 type KnowledgeTab = 'knowledge-sources' | 'help-articles';
 
 export const AgentKnowledgeTab = ({ agentId, userId }: AgentKnowledgeTabProps) => {
-  const { sources, loading, deleteSource, reprocessSource, retrainAllSources, isSourceOutdated, getChildSources, getParentSources } = useKnowledgeSources(agentId);
+  const { sources, loading, deleteSource, reprocessSource, resumeProcessing, retrainAllSources, isSourceOutdated, getChildSources, getParentSources } = useKnowledgeSources(agentId);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<KnowledgeTab>('knowledge-sources');
   const [isRetraining, setIsRetraining] = useState(false);
@@ -174,6 +174,7 @@ export const AgentKnowledgeTab = ({ agentId, userId }: AgentKnowledgeTabProps) =
                   source={source}
                   onDelete={deleteSource}
                   onReprocess={reprocessSource}
+                  onResume={resumeProcessing}
                   isOutdated={isSourceOutdated(source)}
                   childSources={getChildSources(source.id)}
                 />
