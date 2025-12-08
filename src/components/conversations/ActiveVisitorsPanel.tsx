@@ -69,8 +69,8 @@ export const ActiveVisitorsPanel: React.FC<ActiveVisitorsPanelProps> = ({
           const state = channel.presenceState();
           const visitors: ActiveVisitor[] = [];
           
-          Object.values(state).flat().forEach((rawPresence) => {
-            const presence = rawPresence as VisitorPresenceState;
+        Object.values(state).flat().forEach((rawPresence) => {
+          const presence = rawPresence as unknown as VisitorPresenceState;
             if (presence.isWidgetOpen) {
               visitors.push({
                 visitorId: presence.visitorId,
