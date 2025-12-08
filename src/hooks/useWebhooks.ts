@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/lib/toast';
+import { getErrorMessage } from '@/types/errors';
 import { useAuth } from '@/hooks/useAuth';
 import type { Tables } from '@/integrations/supabase/types';
 
@@ -9,7 +10,7 @@ type WebhookLog = {
   id: string;
   webhook_id: string;
   event_type: string;
-  payload: any;
+  payload: unknown;
   response_status: number | null;
   response_body: string | null;
   error_message: string | null;
@@ -62,9 +63,9 @@ export const useWebhooks = (agentId?: string) => {
 
       if (error) throw error;
       setWebhooks(data || []);
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error('Error fetching webhooks', {
-        description: error.message,
+        description: getErrorMessage(error),
       });
     } finally {
       setLoading(false);
@@ -89,9 +90,9 @@ export const useWebhooks = (agentId?: string) => {
 
       if (error) throw error;
       setLogs(data || []);
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error('Error fetching webhook logs', {
-        description: error.message,
+        description: getErrorMessage(error),
       });
     }
   };
@@ -114,9 +115,9 @@ export const useWebhooks = (agentId?: string) => {
 
       fetchWebhooks();
       return data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error('Error creating webhook', {
-        description: error.message,
+        description: getErrorMessage(error),
       });
       throw error;
     }
@@ -133,9 +134,9 @@ export const useWebhooks = (agentId?: string) => {
 
       // Success - no toast needed (SavedIndicator shows feedback)
       fetchWebhooks();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error('Error updating webhook', {
-        description: error.message,
+        description: getErrorMessage(error),
       });
       throw error;
     }
@@ -155,9 +156,9 @@ export const useWebhooks = (agentId?: string) => {
       });
 
       fetchWebhooks();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error('Error deleting webhook', {
-        description: error.message,
+        description: getErrorMessage(error),
       });
       throw error;
     }
@@ -180,9 +181,9 @@ export const useWebhooks = (agentId?: string) => {
 
       fetchLogs(id);
       return data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error('Error testing webhook', {
-        description: error.message,
+        description: getErrorMessage(error),
       });
       throw error;
     }

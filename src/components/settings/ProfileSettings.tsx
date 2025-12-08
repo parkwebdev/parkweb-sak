@@ -16,6 +16,7 @@ import { uploadAvatar } from '@/lib/avatar-upload';
 import { LoadingState } from '@/components/ui/loading-state';
 import { Spinner } from '@/components/ui/spinner';
 import { logger } from '@/utils/logger';
+import { getErrorMessage } from '@/types/errors';
 
 export const ProfileSettings: React.FC = () => {
   const [profile, setProfile] = useState({
@@ -218,9 +219,9 @@ export const ProfileSettings: React.FC = () => {
       setInitialProfile(prev => prev ? { ...prev, avatar_url: avatarUrl } : null);
       
       toast.success("Avatar updated", { description: "Your profile picture has been updated." });
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Avatar upload error:', error);
-      toast.error("Upload failed", { description: error.message || "Failed to upload avatar." });
+      toast.error("Upload failed", { description: getErrorMessage(error) });
     } finally {
       setAvatarUploading(false);
     }

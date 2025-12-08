@@ -10,6 +10,7 @@ import { AgentSettingsLayout } from '@/components/agents/AgentSettingsLayout';
 import { LoadingState } from '@/components/ui/loading-state';
 import { Progress } from '@/components/ui/progress';
 import { toast } from '@/lib/toast';
+import { getErrorMessage } from '@/types/errors';
 
 interface AgentKnowledgeTabProps {
   agentId: string;
@@ -84,8 +85,8 @@ export const AgentKnowledgeTab = ({ agentId, userId }: AgentKnowledgeTabProps) =
           description: `${success} succeeded, ${failed} failed.`,
         });
       }
-    } catch (error: any) {
-      toast.error('Retraining failed', { description: error.message });
+    } catch (error: unknown) {
+      toast.error('Retraining failed', { description: getErrorMessage(error) });
     } finally {
       setIsRetraining(false);
       setRetrainProgress({ completed: 0, total: 0 });

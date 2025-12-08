@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/lib/toast';
 import { logger } from '@/utils/logger';
+import { getErrorMessage } from '@/types/errors';
 import type { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
 
 export type NewsItem = Tables<'news_items'>;
@@ -36,7 +37,7 @@ export const useNewsItems = (agentId: string) => {
 
       if (error) throw error;
       setNewsItems(data || []);
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Error fetching news items', error);
       toast.error('Failed to load news items');
     } finally {
@@ -63,7 +64,7 @@ export const useNewsItems = (agentId: string) => {
       setNewsItems([...newsItems, data]);
       toast.success('News item created successfully');
       return data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Error adding news item', error);
       toast.error('Failed to create news item');
       throw error;
@@ -84,7 +85,7 @@ export const useNewsItems = (agentId: string) => {
       setNewsItems(newsItems.map(item => item.id === id ? data : item));
       toast.success('News item updated successfully');
       return data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Error updating news item', error);
       toast.error('Failed to update news item');
       throw error;
@@ -121,7 +122,7 @@ export const useNewsItems = (agentId: string) => {
 
       setNewsItems(newsItems.filter(item => item.id !== id));
       toast.success('News item deleted successfully');
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Error deleting news item', error);
       toast.error('Failed to delete news item');
       throw error;
@@ -155,7 +156,7 @@ export const useNewsItems = (agentId: string) => {
       if (errors.length > 0) throw errors[0].error;
 
       setNewsItems(reorderedItems);
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Error reordering news items', error);
       toast.error('Failed to reorder news items');
       throw error;

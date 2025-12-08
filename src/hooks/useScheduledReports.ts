@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/lib/toast';
 import { logger } from '@/utils/logger';
+import { getErrorMessage } from '@/types/errors';
 import { useAuth } from '@/hooks/useAuth';
 import type { Tables, TablesInsert } from '@/integrations/supabase/types';
 
@@ -39,10 +40,10 @@ export const useScheduledReports = () => {
 
       if (error) throw error;
       setReports(data || []);
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Error fetching scheduled reports:', error);
       toast.error('Error fetching reports', {
-        description: error.message,
+        description: getErrorMessage(error),
       });
     } finally {
       setLoading(false);
@@ -71,10 +72,10 @@ export const useScheduledReports = () => {
 
       await fetchReports();
       return data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Error creating scheduled report:', error);
       toast.error('Error creating report', {
-        description: error.message,
+        description: getErrorMessage(error),
       });
     }
   };
@@ -96,10 +97,10 @@ export const useScheduledReports = () => {
 
       await fetchReports();
       return data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Error updating scheduled report:', error);
       toast.error('Error updating report', {
-        description: error.message,
+        description: getErrorMessage(error),
       });
     }
   };
@@ -118,10 +119,10 @@ export const useScheduledReports = () => {
       });
 
       await fetchReports();
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Error deleting scheduled report:', error);
       toast.error('Error deleting report', {
-        description: error.message,
+        description: getErrorMessage(error),
       });
     }
   };
@@ -138,10 +139,10 @@ export const useScheduledReports = () => {
       // Success - no toast needed (SavedIndicator shows feedback per row)
 
       await fetchReports();
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Error toggling report status:', error);
       toast.error('Error updating status', {
-        description: error.message,
+        description: getErrorMessage(error),
       });
     }
   };

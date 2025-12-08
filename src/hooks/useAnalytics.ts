@@ -4,6 +4,7 @@ import { toast } from '@/lib/toast';
 import { useAuth } from '@/hooks/useAuth';
 import { format } from 'date-fns';
 import { logger } from '@/utils/logger';
+import { getErrorMessage } from '@/types/errors';
 
 interface ConversationStats {
   date: string;
@@ -69,8 +70,8 @@ export const useAnalytics = (
   const [leadStats, setLeadStats] = useState<LeadStats[]>([]);
   const [agentPerformance, setAgentPerformance] = useState<AgentPerformance[]>([]);
   const [usageMetrics, setUsageMetrics] = useState<UsageMetrics[]>([]);
-  const [conversations, setConversations] = useState<any[]>([]);
-  const [leads, setLeads] = useState<any[]>([]);
+  const [conversations, setConversations] = useState<unknown[]>([]);
+  const [leads, setLeads] = useState<unknown[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
 
@@ -115,7 +116,7 @@ export const useAnalytics = (
       setConversationStats(Object.values(statsByDate).sort((a, b) => 
         a.date.localeCompare(b.date)
       ));
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Error fetching conversation stats:', error);
     }
   };
@@ -167,7 +168,7 @@ export const useAnalytics = (
       setLeadStats(Object.values(statsByDate).sort((a, b) => 
         a.date.localeCompare(b.date)
       ));
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Error fetching lead stats:', error);
     }
   };
@@ -210,7 +211,7 @@ export const useAnalytics = (
       }
 
       setAgentPerformance(performance);
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Error fetching agent performance:', error);
     }
   };
@@ -237,7 +238,7 @@ export const useAnalytics = (
       })) || [];
 
       setUsageMetrics(metrics);
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Error fetching usage metrics:', error);
     }
   };
@@ -251,9 +252,9 @@ export const useAnalytics = (
         fetchAgentPerformance(),
         fetchUsageMetrics(),
       ]);
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error('Error fetching analytics', {
-        description: error.message,
+        description: getErrorMessage(error),
       });
     } finally {
       setLoading(false);

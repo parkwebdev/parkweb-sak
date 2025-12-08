@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/lib/toast';
+import { getErrorMessage } from '@/types/errors';
 import { useAuth } from '@/hooks/useAuth';
 import type { Tables } from '@/integrations/supabase/types';
 
@@ -40,9 +41,9 @@ export const useLeads = () => {
 
       if (error) throw error;
       setLeads(data || []);
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error('Error fetching leads', {
-        description: error.message,
+        description: getErrorMessage(error),
       });
     } finally {
       setLoading(false);
@@ -67,9 +68,9 @@ export const useLeads = () => {
 
       fetchLeads();
       return data;
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error('Error creating lead', {
-        description: error.message,
+        description: getErrorMessage(error),
       });
       throw error;
     }
@@ -86,9 +87,9 @@ export const useLeads = () => {
 
       // Success - no toast needed (SavedIndicator shows feedback for status changes)
       fetchLeads();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error('Error updating lead', {
-        description: error.message,
+        description: getErrorMessage(error),
       });
       throw error;
     }
@@ -133,9 +134,9 @@ export const useLeads = () => {
       });
 
       fetchLeads();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error('Error deleting lead', {
-        description: error.message,
+        description: getErrorMessage(error),
       });
       throw error;
     }
@@ -187,9 +188,9 @@ export const useLeads = () => {
       });
 
       fetchLeads();
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.error('Error deleting leads', {
-        description: error.message,
+        description: getErrorMessage(error),
       });
       throw error;
     }

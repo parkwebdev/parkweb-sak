@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { TeamMember } from '@/types/team';
 import { SimpleAvatarUpload } from './SimpleAvatarUpload';
 import { logger } from '@/utils/logger';
+import { getErrorMessage } from '@/types/errors';
 
 interface ProfileEditDialogProps {
   member: TeamMember | null;
@@ -83,10 +84,10 @@ export const ProfileEditDialog: React.FC<ProfileEditDialogProps> = ({
       onUpdate();
       onClose();
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error('Error updating profile', error);
       toast.error("Update failed", {
-        description: error.message || "Failed to update profile. Please try again.",
+        description: getErrorMessage(error),
       });
     } finally {
       setLoading(false);
