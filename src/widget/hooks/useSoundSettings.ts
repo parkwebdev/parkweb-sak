@@ -2,10 +2,30 @@
  * useSoundSettings Hook
  * 
  * Manages sound notification preferences with localStorage persistence.
+ * Provides toggle functionality and sound playback for notifications.
+ * 
+ * @module widget/hooks/useSoundSettings
+ * 
+ * @example
+ * ```tsx
+ * const { soundEnabled, setSoundEnabled, playNotificationSound } = useSoundSettings('agent-123');
+ * 
+ * // Toggle sound
+ * setSoundEnabled(!soundEnabled);
+ * 
+ * // Play notification
+ * playNotificationSound();
+ * ```
  */
 
 import { useState, useCallback } from 'react';
 
+/**
+ * Hook for managing sound notification settings.
+ * 
+ * @param agentId - Agent ID for localStorage key namespacing
+ * @returns Sound state, setter, and play function
+ */
 export function useSoundSettings(agentId: string) {
   const [soundEnabled, setSoundEnabledState] = useState<boolean>(() => {
     const stored = localStorage.getItem(`chatpad_sound_enabled_${agentId}`);

@@ -1,3 +1,13 @@
+/**
+ * MessageBubble Component
+ * 
+ * Renders a single chat message with avatar, content, metadata, and reactions.
+ * Supports text, audio, file attachments, link previews, and system notices.
+ * Uses message grouping for cleaner UI with continuation messages.
+ * 
+ * @module widget/components/MessageBubble
+ */
+
 import { Suspense } from 'react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Check, CheckCircle, XCircle, Download01 } from '@untitledui/icons';
@@ -12,16 +22,30 @@ import { FileTypeIcon } from '@/components/chat/FileTypeIcons';
 import { stripUrlsFromContent } from '../utils/url-stripper';
 import type { Message } from '../types';
 
+/** Props for the MessageBubble component */
 interface MessageBubbleProps {
+  /** Message data to render */
   message: Message;
+  /** Primary brand color for styling */
   primaryColor: string;
+  /** Whether emoji reactions are enabled */
   enableMessageReactions: boolean;
+  /** Handler for adding a reaction */
   onAddReaction: (emoji: string) => Promise<void>;
+  /** Handler for removing a reaction */
   onRemoveReaction: (emoji: string) => Promise<void>;
+  /** Whether this message continues from the previous (same sender) */
   isContinuation?: boolean;
+  /** Whether this is the last message in a group */
   isLastInGroup?: boolean;
 }
 
+/**
+ * Chat message bubble component with full feature support.
+ * 
+ * @param props - Component props
+ * @returns Message bubble element with content and metadata
+ */
 export const MessageBubble = ({
   message,
   primaryColor,

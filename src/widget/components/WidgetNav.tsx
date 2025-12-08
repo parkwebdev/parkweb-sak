@@ -1,17 +1,40 @@
+/**
+ * WidgetNav Component
+ * 
+ * Bottom navigation bar with Home, Messages, News, and Help tabs.
+ * Displays unread message count badge and supports icon fill animations.
+ * 
+ * @module widget/components/WidgetNav
+ */
+
 import { useState } from 'react';
 import { HomeNavIcon, ChatNavIcon, HelpNavIcon, NewsNavIcon } from '../NavIcons';
 import type { ViewType } from '../types';
 
+/** Props for the WidgetNav component */
 interface WidgetNavProps {
+  /** Currently active view */
   currentView: ViewType;
+  /** View change handler */
   onViewChange: (view: ViewType) => void;
+  /** Number of unread messages */
   unreadCount: number;
+  /** Primary brand color for active state */
   primaryColor: string;
+  /** Optional messages click handler */
   onMessagesClick?: () => void;
+  /** Whether Help tab is enabled */
   enableHelpTab?: boolean;
+  /** Whether News tab is enabled */
   enableNewsTab?: boolean;
 }
 
+/**
+ * Bottom navigation component for widget views.
+ * 
+ * @param props - Component props
+ * @returns Navigation bar with tab buttons
+ */
 export const WidgetNav = ({
   currentView,
   onViewChange,

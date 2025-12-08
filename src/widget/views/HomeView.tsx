@@ -1,3 +1,12 @@
+/**
+ * HomeView Component
+ * 
+ * Main home screen of the widget displaying welcome message, announcements,
+ * and quick action cards. Features animated gradient background.
+ * 
+ * @module widget/views/HomeView
+ */
+
 import { useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { X, ChevronRight, MessageChatCircle, BookOpen01, Zap } from '@untitledui/icons';

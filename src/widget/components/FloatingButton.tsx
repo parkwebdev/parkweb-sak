@@ -1,13 +1,34 @@
+/**
+ * FloatingButton Component
+ * 
+ * The circular floating action button that opens/closes the widget.
+ * Displays the ChatPad logo and supports gradient backgrounds.
+ * 
+ * @module widget/components/FloatingButton
+ */
+
 import ChatPadLogo from '@/components/ChatPadLogo';
 
+/** Props for the FloatingButton component */
 interface FloatingButtonProps {
+  /** Click handler for button interaction */
   onClick: () => void;
+  /** Primary brand color (fallback for non-gradient mode) */
   primaryColor: string;
+  /** Whether to use gradient background */
   useGradientHeader: boolean;
+  /** Gradient start color (top-left) */
   gradientStartColor: string;
+  /** Gradient end color (bottom-right) */
   gradientEndColor: string;
 }
 
+/**
+ * Floating action button component for widget toggle.
+ * 
+ * @param props - Component props
+ * @returns Styled button element with ChatPad logo
+ */
 export const FloatingButton = ({
   onClick,
   primaryColor,

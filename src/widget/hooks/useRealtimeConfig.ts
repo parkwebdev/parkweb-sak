@@ -1,20 +1,42 @@
 /**
  * useRealtimeConfig Hook
  * 
- * Subscribes to real-time changes for widget configuration (announcements, help articles, etc.)
- * and triggers config refresh when changes occur.
+ * Subscribes to real-time changes for widget configuration (announcements, 
+ * help articles, news items, etc.) and triggers config refresh when changes occur.
+ * Uses debouncing to batch rapid changes into single config fetches.
+ * 
+ * @module widget/hooks/useRealtimeConfig
+ * 
+ * @example
+ * ```tsx
+ * useRealtimeConfig({
+ *   agentId: 'agent-123',
+ *   enabled: true,
+ *   onConfigUpdate: (newConfig) => setConfig(newConfig)
+ * });
+ * ```
  */
 
 import { useEffect, useRef, useCallback } from 'react';
 import { widgetSupabase, fetchWidgetConfig, type WidgetConfig } from '../api';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 
+/** Options for the useRealtimeConfig hook */
 interface UseRealtimeConfigOptions {
+  /** Agent ID to subscribe to */
   agentId: string;
+  /** Whether real-time subscription is enabled */
   enabled: boolean;
+  /** Callback when config is updated */
   onConfigUpdate: (config: WidgetConfig) => void;
 }
 
+/**
+ * Hook for subscribing to real-time config changes.
+ * 
+ * @param options - Configuration options for the hook
+ * @returns Reference to the Supabase Realtime channel
+ */
 export function useRealtimeConfig({ agentId, enabled, onConfigUpdate }: UseRealtimeConfigOptions) {
   const channelRef = useRef<RealtimeChannel | null>(null);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);

@@ -1,7 +1,19 @@
 /**
  * useWidgetConfig Hook
  * 
- * Handles config loading, state management, and real-time updates for the widget.
+ * Manages widget configuration loading, state management, and real-time updates.
+ * Supports both simple config (agentId only) and full config (parent-provided).
+ * 
+ * @module widget/hooks/useWidgetConfig
+ * 
+ * @example
+ * ```tsx
+ * const { config, loading, isContentLoading } = useWidgetConfig(
+ *   { agentId: 'abc-123' },
+ *   false,
+ *   false
+ * );
+ * ```
  */
 
 import { useState, useEffect, useCallback } from 'react';
@@ -9,15 +21,30 @@ import { fetchWidgetConfig, type WidgetConfig } from '../api';
 import type { ChatWidgetProps } from '../types';
 import { useRealtimeConfig } from './useRealtimeConfig';
 
+/** Return type for useWidgetConfig hook */
 interface UseWidgetConfigResult {
+  /** Loaded widget configuration or null if still loading */
   config: WidgetConfig | null;
+  /** Whether initial config fetch is in progress */
   loading: boolean;
+  /** Whether content is still loading (accounts for parent handling) */
   isContentLoading: boolean;
+  /** Whether a simple config (agentId only) was provided */
   isSimpleConfig: boolean;
+  /** Whether parent window handles config fetching */
   parentHandlesConfig: boolean;
+  /** Agent ID extracted from config */
   agentId: string;
 }
 
+/**
+ * Hook for managing widget configuration state and real-time updates.
+ * 
+ * @param configProp - Initial config prop (simple or full config)
+ * @param isLoadingProp - Loading state from parent (for iframe mode)
+ * @param previewMode - Whether widget is in preview/editor mode
+ * @returns Configuration state and loading indicators
+ */
 export function useWidgetConfig(
   configProp: ChatWidgetProps['config'],
   isLoadingProp: boolean = false,

@@ -1,8 +1,21 @@
+/**
+ * NavIcons - Navigation Icon Components
+ * 
+ * SVG icon components for widget bottom navigation with fill-on-hover animation.
+ * Each icon has outline and filled variants that transition on hover/active state.
+ * 
+ * @module widget/NavIcons
+ */
+
 import * as React from "react";
 
+/** Props for navigation icon components */
 interface NavIconProps {
+  /** Whether the nav item is currently active */
   active: boolean;
+  /** Whether the nav item is being hovered */
   hovered?: boolean;
+  /** Additional CSS classes */
   className?: string;
 }
 

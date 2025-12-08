@@ -1,3 +1,12 @@
+/**
+ * ContactForm Component
+ * 
+ * Lead capture form displayed before chat begins. Collects first name, last name,
+ * email, and custom fields. Includes honeypot spam protection and input validation.
+ * 
+ * @module widget/components/ContactForm
+ */
+
 import { Suspense, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,24 +16,44 @@ import { PhoneInputField } from '../constants';
 import { createLead } from '../api';
 import type { ChatUser } from '../types';
 
+/** Custom field configuration */
 interface CustomField {
+  /** Unique field identifier */
   id: string;
+  /** Display label for the field */
   label: string;
+  /** Field input type */
   fieldType: 'text' | 'email' | 'phone' | 'select' | 'textarea';
+  /** Whether field is required */
   required: boolean;
+  /** Options for select fields */
   options?: string[];
 }
 
+/** Props for the ContactForm component */
 interface ContactFormProps {
+  /** Agent ID for lead creation */
   agentId: string;
+  /** Primary brand color for submit button */
   primaryColor: string;
+  /** Form title text */
   title: string;
+  /** Optional form subtitle text */
   subtitle?: string;
+  /** Array of custom field configurations */
   customFields: CustomField[];
+  /** Timestamp when form was loaded (for spam protection) */
   formLoadTime: number;
+  /** Form submission handler */
   onSubmit: (userData: ChatUser, conversationId?: string) => void;
 }
 
+/**
+ * Lead capture contact form component.
+ * 
+ * @param props - Component props
+ * @returns Form element with input fields and submit button
+ */
 export const ContactForm = ({
   agentId,
   primaryColor,

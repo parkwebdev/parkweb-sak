@@ -1,3 +1,12 @@
+/**
+ * Category Icons
+ * 
+ * Curated set of 25 UntitledUI icons for help center categories.
+ * Provides icon mapping and a reusable CategoryIcon component.
+ * 
+ * @module widget/category-icons
+ */
+
 import { 
   BookOpen01, 
   HelpCircle, 

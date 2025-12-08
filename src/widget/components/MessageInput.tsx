@@ -1,3 +1,12 @@
+/**
+ * MessageInput Component
+ * 
+ * Chat input area with auto-resizing textarea, emoji picker, file attachments,
+ * voice recording, and send button. Supports keyboard shortcuts (Enter to send).
+ * 
+ * @module widget/components/MessageInput
+ */
+
 import { Suspense, useRef, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -6,32 +15,59 @@ import { Send01, Microphone01, Attachment01, X, FaceSmile } from '@untitledui/ic
 import { VoiceInput } from '../constants';
 import { FileTypeIcon } from '@/components/chat/FileTypeIcons';
 
+/** Pending file attachment with preview URL */
 interface PendingFile {
+  /** Original file object */
   file: File;
+  /** Preview URL (data URL or object URL) */
   preview: string;
 }
 
+/** Props for the MessageInput component */
 interface MessageInputProps {
+  /** Current input value */
   messageInput: string;
+  /** Input change handler */
   onMessageChange: (value: string) => void;
+  /** Send button click handler */
   onSend: () => void;
+  /** Input placeholder text */
   placeholder: string;
+  /** Whether input is disabled */
   disabled: boolean;
+  /** Primary brand color for send button */
   primaryColor: string;
+  /** Whether file attachments are enabled */
   enableFileAttachments: boolean;
+  /** Whether voice messages are enabled */
   enableVoiceMessages: boolean;
+  /** Whether currently recording audio */
   isRecordingAudio: boolean;
+  /** Current recording duration in seconds */
   recordingTime: number;
+  /** Start recording handler */
   onStartRecording: () => void;
+  /** Stop recording handler (sends message) */
   onStopRecording: () => void;
+  /** Cancel recording handler */
   onCancelRecording: () => void;
+  /** Attach files button handler */
   onAttachFiles: () => void;
+  /** Currently pending file attachments */
   pendingFiles: PendingFile[];
+  /** Remove pending file handler */
   onRemoveFile: (index: number) => void;
 }
 
+/** Quick emoji shortcuts for the emoji picker */
 const QUICK_EMOJIS = ['😊', '👍', '❤️', '😂', '🎉', '👋', '🙏', '✨'];
 
+/**
+ * Chat input component with rich input features.
+ * 
+ * @param props - Component props
+ * @returns Input area with textarea and action buttons
+ */
 export const MessageInput = ({
   messageInput,
   onMessageChange,

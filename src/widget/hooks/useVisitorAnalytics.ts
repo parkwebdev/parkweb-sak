@@ -1,7 +1,25 @@
 /**
  * useVisitorAnalytics Hook
  * 
- * Tracks page visits and referrer journey for analytics.
+ * Tracks page visits, referrer journey, and UTM parameters for analytics.
+ * Persists data to localStorage and syncs with server for conversation metadata.
+ * 
+ * @module widget/hooks/useVisitorAnalytics
+ * 
+ * @example
+ * ```tsx
+ * const {
+ *   pageVisits,
+ *   referrerJourney,
+ *   setReferrerJourney,
+ *   currentPageRef
+ * } = useVisitorAnalytics({
+ *   agentId: 'agent-123',
+ *   visitorId: 'visitor-456',
+ *   previewMode: false,
+ *   activeConversationId: 'conv-789'
+ * });
+ * ```
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react';
@@ -10,13 +28,24 @@ import { updatePageVisit, type ReferrerJourney } from '../api';
 import { isInternalWidgetUrl } from '../constants';
 import type { PageVisit } from '../types';
 
+/** Options for the useVisitorAnalytics hook */
 interface UseVisitorAnalyticsOptions {
+  /** Agent ID for localStorage key namespacing */
   agentId: string;
+  /** Unique visitor identifier */
   visitorId: string;
+  /** Whether widget is in preview/editor mode */
   previewMode: boolean;
+  /** Active conversation ID for real-time updates */
   activeConversationId: string | null;
 }
 
+/**
+ * Hook for tracking visitor analytics data.
+ * 
+ * @param options - Configuration options for the hook
+ * @returns Analytics state, setters, and refs
+ */
 export function useVisitorAnalytics(options: UseVisitorAnalyticsOptions) {
   const { agentId, visitorId, previewMode, activeConversationId } = options;
   
