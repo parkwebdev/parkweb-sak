@@ -203,6 +203,219 @@ function extractSitemapUrls(xml: string): string[] {
   return sitemapUrls;
 }
 
+// Process a single URL source (fetch, chunk, embed, store)
+async function processUrlSource(
+  supabase: any,
+  sourceId: string,
+  agentId: string,
+  url: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    // Update status to processing
+    await supabase
+      .from('knowledge_sources')
+      .update({ status: 'processing' })
+      .eq('id', sourceId);
+
+    // Fetch content
+    const content = await fetchUrlContent(url);
+    
+    if (!content || content.length === 0) {
+      throw new Error('No content to process');
+    }
+
+    // Update content
+    await supabase
+      .from('knowledge_sources')
+      .update({ content })
+      .eq('id', sourceId);
+
+    // Delete existing chunks
+    await supabase
+      .from('knowledge_chunks')
+      .delete()
+      .eq('source_id', sourceId);
+
+    // Chunk and embed
+    const chunks = chunkText(content, 500, 50);
+    const embeddings = await generateEmbeddingsBatch(chunks, 5, 200);
+
+    // Store chunks
+    let successfulChunks = 0;
+    for (let i = 0; i < chunks.length; i++) {
+      const chunk = chunks[i];
+      const embedding = embeddings[i];
+      
+      if (embedding) {
+        const embeddingVector = `[${embedding.join(',')}]`;
+        const { error: insertError } = await supabase
+          .from('knowledge_chunks')
+          .insert({
+            source_id: sourceId,
+            agent_id: agentId,
+            chunk_index: i,
+            content: chunk.content,
+            embedding: embeddingVector,
+            token_count: chunk.tokenCount,
+            metadata: {
+              original_length: chunk.content.length,
+              embedding_model: EMBEDDING_MODEL,
+            }
+          });
+
+        if (!insertError) {
+          successfulChunks++;
+        }
+      }
+    }
+
+    // Update source status to ready
+    await supabase
+      .from('knowledge_sources')
+      .update({
+        status: 'ready',
+        metadata: {
+          processed_at: new Date().toISOString(),
+          chunks_count: successfulChunks,
+          total_chunks: chunks.length,
+          content_length: content.length,
+          chunking_version: 2,
+          embedding_model: EMBEDDING_MODEL,
+          embedding_dimensions: EMBEDDING_DIMENSIONS,
+        },
+      })
+      .eq('id', sourceId);
+
+    return { success: true };
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    
+    // Update source status to error
+    await supabase
+      .from('knowledge_sources')
+      .update({
+        status: 'error',
+        metadata: {
+          error: errorMessage,
+          failed_at: new Date().toISOString(),
+        },
+      })
+      .eq('id', sourceId);
+
+    return { success: false, error: errorMessage };
+  }
+}
+
+// Process pending child sources in batches with rate limiting
+async function processPendingBatch(
+  supabase: any,
+  parentSourceId: string,
+  batchId: string,
+  agentId: string
+): Promise<void> {
+  const CONCURRENT_LIMIT = 3; // Process 3 URLs at a time
+  const DELAY_BETWEEN_BATCHES_MS = 2000; // 2 second delay between batches
+  const DELAY_BETWEEN_URLS_MS = 500; // 0.5 second delay between individual URLs
+
+  console.log(`Starting batch processing for parent ${parentSourceId}, batch ${batchId}`);
+
+  let processed = 0;
+  let errors = 0;
+  let hasMore = true;
+
+  while (hasMore) {
+    // Get next batch of pending sources
+    const { data: pendingSources, error: fetchError } = await supabase
+      .from('knowledge_sources')
+      .select('id, source, agent_id')
+      .eq('status', 'pending')
+      .contains('metadata', { batch_id: batchId })
+      .limit(CONCURRENT_LIMIT);
+
+    if (fetchError) {
+      console.error('Error fetching pending sources:', fetchError);
+      break;
+    }
+
+    if (!pendingSources || pendingSources.length === 0) {
+      hasMore = false;
+      console.log('No more pending sources to process');
+      break;
+    }
+
+    console.log(`Processing batch of ${pendingSources.length} URLs...`);
+
+    // Process batch concurrently
+    const results = await Promise.all(
+      pendingSources.map(async (source: any, index: number) => {
+        // Stagger start times slightly
+        await new Promise(resolve => setTimeout(resolve, index * DELAY_BETWEEN_URLS_MS));
+        
+        console.log(`Processing: ${source.source.substring(0, 80)}...`);
+        return processUrlSource(supabase, source.id, source.agent_id, source.source);
+      })
+    );
+
+    // Count results
+    for (const result of results) {
+      if (result.success) {
+        processed++;
+      } else {
+        errors++;
+        console.error(`Failed to process URL: ${result.error}`);
+      }
+    }
+
+    // Update parent source with progress
+    const { data: remainingCount } = await supabase
+      .from('knowledge_sources')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'pending')
+      .contains('metadata', { batch_id: batchId });
+
+    const remaining = remainingCount?.length || 0;
+    
+    await supabase
+      .from('knowledge_sources')
+      .update({
+        metadata: {
+          is_sitemap: true,
+          batch_id: batchId,
+          processed_count: processed,
+          error_count: errors,
+          remaining_count: remaining,
+          last_progress_at: new Date().toISOString(),
+        },
+      })
+      .eq('id', parentSourceId);
+
+    console.log(`Progress: ${processed} processed, ${errors} errors, ${remaining} remaining`);
+
+    // Delay before next batch
+    if (hasMore) {
+      await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_BATCHES_MS));
+    }
+  }
+
+  // Final update to parent source
+  await supabase
+    .from('knowledge_sources')
+    .update({
+      content: `Sitemap processed. ${processed} pages indexed successfully${errors > 0 ? `, ${errors} failed` : ''}.`,
+      metadata: {
+        is_sitemap: true,
+        batch_id: batchId,
+        processed_count: processed,
+        error_count: errors,
+        remaining_count: 0,
+        completed_at: new Date().toISOString(),
+      },
+    })
+    .eq('id', parentSourceId);
+
+  console.log(`Batch processing complete: ${processed} processed, ${errors} errors`);
+}
+
 // Process a sitemap URL and create child sources
 async function processSitemap(
   supabase: any,
@@ -210,7 +423,7 @@ async function processSitemap(
   agentId: string,
   userId: string,
   sitemapUrl: string
-): Promise<{ urlCount: number; sitemapCount: number }> {
+): Promise<{ urlCount: number; sitemapCount: number; batchId: string }> {
   console.log('Processing sitemap:', sitemapUrl);
   
   const response = await fetch(sitemapUrl, {
@@ -305,7 +518,7 @@ async function processSitemap(
   
   console.log(`Created ${insertedCount} child knowledge sources`);
   
-  return { urlCount: insertedCount, sitemapCount };
+  return { urlCount: insertedCount, sitemapCount, batchId };
 }
 
 // Fetch URL content with Readability for clean HTML extraction
@@ -436,7 +649,7 @@ Deno.serve(async (req) => {
     if (source.type === 'url' && isSitemapUrl(source.source)) {
       console.log('Detected sitemap URL, processing as sitemap...');
       
-      const { urlCount, sitemapCount } = await processSitemap(
+      const { urlCount, sitemapCount, batchId } = await processSitemap(
         supabase,
         sourceId,
         source.agent_id,
@@ -444,18 +657,22 @@ Deno.serve(async (req) => {
         source.source
       );
       
-      // Update the sitemap source with metadata
+      // Update the sitemap source with initial metadata
       const { error: updateError } = await supabase
         .from('knowledge_sources')
         .update({
-          status: 'ready',
-          content: `Sitemap processed. Found ${urlCount} page URLs${sitemapCount > 0 ? ` across ${sitemapCount} child sitemaps` : ''}.`,
+          status: 'processing',
+          content: `Sitemap parsed. Processing ${urlCount} page URLs${sitemapCount > 0 ? ` from ${sitemapCount} child sitemaps` : ''}...`,
           metadata: {
             ...((source.metadata as any) || {}),
             processed_at: new Date().toISOString(),
             is_sitemap: true,
             urls_found: urlCount,
             child_sitemaps: sitemapCount,
+            batch_id: batchId,
+            processed_count: 0,
+            error_count: 0,
+            remaining_count: urlCount,
           },
         })
         .eq('id', sourceId);
@@ -464,7 +681,16 @@ Deno.serve(async (req) => {
         throw updateError;
       }
 
-      console.log(`Sitemap processed successfully: ${urlCount} URLs queued for processing`);
+      console.log(`Sitemap parsed: ${urlCount} URLs queued. Starting background batch processing...`);
+
+      // Start background batch processing using EdgeRuntime.waitUntil
+      // This allows the function to return immediately while processing continues
+      EdgeRuntime.waitUntil(
+        processPendingBatch(supabase, sourceId, batchId, source.agent_id)
+          .catch(error => {
+            console.error('Background batch processing failed:', error);
+          })
+      );
 
       return new Response(
         JSON.stringify({
@@ -473,6 +699,8 @@ Deno.serve(async (req) => {
           isSitemap: true,
           urlsFound: urlCount,
           childSitemaps: sitemapCount,
+          batchId,
+          message: `Processing ${urlCount} pages in background...`,
         }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
