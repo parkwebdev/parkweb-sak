@@ -62,6 +62,7 @@ export interface Message {
   senderAvatar?: string;
   linkPreviews?: Array<any>; // Cached link previews from message metadata
   failed?: boolean; // Message failed to send
+  quickReplies?: string[]; // AI-suggested follow-up actions
 }
 
 /**

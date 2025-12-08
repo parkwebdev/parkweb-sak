@@ -486,6 +486,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
           type: 'text', 
           reactions: [],
           linkPreviews: response.linkPreviews,
+          quickReplies: response.quickReplies,
         }]);
       }
     } catch (error) {
@@ -503,6 +504,47 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
         isActivelySendingRef.current = false;
       }, 0);
     }
+  };
+
+  // Handle quick reply selection - directly send the message
+  const handleQuickReplySelect = (suggestion: string) => {
+    // Clear quick replies from current message to prevent re-rendering
+    setMessages(prev => prev.map((msg, idx) => 
+      idx === prev.length - 1 && msg.quickReplies 
+        ? { ...msg, quickReplies: undefined }
+        : msg
+    ));
+    // Set input and trigger send on next tick after state updates
+    setMessageInput(suggestion);
+  };
+  
+  // Effect to send message when input is set from quick reply
+  const quickReplyPendingRef = useRef<string | null>(null);
+  
+  useEffect(() => {
+    // If messageInput was just set and matches a pending quick reply, send it
+    if (messageInput.trim() && !isActivelySendingRef.current) {
+      // Check if this looks like it was set programmatically (quick reply)
+      // by checking if it's a full sentence/question that wasn't being typed
+      const shouldAutoSend = quickReplyPendingRef.current === messageInput;
+      if (shouldAutoSend) {
+        quickReplyPendingRef.current = null;
+        handleSendMessage();
+      }
+    }
+  }, [messageInput]);
+  
+  // Override handleQuickReplySelect to use ref for tracking
+  const handleQuickReplySelectWithSend = (suggestion: string) => {
+    // Clear quick replies from current message
+    setMessages(prev => prev.map((msg, idx) => 
+      idx === prev.length - 1 && msg.quickReplies 
+        ? { ...msg, quickReplies: undefined }
+        : msg
+    ));
+    // Mark as pending and set input
+    quickReplyPendingRef.current = suggestion;
+    setMessageInput(suggestion);
   };
 
   const startAudioRecording = async () => {
@@ -711,6 +753,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                     messagesContainerRef={messagesContainerRef}
                     messagesEndRef={messagesEndRef}
                     onSendMessage={handleSendMessage}
+                    onQuickReplySelect={handleQuickReplySelectWithSend}
                     onStartRecording={startAudioRecording}
                     onStopRecording={stopAudioRecording}
                     onCancelRecording={cancelAudioRecording}

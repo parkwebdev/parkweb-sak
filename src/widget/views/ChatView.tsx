@@ -9,7 +9,7 @@
 
 import { Suspense, RefObject } from 'react';
 import { updateMessageReaction } from '../api';
-import { MessageBubble, ContactForm, MessageInput, TypingIndicator } from '../components';
+import { MessageBubble, ContactForm, MessageInput, TypingIndicator, QuickReplies } from '../components';
 import { FileDropZone } from '../constants';
 import type { Message, ChatUser } from '../types';
 import type { WidgetConfig } from '../api';
@@ -44,6 +44,7 @@ interface ChatViewProps {
   messagesContainerRef: RefObject<HTMLDivElement>;
   messagesEndRef: RefObject<HTMLDivElement>;
   onSendMessage: () => void;
+  onQuickReplySelect: (suggestion: string) => void;
   onStartRecording: () => void;
   onStopRecording: () => void;
   onCancelRecording: () => void;
@@ -75,6 +76,7 @@ export const ChatView = ({
   messagesContainerRef,
   messagesEndRef,
   onSendMessage,
+  onQuickReplySelect,
   onStartRecording,
   onStopRecording,
   onCancelRecording,
@@ -175,18 +177,30 @@ export const ChatView = ({
             nextMsg.role !== msg.role ||
             nextMsg.isSystemNotice ||
             (msg.role !== 'user' && nextMsgMetadata?.isHuman !== msgMetadata?.isHuman);
+          
+          // Show quick replies only on the last assistant message with suggestions
+          const isLastMessage = idx === messages.length - 1;
+          const showQuickReplies = isLastMessage && msg.role === 'assistant' && msg.quickReplies && msg.quickReplies.length > 0;
 
           return (
-            <MessageBubble
-              key={msg.id || idx}
-              message={msg}
-              primaryColor={config.primaryColor}
-              enableMessageReactions={config.enableMessageReactions}
-              onAddReaction={(emoji) => handleAddReaction(msg.id!, emoji)}
-              onRemoveReaction={(emoji) => handleRemoveReaction(msg.id!, emoji)}
-              isContinuation={isContinuation}
-              isLastInGroup={isLastInGroup}
-            />
+            <div key={msg.id || idx}>
+              <MessageBubble
+                message={msg}
+                primaryColor={config.primaryColor}
+                enableMessageReactions={config.enableMessageReactions}
+                onAddReaction={(emoji) => handleAddReaction(msg.id!, emoji)}
+                onRemoveReaction={(emoji) => handleRemoveReaction(msg.id!, emoji)}
+                isContinuation={isContinuation}
+                isLastInGroup={isLastInGroup}
+              />
+              {showQuickReplies && (
+                <QuickReplies
+                  suggestions={msg.quickReplies!}
+                  onSelect={onQuickReplySelect}
+                  primaryColor={config.primaryColor}
+                />
+              )}
+            </div>
           );
         })}
 
