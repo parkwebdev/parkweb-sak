@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/lib/toast';
 import type { Tables } from '@/integrations/supabase/types';
@@ -10,7 +10,7 @@ export const useKnowledgeSources = (agentId?: string) => {
   const [sources, setSources] = useState<KnowledgeSource[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchSources = async () => {
+  const fetchSources = useCallback(async () => {
     if (!agentId) return;
 
     try {
@@ -31,11 +31,55 @@ export const useKnowledgeSources = (agentId?: string) => {
     } finally {
       setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    fetchSources();
   }, [agentId]);
+
+  // Initial fetch and real-time subscription
+  useEffect(() => {
+    if (!agentId) return;
+
+    fetchSources();
+
+    // Subscribe to real-time updates for this agent's knowledge sources
+    const channel = supabase
+      .channel(`knowledge-sources-${agentId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'knowledge_sources',
+          filter: `agent_id=eq.${agentId}`,
+        },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            setSources((prev) => {
+              // Avoid duplicates (optimistic update may already have added it)
+              if (prev.some((s) => s.id === (payload.new as KnowledgeSource).id)) {
+                return prev;
+              }
+              return [payload.new as KnowledgeSource, ...prev];
+            });
+          } else if (payload.eventType === 'UPDATE') {
+            setSources((prev) =>
+              prev.map((s) =>
+                s.id === (payload.new as KnowledgeSource).id
+                  ? (payload.new as KnowledgeSource)
+                  : s
+              )
+            );
+          } else if (payload.eventType === 'DELETE') {
+            setSources((prev) =>
+              prev.filter((s) => s.id !== (payload.old as { id: string }).id)
+            );
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [agentId, fetchSources]);
 
   const markSourceAsError = async (sourceId: string, errorMessage: string) => {
     try {
@@ -101,26 +145,23 @@ export const useKnowledgeSources = (agentId?: string) => {
 
       if (error) throw error;
 
-      // Trigger processing and handle invocation errors
-      const { error: invokeError } = await supabase.functions.invoke('process-knowledge-source', {
-        body: { sourceId: data.id, agentId },
-      });
-
-      if (invokeError) {
-        console.error('Edge function invocation failed:', invokeError);
-        await markSourceAsError(data.id, `Processing failed: ${invokeError.message}`);
-        toast.error('Processing failed', {
-          description: 'The document could not be processed. Please try again.',
-        });
-        await fetchSources();
-        return null;
-      }
+      // Optimistic update - add to local state immediately
+      setSources((prev) => [data, ...prev]);
 
       toast.success('Document uploaded', {
         description: 'Processing document...',
       });
 
-      await fetchSources();
+      // Trigger processing in background (don't await)
+      supabase.functions.invoke('process-knowledge-source', {
+        body: { sourceId: data.id, agentId },
+      }).then(({ error: invokeError }) => {
+        if (invokeError) {
+          console.error('Edge function invocation failed:', invokeError);
+          markSourceAsError(data.id, `Processing failed: ${invokeError.message}`);
+        }
+      });
+
       return data.id;
     } catch (error: any) {
       console.error('Error uploading document:', error);
@@ -154,26 +195,23 @@ export const useKnowledgeSources = (agentId?: string) => {
 
       if (error) throw error;
 
-      // Trigger processing and handle invocation errors
-      const { error: invokeError } = await supabase.functions.invoke('process-knowledge-source', {
-        body: { sourceId: data.id, agentId },
-      });
-
-      if (invokeError) {
-        console.error('Edge function invocation failed:', invokeError);
-        await markSourceAsError(data.id, `Processing failed: ${invokeError.message}`);
-        toast.error('Processing failed', {
-          description: 'The URL could not be processed. Please try again.',
-        });
-        await fetchSources();
-        return null;
-      }
+      // Optimistic update - add to local state immediately
+      setSources((prev) => [data, ...prev]);
 
       toast.success('URL added', {
         description: 'Processing content...',
       });
 
-      await fetchSources();
+      // Trigger processing in background (don't await)
+      supabase.functions.invoke('process-knowledge-source', {
+        body: { sourceId: data.id, agentId },
+      }).then(({ error: invokeError }) => {
+        if (invokeError) {
+          console.error('Edge function invocation failed:', invokeError);
+          markSourceAsError(data.id, `Processing failed: ${invokeError.message}`);
+        }
+      });
+
       return data.id;
     } catch (error: any) {
       console.error('Error adding URL source:', error);
@@ -211,26 +249,23 @@ export const useKnowledgeSources = (agentId?: string) => {
 
       if (error) throw error;
 
-      // Trigger processing and handle invocation errors
-      const { error: invokeError } = await supabase.functions.invoke('process-knowledge-source', {
-        body: { sourceId: data.id, agentId },
-      });
-
-      if (invokeError) {
-        console.error('Edge function invocation failed:', invokeError);
-        await markSourceAsError(data.id, `Processing failed: ${invokeError.message}`);
-        toast.error('Processing failed', {
-          description: 'The content could not be processed. Please try again.',
-        });
-        await fetchSources();
-        return null;
-      }
+      // Optimistic update - add to local state immediately
+      setSources((prev) => [data, ...prev]);
 
       toast.success('Content added', {
         description: 'Processing content...',
       });
 
-      await fetchSources();
+      // Trigger processing in background (don't await)
+      supabase.functions.invoke('process-knowledge-source', {
+        body: { sourceId: data.id, agentId },
+      }).then(({ error: invokeError }) => {
+        if (invokeError) {
+          console.error('Edge function invocation failed:', invokeError);
+          markSourceAsError(data.id, `Processing failed: ${invokeError.message}`);
+        }
+      });
+
       return data.id;
     } catch (error: any) {
       console.error('Error adding text source:', error);
@@ -243,18 +278,23 @@ export const useKnowledgeSources = (agentId?: string) => {
 
   const deleteSource = async (sourceId: string) => {
     try {
+      // Optimistic update - remove from local state immediately
+      setSources((prev) => prev.filter((s) => s.id !== sourceId));
+
       const { error } = await supabase
         .from('knowledge_sources')
         .delete()
         .eq('id', sourceId);
 
-      if (error) throw error;
+      if (error) {
+        // Revert optimistic update on error
+        await fetchSources();
+        throw error;
+      }
 
       toast.success('Source deleted', {
         description: 'Knowledge source has been removed.',
       });
-
-      await fetchSources();
     } catch (error: any) {
       console.error('Error deleting source:', error);
       toast.error('Delete failed', {
@@ -265,7 +305,13 @@ export const useKnowledgeSources = (agentId?: string) => {
 
   const reprocessSource = async (sourceId: string) => {
     try {
-      // Update status to processing
+      // Optimistic update - set status to processing immediately
+      setSources((prev) =>
+        prev.map((s) =>
+          s.id === sourceId ? { ...s, status: 'processing' } : s
+        )
+      );
+
       const { error: updateError } = await supabase
         .from('knowledge_sources')
         .update({ status: 'processing' })
@@ -273,23 +319,26 @@ export const useKnowledgeSources = (agentId?: string) => {
 
       if (updateError) throw updateError;
 
-      // Trigger reprocessing
-      const { error: invokeError } = await supabase.functions.invoke('process-knowledge-source', {
-        body: { sourceId, agentId },
-      });
-
-      if (invokeError) throw invokeError;
-
       toast.success('Reprocessing', {
         description: 'Knowledge source is being reprocessed.',
       });
 
-      await fetchSources();
+      // Trigger reprocessing in background
+      supabase.functions.invoke('process-knowledge-source', {
+        body: { sourceId, agentId },
+      }).then(({ error: invokeError }) => {
+        if (invokeError) {
+          console.error('Edge function invocation failed:', invokeError);
+          markSourceAsError(sourceId, `Reprocessing failed: ${invokeError.message}`);
+        }
+      });
     } catch (error: any) {
       console.error('Error reprocessing source:', error);
       toast.error('Reprocess failed', {
         description: error.message,
       });
+      // Revert optimistic update
+      await fetchSources();
     }
   };
 
@@ -307,7 +356,15 @@ export const useKnowledgeSources = (agentId?: string) => {
     let completed = 0;
     let failed = 0;
 
-    // Update all sources to processing status
+    // Optimistic update - set all to processing
+    setSources((prev) =>
+      prev.map((s) =>
+        sourcesToRetrain.some((sr) => sr.id === s.id)
+          ? { ...s, status: 'processing' }
+          : s
+      )
+    );
+
     const { error: updateError } = await supabase
       .from('knowledge_sources')
       .update({ status: 'processing' })
@@ -316,10 +373,9 @@ export const useKnowledgeSources = (agentId?: string) => {
 
     if (updateError) {
       toast.error('Failed to start retraining', { description: updateError.message });
+      await fetchSources();
       return { success: 0, failed: total };
     }
-
-    await fetchSources();
 
     // Process sources in batches of 3 to avoid rate limits
     const batchSize = 3;
@@ -350,7 +406,6 @@ export const useKnowledgeSources = (agentId?: string) => {
       }
     }
 
-    await fetchSources();
     return { success: completed, failed };
   };
 
