@@ -1053,7 +1053,7 @@ Generate a warm, personalized greeting using the user information provided above
       type: 'function',
       function: {
         name: 'suggest_quick_replies',
-        description: 'Suggest 2-4 relevant follow-up questions or actions the user might want to take next. Use this after every response to help guide the conversation.',
+        description: 'IMPORTANT: Always provide your full response text first, then call this tool to suggest follow-up options. Suggest 2-4 relevant follow-up questions or actions based on your response. Never call this tool without also providing response content in the same message.',
         parameters: {
           type: 'object',
           properties: {
@@ -1172,16 +1172,23 @@ Generate a warm, personalized greeting using the user information provided above
         }
       }
 
-      // Only call AI again if there were actual tool results (not just quick replies)
-      if (toolResults.length > 0) {
-        // Call AI again with tool results
-        const followUpMessages = [
-          ...aiRequestBody.messages,
-          assistantMessage,
-          ...toolResults,
-        ];
+      // If AI only provided quick replies without content, force a follow-up call to get actual response
+      const needsContentFollowUp = !assistantContent && quickReplies.length > 0 && toolResults.length === 0;
+      
+      // Call AI again if there were actual tool results OR if we need content
+      if (toolResults.length > 0 || needsContentFollowUp) {
+        // Call AI again with tool results (or to get content if only quick replies were provided)
+        const followUpMessages = needsContentFollowUp 
+          ? aiRequestBody.messages // Just use original messages if we only need content
+          : [
+              ...aiRequestBody.messages,
+              assistantMessage,
+              ...toolResults,
+            ];
 
-        console.log('Calling AI with tool results for final response');
+        console.log(needsContentFollowUp 
+          ? 'AI only provided quick replies, making follow-up call for content'
+          : 'Calling AI with tool results for final response');
 
         const followUpResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
           method: 'POST',
