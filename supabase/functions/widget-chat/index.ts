@@ -935,6 +935,55 @@ IMPORTANT GUIDELINES FOR RESPONSES:
       }
     }
 
+    // Extract user context from conversation metadata (lead form data)
+    const conversationMetadata = (conversation?.metadata as any) || {};
+    let userContextSection = '';
+    
+    // Check if we have meaningful user context to add
+    const hasUserName = conversationMetadata.lead_name;
+    const hasCustomFields = conversationMetadata.custom_fields && Object.keys(conversationMetadata.custom_fields).length > 0;
+    
+    if (hasUserName || hasCustomFields) {
+      userContextSection = `
+
+USER INFORMATION (from contact form):`;
+      
+      if (conversationMetadata.lead_name) {
+        userContextSection += `\n- Name: ${conversationMetadata.lead_name}`;
+      }
+      if (conversationMetadata.lead_email) {
+        userContextSection += `\n- Email: ${conversationMetadata.lead_email}`;
+      }
+      
+      // Add location if available
+      const location = conversationMetadata.city && conversationMetadata.country 
+        ? `${conversationMetadata.city}, ${conversationMetadata.country}` 
+        : conversationMetadata.country || null;
+      if (location) {
+        userContextSection += `\n- Location: ${location}`;
+      }
+      
+      // Add custom fields from contact form
+      if (conversationMetadata.custom_fields) {
+        for (const [label, value] of Object.entries(conversationMetadata.custom_fields)) {
+          if (value) {
+            userContextSection += `\n- ${label}: ${value}`;
+          }
+        }
+      }
+      
+      userContextSection += `
+
+Use this information to personalize your responses when appropriate (e.g., address them by name, reference their company or interests). Be natural about it - don't force personalization if it doesn't fit the conversation.`;
+      
+      console.log('Added user context to system prompt');
+    }
+
+    // Append user context to system prompt
+    if (userContextSection) {
+      systemPrompt = systemPrompt + userContextSection;
+    }
+
     // Build the initial AI request with all behavior settings
     const aiRequestBody: any = {
       model: agent.model || 'google/gemini-2.5-flash',
