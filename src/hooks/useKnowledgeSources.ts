@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/lib/toast';
+import { logger } from '@/utils/logger';
 import type { Tables } from '@/integrations/supabase/types';
 
 type KnowledgeSource = Tables<'knowledge_sources'>;
@@ -24,7 +25,7 @@ export const useKnowledgeSources = (agentId?: string) => {
       if (error) throw error;
       setSources(data || []);
     } catch (error: any) {
-      console.error('Error fetching knowledge sources:', error);
+      logger.error('Error fetching knowledge sources', error);
       toast.error('Error loading knowledge sources', {
         description: error.message,
       });
@@ -104,7 +105,7 @@ export const useKnowledgeSources = (agentId?: string) => {
         })
         .eq('id', sourceId);
     } catch (e) {
-      console.error('Failed to mark source as error:', e);
+      logger.error('Failed to mark source as error', e);
     }
   };
 
@@ -167,14 +168,14 @@ export const useKnowledgeSources = (agentId?: string) => {
         body: { sourceId: data.id, agentId },
       }).then(({ error: invokeError }) => {
         if (invokeError) {
-          console.error('Edge function invocation failed:', invokeError);
+          logger.error('Edge function invocation failed', invokeError);
           markSourceAsError(data.id, `Processing failed: ${invokeError.message}`);
         }
       });
 
       return data.id;
     } catch (error: any) {
-      console.error('Error uploading document:', error);
+      logger.error('Error uploading document', error);
       toast.error('Upload failed', {
         description: error.message,
       });
@@ -217,14 +218,14 @@ export const useKnowledgeSources = (agentId?: string) => {
         body: { sourceId: data.id, agentId },
       }).then(({ error: invokeError }) => {
         if (invokeError) {
-          console.error('Edge function invocation failed:', invokeError);
+          logger.error('Edge function invocation failed', invokeError);
           markSourceAsError(data.id, `Processing failed: ${invokeError.message}`);
         }
       });
 
       return data.id;
     } catch (error: any) {
-      console.error('Error adding URL source:', error);
+      logger.error('Error adding URL source', error);
       toast.error('Failed to add URL', {
         description: error.message,
       });
@@ -276,14 +277,14 @@ export const useKnowledgeSources = (agentId?: string) => {
         body: { sourceId: data.id, agentId },
       }).then(({ error: invokeError }) => {
         if (invokeError) {
-          console.error('Edge function invocation failed:', invokeError);
+          logger.error('Edge function invocation failed', invokeError);
           markSourceAsError(data.id, `Processing failed: ${invokeError.message}`);
         }
       });
 
       return data.id;
     } catch (error: any) {
-      console.error('Error adding sitemap source:', error);
+      logger.error('Error adding sitemap source', error);
       toast.error('Failed to add sitemap', {
         description: error.message,
       });
@@ -330,14 +331,14 @@ export const useKnowledgeSources = (agentId?: string) => {
         body: { sourceId: data.id, agentId },
       }).then(({ error: invokeError }) => {
         if (invokeError) {
-          console.error('Edge function invocation failed:', invokeError);
+          logger.error('Edge function invocation failed', invokeError);
           markSourceAsError(data.id, `Processing failed: ${invokeError.message}`);
         }
       });
 
       return data.id;
     } catch (error: any) {
-      console.error('Error adding text source:', error);
+      logger.error('Error adding text source', error);
       toast.error('Failed to add content', {
         description: error.message,
       });
@@ -354,14 +355,14 @@ export const useKnowledgeSources = (agentId?: string) => {
 
       // If it's a sitemap, first delete all child sources
       if (isSitemap) {
-        console.log(`Deleting sitemap children for source ${sourceId}`);
+        logger.info(`Deleting sitemap children for source ${sourceId}`);
         const { error: childDeleteError } = await supabase
           .from('knowledge_sources')
           .delete()
           .contains('metadata', { parent_source_id: sourceId });
         
         if (childDeleteError) {
-          console.error('Failed to delete sitemap children:', childDeleteError);
+          logger.error('Failed to delete sitemap children', childDeleteError);
         }
       }
 
@@ -390,7 +391,7 @@ export const useKnowledgeSources = (agentId?: string) => {
         description: 'Knowledge source has been removed.',
       });
     } catch (error: any) {
-      console.error('Error deleting source:', error);
+      logger.error('Error deleting source', error);
       toast.error('Delete failed', {
         description: error.message,
       });
@@ -422,12 +423,12 @@ export const useKnowledgeSources = (agentId?: string) => {
         body: { sourceId, agentId },
       }).then(({ error: invokeError }) => {
         if (invokeError) {
-          console.error('Edge function invocation failed:', invokeError);
+          logger.error('Edge function invocation failed', invokeError);
           markSourceAsError(sourceId, `Reprocessing failed: ${invokeError.message}`);
         }
       });
     } catch (error: any) {
-      console.error('Error reprocessing source:', error);
+      logger.error('Error reprocessing source', error);
       toast.error('Reprocess failed', {
         description: error.message,
       });
@@ -447,14 +448,14 @@ export const useKnowledgeSources = (agentId?: string) => {
         body: { sourceId, agentId, resume: true },
       }).then(({ error: invokeError }) => {
         if (invokeError) {
-          console.error('Edge function invocation failed:', invokeError);
+          logger.error('Edge function invocation failed', invokeError);
           toast.error('Resume failed', {
             description: invokeError.message,
           });
         }
       });
     } catch (error: any) {
-      console.error('Error resuming processing:', error);
+      logger.error('Error resuming processing', error);
       toast.error('Resume failed', {
         description: error.message,
       });
@@ -511,7 +512,7 @@ export const useKnowledgeSources = (agentId?: string) => {
             if (error) throw error;
             completed++;
           } catch (error) {
-            console.error(`Failed to retrain source ${source.id}:`, error);
+            logger.error(`Failed to retrain source ${source.id}`, error);
             failed++;
           }
           
@@ -572,7 +573,7 @@ export const useKnowledgeSources = (agentId?: string) => {
 
       toast.success('Page deleted');
     } catch (error: any) {
-      console.error('Error deleting child source:', error);
+      logger.error('Error deleting child source', error);
       toast.error('Delete failed', { description: error.message });
     }
   };
@@ -601,12 +602,12 @@ export const useKnowledgeSources = (agentId?: string) => {
         body: { sourceId, agentId },
       }).then(({ error: invokeError }) => {
         if (invokeError) {
-          console.error('Edge function invocation failed:', invokeError);
+          logger.error('Edge function invocation failed', invokeError);
           markSourceAsError(sourceId, `Retry failed: ${invokeError.message}`);
         }
       });
     } catch (error: any) {
-      console.error('Error retrying child source:', error);
+      logger.error('Error retrying child source', error);
       toast.error('Retry failed', { description: error.message });
       await fetchSources();
     }

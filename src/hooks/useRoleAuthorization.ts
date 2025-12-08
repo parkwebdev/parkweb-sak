@@ -1,6 +1,7 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useState, useEffect } from 'react';
+import { logger } from '@/utils/logger';
 import type { UserRole } from '@/types/team';
 
 interface RoleAuthData {
@@ -36,7 +37,7 @@ export const useRoleAuthorization = (): RoleAuthData => {
           .single();
 
         if (error) {
-          console.error('Error fetching user role:', error);
+          logger.error('Error fetching user role', error);
           // Set default role if no role exists
           setRole('member');
           setPermissions([]);
@@ -45,7 +46,7 @@ export const useRoleAuthorization = (): RoleAuthData => {
           setPermissions(data.permissions || []);
         }
       } catch (error) {
-        console.error('Error in fetchUserRole:', error);
+        logger.error('Error in fetchUserRole', error);
         setRole('member');
         setPermissions([]);
       } finally {

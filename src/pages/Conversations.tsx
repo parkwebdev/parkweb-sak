@@ -27,6 +27,7 @@ import { formatShortTime, formatSenderName } from '@/lib/time-formatting';
 import { QuickEmojiButton } from '@/components/chat/QuickEmojiButton';
 import { useAutoResizeTextarea } from '@/hooks/useAutoResizeTextarea';
 import { toast } from '@/lib/toast';
+import { logger } from '@/utils/logger';
 
 type Conversation = Tables<'conversations'> & {
   agents?: { name: string };
@@ -242,7 +243,7 @@ const Conversations: React.FC = () => {
             filter: `conversation_id=eq.${selectedConversation.id}`
           },
           (payload) => {
-            console.log('[Admin] Message UPDATE received:', {
+            logger.debug('[Admin] Message UPDATE received', {
               messageId: payload.new?.id,
               metadata: (payload.new as any)?.metadata,
               reactions: (payload.new as any)?.metadata?.reactions,
@@ -250,7 +251,7 @@ const Conversations: React.FC = () => {
             const updatedMessage = payload.new as Message;
             // Incremental update - only update the affected message
             setMessages(prev => {
-              console.log('[Admin] Updating message in state:', updatedMessage.id);
+              logger.debug('[Admin] Updating message in state', updatedMessage.id);
               return prev.map(m => m.id === updatedMessage.id ? updatedMessage : m);
             });
           }
@@ -297,9 +298,9 @@ const Conversations: React.FC = () => {
         body: { conversationId, readerType: 'admin' }
       }).then(({ data }) => {
         if (data?.updated > 0) {
-          console.log('[Conversations] Marked', data.updated, 'messages as read');
+          logger.debug('[Conversations] Marked messages as read', data.updated);
         }
-      }).catch(err => console.error('Failed to mark messages as read:', err));
+      }).catch(err => logger.error('Failed to mark messages as read', err));
     } finally {
       if (showLoading) setLoadingMessages(false);
       isInitialLoadRef.current = false;

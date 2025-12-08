@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/lib/toast';
+import { logger } from '@/utils/logger';
 
 export interface CustomField {
   id: string;
@@ -197,7 +198,7 @@ export const useEmbeddedChatConfig = (agentId: string) => {
         });
       }
     } catch (error: any) {
-      console.error('Error loading embedded chat config:', error);
+      logger.error('Error loading embedded chat config', error);
     } finally {
       setLoading(false);
     }
