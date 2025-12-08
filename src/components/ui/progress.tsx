@@ -8,14 +8,21 @@ interface ProgressProps extends React.ComponentPropsWithoutRef<typeof ProgressPr
   showLabel?: boolean;
   labelPosition?: "left" | "right";
   formatLabel?: (value: number) => string;
+  variant?: "default" | "success";
 }
+
+const indicatorVariants = {
+  default: "bg-primary",
+  success: "bg-success",
+};
 
 const Progress = React.forwardRef<
   React.ElementRef<typeof ProgressPrimitive.Root>,
   ProgressProps
->(({ className, value, showLabel, labelPosition = "right", formatLabel, ...props }, ref) => {
+>(({ className, value, showLabel, labelPosition = "right", formatLabel, variant = "default", ...props }, ref) => {
   const displayValue = value || 0;
   const formattedLabel = formatLabel ? formatLabel(displayValue) : `${displayValue.toFixed(1)}%`;
+  const indicatorClass = indicatorVariants[variant];
 
   if (showLabel) {
     return (
@@ -29,7 +36,7 @@ const Progress = React.forwardRef<
           {...props}
         >
           <ProgressPrimitive.Indicator
-            className="h-full w-full flex-1 bg-primary transition-all"
+            className={cn("h-full w-full flex-1 transition-all", indicatorClass)}
             style={{ transform: `translateX(-${100 - displayValue}%)` }}
           />
         </ProgressPrimitive.Root>
@@ -50,7 +57,7 @@ const Progress = React.forwardRef<
       {...props}
     >
       <ProgressPrimitive.Indicator
-        className="h-full w-full flex-1 bg-primary transition-all"
+        className={cn("h-full w-full flex-1 transition-all", indicatorClass)}
         style={{ transform: `translateX(-${100 - displayValue}%)` }}
       />
     </ProgressPrimitive.Root>
