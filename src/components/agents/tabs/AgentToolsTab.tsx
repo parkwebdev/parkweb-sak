@@ -26,6 +26,7 @@ import { AgentApiKeyManager } from '@/components/agents/AgentApiKeyManager';
 import { ApiUseCasesModal } from '@/components/agents/ApiUseCasesModal';
 import { ToolUseCasesModal } from '@/components/agents/ToolUseCasesModal';
 import { DebugConsole, useDebugLogs } from '@/components/agents/DebugConsole';
+import { logger } from '@/utils/logger';
 
 type AgentTool = Tables<'agent_tools'>;
 type ToolsTab = 'api-access' | 'custom-tools' | 'webhooks';
@@ -100,7 +101,7 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
       if (error) throw error;
       setTools(data || []);
     } catch (error) {
-      console.error('Error fetching tools:', error);
+      logger.error('Error fetching tools:', error);
       toast.error('Failed to load tools');
     } finally {
       setLoading(false);
@@ -178,7 +179,7 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
       } : t));
       toast.success('Tool updated successfully');
     } catch (error) {
-      console.error('Error updating tool:', error);
+      logger.error('Error updating tool:', error);
       toast.error('Failed to update tool. Check JSON format.');
       throw error;
     }
@@ -196,7 +197,7 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
       setTools(tools.map(t => t.id === id ? { ...t, enabled } : t));
       toast.success(`Tool ${enabled ? 'enabled' : 'disabled'}`);
     } catch (error) {
-      console.error('Error updating tool:', error);
+      logger.error('Error updating tool:', error);
       toast.error('Failed to update tool');
     }
   };
@@ -213,7 +214,7 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
       setTools(tools.filter(t => t.id !== id));
       toast.success('Tool deleted');
     } catch (error) {
-      console.error('Error deleting tool:', error);
+      logger.error('Error deleting tool:', error);
       toast.error('Failed to delete tool');
     }
   };
@@ -263,7 +264,7 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
       
       setTestResult(data);
     } catch (error: any) {
-      console.error('Error testing tool:', error);
+      logger.error('Error testing tool:', error);
       
       if (debugMode) {
         debugLog.error(`Tool test error: ${error.message}`, {

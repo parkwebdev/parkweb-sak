@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useSecurityLog } from '@/hooks/useSecurityLog';
 import { SavedIndicator } from './SavedIndicator';
 import { TeamMember, PERMISSION_GROUPS, PERMISSION_LABELS } from '@/types/team';
+import { logger } from '@/utils/logger';
 
 interface RoleManagementDialogProps {
   member: TeamMember | null;
@@ -55,13 +56,13 @@ export const RoleManagementDialog: React.FC<RoleManagementDialogProps> = ({
         .single();
 
       if (error && error.code !== 'PGRST116') {
-        console.error('Error fetching current user role:', error);
+        logger.error('Error fetching current user role:', error);
         return;
       }
 
       setCurrentUserRole(data?.role || 'member');
     } catch (error) {
-      console.error('Error in fetchCurrentUserRole:', error);
+      logger.error('Error in fetchCurrentUserRole:', error);
     }
   };
 
@@ -82,7 +83,7 @@ export const RoleManagementDialog: React.FC<RoleManagementDialogProps> = ({
         .single();
 
       if (error && error.code !== 'PGRST116') {
-        console.error('Error fetching member role:', error);
+        logger.error('Error fetching member role:', error);
         return;
       }
 
@@ -94,7 +95,7 @@ export const RoleManagementDialog: React.FC<RoleManagementDialogProps> = ({
         setPermissions([]);
       }
     } catch (error) {
-      console.error('Error in fetchMemberRole:', error);
+      logger.error('Error in fetchMemberRole:', error);
     }
   };
 
@@ -146,7 +147,7 @@ export const RoleManagementDialog: React.FC<RoleManagementDialogProps> = ({
         onClose();
       }, 1500);
     } catch (error) {
-      console.error('Error in handleSave:', error);
+      logger.error('Error in handleSave:', error);
       
       // Log failed role change attempt
       if (oldRole !== role) {

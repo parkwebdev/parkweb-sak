@@ -21,6 +21,7 @@ import { toast } from '@/lib/toast';
 import { subDays } from 'date-fns';
 import { AnimatedList } from '@/components/ui/animated-list';
 import { AnimatedItem } from '@/components/ui/animated-item';
+import { logger } from '@/utils/logger';
 
 const Analytics: React.FC = () => {
   const { user } = useAuth();
@@ -177,7 +178,7 @@ const Analytics: React.FC = () => {
       await generateCSVReport(analyticsData, reportConfig, startDate, endDate, user?.email || 'User');
       toast.success('CSV exported successfully');
     } catch (error) {
-      console.error('Export error:', error);
+      logger.error('Export error:', error);
       toast.error('Failed to export CSV');
     }
   };
@@ -187,7 +188,7 @@ const Analytics: React.FC = () => {
       await generatePDFReport(analyticsData, reportConfig, startDate, endDate, user?.email || 'User');
       toast.success('PDF exported successfully');
     } catch (error) {
-      console.error('Export error:', error);
+      logger.error('Export error:', error);
       toast.error('Failed to export PDF');
     }
   };

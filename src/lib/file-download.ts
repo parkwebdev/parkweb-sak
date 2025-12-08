@@ -1,3 +1,5 @@
+import { logger } from '@/utils/logger';
+
 /**
  * Downloads a file from a cross-origin URL by fetching it as a blob
  * and triggering a programmatic download.
@@ -23,7 +25,7 @@ export const downloadFile = async (url: string, fileName: string): Promise<void>
     // Clean up the blob URL
     URL.revokeObjectURL(blobUrl);
   } catch (error) {
-    console.error('Download failed:', error);
+    logger.error('Download failed:', error);
     // Fallback: open in new tab
     window.open(url, '_blank');
   }

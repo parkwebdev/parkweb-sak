@@ -8,6 +8,7 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
 
 /**
  * Configuration for inline article image optimization
@@ -194,7 +195,7 @@ export const uploadArticleImage = async (
     });
 
   if (error) {
-    console.error('Image upload error:', error);
+    logger.error('Image upload error:', error);
     throw new Error('Failed to upload image');
   }
 
@@ -237,7 +238,7 @@ export const uploadFeaturedImage = async (
     });
 
   if (error) {
-    console.error('Featured image upload error:', error);
+    logger.error('Featured image upload error:', error);
     throw new Error('Failed to upload featured image');
   }
 
@@ -272,6 +273,6 @@ export const deleteArticleImage = async (imageUrl: string): Promise<void> => {
     .remove([filePath]);
 
   if (error) {
-    console.error('Image delete error:', error);
+    logger.error('Image delete error:', error);
   }
 };

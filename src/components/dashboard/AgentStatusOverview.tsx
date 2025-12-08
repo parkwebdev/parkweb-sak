@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Cube01 as Bot, ChevronRight } from '@untitledui/icons';
 import { AnimatedList } from '@/components/ui/animated-list';
 import { AnimatedItem } from '@/components/ui/animated-item';
+import { logger } from '@/utils/logger';
 
 interface Agent {
   id: string;
@@ -58,7 +59,7 @@ export const AgentStatusOverview: React.FC = () => {
         conversationCount: countMap[agent.id] || 0
       })));
     } catch (error) {
-      console.error('Error fetching agents:', error);
+      logger.error('Error fetching agents:', error);
     } finally {
       setLoading(false);
     }
