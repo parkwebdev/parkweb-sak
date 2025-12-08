@@ -27,7 +27,7 @@ export const useScheduledReports = () => {
       if (error) throw error;
       setReports(data || []);
     } catch (error: any) {
-      console.error('Error fetching scheduled reports:', error);
+      logger.error('Error fetching scheduled reports:', error);
       toast.error('Error fetching reports', {
         description: error.message,
       });
@@ -59,7 +59,7 @@ export const useScheduledReports = () => {
       await fetchReports();
       return data;
     } catch (error: any) {
-      console.error('Error creating scheduled report:', error);
+      logger.error('Error creating scheduled report:', error);
       toast.error('Error creating report', {
         description: error.message,
       });
@@ -84,7 +84,7 @@ export const useScheduledReports = () => {
       await fetchReports();
       return data;
     } catch (error: any) {
-      console.error('Error updating scheduled report:', error);
+      logger.error('Error updating scheduled report:', error);
       toast.error('Error updating report', {
         description: error.message,
       });
@@ -106,7 +106,7 @@ export const useScheduledReports = () => {
 
       await fetchReports();
     } catch (error: any) {
-      console.error('Error deleting scheduled report:', error);
+      logger.error('Error deleting scheduled report:', error);
       toast.error('Error deleting report', {
         description: error.message,
       });
@@ -126,7 +126,7 @@ export const useScheduledReports = () => {
 
       await fetchReports();
     } catch (error: any) {
-      console.error('Error toggling report status:', error);
+      logger.error('Error toggling report status:', error);
       toast.error('Error updating status', {
         description: error.message,
       });
