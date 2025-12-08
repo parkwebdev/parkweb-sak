@@ -4,6 +4,7 @@ import { toast } from '@/lib/toast';
 import { logger } from '@/utils/logger';
 import { getErrorMessage } from '@/types/errors';
 import type { Tables } from '@/integrations/supabase/types';
+import type { KnowledgeSourceMetadata } from '@/types/metadata';
 
 type KnowledgeSource = Tables<'knowledge_sources'>;
 type KnowledgeType = 'pdf' | 'url' | 'api' | 'json' | 'xml' | 'csv';
@@ -366,8 +367,8 @@ export const useKnowledgeSources = (agentId?: string) => {
     try {
       // Find the source to check if it's a sitemap (has children)
       const sourceToDelete = sources.find(s => s.id === sourceId);
-      const metadata = sourceToDelete?.metadata as Record<string, unknown> | null;
-      const isSitemap = metadata?.is_sitemap === true;
+      const metadata = (sourceToDelete?.metadata || {}) as KnowledgeSourceMetadata;
+      const isSitemap = metadata.is_sitemap === true;
 
       // If it's a sitemap, first delete all child sources
       if (isSitemap) {
@@ -387,8 +388,8 @@ export const useKnowledgeSources = (agentId?: string) => {
         // Remove the source itself
         if (s.id === sourceId) return false;
         // Also remove any child sources if this is a sitemap
-        const meta = s.metadata as Record<string, unknown> | null;
-        if (meta?.parent_source_id === sourceId) return false;
+        const meta = (s.metadata || {}) as KnowledgeSourceMetadata;
+        if (meta.parent_source_id === sourceId) return false;
         return true;
       }));
 

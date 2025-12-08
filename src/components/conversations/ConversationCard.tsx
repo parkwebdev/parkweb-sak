@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { MessageChatSquare, Users01, Clock } from '@untitledui/icons';
 import { formatDistanceToNow } from 'date-fns';
 import type { Tables } from '@/integrations/supabase/types';
+import type { ConversationMetadata } from '@/types/metadata';
 
 type Conversation = Tables<'conversations'> & {
   agents?: { name: string };
@@ -21,7 +22,7 @@ export const ConversationCard = ({ conversation, onView }: ConversationCardProps
     closed: 'bg-muted text-muted-foreground',
   };
 
-  const metadata = conversation.metadata as any;
+  const metadata = (conversation.metadata || {}) as ConversationMetadata;
 
   return (
     <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => onView(conversation)}>

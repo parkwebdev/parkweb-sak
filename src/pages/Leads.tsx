@@ -11,7 +11,7 @@ import { CreateLeadDialog } from '@/components/leads/CreateLeadDialog';
 import { DeleteLeadDialog } from '@/components/leads/DeleteLeadDialog';
 import { PageHeader } from '@/components/ui/page-header';
 import { LoadingState } from '@/components/ui/loading-state';
-import type { Tables } from '@/integrations/supabase/types';
+import type { Tables, Enums } from '@/integrations/supabase/types';
 import { AnimatedList } from '@/components/ui/animated-list';
 import { AnimatedItem } from '@/components/ui/animated-item';
 
@@ -262,7 +262,7 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
             leads={filteredLeads}
             selectedIds={selectedLeadIds}
             onView={handleViewLead}
-            onStatusChange={(leadId, status) => updateLead(leadId, { status: status as any })}
+            onStatusChange={(leadId, status) => updateLead(leadId, { status: status as Enums<'lead_status'> })}
             onSelectionChange={handleSelectLead}
             onSelectAll={handleSelectAll}
           />

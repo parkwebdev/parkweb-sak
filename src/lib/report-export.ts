@@ -174,7 +174,9 @@ export const generatePDFReport = async (
       styles: { fontSize: 10 },
     });
 
-    yPosition = (pdf as any).lastAutoTable.finalY + 15;
+    // Get the final Y position from the last auto table
+    const pdfWithAutoTable = pdf as jsPDF & { lastAutoTable?: { finalY: number } };
+    yPosition = (pdfWithAutoTable.lastAutoTable?.finalY || yPosition) + 15;
   }
 
   // Conversations Table
@@ -201,7 +203,9 @@ export const generatePDFReport = async (
       styles: { fontSize: 9 },
     });
 
-    yPosition = (pdf as any).lastAutoTable.finalY + 15;
+    // Get the final Y position from the last auto table
+    const pdfWithAutoTable = pdf as jsPDF & { lastAutoTable?: { finalY: number } };
+    yPosition = (pdfWithAutoTable.lastAutoTable?.finalY || yPosition) + 15;
   }
 
   // Agent Performance Table

@@ -7,6 +7,7 @@ import { useConversations } from '@/hooks/useConversations';
 import { useAgents } from '@/hooks/useAgents';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import ChatPadLogo from './ChatPadLogo';
+import type { ConversationMetadata } from '@/types/metadata';
 
 interface NavigationItem {
   id: string;
@@ -70,7 +71,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
   
   // Count unread conversations for admin
   const unreadConversationsCount = conversations.filter(conv => {
-    const metadata = conv.metadata as any;
+    const metadata = (conv.metadata || {}) as ConversationMetadata;
     const lastReadAt = metadata?.admin_last_read_at;
     const lastUserMessageAt = metadata?.last_user_message_at;
     const lastMessageAt = metadata?.last_message_at;

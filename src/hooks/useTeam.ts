@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/lib/toast';
 import { supabase } from '@/integrations/supabase/client';
-import { TeamMember, InviteMemberData, UserRole } from '@/types/team';
+import { TeamMember, InviteMemberData, UserRole, AppPermission } from '@/types/team';
 import { logger } from '@/utils/logger';
 
 /**
@@ -204,7 +204,7 @@ export const useTeam = () => {
         .upsert({
           user_id: member.user_id,
           role: role as 'admin' | 'manager' | 'member',
-          permissions: permissions as any,
+          permissions: permissions as AppPermission[],
         }, {
           onConflict: 'user_id'
         });

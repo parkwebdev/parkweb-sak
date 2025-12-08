@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/lib/toast';
 import { logger } from '@/utils/logger';
+import type { PlanLimits as PlanLimitsType, PlanFeatures as PlanFeaturesType } from '@/types/metadata';
 
 /**
  * Hook for checking subscription plan limits and current usage.
@@ -83,9 +84,9 @@ export const usePlanLimits = () => {
       let currentPlanName = 'Free';
 
       if (subscription?.plans) {
-        const plan = subscription.plans as any;
+        const plan = subscription.plans as { name?: string; limits?: PlanLimitsType };
         currentPlanName = plan.name || 'Free';
-        const storedLimits = plan.limits as any;
+        const storedLimits = plan.limits;
         if (storedLimits) {
           planLimits = {
             max_agents: storedLimits.max_agents || 1,

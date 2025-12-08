@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import type { Tables } from '@/integrations/supabase/types';
+import type { ConversationMetadata } from '@/types/metadata';
 import { logger } from '@/utils/logger';
 
 export interface SearchResult {
@@ -136,8 +137,8 @@ export const useSearchData = () => {
 
       // Conversations
       if (conversationsRes.data) {
-        const conversationResults: SearchResult[] = conversationsRes.data.map((conv: any) => {
-          const metadata = (conv.metadata as any) || {};
+        const conversationResults: SearchResult[] = conversationsRes.data.map((conv: Tables<'conversations'> & { agents?: { name: string } }) => {
+          const metadata = (conv.metadata || {}) as ConversationMetadata;
           return {
             id: `conversation-${conv.id}`,
             title: metadata.lead_name || metadata.lead_email || 'Anonymous',

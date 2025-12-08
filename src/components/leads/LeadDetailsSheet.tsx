@@ -9,7 +9,7 @@ import { PhoneInputField } from '@/components/ui/phone-input';
 import { Trash02, Save01, LinkExternal02 } from '@untitledui/icons';
 import { useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
-import type { Tables } from '@/integrations/supabase/types';
+import type { Tables, Enums } from '@/integrations/supabase/types';
 import { LeadStatusDropdown } from './LeadStatusDropdown';
 
 interface LeadDetailsSheetProps {
@@ -54,7 +54,7 @@ export const LeadDetailsSheet = ({
             <div className="flex items-center gap-2">
               <LeadStatusDropdown
                 status={currentData.status}
-                onStatusChange={(status) => setEditedLead({ ...editedLead, status: status as any })}
+                onStatusChange={(status) => setEditedLead({ ...editedLead, status: status as Enums<'lead_status'> })}
               />
             </div>
           </SheetTitle>

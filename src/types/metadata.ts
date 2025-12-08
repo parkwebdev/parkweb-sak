@@ -22,6 +22,7 @@ export interface ConversationMetadata {
   last_user_message_at?: string;
   last_message_at?: string;
   last_message_role?: 'user' | 'assistant' | 'human';
+  last_message_preview?: string;
   priority?: 'low' | 'medium' | 'high';
   tags?: string[];
   notes?: string;
@@ -102,4 +103,19 @@ export interface LeadData {
   campaign?: string;
   custom_fields?: Record<string, string | number | boolean>;
   [key: string]: unknown;
+}
+
+/** Plan limits stored in plans.limits JSONB field */
+export interface PlanLimits {
+  max_agents?: number;
+  max_conversations_per_month?: number;
+  max_api_calls_per_month?: number;
+  max_knowledge_sources?: number;
+  max_team_members?: number;
+  max_webhooks?: number;
+}
+
+/** Plan features stored in plans.features JSONB field */
+export interface PlanFeatures {
+  [key: string]: boolean | string | number;
 }
