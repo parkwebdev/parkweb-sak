@@ -198,6 +198,14 @@ export const EmbedSettingsPanel = ({ config, onConfigChange, embedCode }: EmbedS
             </div>
 
             <ToggleSettingRow
+              id="quick-replies"
+              label="Quick Reply Suggestions"
+              description="AI suggests follow-up options after responses"
+              checked={config.enableQuickReplies ?? true}
+              onCheckedChange={(checked) => onConfigChange({ enableQuickReplies: checked })}
+            />
+
+            <ToggleSettingRow
               id="bottom-nav"
               label="Bottom Navigation"
               description="Show nav bar"
