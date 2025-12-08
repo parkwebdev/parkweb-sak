@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/lib/toast';
+import { logger } from '@/utils/logger';
 import { deleteAnnouncementImage } from '@/lib/announcement-image-upload';
 import type { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
 
@@ -24,7 +25,7 @@ export const useAnnouncements = (agentId: string) => {
       if (error) throw error;
       setAnnouncements(data || []);
     } catch (error) {
-      console.error('Error fetching announcements:', error);
+      logger.error('Error fetching announcements', error);
       toast.error('Failed to load announcements');
     } finally {
       setLoading(false);
@@ -51,7 +52,7 @@ export const useAnnouncements = (agentId: string) => {
       toast.success('Announcement created');
       return data;
     } catch (error) {
-      console.error('Error adding announcement:', error);
+      logger.error('Error adding announcement', error);
       toast.error('Failed to create announcement');
       throw error;
     }
@@ -72,7 +73,7 @@ export const useAnnouncements = (agentId: string) => {
       toast.success('Announcement updated');
       return data;
     } catch (error) {
-      console.error('Error updating announcement:', error);
+      logger.error('Error updating announcement', error);
       toast.error('Failed to update announcement');
       throw error;
     }
@@ -98,7 +99,7 @@ export const useAnnouncements = (agentId: string) => {
       setAnnouncements(prev => prev.filter(a => a.id !== id));
       toast.success('Announcement deleted');
     } catch (error) {
-      console.error('Error deleting announcement:', error);
+      logger.error('Error deleting announcement', error);
       toast.error('Failed to delete announcement');
       throw error;
     }
@@ -121,7 +122,7 @@ export const useAnnouncements = (agentId: string) => {
       setAnnouncements(reorderedAnnouncements);
       // Success - no toast needed (SavedIndicator shows feedback)
     } catch (error) {
-      console.error('Error reordering announcements:', error);
+      logger.error('Error reordering announcements', error);
       toast.error('Failed to update order');
       throw error;
     }

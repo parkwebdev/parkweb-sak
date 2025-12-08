@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
+import { logger } from '@/utils/logger';
 import type { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
 
 export type NewsItem = Tables<'news_items'>;
@@ -23,7 +24,7 @@ export const useNewsItems = (agentId: string) => {
       if (error) throw error;
       setNewsItems(data || []);
     } catch (error: any) {
-      console.error('Error fetching news items:', error);
+      logger.error('Error fetching news items', error);
       toast.error('Failed to load news items');
     } finally {
       setLoading(false);
@@ -50,7 +51,7 @@ export const useNewsItems = (agentId: string) => {
       toast.success('News item created successfully');
       return data;
     } catch (error: any) {
-      console.error('Error adding news item:', error);
+      logger.error('Error adding news item', error);
       toast.error('Failed to create news item');
       throw error;
     }
@@ -71,7 +72,7 @@ export const useNewsItems = (agentId: string) => {
       toast.success('News item updated successfully');
       return data;
     } catch (error: any) {
-      console.error('Error updating news item:', error);
+      logger.error('Error updating news item', error);
       toast.error('Failed to update news item');
       throw error;
     }
@@ -98,9 +99,9 @@ export const useNewsItems = (agentId: string) => {
             .remove([imagePath]);
           
           if (storageError) {
-            console.warn('Failed to delete news item image from storage:', storageError);
+            logger.warn('Failed to delete news item image from storage', storageError);
           } else {
-            console.log(`Deleted featured image for news item ${id}`);
+            logger.info(`Deleted featured image for news item ${id}`);
           }
         }
       }
@@ -108,7 +109,7 @@ export const useNewsItems = (agentId: string) => {
       setNewsItems(newsItems.filter(item => item.id !== id));
       toast.success('News item deleted successfully');
     } catch (error: any) {
-      console.error('Error deleting news item:', error);
+      logger.error('Error deleting news item', error);
       toast.error('Failed to delete news item');
       throw error;
     }
@@ -142,7 +143,7 @@ export const useNewsItems = (agentId: string) => {
 
       setNewsItems(reorderedItems);
     } catch (error: any) {
-      console.error('Error reordering news items:', error);
+      logger.error('Error reordering news items', error);
       toast.error('Failed to reorder news items');
       throw error;
     }

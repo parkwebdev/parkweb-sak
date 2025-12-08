@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/lib/toast';
+import { logger } from '@/utils/logger';
 
 export interface PlanLimits {
   max_agents: number;
@@ -135,7 +136,7 @@ export const usePlanLimits = () => {
         team_members: teamCount || 0,
       });
     } catch (error) {
-      console.error('Error fetching plan limits:', error);
+      logger.error('Error fetching plan limits', error);
       toast.error('Failed to load plan limits');
     } finally {
       setLoading(false);
