@@ -180,7 +180,11 @@ export const MessageBubble = ({
             </div>
           )}
           {(message.type === 'text' || !message.type) && (
-            <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
+            <p className="text-sm whitespace-pre-wrap break-words">
+              {message.role === 'assistant' 
+                ? message.content.replace(/\*\*(.*?)\*\*/g, '$1') 
+                : message.content}
+            </p>
           )}
           
           {/* Link previews for assistant messages */}

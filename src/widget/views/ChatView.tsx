@@ -81,8 +81,10 @@ export const ChatView = ({
         const existing = m.reactions || [];
         const reactionIndex = existing.findIndex(r => r.emoji === emoji);
         if (reactionIndex >= 0) {
+          // User already reacted - don't increment count again
+          if (existing[reactionIndex].userReacted) return m;
           const updated = [...existing];
-          updated[reactionIndex] = { ...updated[reactionIndex], userReacted: true, count: updated[reactionIndex].count + 1 };
+          updated[reactionIndex] = { ...updated[reactionIndex], userReacted: true };
           return { ...m, reactions: updated };
         }
         return { ...m, reactions: [...existing, { emoji, count: 1, userReacted: true }] };
@@ -101,11 +103,10 @@ export const ChatView = ({
         const reactionIndex = existing.findIndex(r => r.emoji === emoji);
         if (reactionIndex >= 0) {
           const updated = [...existing];
-          if (updated[reactionIndex].count <= 1) {
-            updated.splice(reactionIndex, 1);
-          } else {
-            updated[reactionIndex] = { ...updated[reactionIndex], userReacted: false, count: updated[reactionIndex].count - 1 };
-          }
+          // User not reacted - nothing to remove
+          if (!updated[reactionIndex].userReacted) return m;
+          // Remove the reaction entirely when user removes their reaction
+          updated.splice(reactionIndex, 1);
           return { ...m, reactions: updated };
         }
         return m;
