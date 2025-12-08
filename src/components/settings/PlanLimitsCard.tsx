@@ -73,7 +73,7 @@ export const PlanLimitsCard = () => {
               </div>
               <Progress 
                 value={Math.min(percentage, 100)} 
-                className={isAtLimit ? '[&>div]:bg-destructive' : isNearLimit ? '[&>div]:bg-warning' : ''}
+                variant={isAtLimit ? 'destructive' : isNearLimit ? 'warning' : 'success'}
               />
             </div>
           );
