@@ -53,12 +53,17 @@ const WidgetPage = () => {
   const searchParams = useWidgetSearchParams();
   const agentId = searchParams.get('agentId');
   
+  // Validate agentId is present and not empty
+  const hasValidAgentId = agentId && agentId.trim().length > 0;
+  
   // Start with default config immediately - no loading state
   const [config, setConfig] = useState<WidgetConfig>(() => 
-    getDefaultConfig(agentId || '')
+    getDefaultConfig(hasValidAgentId ? agentId : 'placeholder')
   );
   const [isConfigLoaded, setIsConfigLoaded] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(() => 
+    hasValidAgentId ? null : 'Agent ID is required. Please provide a valid agentId parameter.'
+  );
   
   // Force light mode for widget
   useEffect(() => {
@@ -87,9 +92,8 @@ const WidgetPage = () => {
   
   // Listen for config from parent window (sent by chatpad-widget.js)
   useEffect(() => {
-    if (!agentId) {
-      setError('Agent ID is required');
-      return;
+    if (!hasValidAgentId) {
+      return; // Error already set in initial state
     }
     
     const handleMessage = (event: MessageEvent) => {
@@ -148,7 +152,7 @@ const WidgetPage = () => {
     }
     
     return () => window.removeEventListener('message', handleMessage);
-  }, [agentId, searchParams]);
+  }, [hasValidAgentId, agentId, searchParams]);
 
   if (error) {
     return (
