@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { logger } from '@/utils/logger';
 import {
   Dialog,
   DialogContent,
@@ -101,7 +102,7 @@ export const CreateWebhookDialog = ({ open, onOpenChange, agentId }: CreateWebho
       setConditions({ rules: [], logic: 'AND' });
       setResponseActions([]);
     } catch (error) {
-      console.error('Error creating webhook:', error);
+      logger.error('Error creating webhook:', error);
       toast.error('Failed to create webhook');
     } finally {
       setLoading(false);
