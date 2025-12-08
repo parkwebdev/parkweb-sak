@@ -28,10 +28,10 @@ export const CSSAnimatedList = ({
   return (
     <div className={cn('widget-animated-list', className)}>
       {React.Children.map(children, (child, index) => {
-        if (React.isValidElement(child)) {
-          return React.cloneElement(child as React.ReactElement<any>, {
+        if (React.isValidElement<{ style?: React.CSSProperties }>(child)) {
+          return React.cloneElement(child, {
             style: {
-              ...((child.props as any).style || {}),
+              ...(child.props.style || {}),
               '--stagger-delay': `${index * staggerDelay}s`
             } as React.CSSProperties
           });

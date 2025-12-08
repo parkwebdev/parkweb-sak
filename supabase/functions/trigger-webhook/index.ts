@@ -151,7 +151,12 @@ Deno.serve(async (req) => {
 
     // Handle response actions if webhook was successful
     if (success && !testMode && webhook.response_actions) {
-      const responseActions = webhook.response_actions as any;
+      const responseActions = webhook.response_actions as { 
+        actions?: Array<{
+          condition: { status_code?: number; body_contains?: string };
+          action: { type: string; updates?: Record<string, unknown> };
+        }>;
+      };
       if (responseActions.actions && Array.isArray(responseActions.actions)) {
         console.log('Processing response actions...');
         

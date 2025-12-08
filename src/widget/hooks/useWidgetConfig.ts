@@ -18,7 +18,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { fetchWidgetConfig, type WidgetConfig } from '../api';
-import type { ChatWidgetProps } from '../types';
+import type { ChatWidgetProps, SimpleWidgetConfig } from '../types';
 import { useRealtimeConfig } from './useRealtimeConfig';
 
 /** Return type for useWidgetConfig hook */
@@ -62,7 +62,7 @@ export function useWidgetConfig(
   // Use the loading state from parent if provided (Intercom-style instant loading)
   const isContentLoading = parentHandlesConfig ? isLoadingProp : loading;
   
-  const agentId = isSimpleConfig ? (configProp as any).agentId : (configProp as WidgetConfig).agentId;
+  const agentId = isSimpleConfig ? (configProp as SimpleWidgetConfig).agentId : (configProp as WidgetConfig).agentId;
 
   // Handle real-time config updates
   const handleConfigUpdate = useCallback((newConfig: WidgetConfig) => {
@@ -79,7 +79,7 @@ export function useWidgetConfig(
   // Load config on mount if simple config
   useEffect(() => {
     if (isSimpleConfig) {
-      fetchWidgetConfig((configProp as any).agentId)
+      fetchWidgetConfig((configProp as SimpleWidgetConfig).agentId)
         .then(cfg => {
           setConfig(cfg);
           setLoading(false);

@@ -26,7 +26,7 @@ import { useEffect, useRef } from 'react';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { subscribeToMessages, unsubscribeFromMessages } from '../api';
 import { isValidUUID } from '../utils';
-import type { Message } from '../types';
+import type { Message, WidgetMessageMetadata } from '../types';
 
 /** Options for the useRealtimeMessages hook */
 interface UseRealtimeMessagesOptions {
@@ -89,8 +89,11 @@ export function useRealtimeMessages(options: UseRealtimeMessagesOptions) {
     realtimeChannelRef.current = subscribeToMessages(
       activeConversationId, 
       (newMessage) => {
+        // Type the metadata
+        const metadata = (newMessage.metadata || {}) as WidgetMessageMetadata;
+        
         // Check if this is a human message (not from AI)
-        const isHumanMessage = newMessage.metadata?.sender_type === 'human';
+        const isHumanMessage = metadata.sender_type === 'human';
         
         console.log('[Widget] Processing new message:', { 
           id: newMessage.id, 
@@ -100,8 +103,8 @@ export function useRealtimeMessages(options: UseRealtimeMessagesOptions) {
         
         // Only add human messages to avoid duplicates (AI messages are added locally)
         if (isHumanMessage) {
-          const senderName = newMessage.metadata?.sender_name;
-          const senderAvatar = newMessage.metadata?.sender_avatar;
+          const senderName = metadata.sender_name;
+          const senderAvatar = metadata.sender_avatar;
           
           setMessages(prev => {
             // Check if message already exists to prevent duplicates
@@ -116,11 +119,11 @@ export function useRealtimeMessages(options: UseRealtimeMessagesOptions) {
               read: isOpen && currentView === 'messages',
               timestamp: new Date(newMessage.created_at),
               type: 'text' as const,
-              reactions: newMessage.metadata?.reactions || [],
+              reactions: metadata.reactions || [],
               isHuman: true,
               senderName,
               senderAvatar,
-              linkPreviews: newMessage.metadata?.link_previews,
+              linkPreviews: metadata.link_previews,
             }];
           });
 
@@ -139,19 +142,20 @@ export function useRealtimeMessages(options: UseRealtimeMessagesOptions) {
       },
       // Handle message updates (for real-time reaction sync AND read receipts)
       (updatedMessage) => {
+        const metadata = (updatedMessage.metadata || {}) as WidgetMessageMetadata;
         console.log('[Widget] Message UPDATE callback invoked:', {
           messageId: updatedMessage.id,
-          metadata: updatedMessage.metadata,
-          reactions: updatedMessage.metadata?.reactions,
+          metadata: metadata,
+          reactions: metadata.reactions,
         });
         setMessages(prev => {
-          console.log('[Widget] Updating message in state:', updatedMessage.id, 'reactions:', updatedMessage.metadata?.reactions);
+          console.log('[Widget] Updating message in state:', updatedMessage.id, 'reactions:', metadata.reactions);
           return prev.map(msg => 
             msg.id === updatedMessage.id 
               ? { 
                   ...msg, 
-                  reactions: updatedMessage.metadata?.reactions || [],
-                  read_at: updatedMessage.metadata?.read_at,
+                  reactions: metadata.reactions || [],
+                  read_at: metadata.read_at,
                 }
               : msg
           );
