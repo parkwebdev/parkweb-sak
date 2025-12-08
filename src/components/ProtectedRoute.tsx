@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { AppLoadingScreen } from '@/components/ui/app-loading-screen';
 import { motion } from 'motion/react';
 import { toast } from 'sonner';

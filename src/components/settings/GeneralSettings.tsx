@@ -6,7 +6,7 @@ import { Switch } from '@/components/ui/switch';
 import { toast } from '@/lib/toast';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { SavedIndicator } from './SavedIndicator';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { AnimatedList } from '@/components/ui/animated-list';
 import { AnimatedItem } from '@/components/ui/animated-item';

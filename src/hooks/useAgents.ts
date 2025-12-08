@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/lib/toast';
 import { logger } from '@/utils/logger';
 import type { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
