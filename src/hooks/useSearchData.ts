@@ -19,6 +19,15 @@ type Agent = Tables<'agents'>;
 type Conversation = Tables<'conversations'>;
 type Lead = Tables<'leads'>;
 
+/**
+ * Hook for global search across agents, conversations, leads, and pages.
+ * Provides fuzzy search with categorized results and navigation actions.
+ * 
+ * @returns {Object} Search functionality
+ * @returns {SearchResult[]} searchResults - All searchable items
+ * @returns {boolean} loading - Loading state
+ * @returns {Function} search - Search function that filters results
+ */
 export const useSearchData = () => {
   const navigate = useNavigate();
   const { user } = useAuth();

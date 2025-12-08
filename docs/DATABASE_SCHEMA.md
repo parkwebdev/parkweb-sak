@@ -878,3 +878,30 @@ USING (is_admin(auth.uid()));
   - Inline images: 800x600px max
   - Featured images: 1200x600px max
   - WebP format, 60% quality
+
+---
+
+## React Hooks Reference
+
+All hooks are documented with JSDoc comments. Key data hooks:
+
+| Hook | Purpose |
+|------|---------|
+| `useAgents` | AI agent CRUD operations |
+| `useConversations` | Conversation management, human takeover |
+| `useLeads` | Lead management with conversation linkage |
+| `useTeam` | Team member and role management |
+| `useWebhooks` | Webhook CRUD and delivery logs |
+| `useNotifications` | In-app notification creation |
+| `useHelpArticles` | Help center article/category management |
+| `useKnowledgeSources` | RAG knowledge source processing |
+| `useAnnouncements` | Widget announcement banners |
+| `useNewsItems` | Widget news feed items |
+| `useAnalytics` | Analytics data fetching with filters |
+| `useScheduledReports` | Scheduled report management |
+| `useAgentApiKeys` | Agent API key management with rate limiting |
+| `usePlanLimits` | Subscription plan limit checking |
+| `useRoleAuthorization` | Role-based permission checking |
+| `useAuth` | Authentication with input validation |
+
+See individual hook files in `src/hooks/` for detailed JSDoc documentation.

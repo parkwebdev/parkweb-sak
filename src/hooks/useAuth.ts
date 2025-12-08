@@ -2,6 +2,17 @@ import { useAuth as useAuthContext } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { validatePasswordStrength, validateAndSanitizeEmail } from '@/utils/input-validation';
 
+/**
+ * Hook for authentication with input validation.
+ * Wraps AuthContext and adds email sanitization and password strength validation.
+ * 
+ * @returns {Object} Auth context plus validated sign-in/sign-up methods
+ * @returns {User|null} user - Current authenticated user
+ * @returns {boolean} loading - Auth loading state
+ * @returns {Function} signUpWithValidation - Sign up with email/password validation
+ * @returns {Function} signInWithValidation - Sign in with email sanitization
+ * @returns {Function} signOut - Sign out current user
+ */
 export const useAuth = () => {
   const context = useAuthContext();
 

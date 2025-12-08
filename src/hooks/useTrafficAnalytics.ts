@@ -3,6 +3,19 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { logger } from '@/utils/logger';
 
+/**
+ * Hook for fetching website traffic analytics.
+ * Analyzes conversation metadata to extract traffic sources, landing pages, and page visits.
+ * 
+ * @param {Date} startDate - Start of date range
+ * @param {Date} endDate - End of date range
+ * @returns {Object} Traffic analytics data
+ * @returns {TrafficSourceData[]} trafficSources - Traffic by referrer source
+ * @returns {LandingPageData[]} landingPages - Landing page performance
+ * @returns {PageVisitData[]} pageVisits - All page visit data
+ * @returns {boolean} loading - Loading state
+ */
+
 interface TrafficSourceData {
   name: string;
   value: number;

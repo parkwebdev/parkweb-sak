@@ -6,6 +6,17 @@ interface UseAutoResizeTextareaOptions {
   lineHeight?: number;
 }
 
+/**
+ * Hook for automatically resizing a textarea based on content.
+ * Adjusts height between min and max rows as user types.
+ * 
+ * @param {RefObject<HTMLTextAreaElement>} textareaRef - Ref to the textarea element
+ * @param {string} value - Current textarea value (triggers resize on change)
+ * @param {UseAutoResizeTextareaOptions} options - Resize options
+ * @param {number} [options.minRows=1] - Minimum number of rows
+ * @param {number} [options.maxRows=5] - Maximum number of rows
+ * @param {number} [options.lineHeight=20] - Line height in pixels
+ */
 export function useAutoResizeTextarea(
   textareaRef: RefObject<HTMLTextAreaElement>,
   value: string,

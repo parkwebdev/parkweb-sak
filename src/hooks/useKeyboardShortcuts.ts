@@ -10,6 +10,15 @@ interface KeyboardShortcut {
   action: () => void;
 }
 
+/**
+ * Hook for registering global keyboard shortcuts.
+ * Includes default navigation shortcuts (Ctrl+D for dashboard, etc.).
+ * Ignores shortcuts when user is typing in input fields.
+ * 
+ * @param {KeyboardShortcut[]} [shortcuts=[]] - Additional custom shortcuts
+ * @returns {Object} Shortcut data
+ * @returns {KeyboardShortcut[]} shortcuts - All registered shortcuts
+ */
 export const useKeyboardShortcuts = (shortcuts: KeyboardShortcut[] = []) => {
   const navigate = useNavigate();
 

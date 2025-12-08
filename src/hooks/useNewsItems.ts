@@ -8,6 +8,19 @@ export type NewsItem = Tables<'news_items'>;
 export type NewsItemInsert = TablesInsert<'news_items'>;
 export type NewsItemUpdate = TablesUpdate<'news_items'>;
 
+/**
+ * Hook for managing widget news/updates feed.
+ * News items support rich text content, featured images, author attribution, and CTAs.
+ * 
+ * @param {string} agentId - Agent ID to scope news items
+ * @returns {Object} News item management methods and state
+ * @returns {NewsItem[]} newsItems - List of news items ordered by index
+ * @returns {boolean} loading - Loading state
+ * @returns {Function} addNewsItem - Create a new news item
+ * @returns {Function} updateNewsItem - Update an existing news item
+ * @returns {Function} deleteNewsItem - Delete a news item (cleans up images)
+ * @returns {Function} refetch - Manually refresh news items list
+ */
 export const useNewsItems = (agentId: string) => {
   const [newsItems, setNewsItems] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);

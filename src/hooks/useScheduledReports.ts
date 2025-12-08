@@ -8,6 +8,19 @@ import type { Tables, TablesInsert } from '@/integrations/supabase/types';
 type ScheduledReport = Tables<'scheduled_reports'>;
 type ScheduledReportInsert = TablesInsert<'scheduled_reports'>;
 
+/**
+ * Hook for managing scheduled analytics reports.
+ * Reports are automatically emailed to recipients on a schedule.
+ * 
+ * @returns {Object} Scheduled report management methods and state
+ * @returns {ScheduledReport[]} reports - List of scheduled reports
+ * @returns {boolean} loading - Loading state
+ * @returns {Function} createReport - Create a new scheduled report
+ * @returns {Function} updateReport - Update an existing report
+ * @returns {Function} deleteReport - Delete a report
+ * @returns {Function} toggleReportStatus - Toggle report active status
+ * @returns {Function} refetch - Manually refresh reports list
+ */
 export const useScheduledReports = () => {
   const [reports, setReports] = useState<ScheduledReport[]>([]);
   const [loading, setLoading] = useState(true);

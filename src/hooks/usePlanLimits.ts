@@ -4,6 +4,18 @@ import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/lib/toast';
 import { logger } from '@/utils/logger';
 
+/**
+ * Hook for checking subscription plan limits and current usage.
+ * Provides limit checks for agents, conversations, API calls, knowledge sources, and team members.
+ * 
+ * @returns {Object} Plan limits and usage data
+ * @returns {PlanLimits|null} limits - Current plan's limits
+ * @returns {CurrentUsage|null} usage - Current usage counts
+ * @returns {boolean} loading - Loading state
+ * @returns {Function} checkLimit - Check if action is within limits
+ * @returns {Function} refetch - Manually refresh limits and usage
+ */
+
 export interface PlanLimits {
   max_agents: number;
   max_conversations_per_month: number;

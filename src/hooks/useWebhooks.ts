@@ -19,6 +19,22 @@ type WebhookLog = {
   delivered_at: string | null;
 };
 
+/**
+ * Hook for managing webhooks and their delivery logs.
+ * Webhooks are scoped to agents and support multiple event types.
+ * 
+ * @param {string} [agentId] - Optional agent ID to scope webhooks
+ * @returns {Object} Webhook management methods and state
+ * @returns {Webhook[]} webhooks - List of webhooks
+ * @returns {WebhookLog[]} logs - Webhook delivery logs
+ * @returns {boolean} loading - Loading state
+ * @returns {Function} createWebhook - Create a new webhook
+ * @returns {Function} updateWebhook - Update an existing webhook
+ * @returns {Function} deleteWebhook - Delete a webhook
+ * @returns {Function} testWebhook - Send a test webhook
+ * @returns {Function} fetchLogs - Fetch delivery logs
+ * @returns {Function} refetch - Manually refresh webhooks list
+ */
 export const useWebhooks = (agentId?: string) => {
   const [webhooks, setWebhooks] = useState<Webhook[]>([]);
   const [logs, setLogs] = useState<WebhookLog[]>([]);

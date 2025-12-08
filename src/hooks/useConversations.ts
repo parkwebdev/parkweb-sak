@@ -13,6 +13,23 @@ type Conversation = Tables<'conversations'> & {
 
 type Message = Tables<'messages'>;
 
+/**
+ * Hook for managing chat conversations.
+ * Handles conversation CRUD, messages, human takeover, and real-time updates.
+ * Plays notification sounds for new user messages when enabled.
+ * 
+ * @returns {Object} Conversation management methods and state
+ * @returns {Conversation[]} conversations - List of user's conversations
+ * @returns {boolean} loading - Loading state
+ * @returns {Function} fetchMessages - Fetch messages for a conversation
+ * @returns {Function} updateConversationStatus - Change conversation status
+ * @returns {Function} updateConversationMetadata - Update conversation metadata (tags, notes, etc.)
+ * @returns {Function} takeover - Take over a conversation from AI
+ * @returns {Function} returnToAI - Return conversation control to AI
+ * @returns {Function} sendHumanMessage - Send a message as a team member
+ * @returns {Function} reopenConversation - Reopen a closed conversation
+ * @returns {Function} refetch - Manually refresh conversations list
+ */
 export const useConversations = () => {
   const { user } = useAuth();
   const [conversations, setConversations] = useState<Conversation[]>([]);

@@ -14,6 +14,19 @@ interface RoleAuthData {
   hasPermission: (permission: string) => boolean;
 }
 
+/**
+ * Hook for role-based authorization checks.
+ * Fetches current user's role and permissions from database.
+ * 
+ * @returns {RoleAuthData} Role authorization data and helpers
+ * @returns {UserRole|null} role - Current user's role
+ * @returns {string[]} permissions - List of user's permissions
+ * @returns {boolean} loading - Loading state
+ * @returns {boolean} isAdmin - Whether user is admin or super_admin
+ * @returns {boolean} canManageTeam - Whether user can manage team
+ * @returns {boolean} canManageSettings - Whether user can manage settings
+ * @returns {Function} hasPermission - Check if user has specific permission
+ */
 export const useRoleAuthorization = (): RoleAuthData => {
   const { user } = useAuth();
   const [role, setRole] = useState<UserRole | null>(null);

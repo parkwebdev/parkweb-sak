@@ -7,6 +7,21 @@ import type { Tables } from '@/integrations/supabase/types';
 type KnowledgeSource = Tables<'knowledge_sources'>;
 type KnowledgeType = 'pdf' | 'url' | 'api' | 'json' | 'xml' | 'csv';
 
+/**
+ * Hook for managing RAG knowledge sources for agents.
+ * Handles URL/sitemap crawling, PDF processing, and embedding generation.
+ * Supports batch processing with self-healing continuous processing architecture.
+ * 
+ * @param {string} [agentId] - Agent ID to scope knowledge sources
+ * @returns {Object} Knowledge source management methods and state
+ * @returns {KnowledgeSource[]} sources - List of knowledge sources
+ * @returns {boolean} loading - Loading state
+ * @returns {Function} addSource - Add a new knowledge source
+ * @returns {Function} deleteSource - Delete a source (cascades to chunks)
+ * @returns {Function} reprocessSource - Reprocess an existing source
+ * @returns {Function} resumeBatchProcessing - Resume stalled batch processing
+ * @returns {Function} refetch - Manually refresh sources list
+ */
 export const useKnowledgeSources = (agentId?: string) => {
   const [sources, setSources] = useState<KnowledgeSource[]>([]);
   const [loading, setLoading] = useState(true);

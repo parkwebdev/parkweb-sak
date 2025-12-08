@@ -11,6 +11,20 @@ interface CreateNotificationParams {
   userId?: string; // Optional - will use current user if not provided
 }
 
+/**
+ * Hook for creating in-app notifications.
+ * Provides type-specific notification creators and browser notification support.
+ * 
+ * @returns {Object} Notification creation methods
+ * @returns {Function} createNotification - Generic notification creator
+ * @returns {Function} createConversationNotification - Conversation-related notification
+ * @returns {Function} createLeadNotification - Lead-related notification
+ * @returns {Function} createAgentNotification - Agent-related notification
+ * @returns {Function} createReportNotification - Report-related notification
+ * @returns {Function} createSystemNotification - System-related notification
+ * @returns {Function} createTeamNotification - Team-related notification
+ * @returns {Function} requestBrowserNotificationPermission - Request browser notification permission
+ */
 export const useNotifications = () => {
   const { user } = useAuth();
 
