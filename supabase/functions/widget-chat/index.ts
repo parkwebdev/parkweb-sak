@@ -262,6 +262,7 @@ async function searchKnowledge(
 
   // Also search Help Articles for RAG
   try {
+    console.log(`Searching help articles with threshold: ${matchThreshold}`);
     const { data: helpArticles, error: helpError } = await supabase.rpc('search_help_articles', {
       p_agent_id: agentId,
       p_query_embedding: embeddingVector,
@@ -269,8 +270,13 @@ async function searchKnowledge(
       p_match_count: 3, // Limit help articles to top 3
     });
 
-    if (!helpError && helpArticles && helpArticles.length > 0) {
-      console.log(`Found ${helpArticles.length} relevant help articles`);
+    if (helpError) {
+      console.error('Help article search RPC error:', helpError);
+    } else if (!helpArticles || helpArticles.length === 0) {
+      console.log('No help articles found above threshold');
+    } else {
+      console.log(`Found ${helpArticles.length} relevant help articles:`, 
+        helpArticles.map((a: any) => ({ title: a.title, similarity: a.similarity?.toFixed(3) })));
       results.push(...helpArticles.map((article: any) => ({
         content: article.content,
         source: `Help: ${article.title}${article.category_name ? ` (${article.category_name})` : ''}`,

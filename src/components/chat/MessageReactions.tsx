@@ -66,7 +66,7 @@ export const MessageReactions: React.FC<MessageReactionsProps> = ({
           }
         >
           <span className="text-sm">{reaction.emoji}</span>
-          <span className="text-xs font-medium">{reaction.count}</span>
+          {reaction.count > 1 && <span className="text-xs font-medium">{reaction.count}</span>}
         </Button>
       ))}
 
