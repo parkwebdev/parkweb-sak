@@ -20,14 +20,10 @@ export function isValidUUID(id: string | null | undefined): boolean {
 }
 
 /**
- * Validate email address format
- * @param email - The email to validate
- * @returns True if valid email format
+ * Re-export shared validation utilities
+ * @see {@link @/utils/validation}
  */
-export function isValidEmail(email: string): boolean {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
-}
+export { isValidEmail } from '@/utils/validation';
 
 /**
  * Validate that a required field has content

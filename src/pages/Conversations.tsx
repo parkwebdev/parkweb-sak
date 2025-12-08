@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/Badge';
+import { Badge } from '@/components/ui/badge';
 
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
