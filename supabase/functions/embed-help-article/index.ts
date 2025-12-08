@@ -5,22 +5,27 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// OpenAI text-embedding-3-small - 1536 dimensions
+// Qwen3 embedding model via OpenRouter (1024 dimensions - truncated from 4096 via MRL)
+const EMBEDDING_MODEL = 'qwen/qwen3-embedding-8b';
+const EMBEDDING_DIMENSIONS = 1024;
+
 async function generateEmbedding(text: string): Promise<number[]> {
-  const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
-  if (!OPENAI_API_KEY) {
-    throw new Error('OPENAI_API_KEY not configured');
+  const OPENROUTER_API_KEY = Deno.env.get('OPENROUTER_API_KEY');
+  if (!OPENROUTER_API_KEY) {
+    throw new Error('OPENROUTER_API_KEY not configured');
   }
 
-  const response = await fetch('https://api.openai.com/v1/embeddings', {
+  const response = await fetch('https://openrouter.ai/api/v1/embeddings', {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${OPENAI_API_KEY}`,
+      'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
       'Content-Type': 'application/json',
+      'HTTP-Referer': 'https://chatpad.ai',
+      'X-Title': 'ChatPad',
     },
     body: JSON.stringify({
       input: text,
-      model: 'text-embedding-3-small',
+      model: EMBEDDING_MODEL,
     }),
   });
 
@@ -30,7 +35,10 @@ async function generateEmbedding(text: string): Promise<number[]> {
   }
 
   const data = await response.json();
-  return data.data[0].embedding;
+  const fullEmbedding = data.data[0].embedding;
+  
+  // Qwen3 returns 4096 dimensions - truncate to 1024 via Matryoshka (MRL)
+  return fullEmbedding.slice(0, EMBEDDING_DIMENSIONS);
 }
 
 // Strip HTML tags and extract clean text from article content

@@ -30,9 +30,9 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// OpenAI text-embedding-3-small - 1536 dimensions
-const EMBEDDING_MODEL = 'text-embedding-3-small';
-const EMBEDDING_DIMENSIONS = 1536;
+// Qwen3 embedding model via OpenRouter (1024 dimensions - truncated from 4096 via MRL)
+const EMBEDDING_MODEL = 'qwen/qwen3-embedding-8b';
+const EMBEDDING_DIMENSIONS = 1024;
 
 // Self-chaining configuration
 const MAX_PROCESSING_TIME_MS = 60000; // 60 seconds max per invocation (safety margin for 150s limit)
@@ -139,18 +139,20 @@ function chunkText(text: string, maxTokens: number = 500, overlapTokens: number 
   return chunks;
 }
 
-// Generate embeddings using OpenAI text-embedding-3-small
+// Generate embeddings using Qwen3 via OpenRouter (consolidated billing)
 async function generateEmbedding(text: string): Promise<number[]> {
-  const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
-  if (!OPENAI_API_KEY) {
-    throw new Error('OPENAI_API_KEY not configured');
+  const OPENROUTER_API_KEY = Deno.env.get('OPENROUTER_API_KEY');
+  if (!OPENROUTER_API_KEY) {
+    throw new Error('OPENROUTER_API_KEY not configured');
   }
 
-  const response = await fetch('https://api.openai.com/v1/embeddings', {
+  const response = await fetch('https://openrouter.ai/api/v1/embeddings', {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${OPENAI_API_KEY}`,
+      'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
       'Content-Type': 'application/json',
+      'HTTP-Referer': 'https://chatpad.ai',
+      'X-Title': 'ChatPad',
     },
     body: JSON.stringify({
       input: text,
@@ -164,7 +166,10 @@ async function generateEmbedding(text: string): Promise<number[]> {
   }
 
   const data = await response.json();
-  return data.data[0].embedding;
+  const fullEmbedding = data.data[0].embedding;
+  
+  // Qwen3 returns 4096 dimensions - truncate to 1024 via Matryoshka (MRL)
+  return fullEmbedding.slice(0, EMBEDDING_DIMENSIONS);
 }
 
 // Batch generate embeddings with rate limiting

@@ -85,9 +85,40 @@ async function fetchLinkPreviews(content: string, supabaseUrl: string, supabaseK
   return previews.filter(p => p !== null);
 }
 
-// OpenAI embedding model - compatible with stored embeddings (1536 dimensions)
-const EMBEDDING_MODEL = 'text-embedding-3-small';
-const EMBEDDING_DIMENSIONS = 1536;
+// Qwen3 embedding model via OpenRouter (1024 dimensions - truncated from 4096 via MRL)
+const EMBEDDING_MODEL = 'qwen/qwen3-embedding-8b';
+const EMBEDDING_DIMENSIONS = 1024;
+
+// Model tiers for smart routing (cost optimization)
+const MODEL_TIERS = {
+  lite: 'google/gemini-2.5-flash-lite',     // $0.015/M input, $0.06/M output - simple lookups
+  standard: 'google/gemini-2.5-flash',       // $0.15/M input, $0.60/M output - balanced
+  // premium uses agent's configured model
+} as const;
+
+// Select optimal model based on query complexity and RAG results
+function selectModelTier(
+  query: string,
+  ragSimilarity: number,
+  conversationLength: number,
+  requiresTools: boolean,
+  agentModel: string
+): { model: string; tier: 'lite' | 'standard' | 'premium' } {
+  const wordCount = query.split(/\s+/).length;
+  
+  // Tier 1: Cheapest - simple lookups with high RAG match, no tools
+  if (ragSimilarity > 0.65 && wordCount < 15 && !requiresTools && conversationLength < 5) {
+    return { model: MODEL_TIERS.lite, tier: 'lite' };
+  }
+  
+  // Tier 3: Premium - complex reasoning needed
+  if (ragSimilarity < 0.35 || conversationLength > 10 || requiresTools) {
+    return { model: agentModel || MODEL_TIERS.standard, tier: 'premium' };
+  }
+  
+  // Tier 2: Default balanced
+  return { model: MODEL_TIERS.standard, tier: 'standard' };
+}
 
 // Normalize query for cache lookup (lowercase, trim, remove extra whitespace)
 function normalizeQuery(query: string): string {
@@ -179,11 +210,11 @@ async function getCachedResponse(supabase: any, queryHash: string, agentId: stri
   return { content: data.response_content, similarity: data.similarity_score };
 }
 
-// Cache high-confidence response
+// Cache high-confidence response (AGGRESSIVE CACHING - lowered threshold)
 async function cacheResponse(supabase: any, queryHash: string, agentId: string, content: string, similarity: number): Promise<void> {
   try {
-    // Only cache responses with very high similarity (FAQ-style)
-    if (similarity < 0.92) return;
+    // COST OPTIMIZATION: Cache responses with moderate+ similarity (was 0.92, now 0.65)
+    if (similarity < 0.65) return;
     
     const { error } = await supabase
       .from('response_cache')
@@ -192,7 +223,7 @@ async function cacheResponse(supabase: any, queryHash: string, agentId: string, 
         agent_id: agentId,
         response_content: content,
         similarity_score: similarity,
-        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days
+        expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days (was 7)
       }, { onConflict: 'query_hash,agent_id' });
     
     if (error) {
@@ -203,23 +234,24 @@ async function cacheResponse(supabase: any, queryHash: string, agentId: string, 
   }
 }
 
-// Generate embedding for a query using OpenAI (matches stored embeddings)
+// Generate embedding using Qwen3 via OpenRouter (consolidated billing)
 async function generateEmbedding(query: string): Promise<number[]> {
-  const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
-  if (!openaiApiKey) {
-    throw new Error('OPENAI_API_KEY not configured');
+  const openrouterApiKey = Deno.env.get('OPENROUTER_API_KEY');
+  if (!openrouterApiKey) {
+    throw new Error('OPENROUTER_API_KEY not configured');
   }
 
-  const response = await fetch('https://api.openai.com/v1/embeddings', {
+  const response = await fetch('https://openrouter.ai/api/v1/embeddings', {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${openaiApiKey}`,
+      'Authorization': `Bearer ${openrouterApiKey}`,
       'Content-Type': 'application/json',
+      'HTTP-Referer': 'https://chatpad.ai',
+      'X-Title': 'ChatPad',
     },
     body: JSON.stringify({
       model: EMBEDDING_MODEL,
       input: query,
-      dimensions: EMBEDDING_DIMENSIONS,
     }),
   });
 
@@ -230,7 +262,11 @@ async function generateEmbedding(query: string): Promise<number[]> {
   }
 
   const data = await response.json();
-  return data.data[0].embedding;
+  const fullEmbedding = data.data[0].embedding;
+  
+  // Qwen3 returns 4096 dimensions - truncate to 1024 via Matryoshka (MRL)
+  // This maintains quality while reducing storage and compute costs
+  return fullEmbedding.slice(0, EMBEDDING_DIMENSIONS);
 }
 
 // Search for relevant knowledge chunks (with fallback to legacy document search)
@@ -848,9 +884,9 @@ serve(async (req) => {
           
           console.log('Query normalized for cache lookup:', normalizedQuery.substring(0, 50));
           
-          // COST OPTIMIZATION: Check response cache first for FAQ-style queries
+          // COST OPTIMIZATION: Check response cache first (AGGRESSIVE - lowered from 0.92 to 0.70)
           const cachedResponse = await getCachedResponse(supabase, queryHash, agentId);
-          if (cachedResponse && cachedResponse.similarity > 0.92) {
+          if (cachedResponse && cachedResponse.similarity > 0.70) {
             console.log('CACHE HIT: Returning cached response, skipping AI call entirely');
             
             // Save user message
@@ -1030,9 +1066,24 @@ Generate a warm, personalized greeting using the user information provided above
       messagesToSend = [{ role: 'user', content: 'Please greet me and ask how you can help.' }];
     }
 
+    // SMART MODEL ROUTING: Select optimal model based on query complexity
+    const hasUserTools = formattedTools && formattedTools.length > 0;
+    const conversationLength = messagesToSend.length;
+    const lastUserQuery = messagesToSend.filter((m: any) => m.role === 'user').pop()?.content || '';
+    
+    const { model: selectedModel, tier: modelTier } = selectModelTier(
+      lastUserQuery,
+      maxSimilarity,
+      conversationLength,
+      hasUserTools,
+      agent.model || 'google/gemini-2.5-flash'
+    );
+    
+    console.log(`Model routing: tier=${modelTier}, model=${selectedModel}, ragSimilarity=${maxSimilarity.toFixed(2)}, hasTools=${hasUserTools}`);
+
     // Build the initial AI request with all behavior settings
     const aiRequestBody: any = {
-      model: agent.model || 'google/gemini-2.5-flash',
+      model: selectedModel, // Use smart-routed model instead of always agent.model
       messages: [
         {
           role: 'system',
@@ -1228,8 +1279,8 @@ Generate a warm, personalized greeting using the user information provided above
     console.log(`Adding natural typing delay: ${typingDelay}ms`);
     await new Promise(resolve => setTimeout(resolve, typingDelay));
 
-    // COST OPTIMIZATION: Cache high-confidence responses for FAQ-style queries
-    if (queryHash && maxSimilarity > 0.92 && sources.length > 0) {
+    // COST OPTIMIZATION: Cache responses with moderate+ similarity (AGGRESSIVE - lowered from 0.92, removed sources requirement)
+    if (queryHash && maxSimilarity > 0.65) {
       console.log(`Caching response with similarity ${maxSimilarity.toFixed(2)} for future reuse`);
       cacheResponse(supabase, queryHash, agentId, assistantContent, maxSimilarity);
     }
@@ -1245,7 +1296,8 @@ Generate a warm, personalized greeting using the user information provided above
       content: assistantContent,
       metadata: { 
         source: 'ai',
-        model: agent.model,
+        model: selectedModel, // Track which model was actually used
+        model_tier: modelTier, // Track the tier for analytics
         knowledge_sources: sources.length > 0 ? sources : undefined,
         tools_used: toolsUsed.length > 0 ? toolsUsed : undefined,
         link_previews: linkPreviews.length > 0 ? linkPreviews : undefined,
