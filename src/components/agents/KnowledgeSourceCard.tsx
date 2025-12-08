@@ -9,6 +9,7 @@ import { File06, Link03, Database01, Trash01, RefreshCcw01, CheckCircle, XCircle
 import { formatDistanceToNow } from 'date-fns';
 import { SitemapChildPages } from './SitemapChildPages';
 import type { Tables } from '@/integrations/supabase/types';
+import type { KnowledgeSourceMetadata } from '@/types/metadata';
 
 interface KnowledgeSourceCardProps {
   source: Tables<'knowledge_sources'>;
@@ -53,7 +54,7 @@ export const KnowledgeSourceCard: React.FC<KnowledgeSourceCardProps> = ({
   childSources = [],
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const metadata = source.metadata as Record<string, any> || {};
+  const metadata = (source.metadata || {}) as KnowledgeSourceMetadata;
   const isSitemap = metadata.is_sitemap === true;
   
   // Use Globe01 for sitemaps, otherwise use type-based icon

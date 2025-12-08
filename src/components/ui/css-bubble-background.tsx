@@ -36,11 +36,11 @@ function CSSBubbleBackground({
   },
   baseGradient,
   ...props
-}: CSSBubbleBackgroundProps) {
+}: CSSBubbleBackgroundProps & { ref?: React.Ref<HTMLDivElement> }) {
   const containerRef = React.useRef<HTMLDivElement>(null);
   const [isMobile, setIsMobile] = React.useState(getIsMobile);
   
-  React.useImperativeHandle(ref as any, () => containerRef.current as HTMLDivElement);
+  React.useImperativeHandle(ref, () => containerRef.current as HTMLDivElement);
 
   // Update mobile detection on resize
   React.useEffect(() => {
@@ -60,7 +60,7 @@ function CSSBubbleBackground({
       style={{
         background: `linear-gradient(to bottom right, rgb(${baseGradient?.from || colors.first}), rgb(${baseGradient?.to || colors.second}))`,
       }}
-      {...(props as any)}
+      {...props}
     >
       <style>
         {`

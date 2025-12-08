@@ -17,6 +17,7 @@ import { useConversations } from '@/hooks/useConversations';
 import { useAgents } from '@/hooks/useAgents';
 import { ConversationMetadataPanel } from '@/components/conversations/ConversationMetadataPanel';
 import type { Tables } from '@/integrations/supabase/types';
+import type { ConversationMetadata, MessageMetadata } from '@/types/metadata';
 import { formatDistanceToNow } from 'date-fns';
 import { downloadFile } from '@/lib/file-download';
 import { TakeoverDialog } from '@/components/conversations/TakeoverDialog';
@@ -180,7 +181,7 @@ const Conversations: React.FC = () => {
 
   // Check if a conversation's visitor is currently active
   const getVisitorPresence = (conversation: Conversation) => {
-    const metadata = (conversation.metadata as any) || {};
+    const metadata = (conversation.metadata || {}) as ConversationMetadata;
     const visitorId = metadata.visitor_id;
     if (!visitorId) return null;
     return activeVisitors[visitorId] || null;
@@ -214,7 +215,7 @@ const Conversations: React.FC = () => {
               // Check if we're replacing an optimistic temp message
               const isReplacingOptimistic = prev.some(m => 
                 m.id.startsWith('temp-') && 
-                (m.metadata as any)?.pending && 
+                (m.metadata as MessageMetadata)?.pending && 
                 m.content === newMessage.content
               );
               
@@ -227,8 +228,8 @@ const Conversations: React.FC = () => {
               // Remove any pending optimistic message with matching content
               const withoutTemp = prev.filter(m => {
                 if (!m.id.startsWith('temp-')) return true;
-                const tempMeta = m.metadata as any;
-                return !(tempMeta?.pending && m.content === newMessage.content);
+                const tempMeta = (m.metadata || {}) as MessageMetadata;
+                return !(tempMeta.pending && m.content === newMessage.content);
               });
               return [...withoutTemp, newMessage];
             });
@@ -245,8 +246,8 @@ const Conversations: React.FC = () => {
           (payload) => {
             logger.debug('[Admin] Message UPDATE received', {
               messageId: payload.new?.id,
-              metadata: (payload.new as any)?.metadata,
-              reactions: (payload.new as any)?.metadata?.reactions,
+              metadata: ((payload.new as Message)?.metadata as MessageMetadata),
+              reactions: ((payload.new as Message)?.metadata as MessageMetadata)?.reactions,
             });
             const updatedMessage = payload.new as Message;
             // Incremental update - only update the affected message
@@ -309,7 +310,7 @@ const Conversations: React.FC = () => {
 
   // Filter conversations
   const filteredConversations = conversations.filter((conv) => {
-    const metadata = (conv.metadata as any) || {};
+    const metadata = (conv.metadata || {}) as ConversationMetadata;
     const matchesSearch = searchQuery === '' || 
       conv.agents?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       metadata?.lead_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -345,7 +346,7 @@ const Conversations: React.FC = () => {
 
   // Check if conversation has unread messages for admin (only user messages, not team responses)
   const getUnreadCount = (conv: Conversation): number => {
-    const metadata = conv.metadata as any;
+    const metadata = (conv.metadata || {}) as ConversationMetadata;
     const lastReadAt = metadata?.admin_last_read_at;
     const lastUserMessageAt = metadata?.last_user_message_at;
     const lastMessageAt = metadata?.last_message_at;
@@ -584,9 +585,9 @@ const Conversations: React.FC = () => {
               />
             ) : (
               <div>
-                {filteredConversations.map((conv) => {
-                  const isSelected = selectedConversation?.id === conv.id;
-                  const metadata = (conv.metadata as any) || {};
+                    {filteredConversations.map((conv) => {
+                      const isSelected = selectedConversation?.id === conv.id;
+                      const metadata = (conv.metadata || {}) as ConversationMetadata;
                   const priority = metadata.priority;
                   
                   return (
@@ -665,9 +666,9 @@ const Conversations: React.FC = () => {
                       </div>
                     )}
                     <p className="font-medium text-sm text-foreground">
-                      {((selectedConversation.metadata as any)?.lead_name || 
-                        (selectedConversation.metadata as any)?.lead_email || 
-                        'Anonymous')}
+                      {((selectedConversation.metadata || {}) as ConversationMetadata).lead_name || 
+                        ((selectedConversation.metadata || {}) as ConversationMetadata).lead_email || 
+                        'Anonymous'}
                     </p>
                   </div>
                   

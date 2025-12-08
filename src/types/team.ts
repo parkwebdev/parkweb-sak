@@ -17,6 +17,19 @@ export interface InviteMemberData {
 
 export type UserRole = 'super_admin' | 'admin' | 'manager' | 'member' | 'client';
 
+/** App permissions matching the database enum */
+export type AppPermission = 
+  | 'manage_team'
+  | 'view_team'
+  | 'manage_projects'
+  | 'view_projects'
+  | 'manage_onboarding'
+  | 'view_onboarding'
+  | 'manage_scope_works'
+  | 'view_scope_works'
+  | 'manage_settings'
+  | 'view_settings';
+
 export interface RolePermissions {
   [key: string]: string[];
 }

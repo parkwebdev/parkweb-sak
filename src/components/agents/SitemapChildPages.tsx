@@ -6,6 +6,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CheckCircle, XCircle, Clock, RefreshCcw01, Trash01, SearchMd, AlertCircle } from '@untitledui/icons';
 import type { Tables } from '@/integrations/supabase/types';
+import type { KnowledgeSourceMetadata } from '@/types/metadata';
 
 interface SitemapChildPagesProps {
   childSources: Tables<'knowledge_sources'>[];
@@ -78,13 +79,13 @@ export const SitemapChildPages: React.FC<SitemapChildPagesProps> = ({
   };
 
   const getErrorMessage = (source: Tables<'knowledge_sources'>) => {
-    const metadata = source.metadata as Record<string, any> | null;
-    return metadata?.error || 'Unknown error';
+    const metadata = (source.metadata || {}) as KnowledgeSourceMetadata;
+    return metadata.error || 'Unknown error';
   };
 
   const getChunkCount = (source: Tables<'knowledge_sources'>) => {
-    const metadata = source.metadata as Record<string, any> | null;
-    return metadata?.chunks_count || 0;
+    const metadata = (source.metadata || {}) as KnowledgeSourceMetadata;
+    return metadata.chunks_count || 0;
   };
 
   // Count by status for filter badges

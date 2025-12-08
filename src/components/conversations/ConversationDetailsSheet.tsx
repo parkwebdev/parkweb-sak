@@ -9,6 +9,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { TakeoverDialog } from './TakeoverDialog';
 import { supabase } from '@/integrations/supabase/client';
 import type { Tables } from '@/integrations/supabase/types';
+import type { ConversationMetadata } from '@/types/metadata';
 import { LoadingState } from '@/components/ui/loading-state';
 
 type Conversation = Tables<'conversations'> & {
@@ -104,7 +105,7 @@ export const ConversationDetailsSheet = ({
 
   if (!conversation) return null;
 
-  const metadata = conversation.metadata as any;
+  const metadata = (conversation.metadata || {}) as ConversationMetadata;
   const statusColors = {
     active: 'bg-success/10 text-success border-success/20',
     human_takeover: 'bg-warning/10 text-warning border-warning/20',

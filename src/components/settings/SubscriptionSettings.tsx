@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import type { Tables } from '@/integrations/supabase/types';
+import type { PlanLimits, PlanFeatures } from '@/types/metadata';
 import { formatDate } from '@/lib/formatting';
 import { CheckCircle, Download01, LinkExternal01, RefreshCw01, Receipt } from '@untitledui/icons';
 import { EmptyState } from '@/components/ui/empty-state';
@@ -97,8 +98,8 @@ export const SubscriptionSettings = () => {
   }
 
   const plan = subscription?.plans;
-  const features = plan?.features as any;
-  const limits = plan?.limits as any;
+  const features = plan?.features as PlanFeatures | undefined;
+  const limits = plan?.limits as PlanLimits | undefined;
 
   const getStatusColor = (status: string | null) => {
     switch (status) {
