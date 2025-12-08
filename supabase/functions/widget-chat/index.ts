@@ -6,6 +6,27 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Local type for conversation metadata (edge functions can't import from src/)
+interface ConversationMetadata {
+  lead_name?: string;
+  lead_email?: string;
+  custom_fields?: Record<string, string | number | boolean>;
+  country?: string;
+  device_type?: string;
+  browser?: string;
+  os?: string;
+  referrer?: string;
+  landing_page?: string;
+  visited_pages?: string[];
+  session_id?: string;
+  ip_address?: string;
+  last_message_at?: string;
+  last_message_role?: string;
+  last_user_message_at?: string;
+  admin_last_read_at?: string;
+  lead_id?: string;
+}
+
 // URL regex for extracting links from content
 const URL_REGEX = /https?:\/\/[^\s<>"')\]]+/gi;
 
@@ -942,7 +963,7 @@ IMPORTANT GUIDELINES FOR RESPONSES:
     }
 
     // Extract user context from conversation metadata (lead form data)
-    const conversationMetadata = (conversation?.metadata as any) || {};
+    const conversationMetadata = (conversation?.metadata || {}) as ConversationMetadata;
     let userContextSection = '';
     
     // Check if we have meaningful user context to add

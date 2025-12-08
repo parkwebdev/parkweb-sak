@@ -3,6 +3,26 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 import { Readability } from "npm:@mozilla/readability@0.5.0";
 import { DOMParser } from "npm:linkedom@0.18.4";
 
+// Local type for knowledge source metadata (edge functions can't import from src/)
+interface KnowledgeSourceMetadata {
+  is_sitemap?: boolean;
+  parent_source_id?: string;
+  batch_id?: string;
+  urls_found?: number;
+  exclude_patterns?: string[];
+  include_patterns?: string[];
+  page_limit?: number;
+  chunks_count?: number;
+  total_chunks?: number;
+  content_length?: number;
+  chunking_version?: number;
+  embedding_model?: string;
+  embedding_dimensions?: number;
+  error?: string;
+  processed_at?: string;
+  last_progress_at?: string;
+}
+
 console.log('process-knowledge-source function initialized');
 
 const corsHeaders = {
@@ -948,7 +968,7 @@ Deno.serve(async (req) => {
     console.log('Source type:', source.type, '| Source:', source.source?.substring(0, 100));
 
     // Handle resume mode for stalled sitemaps
-    const sourceMetadata = (source.metadata as any) || {};
+    const sourceMetadata = (source.metadata || {}) as KnowledgeSourceMetadata;
     if (resumeMode && sourceMetadata.is_sitemap && sourceMetadata.batch_id) {
       console.log('Resuming stalled sitemap processing, batch:', sourceMetadata.batch_id);
       
@@ -1008,11 +1028,11 @@ Deno.serve(async (req) => {
       }
       
       // Extract filter options from source metadata
-      const sourceMetadata = (source.metadata as any) || {};
+      const filterMetadata = (source.metadata || {}) as KnowledgeSourceMetadata;
       const filterOptions = {
-        excludePatterns: sourceMetadata.exclude_patterns || [],
-        includePatterns: sourceMetadata.include_patterns || [],
-        pageLimit: sourceMetadata.page_limit || 200,
+        excludePatterns: filterMetadata.exclude_patterns || [],
+        includePatterns: filterMetadata.include_patterns || [],
+        pageLimit: filterMetadata.page_limit || 200,
       };
       
       const { urlCount, sitemapCount, batchId, filteredCount } = await processSitemap(
@@ -1159,7 +1179,7 @@ Deno.serve(async (req) => {
       .update({
         status: 'ready',
         metadata: {
-          ...((source.metadata as any) || {}),
+          ...((source.metadata || {}) as KnowledgeSourceMetadata),
           processed_at: new Date().toISOString(),
           chunks_count: successfulChunks,
           total_chunks: chunks.length,
