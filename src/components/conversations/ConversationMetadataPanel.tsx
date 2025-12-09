@@ -257,40 +257,88 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
     }
   };
 
-  // Map common country names to country codes for flag display
+  // Comprehensive country name to ISO 3166-1 alpha-2 code mapping
   const getCountryCode = (countryName: string | undefined): string | null => {
     if (!countryName) return null;
     const countryMap: Record<string, string> = {
-      'United States': 'US',
-      'United Kingdom': 'GB',
-      'Canada': 'CA',
-      'Australia': 'AU',
-      'Germany': 'DE',
-      'France': 'FR',
-      'Spain': 'ES',
-      'Italy': 'IT',
-      'Netherlands': 'NL',
-      'Brazil': 'BR',
-      'Mexico': 'MX',
-      'Japan': 'JP',
-      'China': 'CN',
-      'India': 'IN',
-      'South Korea': 'KR',
-      'Russia': 'RU',
-      'Poland': 'PL',
-      'Sweden': 'SE',
-      'Norway': 'NO',
-      'Denmark': 'DK',
-      'Finland': 'FI',
-      'Ireland': 'IE',
-      'New Zealand': 'NZ',
-      'Singapore': 'SG',
-      'Portugal': 'PT',
-      'Belgium': 'BE',
-      'Austria': 'AT',
-      'Switzerland': 'CH',
+      // North America
+      'United States': 'US', 'USA': 'US', 'US': 'US', 'America': 'US',
+      'Canada': 'CA', 'Mexico': 'MX',
+      // Europe - Western
+      'United Kingdom': 'GB', 'UK': 'GB', 'Great Britain': 'GB', 'England': 'GB',
+      'Germany': 'DE', 'France': 'FR', 'Spain': 'ES', 'Italy': 'IT',
+      'Netherlands': 'NL', 'Holland': 'NL', 'Belgium': 'BE', 'Austria': 'AT',
+      'Switzerland': 'CH', 'Portugal': 'PT', 'Ireland': 'IE', 'Luxembourg': 'LU',
+      'Monaco': 'MC', 'Liechtenstein': 'LI', 'Andorra': 'AD', 'San Marino': 'SM',
+      // Europe - Nordic
+      'Sweden': 'SE', 'Norway': 'NO', 'Denmark': 'DK', 'Finland': 'FI', 'Iceland': 'IS',
+      // Europe - Eastern
+      'Poland': 'PL', 'Czech Republic': 'CZ', 'Czechia': 'CZ', 'Slovakia': 'SK',
+      'Hungary': 'HU', 'Romania': 'RO', 'Bulgaria': 'BG', 'Ukraine': 'UA',
+      'Belarus': 'BY', 'Moldova': 'MD', 'Lithuania': 'LT', 'Latvia': 'LV',
+      'Estonia': 'EE', 'Slovenia': 'SI', 'Croatia': 'HR', 'Serbia': 'RS',
+      'Bosnia and Herzegovina': 'BA', 'Montenegro': 'ME', 'North Macedonia': 'MK',
+      'Albania': 'AL', 'Kosovo': 'XK', 'Russia': 'RU', 'Russian Federation': 'RU',
+      // Europe - Southern
+      'Greece': 'GR', 'Cyprus': 'CY', 'Malta': 'MT', 'Turkey': 'TR',
+      // Asia - East
+      'Japan': 'JP', 'China': 'CN', 'South Korea': 'KR', 'Korea': 'KR',
+      'North Korea': 'KP', 'Taiwan': 'TW', 'Hong Kong': 'HK', 'Macau': 'MO',
+      'Mongolia': 'MN',
+      // Asia - Southeast
+      'Singapore': 'SG', 'Malaysia': 'MY', 'Indonesia': 'ID', 'Thailand': 'TH',
+      'Vietnam': 'VN', 'Philippines': 'PH', 'Myanmar': 'MM', 'Burma': 'MM',
+      'Cambodia': 'KH', 'Laos': 'LA', 'Brunei': 'BN', 'Timor-Leste': 'TL',
+      // Asia - South
+      'India': 'IN', 'Pakistan': 'PK', 'Bangladesh': 'BD', 'Sri Lanka': 'LK',
+      'Nepal': 'NP', 'Bhutan': 'BT', 'Maldives': 'MV', 'Afghanistan': 'AF',
+      // Asia - Central
+      'Kazakhstan': 'KZ', 'Uzbekistan': 'UZ', 'Turkmenistan': 'TM',
+      'Kyrgyzstan': 'KG', 'Tajikistan': 'TJ',
+      // Asia - West / Middle East
+      'Saudi Arabia': 'SA', 'United Arab Emirates': 'AE', 'UAE': 'AE',
+      'Qatar': 'QA', 'Kuwait': 'KW', 'Bahrain': 'BH', 'Oman': 'OM',
+      'Yemen': 'YE', 'Iraq': 'IQ', 'Iran': 'IR', 'Israel': 'IL',
+      'Palestine': 'PS', 'Jordan': 'JO', 'Lebanon': 'LB', 'Syria': 'SY',
+      'Armenia': 'AM', 'Azerbaijan': 'AZ', 'Georgia': 'GE',
+      // Oceania
+      'Australia': 'AU', 'New Zealand': 'NZ', 'Fiji': 'FJ',
+      'Papua New Guinea': 'PG', 'Samoa': 'WS', 'Tonga': 'TO', 'Vanuatu': 'VU',
+      'Solomon Islands': 'SB', 'New Caledonia': 'NC', 'French Polynesia': 'PF',
+      'Guam': 'GU', 'Palau': 'PW', 'Micronesia': 'FM', 'Marshall Islands': 'MH',
+      // South America
+      'Brazil': 'BR', 'Argentina': 'AR', 'Chile': 'CL', 'Colombia': 'CO',
+      'Peru': 'PE', 'Venezuela': 'VE', 'Ecuador': 'EC', 'Bolivia': 'BO',
+      'Paraguay': 'PY', 'Uruguay': 'UY', 'Guyana': 'GY', 'Suriname': 'SR',
+      // Central America & Caribbean
+      'Guatemala': 'GT', 'Honduras': 'HN', 'El Salvador': 'SV', 'Nicaragua': 'NI',
+      'Costa Rica': 'CR', 'Panama': 'PA', 'Belize': 'BZ', 'Cuba': 'CU',
+      'Jamaica': 'JM', 'Haiti': 'HT', 'Dominican Republic': 'DO',
+      'Puerto Rico': 'PR', 'Trinidad and Tobago': 'TT', 'Bahamas': 'BS',
+      'Barbados': 'BB', 'Saint Lucia': 'LC', 'Grenada': 'GD',
+      // Africa - North
+      'Egypt': 'EG', 'Libya': 'LY', 'Tunisia': 'TN', 'Algeria': 'DZ',
+      'Morocco': 'MA', 'Sudan': 'SD', 'South Sudan': 'SS',
+      // Africa - West
+      'Nigeria': 'NG', 'Ghana': 'GH', 'Senegal': 'SN', 'Ivory Coast': 'CI',
+      "Côte d'Ivoire": 'CI', 'Mali': 'ML', 'Burkina Faso': 'BF', 'Niger': 'NE',
+      'Guinea': 'GN', 'Benin': 'BJ', 'Togo': 'TG', 'Sierra Leone': 'SL',
+      'Liberia': 'LR', 'Mauritania': 'MR', 'Gambia': 'GM', 'Cape Verde': 'CV',
+      // Africa - East
+      'Kenya': 'KE', 'Tanzania': 'TZ', 'Uganda': 'UG', 'Rwanda': 'RW',
+      'Burundi': 'BI', 'Ethiopia': 'ET', 'Eritrea': 'ER', 'Djibouti': 'DJ',
+      'Somalia': 'SO', 'Madagascar': 'MG', 'Mauritius': 'MU', 'Seychelles': 'SC',
+      // Africa - Central
+      'Democratic Republic of the Congo': 'CD', 'Congo': 'CG',
+      'Cameroon': 'CM', 'Central African Republic': 'CF', 'Chad': 'TD',
+      'Gabon': 'GA', 'Equatorial Guinea': 'GQ', 'Angola': 'AO',
+      // Africa - South
+      'South Africa': 'ZA', 'Namibia': 'NA', 'Botswana': 'BW', 'Zimbabwe': 'ZW',
+      'Zambia': 'ZM', 'Malawi': 'MW', 'Mozambique': 'MZ', 'Lesotho': 'LS',
+      'Eswatini': 'SZ', 'Swaziland': 'SZ',
     };
-    return countryMap[countryName] || null;
+    // First check exact match, then try case-insensitive
+    return countryMap[countryName] || countryMap[countryName.trim()] || null;
   };
 
   // Build accordion default values - always open contact and session

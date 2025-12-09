@@ -9,6 +9,7 @@ import { AnimatedList } from '@/components/ui/animated-list';
 import { AnimatedItem } from '@/components/ui/animated-item';
 import { Link03, CheckCircle, Mail01 } from '@untitledui/icons';
 import { EmptyState } from '@/components/ui/empty-state';
+import { Facebook, Instagram, Twitter, Google, Gmail } from '@ridemountainpig/svgl-react';
 
 type IntegrationsTab = 'social' | 'email' | 'calendars';
 
@@ -78,6 +79,24 @@ const CalendlyLogo = ({ className }: { className?: string }) => (
   </svg>
 );
 
+const GoogleCalendarLogo = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 200 200">
+    <path fill="#fff" d="M152.637 47.363H47.363v105.273h105.273z" />
+    <clipPath id="gc_a">
+      <path d="M152.637 47.363H47.363v105.273h105.273z" />
+    </clipPath>
+    <g clipPath="url(#gc_a)">
+      <path fill="#EA4335" d="m148.363 200-47.363-47.363-10.949 10.949-38.69-38.69 10.95-10.95-10.95-10.949 10.95-10.95-10.95-10.949 10.95-10.95-10.95-10.949L200 47.363V152.637L152.637 200z" />
+      <path fill="#188038" d="M47.363 152.637 0 200V47.363L47.363 0v152.637z" />
+      <path fill="#1967D2" d="M152.637 0 47.363 0v47.363h105.273V0z" />
+      <path fill="#FBBC04" d="M152.637 152.637H47.363V200h105.273z" />
+      <path fill="#4285F4" d="m152.637 47.363 47.363-47.363v152.637L152.637 200V47.363z" />
+    </g>
+    <path fill="#4285F4" d="M70.546 121.408c-2.236-1.512-3.78-3.72-4.632-6.624l5.184-2.16c.48 1.8 1.296 3.216 2.448 4.248 1.152 1.032 2.544 1.548 4.176 1.548 1.68 0 3.12-.54 4.32-1.62 1.2-1.08 1.8-2.436 1.8-4.068 0-1.68-.636-3.06-1.908-4.14-1.272-1.08-2.868-1.62-4.788-1.62h-2.952v-5.112h2.664c1.68 0 3.084-.468 4.212-1.404 1.128-.936 1.692-2.172 1.692-3.708 0-1.392-.528-2.52-1.584-3.384-1.056-.864-2.376-1.296-3.96-1.296-1.536 0-2.772.408-3.708 1.224-.936.816-1.632 1.848-2.088 3.096l-5.112-2.16c.672-1.944 1.92-3.624 3.744-5.04 1.824-1.416 4.14-2.124 6.948-2.124 2.088 0 3.984.432 5.688 1.296 1.704.864 3.048 2.052 4.032 3.564.984 1.512 1.476 3.204 1.476 5.076 0 1.896-.468 3.528-1.404 4.896-.936 1.368-2.148 2.412-3.636 3.132v.36c1.824.672 3.324 1.8 4.5 3.384 1.176 1.584 1.764 3.456 1.764 5.616 0 2.112-.54 3.996-1.62 5.652-1.08 1.656-2.568 2.952-4.464 3.888-1.896.936-4.02 1.404-6.372 1.404-2.808 0-5.316-.756-7.552-2.268z" />
+    <path fill="#4285F4" d="M100.018 91.528l-5.688 4.128-2.808-4.272 10.152-7.344h3.888v40.176h-5.544z" />
+  </svg>
+);
+
 const MicrosoftLogo = ({ className }: { className?: string }) => (
   <svg className={className} viewBox="0 0 256 256">
     <path fill="#F1511B" d="M121.666 121.666H0V0h121.666z" />
@@ -87,12 +106,13 @@ const MicrosoftLogo = ({ className }: { className?: string }) => (
   </svg>
 );
 
+
 const socialIntegrations: Integration[] = [
   {
     id: 'facebook',
     name: 'Facebook',
     description: 'Connect Facebook Messenger to receive and respond to messages',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/0/05/Facebook_Logo_%282019%29.png',
+    logoComponent: <Facebook className="h-8 w-8" />,
     connected: false,
     comingSoon: true,
   },
@@ -100,7 +120,7 @@ const socialIntegrations: Integration[] = [
     id: 'instagram',
     name: 'Instagram',
     description: 'Connect Instagram DMs to handle customer inquiries',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png',
+    logoComponent: <Instagram className="h-8 w-8" />,
     connected: false,
     comingSoon: true,
   },
@@ -108,8 +128,7 @@ const socialIntegrations: Integration[] = [
     id: 'x',
     name: 'X (Twitter)',
     description: 'Connect X to respond to direct messages',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/c/ce/X_logo_2023.svg',
-    logoDark: 'https://upload.wikimedia.org/wikipedia/commons/9/95/Twitter_new_X_logo.png',
+    logoComponent: <Twitter className="h-7 w-7" />,
     connected: false,
     comingSoon: true,
   },
@@ -120,7 +139,7 @@ const emailIntegrations: Integration[] = [
     id: 'google-email',
     name: 'Google',
     description: 'Connect Gmail to handle email conversations',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/7/7e/Gmail_icon_%282020%29.svg',
+    logoComponent: <Google className="h-8 w-8" />,
     connected: false,
     comingSoon: true,
   },
@@ -147,7 +166,7 @@ const calendarIntegrations: Integration[] = [
     id: 'google-calendar',
     name: 'Google Calendar',
     description: 'Sync with Google Calendar for scheduling',
-    logo: 'https://upload.wikimedia.org/wikipedia/commons/a/a5/Google_Calendar_icon_%282020%29.svg',
+    logoComponent: <GoogleCalendarLogo className="h-8 w-8" />,
     connected: false,
     comingSoon: true,
   },
