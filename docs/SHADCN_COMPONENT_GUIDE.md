@@ -814,6 +814,268 @@ Widget uses slightly larger text on mobile for touch readability:
 
 ---
 
+## Icon System (UntitledUI Icons)
+
+ChatPad uses UntitledUI icons exclusively. **Never use Lucide icons.**
+
+### Import Pattern
+
+```tsx
+import { Search01, Settings01, User01 } from '@untitledui/icons';
+```
+
+### Icon Sizing Guidelines
+
+| Size Prop | Pixels | Use Case |
+|-----------|--------|----------|
+| `size={14}` | 14px | Navigation items, sidebar icons, dense UI |
+| `size={16}` | 16px | Buttons, menu items, inline with text (most common) |
+| `size={18}` | 18px | Header actions, standalone icon buttons |
+| `size={20}` | 20px | Mobile menu triggers, larger touch targets |
+| `size={24}` | 24px | Avatar fallbacks, large empty states |
+
+**Alternative Tailwind Sizing:**
+```tsx
+<Search01 className="w-4 h-4" />  {/* 16px - equivalent to size={16} */}
+<Search01 className="w-5 h-5" />  {/* 20px */}
+<Search01 className="w-6 h-6" />  {/* 24px */}
+```
+
+### Icon Color Conventions
+
+| State | Class | Usage |
+|-------|-------|-------|
+| Default | `text-muted-foreground` | Inactive icons, secondary actions |
+| Active/Hover | `text-foreground` | Active nav items, hover states |
+| Brand | `text-primary` | Primary actions, brand emphasis |
+| Delete | `text-destructive` | Delete buttons, error states |
+| Success | `text-success` | Success indicators, confirmations |
+| Warning | `text-warning` | Warning states, caution indicators |
+
+### FeaturedIcon Component
+
+Container component for prominent icons with semantic backgrounds:
+
+```tsx
+import { FeaturedIcon } from '@/components/ui/featured-icon';
+import { AlertCircle, CheckCircle } from '@untitledui/icons';
+
+// Size variants (auto-scales child icon)
+<FeaturedIcon size="sm">  {/* 32px container, 16px icon */}
+  <AlertCircle />
+</FeaturedIcon>
+
+<FeaturedIcon size="md">  {/* 40px container, 20px icon (default) */}
+  <AlertCircle />
+</FeaturedIcon>
+
+<FeaturedIcon size="lg">  {/* 48px container, 24px icon */}
+  <AlertCircle />
+</FeaturedIcon>
+
+<FeaturedIcon size="xl">  {/* 56px container, 28px icon */}
+  <AlertCircle />
+</FeaturedIcon>
+
+// Color variants (semantic backgrounds)
+<FeaturedIcon color="gray">...</FeaturedIcon>        {/* Muted background */}
+<FeaturedIcon color="primary">...</FeaturedIcon>     {/* Primary/10 background */}
+<FeaturedIcon color="success">...</FeaturedIcon>     {/* Success/10 background */}
+<FeaturedIcon color="warning">...</FeaturedIcon>     {/* Warning/10 background */}
+<FeaturedIcon color="destructive">...</FeaturedIcon> {/* Destructive/10 background */}
+```
+
+### Icon Usage Examples
+
+```tsx
+// ✅ CORRECT - Button with icon
+<Button variant="outline" size="sm">
+  <Plus size={16} className="mr-1.5" />
+  Add Item
+</Button>
+
+// ✅ CORRECT - Icon-only button
+<Button variant="ghost" size="icon">
+  <Settings01 size={18} />
+</Button>
+
+// ✅ CORRECT - Navigation item
+<NavLink to="/settings">
+  <Settings01 size={16} className="text-muted-foreground" />
+  <span>Settings</span>
+</NavLink>
+
+// ✅ CORRECT - Empty state with FeaturedIcon
+<EmptyState
+  icon={<FeaturedIcon size="lg" color="primary"><Search01 /></FeaturedIcon>}
+  title="No results found"
+  description="Try adjusting your search"
+/>
+
+// ❌ WRONG - Don't use Lucide icons
+import { Search } from 'lucide-react';  // Never use this
+
+// ❌ WRONG - Don't mix sizing approaches
+<Search01 size={16} className="w-5 h-5" />  // Conflicting sizes
+```
+
+---
+
+## Spacing & Layout System
+
+ChatPad follows a consistent spacing scale derived from Tailwind's default 4px base unit.
+
+### Page Layout Padding
+
+```tsx
+// Standard page container
+<main className="px-4 pt-4 pb-12 lg:px-8 lg:pt-8">
+  {/* Mobile: 16px horizontal, 16px top, 48px bottom */}
+  {/* Desktop: 32px horizontal, 32px top, 48px bottom */}
+</main>
+
+// Full-height page with sidebar
+<div className="flex min-h-screen w-full">
+  <Sidebar />
+  <main className="flex-1 px-4 lg:px-8 pt-4 lg:pt-8 pb-12">
+    {content}
+  </main>
+</div>
+```
+
+### Gap Scale
+
+| Class | Value | Use Case |
+|-------|-------|----------|
+| `gap-1` | 4px | Icon + text inline, badge groups |
+| `gap-1.5` | 6px | Tight button groups, chip clusters |
+| `gap-2` | 8px | Related form fields, input + button |
+| `gap-2.5` | 10px | Navigation items, menu options |
+| `gap-3` | 12px | Card content items, list items |
+| `gap-4` | 16px | Form sections, related card groups |
+| `gap-6` | 24px | Major page sections, card grids |
+| `gap-8` | 32px | Page-level section dividers |
+
+### Component Spacing
+
+**Card Components:**
+```tsx
+<Card>
+  <CardHeader className="p-6">        {/* 24px all sides */}
+    <CardTitle>Title</CardTitle>
+    <CardDescription>Description</CardDescription>
+  </CardHeader>
+  <CardContent className="p-6 pt-0">  {/* 24px sides/bottom, 0 top */}
+    {content}
+  </CardContent>
+  <CardFooter className="p-6 pt-0">   {/* 24px sides/bottom, 0 top */}
+    {actions}
+  </CardFooter>
+</Card>
+```
+
+**Section Dividers:**
+```tsx
+// Horizontal divider between sections
+<div className="border-t border-border pt-4 mt-4">
+  {/* 16px spacing above and below the border */}
+</div>
+
+// With more breathing room
+<div className="border-t border-border pt-6 mt-6">
+  {/* 24px spacing */}
+</div>
+```
+
+**Sidebar Dimensions:**
+- Collapsed: `w-[72px]` (72px)
+- Expanded: `w-60` (240px)
+- Settings sidebar: `w-64` (256px)
+
+### Button & Input Heights
+
+| Size | Height | Use Case |
+|------|--------|----------|
+| Default | `h-8` (32px) | Standard buttons, inputs |
+| Large | `h-10` (40px) | Primary CTAs, mobile touch targets |
+| Icon | `h-8 w-8` | Icon-only buttons |
+| Icon Large | `h-10 w-10` | Mobile icon buttons |
+
+### Common Layout Patterns
+
+```tsx
+// Two-column settings layout
+<div className="flex flex-col lg:flex-row gap-4 lg:gap-8">
+  <nav className="w-full lg:w-64 shrink-0">
+    {/* Settings navigation */}
+  </nav>
+  <main className="flex-1 min-w-0">
+    {/* Settings content */}
+  </main>
+</div>
+
+// Grid of cards
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
+  <Card>...</Card>
+  <Card>...</Card>
+  <Card>...</Card>
+</div>
+
+// Form with sections
+<form className="space-y-6">
+  <div className="space-y-4">
+    <Label>Field 1</Label>
+    <Input />
+  </div>
+  <div className="space-y-4">
+    <Label>Field 2</Label>
+    <Input />
+  </div>
+  <div className="flex gap-2 pt-4">
+    <Button type="submit">Save</Button>
+    <Button variant="outline">Cancel</Button>
+  </div>
+</form>
+
+// Header with actions
+<div className="flex items-center justify-between gap-4">
+  <div>
+    <h1>Page Title</h1>
+    <p className="text-muted-foreground">Description</p>
+  </div>
+  <div className="flex items-center gap-2">
+    <Button variant="outline">Secondary</Button>
+    <Button>Primary</Button>
+  </div>
+</div>
+```
+
+### Responsive Breakpoints
+
+| Breakpoint | Width | Usage |
+|------------|-------|-------|
+| `sm` | 640px | Small mobile adjustments |
+| `md` | 768px | Tablet, 2-column grids |
+| `lg` | 1024px | Desktop, sidebar visible (primary) |
+| `xl` | 1280px | Large desktop, wider content |
+
+**Common Responsive Patterns:**
+```tsx
+// Hide on mobile, show on desktop
+<div className="hidden lg:block">Desktop only</div>
+
+// Stack on mobile, row on desktop
+<div className="flex flex-col lg:flex-row gap-4">...</div>
+
+// Single column mobile, multi-column desktop
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">...</div>
+
+// Adjust padding responsively
+<div className="px-4 lg:px-8 py-4 lg:py-8">...</div>
+```
+
+---
+
 ## Related Documentation
 
 - **[ANIMATION_MOTION_GUIDE.md](./ANIMATION_MOTION_GUIDE.md)** - Complete motion/animation patterns
