@@ -7,7 +7,7 @@
  * @module widget/views/ChatView
  */
 
-import { Suspense, RefObject } from 'react';
+import { Suspense, RefObject, useRef, useEffect } from 'react';
 import { updateMessageReaction } from '../api';
 import { MessageBubble, ContactForm, MessageInput, TypingIndicator, QuickReplies } from '../components';
 import { FileDropZone } from '../constants';
@@ -49,6 +49,8 @@ interface ChatViewProps {
   onStopRecording: () => void;
   onCancelRecording: () => void;
   onFormSubmit: (userData: ChatUser, conversationId?: string) => void;
+  /** Set of message IDs that should animate (new messages) */
+  newMessageIds?: Set<string>;
 }
 
 export const ChatView = ({
@@ -81,6 +83,7 @@ export const ChatView = ({
   onStopRecording,
   onCancelRecording,
   onFormSubmit,
+  newMessageIds,
 }: ChatViewProps) => {
   const disabled = !chatUser && config.enableContactForm;
 
@@ -182,8 +185,14 @@ export const ChatView = ({
           const isLastMessage = idx === messages.length - 1;
           const showQuickReplies = isLastMessage && msg.role === 'assistant' && msg.quickReplies && msg.quickReplies.length > 0;
 
+          // Determine animation class for new messages
+          const shouldAnimate = msg.id && newMessageIds?.has(msg.id);
+          const animationClass = shouldAnimate 
+            ? (msg.role === 'user' ? 'widget-message-slide-right' : 'widget-message-slide-left')
+            : '';
+
           return (
-            <div key={msg.id || idx}>
+            <div key={msg.id || idx} className={animationClass}>
               <MessageBubble
                 message={msg}
                 primaryColor={config.primaryColor}

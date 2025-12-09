@@ -108,6 +108,8 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
   const handleSendMessageRef = useRef<(() => void) | null>(null);
   // Ref for tracking recently added chunk IDs to prevent realtime duplicates
   const recentChunkIdsRef = useRef<Set<string>>(new Set());
+  // State for tracking new message IDs for slide-in animations
+  const [newMessageIds, setNewMessageIds] = useState<Set<string>>(new Set());
   
   // Visitor ID state
   const [visitorId] = useState(() => {
@@ -400,7 +402,9 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     
     // Create optimistic message with temp ID for tracking
     const tempId = `temp-${Date.now()}`;
+    const userMsgId = `user-${Date.now()}`;
     const newMessage: Message = {
+      id: userMsgId,
       tempId,
       role: 'user',
       content: userContent,
@@ -410,6 +414,10 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
       files: uploadedFiles,
       reactions: [],
     };
+    
+    // Mark this message ID for animation
+    setNewMessageIds(prev => new Set([...prev, userMsgId]));
+    setTimeout(() => setNewMessageIds(prev => { const n = new Set(prev); n.delete(userMsgId); return n; }), 300);
     
     setMessages(prev => [...prev, newMessage]);
     setPendingFiles([]);
@@ -516,6 +524,13 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
             }
             
             setIsTyping(false);
+            
+            // Mark chunk for animation
+            if (chunk.id) {
+              setNewMessageIds(prev => new Set([...prev, chunk.id]));
+              setTimeout(() => setNewMessageIds(prev => { const n = new Set(prev); n.delete(chunk.id); return n; }), 300);
+            }
+            
             setMessages(prev => [...prev, { 
               id: chunk.id,
               role: 'assistant', 
@@ -537,9 +552,13 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
             });
           }, 5000);
         } else {
-          // Legacy single message fallback
+          // Legacy single message fallback - mark for animation
+          const msgId = response.assistantMessageId || `legacy-${Date.now()}`;
+          setNewMessageIds(prev => new Set([...prev, msgId]));
+          setTimeout(() => setNewMessageIds(prev => { const n = new Set(prev); n.delete(msgId); return n; }), 300);
+          
           setMessages(prev => [...prev, { 
-            id: response.assistantMessageId,
+            id: msgId,
             role: 'assistant', 
             content: response.response, 
             read: isOpen && currentView === 'messages', 
@@ -795,6 +814,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                     onStopRecording={stopAudioRecording}
                     onCancelRecording={cancelAudioRecording}
                     onFormSubmit={handleFormSubmit}
+                    newMessageIds={newMessageIds}
                   />
                 </div>
               )}

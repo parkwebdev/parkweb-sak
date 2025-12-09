@@ -18,6 +18,25 @@
     display: none;  /* Chrome, Safari, Opera */
   }
 
+  /* Mobile-specific styles */
+  @media (max-width: 480px) {
+    /* Remove border radius on mobile for full-screen appearance */
+    .chatpad-widget-root,
+    body {
+      border-radius: 0 !important;
+    }
+    
+    /* Slightly increase body text size on mobile */
+    body {
+      font-size: 15px;
+    }
+    
+    .text-sm {
+      font-size: 15px;
+      line-height: 1.6;
+    }
+  }
+
   :root {
     --background: 0 0% 100%;
     --foreground: 0 0% 3.9%;
@@ -192,6 +211,25 @@ input, textarea {
 
 .widget-content-enter {
   animation: widget-slide-in 0.2s ease-out;
+}
+
+/* Message slide-in animations (matching app-side Conversations) */
+@keyframes widget-slide-in-left {
+  0% { opacity: 0; transform: translateX(-12px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes widget-slide-in-right {
+  0% { opacity: 0; transform: translateX(12px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+
+.widget-message-slide-left {
+  animation: widget-slide-in-left 0.2s ease-out;
+}
+
+.widget-message-slide-right {
+  animation: widget-slide-in-right 0.2s ease-out;
 }
 
 /* Article content rich text styles */
