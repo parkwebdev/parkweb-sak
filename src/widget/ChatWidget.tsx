@@ -27,7 +27,7 @@
  * ```
  */
 import { useState, useEffect, useRef } from 'react';
-import { createLead, sendChatMessage, submitConversationRating, type WidgetConfig, type ReferrerJourney } from './api';
+import { createLead, sendChatMessageStreaming, submitConversationRating, type WidgetConfig, type ReferrerJourney } from './api';
 import { supabase } from '@/integrations/supabase/client';
 
 // Types and constants extracted for maintainability
@@ -454,153 +454,128 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
         setPageVisits(finalPageVisits);
       }
 
-      console.log('[Widget] Sending message with:', {
+      console.log('[Widget] Sending streaming message with:', {
         pageVisitsCount: finalPageVisits.length,
         referrerJourney: referrerJourney ? 'present' : 'null',
         conversationId: activeConversationId,
       });
 
-      const response = await sendChatMessage(
+      // Create placeholder assistant message for streaming content
+      const streamingMsgId = `streaming-${Date.now()}`;
+      let streamedContent = '';
+      let conversationIdFromStream = activeConversationId;
+      
+      // Mark streaming message for animation
+      setNewMessageIds(prev => new Set([...prev, streamingMsgId]));
+      setTimeout(() => setNewMessageIds(prev => { const n = new Set(prev); n.delete(streamingMsgId); return n; }), 300);
+
+      await sendChatMessageStreaming(
         config.agentId,
         activeConversationId,
         messageHistory,
-        chatUser?.leadId,
-        finalPageVisits.length > 0 ? finalPageVisits : undefined,
-        referrerJourney || undefined,
-        visitorId
-      );
-
-      if (response.conversationId && response.conversationId !== activeConversationId) {
-        // CRITICAL: Mark as fetched BEFORE setting activeConversationId
-        // This prevents the useEffect from triggering a DB fetch that overwrites local messages
-        markConversationFetched(response.conversationId);
-        
-        setActiveConversationId(response.conversationId);
-        
-        if (chatUser) {
-          const updatedUser = { ...chatUser, conversationId: response.conversationId };
-          setChatUser(updatedUser);
-          localStorage.setItem(`chatpad_user_${config.agentId}`, JSON.stringify(updatedUser));
-        }
-      }
-
-      if (response.status === 'human_takeover') {
-        setIsHumanTakeover(true);
-        if (response.takenOverBy) {
-          setTakeoverAgentName(response.takenOverBy.name);
-          setTakeoverAgentAvatar(response.takenOverBy.avatar);
-        }
-        if (response.userMessageId) {
-          setMessages(prev => {
-            const updated = [...prev];
-            for (let i = updated.length - 1; i >= 0; i--) {
-              if (updated[i].role === 'user' && !updated[i].id) {
-                updated[i] = { ...updated[i], id: response.userMessageId };
-                break;
+        {
+          onInit: (data) => {
+            console.log('[Widget] Stream init:', data);
+            conversationIdFromStream = data.conversationId;
+            
+            // Update conversation ID if it changed
+            if (data.conversationId && data.conversationId !== activeConversationId) {
+              markConversationFetched(data.conversationId);
+              setActiveConversationId(data.conversationId);
+              
+              if (chatUser) {
+                const updatedUser = { ...chatUser, conversationId: data.conversationId };
+                setChatUser(updatedUser);
+                localStorage.setItem(`chatpad_user_${config.agentId}`, JSON.stringify(updatedUser));
               }
             }
-            return updated;
-          });
-        }
-      } else if (response.response) {
-        // Update user message with ID
-        if (response.userMessageId) {
-          setMessages(prev => {
-            const updated = [...prev];
-            for (let i = updated.length - 1; i >= 0; i--) {
-              if (updated[i].role === 'user' && !updated[i].id) {
-                updated[i] = { ...updated[i], id: response.userMessageId };
-                break;
-              }
-            }
-            return updated;
-          });
-        }
-        
-        // Check for chunked messages (new multi-message format)
-        if (response.messages && response.messages.length > 0) {
-          // Pre-register all chunk IDs to prevent realtime duplicates
-          response.messages.forEach(chunk => {
-            if (chunk.id) recentChunkIdsRef.current.add(chunk.id);
-          });
-          
-          // Display chunks with staggered delays for natural feel
-          for (let i = 0; i < response.messages.length; i++) {
-            const chunk = response.messages[i];
-            const isLastChunk = i === response.messages.length - 1;
             
-            // Add random delay between 750-1000ms (except for first chunk)
-            if (i > 0) {
-              const delay = 750 + Math.random() * 250; // 750-1000ms
-              setIsTyping(true); // Show typing indicator between chunks
-              await new Promise(resolve => setTimeout(resolve, delay));
+            // Update user message with ID
+            if (data.userMessageId) {
+              setMessages(prev => {
+                const updated = [...prev];
+                for (let i = updated.length - 1; i >= 0; i--) {
+                  if (updated[i].role === 'user' && !updated[i].id) {
+                    updated[i] = { ...updated[i], id: data.userMessageId };
+                    break;
+                  }
+                }
+                return updated;
+              });
             }
             
+            // Hide typing indicator, create streaming message placeholder
             setIsTyping(false);
-            
-            // Mark chunk for animation
-            if (chunk.id) {
-              setNewMessageIds(prev => new Set([...prev, chunk.id]));
-              setTimeout(() => setNewMessageIds(prev => { const n = new Set(prev); n.delete(chunk.id); return n; }), 300);
-            }
-            
             setMessages(prev => [...prev, { 
-              id: chunk.id,
+              id: streamingMsgId,
               role: 'assistant', 
-              content: chunk.content, 
+              content: '', 
               read: isOpen && currentView === 'messages', 
               timestamp: new Date(), 
               type: 'text', 
               reactions: [],
-              // Only attach link previews and quick replies to the last chunk
-              linkPreviews: isLastChunk ? response.linkPreviews : undefined,
-              quickReplies: isLastChunk ? response.quickReplies : undefined,
             }]);
-          }
-          
-          // Clear chunk IDs after delay to allow realtime cleanup
-          setTimeout(() => {
-            response.messages?.forEach(chunk => {
-              if (chunk.id) recentChunkIdsRef.current.delete(chunk.id);
-            });
-          }, 5000);
-          
-          // Check if AI marked conversation complete - show rating after delay
-          if (response.aiMarkedComplete && !hasShownRatingRef.current) {
-            setTimeout(() => {
-              setRatingTriggerType('ai_marked_complete');
-              setShowRatingPrompt(true);
-              hasShownRatingRef.current = true;
-            }, 3000); // 3 second delay after last chunk
-          }
-        } else {
-          // Legacy single message fallback - mark for animation
-          const msgId = response.assistantMessageId || `legacy-${Date.now()}`;
-          setNewMessageIds(prev => new Set([...prev, msgId]));
-          setTimeout(() => setNewMessageIds(prev => { const n = new Set(prev); n.delete(msgId); return n; }), 300);
-          
-          setMessages(prev => [...prev, { 
-            id: msgId,
-            role: 'assistant', 
-            content: response.response, 
-            read: isOpen && currentView === 'messages', 
-            timestamp: new Date(), 
-            type: 'text', 
-            reactions: [],
-            linkPreviews: response.linkPreviews,
-            quickReplies: response.quickReplies,
-          }]);
-          
-          // Check if AI marked conversation complete - show rating after delay
-          if (response.aiMarkedComplete && !hasShownRatingRef.current) {
-            setTimeout(() => {
-              setRatingTriggerType('ai_marked_complete');
-              setShowRatingPrompt(true);
-              hasShownRatingRef.current = true;
-            }, 3000);
-          }
+          },
+          onDelta: (content) => {
+            streamedContent += content;
+            // Update the streaming message with new content
+            setMessages(prev => prev.map(msg => 
+              msg.id === streamingMsgId 
+                ? { ...msg, content: streamedContent }
+                : msg
+            ));
+          },
+          onToolStart: (toolName) => {
+            console.log('[Widget] Tool started:', toolName);
+            // Could show a tool indicator here if desired
+          },
+          onComplete: (data) => {
+            console.log('[Widget] Stream complete:', data);
+            
+            // Register the real message ID to prevent realtime duplicates
+            if (data.assistantMessageId) {
+              recentChunkIdsRef.current.add(data.assistantMessageId);
+              setTimeout(() => recentChunkIdsRef.current.delete(data.assistantMessageId!), 5000);
+            }
+            
+            // Update the streaming message with final ID and metadata
+            setMessages(prev => prev.map(msg => 
+              msg.id === streamingMsgId 
+                ? { 
+                    ...msg, 
+                    id: data.assistantMessageId || streamingMsgId,
+                    linkPreviews: data.linkPreviews,
+                    quickReplies: data.quickReplies,
+                  }
+                : msg
+            ));
+            
+            // Show rating prompt if AI marked complete
+            if (data.aiMarkedComplete && !hasShownRatingRef.current) {
+              setTimeout(() => {
+                setRatingTriggerType('ai_marked_complete');
+                setShowRatingPrompt(true);
+                hasShownRatingRef.current = true;
+              }, 3000);
+            }
+          },
+          onError: (error) => {
+            console.error('[Widget] Stream error:', error);
+            // Update message to show error state
+            setMessages(prev => prev.map(msg => 
+              msg.id === streamingMsgId 
+                ? { ...msg, content: 'I apologize, but I encountered an error. Please try again.', failed: true }
+                : msg
+            ));
+          },
+        },
+        {
+          leadId: chatUser?.leadId,
+          pageVisits: finalPageVisits.length > 0 ? finalPageVisits : undefined,
+          referrerJourney: referrerJourney || undefined,
+          visitorId,
         }
-      }
+      );
     } catch (error) {
       console.error('Error sending message:', error);
       // Mark the optimistic user message as failed
@@ -704,40 +679,84 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     
     setActiveConversationId(conversationId || 'new');
     
-    // Trigger AI to generate personalized greeting using lead data
+    // Trigger AI to generate personalized greeting using lead data with streaming
     setIsTyping(true);
     try {
-      const response = await sendChatMessage(
+      let greetingContent = '';
+      let greetingMsgId = '';
+      let conversationIdFromGreeting = conversationId;
+      
+      await sendChatMessageStreaming(
         config.agentId,
         conversationId || 'new',
         [{ role: 'user', content: '__GREETING_REQUEST__' }],
-        userData.leadId,
-        pageVisits.length > 0 ? pageVisits : undefined,
-        referrerJourney || undefined,
-        visitorId
+        {
+          onInit: (data) => {
+            conversationIdFromGreeting = data.conversationId;
+            if (data.conversationId && data.conversationId !== conversationId) {
+              markConversationFetched(data.conversationId);
+              setActiveConversationId(data.conversationId);
+              
+              const updatedUser = { ...userData, conversationId: data.conversationId };
+              setChatUser(updatedUser);
+              localStorage.setItem(`chatpad_user_${config.agentId}`, JSON.stringify(updatedUser));
+            }
+            setIsTyping(false);
+            // Create streaming message placeholder
+            setMessages([{ 
+              id: 'greeting-stream',
+              role: 'assistant', 
+              content: '', 
+              read: true, 
+              timestamp: new Date(), 
+              type: 'text', 
+              reactions: [],
+            }]);
+          },
+          onDelta: (content) => {
+            greetingContent += content;
+            setMessages([{ 
+              id: 'greeting-stream',
+              role: 'assistant', 
+              content: greetingContent, 
+              read: true, 
+              timestamp: new Date(), 
+              type: 'text', 
+              reactions: [],
+            }]);
+          },
+          onComplete: (data) => {
+            greetingMsgId = data.assistantMessageId || 'greeting-stream';
+            setMessages([{ 
+              id: greetingMsgId,
+              role: 'assistant', 
+              content: greetingContent, 
+              read: true, 
+              timestamp: new Date(), 
+              type: 'text', 
+              reactions: [],
+              linkPreviews: data.linkPreviews,
+            }]);
+          },
+          onError: () => {
+            // Fallback greeting on error
+            setMessages([{ 
+              role: 'assistant', 
+              content: `Welcome! How can I help you today?`, 
+              read: true, 
+              timestamp: new Date(), 
+              type: 'text', 
+              reactions: [] 
+            }]);
+          },
+        },
+        {
+          leadId: userData.leadId,
+          pageVisits: pageVisits.length > 0 ? pageVisits : undefined,
+          referrerJourney: referrerJourney || undefined,
+          visitorId,
+        }
       );
-      
-      if (response.conversationId && response.conversationId !== conversationId) {
-        markConversationFetched(response.conversationId);
-        setActiveConversationId(response.conversationId);
-        
-        const updatedUser = { ...userData, conversationId: response.conversationId };
-        setChatUser(updatedUser);
-        localStorage.setItem(`chatpad_user_${config.agentId}`, JSON.stringify(updatedUser));
-      }
-      
-      if (response.response) {
-        setMessages([{ 
-          id: response.assistantMessageId,
-          role: 'assistant', 
-          content: response.response, 
-          read: true, 
-          timestamp: new Date(), 
-          type: 'text', 
-          reactions: [],
-          linkPreviews: response.linkPreviews,
-        }]);
-      }
     } catch (error) {
       console.error('Error getting AI greeting:', error);
       // Fallback to a simple greeting if AI fails
