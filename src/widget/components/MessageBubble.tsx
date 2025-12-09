@@ -22,6 +22,87 @@ import { FileTypeIcon } from '@/components/chat/FileTypeIcons';
 import { stripUrlsFromContent } from '../utils/url-stripper';
 import type { Message } from '../types';
 
+/**
+ * Formats message content with basic markdown support.
+ * Handles bullet lists, numbered lists, and bold text.
+ */
+function formatMessageContent(content: string): React.ReactNode {
+  const lines = content.split('\n');
+  const elements: React.ReactNode[] = [];
+  let currentList: { type: 'ul' | 'ol'; items: string[] } | null = null;
+  let key = 0;
+
+  const flushList = () => {
+    if (currentList) {
+      const ListTag = currentList.type;
+      elements.push(
+        <ListTag key={key++} className={currentList.type === 'ul' ? 'list-disc pl-4 my-1' : 'list-decimal pl-4 my-1'}>
+          {currentList.items.map((item, i) => (
+            <li key={i} className="my-0.5">{formatInlineMarkdown(item)}</li>
+          ))}
+        </ListTag>
+      );
+      currentList = null;
+    }
+  };
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    
+    // Bullet list: * or -
+    const bulletMatch = line.match(/^[\s]*[*-]\s+(.+)$/);
+    if (bulletMatch) {
+      if (currentList?.type !== 'ul') {
+        flushList();
+        currentList = { type: 'ul', items: [] };
+      }
+      currentList.items.push(bulletMatch[1]);
+      continue;
+    }
+
+    // Numbered list: 1. 2. etc
+    const numberedMatch = line.match(/^[\s]*\d+\.\s+(.+)$/);
+    if (numberedMatch) {
+      if (currentList?.type !== 'ol') {
+        flushList();
+        currentList = { type: 'ol', items: [] };
+      }
+      currentList.items.push(numberedMatch[1]);
+      continue;
+    }
+
+    // Regular line - flush any pending list
+    flushList();
+    
+    if (line.trim() === '') {
+      elements.push(<br key={key++} />);
+    } else {
+      elements.push(
+        <span key={key++}>
+          {formatInlineMarkdown(line)}
+          {i < lines.length - 1 && <br />}
+        </span>
+      );
+    }
+  }
+
+  flushList();
+  return elements;
+}
+
+/**
+ * Formats inline markdown: **bold**
+ */
+function formatInlineMarkdown(text: string): React.ReactNode {
+  const parts = text.split(/(\*\*.*?\*\*)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return <strong key={i}>{part.slice(2, -2)}</strong>;
+    }
+    return part;
+  });
+}
+
 /** Props for the MessageBubble component */
 interface MessageBubbleProps {
   /** Message data to render */
@@ -205,14 +286,16 @@ export const MessageBubble = ({
             </div>
           )}
           {(message.type === 'text' || !message.type) && (
-            <p className="text-sm whitespace-pre-wrap break-words">
+            <div className="text-sm whitespace-pre-wrap break-words widget-message-content">
               {message.role === 'assistant' 
-                ? stripUrlsFromContent(
-                    message.content.replace(/\*\*(.*?)\*\*/g, '$1'),
-                    !!(message.linkPreviews && message.linkPreviews.length > 0)
+                ? formatMessageContent(
+                    stripUrlsFromContent(
+                      message.content,
+                      !!(message.linkPreviews && message.linkPreviews.length > 0)
+                    )
                   )
                 : message.content}
-            </p>
+            </div>
           )}
           
           {/* Link previews for assistant messages */}
