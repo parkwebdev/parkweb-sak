@@ -983,6 +983,7 @@ export type Database = {
           agent_id: string | null
           created_at: string | null
           embedding: string | null
+          expires_at: string | null
           hit_count: number | null
           id: string
           last_used_at: string | null
@@ -993,6 +994,7 @@ export type Database = {
           agent_id?: string | null
           created_at?: string | null
           embedding?: string | null
+          expires_at?: string | null
           hit_count?: number | null
           id?: string
           last_used_at?: string | null
@@ -1003,6 +1005,7 @@ export type Database = {
           agent_id?: string | null
           created_at?: string | null
           embedding?: string | null
+          expires_at?: string | null
           hit_count?: number | null
           id?: string
           last_used_at?: string | null
