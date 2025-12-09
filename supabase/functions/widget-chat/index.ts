@@ -93,48 +93,31 @@ const EMBEDDING_DIMENSIONS = 1024;
 const MAX_CONVERSATION_HISTORY = 10; // Limit to last 10 messages to reduce input tokens
 const MAX_RAG_CHUNKS = 3; // Limit RAG context to top 3 most relevant chunks
 
-// Industry-Standard System Prompt Framework
-// Based on best practices from OpenAI, Anthropic, and production chatbot systems
-const buildSystemPromptFramework = (agentName: string = 'assistant') => `
+// PHASE 8: Response Formatting Rules for Digestible AI Responses (with chunking)
+const RESPONSE_FORMATTING_RULES = `
 
-# CORE BEHAVIOR
+RESPONSE FORMATTING (CRITICAL - Follow these rules):
 
-You are a helpful AI assistant. Your goal is to answer questions accurately and helpfully.
+MESSAGE CHUNKING (IMPORTANT):
+- Use ||| to separate your response into 2-4 message chunks for a conversational feel
+- Chunk 1: ALWAYS start with a friendly greeting/opener (1-2 sentences max)
+- Middle chunks: Main answer content, bullet points, explanations  
+- Final chunk: Links ONLY (if any) - "Learn more: [URL]"
+- Simple yes/no answers can be 1 chunk (no delimiter needed)
+- Max 4 chunks total
 
-## Response Style
-- **Concise by default**: 1-2 sentences for simple questions
-- **Expand only when needed**: 3-4 sentences for explanations, never more than 5
-- **Conversational tone**: Natural, friendly, not robotic
-- **Answer first**: Lead with the answer, then add context if needed
+CHUNKING EXAMPLES:
+Good: "Hey! Great question about pricing. ||| We have 3 plans:\n- Starter: $29/mo\n- Pro: $99/mo\n- Enterprise: Custom ||| Learn more: https://example.com/pricing"
+Good: "Hi there! ||| Yes, we support that feature. It works by..."
+Bad: "I'd be happy to help! Here's everything..." (no chunks, starts with preamble)
 
-## DO
-- Use contractions naturally (you'll, we're, that's)
-- Reference user's name when known
-- Include source links when you used knowledge base info
-- Be direct and confident
-
-## DO NOT
-- Start with "I'd be happy to help", "Of course!", "Great question!", etc.
-- Use bullet points unless listing 3+ distinct items
-- Write paragraph blocks - keep it scannable
-- Repeat information the user already knows
-- Apologize excessively
-
-## Link Formatting (CRITICAL)
-When sharing links, ALWAYS put them on their own line:
-✓ "Here's more info:\nhttps://example.com"
-✗ "You can read about this at https://example.com which explains..."
-
-## Sample Openers (vary these, don't repeat)
-- "Hey [name]! "
-- "Sure thing—"
-- "Quick answer: "
-- "[Direct answer without preamble]"
-
-## When Uncertain
-- "I don't have that specific info, but here's what I know..."
-- "That's outside my knowledge—want me to connect you with our team?"
-`;
+OTHER RULES:
+- Be CONCISE: Max 2-3 short sentences per chunk
+- Skip preamble like "I'd be happy to help" - just answer directly
+- Put links on their OWN LINE: "Learn more: [URL]" - never bury links in paragraphs
+- Use BULLET POINTS for any list of 2+ items
+- Lead with the ANSWER first, then add brief context if needed
+- If you're writing more than 50 words without a break, STOP and restructure`;
 
 // Model tiers for smart routing (cost optimization)
 const MODEL_TIERS = {
@@ -188,25 +171,23 @@ function normalizeQuery(query: string): string {
   return query.toLowerCase().trim().replace(/\s+/g, ' ').replace(/[^\w\s]/g, '');
 }
 
-// Detect natural chunk breaks - SIMPLIFIED: Only split for URLs on their own line
-// Single-bubble by default, multi-bubble only when necessary
-function detectChunkBreak(buffer: string, currentChunkCount: number): { breakIndex: number; isLink: boolean } {
-  // Max 2 chunks (main content + optional link bubble)
-  if (currentChunkCount >= 2) return { breakIndex: -1, isLink: false };
+// Split AI response into message chunks using ||| delimiter
+function splitResponseIntoChunks(response: string, maxChunks = 4): string[] {
+  const DELIMITER = '|||';
   
-  // ONLY trigger: URL on its own line - isolate it to separate bubble
-  const urlMatch = buffer.match(/\n(https?:\/\/[^\s<>"')\]]+)/);
-  if (urlMatch) {
-    const urlLineStart = buffer.indexOf(urlMatch[0]);
-    const textBefore = buffer.substring(0, urlLineStart).trim();
-    // Only break if there's substantial content before (at least 30 chars)
-    if (textBefore.length >= 30) {
-      return { breakIndex: urlLineStart + 1, isLink: true }; // +1 to skip the newline
-    }
+  // If no delimiter, return as single chunk
+  if (!response.includes(DELIMITER)) {
+    return [response.trim()];
   }
   
-  // No break - keep as single bubble
-  return { breakIndex: -1, isLink: false };
+  // Split on delimiter
+  const chunks = response
+    .split(DELIMITER)
+    .map(chunk => chunk.trim())
+    .filter(chunk => chunk.length > 0);
+  
+  // Cap at maxChunks
+  return chunks.slice(0, maxChunks);
 }
 
 // Hash query for cache key
@@ -1134,8 +1115,8 @@ Use this information to personalize your responses when appropriate (e.g., addre
       systemPrompt = systemPrompt + userContextSection;
     }
     
-    // Append industry-standard response framework
-    systemPrompt = systemPrompt + buildSystemPromptFramework();
+    // PHASE 8: Append formatting rules for digestible responses
+    systemPrompt = systemPrompt + RESPONSE_FORMATTING_RULES;
 
     // PHASE 6: Truncate conversation history to reduce input tokens
     let messagesToSend = truncateConversationHistory(messages);
@@ -1191,13 +1172,36 @@ Generate a warm, personalized greeting using the user information provided above
       frequency_penalty: deploymentConfig.frequency_penalty || 0,
     };
 
-    // PHASE 2: Quick replies moved to separate post-response call to prevent empty content issue
-    // Check config for enable_quick_replies setting (defaults to true)
+    // PHASE 7: Skip quick replies for lite model tier (reduces tool call overhead)
+    // Also check agent config for enable_quick_replies setting (defaults to true)
     const enableQuickReplies = deploymentConfig.enable_quick_replies !== false;
     const shouldIncludeQuickReplies = enableQuickReplies && modelTier !== 'lite';
+    
+    // Built-in quick replies tool (conditional based on tier and config)
+    const quickRepliesTool = shouldIncludeQuickReplies ? {
+      type: 'function',
+      function: {
+        name: 'suggest_quick_replies',
+        description: 'IMPORTANT: Always provide your full response text first, then call this tool to suggest follow-up options. Suggest 2-4 relevant follow-up questions or actions based on your response. Never call this tool without also providing response content in the same message.',
+        parameters: {
+          type: 'object',
+          properties: {
+            suggestions: {
+              type: 'array',
+              description: 'Array of 2-4 short, actionable suggestions (max 40 characters each)',
+              items: {
+                type: 'string'
+              },
+              minItems: 2,
+              maxItems: 4
+            }
+          },
+          required: ['suggestions']
+        }
+      }
+    } : null;
 
     // Built-in tool to mark conversation as complete (triggers satisfaction rating)
-    // This stays in main request as it's low-risk and useful for AI to call inline
     const markCompleteTool = {
       type: 'function',
       function: {
@@ -1221,29 +1225,23 @@ Generate a warm, personalized greeting using the user information provided above
       }
     };
 
-    // Combine mark_complete with user-defined tools (quick replies moved to separate call)
+    // Combine built-in tools with user-defined tools (only include quick replies if enabled)
     const allTools = [
-      markCompleteTool,
+      ...(quickRepliesTool ? [quickRepliesTool] : []),
+      markCompleteTool, // Always include mark_conversation_complete
       ...(formattedTools || [])
     ];
     
-    // Only add tools if there are user-defined tools (mark_complete is lightweight)
-    if (formattedTools && formattedTools.length > 0) {
+    // PHASE 7: Only add tools if there are any (skip entirely for lite model with no user tools)
+    if (allTools.length > 0) {
       aiRequestBody.tools = allTools;
-      aiRequestBody.tool_choice = 'auto';
-    } else {
-      // Just mark_complete tool - still include it
-      aiRequestBody.tools = [markCompleteTool];
       aiRequestBody.tool_choice = 'auto';
     }
     
-    console.log(`Quick replies: ${shouldIncludeQuickReplies ? 'will generate post-response' : 'disabled'} (tier=${modelTier}, config=${enableQuickReplies})`);
+    console.log(`Quick replies: ${shouldIncludeQuickReplies ? 'enabled' : 'disabled'} (tier=${modelTier}, config=${enableQuickReplies})`);
 
-    // Enable streaming for real-time token display
-    aiRequestBody.stream = true;
-
-    // Call OpenRouter API with streaming
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    // Call OpenRouter API
+    let response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
@@ -1258,13 +1256,19 @@ Generate a warm, personalized greeting using the user information provided above
       if (response.status === 429) {
         return new Response(
           JSON.stringify({ error: 'Rate limit exceeded. Please try again later.', conversationId: activeConversationId }),
-          { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          {
+            status: 429,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
         );
       }
       if (response.status === 402) {
         return new Response(
           JSON.stringify({ error: 'Credits exhausted. Please add funds to continue.', conversationId: activeConversationId }),
-          { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          {
+            status: 402,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
         );
       }
       const errorText = await response.text();
@@ -1272,483 +1276,271 @@ Generate a warm, personalized greeting using the user information provided above
       throw new Error('AI Gateway error');
     }
 
-    // Stream response to client
-    const reader = response.body?.getReader();
-    if (!reader) {
-      throw new Error('No response body');
-    }
-
-    const encoder = new TextEncoder();
-    const decoder = new TextDecoder();
-    
-    let fullContent = '';
-    let toolCalls: any[] = [];
-    let quickReplies: string[] = [];
-    let aiMarkedComplete = false;
+    let aiResponse = await response.json();
+    let assistantMessage = aiResponse.choices?.[0]?.message;
+    let assistantContent = assistantMessage?.content || '';
     const toolsUsed: { name: string; success: boolean }[] = [];
-    const completedChunks: string[] = []; // Track completed chunks for DB storage
-    
-    // Create a TransformStream to process and forward SSE
-    const stream = new ReadableStream({
-      async start(controller) {
-        let buffer = '';
-        let currentChunkBuffer = ''; // Buffer for detecting sentence breaks within current chunk
-        let chunkCount = 0;
+    let quickReplies: string[] = [];
+    let aiMarkedComplete = false; // Track if AI called mark_conversation_complete with high confidence
+
+    // Handle tool calls if AI decided to use tools
+    if (assistantMessage?.tool_calls && assistantMessage.tool_calls.length > 0) {
+      console.log(`AI requested ${assistantMessage.tool_calls.length} tool call(s)`);
+      
+      const toolResults: any[] = [];
+      
+      for (const toolCall of assistantMessage.tool_calls) {
+        const toolName = toolCall.function?.name;
+        const toolArgs = JSON.parse(toolCall.function?.arguments || '{}');
         
-        try {
-          // First, send conversation ID immediately
-          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
-            type: 'init', 
-            conversationId: activeConversationId,
-            userMessageId 
-          })}\n\n`));
-          
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
+        // Handle built-in quick replies tool
+        if (toolName === 'suggest_quick_replies') {
+          console.log('AI suggested quick replies:', toolArgs.suggestions);
+          quickReplies = (toolArgs.suggestions || []).slice(0, 4).map((s: string) => 
+            s.length > 40 ? s.substring(0, 37) + '...' : s
+          );
+          // Don't add to toolResults - this is a client-side only tool
+          continue;
+        }
+        
+        // Handle built-in mark_conversation_complete tool
+        if (toolName === 'mark_conversation_complete') {
+          console.log('AI called mark_conversation_complete:', toolArgs);
+          if (toolArgs.confidence === 'high') {
+            aiMarkedComplete = true;
+            console.log('Conversation marked complete with HIGH confidence, will trigger rating prompt');
             
-            buffer += decoder.decode(value, { stream: true });
-            const lines = buffer.split('\n');
-            buffer = lines.pop() || '';
-            
-            for (const line of lines) {
-              if (!line.startsWith('data: ')) continue;
-              const data = line.slice(6).trim();
-              if (data === '[DONE]') continue;
-              
-              try {
-                const parsed = JSON.parse(data);
-                const delta = parsed.choices?.[0]?.delta;
-                
-                // Handle content tokens
-                if (delta?.content) {
-                  fullContent += delta.content;
-                  currentChunkBuffer += delta.content;
-                  
-                  // Emit entire token at once (token-based streaming for efficiency)
-                  controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
-                    type: 'delta', 
-                    content: delta.content 
-                  })}\n\n`));
-                  
-                  // Check for URL-based chunk break (only split for links now)
-                  const { breakIndex, isLink } = detectChunkBreak(currentChunkBuffer, chunkCount);
-                  if (breakIndex > 0) {
-                    const chunkContent = currentChunkBuffer.substring(0, breakIndex).trim();
-                    
-                    if (chunkContent.length >= 30) {
-                      completedChunks.push(chunkContent);
-                      chunkCount++;
-                      
-                      // Emit chunk_complete event for client to create new bubble
-                      controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
-                        type: 'chunk_complete', 
-                        content: chunkContent,
-                        chunkIndex: chunkCount - 1,
-                        isLink 
-                      })}\n\n`));
-                      
-                      // 1.5 second pause between bubbles for natural conversation rhythm
-                      await new Promise(resolve => setTimeout(resolve, 1500));
-                      
-                      currentChunkBuffer = currentChunkBuffer.substring(breakIndex).trimStart();
-                    }
-                  }
-                }
-                
-                // Handle tool calls (accumulate arguments)
-                if (delta?.tool_calls) {
-                  for (const tc of delta.tool_calls) {
-                    const idx = tc.index || 0;
-                    if (!toolCalls[idx]) {
-                      toolCalls[idx] = { id: tc.id, function: { name: tc.function?.name || '', arguments: '' } };
-                    }
-                    if (tc.function?.name) toolCalls[idx].function.name = tc.function.name;
-                    if (tc.function?.arguments) toolCalls[idx].function.arguments += tc.function.arguments;
-                  }
-                }
-              } catch (e) {
-                // Ignore parse errors for partial JSON
-              }
-            }
-          }
-          
-          // Emit final chunk if there's remaining content
-          if (currentChunkBuffer.trim()) {
-            completedChunks.push(currentChunkBuffer.trim());
-            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
-              type: 'chunk_complete', 
-              content: currentChunkBuffer.trim(),
-              chunkIndex: chunkCount,
-              isLink: false,
-              isFinal: true
-            })}\n\n`));
-          }
-          
-          // Process tool calls after stream completes
-          if (toolCalls.length > 0) {
-            console.log(`Processing ${toolCalls.length} tool call(s) after stream`);
-            
-            for (const toolCall of toolCalls) {
-              const toolName = toolCall.function?.name;
-              let toolArgs = {};
-              try {
-                toolArgs = JSON.parse(toolCall.function?.arguments || '{}');
-              } catch (e) {
-                console.error('Failed to parse tool args:', toolCall.function?.arguments);
-                continue;
-              }
-              
-              // Handle mark_conversation_complete
-              if (toolName === 'mark_conversation_complete') {
-                if ((toolArgs as any).confidence === 'high') {
-                  aiMarkedComplete = true;
-                  const currentMeta = conversation?.metadata || {};
-                  await supabase
-                    .from('conversations')
-                    .update({
-                      metadata: {
-                        ...currentMeta,
-                        ai_marked_complete: true,
-                        ai_complete_reason: (toolArgs as any).reason,
-                        ai_complete_at: new Date().toISOString(),
-                      },
-                    })
-                    .eq('id', activeConversationId);
-                }
-                continue;
-              }
-              
-              // Handle user-defined tools
-              const tool = enabledTools.find(t => t.name === toolName);
-              if (tool && tool.endpoint_url) {
-                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
-                  type: 'tool_start', 
-                  name: toolName 
-                })}\n\n`));
-                
-                const result = await callToolEndpoint({
-                  name: tool.name,
-                  endpoint_url: tool.endpoint_url,
-                  headers: tool.headers || {},
-                  timeout_ms: tool.timeout_ms || 10000,
-                }, toolArgs);
-                
-                toolsUsed.push({ name: toolName, success: result.success });
-                
-                // Make follow-up call with tool result
-                const followUpResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-                  method: 'POST',
-                  headers: {
-                    'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-                    'HTTP-Referer': 'https://chatpad.ai',
-                    'X-Title': 'ChatPad',
-                    'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify({
-                    ...aiRequestBody,
-                    stream: false,
-                    messages: [
-                      ...aiRequestBody.messages,
-                      { role: 'assistant', tool_calls: [toolCall] },
-                      {
-                        role: 'tool',
-                        tool_call_id: toolCall.id,
-                        content: result.success ? JSON.stringify(result.result) : JSON.stringify({ error: result.error }),
-                      },
-                    ],
-                    tools: undefined,
-                    tool_choice: undefined,
-                  }),
-                });
-                
-                if (followUpResponse.ok) {
-                  const followUpData = await followUpResponse.json();
-                  const followUpContent = followUpData.choices?.[0]?.message?.content || '';
-                  if (followUpContent) {
-                    fullContent += (fullContent ? '\n\n' : '') + followUpContent;
-                    controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
-                      type: 'delta', 
-                      content: followUpContent 
-                    })}\n\n`));
-                  }
-                }
-              }
-            }
-          }
-          
-          // PHASE 5: Post-processing guardrails
-          // Strip common AI preambles and clean up response
-          const preamblesToRemove = [
-            /^(I'd be happy to help[!.]?\s*)/i,
-            /^(Of course[!.]?\s*)/i,
-            /^(Great question[!.]?\s*)/i,
-            /^(Absolutely[!.]?\s*)/i,
-            /^(Sure thing[!.]?\s*)/i,
-            /^(Hello[!.]?\s*)/i,
-            /^(Hi there[!.]?\s*)/i,
-          ];
-          
-          let cleanedContent = fullContent;
-          for (const pattern of preamblesToRemove) {
-            cleanedContent = cleanedContent.replace(pattern, '');
-          }
-          
-          // Strip any remaining ||| delimiters (safety net)
-          cleanedContent = cleanedContent.replace(/\|\|\|/g, '').trim();
-          
-          // Update fullContent with cleaned version
-          if (cleanedContent !== fullContent) {
-            console.log('Post-processing: cleaned response content');
-            fullContent = cleanedContent;
-          }
-          
-          // Fallback if no content - make a retry call without tools
-          if (!fullContent) {
-            console.log('Empty response detected - making retry call without tools');
-            try {
-              const retryResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-                method: 'POST',
-                headers: {
-                  'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-                  'HTTP-Referer': 'https://chatpad.ai',
-                  'X-Title': 'ChatPad',
-                  'Content-Type': 'application/json',
+            // Update conversation metadata to track this
+            const currentMeta = conversation?.metadata || {};
+            await supabase
+              .from('conversations')
+              .update({
+                metadata: {
+                  ...currentMeta,
+                  ai_marked_complete: true,
+                  ai_complete_reason: toolArgs.reason,
+                  ai_complete_at: new Date().toISOString(),
                 },
-                body: JSON.stringify({
-                  model: selectedModel,
-                  messages: aiRequestBody.messages,
-                  stream: false,
-                  temperature: agent.temperature || 0.7,
-                  max_completion_tokens: agent.max_tokens || 500,
-                  // No tools - force content generation
-                }),
-              });
-              
-              if (retryResponse.ok) {
-                const retryData = await retryResponse.json();
-                const retryContent = retryData.choices?.[0]?.message?.content;
-                if (retryContent) {
-                  fullContent = retryContent;
-                  controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
-                    type: 'delta', 
-                    content: fullContent 
-                  })}\n\n`));
-                  console.log('Retry successful - got content');
-                }
-              }
-            } catch (retryError) {
-              console.error('Retry call failed:', retryError);
-            }
-          }
-          
-          // Final fallback if still no content
-          if (!fullContent) {
-            fullContent = "I'm here to help! What would you like to know?";
-            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
-              type: 'delta', 
-              content: fullContent 
-            })}\n\n`));
-          }
-          
-          // PHASE 3: Generate quick replies in separate call (post-response)
-          if (shouldIncludeQuickReplies && fullContent) {
-            try {
-              console.log('Generating quick replies via separate call...');
-              const quickReplyResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-                method: 'POST',
-                headers: {
-                  'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-                  'HTTP-Referer': 'https://chatpad.ai',
-                  'X-Title': 'ChatPad',
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  model: MODEL_TIERS.lite, // Use cheapest model for quick replies
-                  messages: [
-                    {
-                      role: 'system',
-                      content: 'You generate 2-3 short follow-up suggestions (max 35 characters each) based on an AI assistant response. Return ONLY a JSON array of strings, nothing else. Example: ["Tell me more", "How does this work?", "What are the costs?"]'
-                    },
-                    {
-                      role: 'user',
-                      content: `Based on this assistant response, suggest 2-3 natural follow-up questions or actions:\n\n"${fullContent.substring(0, 500)}"`
-                    }
-                  ],
-                  stream: false,
-                  temperature: 0.5,
-                  max_completion_tokens: 100,
-                }),
-              });
-              
-              if (quickReplyResponse.ok) {
-                const qrData = await quickReplyResponse.json();
-                const qrContent = qrData.choices?.[0]?.message?.content || '';
-                try {
-                  // Parse the JSON array from response
-                  const parsed = JSON.parse(qrContent.trim());
-                  if (Array.isArray(parsed)) {
-                    quickReplies = parsed.slice(0, 4).map((s: string) => 
-                      typeof s === 'string' ? (s.length > 40 ? s.substring(0, 37) + '...' : s) : ''
-                    ).filter(s => s);
-                    console.log('Generated quick replies:', quickReplies);
-                  }
-                } catch (parseErr) {
-                  console.log('Failed to parse quick replies JSON:', qrContent);
-                }
-              }
-            } catch (qrError) {
-              console.error('Quick reply generation failed (non-blocking):', qrError);
-            }
-          }
-          
-          // Fetch link previews after stream completes
-          const linkPreviews = await fetchLinkPreviews(fullContent, supabaseUrl, supabaseKey);
-          console.log(`Link previews fetched: ${linkPreviews.length} total`);
-          
-          // Save chunks as separate messages for multi-bubble display in DB
-          const chunkIds: string[] = [];
-          const baseTime = new Date();
-          
-          // Get URLs per chunk for matching previews
-          const getPreviewsForContent = (content: string) => {
-            const urls = content.match(URL_REGEX) || [];
-            return linkPreviews.filter(p => urls.some(u => p.url === u || content.includes(p.url)));
-          };
-          
-          if (completedChunks.length > 1) {
-            // Multiple chunks - save each as separate message
-            for (let i = 0; i < completedChunks.length; i++) {
-              const chunkContent = completedChunks[i];
-              const isLast = i === completedChunks.length - 1;
-              
-              // Offset timestamps slightly for proper ordering
-              const chunkTime = new Date(baseTime.getTime() + (i * 100));
-              
-              // Match pre-fetched previews to this chunk's URLs
-              const chunkLinkPreviews = getPreviewsForContent(chunkContent);
-              
-              const { data: msg } = await supabase.from('messages').insert({
-                conversation_id: activeConversationId,
-                role: 'assistant',
-                content: chunkContent,
-                created_at: chunkTime.toISOString(),
-                metadata: { 
-                  source: 'ai',
-                  model: selectedModel,
-                  model_tier: modelTier,
-                  chunk_index: i,
-                  chunk_total: completedChunks.length,
-                  knowledge_sources: isLast && sources.length > 0 ? sources : undefined,
-                  tools_used: isLast && toolsUsed.length > 0 ? toolsUsed : undefined,
-                  link_previews: chunkLinkPreviews.length > 0 ? chunkLinkPreviews : undefined,
-                }
-              }).select('id').single();
-              
-              if (msg?.id) chunkIds.push(msg.id);
-            }
+              })
+              .eq('id', activeConversationId);
           } else {
-            // Single message - save as before
-            const { data: msg } = await supabase.from('messages').insert({
-              conversation_id: activeConversationId,
-              role: 'assistant',
-              content: fullContent,
-              created_at: baseTime.toISOString(),
-              metadata: { 
-                source: 'ai',
-                model: selectedModel,
-                model_tier: modelTier,
-                knowledge_sources: sources.length > 0 ? sources : undefined,
-                tools_used: toolsUsed.length > 0 ? toolsUsed : undefined,
-                link_previews: linkPreviews.length > 0 ? linkPreviews : undefined,
-              }
-            }).select('id').single();
-            
-            if (msg?.id) chunkIds.push(msg.id);
+            console.log('AI marked complete with MEDIUM confidence, skipping rating prompt');
           }
-          
-          const assistantMessageId = chunkIds[chunkIds.length - 1]; // Last chunk ID for backwards compat
-          
-          // Update conversation metadata
-          const currentMetadata = conversation?.metadata || {};
-          let mergedPageVisits = currentMetadata.visited_pages || [];
-          if (pageVisits && Array.isArray(pageVisits)) {
-            const existingUrls = new Set(mergedPageVisits.map((v: any) => `${v.url}-${v.entered_at}`));
-            const newVisits = pageVisits.filter((v: any) => !existingUrls.has(`${v.url}-${v.entered_at}`));
-            mergedPageVisits = [...mergedPageVisits, ...newVisits];
-          }
-          
-          await supabase
-            .from('conversations')
-            .update({
-              metadata: {
-                ...currentMetadata,
-                messages_count: (currentMetadata.messages_count || 0) + 2,
-                first_message_at: currentMetadata.first_message_at || new Date().toISOString(),
-                visited_pages: mergedPageVisits,
-                last_message_preview: fullContent.substring(0, 60),
-                last_message_role: 'assistant',
-                last_message_at: new Date().toISOString(),
-                last_user_message_at: new Date().toISOString(),
-              },
-              updated_at: new Date().toISOString(),
-            })
-            .eq('id', activeConversationId);
-          
-          // Cache response if similarity is good
-          if (queryHash && maxSimilarity > 0.65) {
-            cacheResponse(supabase, queryHash, agentId, fullContent, maxSimilarity);
-          }
-          
-          // Track API usage
-          const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-          supabase
-            .from('usage_metrics')
-            .upsert({
-              user_id: agent.user_id,
-              period_start: firstDayOfMonth.toISOString(),
-              period_end: lastDayOfMonth.toISOString(),
-              api_calls_count: currentApiCalls + 1,
-            }, { onConflict: 'user_id,period_start' })
-            .then(() => {})
-            .catch(() => {});
-          
-          // Send completion event with metadata
-          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
-            type: 'done',
-            assistantMessageId,
-            chunkIds: chunkIds.length > 1 ? chunkIds : undefined,
-            linkPreviews: linkPreviews.length > 0 ? linkPreviews : undefined,
-            quickReplies: quickReplies.length > 0 ? quickReplies : undefined,
-            aiMarkedComplete,
-            sources: sources.length > 0 ? sources : undefined,
-          })}\n\n`));
-          
-          controller.close();
-        } catch (error) {
-          console.error('Streaming error:', error);
-          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
-            type: 'error', 
-            message: error.message || 'Streaming error' 
-          })}\n\n`));
-          controller.close();
+          // Don't add to toolResults - this is a client-side only tool
+          continue;
+        }
+        
+        // Find the user-defined tool configuration
+        const tool = enabledTools.find(t => t.name === toolName);
+        
+        if (tool && tool.endpoint_url) {
+          const result = await callToolEndpoint({
+            name: tool.name,
+            endpoint_url: tool.endpoint_url,
+            headers: tool.headers || {},
+            timeout_ms: tool.timeout_ms || 10000,
+          }, toolArgs);
+
+          toolsUsed.push({ name: toolName, success: result.success });
+
+          toolResults.push({
+            role: 'tool',
+            tool_call_id: toolCall.id,
+            content: result.success 
+              ? JSON.stringify(result.result) 
+              : JSON.stringify({ error: result.error }),
+          });
+        } else {
+          console.error(`Tool ${toolName} not found or has no endpoint`);
+          toolResults.push({
+            role: 'tool',
+            tool_call_id: toolCall.id,
+            content: JSON.stringify({ error: `Tool ${toolName} is not configured` }),
+          });
+          toolsUsed.push({ name: toolName, success: false });
         }
       }
-    });
+
+      // If AI only provided quick replies without content, force a follow-up call to get actual response
+      const needsContentFollowUp = !assistantContent && quickReplies.length > 0 && toolResults.length === 0;
+      
+      // Call AI again if there were actual tool results OR if we need content
+      if (toolResults.length > 0 || needsContentFollowUp) {
+        // Call AI again with tool results (or to get content if only quick replies were provided)
+        const followUpMessages = needsContentFollowUp 
+          ? aiRequestBody.messages // Just use original messages if we only need content
+          : [
+              ...aiRequestBody.messages,
+              assistantMessage,
+              ...toolResults,
+            ];
+
+        console.log(needsContentFollowUp 
+          ? 'AI only provided quick replies, making follow-up call for content'
+          : 'Calling AI with tool results for final response');
+
+        const followUpResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+            'HTTP-Referer': 'https://chatpad.ai',
+            'X-Title': 'ChatPad',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            ...aiRequestBody,
+            messages: followUpMessages,
+            tools: undefined, // Don't pass tools again
+            tool_choice: undefined,
+          }),
+        });
+
+        if (followUpResponse.ok) {
+          const followUpData = await followUpResponse.json();
+          assistantContent = followUpData.choices?.[0]?.message?.content || assistantContent || 'I apologize, but I was unable to generate a response.';
+        } else {
+          console.error('Follow-up AI call failed:', await followUpResponse.text());
+          assistantContent = assistantContent || 'I apologize, but I encountered an error processing the tool results.';
+        }
+      }
+    }
+
+    // Fallback if no content
+    if (!assistantContent) {
+      assistantContent = 'I apologize, but I was unable to generate a response.';
+    }
+
+    // Add natural typing delay before responding (2-3 seconds, varied for realism)
+    const minDelay = 2000; // 2 seconds
+    const maxDelay = 3000; // 3 seconds
+    const typingDelay = Math.floor(Math.random() * (maxDelay - minDelay + 1)) + minDelay;
+    console.log(`Adding natural typing delay: ${typingDelay}ms`);
+    await new Promise(resolve => setTimeout(resolve, typingDelay));
+
+    // COST OPTIMIZATION: Cache responses with moderate+ similarity (AGGRESSIVE - lowered from 0.92, removed sources requirement)
+    if (queryHash && maxSimilarity > 0.65) {
+      console.log(`Caching response with similarity ${maxSimilarity.toFixed(2)} for future reuse`);
+      cacheResponse(supabase, queryHash, agentId, assistantContent, maxSimilarity);
+    }
+
+    // Split response into chunks for staggered display
+    const chunks = splitResponseIntoChunks(assistantContent);
+    console.log(`Splitting response into ${chunks.length} chunks`);
+
+    // Fetch link previews for the full response (will be attached to last chunk)
+    const linkPreviews = await fetchLinkPreviews(assistantContent, supabaseUrl, supabaseKey);
+    console.log(`Cached ${linkPreviews.length} link previews for assistant message`);
+
+    // Save each chunk as a separate message with offset timestamps
+    const assistantMessageIds: string[] = [];
+    for (let i = 0; i < chunks.length; i++) {
+      const chunkTimestamp = new Date(Date.now() + (i * 100)); // 100ms offset for ordering
+      const isLastChunk = i === chunks.length - 1;
+      
+      const { data: msg, error: msgError } = await supabase.from('messages').insert({
+        conversation_id: activeConversationId,
+        role: 'assistant',
+        content: chunks[i],
+        created_at: chunkTimestamp.toISOString(),
+        metadata: { 
+          source: 'ai',
+          model: selectedModel,
+          model_tier: modelTier,
+          chunk_index: i,
+          chunk_total: chunks.length,
+          knowledge_sources: isLastChunk && sources.length > 0 ? sources : undefined,
+          tools_used: isLastChunk && toolsUsed.length > 0 ? toolsUsed : undefined,
+          link_previews: isLastChunk && linkPreviews.length > 0 ? linkPreviews : undefined,
+        }
+      }).select('id').single();
+      
+      if (msgError) {
+        console.error(`Error saving chunk ${i}:`, msgError);
+      }
+      if (msg) assistantMessageIds.push(msg.id);
+    }
+
+    const assistantMessageId = assistantMessageIds[assistantMessageIds.length - 1];
+
+    // Update conversation metadata (message count, last activity, page visits, last message preview)
+    const currentMetadata = conversation?.metadata || {};
     
-    return new Response(stream, {
-      headers: { 
-        ...corsHeaders, 
-        'Content-Type': 'text/event-stream',
-        'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive',
-      },
-    });
+    // Merge page visits (keep existing ones, add new ones)
+    let mergedPageVisits = currentMetadata.visited_pages || [];
+    if (pageVisits && Array.isArray(pageVisits)) {
+      // Only add page visits that aren't already tracked
+      const existingUrls = new Set(mergedPageVisits.map((v: any) => `${v.url}-${v.entered_at}`));
+      const newVisits = pageVisits.filter((v: any) => !existingUrls.has(`${v.url}-${v.entered_at}`));
+      mergedPageVisits = [...mergedPageVisits, ...newVisits];
+      console.log(`Merged ${newVisits.length} new page visits, total: ${mergedPageVisits.length}`);
+    }
+    
+    await supabase
+      .from('conversations')
+      .update({
+        metadata: {
+          ...currentMetadata,
+          messages_count: (currentMetadata.messages_count || 0) + 2, // user + assistant
+          first_message_at: currentMetadata.first_message_at || new Date().toISOString(),
+          visited_pages: mergedPageVisits,
+          // Store last message preview for conversation list
+          last_message_preview: assistantContent.substring(0, 60),
+          last_message_role: 'assistant',
+          last_message_at: new Date().toISOString(),
+          // Track when the visitor/user last sent a message (for unread badge logic)
+          last_user_message_at: new Date().toISOString(),
+        },
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', activeConversationId);
+
+    // Track API call usage (fire and forget - don't wait)
+    const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    supabase
+      .from('usage_metrics')
+      .upsert({
+        user_id: agent.user_id,
+        period_start: firstDayOfMonth.toISOString(),
+        period_end: lastDayOfMonth.toISOString(),
+        api_calls_count: currentApiCalls + 1,
+      }, {
+        onConflict: 'user_id,period_start',
+      })
+      .then(() => console.log('API usage tracked'))
+      .catch(err => console.error('Failed to track usage:', err));
+
+    // Return the response with chunked messages for staggered display
+    return new Response(
+      JSON.stringify({
+        conversationId: activeConversationId,
+        // New: array of message chunks for staggered display
+        messages: chunks.map((content, i) => ({
+          id: assistantMessageIds[i],
+          content,
+          chunkIndex: i,
+        })),
+        // Legacy: keep single response for backward compatibility
+        response: assistantContent,
+        userMessageId,
+        assistantMessageId,
+        sources: sources.length > 0 ? sources : undefined,
+        toolsUsed: toolsUsed.length > 0 ? toolsUsed : undefined,
+        linkPreviews: linkPreviews.length > 0 ? linkPreviews : undefined,
+        quickReplies: quickReplies.length > 0 ? quickReplies : undefined,
+        aiMarkedComplete, // Signal to widget to show rating prompt
+      }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
   } catch (error) {
     console.error('Widget chat error:', error);
     return new Response(
       JSON.stringify({ error: error.message || 'An error occurred' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
     );
   }
 });
