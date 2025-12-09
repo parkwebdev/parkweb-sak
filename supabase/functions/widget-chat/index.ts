@@ -93,24 +93,16 @@ const EMBEDDING_DIMENSIONS = 1024;
 const MAX_CONVERSATION_HISTORY = 10; // Limit to last 10 messages to reduce input tokens
 const MAX_RAG_CHUNKS = 3; // Limit RAG context to top 3 most relevant chunks
 
-// PHASE 8: Response Formatting Rules for Digestible AI Responses
+// PHASE 8: Response Formatting Rules - Simple & Concise
 const RESPONSE_FORMATTING_RULES = `
 
-RESPONSE FORMATTING (CRITICAL - Follow these rules):
-
-STYLE RULES:
-- Be CONCISE: Max 2-3 short sentences per paragraph
-- Skip preamble like "I'd be happy to help" - just answer directly
-- Put links on their OWN LINE: "Learn more: [URL]" - never bury links in paragraphs
-- Use BULLET POINTS for any list of 2+ items
-- Lead with the ANSWER first, then add brief context if needed
-- If you're writing more than 50 words without a break, STOP and restructure
-
-MULTI-MESSAGE FORMAT:
-- Use ||| (triple pipe) to separate your response into 2-3 message bubbles for conversational flow
-- Place ||| ONLY at complete sentence boundaries - never split a sentence
-- Example: "Here's what I found. ||| The main feature is..." (each part is a complete thought)
-- Links automatically become their own bubble - no need for ||| before links`;
+RESPONSE FORMATTING (CRITICAL):
+- Be EXTREMELY CONCISE: 1-2 sentences for simple questions
+- Answer DIRECTLY - no preambles like "I'd be happy to help"
+- Use bullet points only when listing 3+ items
+- Put links on their OWN LINE (e.g., "Learn more:\nhttps://example.com")
+- Only write longer responses when explaining something complex
+- Keep it conversational and human`;
 
 // Model tiers for smart routing (cost optimization)
 const MODEL_TIERS = {
@@ -164,64 +156,25 @@ function normalizeQuery(query: string): string {
   return query.toLowerCase().trim().replace(/\s+/g, ' ').replace(/[^\w\s]/g, '');
 }
 
-// Detect natural chunk breaks in streamed content for multi-bubble display
-// Returns breakpoint index or -1 if no break detected
+// Detect natural chunk breaks - SIMPLIFIED: Only split for URLs on their own line
+// Single-bubble by default, multi-bubble only when necessary
 function detectChunkBreak(buffer: string, currentChunkCount: number): { breakIndex: number; isLink: boolean } {
-  // Max 4 chunks
-  if (currentChunkCount >= 4) return { breakIndex: -1, isLink: false };
+  // Max 2 chunks (main content + optional link bubble)
+  if (currentChunkCount >= 2) return { breakIndex: -1, isLink: false };
   
-  // Priority 1: AI-inserted delimiter ||| (explicit chunk break)
-  const delimiterIndex = buffer.indexOf('|||');
-  if (delimiterIndex > 10) {
-    const beforeDelimiter = buffer.substring(0, delimiterIndex).trim();
-    // Only break if content before ends with complete sentence (.!?)
-    if (/[.!?]$/.test(beforeDelimiter) && beforeDelimiter.length >= 20) {
-      return { breakIndex: delimiterIndex + 3, isLink: false }; // +3 to skip |||
-    }
-  }
-  
-  // Priority 2: URL isolation - break BEFORE URLs on their own line
+  // ONLY trigger: URL on its own line - isolate it to separate bubble
   const urlMatch = buffer.match(/\n(https?:\/\/[^\s<>"')\]]+)/);
   if (urlMatch) {
     const urlLineStart = buffer.indexOf(urlMatch[0]);
     const textBefore = buffer.substring(0, urlLineStart).trim();
-    // Only break if there's substantial content before and it ends properly
-    if (textBefore.length > 20 && /[.!?:]$/.test(textBefore)) {
-      return { breakIndex: urlLineStart + 1, isLink: false }; // +1 to skip the newline
+    // Only break if there's substantial content before (at least 30 chars)
+    if (textBefore.length >= 30) {
+      return { breakIndex: urlLineStart + 1, isLink: true }; // +1 to skip the newline
     }
   }
   
-  // Priority 3: Sentence boundary detection with strict validation
-  // Only break at complete sentences with minimum chunk length
-  const MIN_CHUNK_LENGTH = 150; // Increased from 80 - more substantial chunks before breaking
-  
-  // Words that indicate a sentence is incomplete - never break after these
-  const CONTINUATION_WORDS = /\b(are|is|the|a|an|or|and|to|for|with|that|you|currently|if|when|would|could|should|can|will|in|on|at|of|by|your|our|their|this|these|those|have|has|been|being|also|do|does|did|was|were|not|but|so|as|about|from|into)$/i;
-  
-  // Pattern: sentence ender + space + capital letter (start of new sentence)
-  const sentencePattern = /[.!?]\s+(?=[A-Z])/g;
-  let bestBreakIndex = -1;
-  let match;
-  
-  while ((match = sentencePattern.exec(buffer)) !== null) {
-    const potentialBreak = match.index + match[0].length;
-    const chunkContent = buffer.substring(0, potentialBreak).trim();
-    
-    // Validate: chunk must be at least MIN_CHUNK_LENGTH, end with sentence punctuation,
-    // AND not end with a continuation word (which indicates mid-sentence)
-    if (
-      chunkContent.length >= MIN_CHUNK_LENGTH && 
-      /[.!?]$/.test(chunkContent) &&
-      !CONTINUATION_WORDS.test(chunkContent)
-    ) {
-      bestBreakIndex = potentialBreak;
-      // For first chunk, prefer ~200 chars; for subsequent, break after finding valid point
-      if (currentChunkCount === 0 && chunkContent.length >= 200) break;
-      if (currentChunkCount > 0) break;
-    }
-  }
-  
-  return { breakIndex: bestBreakIndex, isLink: false };
+  // No break - keep as single bubble
+  return { breakIndex: -1, isLink: false };
 }
 
 // Hash query for cache key
@@ -1366,16 +1319,12 @@ Generate a warm, personalized greeting using the user information provided above
                     content: delta.content 
                   })}\n\n`));
                   
-                  // Check for natural chunk break (sentence boundary, link isolation)
+                  // Check for URL-based chunk break (only split for links now)
                   const { breakIndex, isLink } = detectChunkBreak(currentChunkBuffer, chunkCount);
                   if (breakIndex > 0) {
-                    // Strip ||| delimiter from chunk content if present
-                    let chunkContent = currentChunkBuffer.substring(0, breakIndex).trim();
-                    chunkContent = chunkContent.replace(/\|\|\|/g, '').trim();
+                    const chunkContent = currentChunkBuffer.substring(0, breakIndex).trim();
                     
-                    // Only emit chunk_complete for complete sentences (ends with .!?) and not mid-sentence
-                    const CONTINUATION_CHECK = /\b(are|is|the|a|an|or|and|to|for|with|that|you|currently|if|when|would|could|should|can|will|in|on|at|of|by|your|our|their|this|these|those|have|has|been|being|also|do|does|did|was|were|not|but|so|as|about|from|into)$/i;
-                    if (chunkContent.length >= 50 && /[.!?:]$/.test(chunkContent) && !CONTINUATION_CHECK.test(chunkContent)) {
+                    if (chunkContent.length >= 30) {
                       completedChunks.push(chunkContent);
                       chunkCount++;
                       
@@ -1387,11 +1336,10 @@ Generate a warm, personalized greeting using the user information provided above
                         isLink 
                       })}\n\n`));
                       
-                      // Pause between chunks for natural conversation rhythm (800-1200ms)
-                      await new Promise(resolve => setTimeout(resolve, 800 + Math.random() * 400));
+                      // 1.5 second pause between bubbles for natural conversation rhythm
+                      await new Promise(resolve => setTimeout(resolve, 1500));
                       
-                      // Keep remainder for next chunk, also strip any leading |||
-                      currentChunkBuffer = currentChunkBuffer.substring(breakIndex).replace(/^\|\|\|/, '').trimStart();
+                      currentChunkBuffer = currentChunkBuffer.substring(breakIndex).trimStart();
                     }
                   }
                 }
