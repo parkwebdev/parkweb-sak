@@ -392,6 +392,8 @@ export interface StreamingCallbacks {
   onInit?: (data: { conversationId: string; userMessageId?: string }) => void;
   /** Called for each content token as it arrives */
   onDelta?: (content: string) => void;
+  /** Called when a chunk is complete (sentence boundary, link isolation) - triggers new bubble */
+  onChunkComplete?: (data: { content: string; chunkIndex: number; isLink: boolean; isFinal?: boolean }) => void;
   /** Called when a tool starts executing */
   onToolStart?: (toolName: string) => void;
   /** Called when the stream completes with final metadata */
@@ -401,6 +403,7 @@ export interface StreamingCallbacks {
     quickReplies?: string[];
     aiMarkedComplete?: boolean;
     sources?: Array<{ source: string; type: string; similarity: number }>;
+    chunkIds?: string[]; // IDs of saved chunk messages
   }) => void;
   /** Called on stream error */
   onError?: (error: Error) => void;
@@ -494,6 +497,14 @@ export async function sendChatMessageStreaming(
             case 'delta':
               callbacks.onDelta?.(data.content);
               break;
+            case 'chunk_complete':
+              callbacks.onChunkComplete?.({
+                content: data.content,
+                chunkIndex: data.chunkIndex,
+                isLink: data.isLink || false,
+                isFinal: data.isFinal || false,
+              });
+              break;
             case 'tool_start':
               callbacks.onToolStart?.(data.name);
               break;
@@ -504,6 +515,7 @@ export async function sendChatMessageStreaming(
                 quickReplies: data.quickReplies,
                 aiMarkedComplete: data.aiMarkedComplete,
                 sources: data.sources,
+                chunkIds: data.chunkIds,
               });
               break;
             case 'error':
