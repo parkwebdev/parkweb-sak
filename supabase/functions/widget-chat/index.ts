@@ -1340,11 +1340,14 @@ Generate a warm, personalized greeting using the user information provided above
                   fullContent += delta.content;
                   currentChunkBuffer += delta.content;
                   
-                  // Forward token to client immediately
+                  // Forward token to client with small delay for natural typing feel
                   controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
                     type: 'delta', 
                     content: delta.content 
                   })}\n\n`));
+                  
+                  // Small delay between tokens for natural typing speed (20-35ms per token)
+                  await new Promise(resolve => setTimeout(resolve, 20 + Math.random() * 15));
                   
                   // Check for natural chunk break (sentence boundary, link isolation)
                   const { breakIndex, isLink } = detectChunkBreak(currentChunkBuffer, chunkCount);
@@ -1361,6 +1364,9 @@ Generate a warm, personalized greeting using the user information provided above
                         chunkIndex: chunkCount - 1,
                         isLink 
                       })}\n\n`));
+                      
+                      // Pause between chunks for natural conversation rhythm (800-1200ms)
+                      await new Promise(resolve => setTimeout(resolve, 800 + Math.random() * 400));
                       
                       // Keep remainder for next chunk
                       currentChunkBuffer = currentChunkBuffer.substring(breakIndex);

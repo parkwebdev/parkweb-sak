@@ -557,7 +557,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                   type: 'text', 
                   reactions: [],
                 }]);
-              }, 400 + Math.random() * 300); // 400-700ms natural feeling delay
+              }, 800 + Math.random() * 400); // 800-1200ms natural feeling delay
             }
           },
           onToolStart: (toolName) => {
