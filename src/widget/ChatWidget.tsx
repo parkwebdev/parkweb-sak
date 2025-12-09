@@ -464,6 +464,8 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
       const streamingMsgId = `streaming-${Date.now()}`;
       let streamedContent = '';
       let conversationIdFromStream = activeConversationId;
+      let currentChunkMsgId = streamingMsgId; // Track current chunk message being streamed into
+      let chunkMsgIds: string[] = []; // Track all chunk message IDs
       
       // Mark streaming message for animation
       setNewMessageIds(prev => new Set([...prev, streamingMsgId]));
@@ -506,6 +508,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
             
             // Hide typing indicator, create streaming message placeholder
             setIsTyping(false);
+            chunkMsgIds.push(streamingMsgId);
             setMessages(prev => [...prev, { 
               id: streamingMsgId,
               role: 'assistant', 
@@ -518,12 +521,44 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
           },
           onDelta: (content) => {
             streamedContent += content;
-            // Update the streaming message with new content
+            // Update the CURRENT chunk message with new content
             setMessages(prev => prev.map(msg => 
-              msg.id === streamingMsgId 
-                ? { ...msg, content: streamedContent }
+              msg.id === currentChunkMsgId 
+                ? { ...msg, content: msg.content + content }
                 : msg
             ));
+          },
+          onChunkComplete: (data) => {
+            console.log('[Widget] Chunk complete:', data.chunkIndex, data.isLink);
+            
+            // If not the final chunk, show brief typing indicator and create new bubble
+            if (!data.isFinal) {
+              // Show typing indicator briefly
+              setIsTyping(true);
+              
+              // After a short delay, create new bubble for next chunk
+              setTimeout(() => {
+                setIsTyping(false);
+                const newChunkId = `chunk-${Date.now()}-${data.chunkIndex + 1}`;
+                currentChunkMsgId = newChunkId;
+                chunkMsgIds.push(newChunkId);
+                
+                // Mark new chunk for animation
+                setNewMessageIds(prev => new Set([...prev, newChunkId]));
+                setTimeout(() => setNewMessageIds(prev => { const n = new Set(prev); n.delete(newChunkId); return n; }), 300);
+                
+                // Add new message bubble for next chunk
+                setMessages(prev => [...prev, { 
+                  id: newChunkId,
+                  role: 'assistant', 
+                  content: '', 
+                  read: isOpen && currentView === 'messages', 
+                  timestamp: new Date(), 
+                  type: 'text', 
+                  reactions: [],
+                }]);
+              }, 400 + Math.random() * 300); // 400-700ms natural feeling delay
+            }
           },
           onToolStart: (toolName) => {
             console.log('[Widget] Tool started:', toolName);
@@ -532,23 +567,31 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
           onComplete: (data) => {
             console.log('[Widget] Stream complete:', data);
             
-            // Register the real message ID to prevent realtime duplicates
+            // Register all chunk IDs to prevent realtime duplicates
             if (data.assistantMessageId) {
               recentChunkIdsRef.current.add(data.assistantMessageId);
               setTimeout(() => recentChunkIdsRef.current.delete(data.assistantMessageId!), 5000);
             }
+            if (data.chunkIds) {
+              data.chunkIds.forEach(id => {
+                recentChunkIdsRef.current.add(id);
+                setTimeout(() => recentChunkIdsRef.current.delete(id), 5000);
+              });
+            }
             
-            // Update the streaming message with final ID and metadata
-            setMessages(prev => prev.map(msg => 
-              msg.id === streamingMsgId 
-                ? { 
-                    ...msg, 
-                    id: data.assistantMessageId || streamingMsgId,
-                    linkPreviews: data.linkPreviews,
-                    quickReplies: data.quickReplies,
-                  }
-                : msg
-            ));
+            // Update the LAST chunk message with link previews and quick replies
+            const lastChunkId = chunkMsgIds[chunkMsgIds.length - 1];
+            setMessages(prev => prev.map((msg, idx) => {
+              // Only add quick replies to the very last assistant message
+              if (msg.id === lastChunkId) {
+                return { 
+                  ...msg, 
+                  linkPreviews: data.linkPreviews,
+                  quickReplies: data.quickReplies,
+                };
+              }
+              return msg;
+            }));
             
             // Show rating prompt if AI marked complete
             if (data.aiMarkedComplete && !hasShownRatingRef.current) {

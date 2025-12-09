@@ -93,26 +93,13 @@ const EMBEDDING_DIMENSIONS = 1024;
 const MAX_CONVERSATION_HISTORY = 10; // Limit to last 10 messages to reduce input tokens
 const MAX_RAG_CHUNKS = 3; // Limit RAG context to top 3 most relevant chunks
 
-// PHASE 8: Response Formatting Rules for Digestible AI Responses (with chunking)
+// PHASE 8: Response Formatting Rules for Digestible AI Responses
 const RESPONSE_FORMATTING_RULES = `
 
 RESPONSE FORMATTING (CRITICAL - Follow these rules):
 
-MESSAGE CHUNKING (IMPORTANT):
-- Use ||| to separate your response into 2-4 message chunks for a conversational feel
-- Chunk 1: ALWAYS start with a friendly greeting/opener (1-2 sentences max)
-- Middle chunks: Main answer content, bullet points, explanations  
-- Final chunk: Links ONLY (if any) - "Learn more: [URL]"
-- Simple yes/no answers can be 1 chunk (no delimiter needed)
-- Max 4 chunks total
-
-CHUNKING EXAMPLES:
-Good: "Hey! Great question about pricing. ||| We have 3 plans:\n- Starter: $29/mo\n- Pro: $99/mo\n- Enterprise: Custom ||| Learn more: https://example.com/pricing"
-Good: "Hi there! ||| Yes, we support that feature. It works by..."
-Bad: "I'd be happy to help! Here's everything..." (no chunks, starts with preamble)
-
-OTHER RULES:
-- Be CONCISE: Max 2-3 short sentences per chunk
+STYLE RULES:
+- Be CONCISE: Max 2-3 short sentences per paragraph
 - Skip preamble like "I'd be happy to help" - just answer directly
 - Put links on their OWN LINE: "Learn more: [URL]" - never bury links in paragraphs
 - Use BULLET POINTS for any list of 2+ items
@@ -171,23 +158,50 @@ function normalizeQuery(query: string): string {
   return query.toLowerCase().trim().replace(/\s+/g, ' ').replace(/[^\w\s]/g, '');
 }
 
-// Split AI response into message chunks using ||| delimiter
-function splitResponseIntoChunks(response: string, maxChunks = 4): string[] {
-  const DELIMITER = '|||';
+// Detect natural chunk breaks in streamed content for multi-bubble display
+// Returns breakpoint index or -1 if no break detected
+function detectChunkBreak(buffer: string, currentChunkCount: number): { breakIndex: number; isLink: boolean } {
+  // Max 4 chunks
+  if (currentChunkCount >= 4) return { breakIndex: -1, isLink: false };
   
-  // If no delimiter, return as single chunk
-  if (!response.includes(DELIMITER)) {
-    return [response.trim()];
+  // Check for URL that should be isolated (break BEFORE the URL)
+  const urlMatch = buffer.match(/(https?:\/\/[^\s<>"')\]]+)/);
+  if (urlMatch) {
+    const urlStart = buffer.indexOf(urlMatch[0]);
+    // If there's content before the URL, break before it
+    const textBefore = buffer.substring(0, urlStart).trim();
+    if (textBefore.length > 10) {
+      return { breakIndex: urlStart, isLink: false };
+    }
+    // If URL is at start, break AFTER it (isolate the link)
+    if (urlStart < 5) {
+      const urlEnd = urlStart + urlMatch[0].length;
+      // Find end of URL line
+      const newlineAfter = buffer.indexOf('\n', urlEnd);
+      if (newlineAfter > urlEnd) {
+        return { breakIndex: newlineAfter + 1, isLink: true };
+      }
+    }
   }
   
-  // Split on delimiter
-  const chunks = response
-    .split(DELIMITER)
-    .map(chunk => chunk.trim())
-    .filter(chunk => chunk.length > 0);
+  // Look for sentence endings followed by new sentence (1-2 sentences per chunk)
+  // Pattern: sentence ender + space + capital letter
+  const sentencePattern = /[.!?]\s+(?=[A-Z])/g;
+  let sentenceCount = 0;
+  let lastBreakIndex = -1;
+  let match;
   
-  // Cap at maxChunks
-  return chunks.slice(0, maxChunks);
+  while ((match = sentencePattern.exec(buffer)) !== null) {
+    sentenceCount++;
+    // Break after 1-2 sentences (vary for natural feel)
+    const breakAfter = currentChunkCount === 0 ? 2 : (Math.random() > 0.5 ? 1 : 2);
+    if (sentenceCount >= breakAfter) {
+      lastBreakIndex = match.index + match[0].length;
+      break;
+    }
+  }
+  
+  return { breakIndex: lastBreakIndex, isLink: false };
 }
 
 // Hash query for cache key
@@ -1287,11 +1301,14 @@ Generate a warm, personalized greeting using the user information provided above
     let quickReplies: string[] = [];
     let aiMarkedComplete = false;
     const toolsUsed: { name: string; success: boolean }[] = [];
+    const completedChunks: string[] = []; // Track completed chunks for DB storage
     
     // Create a TransformStream to process and forward SSE
     const stream = new ReadableStream({
       async start(controller) {
         let buffer = '';
+        let currentChunkBuffer = ''; // Buffer for detecting sentence breaks within current chunk
+        let chunkCount = 0;
         
         try {
           // First, send conversation ID immediately
@@ -1321,10 +1338,34 @@ Generate a warm, personalized greeting using the user information provided above
                 // Handle content tokens
                 if (delta?.content) {
                   fullContent += delta.content;
+                  currentChunkBuffer += delta.content;
+                  
+                  // Forward token to client immediately
                   controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
                     type: 'delta', 
                     content: delta.content 
                   })}\n\n`));
+                  
+                  // Check for natural chunk break (sentence boundary, link isolation)
+                  const { breakIndex, isLink } = detectChunkBreak(currentChunkBuffer, chunkCount);
+                  if (breakIndex > 0) {
+                    const chunkContent = currentChunkBuffer.substring(0, breakIndex).trim();
+                    if (chunkContent.length > 0) {
+                      completedChunks.push(chunkContent);
+                      chunkCount++;
+                      
+                      // Emit chunk_complete event for client to create new bubble
+                      controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
+                        type: 'chunk_complete', 
+                        content: chunkContent,
+                        chunkIndex: chunkCount - 1,
+                        isLink 
+                      })}\n\n`));
+                      
+                      // Keep remainder for next chunk
+                      currentChunkBuffer = currentChunkBuffer.substring(breakIndex);
+                    }
+                  }
                 }
                 
                 // Handle tool calls (accumulate arguments)
@@ -1342,6 +1383,18 @@ Generate a warm, personalized greeting using the user information provided above
                 // Ignore parse errors for partial JSON
               }
             }
+          }
+          
+          // Emit final chunk if there's remaining content
+          if (currentChunkBuffer.trim()) {
+            completedChunks.push(currentChunkBuffer.trim());
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
+              type: 'chunk_complete', 
+              content: currentChunkBuffer.trim(),
+              chunkIndex: chunkCount,
+              isLink: false,
+              isFinal: true
+            })}\n\n`));
           }
           
           // Process tool calls after stream completes
@@ -1456,23 +1509,62 @@ Generate a warm, personalized greeting using the user information provided above
           // Fetch link previews
           const linkPreviews = await fetchLinkPreviews(fullContent, supabaseUrl, supabaseKey);
           
-          // Save message to database (single message, no chunking needed with streaming)
-          const { data: msg } = await supabase.from('messages').insert({
-            conversation_id: activeConversationId,
-            role: 'assistant',
-            content: fullContent,
-            created_at: new Date().toISOString(),
-            metadata: { 
-              source: 'ai',
-              model: selectedModel,
-              model_tier: modelTier,
-              knowledge_sources: sources.length > 0 ? sources : undefined,
-              tools_used: toolsUsed.length > 0 ? toolsUsed : undefined,
-              link_previews: linkPreviews.length > 0 ? linkPreviews : undefined,
-            }
-          }).select('id').single();
+          // Save chunks as separate messages for multi-bubble display in DB
+          const chunkIds: string[] = [];
+          const baseTime = new Date();
           
-          const assistantMessageId = msg?.id;
+          if (completedChunks.length > 1) {
+            // Multiple chunks - save each as separate message
+            for (let i = 0; i < completedChunks.length; i++) {
+              const chunkContent = completedChunks[i];
+              const isLast = i === completedChunks.length - 1;
+              
+              // Offset timestamps slightly for proper ordering
+              const chunkTime = new Date(baseTime.getTime() + (i * 100));
+              
+              // Get link previews for this specific chunk
+              const chunkLinkPreviews = await fetchLinkPreviews(chunkContent, supabaseUrl, supabaseKey);
+              
+              const { data: msg } = await supabase.from('messages').insert({
+                conversation_id: activeConversationId,
+                role: 'assistant',
+                content: chunkContent,
+                created_at: chunkTime.toISOString(),
+                metadata: { 
+                  source: 'ai',
+                  model: selectedModel,
+                  model_tier: modelTier,
+                  chunk_index: i,
+                  chunk_total: completedChunks.length,
+                  knowledge_sources: isLast && sources.length > 0 ? sources : undefined,
+                  tools_used: isLast && toolsUsed.length > 0 ? toolsUsed : undefined,
+                  link_previews: chunkLinkPreviews.length > 0 ? chunkLinkPreviews : undefined,
+                }
+              }).select('id').single();
+              
+              if (msg?.id) chunkIds.push(msg.id);
+            }
+          } else {
+            // Single message - save as before
+            const { data: msg } = await supabase.from('messages').insert({
+              conversation_id: activeConversationId,
+              role: 'assistant',
+              content: fullContent,
+              created_at: baseTime.toISOString(),
+              metadata: { 
+                source: 'ai',
+                model: selectedModel,
+                model_tier: modelTier,
+                knowledge_sources: sources.length > 0 ? sources : undefined,
+                tools_used: toolsUsed.length > 0 ? toolsUsed : undefined,
+                link_previews: linkPreviews.length > 0 ? linkPreviews : undefined,
+              }
+            }).select('id').single();
+            
+            if (msg?.id) chunkIds.push(msg.id);
+          }
+          
+          const assistantMessageId = chunkIds[chunkIds.length - 1]; // Last chunk ID for backwards compat
           
           // Update conversation metadata
           const currentMetadata = conversation?.metadata || {};
@@ -1522,6 +1614,7 @@ Generate a warm, personalized greeting using the user information provided above
           controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
             type: 'done',
             assistantMessageId,
+            chunkIds: chunkIds.length > 1 ? chunkIds : undefined,
             linkPreviews: linkPreviews.length > 0 ? linkPreviews : undefined,
             quickReplies: quickReplies.length > 0 ? quickReplies : undefined,
             aiMarkedComplete,
