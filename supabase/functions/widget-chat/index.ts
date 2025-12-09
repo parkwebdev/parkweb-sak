@@ -193,7 +193,10 @@ function detectChunkBreak(buffer: string, currentChunkCount: number): { breakInd
   
   // Priority 3: Sentence boundary detection with strict validation
   // Only break at complete sentences with minimum chunk length
-  const MIN_CHUNK_LENGTH = 80; // Must have at least 80 chars before breaking
+  const MIN_CHUNK_LENGTH = 150; // Increased from 80 - more substantial chunks before breaking
+  
+  // Words that indicate a sentence is incomplete - never break after these
+  const CONTINUATION_WORDS = /\b(are|is|the|a|an|or|and|to|for|with|that|you|currently|if|when|would|could|should|can|will|in|on|at|of|by|your|our|their|this|these|those|have|has|been|being|also|do|does|did|was|were|not|but|so|as|about|from|into)$/i;
   
   // Pattern: sentence ender + space + capital letter (start of new sentence)
   const sentencePattern = /[.!?]\s+(?=[A-Z])/g;
@@ -204,11 +207,16 @@ function detectChunkBreak(buffer: string, currentChunkCount: number): { breakInd
     const potentialBreak = match.index + match[0].length;
     const chunkContent = buffer.substring(0, potentialBreak).trim();
     
-    // Validate: chunk must be at least MIN_CHUNK_LENGTH and end with sentence punctuation
-    if (chunkContent.length >= MIN_CHUNK_LENGTH && /[.!?]$/.test(chunkContent)) {
+    // Validate: chunk must be at least MIN_CHUNK_LENGTH, end with sentence punctuation,
+    // AND not end with a continuation word (which indicates mid-sentence)
+    if (
+      chunkContent.length >= MIN_CHUNK_LENGTH && 
+      /[.!?]$/.test(chunkContent) &&
+      !CONTINUATION_WORDS.test(chunkContent)
+    ) {
       bestBreakIndex = potentialBreak;
-      // For first chunk, prefer ~150 chars; for subsequent, break after finding valid point
-      if (currentChunkCount === 0 && chunkContent.length >= 150) break;
+      // For first chunk, prefer ~200 chars; for subsequent, break after finding valid point
+      if (currentChunkCount === 0 && chunkContent.length >= 200) break;
       if (currentChunkCount > 0) break;
     }
   }
@@ -1359,8 +1367,8 @@ Generate a warm, personalized greeting using the user information provided above
                       content: char 
                     })}\n\n`));
                     
-                    // 50-75ms per character = ~13-20 chars/sec ≈ 130-200 WPM (faster typing speed)
-                    await new Promise(resolve => setTimeout(resolve, 50 + Math.random() * 25));
+                    // 37-56ms per character = ~18-27 chars/sec ≈ 175-270 WPM (25% faster)
+                    await new Promise(resolve => setTimeout(resolve, 37 + Math.random() * 19));
                   }
                   
                   // Check for natural chunk break (sentence boundary, link isolation)
@@ -1370,8 +1378,9 @@ Generate a warm, personalized greeting using the user information provided above
                     let chunkContent = currentChunkBuffer.substring(0, breakIndex).trim();
                     chunkContent = chunkContent.replace(/\|\|\|/g, '').trim();
                     
-                    // Only emit chunk_complete for complete sentences (ends with .!?)
-                    if (chunkContent.length >= 20 && /[.!?:]$/.test(chunkContent)) {
+                    // Only emit chunk_complete for complete sentences (ends with .!?) and not mid-sentence
+                    const CONTINUATION_CHECK = /\b(are|is|the|a|an|or|and|to|for|with|that|you|currently|if|when|would|could|should|can|will|in|on|at|of|by|your|our|their|this|these|those|have|has|been|being|also|do|does|did|was|were|not|but|so|as|about|from|into)$/i;
+                    if (chunkContent.length >= 50 && /[.!?:]$/.test(chunkContent) && !CONTINUATION_CHECK.test(chunkContent)) {
                       completedChunks.push(chunkContent);
                       chunkCount++;
                       
