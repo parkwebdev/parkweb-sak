@@ -675,6 +675,145 @@ See **[DATA_TABLE_DASHBOARD_GUIDE.md](./DATA_TABLE_DASHBOARD_GUIDE.md)** for com
 
 ---
 
+## Typography System
+
+ChatPad uses a refined typography system built on Geist fonts with carefully tuned letter-spacing for optimal readability.
+
+### Font Families
+
+```css
+/* Primary - loaded via Google Fonts with preload optimization */
+font-family: 'Geist', system-ui, -apple-system, sans-serif;
+
+/* Monospace - for code and technical content */
+font-family: 'Geist Mono', ui-monospace, monospace;
+```
+
+**Tailwind Usage:**
+```tsx
+<p className="font-sans">Body text (Geist)</p>
+<code className="font-mono">Code text (Geist Mono)</code>
+```
+
+### Type Scale
+
+ChatPad uses a compact, information-dense type scale:
+
+| Element | Size | Weight | Letter-Spacing | Line-Height | Class |
+|---------|------|--------|----------------|-------------|-------|
+| H1 | 16px | 600 | -0.022em | 1.25 | `text-base font-semibold` |
+| H2 | 14px | 600 | -0.022em | 1.3 | `text-sm font-semibold` |
+| H3 | 14px | 500 | -0.022em | 1.4 | `text-sm font-medium` |
+| H4 | 12px | 500 | -0.022em | 1.4 | `text-xs font-medium` |
+| Body | 14px | 400 | -0.011em | 1.6 | `text-sm` |
+| Small | 12px | 400 | -0.011em | 1.5 | `text-xs` |
+| Caption | 12px | 400 | -0.011em | 1.5 | `text-xs text-muted-foreground` |
+
+### Letter-Spacing System
+
+Negative letter-spacing is applied globally for a refined, modern appearance:
+
+| Element | Letter-Spacing | Purpose |
+|---------|----------------|---------|
+| Body text | -0.011em | Subtle tightening for readability |
+| Headings | -0.022em | Tighter for visual weight |
+| Buttons | -0.01em | Consistent with body |
+| Inputs | -0.009em | Slightly looser for typing |
+| Code | -0.01em | Balanced for monospace |
+| Labels | -0.01em | Match button styling |
+
+### Code Typography
+
+```tsx
+// Inline code
+<code className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">
+  inline code
+</code>
+
+// Code blocks
+<pre className="font-mono text-xs bg-muted p-3 rounded-lg overflow-x-auto">
+  {codeContent}
+</pre>
+```
+
+**Styling from index.css:**
+```css
+code {
+  @apply font-mono text-xs bg-muted px-1.5 py-0.5 rounded;
+  letter-spacing: -0.01em;
+}
+
+pre {
+  @apply font-mono text-xs bg-muted p-3 rounded-lg overflow-x-auto;
+  letter-spacing: -0.01em;
+}
+```
+
+### Font Loading Strategy
+
+Fonts are optimized for performance in `index.html`:
+
+```html
+<!-- Preconnect for faster DNS resolution -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+<!-- Preload critical font files -->
+<link rel="preload" as="font" type="font/woff2" crossorigin 
+  href="https://fonts.gstatic.com/s/geist/..." />
+
+<!-- Load fonts with swap for progressive rendering -->
+<link rel="stylesheet" 
+  href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" />
+
+<!-- Fallback for JS-disabled browsers -->
+<noscript>
+  <link rel="stylesheet" href="..." />
+</noscript>
+```
+
+### Typography Usage Examples
+
+```tsx
+// ✅ CORRECT - Use semantic heading elements
+<h1>Page Title</h1>           {/* 16px semibold, auto letter-spacing */}
+<h2>Section Title</h2>        {/* 14px semibold */}
+<h3>Subsection</h3>           {/* 14px medium */}
+<p>Body text content</p>      {/* 14px regular */}
+<span className="text-xs text-muted-foreground">Caption</span>
+
+// ✅ CORRECT - Muted foreground for secondary text
+<p className="text-muted-foreground">Secondary information</p>
+
+// ✅ CORRECT - Using PageHeader component
+<PageHeader 
+  title="Settings"
+  description="Manage your account preferences"
+/>
+
+// ✅ CORRECT - Section headers with SectionHeader component
+<SectionHeader>Configuration</SectionHeader>
+
+// ❌ WRONG - Don't override the type system arbitrarily
+<h1 className="text-3xl">Too large for ChatPad's compact design</h1>
+<p style={{ letterSpacing: '0.1em' }}>Don't override letter-spacing</p>
+```
+
+### Responsive Typography
+
+Widget uses slightly larger text on mobile for touch readability:
+
+```css
+/* Widget mobile optimization (≤480px) */
+@media (max-width: 480px) {
+  .widget-message {
+    font-size: 15px; /* 14px → 15px for mobile readability */
+  }
+}
+```
+
+---
+
 ## Related Documentation
 
 - **[ANIMATION_MOTION_GUIDE.md](./ANIMATION_MOTION_GUIDE.md)** - Complete motion/animation patterns
