@@ -1,4 +1,4 @@
-import { useLocation } from "react-router-dom";
+import { useLocation, Link } from "react-router-dom";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { logger } from '@/utils/logger';
@@ -24,7 +24,7 @@ const NotFound = () => {
           </p>
         </div>
         <Button asChild>
-          <a href="/">Return to Home</a>
+          <Link to="/">Return to Home</Link>
         </Button>
       </div>
     </div>
