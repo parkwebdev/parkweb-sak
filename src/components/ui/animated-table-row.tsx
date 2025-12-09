@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion } from 'motion/react';
+import { motion, HTMLMotionProps } from 'motion/react';
 import { cn } from '@/lib/utils';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { staggerItemVariants, staggerItemReducedVariants, getVariants } from '@/lib/motion-variants';
@@ -9,10 +9,12 @@ interface AnimatedTableRowProps {
   className?: string;
   index?: number;
   enableHover?: boolean;
+  onClick?: () => void;
+  'data-state'?: string;
 }
 
 export const AnimatedTableRow = React.forwardRef<HTMLTableRowElement, AnimatedTableRowProps>(
-  ({ children, className, index = 0, enableHover = true }, ref) => {
+  ({ children, className, index = 0, enableHover = true, onClick, 'data-state': dataState, ...props }, ref) => {
     const prefersReducedMotion = useReducedMotion();
     const variants = getVariants(staggerItemVariants, staggerItemReducedVariants, prefersReducedMotion);
 
@@ -31,6 +33,8 @@ export const AnimatedTableRow = React.forwardRef<HTMLTableRowElement, AnimatedTa
           backgroundColor: 'hsl(var(--muted) / 0.5)',
           transition: { duration: 0.15 }
         } : undefined}
+        onClick={onClick}
+        data-state={dataState}
       >
         {children}
       </motion.tr>
