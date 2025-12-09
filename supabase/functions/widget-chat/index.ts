@@ -1288,39 +1288,6 @@ Generate a warm, personalized greeting using the user information provided above
     const toolsUsed: { name: string; success: boolean }[] = [];
     const completedChunks: string[] = []; // Track completed chunks for DB storage
     
-    // Pre-fetch link previews during streaming
-    const detectedUrls = new Set<string>();
-    const linkPreviewPromises = new Map<string, Promise<any>>();
-    const completedPreviews: any[] = [];
-    
-    // Function to start fetching a URL preview in background
-    const startPreviewFetch = (url: string, controller: ReadableStreamDefaultController<Uint8Array>) => {
-      if (detectedUrls.has(url) || detectedUrls.size >= 3) return;
-      detectedUrls.add(url);
-      
-      console.log(`Pre-fetching link preview during stream: ${url}`);
-      const promise = fetchLinkPreviews(url, supabaseUrl, supabaseKey)
-        .then(previews => {
-          if (previews.length > 0) {
-            const preview = previews[0];
-            completedPreviews.push(preview);
-            // Send preview to client immediately as it completes
-            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
-              type: 'link_preview', 
-              preview 
-            })}\n\n`));
-            console.log(`Link preview ready: ${url}`);
-          }
-          return previews[0] || null;
-        })
-        .catch(err => {
-          console.error(`Pre-fetch failed for ${url}:`, err.message);
-          return null;
-        });
-      
-      linkPreviewPromises.set(url, promise);
-    };
-    
     // Create a TransformStream to process and forward SSE
     const stream = new ReadableStream({
       async start(controller) {
@@ -1363,19 +1330,6 @@ Generate a warm, personalized greeting using the user information provided above
                     type: 'delta', 
                     content: delta.content 
                   })}\n\n`));
-                  
-                  // Detect URLs in stream and start pre-fetching link previews immediately
-                  const urlsInContent = fullContent.match(URL_REGEX);
-                  if (urlsInContent) {
-                    for (const url of urlsInContent) {
-                      // Only start fetch once URL appears complete (ends with space/newline or is at end)
-                      if (fullContent.endsWith(url) && !delta.content.match(/\s$/)) {
-                        // URL might still be streaming, wait
-                        continue;
-                      }
-                      startPreviewFetch(url, controller);
-                    }
-                  }
                   
                   // Check for URL-based chunk break (only split for links now)
                   const { breakIndex, isLink } = detectChunkBreak(currentChunkBuffer, chunkCount);
@@ -1648,15 +1602,9 @@ Generate a warm, personalized greeting using the user information provided above
             }
           }
           
-          // Wait for any in-flight link preview fetches to complete
-          if (linkPreviewPromises.size > 0) {
-            console.log(`Waiting for ${linkPreviewPromises.size} in-flight link preview(s)...`);
-            await Promise.all(linkPreviewPromises.values());
-          }
-          
-          // Use pre-fetched previews (already sent to client during stream)
-          const linkPreviews = completedPreviews;
-          console.log(`Link previews ready: ${linkPreviews.length} total`);
+          // Fetch link previews after stream completes
+          const linkPreviews = await fetchLinkPreviews(fullContent, supabaseUrl, supabaseKey);
+          console.log(`Link previews fetched: ${linkPreviews.length} total`);
           
           // Save chunks as separate messages for multi-bubble display in DB
           const chunkIds: string[] = [];
