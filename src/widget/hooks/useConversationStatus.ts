@@ -42,6 +42,8 @@ interface UseConversationStatusOptions {
   setTakeoverAgentAvatar: (avatar: string | undefined) => void;
   /** State setter for messages (to add system notices) */
   setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
+  /** Optional callback when conversation is closed by team (triggers rating) */
+  onConversationClosed?: () => void;
 }
 
 /**
@@ -59,6 +61,7 @@ export function useConversationStatus(options: UseConversationStatusOptions) {
     setTakeoverAgentName,
     setTakeoverAgentAvatar,
     setMessages,
+    onConversationClosed,
   } = options;
 
   const statusChannelRef = useRef<RealtimeChannel | null>(null);
@@ -94,6 +97,13 @@ export function useConversationStatus(options: UseConversationStatusOptions) {
       console.log('[Widget] Status changed to:', status);
       const wasTakeover = isHumanTakeover;
       setIsHumanTakeover(status === 'human_takeover');
+      
+      // Handle conversation closed by team - trigger rating
+      if (status === 'closed') {
+        console.log('[Widget] Conversation closed by team, triggering rating prompt');
+        onConversationClosed?.();
+        return;
+      }
       
       // Clear the takeover notice flag when returning to AI so next takeover shows notice again
       if (status !== 'human_takeover') {

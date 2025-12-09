@@ -33,3 +33,6 @@ export { ContactForm } from './ContactForm';
 
 /** AI-generated quick reply suggestion chips */
 export { QuickReplies } from './QuickReplies';
+
+/** Satisfaction rating prompt (1-5 stars with optional feedback) */
+export { SatisfactionRating } from './SatisfactionRating';

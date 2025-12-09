@@ -1201,9 +1201,34 @@ Generate a warm, personalized greeting using the user information provided above
       }
     } : null;
 
+    // Built-in tool to mark conversation as complete (triggers satisfaction rating)
+    const markCompleteTool = {
+      type: 'function',
+      function: {
+        name: 'mark_conversation_complete',
+        description: 'Call this when you are highly confident the user\'s question has been fully answered and they appear satisfied. Look for signals like "thanks", "got it", "perfect", "that helps", or explicit confirmation that their issue is resolved. Only call with HIGH confidence.',
+        parameters: {
+          type: 'object',
+          properties: {
+            reason: {
+              type: 'string',
+              description: 'Why the conversation appears complete (e.g., "user confirmed answer was helpful", "question fully addressed")'
+            },
+            confidence: {
+              type: 'string',
+              enum: ['high', 'medium'],
+              description: 'Confidence level - only triggers rating prompt if HIGH'
+            }
+          },
+          required: ['reason', 'confidence']
+        }
+      }
+    };
+
     // Combine built-in tools with user-defined tools (only include quick replies if enabled)
     const allTools = [
       ...(quickRepliesTool ? [quickRepliesTool] : []),
+      markCompleteTool, // Always include mark_conversation_complete
       ...(formattedTools || [])
     ];
     
@@ -1256,6 +1281,7 @@ Generate a warm, personalized greeting using the user information provided above
     let assistantContent = assistantMessage?.content || '';
     const toolsUsed: { name: string; success: boolean }[] = [];
     let quickReplies: string[] = [];
+    let aiMarkedComplete = false; // Track if AI called mark_conversation_complete with high confidence
 
     // Handle tool calls if AI decided to use tools
     if (assistantMessage?.tool_calls && assistantMessage.tool_calls.length > 0) {
@@ -1273,6 +1299,33 @@ Generate a warm, personalized greeting using the user information provided above
           quickReplies = (toolArgs.suggestions || []).slice(0, 4).map((s: string) => 
             s.length > 40 ? s.substring(0, 37) + '...' : s
           );
+          // Don't add to toolResults - this is a client-side only tool
+          continue;
+        }
+        
+        // Handle built-in mark_conversation_complete tool
+        if (toolName === 'mark_conversation_complete') {
+          console.log('AI called mark_conversation_complete:', toolArgs);
+          if (toolArgs.confidence === 'high') {
+            aiMarkedComplete = true;
+            console.log('Conversation marked complete with HIGH confidence, will trigger rating prompt');
+            
+            // Update conversation metadata to track this
+            const currentMeta = conversation?.metadata || {};
+            await supabase
+              .from('conversations')
+              .update({
+                metadata: {
+                  ...currentMeta,
+                  ai_marked_complete: true,
+                  ai_complete_reason: toolArgs.reason,
+                  ai_complete_at: new Date().toISOString(),
+                },
+              })
+              .eq('id', activeConversationId);
+          } else {
+            console.log('AI marked complete with MEDIUM confidence, skipping rating prompt');
+          }
           // Don't add to toolResults - this is a client-side only tool
           continue;
         }
@@ -1474,6 +1527,7 @@ Generate a warm, personalized greeting using the user information provided above
         toolsUsed: toolsUsed.length > 0 ? toolsUsed : undefined,
         linkPreviews: linkPreviews.length > 0 ? linkPreviews : undefined,
         quickReplies: quickReplies.length > 0 ? quickReplies : undefined,
+        aiMarkedComplete, // Signal to widget to show rating prompt
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

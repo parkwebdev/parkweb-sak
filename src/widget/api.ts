@@ -302,6 +302,8 @@ export interface ChatResponse {
     embedUrl?: string;
   }>;
   quickReplies?: string[];
+  /** Signal that AI marked conversation complete with high confidence - triggers rating prompt */
+  aiMarkedComplete?: boolean;
 }
 
 /**
@@ -902,4 +904,51 @@ export async function updateVisitorPresence(
 export function stopVisitorPresence(channel: RealtimeChannel) {
   console.log('[Widget] Stopping visitor presence');
   widgetSupabase.removeChannel(channel);
+}
+
+/**
+ * Submits a satisfaction rating for a conversation.
+ * 
+ * @param conversationId - The conversation ID to rate
+ * @param rating - Rating from 1-5 stars
+ * @param triggerType - What triggered the rating prompt
+ * @param feedback - Optional text feedback
+ * @returns Promise indicating success
+ * 
+ * @example
+ * ```ts
+ * await submitConversationRating('conv-uuid', 5, 'ai_marked_complete', 'Great help!');
+ * ```
+ */
+export async function submitConversationRating(
+  conversationId: string,
+  rating: number,
+  triggerType: 'team_closed' | 'ai_marked_complete',
+  feedback?: string
+): Promise<{ success: boolean }> {
+  try {
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/submit-rating`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        conversationId,
+        rating,
+        triggerType,
+        feedback,
+      }),
+    });
+
+    if (!response.ok) {
+      console.error('Failed to submit rating');
+      return { success: false };
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error('Error submitting rating:', error);
+    return { success: false };
+  }
 }
