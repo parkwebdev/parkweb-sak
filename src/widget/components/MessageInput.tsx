@@ -7,11 +7,10 @@
  * @module widget/components/MessageInput
  */
 
-import { Suspense, useRef, useEffect, useState } from 'react';
+import { Suspense, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Send01, Microphone01, Attachment01, X, FaceSmile } from '@untitledui/icons';
+import { Send01, Microphone01, Attachment01, X } from '@untitledui/icons';
 import { VoiceInput } from '../constants';
 import { FileTypeIcon } from '@/components/chat/FileTypeIcons';
 
@@ -59,8 +58,6 @@ interface MessageInputProps {
   onRemoveFile: (index: number) => void;
 }
 
-/** Quick emoji shortcuts for the emoji picker */
-const QUICK_EMOJIS = ['😊', '👍', '❤️', '😂', '🎉', '👋', '🙏', '✨'];
 
 /**
  * Chat input component with rich input features.
@@ -87,7 +84,6 @@ export const MessageInput = ({
   onRemoveFile,
 }: MessageInputProps) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const [emojiOpen, setEmojiOpen] = useState(false);
 
   // Auto-resize textarea
   useEffect(() => {
@@ -108,24 +104,6 @@ export const MessageInput = ({
       e.preventDefault();
       onSend();
     }
-  };
-
-  const handleEmojiSelect = (emoji: string) => {
-    const textarea = textareaRef.current;
-    if (textarea) {
-      const start = textarea.selectionStart;
-      const end = textarea.selectionEnd;
-      const newValue = messageInput.slice(0, start) + emoji + messageInput.slice(end);
-      onMessageChange(newValue);
-      // Restore cursor position after emoji
-      setTimeout(() => {
-        textarea.focus();
-        textarea.setSelectionRange(start + emoji.length, start + emoji.length);
-      }, 0);
-    } else {
-      onMessageChange(messageInput + emoji);
-    }
-    setEmojiOpen(false);
   };
 
   return (
@@ -168,39 +146,6 @@ export const MessageInput = ({
           </div>
         ) : (
           <div className="flex items-end gap-2">
-            <Popover open={emojiOpen} onOpenChange={setEmojiOpen}>
-              <PopoverTrigger asChild>
-                <Button 
-                  type="button"
-                  size="icon" 
-                  variant="ghost" 
-                  disabled={disabled}
-                  className="h-8 w-8 shrink-0"
-                >
-                  <FaceSmile className="h-4 w-4 text-muted-foreground" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent 
-                className="w-auto p-2" 
-                side="top" 
-                align="start"
-                sideOffset={8}
-              >
-                <div className="flex gap-1">
-                  {QUICK_EMOJIS.map((emoji) => (
-                    <button
-                      key={emoji}
-                      type="button"
-                      onClick={() => handleEmojiSelect(emoji)}
-                      className="text-lg p-1 hover:bg-muted rounded transition-transform hover:scale-110"
-                    >
-                      {emoji}
-                    </button>
-                  ))}
-                </div>
-              </PopoverContent>
-            </Popover>
-            
             {enableFileAttachments && (
               <Button 
                 type="button"
