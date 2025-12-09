@@ -396,6 +396,8 @@ export interface StreamingCallbacks {
   onChunkComplete?: (data: { content: string; chunkIndex: number; isLink: boolean; isFinal?: boolean }) => void;
   /** Called when a tool starts executing */
   onToolStart?: (toolName: string) => void;
+  /** Called when a link preview is ready (pre-fetched during streaming) */
+  onLinkPreview?: (preview: any) => void;
   /** Called when the stream completes with final metadata */
   onComplete?: (data: {
     assistantMessageId?: string;
@@ -507,6 +509,10 @@ export async function sendChatMessageStreaming(
               break;
             case 'tool_start':
               callbacks.onToolStart?.(data.name);
+              break;
+            case 'link_preview':
+              // Link preview pre-fetched during streaming - immediately available
+              callbacks.onLinkPreview?.(data.preview);
               break;
             case 'done':
               callbacks.onComplete?.({
