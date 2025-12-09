@@ -1,108 +1,363 @@
-# Data Table + Dashboard Master Guide
+# Data Table & Dashboard Guide
 
-Senior Data Visualization Engineer guidelines for building enterprise-grade data tables and interactive dashboards. TanStack Table integration with shadcn/ui and Recharts for data visualization.
+This document outlines the TanStack Table architecture and patterns used throughout the ChatPad application.
 
-## Core Responsibilities
-- Follow user requirements precisely and to the letter
-- Think step-by-step: describe data architecture plan in detailed pseudocode first
-- Write correct, best practice, performant, type-safe data handling code
-- Prioritize accessibility, performance optimization, and user experience
-- Implement all requested functionality completely
-- Leave NO todos, placeholders, or missing pieces
+## Architecture Overview
 
-## Technology Stack Focus
-- **TanStack Table**: Headless table library with advanced features
-- **shadcn/ui**: Table, Chart, and UI component integration
-- **Recharts**: Data visualization and chart components
-- **TypeScript**: Strict typing for data models and table configurations
-- **React Hook Form + Zod**: Form handling and validation for data operations
-- **TanStack Query**: Server state management and data fetching
+All data tables use **TanStack Table (React Table v8)** with shadcn/ui components and Framer Motion animations.
 
-## Code Implementation Rules
+### Component Hierarchy
 
-### Data Table Architecture
-- Use TanStack Table as the headless foundation with shadcn/ui components
-- Implement proper TypeScript interfaces for data models and column definitions
-- Create reusable column header components with DataTableColumnHeader
-- Build comprehensive pagination, filtering, and sorting functionality
-- Support row selection, bulk operations, and CRUD actions
-- Implement proper loading, error, and empty states
+```
+DataTable (generic wrapper)
+├── TableHeader
+│   └── DataTableColumnHeader (sortable headers)
+├── motion.tbody (stagger container)
+│   └── AnimatedTableRow (motion-enabled rows)
+│       └── TableCell
+├── DataTableToolbar (search + filters)
+├── DataTablePagination (page controls)
+└── DataTableRowActions (row action dropdown)
+```
 
-### Advanced Table Features
-- Configure server-side pagination, sorting, and filtering when needed
-- Implement global search with debounced input handling
-- Create faceted filters for categorical data with multiple selection
-- Support column visibility toggling and column resizing
-- Build row actions with dropdown menus and confirmation dialogs
-- Enable data export functionality (CSV, JSON, PDF)
+## Core Components
 
-### Dashboard Integration
-- Combine data tables with Recharts for comprehensive data visualization
-- Create responsive grid layouts for dashboard components
-- Implement real-time data updates with proper state synchronization
-- Build interactive filters that affect both tables and charts
-- Support multiple data sources and cross-references between components
-- Create drill-down functionality from charts to detailed tables
+### DataTable (`src/components/data-table/DataTable.tsx`)
 
-### Chart Integration Patterns
-- Use shadcn/ui Chart components built with Recharts
-- Implement ChartContainer with proper responsive configurations
-- Create custom ChartTooltip and ChartLegend components
-- Support dark mode with proper color theming using chart-* CSS variables
-- Build interactive charts that filter connected data tables
-- Implement chart animations and transitions for better UX
+Generic table wrapper that integrates TanStack Table with shadcn/ui and motion.
 
-### Performance Optimization
-- Implement virtual scrolling for large datasets using TanStack Virtual
-- Use proper memoization with useMemo and useCallback for table configurations
-- Optimize re-renders with React.memo for table row components
-- Implement efficient data fetching patterns with TanStack Query
-- Support incremental data loading and infinite scrolling
-- Cache computed values and expensive operations
+```tsx
+import { DataTable } from '@/components/data-table';
 
-### Server-Side Operations
-- Design API integration patterns for server-side sorting/filtering/pagination
-- Implement proper error handling and retry logic for data operations
-- Support optimistic updates for CRUD operations
-- Handle concurrent data modifications with proper conflict resolution
-- Implement proper loading states during server operations
-- Support real-time updates with WebSocket or polling patterns
+<DataTable
+  table={table}           // TanStack table instance
+  columns={columns}       // Column definitions
+  onRowClick={handleClick} // Optional row click handler
+  emptyMessage="No data." // Empty state message
+  isLoading={false}       // Loading state
+/>
+```
 
-### Accessibility Standards
-- Ensure proper ARIA labels and roles for complex table structures
-- Implement keyboard navigation for all interactive elements
-- Provide screen reader announcements for dynamic content changes
-- Support high contrast themes and reduced motion preferences
-- Ensure proper focus management during table operations
-- Test with assistive technologies and provide alternative data access
+**Features:**
+- Accepts TanStack table instance
+- Animated rows via `AnimatedTableRow`
+- Staggered enter animations via `motion.tbody`
+- Respects reduced motion preferences
+- Loading skeleton state
 
-### shadcn/ui Integration Patterns
-- Use DataTable wrapper component following shadcn patterns
-- Implement proper forwardRef and component composition
-- Integrate with shadcn Form components for inline editing
-- Use shadcn Dialog, Sheet, and Popover for data operations
-- Support shadcn theming system for consistent visual design
-- Follow shadcn naming conventions and file organization
+### DataTableColumnHeader (`src/components/data-table/DataTableColumnHeader.tsx`)
 
-### Enterprise Features
-- Implement user preferences persistence (column order, filters, etc.)
-- Support multiple table views and saved configurations
-- Create audit trails and change tracking for data modifications
-- Implement proper authorization checks for data operations
-- Support data validation and business rules enforcement
-- Enable bulk operations with progress tracking and error handling
+Sortable column header with visual indicators.
+
+```tsx
+import { DataTableColumnHeader } from '@/components/data-table';
+
+{
+  accessorKey: 'name',
+  header: ({ column }) => (
+    <DataTableColumnHeader column={column} title="Name" />
+  ),
+}
+```
+
+**Features:**
+- Sort direction icons (ArrowUp, ArrowDown, ChevronSelectorVertical)
+- Accessible button wrapper
+- Keyboard navigation support
+
+### DataTableToolbar (`src/components/data-table/DataTableToolbar.tsx`)
+
+Search and filter toolbar.
+
+```tsx
+import { DataTableToolbar } from '@/components/data-table';
+
+<DataTableToolbar
+  table={table}
+  searchPlaceholder="Search..."
+  searchColumn="name"      // Column-specific search
+  globalFilter={true}      // Or use global filter
+/>
+```
+
+### DataTablePagination (`src/components/data-table/DataTablePagination.tsx`)
+
+Pagination controls with page size selector.
+
+```tsx
+import { DataTablePagination } from '@/components/data-table';
+
+<DataTablePagination
+  table={table}
+  pageSizeOptions={[10, 25, 50, 100]}
+  showRowsPerPage={true}
+  showSelectedCount={true}
+/>
+```
+
+### DataTableRowActions (`src/components/data-table/DataTableRowActions.tsx`)
+
+Dropdown menu for row actions.
+
+```tsx
+import { DataTableRowActions } from '@/components/data-table';
+
+<DataTableRowActions
+  onView={() => handleView(row)}
+  onEdit={() => handleEdit(row)}
+  onDelete={() => handleDelete(row)}
+/>
+```
+
+### DataTableViewOptions (`src/components/data-table/DataTableViewOptions.tsx`)
+
+Column visibility toggle dropdown.
+
+```tsx
+import { DataTableViewOptions } from '@/components/data-table';
+
+<DataTableViewOptions table={table} />
+```
+
+## Column Definition Patterns
+
+### Factory Pattern
+
+Create column definitions using factory functions for reusability:
+
+```tsx
+// src/components/data-table/columns/leads-columns.tsx
+import { ColumnDef } from '@tanstack/react-table';
+import { DataTableColumnHeader } from '../DataTableColumnHeader';
+
+export interface Lead {
+  id: string;
+  name: string;
+  email: string;
+  status: string;
+}
+
+export function createLeadsColumns(options: {
+  onView: (lead: Lead) => void;
+  onStatusChange: (id: string, status: string) => void;
+}): ColumnDef<Lead>[] {
+  return [
+    {
+      accessorKey: 'name',
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Name" />
+      ),
+    },
+    {
+      accessorKey: 'email',
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Email" />
+      ),
+    },
+    {
+      id: 'actions',
+      cell: ({ row }) => (
+        <DataTableRowActions
+          onView={() => options.onView(row.original)}
+        />
+      ),
+    },
+  ];
+}
+```
+
+### Static Columns
+
+For simpler tables, export static column definitions:
+
+```tsx
+// src/components/data-table/columns/analytics-columns.tsx
+export const usageMetricsColumns: ColumnDef<UsageMetricsRow>[] = [
+  {
+    accessorKey: 'date',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Date" />
+    ),
+  },
+  {
+    accessorKey: 'conversations',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Conversations" />
+    ),
+  },
+];
+```
+
+## Motion Integration
+
+### AnimatedTableRow (`src/components/ui/animated-table-row.tsx`)
+
+Motion-enabled table row component:
+
+```tsx
+import { AnimatedTableRow } from '@/components/ui/animated-table-row';
+
+<AnimatedTableRow
+  index={rowIndex}
+  onClick={() => handleClick(row)}
+  data-state={row.getIsSelected() ? 'selected' : undefined}
+>
+  {cells}
+</AnimatedTableRow>
+```
+
+**Features:**
+- Fade + slide-up enter animation
+- Exit animation via AnimatePresence
+- Index-based stagger delay
+- Hover/tap feedback
+- Respects `useReducedMotion`
+
+### Motion Variants (`src/lib/motion-variants.ts`)
+
+Shared animation variants:
+
+```tsx
+import {
+  staggerContainerVariants,
+  tableRowVariants,
+  fadeReducedVariants,
+  getVariants,
+} from '@/lib/motion-variants';
+
+// Get appropriate variants based on reduced motion preference
+const variants = getVariants(
+  tableRowVariants,
+  fadeReducedVariants,
+  prefersReducedMotion
+);
+```
+
+### Reduced Motion Support
+
+All tables respect user's reduced motion preference:
+
+```tsx
+import { useReducedMotion } from '@/hooks/useReducedMotion';
+
+const prefersReducedMotion = useReducedMotion();
+const containerVariants = getVariants(
+  staggerContainerVariants,
+  fadeReducedVariants,
+  prefersReducedMotion
+);
+```
+
+## Table Implementation Example
+
+Complete example of a TanStack Table implementation:
+
+```tsx
+import React, { useMemo } from 'react';
+import {
+  useReactTable,
+  getCoreRowModel,
+  getSortedRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  SortingState,
+} from '@tanstack/react-table';
+import { DataTable, DataTableToolbar, DataTablePagination } from '@/components/data-table';
+import { createLeadsColumns } from '@/components/data-table/columns';
+
+export function LeadsTable({ leads, onView, onStatusChange }) {
+  const [sorting, setSorting] = React.useState<SortingState>([]);
+
+  const columns = useMemo(
+    () => createLeadsColumns({ onView, onStatusChange }),
+    [onView, onStatusChange]
+  );
+
+  const table = useReactTable({
+    data: leads,
+    columns,
+    state: { sorting },
+    onSortingChange: setSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+  });
+
+  return (
+    <div className="space-y-4">
+      <DataTableToolbar table={table} searchColumn="name" />
+      <DataTable table={table} columns={columns} onRowClick={onView} />
+      <DataTablePagination table={table} />
+    </div>
+  );
+}
+```
+
+## Available Column Definitions
+
+### Leads (`leads-columns.tsx`)
+- Selection checkbox
+- Name, Email, Phone, Company
+- Status (with dropdown)
+- Actions (view)
+
+### Team (`team-columns.tsx`)
+- Member (avatar + name + email)
+- Role (badge)
+- Actions (edit, delete)
+
+### Landing Pages (`landing-pages-columns.tsx`)
+- Page URL (formatted path)
+- Views, Avg Duration
+- Conversions, Conversion Rate
+- Agent (badge)
+
+### Analytics (`analytics-columns.tsx`)
+- Conversations analytics
+- Leads analytics
+- Agent performance
+- Usage metrics
+
+## Best Practices
+
+1. **Type Safety**: Always define proper TypeScript interfaces for row data
+2. **Memoization**: Memoize column definitions to prevent unnecessary re-renders
+3. **Motion**: Use `AnimatedTableRow` for consistent animations
+4. **Reduced Motion**: Always check `useReducedMotion` for accessibility
+5. **Loading States**: Show skeleton loaders during data fetching
+6. **Empty States**: Provide meaningful empty state messages
+7. **Responsive**: Test tables on mobile viewports
+
+## File Structure
+
+```
+src/components/data-table/
+├── index.ts                    # Exports all components
+├── DataTable.tsx               # Generic table wrapper
+├── DataTableColumnHeader.tsx   # Sortable header
+├── DataTableToolbar.tsx        # Search + filters
+├── DataTablePagination.tsx     # Page controls
+├── DataTableRowActions.tsx     # Row action dropdown
+├── DataTableViewOptions.tsx    # Column visibility
+└── columns/
+    ├── index.ts                # Column exports
+    ├── leads-columns.tsx       # Leads table columns
+    ├── team-columns.tsx        # Team table columns
+    ├── landing-pages-columns.tsx
+    └── analytics-columns.tsx   # Analytics table columns
+```
 
 ## ChatPad-Specific Patterns
 
-For the Conversations, Leads, and Analytics pages:
-- Use AnimatedTableRow for row enter/exit animations
-- Implement ConversationsTable and LeadsTable patterns
-- Use EmptyState component for no-data states
-- Follow existing column definition patterns in the codebase
+### Conversations Table
+Uses TanStack Table with real-time Supabase subscriptions, unread badges, and human takeover status indicators.
 
-## Response Protocol
-1. If uncertain about performance implications for large datasets, state so explicitly
-2. If you don't know a specific TanStack Table API, admit it rather than guessing
-3. Search for latest TanStack Table and Recharts documentation when needed
-4. Provide usage examples only when requested
-5. Stay focused on data table and dashboard implementation over general advice
+### Leads Table
+Includes inline status dropdown editing, bulk selection, and view details sheet.
+
+### Team Members Table
+Role-based action visibility with avatar rendering and role badges.
+
+### Analytics Data Tables
+Dynamic column selection based on active tab with CSV export functionality.

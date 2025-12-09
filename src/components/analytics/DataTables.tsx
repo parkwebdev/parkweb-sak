@@ -1,153 +1,131 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { format } from 'date-fns';
-import { Button } from '@/components/ui/button';
+import React, { useMemo } from 'react';
+import {
+  ColumnDef,
+  useReactTable,
+  getCoreRowModel,
+  getSortedRowModel,
+  SortingState,
+} from '@tanstack/react-table';
 import { Download01 } from '@untitledui/icons';
-import { AnimatedTableRow } from '@/components/ui/animated-table-row';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { DataTable } from '@/components/data-table';
+import {
+  conversationsAnalyticsColumns,
+  leadsAnalyticsColumns,
+  agentPerformanceColumns,
+  usageMetricsColumns,
+  type ConversationAnalyticsRow,
+  type LeadAnalyticsRow,
+  type AgentPerformanceRow,
+  type UsageMetricsRow,
+} from '@/components/data-table/columns/analytics-columns';
 
 interface DataTablesProps {
   activeTab: 'conversations' | 'leads' | 'agents' | 'usage';
   data: any;
 }
 
-export const DataTables = ({ activeTab, data }: DataTablesProps) => {
+type TableDataRow = ConversationAnalyticsRow | LeadAnalyticsRow | AgentPerformanceRow | UsageMetricsRow;
+
+export const DataTables: React.FC<DataTablesProps> = ({ activeTab, data }) => {
+  const [sorting, setSorting] = React.useState<SortingState>([]);
+
+  const { columns, tableData, headers, title, description } = useMemo(() => {
+    switch (activeTab) {
+      case 'conversations':
+        return {
+          columns: conversationsAnalyticsColumns,
+          tableData: (data?.conversations || []) as ConversationAnalyticsRow[],
+          headers: ['Date', 'Agent', 'Status', 'Messages', 'Duration'],
+          title: 'Conversation Details',
+          description: 'Detailed breakdown of all conversations',
+        };
+      case 'leads':
+        return {
+          columns: leadsAnalyticsColumns,
+          tableData: (data?.leads || []) as LeadAnalyticsRow[],
+          headers: ['Date', 'Name', 'Email', 'Company', 'Status'],
+          title: 'Lead Details',
+          description: 'Complete list of captured leads',
+        };
+      case 'agents':
+        return {
+          columns: agentPerformanceColumns,
+          tableData: (data?.agentPerformance || []) as AgentPerformanceRow[],
+          headers: ['Agent', 'Conversations', 'Avg Response Time', 'Satisfaction'],
+          title: 'Agent Performance',
+          description: 'Performance metrics by agent',
+        };
+      case 'usage':
+        return {
+          columns: usageMetricsColumns,
+          tableData: (data?.usageMetrics || []) as UsageMetricsRow[],
+          headers: ['Date', 'Conversations', 'Messages', 'API Calls'],
+          title: 'Usage Metrics',
+          description: 'Daily usage statistics',
+        };
+      default:
+        return {
+          columns: [],
+          tableData: [],
+          headers: [],
+          title: 'Data',
+          description: '',
+        };
+    }
+  }, [activeTab, data]);
+
+  const table = useReactTable<TableDataRow>({
+    data: tableData as TableDataRow[],
+    columns: columns as ColumnDef<TableDataRow>[],
+    state: { sorting },
+    onSortingChange: setSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+  });
+
   const exportTableData = () => {
-    // Simple CSV export for table data
-    const headers = Object.keys(data[0] || {}).join(',');
-    const rows = data.map((row: any) => Object.values(row).join(',')).join('\n');
-    const csv = `${headers}\n${rows}`;
-    
-    const blob = new Blob([csv], { type: 'text/csv' });
+    if (!tableData.length) return;
+
+    const csvContent = [
+      headers.join(','),
+      ...tableData.map((row: TableDataRow) =>
+        headers.map((header) => {
+          const key = header.toLowerCase().replace(/\s+/g, '_');
+          const value = (row as any)[key] ?? '';
+          return typeof value === 'string' && value.includes(',') ? `"${value}"` : value;
+        }).join(',')
+      ),
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${activeTab}_data_${format(new Date(), 'yyyy-MM-dd')}.csv`;
+    a.download = `${activeTab}-data.csv`;
     a.click();
+    window.URL.revokeObjectURL(url);
   };
 
   return (
     <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="capitalize">{activeTab} Data</CardTitle>
-            <CardDescription>Detailed {activeTab} records</CardDescription>
-          </div>
-          <Button variant="outline" size="sm" onClick={exportTableData}>
-            <Download01 className="mr-2 h-4 w-4" />
-            Export
-          </Button>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <div>
+          <CardTitle>{title}</CardTitle>
+          <CardDescription>{description}</CardDescription>
         </div>
+        <Button variant="outline" size="sm" onClick={exportTableData} disabled={!tableData.length}>
+          <Download01 className="mr-2 h-4 w-4" />
+          Export CSV
+        </Button>
       </CardHeader>
       <CardContent>
-        {activeTab === 'conversations' && (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>Agent</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Messages</TableHead>
-                <TableHead>Duration</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data.conversations?.map((conv: any, index: number) => (
-                <AnimatedTableRow key={index} index={index}>
-                  <TableCell>{format(new Date(conv.created_at), 'MMM d, yyyy HH:mm')}</TableCell>
-                  <TableCell>{conv.agent_name || 'Unknown'}</TableCell>
-                  <TableCell>
-                    <Badge variant={conv.status === 'active' ? 'default' : 'secondary'}>
-                      {conv.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{conv.message_count || 0}</TableCell>
-                  <TableCell>{conv.duration || '-'}</TableCell>
-                </AnimatedTableRow>
-              ))}
-            </TableBody>
-          </Table>
-        )}
-
-        {activeTab === 'leads' && (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Company</TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data.leads?.map((lead: any, index: number) => (
-                <AnimatedTableRow key={index} index={index}>
-                  <TableCell>{format(new Date(lead.created_at), 'MMM d, yyyy HH:mm')}</TableCell>
-                  <TableCell>{lead.name || '-'}</TableCell>
-                  <TableCell>{lead.email || '-'}</TableCell>
-                  <TableCell>{lead.company || '-'}</TableCell>
-                  <TableCell>
-                    <Badge>{lead.status}</Badge>
-                  </TableCell>
-                </AnimatedTableRow>
-              ))}
-            </TableBody>
-          </Table>
-        )}
-
-        {activeTab === 'agents' && (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Agent</TableHead>
-                <TableHead>Conversations</TableHead>
-                <TableHead>Avg Response Time</TableHead>
-                <TableHead>Satisfaction</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data.agentPerformance?.map((agent: any, index: number) => (
-                <AnimatedTableRow key={index} index={index}>
-                  <TableCell>{agent.agent_name}</TableCell>
-                  <TableCell>{agent.total_conversations}</TableCell>
-                  <TableCell>{agent.avg_response_time}s</TableCell>
-                  <TableCell>{agent.satisfaction_score?.toFixed(1) || '-'}</TableCell>
-                </AnimatedTableRow>
-              ))}
-            </TableBody>
-          </Table>
-        )}
-
-        {activeTab === 'usage' && (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>Conversations</TableHead>
-                <TableHead>Messages</TableHead>
-                <TableHead>API Calls</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data.usageMetrics?.map((usage: any, index: number) => (
-                <AnimatedTableRow key={index} index={index}>
-                  <TableCell>{usage.date}</TableCell>
-                  <TableCell>{usage.conversations}</TableCell>
-                  <TableCell>{usage.messages}</TableCell>
-                  <TableCell>{usage.api_calls}</TableCell>
-                </AnimatedTableRow>
-              ))}
-            </TableBody>
-          </Table>
-        )}
-
-        {(!data[activeTab] || data[activeTab]?.length === 0) && (
-          <div className="text-center py-12 text-muted-foreground">
-            No data available for the selected period
-          </div>
-        )}
+        <DataTable
+          table={table}
+          columns={columns as any}
+          emptyMessage="No data available for this period."
+        />
       </CardContent>
     </Card>
   );
