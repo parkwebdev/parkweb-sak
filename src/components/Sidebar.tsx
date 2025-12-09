@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, ChevronLeft, ChevronRight, Settings01 as Settings, Grid01 as Grid, MessageCircle02, Users01 as Users, Cube01 as Bot, BarChart03, ChevronDown } from '@untitledui/icons';
+import { X, ChevronLeft, ChevronRight, Settings01 as Settings, Grid01 as Grid, MessageCircle02, User03, Cube01 as Bot, PieChart01, ChevronDown } from '@untitledui/icons';
 import { Link, useLocation } from 'react-router-dom';
 import { UserAccountCard } from './UserAccountCard';
 import { useSidebar } from '@/hooks/use-sidebar';
@@ -39,13 +39,13 @@ const navigationItems: NavigationItem[] = [
   {
     id: 'leads',
     label: 'Leads',
-    icon: Users,
+    icon: User03,
     path: '/leads'
   },
   {
     id: 'analytics',
     label: 'Analytics',
-    icon: BarChart03,
+    icon: PieChart01,
     path: '/analytics'
   }
 ];
