@@ -1346,8 +1346,8 @@ Generate a warm, personalized greeting using the user information provided above
                     content: delta.content 
                   })}\n\n`));
                   
-                  // Small delay between tokens for natural typing speed (20-35ms per token)
-                  await new Promise(resolve => setTimeout(resolve, 20 + Math.random() * 15));
+                  // Small delay between tokens for natural typing speed (45-75ms per token)
+                  await new Promise(resolve => setTimeout(resolve, 45 + Math.random() * 30));
                   
                   // Check for natural chunk break (sentence boundary, link isolation)
                   const { breakIndex, isLink } = detectChunkBreak(currentChunkBuffer, chunkCount);
