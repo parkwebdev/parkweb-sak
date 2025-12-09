@@ -11,3 +11,6 @@ export {
   type AgentPerformanceRow,
   type UsageMetricsRow,
 } from './analytics-columns';
+
+// Conversations table columns
+export { createConversationsColumns, type ConversationRow } from './conversations-columns';

@@ -1,18 +1,22 @@
-import { useState, useMemo, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import {
+  useReactTable,
+  getCoreRowModel,
+  getSortedRowModel,
+  getPaginationRowModel,
+  SortingState,
+  RowSelectionState,
+} from '@tanstack/react-table';
 import {
   SearchMd,
   FilterLines,
-  ChevronSelectorVertical,
-  ArrowUp,
-  ArrowDown,
-  Trash01,
-  Edit02,
   Calendar,
   Check,
   User01,
   Cube01,
-} from "@untitledui/icons";
+  Trash01,
+} from '@untitledui/icons';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,35 +24,14 @@ import {
   DropdownMenuTrigger,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
-import { SimpleDeleteDialog } from "@/components/ui/simple-delete-dialog";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { DashboardPagination } from "./DashboardPagination";
-import { AnimatedTableRow } from "@/components/ui/animated-table-row";
-import { cn } from "@/lib/utils";
-
-export interface ConversationRow {
-  id: string;
-  agentName: string;
-  leadName?: string;
-  messageCount: number;
-  duration: string;
-  percentageOfTotal: number;
-  status: "active" | "human_takeover" | "closed";
-  createdAt: string;
-}
+} from '@/components/ui/dropdown-menu';
+import { SimpleDeleteDialog } from '@/components/ui/simple-delete-dialog';
+import { Card } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { DataTable } from '@/components/data-table';
+import { createConversationsColumns, ConversationRow } from '@/components/data-table/columns';
+import { cn } from '@/lib/utils';
 
 interface TabConfig {
   id: string;
@@ -67,24 +50,10 @@ interface ConversationsDataTableProps {
   storageKey?: string;
 }
 
-type DateFilter = "all" | "today" | "7days" | "30days";
-type StatusFilter = "all" | "active" | "human_takeover" | "closed";
+type DateFilter = 'all' | 'today' | '7days' | '30days';
+type StatusFilter = 'all' | 'active' | 'human_takeover' | 'closed';
 
-type SortColumn = "agentName" | "messageCount" | "duration" | "percentageOfTotal" | "status";
-type SortDirection = "asc" | "desc";
-
-interface SortState {
-  column: SortColumn;
-  direction: SortDirection;
-}
-
-const statusConfig = {
-  active: { label: "Active", className: "bg-success/10 text-success border-success/20" },
-  human_takeover: { label: "Human", className: "bg-info/10 text-info border-info/20" },
-  closed: { label: "Closed", className: "bg-muted text-muted-foreground border-border" },
-};
-
-const STORAGE_PREFIX = "dashboard_table_sort_";
+const STORAGE_PREFIX = 'dashboard_table_sort_';
 
 function useDebouncedValue<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
@@ -97,18 +66,18 @@ function useDebouncedValue<T>(value: T, delay: number): T {
   return debouncedValue;
 }
 
-function loadSortState(key: string): SortState | null {
+function loadSortState(key: string): SortingState | null {
   try {
     const stored = localStorage.getItem(`${STORAGE_PREFIX}${key}`);
     if (stored) {
       const parsed = JSON.parse(stored);
-      if (parsed.column && parsed.direction) return parsed as SortState;
+      if (Array.isArray(parsed)) return parsed;
     }
   } catch {}
   return null;
 }
 
-function saveSortState(key: string, state: SortState): void {
+function saveSortState(key: string, state: SortingState): void {
   try {
     localStorage.setItem(`${STORAGE_PREFIX}${key}`, JSON.stringify(state));
   } catch {}
@@ -120,27 +89,25 @@ export function ConversationsDataTable({
   selectedTab,
   onTabChange,
   onDelete,
-  title = "Conversations",
+  title = 'Conversations',
   className,
-  storageKey = "conversations",
+  storageKey = 'conversations',
 }: ConversationsDataTableProps) {
   const navigate = useNavigate();
-  const [searchInput, setSearchInput] = useState("");
+  const [searchInput, setSearchInput] = useState('');
   const debouncedSearch = useDebouncedValue(searchInput, 300);
-  const [sortState, setSortState] = useState<SortState>(() => {
+  const [sorting, setSorting] = useState<SortingState>(() => {
     const stored = loadSortState(storageKey);
-    return stored || { column: "messageCount", direction: "desc" };
+    return stored || [{ id: 'messageCount', desc: true }];
   });
-  const [page, setPage] = useState(1);
-  const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
-  const [dateFilter, setDateFilter] = useState<DateFilter>("all");
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
-  const [agentFilter, setAgentFilter] = useState<string>("all");
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+  const [dateFilter, setDateFilter] = useState<DateFilter>('all');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [agentFilter, setAgentFilter] = useState<string>('all');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const itemsPerPage = 10;
 
   // Derive unique agent names from data
   const uniqueAgents = useMemo(() => {
@@ -149,129 +116,67 @@ export function ConversationsDataTable({
   }, [data]);
 
   const dateFilterOptions = [
-    { id: "all" as DateFilter, label: "All time" },
-    { id: "today" as DateFilter, label: "Today" },
-    { id: "7days" as DateFilter, label: "Last 7 days" },
-    { id: "30days" as DateFilter, label: "Last 30 days" },
+    { id: 'all' as DateFilter, label: 'All time' },
+    { id: 'today' as DateFilter, label: 'Today' },
+    { id: '7days' as DateFilter, label: 'Last 7 days' },
+    { id: '30days' as DateFilter, label: 'Last 30 days' },
   ];
 
   const statusFilterOptions = [
-    { id: "all" as StatusFilter, label: "All statuses" },
-    { id: "active" as StatusFilter, label: "Active" },
-    { id: "human_takeover" as StatusFilter, label: "Human" },
-    { id: "closed" as StatusFilter, label: "Closed" },
+    { id: 'all' as StatusFilter, label: 'All statuses' },
+    { id: 'active' as StatusFilter, label: 'Active' },
+    { id: 'human_takeover' as StatusFilter, label: 'Human' },
+    { id: 'closed' as StatusFilter, label: 'Closed' },
   ];
 
   useEffect(() => {
-    saveSortState(storageKey, sortState);
-  }, [sortState, storageKey]);
-
-  useEffect(() => {
-    setPage(1);
-  }, [debouncedSearch]);
+    saveSortState(storageKey, sorting);
+  }, [sorting, storageKey]);
 
   const filteredData = useMemo(() => {
     let filtered = data;
 
     // Apply date filter
-    if (dateFilter !== "all") {
+    if (dateFilter !== 'all') {
       const now = new Date();
       const cutoff = new Date();
-      if (dateFilter === "today") {
+      if (dateFilter === 'today') {
         cutoff.setHours(0, 0, 0, 0);
-      } else if (dateFilter === "7days") {
+      } else if (dateFilter === '7days') {
         cutoff.setDate(now.getDate() - 7);
-      } else if (dateFilter === "30days") {
+      } else if (dateFilter === '30days') {
         cutoff.setDate(now.getDate() - 30);
       }
       filtered = filtered.filter((row) => new Date(row.createdAt) >= cutoff);
     }
 
     // Apply status filter
-    if (statusFilter !== "all") {
+    if (statusFilter !== 'all') {
       filtered = filtered.filter((row) => row.status === statusFilter);
     }
 
     // Apply agent filter
-    if (agentFilter !== "all") {
+    if (agentFilter !== 'all') {
       filtered = filtered.filter((row) => row.agentName === agentFilter);
     }
 
     // Apply search filter
     if (debouncedSearch.trim()) {
       const searchLower = debouncedSearch.toLowerCase();
-      filtered = filtered.filter((row) =>
-        row.agentName.toLowerCase().includes(searchLower) ||
-        (row.leadName?.toLowerCase().includes(searchLower) ?? false)
+      filtered = filtered.filter(
+        (row) =>
+          row.agentName.toLowerCase().includes(searchLower) ||
+          (row.leadName?.toLowerCase().includes(searchLower) ?? false)
       );
     }
 
     return filtered;
   }, [data, debouncedSearch, dateFilter, statusFilter, agentFilter]);
 
-  const sortedData = useMemo(() => {
-    return [...filteredData].sort((a, b) => {
-      let comparison = 0;
-      switch (sortState.column) {
-        case "agentName":
-          comparison = a.agentName.localeCompare(b.agentName);
-          break;
-        case "messageCount":
-          comparison = a.messageCount - b.messageCount;
-          break;
-        case "percentageOfTotal":
-          comparison = a.percentageOfTotal - b.percentageOfTotal;
-          break;
-        case "status":
-          comparison = a.status.localeCompare(b.status);
-          break;
-        default:
-          comparison = 0;
-      }
-      return sortState.direction === "asc" ? comparison : -comparison;
-    });
-  }, [filteredData, sortState]);
-
-  const paginatedData = useMemo(() => {
-    const start = (page - 1) * itemsPerPage;
-    return sortedData.slice(start, start + itemsPerPage);
-  }, [sortedData, page]);
-
-  const totalPages = Math.ceil(sortedData.length / itemsPerPage);
-
-  const handleSort = useCallback((column: SortColumn) => {
-    setSortState((prev) => ({
-      column,
-      direction: prev.column === column && prev.direction === "desc" ? "asc" : "desc",
-    }));
-  }, []);
-
-  // Selection handlers
-  const allSelected = paginatedData.length > 0 && paginatedData.every(row => selectedRows.has(row.id));
-  const someSelected = paginatedData.some(row => selectedRows.has(row.id)) && !allSelected;
-
-  const handleSelectAll = (checked: boolean) => {
-    if (checked) {
-      setSelectedRows(new Set(paginatedData.map(row => row.id)));
-    } else {
-      setSelectedRows(new Set());
-    }
-  };
-
-  const handleSelectRow = (id: string, checked: boolean) => {
-    const newSelected = new Set(selectedRows);
-    if (checked) {
-      newSelected.add(id);
-    } else {
-      newSelected.delete(id);
-    }
-    setSelectedRows(newSelected);
-  };
-
-  const handleDeleteClick = (id: string) => {
+  const handleDeleteClick = useCallback((id: string) => {
     setDeleteTarget(id);
     setDeleteDialogOpen(true);
-  };
+  }, []);
 
   const handleConfirmDelete = async () => {
     if (!deleteTarget || !onDelete) return;
@@ -280,25 +185,31 @@ export function ConversationsDataTable({
       await onDelete([deleteTarget]);
       setDeleteDialogOpen(false);
       setDeleteTarget(null);
-      selectedRows.delete(deleteTarget);
-      setSelectedRows(new Set(selectedRows));
+      // Clear selection if deleted row was selected
+      if (rowSelection[deleteTarget]) {
+        const newSelection = { ...rowSelection };
+        delete newSelection[deleteTarget];
+        setRowSelection(newSelection);
+      }
     } finally {
       setIsDeleting(false);
     }
   };
 
+  const selectedRowIds = Object.keys(rowSelection).filter((id) => rowSelection[id]);
+
   const handleBulkDeleteClick = () => {
-    if (selectedRows.size === 0) return;
+    if (selectedRowIds.length === 0) return;
     setBulkDeleteDialogOpen(true);
   };
 
   const handleConfirmBulkDelete = async () => {
-    if (selectedRows.size === 0 || !onDelete) return;
+    if (selectedRowIds.length === 0 || !onDelete) return;
     setIsDeleting(true);
     try {
-      await onDelete(Array.from(selectedRows));
+      await onDelete(selectedRowIds);
       setBulkDeleteDialogOpen(false);
-      setSelectedRows(new Set());
+      setRowSelection({});
     } finally {
       setIsDeleting(false);
     }
@@ -306,40 +217,43 @@ export function ConversationsDataTable({
 
   // Count active filters
   const activeFilterCount = [
-    dateFilter !== "all",
-    statusFilter !== "all",
-    agentFilter !== "all",
+    dateFilter !== 'all',
+    statusFilter !== 'all',
+    agentFilter !== 'all',
   ].filter(Boolean).length;
 
-  // Sortable header with diamond icon
-  const SortableHeader = ({ column, children }: { column: SortColumn; children: React.ReactNode }) => {
-    const isActive = sortState.column === column;
-    return (
-      <button
-        onClick={() => handleSort(column)}
-        className="flex items-center gap-1 hover:text-foreground transition-colors group"
-      >
-        {children}
-        <span className={cn(
-          "transition-colors",
-          isActive ? "text-foreground" : "text-muted-foreground/50 group-hover:text-muted-foreground"
-        )}>
-          {isActive ? (
-            sortState.direction === "asc" ? (
-              <ArrowUp className="h-3.5 w-3.5" />
-            ) : (
-              <ArrowDown className="h-3.5 w-3.5" />
-            )
-          ) : (
-            <ChevronSelectorVertical className="h-3.5 w-3.5" />
-          )}
-        </span>
-      </button>
-    );
-  };
+  const columns = useMemo(
+    () =>
+      createConversationsColumns({
+        onView: (id) => navigate(`/conversations?id=${id}`),
+        onDelete: onDelete ? handleDeleteClick : undefined,
+      }),
+    [navigate, onDelete, handleDeleteClick]
+  );
+
+  const table = useReactTable({
+    data: filteredData,
+    columns,
+    state: {
+      sorting,
+      rowSelection,
+    },
+    enableRowSelection: true,
+    onSortingChange: setSorting,
+    onRowSelectionChange: setRowSelection,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getRowId: (row) => row.id,
+    initialState: {
+      pagination: {
+        pageSize: 10,
+      },
+    },
+  });
 
   return (
-    <Card className={cn("overflow-hidden border-border/50", className)}>
+    <Card className={cn('overflow-hidden border-border/50', className)}>
       {/* Header */}
       <div className="px-5 pt-5 pb-4">
         <h3 className="text-lg font-semibold text-foreground">{title}</h3>
@@ -354,18 +268,20 @@ export function ConversationsDataTable({
               key={tab.id}
               onClick={() => onTabChange(tab.id)}
               className={cn(
-                "px-3 py-1.5 text-sm font-medium rounded-md transition-all whitespace-nowrap",
+                'px-3 py-1.5 text-sm font-medium rounded-md transition-all whitespace-nowrap',
                 selectedTab === tab.id
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
               )}
             >
               {tab.label}
               {tab.count !== undefined && (
-                <span className={cn(
-                  "ml-1.5 text-xs",
-                  selectedTab === tab.id ? "text-muted-foreground" : "text-muted-foreground/70"
-                )}>
+                <span
+                  className={cn(
+                    'ml-1.5 text-xs',
+                    selectedTab === tab.id ? 'text-muted-foreground' : 'text-muted-foreground/70'
+                  )}
+                >
                   {tab.count}
                 </span>
               )}
@@ -432,11 +348,11 @@ export function ConversationsDataTable({
                 Agent
               </DropdownMenuLabel>
               <DropdownMenuItem
-                onClick={() => setAgentFilter("all")}
+                onClick={() => setAgentFilter('all')}
                 className="flex items-center justify-between"
               >
                 All agents
-                {agentFilter === "all" && <Check className="h-4 w-4" />}
+                {agentFilter === 'all' && <Check className="h-4 w-4" />}
               </DropdownMenuItem>
               {uniqueAgents.map((agent) => (
                 <DropdownMenuItem
@@ -455,138 +371,45 @@ export function ConversationsDataTable({
 
       {/* Table */}
       <div className="border-t border-border/50">
-        <Table>
-          <TableHeader>
-            <TableRow className="hover:bg-transparent border-b border-border/50">
-              <TableHead className="w-12 pl-5">
-                <Checkbox
-                  checked={allSelected || someSelected}
-                  onCheckedChange={handleSelectAll}
-                />
-              </TableHead>
-              <TableHead className="text-xs font-medium text-muted-foreground">
-                <SortableHeader column="agentName">Agent / Lead</SortableHeader>
-              </TableHead>
-              <TableHead className="text-xs font-medium text-muted-foreground">
-                <SortableHeader column="messageCount">Messages</SortableHeader>
-              </TableHead>
-              <TableHead className="text-xs font-medium text-muted-foreground">Duration</TableHead>
-              <TableHead className="text-xs font-medium text-muted-foreground min-w-[180px]">
-                <SortableHeader column="percentageOfTotal">% of Total</SortableHeader>
-              </TableHead>
-              <TableHead className="text-xs font-medium text-muted-foreground">
-                <SortableHeader column="status">Status</SortableHeader>
-              </TableHead>
-              <TableHead className="w-24 text-xs font-medium text-muted-foreground pr-5">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {paginatedData.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">
-                  {debouncedSearch ? "No matching conversations found" : "No conversations found"}
-                </TableCell>
-              </TableRow>
-            ) : (
-              paginatedData.map((row, index) => {
-                const config = statusConfig[row.status];
-                return (
-                  <AnimatedTableRow
-                    key={row.id}
-                    index={index}
-                    className="group border-b border-border/30 hover:bg-muted/30"
-                  >
-                    <TableCell className="pl-5">
-                      <Checkbox
-                        checked={selectedRows.has(row.id)}
-                        onCheckedChange={(checked) => handleSelectRow(row.id, !!checked)}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-col">
-                        <span className="font-medium text-foreground">{row.agentName}</span>
-                        {row.leadName && (
-                          <span className="text-sm text-muted-foreground">{row.leadName}</span>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell className="font-medium tabular-nums">
-                      {row.messageCount.toLocaleString()}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground tabular-nums">
-                      {row.duration}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-3 w-32">
-                        <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-violet-500 rounded-full transition-all"
-                            style={{ width: `${Math.min(row.percentageOfTotal, 100)}%` }}
-                          />
-                        </div>
-                        <span className="text-sm tabular-nums text-muted-foreground w-12 text-right">
-                          {row.percentageOfTotal.toFixed(1)}%
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant="outline"
-                        className={cn("font-medium border", config.className)}
-                      >
-                        <span className={cn(
-                          "w-1.5 h-1.5 rounded-full mr-1.5",
-                          row.status === "active" && "bg-success",
-                          row.status === "human_takeover" && "bg-info",
-                          row.status === "closed" && "bg-muted-foreground"
-                        )} />
-                        {config.label}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="pr-5">
-                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                          onClick={() => navigate(`/conversations?id=${row.id}`)}
-                        >
-                          <Edit02 className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                          onClick={() => handleDeleteClick(row.id)}
-                        >
-                          <Trash01 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </AnimatedTableRow>
-                );
-              })
-            )}
-          </TableBody>
-        </Table>
+        <DataTable
+          table={table}
+          columns={columns}
+          emptyMessage={debouncedSearch ? 'No matching conversations found' : 'No conversations found'}
+        />
       </div>
 
       {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="border-t border-border/50">
-          <DashboardPagination
-            page={page}
-            totalPages={totalPages}
-            onPageChange={setPage}
-          />
+      {table.getPageCount() > 1 && (
+        <div className="border-t border-border/50 px-5 py-3 flex items-center justify-between">
+          <span className="text-sm text-muted-foreground">
+            Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+          </span>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+            >
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+            >
+              Next
+            </Button>
+          </div>
         </div>
       )}
 
       {/* Bulk Action Bar */}
-      {selectedRows.size > 0 && (
+      {selectedRowIds.length > 0 && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 shadow-lg">
           <span className="text-sm font-medium text-foreground">
-            {selectedRows.size} selected
+            {selectedRowIds.length} selected
           </span>
           <Button
             variant="destructive"
@@ -597,11 +420,7 @@ export function ConversationsDataTable({
             <Trash01 className="h-4 w-4" />
             Delete Selected
           </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setSelectedRows(new Set())}
-          >
+          <Button variant="ghost" size="sm" onClick={() => setRowSelection({})}>
             Clear
           </Button>
         </div>
@@ -622,10 +441,13 @@ export function ConversationsDataTable({
         open={bulkDeleteDialogOpen}
         onOpenChange={setBulkDeleteDialogOpen}
         title="Delete Conversations"
-        description={`Are you sure you want to delete ${selectedRows.size} conversation${selectedRows.size > 1 ? 's' : ''}? This action cannot be undone.`}
+        description={`Are you sure you want to delete ${selectedRowIds.length} conversation${selectedRowIds.length > 1 ? 's' : ''}? This action cannot be undone.`}
         onConfirm={handleConfirmBulkDelete}
         isDeleting={isDeleting}
       />
     </Card>
   );
 }
+
+// Re-export the type for backward compatibility
+export type { ConversationRow };
