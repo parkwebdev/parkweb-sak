@@ -289,17 +289,14 @@ export const MessageBubble = ({
             <div className="text-sm whitespace-pre-wrap break-words widget-message-content">
               {message.role === 'assistant' 
                 ? formatMessageContent(
-                    stripUrlsFromContent(
-                      message.content,
-                      !!(message.linkPreviews && message.linkPreviews.length > 0)
-                    )
+                    stripUrlsFromContent(message.content, true)
                   )
                 : message.content}
             </div>
           )}
           
-          {/* Link previews for assistant messages */}
-          {message.role === 'assistant' && message.linkPreviews && message.linkPreviews.length > 0 && (
+          {/* Link previews for assistant messages - always render, component handles URL detection */}
+          {message.role === 'assistant' && (
             <div className="mt-2">
               <LinkPreviews content={message.content} cachedPreviews={message.linkPreviews} />
             </div>

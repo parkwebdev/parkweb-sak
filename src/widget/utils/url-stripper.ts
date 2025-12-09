@@ -19,14 +19,17 @@ const LINK_PHRASES = [
   /For more information:\s*/gi,
   /You can find more here:\s*/gi,
   /You can learn more here:\s*/gi,
+  /Here(?:'s| is) (?:the )?(?:link|more info(?:rmation)?):\s*/gi,
+  /View (?:it |details )?here:\s*/gi,
+  /Click here(?:\s+to\s+\w+)?:\s*/gi,
 ];
 
 /**
  * Strips URLs and associated phrases from message content when link previews are available.
  * This prevents duplicate display of URLs (both as text and as rich preview cards).
  */
-export function stripUrlsFromContent(content: string, hasLinkPreviews: boolean): string {
-  if (!hasLinkPreviews) return content;
+export function stripUrlsFromContent(content: string, stripUrls: boolean): string {
+  if (!stripUrls) return content;
   
   let cleaned = content;
   
@@ -37,6 +40,10 @@ export function stripUrlsFromContent(content: string, hasLinkPreviews: boolean):
   LINK_PHRASES.forEach(phrase => {
     cleaned = cleaned.replace(phrase, '');
   });
+  
+  // Clean up trailing colons left after URL removal
+  cleaned = cleaned.replace(/:\s*$/gm, '');
+  cleaned = cleaned.replace(/:\s*\n/g, '\n');
   
   // Clean up formatting artifacts
   cleaned = cleaned
