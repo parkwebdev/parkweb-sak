@@ -7,7 +7,7 @@ This document catalogs recommended chat widget improvements based on industry st
 ## High Priority Features
 
 ### 1. Satisfaction Ratings ⭐
-**Status**: Planned  
+**Status**: ✅ Implemented
 **Complexity**: Medium  
 **Business Value**: High - Direct feedback on AI/team performance
 
@@ -276,8 +276,10 @@ CREATE TABLE proactive_messages (
 
 ## Implementation Roadmap
 
-### Phase 1 (Next Sprint)
-1. ✅ Satisfaction Ratings (in progress)
+### Phase 1 (Completed)
+1. ✅ Satisfaction Ratings (implemented)
+
+### Phase 2 (Next Sprint)
 2. Message Copy Button
 
 ### Phase 2
@@ -301,5 +303,5 @@ CREATE TABLE proactive_messages (
 
 ## Related Documentation
 - [Widget Architecture](./WIDGET_ARCHITECTURE.md)
-- [AI Cost Optimization](./AI_COST_OPTIMIZATION.md)
+- [AI Architecture](./AI_ARCHITECTURE.md)
 - [Edge Functions](./EDGE_FUNCTIONS.md)

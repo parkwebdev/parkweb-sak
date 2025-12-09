@@ -488,7 +488,32 @@ function AnimatedList({ items }) {
 }
 ```
 
-See **[ANIMATION_MOTION_GUIDE.md](./ANIMATION_MOTION_GUIDE.md)** for complete motion documentation.
+### Widget-Specific Animation Optimizations
+
+For the embedded chat widget, prioritize performance:
+
+- Use CSS animations instead of Framer Motion where possible (smaller bundle)
+- Lazy-load heavy animation components (BubbleBackground, etc.)
+- Use CSSAnimatedList/CSSAnimatedItem for stagger effects
+- Keep animation bundle under 50KB gzipped
+
+### Animation Design Principles
+
+- Follow 12 principles of animation (timing, spacing, anticipation, etc.)
+- Create meaningful motion that supports user understanding
+- Use appropriate easing curves (ease-out for entrances, ease-in for exits)
+- Implement proper animation sequences and choreography
+- Design motion that feels natural and physics-based
+- Create consistent animation vocabulary across the application
+
+### Performance Standards
+
+- Prioritize transform and opacity animations for GPU acceleration
+- Use will-change CSS property judiciously and clean up after animations
+- Implement proper animation cleanup with useEffect dependencies
+- Optimize re-renders with useCallback for motion handlers
+- Implement intersection observers for scroll-triggered animations
+- Target 60fps for all animations
 
 ---
 

@@ -173,7 +173,7 @@ super_admin
 1. **Upload**: User uploads PDF, URL, CSV, etc.
 2. **Extract**: Content extracted from source
 3. **Chunk**: Content split into chunks
-4. **Embed**: OpenAI generates vector embeddings
+4. **Embed**: Qwen3 generates vector embeddings (via OpenRouter)
 5. **Store**: Vectors stored in `knowledge_sources`
 
 ### Vector Search

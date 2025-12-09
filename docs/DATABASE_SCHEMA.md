@@ -129,7 +129,7 @@ RAG knowledge base sources for agents.
 | `type` | knowledge_type | No | - | Source type |
 | `source` | text | No | - | Source URL/path |
 | `content` | text | Yes | - | Extracted content |
-| `embedding` | vector | Yes | - | Vector embedding |
+| `embedding` | vector(1024) | Yes | - | Vector embedding (Qwen3) |
 | `metadata` | jsonb | Yes | `'{}'` | Additional metadata |
 | `status` | text | No | `'processing'` | Processing status |
 | `created_at` | timestamptz | No | `now()` | Creation timestamp |
@@ -138,6 +138,98 @@ RAG knowledge base sources for agents.
 **RLS Policies:**
 - Users can create for accessible agents
 - Users can view/update/delete accessible sources (`has_account_access(user_id)`)
+
+---
+
+#### `knowledge_chunks`
+Chunked knowledge content with embeddings for RAG vector search.
+
+| Column | Type | Nullable | Default | Description |
+|--------|------|----------|---------|-------------|
+| `id` | uuid | No | `gen_random_uuid()` | Primary key |
+| `source_id` | uuid | No | - | FK to knowledge_sources |
+| `agent_id` | uuid | No | - | FK to agents |
+| `content` | text | No | - | Chunk text content |
+| `chunk_index` | integer | No | - | Order within source |
+| `token_count` | integer | Yes | - | Token count estimate |
+| `embedding` | vector(1024) | Yes | - | Qwen3 vector embedding |
+| `metadata` | jsonb | Yes | `'{}'` | Additional metadata |
+| `created_at` | timestamptz | Yes | `now()` | Creation timestamp |
+
+**RLS Policies:**
+- Service role can insert chunks (via edge function)
+- Access controlled via parent knowledge_source ownership
+
+---
+
+### Caching System
+
+#### `response_cache`
+Cached AI responses for cost optimization.
+
+| Column | Type | Nullable | Default | Description |
+|--------|------|----------|---------|-------------|
+| `id` | uuid | No | `gen_random_uuid()` | Primary key |
+| `agent_id` | uuid | No | - | FK to agents |
+| `query_hash` | text | No | - | SHA-256 of normalized query |
+| `response_content` | text | No | - | Cached response text |
+| `similarity_score` | double precision | No | - | Original similarity score |
+| `hit_count` | integer | Yes | `1` | Number of cache hits |
+| `created_at` | timestamptz | Yes | `now()` | Creation timestamp |
+| `last_used_at` | timestamptz | Yes | `now()` | Last access timestamp |
+| `expires_at` | timestamptz | Yes | `now() + '30 days'` | Expiration date |
+
+**Cache Settings:**
+- Storage threshold: 0.60 similarity
+- Hit threshold: 0.70 similarity
+- TTL: 30 days
+
+**RLS Policies:**
+- Service role can manage response cache
+
+---
+
+#### `query_embedding_cache`
+Cached query embeddings to avoid re-embedding identical queries.
+
+| Column | Type | Nullable | Default | Description |
+|--------|------|----------|---------|-------------|
+| `id` | uuid | No | `gen_random_uuid()` | Primary key |
+| `agent_id` | uuid | Yes | - | FK to agents |
+| `query_normalized` | text | No | - | Normalized query text |
+| `query_hash` | text | No | - | SHA-256 of normalized query |
+| `embedding` | vector(1024) | Yes | - | Qwen3 vector embedding |
+| `hit_count` | integer | Yes | `1` | Number of cache hits |
+| `created_at` | timestamptz | Yes | `now()` | Creation timestamp |
+| `last_used_at` | timestamptz | Yes | `now()` | Last access timestamp |
+| `expires_at` | timestamptz | Yes | `now() + '7 days'` | Expiration date |
+
+**RLS Policies:**
+- Service role can manage query cache
+
+---
+
+### Feedback System
+
+#### `conversation_ratings`
+Post-conversation satisfaction ratings.
+
+| Column | Type | Nullable | Default | Description |
+|--------|------|----------|---------|-------------|
+| `id` | uuid | No | `gen_random_uuid()` | Primary key |
+| `conversation_id` | uuid | No | - | FK to conversations |
+| `rating` | integer | No | - | 1-5 star rating |
+| `feedback` | text | Yes | - | Optional text feedback |
+| `trigger_type` | text | No | - | `'team_closed'` \| `'ai_marked_complete'` |
+| `created_at` | timestamptz | Yes | `now()` | Creation timestamp |
+
+**Trigger Types:**
+- `team_closed`: Team member closed conversation
+- `ai_marked_complete`: AI detected completion via tool
+
+**RLS Policies:**
+- Anyone can submit ratings for active conversations
+- Users can view ratings for accessible conversations
 
 ---
 
@@ -805,6 +897,34 @@ Trigger function to automatically update `updated_at` column on row updates.
 **Returns:** `trigger`
 
 Trigger function to ensure only one primary domain per user.
+
+---
+
+#### `handle_new_user_profile()`
+**Returns:** `trigger`
+
+Trigger on `auth.users` table INSERT. Creates a profile record for new users with display name extracted from metadata or email.
+
+---
+
+#### `handle_new_user_notification_preferences()`
+**Returns:** `trigger`
+
+Trigger on `auth.users` table INSERT. Creates default notification preferences for new users.
+
+---
+
+#### `handle_new_user_role()`
+**Returns:** `trigger`
+
+Trigger on `auth.users` table INSERT. Assigns the default `member` role to new users.
+
+---
+
+#### `cleanup_expired_caches()`
+**Returns:** `void`
+
+Deletes expired entries from `response_cache` and `query_embedding_cache` tables. Called via scheduled cron job.
 
 ---
 
