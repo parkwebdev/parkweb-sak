@@ -466,6 +466,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
       let conversationIdFromStream = activeConversationId;
       let currentChunkMsgId = streamingMsgId; // Track current chunk message being streamed into
       let chunkMsgIds: string[] = []; // Track all chunk message IDs
+      let waitingForNewChunk = false; // Flag to defer bubble creation to first delta
       
       // Mark streaming message for animation
       setNewMessageIds(prev => new Set([...prev, streamingMsgId]));
@@ -521,6 +522,33 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
           },
           onDelta: (content) => {
             streamedContent += content;
+            
+            // If waiting for new chunk, create the bubble NOW with first content
+            if (waitingForNewChunk) {
+              waitingForNewChunk = false;
+              setIsTyping(false);
+              
+              const newChunkId = `chunk-${Date.now()}-${chunkMsgIds.length}`;
+              currentChunkMsgId = newChunkId;
+              chunkMsgIds.push(newChunkId);
+              
+              // Mark new chunk for animation
+              setNewMessageIds(prev => new Set([...prev, newChunkId]));
+              setTimeout(() => setNewMessageIds(prev => { const n = new Set(prev); n.delete(newChunkId); return n; }), 300);
+              
+              // Create bubble WITH the first content (not empty!)
+              setMessages(prev => [...prev, { 
+                id: newChunkId,
+                role: 'assistant', 
+                content: content, 
+                read: isOpen && currentView === 'messages', 
+                timestamp: new Date(), 
+                type: 'text', 
+                reactions: [],
+              }]);
+              return; // Don't update again below
+            }
+            
             // Update the CURRENT chunk message with new content
             setMessages(prev => prev.map(msg => 
               msg.id === currentChunkMsgId 
@@ -531,33 +559,18 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
           onChunkComplete: (data) => {
             console.log('[Widget] Chunk complete:', data.chunkIndex, data.isLink);
             
-            // If not the final chunk, show brief typing indicator and create new bubble
+            // If not the final chunk, mark that we're waiting for next chunk
+            // Don't create empty bubble - wait for first onDelta of next chunk
             if (!data.isFinal) {
-              // Show typing indicator briefly
+              waitingForNewChunk = true;
               setIsTyping(true);
               
-              // After a short delay, create new bubble for next chunk
+              // Safety timeout - if no delta comes within 2s, stop typing indicator
               setTimeout(() => {
-                setIsTyping(false);
-                const newChunkId = `chunk-${Date.now()}-${data.chunkIndex + 1}`;
-                currentChunkMsgId = newChunkId;
-                chunkMsgIds.push(newChunkId);
-                
-                // Mark new chunk for animation
-                setNewMessageIds(prev => new Set([...prev, newChunkId]));
-                setTimeout(() => setNewMessageIds(prev => { const n = new Set(prev); n.delete(newChunkId); return n; }), 300);
-                
-                // Add new message bubble for next chunk
-                setMessages(prev => [...prev, { 
-                  id: newChunkId,
-                  role: 'assistant', 
-                  content: '', 
-                  read: isOpen && currentView === 'messages', 
-                  timestamp: new Date(), 
-                  type: 'text', 
-                  reactions: [],
-                }]);
-              }, 800 + Math.random() * 400); // 800-1200ms natural feeling delay
+                if (waitingForNewChunk) {
+                  setIsTyping(false);
+                }
+              }, 2000);
             }
           },
           onToolStart: (toolName) => {
@@ -566,6 +579,11 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
           },
           onComplete: (data) => {
             console.log('[Widget] Stream complete:', data);
+            
+            // Clean up any empty assistant messages that may have been created
+            setMessages(prev => prev.filter(msg => 
+              msg.role !== 'assistant' || (msg.content && msg.content.trim().length > 0)
+            ));
             
             // Register all chunk IDs to prevent realtime duplicates
             if (data.assistantMessageId) {

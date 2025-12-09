@@ -1346,14 +1346,15 @@ Generate a warm, personalized greeting using the user information provided above
                     content: delta.content 
                   })}\n\n`));
                   
-                  // Small delay between tokens for natural typing speed (45-75ms per token)
-                  await new Promise(resolve => setTimeout(resolve, 45 + Math.random() * 30));
+                  // Small delay between tokens for natural typing speed (60-100ms per token)
+                  await new Promise(resolve => setTimeout(resolve, 60 + Math.random() * 40));
                   
                   // Check for natural chunk break (sentence boundary, link isolation)
                   const { breakIndex, isLink } = detectChunkBreak(currentChunkBuffer, chunkCount);
                   if (breakIndex > 0) {
                     const chunkContent = currentChunkBuffer.substring(0, breakIndex).trim();
-                    if (chunkContent.length > 0) {
+                    // Only emit chunk_complete for substantial content (avoid empty bubbles)
+                    if (chunkContent.length > 5) {
                       completedChunks.push(chunkContent);
                       chunkCount++;
                       
