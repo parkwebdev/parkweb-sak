@@ -104,7 +104,13 @@ STYLE RULES:
 - Put links on their OWN LINE: "Learn more: [URL]" - never bury links in paragraphs
 - Use BULLET POINTS for any list of 2+ items
 - Lead with the ANSWER first, then add brief context if needed
-- If you're writing more than 50 words without a break, STOP and restructure`;
+- If you're writing more than 50 words without a break, STOP and restructure
+
+MULTI-MESSAGE FORMAT:
+- Use ||| (triple pipe) to separate your response into 2-3 message bubbles for conversational flow
+- Place ||| ONLY at complete sentence boundaries - never split a sentence
+- Example: "Here's what I found. ||| The main feature is..." (each part is a complete thought)
+- Links automatically become their own bubble - no need for ||| before links`;
 
 // Model tiers for smart routing (cost optimization)
 const MODEL_TIERS = {
@@ -164,44 +170,50 @@ function detectChunkBreak(buffer: string, currentChunkCount: number): { breakInd
   // Max 4 chunks
   if (currentChunkCount >= 4) return { breakIndex: -1, isLink: false };
   
-  // Check for URL that should be isolated (break BEFORE the URL)
-  const urlMatch = buffer.match(/(https?:\/\/[^\s<>"')\]]+)/);
-  if (urlMatch) {
-    const urlStart = buffer.indexOf(urlMatch[0]);
-    // If there's content before the URL, break before it
-    const textBefore = buffer.substring(0, urlStart).trim();
-    if (textBefore.length > 10) {
-      return { breakIndex: urlStart, isLink: false };
-    }
-    // If URL is at start, break AFTER it (isolate the link)
-    if (urlStart < 5) {
-      const urlEnd = urlStart + urlMatch[0].length;
-      // Find end of URL line
-      const newlineAfter = buffer.indexOf('\n', urlEnd);
-      if (newlineAfter > urlEnd) {
-        return { breakIndex: newlineAfter + 1, isLink: true };
-      }
+  // Priority 1: AI-inserted delimiter ||| (explicit chunk break)
+  const delimiterIndex = buffer.indexOf('|||');
+  if (delimiterIndex > 10) {
+    const beforeDelimiter = buffer.substring(0, delimiterIndex).trim();
+    // Only break if content before ends with complete sentence (.!?)
+    if (/[.!?]$/.test(beforeDelimiter) && beforeDelimiter.length >= 20) {
+      return { breakIndex: delimiterIndex + 3, isLink: false }; // +3 to skip |||
     }
   }
   
-  // Look for sentence endings followed by new sentence (1-2 sentences per chunk)
-  // Pattern: sentence ender + space + capital letter
+  // Priority 2: URL isolation - break BEFORE URLs on their own line
+  const urlMatch = buffer.match(/\n(https?:\/\/[^\s<>"')\]]+)/);
+  if (urlMatch) {
+    const urlLineStart = buffer.indexOf(urlMatch[0]);
+    const textBefore = buffer.substring(0, urlLineStart).trim();
+    // Only break if there's substantial content before and it ends properly
+    if (textBefore.length > 20 && /[.!?:]$/.test(textBefore)) {
+      return { breakIndex: urlLineStart + 1, isLink: false }; // +1 to skip the newline
+    }
+  }
+  
+  // Priority 3: Sentence boundary detection with strict validation
+  // Only break at complete sentences with minimum chunk length
+  const MIN_CHUNK_LENGTH = 80; // Must have at least 80 chars before breaking
+  
+  // Pattern: sentence ender + space + capital letter (start of new sentence)
   const sentencePattern = /[.!?]\s+(?=[A-Z])/g;
-  let sentenceCount = 0;
-  let lastBreakIndex = -1;
+  let bestBreakIndex = -1;
   let match;
   
   while ((match = sentencePattern.exec(buffer)) !== null) {
-    sentenceCount++;
-    // Break after 1-2 sentences (vary for natural feel)
-    const breakAfter = currentChunkCount === 0 ? 2 : (Math.random() > 0.5 ? 1 : 2);
-    if (sentenceCount >= breakAfter) {
-      lastBreakIndex = match.index + match[0].length;
-      break;
+    const potentialBreak = match.index + match[0].length;
+    const chunkContent = buffer.substring(0, potentialBreak).trim();
+    
+    // Validate: chunk must be at least MIN_CHUNK_LENGTH and end with sentence punctuation
+    if (chunkContent.length >= MIN_CHUNK_LENGTH && /[.!?]$/.test(chunkContent)) {
+      bestBreakIndex = potentialBreak;
+      // For first chunk, prefer ~150 chars; for subsequent, break after finding valid point
+      if (currentChunkCount === 0 && chunkContent.length >= 150) break;
+      if (currentChunkCount > 0) break;
     }
   }
   
-  return { breakIndex: lastBreakIndex, isLink: false };
+  return { breakIndex: bestBreakIndex, isLink: false };
 }
 
 // Hash query for cache key
@@ -1352,9 +1364,12 @@ Generate a warm, personalized greeting using the user information provided above
                   // Check for natural chunk break (sentence boundary, link isolation)
                   const { breakIndex, isLink } = detectChunkBreak(currentChunkBuffer, chunkCount);
                   if (breakIndex > 0) {
-                    const chunkContent = currentChunkBuffer.substring(0, breakIndex).trim();
-                    // Only emit chunk_complete for substantial content (avoid empty bubbles)
-                    if (chunkContent.length > 5) {
+                    // Strip ||| delimiter from chunk content if present
+                    let chunkContent = currentChunkBuffer.substring(0, breakIndex).trim();
+                    chunkContent = chunkContent.replace(/\|\|\|/g, '').trim();
+                    
+                    // Only emit chunk_complete for complete sentences (ends with .!?)
+                    if (chunkContent.length >= 20 && /[.!?:]$/.test(chunkContent)) {
                       completedChunks.push(chunkContent);
                       chunkCount++;
                       
@@ -1369,8 +1384,8 @@ Generate a warm, personalized greeting using the user information provided above
                       // Pause between chunks for natural conversation rhythm (800-1200ms)
                       await new Promise(resolve => setTimeout(resolve, 800 + Math.random() * 400));
                       
-                      // Keep remainder for next chunk
-                      currentChunkBuffer = currentChunkBuffer.substring(breakIndex);
+                      // Keep remainder for next chunk, also strip any leading |||
+                      currentChunkBuffer = currentChunkBuffer.substring(breakIndex).replace(/^\|\|\|/, '').trimStart();
                     }
                   }
                 }
