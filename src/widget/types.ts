@@ -137,4 +137,8 @@ export interface WidgetMessageMetadata {
   }>;
   pending?: boolean;
   source?: string;
+  /** Chunk index for multi-message responses (0-based) */
+  chunk_index?: number;
+  /** Total number of chunks in this response */
+  chunk_total?: number;
 }
