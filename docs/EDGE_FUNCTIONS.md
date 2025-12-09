@@ -475,6 +475,90 @@ if (req.method === 'OPTIONS') {
 
 ---
 
+### `cleanup-orphaned-sources`
+
+**Purpose:** Deletes orphaned knowledge sources (where parent no longer exists).
+
+**Auth:** Service Role (called by cron)
+
+**Method:** `POST`
+
+**Details:**
+- Finds knowledge_sources where `parent_source_id` references a non-existent source
+- Deletes associated knowledge_chunks via CASCADE
+- Prevents accumulation of stale data from failed batch processing
+- Runs daily via scheduled cron
+
+---
+
+### `submit-rating`
+
+**Purpose:** Submits a satisfaction rating for a conversation.
+
+**Auth:** Public (widget)
+
+**Method:** `POST`
+
+**Request Body:**
+```typescript
+{
+  conversationId: string;
+  rating: number;          // 1-5
+  feedback?: string;       // Optional text feedback
+  triggerType: 'team_closed' | 'ai_marked_complete';
+}
+```
+
+**Response:**
+```typescript
+{
+  success: true;
+  ratingId: string;
+}
+```
+
+**Details:**
+- Validates conversation exists
+- Validates rating is between 1-5
+- Creates record in `conversation_ratings` table
+- Rate limited: 1 rating per conversation
+
+---
+
+### `update-page-visits`
+
+**Purpose:** Tracks visitor page visits for analytics.
+
+**Auth:** Public (widget)
+
+**Method:** `POST`
+
+**Request Body:**
+```typescript
+{
+  conversationId: string;
+  visitorId: string;
+  pageUrl: string;
+  pageTitle?: string;
+  referrer?: string;
+}
+```
+
+**Response:**
+```typescript
+{
+  success: true;
+}
+```
+
+**Details:**
+- Validates conversation ownership
+- Filters out internal widget URLs (widget.html, widget-entry)
+- Updates conversation metadata with visited pages array
+- Tracks landing page for first visit
+
+---
+
 ## Utility Functions
 
 ### `validate_api_key` (Database Function)
