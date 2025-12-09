@@ -84,3 +84,6 @@ verify_jwt = true
 [functions.cleanup-orphaned-sources]
 verify_jwt = false
 schedule = "0 4 * * *"
+
+[functions.submit-rating]
+verify_jwt = false

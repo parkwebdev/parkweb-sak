@@ -262,6 +262,48 @@ export type Database = {
           },
         ]
       }
+      conversation_ratings: {
+        Row: {
+          conversation_id: string
+          created_at: string | null
+          feedback: string | null
+          id: string
+          rating: number
+          trigger_type: string
+        }
+        Insert: {
+          conversation_id: string
+          created_at?: string | null
+          feedback?: string | null
+          id?: string
+          rating: number
+          trigger_type: string
+        }
+        Update: {
+          conversation_id?: string
+          created_at?: string | null
+          feedback?: string | null
+          id?: string
+          rating?: number
+          trigger_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_ratings_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversation_ratings_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "widget_conversations_secure"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conversation_takeovers: {
         Row: {
           conversation_id: string

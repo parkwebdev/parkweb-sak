@@ -27,7 +27,7 @@
  * ```
  */
 import { useState, useEffect, useRef } from 'react';
-import { createLead, sendChatMessage, type WidgetConfig, type ReferrerJourney } from './api';
+import { createLead, sendChatMessage, submitConversationRating, type WidgetConfig, type ReferrerJourney } from './api';
 import { supabase } from '@/integrations/supabase/client';
 
 // Types and constants extracted for maintainability
@@ -54,7 +54,7 @@ import { HelpView } from './views/HelpView';
 import { NewsView } from './views/NewsView';
 
 // UI Components
-import { FloatingButton, WidgetHeader, WidgetNav } from './components';
+import { FloatingButton, WidgetHeader, WidgetNav, SatisfactionRating } from './components';
 import { Card } from '@/components/ui/card';
 import { TooltipProvider } from '@/components/ui/tooltip';
 
@@ -102,6 +102,11 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
   const [unreadCount, setUnreadCount] = useState(0);
   const [headerScrollY, setHeaderScrollY] = useState(0);
   const [showSettingsDropdown, setShowSettingsDropdown] = useState(false);
+  
+  // Satisfaction rating state
+  const [showRatingPrompt, setShowRatingPrompt] = useState(false);
+  const [ratingTriggerType, setRatingTriggerType] = useState<'team_closed' | 'ai_marked_complete'>('ai_marked_complete');
+  const hasShownRatingRef = useRef(false); // Track if rating has been shown this session
   
   // Refs for quick reply auto-send (must be before early return to maintain hooks order)
   const quickReplyPendingRef = useRef<string | null>(null);
@@ -206,6 +211,14 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     setTakeoverAgentName,
     setTakeoverAgentAvatar,
     setMessages,
+    onConversationClosed: () => {
+      // Team member closed conversation - show rating prompt
+      if (!hasShownRatingRef.current) {
+        setRatingTriggerType('team_closed');
+        setShowRatingPrompt(true);
+        hasShownRatingRef.current = true;
+      }
+    },
   });
 
   // Typing indicator via extracted hook
@@ -551,6 +564,15 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
               if (chunk.id) recentChunkIdsRef.current.delete(chunk.id);
             });
           }, 5000);
+          
+          // Check if AI marked conversation complete - show rating after delay
+          if (response.aiMarkedComplete && !hasShownRatingRef.current) {
+            setTimeout(() => {
+              setRatingTriggerType('ai_marked_complete');
+              setShowRatingPrompt(true);
+              hasShownRatingRef.current = true;
+            }, 3000); // 3 second delay after last chunk
+          }
         } else {
           // Legacy single message fallback - mark for animation
           const msgId = response.assistantMessageId || `legacy-${Date.now()}`;
@@ -568,6 +590,15 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
             linkPreviews: response.linkPreviews,
             quickReplies: response.quickReplies,
           }]);
+          
+          // Check if AI marked conversation complete - show rating after delay
+          if (response.aiMarkedComplete && !hasShownRatingRef.current) {
+            setTimeout(() => {
+              setRatingTriggerType('ai_marked_complete');
+              setShowRatingPrompt(true);
+              hasShownRatingRef.current = true;
+            }, 3000);
+          }
         }
       }
     } catch (error) {
@@ -816,6 +847,19 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
                     onFormSubmit={handleFormSubmit}
                     newMessageIds={newMessageIds}
                   />
+                  
+                  {/* Satisfaction Rating Prompt */}
+                  {showRatingPrompt && activeConversationId && (
+                    <SatisfactionRating
+                      conversationId={activeConversationId}
+                      triggerType={ratingTriggerType}
+                      primaryColor={config.primaryColor}
+                      onSubmit={async (rating, feedback) => {
+                        await submitConversationRating(activeConversationId, rating, ratingTriggerType, feedback);
+                      }}
+                      onDismiss={() => setShowRatingPrompt(false)}
+                    />
+                  )}
                 </div>
               )}
 
