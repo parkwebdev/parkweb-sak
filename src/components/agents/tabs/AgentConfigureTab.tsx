@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useImperativeHandle, forwardRef } from 'react';
+import React, { useState, useEffect, useImperativeHandle, forwardRef, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Tables } from '@/integrations/supabase/types';
 import { Input } from '@/components/ui/input';
@@ -12,6 +12,7 @@ import { LightbulbIcon, LightbulbIconFilled } from '@/components/ui/lightbulb-ic
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { AgentSettingsLayout } from '@/components/agents/AgentSettingsLayout';
 import { Badge } from '@/components/ui/badge';
+import { SavedIndicator } from '@/components/settings/SavedIndicator';
 import { Card } from '@/components/ui/card';
 import { AgentDeploymentConfig } from '@/types/metadata';
 
@@ -206,6 +207,56 @@ export const AgentConfigureTab = forwardRef<AgentConfigureTabHandle, AgentConfig
     onFormChange?.(hasChanges);
   }, [hasChanges, onFormChange]);
 
+  // Auto-save with debounce
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [showSaved, setShowSaved] = useState(false);
+  const isInitialMount = useRef(true);
+
+  const performSave = useCallback(async () => {
+    if (!hasChanges) return;
+    
+    const { top_p, presence_penalty, frequency_penalty, response_length_preset, system_prompt, ...coreFields } = formData;
+    await onUpdate(agent.id, {
+      ...coreFields,
+      system_prompt,
+      deployment_config: {
+        ...deploymentConfig,
+        top_p,
+        presence_penalty,
+        frequency_penalty,
+      },
+    });
+    
+    setShowSaved(true);
+    setTimeout(() => setShowSaved(false), 2000);
+  }, [hasChanges, formData, agent.id, onUpdate, deploymentConfig]);
+
+  useEffect(() => {
+    // Skip auto-save on initial mount
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+
+    if (!hasChanges) return;
+
+    // Clear existing timeout
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+
+    // Debounce save by 1 second
+    saveTimeoutRef.current = setTimeout(() => {
+      performSave();
+    }, 1000);
+
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, [formData, hasChanges, performSave]);
+
   const handleUpdate = (updates: Partial<typeof formData>) => {
     const newFormData = { ...formData, ...updates };
     
@@ -229,22 +280,8 @@ export const AgentConfigureTab = forwardRef<AgentConfigureTabHandle, AgentConfig
   };
 
   useImperativeHandle(ref, () => ({
-    handleSave: async () => {
-      if (hasChanges) {
-        const { top_p, presence_penalty, frequency_penalty, response_length_preset, system_prompt, ...coreFields } = formData;
-        await onUpdate(agent.id, {
-          ...coreFields,
-          system_prompt,
-          deployment_config: {
-            ...deploymentConfig,
-            top_p,
-            presence_penalty,
-            frequency_penalty,
-          },
-        });
-      }
-    }
-  }), [hasChanges, formData, agent.id, onUpdate, deploymentConfig]);
+    handleSave: performSave
+  }), [performSave]);
 
   const costEstimate = calculateEstimatedCost(formData.model, formData.max_tokens);
 
@@ -493,6 +530,7 @@ export const AgentConfigureTab = forwardRef<AgentConfigureTabHandle, AgentConfig
         menuItems={CONFIGURE_MENU_ITEMS}
         title="Configure"
         description={CONFIGURE_MENU_ITEMS.find(item => item.id === activeSection)?.description || ''}
+        rightContent={<SavedIndicator show={showSaved} />}
       >
         {activeSection === 'identity' && renderIdentitySection()}
         {activeSection === 'model' && renderModelSection()}
