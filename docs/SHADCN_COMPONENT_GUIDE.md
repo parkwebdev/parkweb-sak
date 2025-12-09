@@ -2,6 +2,19 @@
 
 Senior UI/UX Engineer guidelines for ReactJS, TypeScript, component design systems, and accessibility. Build, extend, and customize shadcn/ui components with Radix UI primitives and Tailwind CSS.
 
+## Table of Contents
+- [Core Responsibilities](#core-responsibilities)
+- [Technology Stack](#technology-stack-focus)
+- [Code Implementation Rules](#code-implementation-rules)
+- [ChatPad Design System](#chatpad-design-system)
+- [ChatPad Component Library](#chatpad-component-library)
+- [Motion Integration](#motion-integration)
+- [Form Patterns](#form-patterns)
+- [Data Table Patterns](#data-table-patterns)
+- [Related Documentation](#related-documentation)
+
+---
+
 ## Core Responsibilities
 - Follow user requirements precisely and to the letter
 - Think step-by-step: describe component architecture plan in detailed pseudocode first
@@ -17,6 +30,9 @@ Senior UI/UX Engineer guidelines for ReactJS, TypeScript, component design syste
 - **Tailwind CSS**: Utility-first styling with shadcn design tokens
 - **Class Variance Authority (CVA)**: Component variant management
 - **React**: Modern patterns with hooks and composition
+- **motion/react**: Animation library for fluid transitions
+
+---
 
 ## Code Implementation Rules
 
@@ -60,35 +76,250 @@ Senior UI/UX Engineer guidelines for ReactJS, TypeScript, component design syste
 - Implement proper loading and error states
 - Support controlled and uncontrolled component modes
 
+---
+
 ## ChatPad Design System
 
-### Color Tokens (from index.css)
+### Complete Color Token Reference
+
+All colors are defined in `src/index.css` as HSL values. **Never use direct colors** like `text-white`, `bg-black`. Always use semantic tokens.
+
+#### Core Tokens
 ```css
-/* Use semantic tokens, never direct colors */
---background    /* Main background */
---foreground    /* Main text color */
---primary       /* Brand color */
---secondary     /* Secondary surfaces */
---muted         /* Muted backgrounds */
---accent        /* Accent highlights */
---destructive   /* Error/danger states */
---border        /* Border colors */
---ring          /* Focus ring color */
+/* Light Mode (:root) */
+--background: 0 0% 100%;           /* Main page background */
+--foreground: 0 0% 3.9%;           /* Primary text color */
+--card: 0 0% 100%;                 /* Card backgrounds */
+--card-foreground: 0 0% 3.9%;      /* Card text */
+--popover: 0 0% 100%;              /* Popover/dropdown backgrounds */
+--popover-foreground: 0 0% 3.9%;   /* Popover text */
+--primary: 0 0% 9%;                /* Brand/action color */
+--primary-foreground: 0 0% 98%;    /* Text on primary surfaces */
+--secondary: 0 0% 96.1%;           /* Secondary surfaces */
+--secondary-foreground: 0 0% 9%;   /* Text on secondary */
+--muted: 0 0% 96.1%;               /* Muted backgrounds */
+--muted-foreground: 0 0% 45.1%;    /* Subtle/placeholder text */
+--accent: 0 0% 96.1%;              /* Accent highlights */
+--accent-foreground: 0 0% 9%;      /* Text on accent */
+--border: 0 0% 89.8%;              /* Border color */
+--input: 0 0% 89.8%;               /* Input borders */
+--ring: 0 0% 3.9%;                 /* Focus ring color */
+--radius: 0.5rem;                  /* Border radius base */
+
+/* Dark Mode (.dark) - key differences */
+--background: 0 0% 3.9%;
+--foreground: 0 0% 98%;
+--primary: 0 0% 98%;
+--primary-foreground: 0 0% 9%;
+--muted: 0 0% 9.4%;
+--muted-foreground: 0 0% 63.9%;
+--border: 0 0% 14.9%;
 ```
 
-### Existing Components to Extend
-- `src/components/ui/button.tsx` - Button with loading state
-- `src/components/ui/card.tsx` - Card with header/content/footer
-- `src/components/ui/dialog.tsx` - Modal dialogs
-- `src/components/ui/empty-state.tsx` - Standardized empty states
-- `src/components/ui/spinner.tsx` - Loading spinner
+#### Status Colors
+```css
+/* Success - Teal green (harmonizes with destructive) */
+--success: 146 59.1% 46.9%;
+--success-foreground: 355 100% 97%;  /* Light: near-white */
+--success-foreground: 144 61% 20%;   /* Dark: dark green */
 
-### Creating New Components
+/* Warning - Amber/orange */
+--warning: 38 92% 50%;
+--warning-foreground: 48 96% 5%;
+
+/* Info - Blue */
+--info: 221 83% 53%;                 /* Light */
+--info: 217 91% 60%;                 /* Dark */
+--info-foreground: 210 40% 98%;
+
+/* Destructive - Deep crimson (sophisticated, not harsh) */
+--destructive: 0 84.2% 60.2%;        /* Light */
+--destructive: 355 59.1% 46.9%;      /* Dark */
+--destructive-foreground: 0 0% 98%;
+```
+
+#### Surface Tokens
+```css
+/* Sidebar */
+--sidebar: 0 0% 97%;               /* Light */
+--sidebar: 0 0% 3.9%;              /* Dark */
+--sidebar-foreground: 0 0% 3.9%;   /* Light */
+--sidebar-foreground: 0 0% 98%;    /* Dark */
+
+/* App Background (behind main content) */
+--app-background: 0 0% 96%;        /* Light */
+--app-background: 0 0% 3.9%;       /* Dark */
+```
+
+#### Chart Colors (for Recharts)
+```css
+/* Light Mode */
+--chart-1: 12 76% 61%;   /* Coral */
+--chart-2: 173 58% 39%;  /* Teal */
+--chart-3: 197 37% 24%;  /* Dark blue */
+--chart-4: 43 74% 66%;   /* Gold */
+--chart-5: 27 87% 67%;   /* Orange */
+
+/* Dark Mode */
+--chart-1: 220 70% 50%;  /* Blue */
+--chart-2: 160 60% 45%;  /* Green */
+--chart-3: 30 80% 55%;   /* Orange */
+--chart-4: 280 65% 60%;  /* Purple */
+--chart-5: 340 75% 55%;  /* Pink */
+```
+
+### Usage in Tailwind
+```tsx
+// ✅ CORRECT - Use semantic tokens
+<div className="bg-background text-foreground" />
+<div className="bg-card border-border" />
+<div className="text-muted-foreground" />
+<Badge className="bg-success text-success-foreground" />
+
+// ❌ WRONG - Direct colors
+<div className="bg-white text-black" />
+<div className="bg-gray-100" />
+```
+
+### Icon Usage
+- **Always use UntitledUI Icons** (`@untitledui/icons`) - NOT Lucide Icons
+- Import icons directly: `import { IconName } from "@untitledui/icons"`
+
+---
+
+## ChatPad Component Library
+
+Custom components built for ChatPad following shadcn patterns.
+
+### Layout Components
+
+#### PageHeader (`src/components/ui/page-header.tsx`)
+Page title with optional description and actions.
+```tsx
+<PageHeader
+  title="Dashboard"
+  description="Overview of your agents and conversations"
+  showMenuButton={true}  // Shows sidebar toggle on mobile
+>
+  <Button>Create Agent</Button>
+</PageHeader>
+```
+
+#### SectionHeader (`src/components/ui/section-header.tsx`)
+Uppercase tracking section labels.
+```tsx
+<SectionHeader>Configuration</SectionHeader>
+```
+
+### Feedback Components
+
+#### FeaturedIcon (`src/components/ui/featured-icon.tsx`)
+Circular icon containers with color and size variants.
+```tsx
+import { AlertCircle } from "@untitledui/icons";
+
+<FeaturedIcon size="lg" color="destructive">
+  <AlertCircle />
+</FeaturedIcon>
+```
+
+**Props:**
+- `size`: `"sm" | "md" | "lg" | "xl"`
+- `color`: `"gray" | "primary" | "success" | "warning" | "destructive"`
+- `theme`: `"modern" | "light" | "dark"`
+
+#### LoadingState (`src/components/ui/loading-state.tsx`)
+Spinner with optional text and size variants.
+```tsx
+<LoadingState text="Loading conversations..." size="lg" />
+```
+
+#### EmptyState (`src/components/ui/empty-state.tsx`)
+Standardized empty state pattern.
+```tsx
+<EmptyState
+  icon={MessageSquare}
+  title="No conversations yet"
+  description="Start a conversation to see it here"
+  action={<Button>Start Chat</Button>}
+/>
+```
+
+#### Spinner (`src/components/ui/spinner.tsx`)
+Standalone animated spinner.
+```tsx
+<Spinner size="sm" /> {/* sm, md, lg */}
+```
+
+### Form Components
+
+#### ToggleSettingRow (`src/components/ui/toggle-setting-row.tsx`)
+Switch with label, description, and auto-save indicator.
+```tsx
+<ToggleSettingRow
+  label="Enable notifications"
+  description="Receive alerts for new messages"
+  checked={enabled}
+  onCheckedChange={setEnabled}
+  isPending={isSaving}
+  showSavedIndicator={true}
+/>
+```
+
+#### PhoneInput (`src/components/ui/phone-input.tsx`)
+International phone formatting with country detection.
+```tsx
+<PhoneInput
+  value={phone}
+  onChange={setPhone}
+  placeholder="Enter phone number"
+/>
+```
+- Auto-formats based on detected country
+- Shows country flag emoji
+- Uses `libphonenumber-js`
+
+#### RichTextEditor (`src/components/ui/rich-text-editor.tsx`)
+Tiptap-based rich text editor.
+```tsx
+<RichTextEditor
+  content={htmlContent}
+  onChange={setHtmlContent}
+  placeholder="Write your content..."
+/>
+```
+
+#### SavedIndicator (`src/components/settings/SavedIndicator.tsx`)
+Shows "Saved" text with checkmark for auto-save feedback.
+```tsx
+<SavedIndicator show={justSaved} />
+```
+
+### Data Display Components
+
+#### DataTable (`src/components/data-table/DataTable.tsx`)
+TanStack Table wrapper with motion integration.
+See [Data Table Patterns](#data-table-patterns) section.
+
+#### AnimatedTableRow (`src/components/ui/animated-table-row.tsx`)
+Motion-integrated table rows with stagger animations.
+```tsx
+<AnimatedTableRow index={rowIndex}>
+  <TableCell>...</TableCell>
+</AnimatedTableRow>
+```
+
+### Creating New Components Template
+
+Enhanced template with motion and reduced motion support:
+
 ```typescript
-// Example pattern for new shadcn-style component
-import * as React from "react"
-import { cva, type VariantProps } from "class-variance-authority"
-import { cn } from "@/lib/utils"
+import * as React from "react";
+import { cva, type VariantProps } from "class-variance-authority";
+import { motion, type Variants } from "motion/react";
+import { cn } from "@/lib/utils";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
+import { fadeVariants, fadeReducedVariants, springs } from "@/lib/motion-variants";
 
 const componentVariants = cva(
   "base-classes-here",
@@ -109,33 +340,353 @@ const componentVariants = cva(
       size: "default",
     },
   }
-)
+);
 
 export interface ComponentProps
   extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof componentVariants> {}
+    VariantProps<typeof componentVariants> {
+  /** Enable entrance animation */
+  animate?: boolean;
+}
 
 const Component = React.forwardRef<HTMLDivElement, ComponentProps>(
-  ({ className, variant, size, ...props }, ref) => {
+  ({ className, variant, size, animate = false, children, ...props }, ref) => {
+    const prefersReducedMotion = useReducedMotion();
+    
+    const variants = prefersReducedMotion ? fadeReducedVariants : fadeVariants;
+    
+    if (animate) {
+      return (
+        <motion.div
+          ref={ref}
+          className={cn(componentVariants({ variant, size, className }))}
+          variants={variants}
+          initial="hidden"
+          animate="visible"
+          transition={springs.snappy}
+          {...props}
+        >
+          {children}
+        </motion.div>
+      );
+    }
+
     return (
       <div
         ref={ref}
         className={cn(componentVariants({ variant, size, className }))}
         {...props}
-      />
-    )
+      >
+        {children}
+      </div>
+    );
   }
-)
-Component.displayName = "Component"
+);
+Component.displayName = "Component";
 
-export { Component, componentVariants }
+export { Component, componentVariants };
 ```
 
-### Icon Usage
-- Use UntitledUI Icons (@untitledui/icons) - NOT Lucide Icons
-- Import icons directly: `import { IconName } from "@untitledui/icons"`
+---
+
+## Motion Integration
+
+ChatPad uses `motion/react` (Framer Motion) for animations with accessibility support.
+
+### Required Pattern: Reduced Motion Check
+
+**Every animated component MUST check user preferences:**
+
+```tsx
+import { useReducedMotion } from "@/hooks/useReducedMotion";
+import { fadeVariants, fadeReducedVariants } from "@/lib/motion-variants";
+
+function AnimatedComponent() {
+  const prefersReducedMotion = useReducedMotion();
+  const variants = prefersReducedMotion ? fadeReducedVariants : fadeVariants;
+  
+  return (
+    <motion.div variants={variants} initial="hidden" animate="visible">
+      Content
+    </motion.div>
+  );
+}
+```
+
+### Available Motion Variants (`src/lib/motion-variants.ts`)
+
+```tsx
+// Basic transitions
+import {
+  fadeVariants,
+  fadeReducedVariants,
+  scaleVariants,
+  scaleReducedVariants,
+  slideUpVariants,
+  slideDownVariants,
+} from "@/lib/motion-variants";
+
+// Stagger animations for lists
+import {
+  staggerContainerVariants,
+  staggerItemVariants,
+  staggerItemReducedVariants,
+} from "@/lib/motion-variants";
+
+// Spring physics presets
+import { springs } from "@/lib/motion-variants";
+// springs.snappy, springs.smooth, springs.bouncy
+```
+
+### Content Transitions with AnimatePresence
+
+```tsx
+import { AnimatePresence, motion } from "motion/react";
+
+function ContentTransition({ activeTab, children }) {
+  const prefersReducedMotion = useReducedMotion();
+  
+  return (
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={activeTab}
+        initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: prefersReducedMotion ? 0 : -10 }}
+        transition={prefersReducedMotion ? { duration: 0 } : springs.snappy}
+      >
+        {children}
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+```
+
+### Stagger List Pattern
+
+```tsx
+function AnimatedList({ items }) {
+  const prefersReducedMotion = useReducedMotion();
+  
+  return (
+    <motion.div
+      variants={staggerContainerVariants}
+      initial="hidden"
+      animate="visible"
+    >
+      {items.map((item, index) => (
+        <motion.div
+          key={item.id}
+          variants={prefersReducedMotion ? staggerItemReducedVariants : staggerItemVariants}
+          custom={index}
+        >
+          {item.content}
+        </motion.div>
+      ))}
+    </motion.div>
+  );
+}
+```
+
+See **[ANIMATION_MOTION_GUIDE.md](./ANIMATION_MOTION_GUIDE.md)** for complete motion documentation.
+
+---
+
+## Form Patterns
+
+ChatPad uses React Hook Form + Zod for form management with auto-save patterns.
+
+### Standard Form Setup
+
+```tsx
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+
+const formSchema = z.object({
+  name: z.string().min(1, "Name is required").max(100),
+  email: z.string().email("Invalid email"),
+});
+
+type FormValues = z.infer<typeof formSchema>;
+
+function MyForm() {
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: { name: "", email: "" },
+  });
+  
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)}>
+        <FormField
+          control={form.control}
+          name="name"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Name</FormLabel>
+              <FormControl>
+                <Input {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </form>
+    </Form>
+  );
+}
+```
+
+### Auto-Save with Debounce Pattern
+
+Used throughout settings pages:
+
+```tsx
+import { useCallback, useEffect, useState } from "react";
+
+function AutoSaveField({ value, onSave }) {
+  const [localValue, setLocalValue] = useState(value);
+  const [justSaved, setJustSaved] = useState(false);
+  
+  // Debounced save
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (localValue !== value) {
+        onSave(localValue, { silent: true }); // silent: true prevents toast
+        setJustSaved(true);
+        setTimeout(() => setJustSaved(false), 2000);
+      }
+    }, 1000); // 1 second debounce
+    
+    return () => clearTimeout(timeout);
+  }, [localValue]);
+  
+  return (
+    <div>
+      <Input value={localValue} onChange={(e) => setLocalValue(e.target.value)} />
+      <SavedIndicator show={justSaved} />
+    </div>
+  );
+}
+```
+
+### Silent Toast Pattern
+
+When auto-saving, use `silent: true` to prevent toast notifications:
+
+```tsx
+// From useLeads, useAgents, etc.
+updateMutation.mutate(data, {
+  onSuccess: () => {
+    if (!options?.silent) {
+      toast.success("Changes saved");
+    }
+  }
+});
+```
+
+---
+
+## Data Table Patterns
+
+ChatPad uses TanStack Table with motion integration for all data tables.
+
+### Architecture Overview
+
+```
+src/components/data-table/
+├── DataTable.tsx           # Main wrapper with motion
+├── DataTableToolbar.tsx    # Search, filters, actions
+├── DataTablePagination.tsx # Page controls
+├── DataTableColumnHeader.tsx
+├── DataTableRowActions.tsx
+├── DataTableViewOptions.tsx
+└── columns/
+    ├── index.ts
+    ├── conversations-columns.tsx
+    ├── leads-columns.tsx
+    ├── team-columns.tsx
+    └── landing-pages-columns.tsx
+```
+
+### Creating Column Definitions
+
+```tsx
+import { ColumnDef } from "@tanstack/react-table";
+import { DataTableColumnHeader } from "../DataTableColumnHeader";
+import { Checkbox } from "@/components/ui/checkbox";
+
+export function createMyColumns(): ColumnDef<MyType>[] {
+  return [
+    // Selection checkbox
+    {
+      id: "select",
+      header: ({ table }) => (
+        <Checkbox
+          checked={table.getIsAllPageRowsSelected()}
+          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+        />
+      ),
+      cell: ({ row }) => (
+        <Checkbox
+          checked={row.getIsSelected()}
+          onCheckedChange={(value) => row.toggleSelected(!!value)}
+        />
+      ),
+    },
+    // Sortable column
+    {
+      accessorKey: "name",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Name" />
+      ),
+    },
+    // Custom cell
+    {
+      accessorKey: "status",
+      cell: ({ row }) => <Badge>{row.original.status}</Badge>,
+    },
+  ];
+}
+```
+
+### Using DataTable
+
+```tsx
+import { DataTable } from "@/components/data-table";
+import { createMyColumns } from "@/components/data-table/columns/my-columns";
+
+function MyPage() {
+  const columns = useMemo(() => createMyColumns(), []);
+  
+  return (
+    <DataTable
+      columns={columns}
+      data={items}
+      searchColumn="name"
+      searchPlaceholder="Search items..."
+    />
+  );
+}
+```
+
+See **[DATA_TABLE_DASHBOARD_GUIDE.md](./DATA_TABLE_DASHBOARD_GUIDE.md)** for complete table documentation.
+
+---
+
+## Related Documentation
+
+- **[ANIMATION_MOTION_GUIDE.md](./ANIMATION_MOTION_GUIDE.md)** - Complete motion/animation patterns
+- **[DATA_TABLE_DASHBOARD_GUIDE.md](./DATA_TABLE_DASHBOARD_GUIDE.md)** - TanStack Table implementation
+- **[AI_ARCHITECTURE.md](./AI_ARCHITECTURE.md)** - AI integration patterns
+- **[DATABASE_SCHEMA.md](./DATABASE_SCHEMA.md)** - Supabase schema reference
+- **[WIDGET_ARCHITECTURE.md](./WIDGET_ARCHITECTURE.md)** - Embedded widget patterns
+
+---
 
 ## Response Protocol
+
 1. If uncertain about shadcn/ui patterns, state so explicitly
 2. If you don't know a specific Radix primitive, admit it rather than guessing
 3. Search for latest shadcn/ui and Radix documentation when needed
