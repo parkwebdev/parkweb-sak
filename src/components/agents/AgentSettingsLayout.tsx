@@ -46,6 +46,7 @@ interface AgentSettingsLayoutContentProps<T extends string = string> {
   title: string;
   description: string;
   headerExtra?: React.ReactNode;
+  rightContent?: React.ReactNode;
 }
 
 export const AgentSettingsLayout = <T extends string = string>({
@@ -57,6 +58,7 @@ export const AgentSettingsLayout = <T extends string = string>({
   title,
   description,
   headerExtra,
+  rightContent,
 }: AgentSettingsLayoutContentProps<T>) => {
   return (
     <div className="flex flex-col lg:flex-row gap-4 lg:gap-8 w-full h-full min-h-0 flex-1">
@@ -111,7 +113,10 @@ export const AgentSettingsLayout = <T extends string = string>({
           <div className="mb-6">
             <div className="flex items-center justify-between gap-2 mb-1">
               <h2 className="text-base font-semibold text-foreground">{title}</h2>
-              {headerExtra}
+              <div className="flex items-center gap-2">
+                {rightContent}
+                {headerExtra}
+              </div>
             </div>
             <AnimatePresence mode="wait">
               <motion.p 
