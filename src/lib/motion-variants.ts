@@ -224,6 +224,12 @@ export const staggerItemScaleVariants: Variants = {
   },
 };
 
+export const staggerItemReducedVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { duration: 0 } },
+  exit: { opacity: 0, transition: { duration: 0 } },
+};
+
 // =============================================================================
 // INTERACTIVE VARIANTS (HOVER, TAP)
 // =============================================================================
@@ -298,6 +304,36 @@ export const tableRowVariants: Variants = {
     opacity: 0,
     transition: { duration: 0.1 }
   },
+};
+
+export const tableRowReducedVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { duration: 0 } },
+  exit: { opacity: 0, transition: { duration: 0 } },
+};
+
+/** For message bubbles */
+export const messageBubbleVariants: Variants = {
+  hidden: { opacity: 0, x: -12 },
+  visible: { 
+    opacity: 1, 
+    x: 0,
+    transition: { duration: 0.2, ease: easings.easeOut }
+  },
+};
+
+export const messageBubbleUserVariants: Variants = {
+  hidden: { opacity: 0, x: 12 },
+  visible: { 
+    opacity: 1, 
+    x: 0,
+    transition: { duration: 0.2, ease: easings.easeOut }
+  },
+};
+
+export const messageBubbleReducedVariants: Variants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { duration: 0 } },
 };
 
 /** For modals and dialogs */
