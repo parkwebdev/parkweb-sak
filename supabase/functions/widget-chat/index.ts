@@ -1360,16 +1360,11 @@ Generate a warm, personalized greeting using the user information provided above
                   fullContent += delta.content;
                   currentChunkBuffer += delta.content;
                   
-                  // Stream character-by-character for natural typing feel
-                  for (const char of delta.content) {
-                    controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
-                      type: 'delta', 
-                      content: char 
-                    })}\n\n`));
-                    
-                    // 37-56ms per character = ~18-27 chars/sec ≈ 175-270 WPM (25% faster)
-                    await new Promise(resolve => setTimeout(resolve, 37 + Math.random() * 19));
-                  }
+                  // Emit entire token at once (token-based streaming for efficiency)
+                  controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
+                    type: 'delta', 
+                    content: delta.content 
+                  })}\n\n`));
                   
                   // Check for natural chunk break (sentence boundary, link isolation)
                   const { breakIndex, isLink } = detectChunkBreak(currentChunkBuffer, chunkCount);
