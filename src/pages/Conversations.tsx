@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
+import { motion, AnimatePresence } from 'motion/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -30,6 +31,8 @@ import { QuickEmojiButton } from '@/components/chat/QuickEmojiButton';
 import { useAutoResizeTextarea } from '@/hooks/useAutoResizeTextarea';
 import { toast } from '@/lib/toast';
 import { logger } from '@/utils/logger';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { messageBubbleVariants, messageBubbleUserVariants, messageBubbleReducedVariants, getVariants } from '@/lib/motion-variants';
 
 type Conversation = Tables<'conversations'> & {
   agents?: { name: string };
@@ -58,6 +61,7 @@ async function updateMessageReaction(
 
 const Conversations: React.FC = () => {
   const { user } = useAuth();
+  const prefersReducedMotion = useReducedMotion();
   const {
     conversations, 
     loading, 
@@ -788,12 +792,19 @@ const Conversations: React.FC = () => {
                         nextMessage.role !== message.role ||
                         (message.role !== 'user' && nextMsgMetadata?.sender_type !== msgMetadata?.sender_type);
                       
+                      const bubbleVariants = getVariants(
+                        isUser ? messageBubbleUserVariants : messageBubbleVariants,
+                        messageBubbleReducedVariants,
+                        prefersReducedMotion
+                      );
+                      
                       return (
-                        <div
+                        <motion.div
                           key={message.id}
-                          className={`flex ${isUser ? 'justify-end' : 'justify-start'} ${
-                            isNewMessage ? (isUser ? 'animate-slide-in-right' : 'animate-slide-in-left') : ''
-                          } ${isContinuation ? 'mt-1' : 'mt-1 first:mt-0'}`}
+                          className={`flex ${isUser ? 'justify-end' : 'justify-start'} ${isContinuation ? 'mt-1' : 'mt-1 first:mt-0'}`}
+                          variants={isNewMessage ? bubbleVariants : undefined}
+                          initial={isNewMessage ? "hidden" : false}
+                          animate={isNewMessage ? "visible" : undefined}
                         >
                           <div className={`flex items-start gap-2 max-w-[75%] ${isContinuation && !isUser ? 'ml-10' : ''}`}>
                           {!isUser && !isContinuation && (
@@ -1004,7 +1015,7 @@ const Conversations: React.FC = () => {
                               )}
                             </div>
                           </div>
-                        </div>
+                        </motion.div>
                       );
                     })}
                     </div>
