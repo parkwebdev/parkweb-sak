@@ -1,6 +1,13 @@
 import * as React from "react"
+import { motion, type HTMLMotionProps } from "motion/react"
 
 import { cn } from "@/lib/utils"
+import { useReducedMotion } from "@/hooks/useReducedMotion"
+import { springs } from "@/lib/motion-variants"
+
+// =============================================================================
+// STATIC CARD COMPONENTS (Original)
+// =============================================================================
 
 const Card = React.forwardRef<
   HTMLDivElement,
@@ -76,4 +83,70 @@ const CardFooter = React.forwardRef<
 ))
 CardFooter.displayName = "CardFooter"
 
-export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent }
+// =============================================================================
+// MOTION CARD COMPONENT (Interactive with hover effects)
+// =============================================================================
+
+interface MotionCardProps extends Omit<HTMLMotionProps<"div">, "ref"> {
+  /** Enable hover lift animation */
+  hoverEffect?: boolean
+  /** Enable tap scale animation */
+  tapEffect?: boolean
+  /** Enable layout animations */
+  layout?: boolean | "position" | "size"
+  /** Custom hover scale (default: 1.01) */
+  hoverScale?: number
+  /** Custom hover Y offset (default: -2) */
+  hoverY?: number
+}
+
+const MotionCard = React.forwardRef<HTMLDivElement, MotionCardProps>(
+  ({ 
+    className, 
+    hoverEffect = true, 
+    tapEffect = false,
+    layout = false,
+    hoverScale = 1.01,
+    hoverY = -2,
+    ...props 
+  }, ref) => {
+    const prefersReducedMotion = useReducedMotion()
+
+    const motionProps = prefersReducedMotion ? {} : {
+      whileHover: hoverEffect ? { 
+        scale: hoverScale, 
+        y: hoverY,
+        transition: springs.micro 
+      } : undefined,
+      whileTap: tapEffect ? { 
+        scale: 0.99,
+        transition: springs.micro 
+      } : undefined,
+      layout,
+    }
+
+    return (
+      <motion.div
+        ref={ref}
+        className={cn(
+          "rounded-lg border bg-card text-card-foreground shadow-sm",
+          hoverEffect && "cursor-pointer",
+          className
+        )}
+        {...motionProps}
+        {...props}
+      />
+    )
+  }
+)
+MotionCard.displayName = "MotionCard"
+
+export { 
+  Card, 
+  CardHeader, 
+  CardFooter, 
+  CardTitle, 
+  CardDescription, 
+  CardContent,
+  MotionCard 
+}

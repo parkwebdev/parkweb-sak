@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
 import { X, ChevronLeft, ChevronRight, Settings01 as Settings, Grid01 as Grid, MessageCircle02, User03, Cube01 as Bot, PieChart01, ChevronDown } from '@untitledui/icons';
 import { Link, useLocation } from 'react-router-dom';
+import { motion, AnimatePresence } from 'motion/react';
 import { UserAccountCard } from './UserAccountCard';
 import { useSidebar } from '@/hooks/use-sidebar';
 import { useConversations } from '@/hooks/useConversations';
 import { useAgents } from '@/hooks/useAgents';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import ChatPadLogo from './ChatPadLogo';
+import { springs } from '@/lib/motion-variants';
 import type { ConversationMetadata } from '@/types/metadata';
 
 interface NavigationItem {
@@ -68,6 +71,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
   const { isCollapsed, toggle } = useSidebar();
   const { conversations } = useConversations();
   const { agents } = useAgents();
+  const prefersReducedMotion = useReducedMotion();
   
   // Count unread conversations for admin
   const unreadConversationsCount = conversations.filter(conv => {
@@ -77,17 +81,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
     const lastMessageAt = metadata?.last_message_at;
     const lastMessageRole = metadata?.last_message_role;
     
-    // Prefer last_user_message_at if available
-    // Fallback to last_message_at only if last message wasn't from human team member
     const relevantMessageAt = lastUserMessageAt || 
       (lastMessageRole !== 'human' ? lastMessageAt : null);
     
     if (!relevantMessageAt) return false;
-    
-    // Never read by admin - unread
     if (!lastReadAt) return true;
-    
-    // New user messages since last read
     return new Date(relevantMessageAt) > new Date(lastReadAt);
   }).length;
 
@@ -96,22 +94,44 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
   const [agentsOpen, setAgentsOpen] = useState(isOnAgentsPage);
 
   return (
-    <aside className={`flex ${isCollapsed ? 'w-[72px]' : 'w-[240px]'} h-screen bg-sidebar transition-all duration-300`}>
+    <motion.aside 
+      className="flex h-screen bg-sidebar"
+      animate={{ 
+        width: isCollapsed ? 72 : 240 
+      }}
+      transition={prefersReducedMotion ? { duration: 0 } : springs.smooth}
+    >
       <nav className="w-full flex flex-col pt-6 px-3 pb-4">
         <header className="w-full px-2 mb-6">
           <div className="flex items-center justify-between">
-            {!isCollapsed && (
-              <ChatPadLogo className="h-6 w-6 text-foreground" />
-            )}
+            <AnimatePresence mode="wait">
+              {!isCollapsed && (
+                <motion.div
+                  initial={prefersReducedMotion ? false : { opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  transition={springs.snappy}
+                >
+                  <ChatPadLogo className="h-6 w-6 text-foreground" />
+                </motion.div>
+              )}
+            </AnimatePresence>
             
             <div className={`flex items-center gap-2 ${isCollapsed ? 'mx-auto' : 'ml-auto'}`}>
-              <button
+              <motion.button
                 onClick={toggle}
                 className="p-1 rounded-md hover:bg-accent/50 text-muted-foreground hover:text-foreground"
                 title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                whileHover={prefersReducedMotion ? undefined : { scale: 1.1 }}
+                whileTap={prefersReducedMotion ? undefined : { scale: 0.95 }}
               >
-                {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
-              </button>
+                <motion.div
+                  animate={{ rotate: isCollapsed ? 0 : 180 }}
+                  transition={prefersReducedMotion ? { duration: 0 } : springs.snappy}
+                >
+                  <ChevronRight size={16} />
+                </motion.div>
+              </motion.button>
               {onClose && (
                 <button
                   onClick={onClose}
@@ -126,7 +146,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
 
         <div className="flex-1 overflow-auto">
           <section className="w-full">
-              {navigationItems.map((item) => {
+              {navigationItems.map((item, index) => {
                 const isActive = location.pathname === item.path;
                 
                 // Special handling for Agents with accordion
@@ -139,13 +159,17 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
                       onOpenChange={setAgentsOpen}
                       className="w-full"
                     >
-                      <div className="items-center flex w-full overflow-hidden px-0 py-0.5">
+                      <motion.div 
+                        className="items-center flex w-full overflow-hidden px-0 py-0.5"
+                        initial={prefersReducedMotion ? false : { opacity: 0, x: -12 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.03, ...springs.smooth }}
+                      >
                         <div className={`flex items-center w-full rounded-md ${
                           isOnAgentsPage 
                             ? 'bg-accent text-accent-foreground' 
                             : 'bg-transparent text-muted-foreground hover:bg-accent/50 hover:text-foreground'
                         }`}>
-                          {/* Left side: Link to /agents (icon + label) */}
                           <Link 
                             to="/agents"
                             className="items-center flex gap-2.5 flex-1 text-sm px-2.5 py-1.5"
@@ -160,30 +184,40 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
                             </div>
                           </Link>
                           
-                          {/* Right side: Chevron toggle for dropdown */}
                           <CollapsibleTrigger className="p-1.5">
-                            <ChevronDown size={14} />
+                            <motion.div
+                              animate={{ rotate: agentsOpen ? 180 : 0 }}
+                              transition={prefersReducedMotion ? { duration: 0 } : springs.snappy}
+                            >
+                              <ChevronDown size={14} />
+                            </motion.div>
                           </CollapsibleTrigger>
                         </div>
-                      </div>
+                      </motion.div>
                       <CollapsibleContent>
                         {activeAgents.length > 0 ? (
                           <div className="ml-6 mt-1 space-y-0.5">
-                            {activeAgents.map((agent) => {
+                            {activeAgents.map((agent, agentIndex) => {
                               const isAgentActive = location.pathname === `/agents/${agent.id}`;
                               return (
-                                <Link
+                                <motion.div
                                   key={agent.id}
-                                  to={`/agents/${agent.id}`}
-                                  className={`flex items-center gap-2 px-2.5 py-1.5 rounded-md text-sm transition-colors ${
-                                    isAgentActive 
-                                      ? 'bg-accent/50 text-accent-foreground font-medium' 
-                                      : 'text-muted-foreground hover:bg-accent/30 hover:text-foreground'
-                                  }`}
+                                  initial={prefersReducedMotion ? false : { opacity: 0, x: -8 }}
+                                  animate={{ opacity: 1, x: 0 }}
+                                  transition={{ delay: agentIndex * 0.03, ...springs.smooth }}
                                 >
-                                  <div className="w-1.5 h-1.5 rounded-full bg-current opacity-50" />
-                                  <span className="truncate">{agent.name}</span>
-                                </Link>
+                                  <Link
+                                    to={`/agents/${agent.id}`}
+                                    className={`flex items-center gap-2 px-2.5 py-1.5 rounded-md text-sm transition-colors ${
+                                      isAgentActive 
+                                        ? 'bg-accent/50 text-accent-foreground font-medium' 
+                                        : 'text-muted-foreground hover:bg-accent/30 hover:text-foreground'
+                                    }`}
+                                  >
+                                    <div className="w-1.5 h-1.5 rounded-full bg-current opacity-50" />
+                                    <span className="truncate">{agent.name}</span>
+                                  </Link>
+                                </motion.div>
                               );
                             })}
                           </div>
@@ -195,7 +229,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
                 
                 // Regular navigation items
                 return (
-                  <div key={item.id} className="items-center flex w-full overflow-hidden px-0 py-0.5">
+                  <motion.div 
+                    key={item.id} 
+                    className="items-center flex w-full overflow-hidden px-0 py-0.5"
+                    initial={prefersReducedMotion ? false : { opacity: 0, x: -12 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.03, ...springs.smooth }}
+                  >
                     <Link 
                       to={item.path}
                       className={`items-center flex w-full gap-2.5 flex-1 shrink basis-[0%] my-auto transition-colors text-sm ${
@@ -210,26 +250,44 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
                           <item.icon size={14} className="self-stretch my-auto" />
                           {/* Collapsed state unread indicator */}
                           {isCollapsed && item.id === 'conversations' && unreadConversationsCount > 0 && (
-                            <span className="absolute -top-1 -right-1 w-2 h-2 bg-destructive rounded-full" />
+                            <motion.span 
+                              className="absolute -top-1 -right-1 w-2 h-2 bg-destructive rounded-full"
+                              initial={prefersReducedMotion ? false : { scale: 0 }}
+                              animate={{ scale: 1 }}
+                              transition={springs.bouncy}
+                            />
                           )}
                         </div>
-                        {!isCollapsed && (
-                          <div className="flex items-center justify-between flex-1">
-                            <div className={`text-sm font-normal leading-4 self-stretch my-auto ${
-                              isActive ? 'text-accent-foreground font-medium' : ''
-                            }`}>
-                              {item.label}
-                            </div>
-                            {item.id === 'conversations' && unreadConversationsCount > 0 && (
-                              <div className="bg-destructive text-destructive-foreground text-[10px] font-semibold rounded-full h-5 min-w-[20px] px-1.5 flex items-center justify-center">
-                                {unreadConversationsCount}
+                        <AnimatePresence mode="wait">
+                          {!isCollapsed && (
+                            <motion.div 
+                              className="flex items-center justify-between flex-1"
+                              initial={prefersReducedMotion ? false : { opacity: 0, width: 0 }}
+                              animate={{ opacity: 1, width: 'auto' }}
+                              exit={{ opacity: 0, width: 0 }}
+                              transition={springs.snappy}
+                            >
+                              <div className={`text-sm font-normal leading-4 self-stretch my-auto whitespace-nowrap ${
+                                isActive ? 'text-accent-foreground font-medium' : ''
+                              }`}>
+                                {item.label}
                               </div>
-                            )}
-                          </div>
-                        )}
+                              {item.id === 'conversations' && unreadConversationsCount > 0 && (
+                                <motion.div 
+                                  className="bg-destructive text-destructive-foreground text-[10px] font-semibold rounded-full h-5 min-w-[20px] px-1.5 flex items-center justify-center"
+                                  initial={prefersReducedMotion ? false : { scale: 0 }}
+                                  animate={{ scale: 1 }}
+                                  transition={springs.bouncy}
+                                >
+                                  {unreadConversationsCount}
+                                </motion.div>
+                              )}
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
                       </div>
                     </Link>
-                  </div>
+                  </motion.div>
                 );
               })}
             </section>
@@ -237,10 +295,16 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
           {/* Bottom Navigation Items */}
           {bottomItems.length > 0 && (
             <section className="w-full mt-4 pt-4 border-t border-border">
-                {bottomItems.map((item) => {
+                {bottomItems.map((item, index) => {
                   const isActive = location.pathname === item.path;
                   return (
-                    <div key={item.id} className="items-center flex w-full overflow-hidden px-0 py-0.5">
+                    <motion.div 
+                      key={item.id} 
+                      className="items-center flex w-full overflow-hidden px-0 py-0.5"
+                      initial={prefersReducedMotion ? false : { opacity: 0, x: -12 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: (navigationItems.length + index) * 0.03, ...springs.smooth }}
+                    >
                       <Link 
                         to={item.path}
                         className={`items-center flex w-full gap-2.5 flex-1 shrink basis-[0%] my-auto transition-colors text-sm ${
@@ -254,16 +318,24 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
                           <div className={`items-center flex my-auto ${isCollapsed ? '' : 'w-[18px] pr-0.5'}`}>
                             <item.icon size={14} className="self-stretch my-auto" />
                           </div>
-                          {!isCollapsed && (
-                            <div className={`text-sm font-normal leading-4 self-stretch my-auto ${
-                              isActive ? 'text-accent-foreground font-medium' : ''
-                            }`}>
-                              {item.label}
-                            </div>
-                          )}
+                          <AnimatePresence mode="wait">
+                            {!isCollapsed && (
+                              <motion.div
+                                className={`text-sm font-normal leading-4 self-stretch my-auto whitespace-nowrap ${
+                                  isActive ? 'text-accent-foreground font-medium' : ''
+                                }`}
+                                initial={prefersReducedMotion ? false : { opacity: 0, width: 0 }}
+                                animate={{ opacity: 1, width: 'auto' }}
+                                exit={{ opacity: 0, width: 0 }}
+                                transition={springs.snappy}
+                              >
+                                {item.label}
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
                         </div>
                       </Link>
-                    </div>
+                    </motion.div>
                   );
               })}
             </section>
@@ -275,6 +347,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
           <UserAccountCard isCollapsed={isCollapsed} />
         </div>
       </nav>
-    </aside>
+    </motion.aside>
   );
 };
