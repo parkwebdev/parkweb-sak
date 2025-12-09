@@ -1,7 +1,10 @@
 import { useId } from "react";
 import { TrendUp01, TrendDown01, DotsVertical } from "@untitledui/icons";
 import { Area, AreaChart, ResponsiveContainer } from "recharts";
+import { motion } from "motion/react";
 import { cn } from "@/lib/utils";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
+import { springs } from "@/lib/motion-variants";
 
 interface MetricCardWithChartProps {
   title: string;
@@ -11,6 +14,8 @@ interface MetricCardWithChartProps {
   chartData: { value: number }[];
   showMenu?: boolean;
   className?: string;
+  /** Delay for stagger animation (in seconds) */
+  animationDelay?: number;
 }
 
 export function MetricCardWithChart({
@@ -21,16 +26,40 @@ export function MetricCardWithChart({
   chartData,
   showMenu = false,
   className,
+  animationDelay = 0,
 }: MetricCardWithChartProps) {
   const id = useId();
+  const prefersReducedMotion = useReducedMotion();
   const isPositive = change !== undefined && change >= 0;
-  const chartColor = isPositive ? "text-success" : "text-destructive";
+
+  const cardVariants = {
+    hidden: { opacity: 0, y: 16 },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: { 
+        ...springs.smooth,
+        delay: animationDelay,
+      }
+    },
+  };
+
+  const reducedVariants = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1, transition: { duration: 0, delay: animationDelay } },
+  };
 
   return (
-    <div className={cn(
-      "flex flex-col overflow-hidden rounded-xl bg-muted/50 shadow-sm ring-1 ring-border/50 ring-inset",
-      className
-    )}>
+    <motion.div 
+      className={cn(
+        "flex flex-col overflow-hidden rounded-xl bg-muted/50 shadow-sm ring-1 ring-border/50 ring-inset",
+        className
+      )}
+      variants={prefersReducedMotion ? reducedVariants : cardVariants}
+      initial="hidden"
+      animate="visible"
+      whileHover={prefersReducedMotion ? undefined : { y: -2, transition: springs.micro }}
+    >
       {/* Subtitle in outer wrapper */}
       <div className="mb-0.5 px-4 pt-3 pb-2 md:px-5">
         <h3 className="text-sm font-semibold text-foreground">{subtitle}</h3>
@@ -43,7 +72,12 @@ export function MetricCardWithChart({
           <div className="flex items-center gap-3">
             <p className="text-3xl font-semibold tracking-tight text-foreground">{title}</p>
             {change !== undefined && (
-              <div className="flex items-center gap-2">
+              <motion.div 
+                className="flex items-center gap-2"
+                initial={prefersReducedMotion ? false : { opacity: 0, x: -8 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: animationDelay + 0.2, ...springs.smooth }}
+              >
                 <div className={cn(
                   "flex items-center gap-0.5",
                   isPositive ? "text-success" : "text-destructive"
@@ -56,7 +90,7 @@ export function MetricCardWithChart({
                   <span className="text-sm font-medium">{Math.abs(change).toFixed(1)}%</span>
                 </div>
                 <span className="text-sm font-medium text-muted-foreground">{changeLabel}</span>
-              </div>
+              </motion.div>
             )}
           </div>
         </div>
@@ -74,7 +108,9 @@ export function MetricCardWithChart({
               </linearGradient>
             </defs>
             <Area
-              isAnimationActive={false}
+              isAnimationActive={!prefersReducedMotion}
+              animationDuration={800}
+              animationEasing="ease-out"
               dataKey="value"
               type="monotone"
               stroke={isPositive ? "hsl(var(--success))" : "hsl(var(--destructive))"}
@@ -94,6 +130,6 @@ export function MetricCardWithChart({
           </div>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 }
