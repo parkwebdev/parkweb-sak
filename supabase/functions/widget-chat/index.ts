@@ -93,16 +93,48 @@ const EMBEDDING_DIMENSIONS = 1024;
 const MAX_CONVERSATION_HISTORY = 10; // Limit to last 10 messages to reduce input tokens
 const MAX_RAG_CHUNKS = 3; // Limit RAG context to top 3 most relevant chunks
 
-// PHASE 8: Response Formatting Rules - Simple & Concise
-const RESPONSE_FORMATTING_RULES = `
+// Industry-Standard System Prompt Framework
+// Based on best practices from OpenAI, Anthropic, and production chatbot systems
+const buildSystemPromptFramework = (agentName: string = 'assistant') => `
 
-RESPONSE FORMATTING (CRITICAL):
-- Be EXTREMELY CONCISE: 1-2 sentences for simple questions
-- Answer DIRECTLY - no preambles like "I'd be happy to help"
-- Use bullet points only when listing 3+ items
-- Put links on their OWN LINE (e.g., "Learn more:\nhttps://example.com")
-- Only write longer responses when explaining something complex
-- Keep it conversational and human`;
+# CORE BEHAVIOR
+
+You are a helpful AI assistant. Your goal is to answer questions accurately and helpfully.
+
+## Response Style
+- **Concise by default**: 1-2 sentences for simple questions
+- **Expand only when needed**: 3-4 sentences for explanations, never more than 5
+- **Conversational tone**: Natural, friendly, not robotic
+- **Answer first**: Lead with the answer, then add context if needed
+
+## DO
+- Use contractions naturally (you'll, we're, that's)
+- Reference user's name when known
+- Include source links when you used knowledge base info
+- Be direct and confident
+
+## DO NOT
+- Start with "I'd be happy to help", "Of course!", "Great question!", etc.
+- Use bullet points unless listing 3+ distinct items
+- Write paragraph blocks - keep it scannable
+- Repeat information the user already knows
+- Apologize excessively
+
+## Link Formatting (CRITICAL)
+When sharing links, ALWAYS put them on their own line:
+✓ "Here's more info:\nhttps://example.com"
+✗ "You can read about this at https://example.com which explains..."
+
+## Sample Openers (vary these, don't repeat)
+- "Hey [name]! "
+- "Sure thing—"
+- "Quick answer: "
+- "[Direct answer without preamble]"
+
+## When Uncertain
+- "I don't have that specific info, but here's what I know..."
+- "That's outside my knowledge—want me to connect you with our team?"
+`;
 
 // Model tiers for smart routing (cost optimization)
 const MODEL_TIERS = {
@@ -1102,8 +1134,8 @@ Use this information to personalize your responses when appropriate (e.g., addre
       systemPrompt = systemPrompt + userContextSection;
     }
     
-    // PHASE 8: Append formatting rules for digestible responses
-    systemPrompt = systemPrompt + RESPONSE_FORMATTING_RULES;
+    // Append industry-standard response framework
+    systemPrompt = systemPrompt + buildSystemPromptFramework();
 
     // PHASE 6: Truncate conversation history to reduce input tokens
     let messagesToSend = truncateConversationHistory(messages);
@@ -1159,36 +1191,13 @@ Generate a warm, personalized greeting using the user information provided above
       frequency_penalty: deploymentConfig.frequency_penalty || 0,
     };
 
-    // PHASE 7: Skip quick replies for lite model tier (reduces tool call overhead)
-    // Also check agent config for enable_quick_replies setting (defaults to true)
+    // PHASE 2: Quick replies moved to separate post-response call to prevent empty content issue
+    // Check config for enable_quick_replies setting (defaults to true)
     const enableQuickReplies = deploymentConfig.enable_quick_replies !== false;
     const shouldIncludeQuickReplies = enableQuickReplies && modelTier !== 'lite';
-    
-    // Built-in quick replies tool (conditional based on tier and config)
-    const quickRepliesTool = shouldIncludeQuickReplies ? {
-      type: 'function',
-      function: {
-        name: 'suggest_quick_replies',
-        description: 'IMPORTANT: Always provide your full response text first, then call this tool to suggest follow-up options. Suggest 2-4 relevant follow-up questions or actions based on your response. Never call this tool without also providing response content in the same message.',
-        parameters: {
-          type: 'object',
-          properties: {
-            suggestions: {
-              type: 'array',
-              description: 'Array of 2-4 short, actionable suggestions (max 40 characters each)',
-              items: {
-                type: 'string'
-              },
-              minItems: 2,
-              maxItems: 4
-            }
-          },
-          required: ['suggestions']
-        }
-      }
-    } : null;
 
     // Built-in tool to mark conversation as complete (triggers satisfaction rating)
+    // This stays in main request as it's low-risk and useful for AI to call inline
     const markCompleteTool = {
       type: 'function',
       function: {
@@ -1212,20 +1221,23 @@ Generate a warm, personalized greeting using the user information provided above
       }
     };
 
-    // Combine built-in tools with user-defined tools (only include quick replies if enabled)
+    // Combine mark_complete with user-defined tools (quick replies moved to separate call)
     const allTools = [
-      ...(quickRepliesTool ? [quickRepliesTool] : []),
-      markCompleteTool, // Always include mark_conversation_complete
+      markCompleteTool,
       ...(formattedTools || [])
     ];
     
-    // PHASE 7: Only add tools if there are any (skip entirely for lite model with no user tools)
-    if (allTools.length > 0) {
+    // Only add tools if there are user-defined tools (mark_complete is lightweight)
+    if (formattedTools && formattedTools.length > 0) {
       aiRequestBody.tools = allTools;
+      aiRequestBody.tool_choice = 'auto';
+    } else {
+      // Just mark_complete tool - still include it
+      aiRequestBody.tools = [markCompleteTool];
       aiRequestBody.tool_choice = 'auto';
     }
     
-    console.log(`Quick replies: ${shouldIncludeQuickReplies ? 'enabled' : 'disabled'} (tier=${modelTier}, config=${enableQuickReplies})`);
+    console.log(`Quick replies: ${shouldIncludeQuickReplies ? 'will generate post-response' : 'disabled'} (tier=${modelTier}, config=${enableQuickReplies})`);
 
     // Enable streaming for real-time token display
     aiRequestBody.stream = true;
@@ -1387,14 +1399,6 @@ Generate a warm, personalized greeting using the user information provided above
                 continue;
               }
               
-              // Handle quick replies
-              if (toolName === 'suggest_quick_replies') {
-                quickReplies = ((toolArgs as any).suggestions || []).slice(0, 4).map((s: string) => 
-                  s.length > 40 ? s.substring(0, 37) + '...' : s
-                );
-                continue;
-              }
-              
               // Handle mark_conversation_complete
               if (toolName === 'mark_conversation_complete') {
                 if ((toolArgs as any).confidence === 'high') {
@@ -1473,13 +1477,129 @@ Generate a warm, personalized greeting using the user information provided above
             }
           }
           
-          // Fallback if no content
+          // PHASE 5: Post-processing guardrails
+          // Strip common AI preambles and clean up response
+          const preamblesToRemove = [
+            /^(I'd be happy to help[!.]?\s*)/i,
+            /^(Of course[!.]?\s*)/i,
+            /^(Great question[!.]?\s*)/i,
+            /^(Absolutely[!.]?\s*)/i,
+            /^(Sure thing[!.]?\s*)/i,
+            /^(Hello[!.]?\s*)/i,
+            /^(Hi there[!.]?\s*)/i,
+          ];
+          
+          let cleanedContent = fullContent;
+          for (const pattern of preamblesToRemove) {
+            cleanedContent = cleanedContent.replace(pattern, '');
+          }
+          
+          // Strip any remaining ||| delimiters (safety net)
+          cleanedContent = cleanedContent.replace(/\|\|\|/g, '').trim();
+          
+          // Update fullContent with cleaned version
+          if (cleanedContent !== fullContent) {
+            console.log('Post-processing: cleaned response content');
+            fullContent = cleanedContent;
+          }
+          
+          // Fallback if no content - make a retry call without tools
           if (!fullContent) {
-            fullContent = 'I apologize, but I was unable to generate a response.';
+            console.log('Empty response detected - making retry call without tools');
+            try {
+              const retryResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+                  'HTTP-Referer': 'https://chatpad.ai',
+                  'X-Title': 'ChatPad',
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  model: selectedModel,
+                  messages: aiRequestBody.messages,
+                  stream: false,
+                  temperature: agent.temperature || 0.7,
+                  max_completion_tokens: agent.max_tokens || 500,
+                  // No tools - force content generation
+                }),
+              });
+              
+              if (retryResponse.ok) {
+                const retryData = await retryResponse.json();
+                const retryContent = retryData.choices?.[0]?.message?.content;
+                if (retryContent) {
+                  fullContent = retryContent;
+                  controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
+                    type: 'delta', 
+                    content: fullContent 
+                  })}\n\n`));
+                  console.log('Retry successful - got content');
+                }
+              }
+            } catch (retryError) {
+              console.error('Retry call failed:', retryError);
+            }
+          }
+          
+          // Final fallback if still no content
+          if (!fullContent) {
+            fullContent = "I'm here to help! What would you like to know?";
             controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
               type: 'delta', 
               content: fullContent 
             })}\n\n`));
+          }
+          
+          // PHASE 3: Generate quick replies in separate call (post-response)
+          if (shouldIncludeQuickReplies && fullContent) {
+            try {
+              console.log('Generating quick replies via separate call...');
+              const quickReplyResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+                  'HTTP-Referer': 'https://chatpad.ai',
+                  'X-Title': 'ChatPad',
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  model: MODEL_TIERS.lite, // Use cheapest model for quick replies
+                  messages: [
+                    {
+                      role: 'system',
+                      content: 'You generate 2-3 short follow-up suggestions (max 35 characters each) based on an AI assistant response. Return ONLY a JSON array of strings, nothing else. Example: ["Tell me more", "How does this work?", "What are the costs?"]'
+                    },
+                    {
+                      role: 'user',
+                      content: `Based on this assistant response, suggest 2-3 natural follow-up questions or actions:\n\n"${fullContent.substring(0, 500)}"`
+                    }
+                  ],
+                  stream: false,
+                  temperature: 0.5,
+                  max_completion_tokens: 100,
+                }),
+              });
+              
+              if (quickReplyResponse.ok) {
+                const qrData = await quickReplyResponse.json();
+                const qrContent = qrData.choices?.[0]?.message?.content || '';
+                try {
+                  // Parse the JSON array from response
+                  const parsed = JSON.parse(qrContent.trim());
+                  if (Array.isArray(parsed)) {
+                    quickReplies = parsed.slice(0, 4).map((s: string) => 
+                      typeof s === 'string' ? (s.length > 40 ? s.substring(0, 37) + '...' : s) : ''
+                    ).filter(s => s);
+                    console.log('Generated quick replies:', quickReplies);
+                  }
+                } catch (parseErr) {
+                  console.log('Failed to parse quick replies JSON:', qrContent);
+                }
+              }
+            } catch (qrError) {
+              console.error('Quick reply generation failed (non-blocking):', qrError);
+            }
           }
           
           // Fetch link previews
