@@ -1352,14 +1352,16 @@ Generate a warm, personalized greeting using the user information provided above
                   fullContent += delta.content;
                   currentChunkBuffer += delta.content;
                   
-                  // Forward token to client with small delay for natural typing feel
-                  controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
-                    type: 'delta', 
-                    content: delta.content 
-                  })}\n\n`));
-                  
-                  // Small delay between tokens for natural typing speed (60-100ms per token)
-                  await new Promise(resolve => setTimeout(resolve, 60 + Math.random() * 40));
+                  // Stream character-by-character for natural typing feel
+                  for (const char of delta.content) {
+                    controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
+                      type: 'delta', 
+                      content: char 
+                    })}\n\n`));
+                    
+                    // 100-150ms per character = ~7-10 chars/sec ≈ 70-100 WPM (natural typing speed)
+                    await new Promise(resolve => setTimeout(resolve, 100 + Math.random() * 50));
+                  }
                   
                   // Check for natural chunk break (sentence boundary, link isolation)
                   const { breakIndex, isLink } = detectChunkBreak(currentChunkBuffer, chunkCount);
