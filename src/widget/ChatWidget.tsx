@@ -577,6 +577,23 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
             console.log('[Widget] Tool started:', toolName);
             // Could show a tool indicator here if desired
           },
+          onLinkPreview: (preview) => {
+            console.log('[Widget] Link preview ready:', preview?.url);
+            // Update the current streaming message with the preview immediately
+            const currentChunkId = chunkMsgIds[chunkMsgIds.length - 1] || streamingMsgId;
+            setMessages(prev => prev.map(msg => {
+              if (msg.id === currentChunkId) {
+                const existingPreviews = msg.linkPreviews || [];
+                // Avoid duplicates
+                if (existingPreviews.some(p => p.url === preview?.url)) return msg;
+                return { 
+                  ...msg, 
+                  linkPreviews: [...existingPreviews, preview],
+                };
+              }
+              return msg;
+            }));
+          },
           onComplete: (data) => {
             console.log('[Widget] Stream complete:', data);
             
