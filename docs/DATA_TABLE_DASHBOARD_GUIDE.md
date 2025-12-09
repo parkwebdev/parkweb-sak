@@ -296,6 +296,15 @@ export function LeadsTable({ leads, onView, onStatusChange }) {
 
 ## Available Column Definitions
 
+### Conversations (`conversations-columns.tsx`)
+- Selection checkbox
+- Agent / Lead (with subtext showing lead name)
+- Messages count
+- Duration (formatted from created_at)
+- % of Total (progress bar with percentage)
+- Status (badge with color coding)
+- Actions (view, delete)
+
 ### Leads (`leads-columns.tsx`)
 - Selection checkbox
 - Name, Email, Phone, Company
@@ -342,6 +351,7 @@ src/components/data-table/
 ├── DataTableViewOptions.tsx    # Column visibility
 └── columns/
     ├── index.ts                # Column exports
+    ├── conversations-columns.tsx # Conversations table columns
     ├── leads-columns.tsx       # Leads table columns
     ├── team-columns.tsx        # Team table columns
     ├── landing-pages-columns.tsx
