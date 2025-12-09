@@ -1359,8 +1359,8 @@ Generate a warm, personalized greeting using the user information provided above
                       content: char 
                     })}\n\n`));
                     
-                    // 100-150ms per character = ~7-10 chars/sec ≈ 70-100 WPM (natural typing speed)
-                    await new Promise(resolve => setTimeout(resolve, 100 + Math.random() * 50));
+                    // 50-75ms per character = ~13-20 chars/sec ≈ 130-200 WPM (faster typing speed)
+                    await new Promise(resolve => setTimeout(resolve, 50 + Math.random() * 25));
                   }
                   
                   // Check for natural chunk break (sentence boundary, link isolation)
