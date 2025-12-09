@@ -93,18 +93,31 @@ const EMBEDDING_DIMENSIONS = 1024;
 const MAX_CONVERSATION_HISTORY = 10; // Limit to last 10 messages to reduce input tokens
 const MAX_RAG_CHUNKS = 3; // Limit RAG context to top 3 most relevant chunks
 
-// PHASE 8: Response Formatting Rules for Digestible AI Responses
+// PHASE 8: Response Formatting Rules for Digestible AI Responses (with chunking)
 const RESPONSE_FORMATTING_RULES = `
 
 RESPONSE FORMATTING (CRITICAL - Follow these rules):
-- Be CONCISE: Max 2-3 short sentences per paragraph
+
+MESSAGE CHUNKING (IMPORTANT):
+- Use ||| to separate your response into 2-4 message chunks for a conversational feel
+- Chunk 1: ALWAYS start with a friendly greeting/opener (1-2 sentences max)
+- Middle chunks: Main answer content, bullet points, explanations  
+- Final chunk: Links ONLY (if any) - "Learn more: [URL]"
+- Simple yes/no answers can be 1 chunk (no delimiter needed)
+- Max 4 chunks total
+
+CHUNKING EXAMPLES:
+Good: "Hey! Great question about pricing. ||| We have 3 plans:\n- Starter: $29/mo\n- Pro: $99/mo\n- Enterprise: Custom ||| Learn more: https://example.com/pricing"
+Good: "Hi there! ||| Yes, we support that feature. It works by..."
+Bad: "I'd be happy to help! Here's everything..." (no chunks, starts with preamble)
+
+OTHER RULES:
+- Be CONCISE: Max 2-3 short sentences per chunk
 - Skip preamble like "I'd be happy to help" - just answer directly
 - Put links on their OWN LINE: "Learn more: [URL]" - never bury links in paragraphs
 - Use BULLET POINTS for any list of 2+ items
 - Lead with the ANSWER first, then add brief context if needed
-- Break up long responses with line breaks between points
-- If you're writing more than 50 words without a break, STOP and restructure
-- Never use phrases like "Here's what I found" or "Let me explain" - just explain`;
+- If you're writing more than 50 words without a break, STOP and restructure`;
 
 // Model tiers for smart routing (cost optimization)
 const MODEL_TIERS = {
@@ -156,6 +169,25 @@ function truncateConversationHistory(messages: any[]): any[] {
 // Normalize query for cache lookup (lowercase, trim, remove extra whitespace)
 function normalizeQuery(query: string): string {
   return query.toLowerCase().trim().replace(/\s+/g, ' ').replace(/[^\w\s]/g, '');
+}
+
+// Split AI response into message chunks using ||| delimiter
+function splitResponseIntoChunks(response: string, maxChunks = 4): string[] {
+  const DELIMITER = '|||';
+  
+  // If no delimiter, return as single chunk
+  if (!response.includes(DELIMITER)) {
+    return [response.trim()];
+  }
+  
+  // Split on delimiter
+  const chunks = response
+    .split(DELIMITER)
+    .map(chunk => chunk.trim())
+    .filter(chunk => chunk.length > 0);
+  
+  // Cap at maxChunks
+  return chunks.slice(0, maxChunks);
 }
 
 // Hash query for cache key
@@ -1338,30 +1370,44 @@ Generate a warm, personalized greeting using the user information provided above
       cacheResponse(supabase, queryHash, agentId, assistantContent, maxSimilarity);
     }
 
-    // Fetch link previews for assistant message content (server-side caching)
+    // Split response into chunks for staggered display
+    const chunks = splitResponseIntoChunks(assistantContent);
+    console.log(`Splitting response into ${chunks.length} chunks`);
+
+    // Fetch link previews for the full response (will be attached to last chunk)
     const linkPreviews = await fetchLinkPreviews(assistantContent, supabaseUrl, supabaseKey);
     console.log(`Cached ${linkPreviews.length} link previews for assistant message`);
 
-    // Save the assistant message to database with cached link previews
-    const { data: assistantMsg, error: assistantMsgError } = await supabase.from('messages').insert({
-      conversation_id: activeConversationId,
-      role: 'assistant',
-      content: assistantContent,
-      metadata: { 
-        source: 'ai',
-        model: selectedModel, // Track which model was actually used
-        model_tier: modelTier, // Track the tier for analytics
-        knowledge_sources: sources.length > 0 ? sources : undefined,
-        tools_used: toolsUsed.length > 0 ? toolsUsed : undefined,
-        link_previews: linkPreviews.length > 0 ? linkPreviews : undefined,
+    // Save each chunk as a separate message with offset timestamps
+    const assistantMessageIds: string[] = [];
+    for (let i = 0; i < chunks.length; i++) {
+      const chunkTimestamp = new Date(Date.now() + (i * 100)); // 100ms offset for ordering
+      const isLastChunk = i === chunks.length - 1;
+      
+      const { data: msg, error: msgError } = await supabase.from('messages').insert({
+        conversation_id: activeConversationId,
+        role: 'assistant',
+        content: chunks[i],
+        created_at: chunkTimestamp.toISOString(),
+        metadata: { 
+          source: 'ai',
+          model: selectedModel,
+          model_tier: modelTier,
+          chunk_index: i,
+          chunk_total: chunks.length,
+          knowledge_sources: isLastChunk && sources.length > 0 ? sources : undefined,
+          tools_used: isLastChunk && toolsUsed.length > 0 ? toolsUsed : undefined,
+          link_previews: isLastChunk && linkPreviews.length > 0 ? linkPreviews : undefined,
+        }
+      }).select('id').single();
+      
+      if (msgError) {
+        console.error(`Error saving chunk ${i}:`, msgError);
       }
-    }).select('id').single();
-
-    if (assistantMsgError) {
-      console.error('Error saving assistant message:', assistantMsgError);
+      if (msg) assistantMessageIds.push(msg.id);
     }
 
-    const assistantMessageId = assistantMsg?.id;
+    const assistantMessageId = assistantMessageIds[assistantMessageIds.length - 1];
 
     // Update conversation metadata (message count, last activity, page visits, last message preview)
     const currentMetadata = conversation?.metadata || {};
@@ -1410,10 +1456,17 @@ Generate a warm, personalized greeting using the user information provided above
       .then(() => console.log('API usage tracked'))
       .catch(err => console.error('Failed to track usage:', err));
 
-    // Return the response with conversation ID, message IDs, cached link previews, and quick replies
+    // Return the response with chunked messages for staggered display
     return new Response(
       JSON.stringify({
         conversationId: activeConversationId,
+        // New: array of message chunks for staggered display
+        messages: chunks.map((content, i) => ({
+          id: assistantMessageIds[i],
+          content,
+          chunkIndex: i,
+        })),
+        // Legacy: keep single response for backward compatibility
         response: assistantContent,
         userMessageId,
         assistantMessageId,

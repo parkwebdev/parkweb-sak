@@ -277,6 +277,12 @@ export async function submitArticleFeedback(articleId: string, data: {
 export interface ChatResponse {
   conversationId: string;
   response: string;
+  /** Chunked messages for staggered display (new multi-message format) */
+  messages?: Array<{
+    id: string;
+    content: string;
+    chunkIndex: number;
+  }>;
   status?: 'active' | 'human_takeover' | 'closed';
   message?: string;
   takenOverBy?: { name: string; avatar?: string };

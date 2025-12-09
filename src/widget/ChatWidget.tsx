@@ -106,6 +106,8 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
   // Refs for quick reply auto-send (must be before early return to maintain hooks order)
   const quickReplyPendingRef = useRef<string | null>(null);
   const handleSendMessageRef = useRef<(() => void) | null>(null);
+  // Ref for tracking recently added chunk IDs to prevent realtime duplicates
+  const recentChunkIdsRef = useRef<Set<string>>(new Set());
   
   // Visitor ID state
   const [visitorId] = useState(() => {
@@ -190,6 +192,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     setIsTyping,
     setTakeoverAgentName,
     setTakeoverAgentAvatar,
+    recentChunkIdsRef,
   });
 
   // Conversation status (takeover) via extracted hook
@@ -479,6 +482,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
           });
         }
       } else if (response.response) {
+        // Update user message with ID
         if (response.userMessageId) {
           setMessages(prev => {
             const updated = [...prev];
@@ -492,17 +496,60 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
           });
         }
         
-        setMessages(prev => [...prev, { 
-          id: response.assistantMessageId,
-          role: 'assistant', 
-          content: response.response, 
-          read: isOpen && currentView === 'messages', 
-          timestamp: new Date(), 
-          type: 'text', 
-          reactions: [],
-          linkPreviews: response.linkPreviews,
-          quickReplies: response.quickReplies,
-        }]);
+        // Check for chunked messages (new multi-message format)
+        if (response.messages && response.messages.length > 0) {
+          // Pre-register all chunk IDs to prevent realtime duplicates
+          response.messages.forEach(chunk => {
+            if (chunk.id) recentChunkIdsRef.current.add(chunk.id);
+          });
+          
+          // Display chunks with staggered delays for natural feel
+          for (let i = 0; i < response.messages.length; i++) {
+            const chunk = response.messages[i];
+            const isLastChunk = i === response.messages.length - 1;
+            
+            // Add random delay between 750-1000ms (except for first chunk)
+            if (i > 0) {
+              const delay = 750 + Math.random() * 250; // 750-1000ms
+              setIsTyping(true); // Show typing indicator between chunks
+              await new Promise(resolve => setTimeout(resolve, delay));
+            }
+            
+            setIsTyping(false);
+            setMessages(prev => [...prev, { 
+              id: chunk.id,
+              role: 'assistant', 
+              content: chunk.content, 
+              read: isOpen && currentView === 'messages', 
+              timestamp: new Date(), 
+              type: 'text', 
+              reactions: [],
+              // Only attach link previews and quick replies to the last chunk
+              linkPreviews: isLastChunk ? response.linkPreviews : undefined,
+              quickReplies: isLastChunk ? response.quickReplies : undefined,
+            }]);
+          }
+          
+          // Clear chunk IDs after delay to allow realtime cleanup
+          setTimeout(() => {
+            response.messages?.forEach(chunk => {
+              if (chunk.id) recentChunkIdsRef.current.delete(chunk.id);
+            });
+          }, 5000);
+        } else {
+          // Legacy single message fallback
+          setMessages(prev => [...prev, { 
+            id: response.assistantMessageId,
+            role: 'assistant', 
+            content: response.response, 
+            read: isOpen && currentView === 'messages', 
+            timestamp: new Date(), 
+            type: 'text', 
+            reactions: [],
+            linkPreviews: response.linkPreviews,
+            quickReplies: response.quickReplies,
+          }]);
+        }
       }
     } catch (error) {
       console.error('Error sending message:', error);

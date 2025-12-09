@@ -48,6 +48,8 @@ interface UseRealtimeMessagesOptions {
   setTakeoverAgentName: (name: string | undefined) => void;
   /** Setter for takeover agent avatar URL */
   setTakeoverAgentAvatar: (avatar: string | undefined) => void;
+  /** Ref for tracking recently added chunk IDs to prevent duplicates */
+  recentChunkIdsRef?: React.MutableRefObject<Set<string>>;
 }
 
 /**
@@ -67,9 +69,14 @@ export function useRealtimeMessages(options: UseRealtimeMessagesOptions) {
     setIsTyping,
     setTakeoverAgentName,
     setTakeoverAgentAvatar,
+    recentChunkIdsRef: externalChunkIdsRef,
   } = options;
 
   const realtimeChannelRef = useRef<RealtimeChannel | null>(null);
+  // Track recently added chunk IDs to prevent duplicates from realtime subscription
+  // Use external ref if provided, otherwise create internal one
+  const internalChunkIdsRef = useRef<Set<string>>(new Set());
+  const recentChunkIdsRef = externalChunkIdsRef || internalChunkIdsRef;
 
   useEffect(() => {
     // Only subscribe if we have a valid database conversation ID (UUID format)
@@ -100,6 +107,16 @@ export function useRealtimeMessages(options: UseRealtimeMessagesOptions) {
           isHuman: isHumanMessage,
           content: newMessage.content.substring(0, 50)
         });
+        
+        // Skip AI messages (they're added locally via staggered display)
+        // This prevents duplicates when realtime subscription fires for our own chunks
+        if (!isHumanMessage) {
+          // Check if this chunk was recently added locally
+          if (recentChunkIdsRef.current.has(newMessage.id)) {
+            console.log('[Widget] Ignoring realtime chunk already added locally:', newMessage.id);
+            return;
+          }
+        }
         
         // Only add human messages to avoid duplicates (AI messages are added locally)
         if (isHumanMessage) {
