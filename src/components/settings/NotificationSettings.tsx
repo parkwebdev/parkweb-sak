@@ -210,8 +210,8 @@ export const NotificationSettings: React.FC = () => {
     }
 
     new Notification('Test Notification', {
-      body: 'This is a test notification from Agency.',
-      icon: '/favicon.ico',
+      body: 'This is a test notification from ChatPad.',
+      icon: '/favicon.png',
     });
 
     toast.success("Test notification sent", {

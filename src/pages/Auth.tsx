@@ -525,7 +525,7 @@ const Auth = () => {
 
         {/* Footer */}
         <footer className="flex justify-between items-center px-8 py-6 text-sm text-muted-foreground">
-          <p>© ChatPad 2024</p>
+          <p>© ChatPad 2025</p>
           <a href="mailto:help@chatpad.ai" className="flex items-center gap-2 hover:text-foreground transition-colors">
             <Mail01 className="w-4 h-4" />
             help@chatpad.ai

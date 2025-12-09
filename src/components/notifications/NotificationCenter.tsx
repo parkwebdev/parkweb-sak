@@ -103,7 +103,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNotifi
           if (Notification.permission === 'granted') {
             new Notification(newNotification.title, {
               body: newNotification.message,
-              icon: '/favicon.ico',
+              icon: '/favicon.png',
             });
           }
         }
