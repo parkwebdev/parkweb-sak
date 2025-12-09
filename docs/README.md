@@ -24,7 +24,7 @@ Welcome to the ChatPad documentation. This index provides quick access to all te
 ### Full-Stack Development
 | Guide | Description |
 |-------|-------------|
-| [Supabase + shadcn Guide](./SUPABASE_SHADCN_GUIDE.md) | Full-stack patterns with Supabase, React Query, and shadcn/ui |
+| [Supabase Integration Guide](./SUPABASE_INTEGRATION_GUIDE.md) | Full-stack patterns with Supabase, React Query, and shadcn/ui |
 | [Stripe Payment Guide](./STRIPE_PAYMENT_GUIDE.md) | Payment integration, subscriptions, and webhooks |
 
 ### UI/UX Development
@@ -64,7 +64,7 @@ docs/
 ├── WIDGET_ENHANCEMENTS.md         # Widget feature roadmap
 ├── SECURITY.md                    # Security documentation
 ├── MULTI_ACCOUNT_INTEGRATIONS.md  # Multi-account architecture
-├── SUPABASE_SHADCN_GUIDE.md       # Full-stack development guide
+├── SUPABASE_INTEGRATION_GUIDE.md  # Full-stack development guide
 ├── STRIPE_PAYMENT_GUIDE.md        # Payment integration guide
 ├── SHADCN_COMPONENT_GUIDE.md      # Component building guide (includes animation)
 └── DATA_TABLE_DASHBOARD_GUIDE.md  # Data visualization guide
