@@ -1519,8 +1519,8 @@ Generate a warm, personalized greeting using the user information provided above
         }
       }
 
-      // If AI only provided quick replies without content, force a follow-up call to get actual response
-      const needsContentFollowUp = !assistantContent && quickReplies.length > 0 && toolResults.length === 0;
+      // If AI only provided quick replies or marked complete without content, force a follow-up call to get actual response
+      const needsContentFollowUp = !assistantContent && (quickReplies.length > 0 || aiMarkedComplete) && toolResults.length === 0;
       
       // Call AI again if there were actual tool results OR if we need content
       if (toolResults.length > 0 || needsContentFollowUp) {
@@ -1534,7 +1534,7 @@ Generate a warm, personalized greeting using the user information provided above
             ];
 
         console.log(needsContentFollowUp 
-          ? 'AI only provided quick replies, making follow-up call for content'
+          ? 'AI only provided quick replies/completion signal, making follow-up call for content'
           : 'Calling AI with tool results for final response');
 
         const followUpResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
