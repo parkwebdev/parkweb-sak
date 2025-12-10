@@ -160,7 +160,7 @@ export const HelpView = ({
                           <div className="flex items-center gap-3">
                             <div 
                               className="p-2.5 rounded-lg flex-shrink-0"
-                              style={{ backgroundColor: `${config.gradientStartColor}15` }}
+                              style={{ backgroundColor: `${config.gradientStartColor}30` }}
                             >
                               <CategoryIcon 
                                 name={category.icon} 

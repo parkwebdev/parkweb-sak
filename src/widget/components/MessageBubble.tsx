@@ -73,7 +73,7 @@ export const MessageBubble = ({
     ? 'You' 
     : msgWithExtras.isHuman && msgWithExtras.senderName 
       ? msgWithExtras.senderName 
-      : 'Assistant';
+      : 'Ari';
 
   return (
     <div className={`flex items-start gap-2 ${isUser ? 'justify-end' : ''} ${isContinuation ? 'mt-1' : 'mt-1 first:mt-0'}`}>
