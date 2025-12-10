@@ -14,10 +14,9 @@ type Agent = Tables<'agents'>;
 interface AgentEmbedTabProps {
   agent: Agent;
   onUpdate: (id: string, updates: Partial<Agent>) => Promise<unknown>;
-  onFormChange?: (hasChanges: boolean) => void;
 }
 
-export const AgentEmbedTab = ({ agent, onUpdate, onFormChange }: AgentEmbedTabProps) => {
+export const AgentEmbedTab = ({ agent, onUpdate }: AgentEmbedTabProps) => {
   const { config, loading, saveConfig, generateEmbedCode } = useEmbeddedChatConfig(agent.id);
   const [localConfig, setLocalConfig] = useState(config);
   const [showSaved, setShowSaved] = useState(false);

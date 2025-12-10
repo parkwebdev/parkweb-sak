@@ -1,17 +1,13 @@
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ChevronLeft, CheckCircle } from '@untitledui/icons';
+import { ChevronLeft } from '@untitledui/icons';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Agent = Tables<'agents'>;
 
 interface AgentConfigHeaderProps {
   agent: Agent;
-  hasUnsavedChanges: boolean;
-  showSaved: boolean;
-  onSave?: () => void;
-  isSaving?: boolean;
 }
 
 const statusColors = {
@@ -20,13 +16,7 @@ const statusColors = {
   paused: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
 };
 
-export const AgentConfigHeader = ({
-  agent,
-  hasUnsavedChanges,
-  showSaved,
-  onSave,
-  isSaving,
-}: AgentConfigHeaderProps) => {
+export const AgentConfigHeader = ({ agent }: AgentConfigHeaderProps) => {
   const navigate = useNavigate();
 
   return (
@@ -44,7 +34,7 @@ export const AgentConfigHeader = ({
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-neutral-100/50 to-neutral-100/90 dark:via-neutral-950/50 dark:to-neutral-950/90" />
           
           <div className="relative z-10 px-4 lg:px-8 py-4 h-full flex flex-col">
-            {/* Top Row: Back button + Save controls */}
+            {/* Top Row: Back button only */}
             <div className="flex items-center justify-between mb-auto">
               <Button
                 variant="ghost"
@@ -55,25 +45,6 @@ export const AgentConfigHeader = ({
                 <ChevronLeft size={16} />
                 Back
               </Button>
-
-              <div className="flex items-center gap-2">
-                {showSaved && (
-                  <div className="flex items-center gap-1.5 text-xs text-neutral-700 dark:text-white/90 animate-fade-in">
-                    <CheckCircle className="h-3 w-3" />
-                    <span>Saved</span>
-                  </div>
-                )}
-                {hasUnsavedChanges && onSave && (
-                  <Button 
-                    onClick={onSave} 
-                    disabled={isSaving} 
-                    size="sm"
-                    className="bg-neutral-900/10 text-neutral-900 hover:bg-neutral-900/20 border-neutral-900/20 dark:bg-white/20 dark:text-white dark:hover:bg-white/30 dark:border-white/20"
-                  >
-                    {isSaving ? 'Saving...' : 'Save Changes'}
-                  </Button>
-                )}
-              </div>
             </div>
 
             {/* Bottom: Agent info */}
