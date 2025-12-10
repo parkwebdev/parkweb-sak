@@ -768,9 +768,9 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
 
   // Widget content
   const widgetContent = (
-    <div id="chatpad-widget-root" className="h-full bg-transparent">
-      {isOpen || isIframeMode ? (
-        <Card 
+    <div id="chatpad-widget-root" className="h-full bg-transparent flex flex-col items-end gap-4 justify-end">
+      {(isOpen || isIframeMode) && (
+        <Card
           className={isIframeMode 
             ? `w-full h-full flex flex-col shadow-none overflow-hidden border-0 ${isMobileFullScreen ? 'rounded-none' : 'rounded-3xl'}` 
             : "w-[380px] h-[650px] flex flex-col shadow-xl overflow-hidden border-0 rounded-3xl"}
@@ -891,15 +891,17 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
             enableNewsTab={config.enableNewsTab}
           />
         </Card>
-      ) : (
-        <FloatingButton
-          onClick={() => setIsOpen(true)}
-          primaryColor={config.primaryColor}
-          useGradientHeader={config.useGradientHeader}
-          gradientStartColor={config.gradientStartColor}
-          gradientEndColor={config.gradientEndColor}
-        />
       )}
+      
+      {/* FloatingButton - always visible, toggles between logo/X icon */}
+      <FloatingButton
+        onClick={() => setIsOpen(!isOpen)}
+        primaryColor={config.primaryColor}
+        useGradientHeader={config.useGradientHeader}
+        gradientStartColor={config.gradientStartColor}
+        gradientEndColor={config.gradientEndColor}
+        isOpen={isOpen}
+      />
     </div>
   );
 

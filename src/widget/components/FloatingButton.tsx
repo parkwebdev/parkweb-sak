@@ -2,12 +2,13 @@
  * FloatingButton Component
  * 
  * The circular floating action button that opens/closes the widget.
- * Displays the ChatPad logo and supports gradient backgrounds.
+ * Displays the ChatPad logo when closed, X icon when open.
  * 
  * @module widget/components/FloatingButton
  */
 
 import ChatPadLogo from '@/components/ChatPadLogo';
+import { XClose } from '@untitledui/icons';
 
 /** Props for the FloatingButton component */
 interface FloatingButtonProps {
@@ -21,13 +22,15 @@ interface FloatingButtonProps {
   gradientStartColor: string;
   /** Gradient end color (bottom-right) */
   gradientEndColor: string;
+  /** Whether the widget is currently open */
+  isOpen?: boolean;
 }
 
 /**
  * Floating action button component for widget toggle.
  * 
  * @param props - Component props
- * @returns Styled button element with ChatPad logo
+ * @returns Styled button element with ChatPad logo or X icon
  */
 export const FloatingButton = ({
   onClick,
@@ -35,6 +38,7 @@ export const FloatingButton = ({
   useGradientHeader,
   gradientStartColor,
   gradientEndColor,
+  isOpen = false,
 }: FloatingButtonProps) => {
   const getGradientStyle = () => {
     if (!useGradientHeader) return { backgroundColor: primaryColor };
@@ -44,10 +48,16 @@ export const FloatingButton = ({
   return (
     <button
       onClick={onClick}
-      className="w-[50px] h-[50px] rounded-3xl flex items-center justify-center shadow-lg transition-transform hover:scale-105"
+      className="w-[50px] h-[50px] rounded-3xl flex items-center justify-center shadow-lg transition-all duration-200 hover:scale-105"
       style={getGradientStyle()}
     >
-      <ChatPadLogo className="h-6 w-6 text-white" />
+      <div className={`transition-transform duration-200 ${isOpen ? 'rotate-90' : 'rotate-0'}`}>
+        {isOpen ? (
+          <XClose className="h-6 w-6 text-white" />
+        ) : (
+          <ChatPadLogo className="h-6 w-6 text-white" />
+        )}
+      </div>
     </button>
   );
 };
