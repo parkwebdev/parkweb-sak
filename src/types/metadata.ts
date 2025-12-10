@@ -237,6 +237,18 @@ export interface AgentDeploymentConfig {
   hosted_page_enabled?: boolean;
   /** Whether embedded chat is enabled (legacy) */
   embedded_chat_enabled?: boolean;
+
+  // Behavior parameters (stored here, not in agent table)
+  /** Top P (nucleus sampling) */
+  top_p?: number;
+  /** Presence penalty (OpenAI models) */
+  presence_penalty?: number;
+  /** Frequency penalty (OpenAI models) */
+  frequency_penalty?: number;
+  /** Top K (Gemini/Claude models) - limits token selection pool */
+  top_k?: number;
+  /** Enable quick replies suggestions */
+  enable_quick_replies?: boolean;
 }
 
 /**
