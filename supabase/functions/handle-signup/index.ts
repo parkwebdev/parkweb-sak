@@ -99,6 +99,17 @@ const handler = async (req: Request): Promise<Response> => {
         console.error('Error adding team member:', teamError);
       } else {
         console.log(`Added user ${user_id} to team of ${invitation.invited_by}`);
+        
+        // Notify team owner that a new member joined
+        await supabase.from('notifications').insert({
+          user_id: invitation.invited_by,
+          type: 'team',
+          title: 'Team Member Joined',
+          message: `${email} accepted your invitation and joined the team`,
+          data: { member_id: user_id, email: email },
+          read: false
+        });
+        console.log('Team member join notification created');
       }
 
       console.log(`Marked invitation as accepted for: ${email}`);
@@ -118,6 +129,17 @@ const handler = async (req: Request): Promise<Response> => {
         }
       });
     }
+
+    // Create welcome notification for new user
+    await supabase.from('notifications').insert({
+      user_id: user_id,
+      type: 'system',
+      title: 'Welcome to ChatPad! 🎉',
+      message: 'Get started by creating your first AI agent',
+      data: { first_login: true },
+      read: false
+    });
+    console.log('Welcome notification created');
 
     return new Response(JSON.stringify({ 
       success: true,
