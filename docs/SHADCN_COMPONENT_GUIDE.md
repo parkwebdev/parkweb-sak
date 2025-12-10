@@ -111,6 +111,45 @@ All buttons across the app MUST use consistent sizing via the `size` prop. **NEV
 
 ---
 
+## Form Input Sizing Standards
+
+All form inputs (Input, SelectTrigger, PhoneInputField) MUST use consistent sizing via the `size` prop or default height. **NEVER** override input height via className.
+
+### Size Reference
+
+| Size | Height | Use Case |
+|------|--------|----------|
+| `default` | 40px (h-10) | Standard form inputs, dialogs, settings, auth pages |
+| `sm` | 32px (h-8) | Data tables, toolbars, compact UIs, popovers |
+
+### Components Affected
+- `Input` — default h-10, no size prop yet (use default)
+- `SelectTrigger` — supports `size="default"` (40px) and `size="sm"` (32px)
+- `PhoneInputField` — inherits Input sizing
+
+### Usage Examples
+
+```tsx
+// ✅ CORRECT - Use size prop for SelectTrigger
+<SelectTrigger>...</SelectTrigger>           // 40px default
+<SelectTrigger size="sm">...</SelectTrigger> // 32px compact
+
+// ✅ CORRECT - Input uses default height
+<Input placeholder="Email" />                 // 40px default
+
+// ❌ WRONG - Never override height via className
+<SelectTrigger className="h-8">...</SelectTrigger>
+<SelectTrigger className="h-9">...</SelectTrigger>
+<Input className="h-10" />  // Redundant, already default
+```
+
+### When to Use Each Size
+
+- **`default` (40px)**: Auth forms, settings pages, dialogs, contact forms, any standard form field
+- **`sm` (32px)**: Data table pagination, filter popovers, notification center, compact toolbars
+
+---
+
 ## ChatPad Design System
 
 ### Complete Color Token Reference
