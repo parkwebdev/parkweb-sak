@@ -1,25 +1,48 @@
 import { useState, useEffect, useRef } from 'react';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
 import { useEmbeddedChatConfig } from '@/hooks/useEmbeddedChatConfig';
-import { EmbedSettingsPanel } from '../embed/EmbedSettingsPanel';
-import { EmbedPreviewPanel } from '../embed/EmbedPreviewPanel';
+import { AgentSettingsLayout } from '../AgentSettingsLayout';
 import { SavedIndicator } from '@/components/settings/SavedIndicator';
 import { LoadingState } from '@/components/ui/loading-state';
+import { 
+  AppearanceSection, 
+  ContentSection, 
+  ContactFormSection, 
+  InstallationSection,
+  PlaygroundSection 
+} from '../embed/sections';
 import type { Tables } from '@/integrations/supabase/types';
 import type { AgentDeploymentConfig } from '@/types/metadata';
 
 type Agent = Tables<'agents'>;
+
+type EmbedSettingsTab = 'appearance' | 'content' | 'contact-form' | 'installation' | 'playground';
 
 interface AgentEmbedTabProps {
   agent: Agent;
   onUpdate: (id: string, updates: Partial<Agent>) => Promise<unknown>;
 }
 
+const MENU_ITEMS: Array<{ id: EmbedSettingsTab; label: string }> = [
+  { id: 'appearance', label: 'Appearance' },
+  { id: 'content', label: 'Content' },
+  { id: 'contact-form', label: 'Contact Form' },
+  { id: 'installation', label: 'Installation' },
+  { id: 'playground', label: 'Playground' },
+];
+
+const SECTION_DESCRIPTIONS: Record<EmbedSettingsTab, string> = {
+  'appearance': 'Customize colors and visual styling',
+  'content': 'Configure messages and navigation',
+  'contact-form': 'Set up lead capture form',
+  'installation': 'Get your embed code',
+  'playground': 'Test your widget live',
+};
+
 export const AgentEmbedTab = ({ agent, onUpdate }: AgentEmbedTabProps) => {
   const { config, loading, saveConfig, generateEmbedCode } = useEmbeddedChatConfig(agent.id);
   const [localConfig, setLocalConfig] = useState(config);
   const [showSaved, setShowSaved] = useState(false);
+  const [activeTab, setActiveTab] = useState<EmbedSettingsTab>('appearance');
   const saveTimerRef = useRef<NodeJS.Timeout>();
   
   useEffect(() => {
@@ -64,27 +87,37 @@ export const AgentEmbedTab = ({ agent, onUpdate }: AgentEmbedTabProps) => {
     return <LoadingState text="Loading embed settings..." />;
   }
 
-  return (
-    <div className="h-full min-h-0 overflow-y-auto">
-      <div className="grid grid-cols-1 lg:grid-cols-[400px_1fr] gap-6">
-        {/* Left Panel - Settings */}
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-medium text-muted-foreground">Embed Configuration</h3>
-            <SavedIndicator show={showSaved} />
-          </div>
-          <EmbedSettingsPanel
-            config={localConfig}
-            onConfigChange={handleConfigChange}
-            embedCode={generateEmbedCode()}
-          />
-        </div>
+  const renderSection = () => {
+    switch (activeTab) {
+      case 'appearance':
+        return <AppearanceSection config={localConfig} onConfigChange={handleConfigChange} />;
+      case 'content':
+        return <ContentSection config={localConfig} onConfigChange={handleConfigChange} />;
+      case 'contact-form':
+        return <ContactFormSection config={localConfig} onConfigChange={handleConfigChange} />;
+      case 'installation':
+        return <InstallationSection embedCode={generateEmbedCode()} />;
+      case 'playground':
+        return <PlaygroundSection config={localConfig} />;
+      default:
+        return null;
+    }
+  };
 
-        {/* Right Panel - Preview */}
-        <div className="hidden lg:block">
-          <EmbedPreviewPanel config={localConfig} />
+  return (
+    <div className="h-full min-h-0">
+      <AgentSettingsLayout<EmbedSettingsTab>
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        menuItems={MENU_ITEMS}
+        title="Widget Settings"
+        description={SECTION_DESCRIPTIONS[activeTab]}
+        headerExtra={<SavedIndicator show={showSaved} />}
+      >
+        <div className="max-w-2xl">
+          {renderSection()}
         </div>
-      </div>
+      </AgentSettingsLayout>
     </div>
   );
 };
