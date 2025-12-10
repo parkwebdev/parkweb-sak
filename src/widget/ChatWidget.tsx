@@ -814,7 +814,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
           {currentView !== 'home' && (
             <div className="flex-1 overflow-hidden bg-background flex flex-col min-h-0">
               {currentView === 'messages' && (
-                <div className="flex-1 flex flex-col widget-view-enter min-h-0">
+                <div className="flex-1 flex flex-col widget-view-enter min-h-0 relative">
                   <ChatView
                     config={config}
                     messages={messages}

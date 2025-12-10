@@ -99,12 +99,14 @@ export const SatisfactionRating = ({
           ))}
         </div>
 
-        {/* Rating label */}
-        {(hoveredRating || rating) > 0 && (
-          <p className="text-center text-sm text-muted-foreground">
-            {ratingLabels[hoveredRating || rating]}
-          </p>
-        )}
+        {/* Rating label - always reserve space to prevent layout shift */}
+        <div className="h-5 text-center">
+          {(hoveredRating || rating) > 0 && (
+            <p className="text-sm text-muted-foreground">
+              {ratingLabels[hoveredRating || rating]}
+            </p>
+          )}
+        </div>
 
         {/* Feedback textarea - only show after rating selected */}
         {rating > 0 && (
