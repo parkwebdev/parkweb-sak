@@ -563,7 +563,7 @@ export const AgentConfigureTab: React.FC<AgentConfigureTabProps> = ({ agent, onU
                             <div className="flex items-center gap-2">
                               <span className="font-medium">{model.label}</span>
                               {model.recommended && (
-                                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 font-medium">
+                                <Badge className="text-[10px] px-1.5 py-0 h-4 font-medium bg-foreground text-background">
                                   Popular
                                 </Badge>
                               )}
@@ -588,7 +588,7 @@ export const AgentConfigureTab: React.FC<AgentConfigureTabProps> = ({ agent, onU
                             <div className="flex items-center gap-2">
                               <span className="font-medium">{model.label}</span>
                               {model.recommended && (
-                                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 font-medium">
+                                <Badge className="text-[10px] px-1.5 py-0 h-4 font-medium bg-foreground text-background">
                                   Popular
                                 </Badge>
                               )}
@@ -613,7 +613,7 @@ export const AgentConfigureTab: React.FC<AgentConfigureTabProps> = ({ agent, onU
                             <div className="flex items-center gap-2">
                               <span className="font-medium">{model.label}</span>
                               {model.recommended && (
-                                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 font-medium">
+                                <Badge className="text-[10px] px-1.5 py-0 h-4 font-medium bg-foreground text-background">
                                   Popular
                                 </Badge>
                               )}
@@ -638,7 +638,7 @@ export const AgentConfigureTab: React.FC<AgentConfigureTabProps> = ({ agent, onU
                             <div className="flex items-center gap-2">
                               <span className="font-medium">{model.label}</span>
                               {model.recommended && (
-                                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 font-medium">
+                                <Badge className="text-[10px] px-1.5 py-0 h-4 font-medium bg-foreground text-background">
                                   Popular
                                 </Badge>
                               )}
