@@ -772,7 +772,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
       {isOpen || isIframeMode ? (
         <Card 
           className={isIframeMode 
-            ? `w-full h-full flex flex-col shadow-none overflow-hidden border-0 ${isMobileFullScreen ? '' : 'rounded-3xl'}` 
+            ? `w-full h-full flex flex-col shadow-none overflow-hidden border-0 ${isMobileFullScreen ? 'rounded-none' : 'rounded-3xl'}` 
             : "w-[380px] h-[650px] flex flex-col shadow-xl overflow-hidden border-0 rounded-3xl"}
           style={{
             background: currentView === 'home' 
