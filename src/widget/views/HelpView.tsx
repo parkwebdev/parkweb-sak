@@ -315,7 +315,7 @@ export const HelpView = ({
             <div className="p-4 border-t bg-muted/30">
               {feedbackSubmitted ? (
                 <div className="text-center py-4">
-                  <CheckCircle className="h-8 w-8 text-green-500 mx-auto mb-2" />
+                  <CheckCircle className="h-8 w-8 text-success mx-auto mb-2" />
                   <p className="text-sm font-medium">Thanks for your feedback!</p>
                   <p className="text-xs text-muted-foreground mt-1">Your input helps us improve.</p>
                 </div>

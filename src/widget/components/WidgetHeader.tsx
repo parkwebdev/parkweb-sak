@@ -92,8 +92,8 @@ export const WidgetHeader = ({
           <h3 className="font-semibold text-foreground">{title}</h3>
           <div className="flex items-center gap-1.5">
             <div className="relative flex items-center">
-              <div className="w-2 h-2 bg-green-500 rounded-full" />
-              <div className="absolute w-2 h-2 bg-green-500 rounded-full animate-pulse-slow" />
+              <div className="w-2 h-2 bg-success rounded-full" />
+              <div className="absolute w-2 h-2 bg-success rounded-full animate-pulse-slow" />
             </div>
             <p className="text-xs text-muted-foreground">Online</p>
           </div>
