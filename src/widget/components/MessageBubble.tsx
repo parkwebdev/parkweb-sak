@@ -87,8 +87,8 @@ export const MessageBubble = ({
             </AvatarFallback>
           </Avatar>
         ) : (
-          <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${primaryColor}15` }}>
-            <ChatBubbleIcon className="h-4 w-4" style={{ color: primaryColor }} />
+          <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 bg-muted">
+            <ChatBubbleIcon className="h-4 w-4 text-foreground" />
           </div>
         )
       )}
