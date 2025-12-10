@@ -106,6 +106,39 @@
       --info: 221 83% 53%;
       --info-foreground: 210 40% 98%;
     }
+    
+    /* Force dark mode on all form inputs (override browser defaults) */
+    input,
+    textarea,
+    select,
+    [type="text"],
+    [type="email"],
+    [type="tel"],
+    [type="password"],
+    [type="search"] {
+      background-color: hsl(var(--background)) !important;
+      color: hsl(var(--foreground)) !important;
+      border-color: hsl(var(--border)) !important;
+    }
+    
+    /* Override webkit autofill backgrounds */
+    input:-webkit-autofill,
+    input:-webkit-autofill:hover,
+    input:-webkit-autofill:focus,
+    textarea:-webkit-autofill,
+    textarea:-webkit-autofill:hover,
+    textarea:-webkit-autofill:focus {
+      -webkit-text-fill-color: hsl(var(--foreground)) !important;
+      -webkit-box-shadow: 0 0 0px 1000px hsl(var(--background)) inset !important;
+      box-shadow: 0 0 0px 1000px hsl(var(--background)) inset !important;
+      transition: background-color 5000s ease-in-out 0s;
+    }
+    
+    /* Ensure select dropdowns respect dark mode */
+    select option {
+      background-color: hsl(var(--background));
+      color: hsl(var(--foreground));
+    }
   }
 }
 

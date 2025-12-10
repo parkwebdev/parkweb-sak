@@ -121,11 +121,8 @@ export const SatisfactionRating = ({
             <button
               onClick={handleSubmit}
               disabled={isSubmitting}
-              className="w-full py-2.5 px-4 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
-              style={{
-                backgroundColor: primaryColor,
-                color: 'white',
-              }}
+              className="w-full py-2.5 px-4 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 text-primary-foreground"
+              style={{ backgroundColor: primaryColor }}
             >
               {isSubmitting ? 'Submitting...' : 'Submit Feedback'}
             </button>

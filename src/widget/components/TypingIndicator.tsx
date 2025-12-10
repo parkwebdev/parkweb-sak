@@ -34,7 +34,7 @@ export const TypingIndicator = ({ primaryColor, isHumanTyping, typingAgentName }
       <div className="bg-muted rounded-lg p-3">
         <div className="flex items-center gap-1.5">
           {isHumanTyping && typingAgentName && (
-            <span className="text-xs text-blue-600 font-medium mr-1">{typingAgentName}</span>
+            <span className="text-xs text-info font-medium mr-1">{typingAgentName}</span>
           )}
           <div className="flex gap-1">
             <div className="w-2 h-2 rounded-full bg-muted-foreground/40 animate-bounce" style={{ animationDelay: '0ms' }} />

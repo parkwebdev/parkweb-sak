@@ -106,8 +106,8 @@ export const HomeView = ({
         >
           {isContentLoading ? (
             <div className="space-y-2">
-              <span className="inline-block w-24 h-8 bg-white/20 rounded animate-pulse" />
-              <span className="inline-block w-48 h-5 bg-white/20 rounded animate-pulse" />
+              <span className="inline-block w-24 h-8 bg-foreground/20 rounded animate-pulse" />
+              <span className="inline-block w-48 h-5 bg-foreground/20 rounded animate-pulse" />
             </div>
           ) : (
             <>

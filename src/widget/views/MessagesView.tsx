@@ -60,7 +60,7 @@ export const MessagesView = ({
       <div className="p-4 border-t">
         <Button
           onClick={onStartNewConversation}
-          className="w-full bg-black text-white hover:bg-black/90"
+          className="w-full bg-foreground text-background hover:bg-foreground/90"
         >
           <MessageChatCircle className="h-4 w-4 mr-2" />
           Start New Conversation
