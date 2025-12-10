@@ -7,7 +7,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/lib/toast';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { KeyboardShortcutsDropdown } from '@/components/KeyboardShortcutsDropdown';
 import { Spinner } from '@/components/ui/spinner';
 import { logger } from '@/utils/logger';
@@ -27,9 +26,6 @@ export const UserAccountCard: React.FC<UserAccountCardProps> = ({ isCollapsed = 
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-  
-  // Initialize keyboard shortcuts
-  const { shortcuts } = useKeyboardShortcuts();
 
   useEffect(() => {
     if (user) {
@@ -139,7 +135,7 @@ export const UserAccountCard: React.FC<UserAccountCardProps> = ({ isCollapsed = 
                 Settings
               </Link>
             </DropdownMenuItem>
-            <KeyboardShortcutsDropdown shortcuts={shortcuts} />
+            <KeyboardShortcutsDropdown />
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
             <LogOut size={16} className="mr-2" />

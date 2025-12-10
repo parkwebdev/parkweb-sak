@@ -19,15 +19,16 @@ export interface SearchResult {
 type Agent = Tables<'agents'>;
 type Conversation = Tables<'conversations'>;
 type Lead = Tables<'leads'>;
+type HelpArticle = Tables<'help_articles'>;
+type NewsItem = Tables<'news_items'>;
+type Webhook = Tables<'webhooks'>;
+type AgentTool = Tables<'agent_tools'>;
+type KnowledgeSource = Tables<'knowledge_sources'>;
+type Profile = Tables<'profiles'>;
 
 /**
- * Hook for global search across agents, conversations, leads, and pages.
+ * Hook for global search across agents, conversations, leads, articles, and more.
  * Provides fuzzy search with categorized results and navigation actions.
- * 
- * @returns {Object} Search functionality
- * @returns {SearchResult[]} searchResults - All searchable items
- * @returns {boolean} loading - Loading state
- * @returns {Function} search - Search function that filters results
  */
 export const useSearchData = () => {
   const navigate = useNavigate();
@@ -47,22 +48,61 @@ export const useSearchData = () => {
     setLoading(true);
     try {
       // Fetch all data in parallel
-      const [agentsRes, conversationsRes, leadsRes] = await Promise.all([
+      const [
+        agentsRes,
+        conversationsRes,
+        leadsRes,
+        helpArticlesRes,
+        newsItemsRes,
+        webhooksRes,
+        toolsRes,
+        knowledgeSourcesRes,
+        teamMembersRes,
+      ] = await Promise.all([
         supabase
           .from('agents')
           .select('*')
-          .eq('user_id', user.id),
+          .order('name'),
         supabase
           .from('conversations')
           .select('*, agents(name)')
-          .eq('user_id', user.id)
           .order('updated_at', { ascending: false })
           .limit(50),
         supabase
           .from('leads')
           .select('*')
-          .eq('user_id', user.id)
           .order('created_at', { ascending: false })
+          .limit(50),
+        supabase
+          .from('help_articles')
+          .select('*, help_categories(name), agents(name)')
+          .order('title')
+          .limit(50),
+        supabase
+          .from('news_items')
+          .select('*, agents(name)')
+          .order('created_at', { ascending: false })
+          .limit(50),
+        supabase
+          .from('webhooks')
+          .select('*, agents(name)')
+          .order('name')
+          .limit(50),
+        supabase
+          .from('agent_tools')
+          .select('*, agents(name)')
+          .order('name')
+          .limit(50),
+        supabase
+          .from('knowledge_sources')
+          .select('*, agents(name)')
+          .is('metadata->parent_source_id', null) // Only top-level sources
+          .order('created_at', { ascending: false })
+          .limit(50),
+        supabase
+          .from('profiles')
+          .select('*')
+          .order('display_name')
           .limit(50),
       ]);
 
@@ -76,7 +116,7 @@ export const useSearchData = () => {
           description: 'View overview and statistics',
           category: 'Navigation',
           iconName: 'LayoutGrid01',
-          url: '/',
+          action: () => navigate('/dashboard'),
         },
         {
           id: 'nav-agents',
@@ -84,7 +124,7 @@ export const useSearchData = () => {
           description: 'Manage AI agents',
           category: 'Navigation',
           iconName: 'Cube01',
-          url: '/agents',
+          action: () => navigate('/agents'),
         },
         {
           id: 'nav-conversations',
@@ -92,7 +132,7 @@ export const useSearchData = () => {
           description: 'View all conversations',
           category: 'Navigation',
           iconName: 'MessageChatSquare',
-          url: '/conversations',
+          action: () => navigate('/conversations'),
         },
         {
           id: 'nav-leads',
@@ -100,7 +140,7 @@ export const useSearchData = () => {
           description: 'Manage captured leads',
           category: 'Navigation',
           iconName: 'Users01',
-          url: '/leads',
+          action: () => navigate('/leads'),
         },
         {
           id: 'nav-analytics',
@@ -108,7 +148,7 @@ export const useSearchData = () => {
           description: 'View insights and metrics',
           category: 'Navigation',
           iconName: 'TrendUp01',
-          url: '/analytics',
+          action: () => navigate('/analytics'),
         },
         {
           id: 'nav-settings',
@@ -116,7 +156,7 @@ export const useSearchData = () => {
           description: 'Manage organization settings',
           category: 'Navigation',
           iconName: 'Settings01',
-          url: '/settings',
+          action: () => navigate('/settings'),
         },
       ];
 
@@ -130,7 +170,7 @@ export const useSearchData = () => {
           description: agent.description || `${agent.status} • ${agent.model}`,
           category: 'Agents',
           iconName: 'Cube01',
-          url: `/agents/${agent.id}`,
+          action: () => navigate(`/agents/${agent.id}`),
         }));
         results.push(...agentResults);
       }
@@ -145,7 +185,6 @@ export const useSearchData = () => {
             description: `via ${conv.agents?.name || 'Unknown Agent'} • ${conv.status}`,
             category: 'Conversations',
             iconName: 'MessageChatSquare',
-            url: '/conversations',
             action: () => navigate('/conversations'),
           };
         });
@@ -160,10 +199,87 @@ export const useSearchData = () => {
           description: `${lead.company || ''} • ${lead.status}`,
           category: 'Leads',
           iconName: 'User01',
-          url: '/leads',
           action: () => navigate('/leads'),
         }));
         results.push(...leadResults);
+      }
+
+      // Help Articles
+      if (helpArticlesRes.data) {
+        const articleResults: SearchResult[] = helpArticlesRes.data.map((article: HelpArticle & { help_categories?: { name: string }, agents?: { name: string } }) => ({
+          id: `article-${article.id}`,
+          title: article.title,
+          description: `${article.help_categories?.name || 'Uncategorized'} • ${article.agents?.name || 'Unknown Agent'}`,
+          category: 'Help Articles',
+          iconName: 'BookOpen01',
+          action: () => navigate(`/agents/${article.agent_id}?tab=content`),
+        }));
+        results.push(...articleResults);
+      }
+
+      // News Items
+      if (newsItemsRes.data) {
+        const newsResults: SearchResult[] = newsItemsRes.data.map((news: NewsItem & { agents?: { name: string } }) => ({
+          id: `news-${news.id}`,
+          title: news.title,
+          description: `${news.is_published ? 'Published' : 'Draft'} • ${news.agents?.name || 'Unknown Agent'}`,
+          category: 'News',
+          iconName: 'Announcement01',
+          action: () => navigate(`/agents/${news.agent_id}?tab=content`),
+        }));
+        results.push(...newsResults);
+      }
+
+      // Webhooks
+      if (webhooksRes.data) {
+        const webhookResults: SearchResult[] = webhooksRes.data.map((webhook: Webhook & { agents?: { name: string } }) => ({
+          id: `webhook-${webhook.id}`,
+          title: webhook.name,
+          description: `${webhook.active ? 'Active' : 'Inactive'} • ${webhook.agents?.name || 'Global'}`,
+          category: 'Webhooks',
+          iconName: 'Link01',
+          action: () => webhook.agent_id ? navigate(`/agents/${webhook.agent_id}?tab=tools`) : navigate('/settings?tab=webhooks'),
+        }));
+        results.push(...webhookResults);
+      }
+
+      // Custom Tools
+      if (toolsRes.data) {
+        const toolResults: SearchResult[] = toolsRes.data.map((tool: AgentTool & { agents?: { name: string } }) => ({
+          id: `tool-${tool.id}`,
+          title: tool.name,
+          description: `${tool.enabled ? 'Enabled' : 'Disabled'} • ${tool.agents?.name || 'Unknown Agent'}`,
+          category: 'Tools',
+          iconName: 'Tool02',
+          action: () => navigate(`/agents/${tool.agent_id}?tab=tools`),
+        }));
+        results.push(...toolResults);
+      }
+
+      // Knowledge Sources
+      if (knowledgeSourcesRes.data) {
+        const knowledgeResults: SearchResult[] = knowledgeSourcesRes.data.map((source: KnowledgeSource & { agents?: { name: string } }) => ({
+          id: `knowledge-${source.id}`,
+          title: source.source,
+          description: `${source.type.toUpperCase()} • ${source.status} • ${source.agents?.name || 'Unknown Agent'}`,
+          category: 'Knowledge',
+          iconName: 'Database01',
+          action: () => navigate(`/agents/${source.agent_id}?tab=knowledge`),
+        }));
+        results.push(...knowledgeResults);
+      }
+
+      // Team Members
+      if (teamMembersRes.data) {
+        const teamResults: SearchResult[] = teamMembersRes.data.map((profile: Profile) => ({
+          id: `team-${profile.id}`,
+          title: profile.display_name || profile.email || 'Team Member',
+          description: profile.email || '',
+          category: 'Team',
+          iconName: 'User01',
+          action: () => navigate('/settings?tab=team'),
+        }));
+        results.push(...teamResults);
       }
 
       // Settings sections
@@ -174,7 +290,7 @@ export const useSearchData = () => {
           description: 'Manage your profile',
           category: 'Settings',
           iconName: 'User01',
-          url: '/settings?tab=profile',
+          action: () => navigate('/settings?tab=profile'),
         },
         {
           id: 'settings-team',
@@ -182,15 +298,15 @@ export const useSearchData = () => {
           description: 'Manage team members',
           category: 'Settings',
           iconName: 'Users01',
-          url: '/settings?tab=team',
+          action: () => navigate('/settings?tab=team'),
         },
         {
-          id: 'settings-organization',
-          title: 'Organization Settings',
-          description: 'Manage organization',
+          id: 'settings-notifications',
+          title: 'Notification Settings',
+          description: 'Manage notification preferences',
           category: 'Settings',
-          iconName: 'Building07',
-          url: '/settings?tab=organization',
+          iconName: 'Bell01',
+          action: () => navigate('/settings?tab=notifications'),
         },
         {
           id: 'settings-subscription',
@@ -198,31 +314,15 @@ export const useSearchData = () => {
           description: 'Manage subscription and invoices',
           category: 'Settings',
           iconName: 'CreditCard01',
-          url: '/settings?tab=subscription',
+          action: () => navigate('/settings?tab=subscription'),
         },
         {
-          id: 'settings-api-keys',
-          title: 'API Keys',
-          description: 'Manage API keys',
+          id: 'settings-usage',
+          title: 'Usage',
+          description: 'View usage metrics',
           category: 'Settings',
-          iconName: 'Key01',
-          url: '/settings?tab=api-keys',
-        },
-        {
-          id: 'settings-webhooks',
-          title: 'Webhooks',
-          description: 'Configure webhooks',
-          category: 'Settings',
-          iconName: 'Link01',
-          url: '/settings?tab=webhooks',
-        },
-        {
-          id: 'settings-branding',
-          title: 'Branding',
-          description: 'Customize branding',
-          category: 'Settings',
-          iconName: 'Palette',
-          url: '/settings?tab=branding',
+          iconName: 'BarChart01',
+          action: () => navigate('/settings?tab=usage'),
         },
       ];
 

@@ -10,29 +10,31 @@ interface KeyboardShortcut {
   altKey?: boolean;
   shiftKey?: boolean;
   description: string;
-  action: () => void;
 }
 
-interface KeyboardShortcutsDropdownProps {
-  shortcuts: KeyboardShortcut[];
-}
+// Define shortcuts statically since they're consistent across the app
+const shortcuts: KeyboardShortcut[] = [
+  { key: 'k', ctrlKey: true, description: 'Global Search' },
+  { key: 'd', altKey: true, description: 'Go to Dashboard' },
+  { key: 'a', altKey: true, description: 'Go to Agents' },
+  { key: 'c', altKey: true, description: 'Go to Conversations' },
+  { key: 'l', altKey: true, description: 'Go to Leads' },
+  { key: 'y', altKey: true, description: 'Go to Analytics' },
+  { key: 's', altKey: true, description: 'Go to Settings' },
+];
 
-export const KeyboardShortcutsDropdown: React.FC<KeyboardShortcutsDropdownProps> = ({
-  shortcuts
-}) => {
+export const KeyboardShortcutsDropdown: React.FC = () => {
   const formatShortcut = (shortcut: KeyboardShortcut) => {
     const keys = [];
-    if (shortcut.ctrlKey) keys.push('Ctrl');
+    if (shortcut.ctrlKey) keys.push('⌘');
     if (shortcut.altKey) keys.push('Alt');
-    if (shortcut.shiftKey) keys.push('Shift');
+    if (shortcut.shiftKey) keys.push('⇧');
     keys.push(shortcut.key.toUpperCase());
     return keys;
   };
 
   const groupedShortcuts = shortcuts.reduce((groups, shortcut) => {
-    const category = shortcut.description.includes('Go to') ? 'Navigation' :
-                    shortcut.description.includes('Create') || shortcut.description.includes('New') ? 'Actions' :
-                    'General';
+    const category = shortcut.description.includes('Go to') ? 'Navigation' : 'Actions';
     
     if (!groups[category]) groups[category] = [];
     groups[category].push(shortcut);
@@ -58,17 +60,13 @@ export const KeyboardShortcutsDropdown: React.FC<KeyboardShortcutsDropdownProps>
                     <span className="text-xs text-foreground">{shortcut.description}</span>
                     <div className="flex items-center gap-0.5">
                       {formatShortcut(shortcut).map((key, keyIndex) => (
-                        <React.Fragment key={keyIndex}>
-                          <Badge 
-                            variant="secondary" 
-                            className="px-1.5 py-0.5 text-[10px] font-mono h-auto"
-                          >
-                            {key}
-                          </Badge>
-                          {keyIndex < formatShortcut(shortcut).length - 1 && (
-                            <span className="text-[10px] text-muted-foreground mx-0.5">+</span>
-                          )}
-                        </React.Fragment>
+                        <Badge 
+                          key={keyIndex}
+                          variant="secondary" 
+                          className="px-1.5 py-0.5 text-[10px] font-mono h-auto"
+                        >
+                          {key}
+                        </Badge>
                       ))}
                     </div>
                   </div>

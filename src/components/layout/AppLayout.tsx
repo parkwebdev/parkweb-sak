@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Sidebar } from '@/components/Sidebar';
 import { AppHeader } from './AppHeader';
 import { useSidebar } from '@/hooks/use-sidebar';
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -10,6 +11,9 @@ interface AppLayoutProps {
 export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { isCollapsed } = useSidebar();
+  
+  // Initialize keyboard shortcuts at app level
+  useKeyboardShortcuts();
 
   return (
     <div className="flex h-screen bg-app-background">
