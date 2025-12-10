@@ -235,6 +235,32 @@ serve(async (req) => {
     }
 
     console.log(`Lead created successfully: ${lead.id}, Conversation: ${conversationId}`);
+
+    // Create notifications for lead and conversation (fire and forget)
+    const leadName = `${sanitizedFirstName} ${sanitizedLastName}`;
+    
+    // Notification for new lead captured
+    supabase.from('notifications').insert({
+      user_id: agent.user_id,
+      type: 'lead',
+      title: 'New Lead Captured',
+      message: `${leadName} submitted a contact form`,
+      data: { lead_id: lead.id, email: sanitizedEmail, conversation_id: conversationId },
+      read: false
+    }).then(() => console.log('Lead notification created'))
+      .catch(err => console.error('Failed to create lead notification:', err));
+
+    // Notification for new conversation started
+    supabase.from('notifications').insert({
+      user_id: agent.user_id,
+      type: 'conversation',
+      title: 'New Conversation Started',
+      message: `${leadName} started a chat`,
+      data: { conversation_id: conversationId, lead_id: lead.id },
+      read: false
+    }).then(() => console.log('Conversation notification created'))
+      .catch(err => console.error('Failed to create conversation notification:', err));
+
     return new Response(
       JSON.stringify({ leadId: lead.id, conversationId }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

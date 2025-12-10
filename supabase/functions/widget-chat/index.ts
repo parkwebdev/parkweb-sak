@@ -1693,6 +1693,38 @@ Generate a warm, personalized greeting using the user information provided above
     );
   } catch (error) {
     console.error('Widget chat error:', error);
+    
+    // Create agent error notification (fire and forget)
+    try {
+      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+      const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+      const errorSupabase = createClient(supabaseUrl, supabaseServiceKey);
+      
+      // Try to get agent info from request body for notification
+      const body = await new Response(error.body).json().catch(() => ({}));
+      if (body.agentId) {
+        const { data: agent } = await errorSupabase
+          .from('agents')
+          .select('user_id, name')
+          .eq('id', body.agentId)
+          .single();
+        
+        if (agent) {
+          await errorSupabase.from('notifications').insert({
+            user_id: agent.user_id,
+            type: 'agent',
+            title: 'Agent Error',
+            message: `Agent "${agent.name}" encountered an error while responding`,
+            data: { agent_id: body.agentId, error: error.message },
+            read: false
+          });
+          console.log('Agent error notification created');
+        }
+      }
+    } catch (notifError) {
+      console.error('Failed to create error notification:', notifError);
+    }
+    
     return new Response(
       JSON.stringify({ error: error.message || 'An error occurred' }),
       {

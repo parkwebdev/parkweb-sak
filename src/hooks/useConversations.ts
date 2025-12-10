@@ -239,6 +239,13 @@ export const useConversations = () => {
     if (!user?.id) return;
 
     try {
+      // Get conversation details for notification
+      const { data: conversation } = await supabase
+        .from('conversations')
+        .select('metadata, agents(name, user_id)')
+        .eq('id', conversationId)
+        .single();
+
       const { error: takeoverError } = await supabase
         .from('conversation_takeovers')
         .insert({
@@ -250,6 +257,19 @@ export const useConversations = () => {
       if (takeoverError) throw takeoverError;
 
       await updateConversationStatus(conversationId, 'human_takeover');
+
+      // Create notification for account owner about human takeover request
+      if (conversation?.agents?.user_id) {
+        const leadName = (conversation.metadata as ConversationMetadata)?.lead_name || 'A visitor';
+        await supabase.from('notifications').insert({
+          user_id: conversation.agents.user_id,
+          type: 'conversation',
+          title: 'Human Takeover Started',
+          message: `${leadName}'s conversation requires attention`,
+          data: { conversation_id: conversationId, taken_over_by: user.id },
+          read: false
+        });
+      }
     } catch (error) {
       logger.error('Error taking over conversation:', error);
       toast.error('Failed to take over conversation');

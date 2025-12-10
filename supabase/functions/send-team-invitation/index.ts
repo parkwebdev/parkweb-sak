@@ -96,6 +96,17 @@ const handler = async (req: Request): Promise<Response> => {
           console.error('Error creating pending invitation:', pendingError);
         }
 
+        // Create notification confirming invitation was sent
+        await supabase.from('notifications').insert({
+          user_id: user.id,
+          type: 'team',
+          title: 'Team Invitation Sent',
+          message: `Invitation sent to ${email}`,
+          data: { invited_email: email },
+          read: false
+        });
+        console.log('Invitation sent notification created');
+
         // Log the invitation for security/audit purposes
         await supabase.rpc('log_security_event', {
           p_user_id: user.id,
