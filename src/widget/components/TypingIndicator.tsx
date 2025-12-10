@@ -28,8 +28,8 @@ interface TypingIndicatorProps {
 export const TypingIndicator = ({ primaryColor, isHumanTyping, typingAgentName }: TypingIndicatorProps) => {
   return (
     <div className="flex items-start gap-2">
-      <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${primaryColor}15` }}>
-        <ChatBubbleIcon className="h-4 w-4" style={{ color: primaryColor }} />
+      <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+        <ChatBubbleIcon className="h-4 w-4 text-foreground" />
       </div>
       <div className="bg-muted rounded-lg p-3">
         <div className="flex items-center gap-1.5">
