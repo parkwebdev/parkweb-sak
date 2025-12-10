@@ -319,7 +319,7 @@ const Auth = () => {
                   placeholder="Enter your name"
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
-                  className="h-11"
+                  className="h-10"
                   disabled={isLoading}
                 />
               </div>
@@ -331,11 +331,11 @@ const Auth = () => {
                   placeholder="Enter your email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="h-11"
+                  className="h-10"
                   disabled={isLoading}
                 />
               </div>
-              <Button onClick={handleNextStep} className="w-full h-11" disabled={isLoading}>
+              <Button onClick={handleNextStep} size="lg" className="w-full" disabled={isLoading}>
                 Continue
               </Button>
 
@@ -351,7 +351,8 @@ const Auth = () => {
               <Button 
                 type="button" 
                 variant="outline" 
-                className="w-full h-11" 
+                size="lg"
+                className="w-full" 
                 onClick={handleGoogleSignIn}
                 disabled={isLoading}
               >
@@ -367,7 +368,8 @@ const Auth = () => {
               <Button 
                 type="button" 
                 variant="outline" 
-                className="w-full h-11" 
+                size="lg"
+                className="w-full" 
                 onClick={handleMicrosoftSignIn}
                 disabled={isLoading}
               >
@@ -412,7 +414,7 @@ const Auth = () => {
                     placeholder="Create a password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="h-11 pr-10"
+                    className="h-10 pr-10"
                     disabled={isLoading}
                   />
                   <button
@@ -433,15 +435,15 @@ const Auth = () => {
                   placeholder="Confirm your password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="h-11"
+                  className="h-10"
                   disabled={isLoading}
                 />
               </div>
               <div className="flex gap-3">
-                <Button variant="outline" onClick={handlePrevStep} className="h-11 px-4">
+                <Button variant="outline" size="lg" onClick={handlePrevStep}>
                   <ArrowLeft className="w-4 h-4" />
                 </Button>
-                <Button onClick={handleNextStep} className="flex-1 h-11" disabled={isLoading}>
+                <Button onClick={handleNextStep} size="lg" className="flex-1" disabled={isLoading}>
                   Continue
                 </Button>
               </div>
@@ -477,7 +479,7 @@ const Auth = () => {
                   placeholder="Enter emails separated by commas"
                   value={teamEmails}
                   onChange={(e) => setTeamEmails(e.target.value)}
-                  className="h-11"
+                  className="h-10"
                   disabled={isLoading}
                 />
                 <p className="text-xs text-muted-foreground">
@@ -485,10 +487,10 @@ const Auth = () => {
                 </p>
               </div>
               <div className="flex gap-3">
-                <Button variant="outline" onClick={handlePrevStep} className="h-11 px-4">
+                <Button variant="outline" size="lg" onClick={handlePrevStep}>
                   <ArrowLeft className="w-4 h-4" />
                 </Button>
-                <Button onClick={handleNextStep} className="flex-1 h-11" loading={isLoading}>
+                <Button onClick={handleNextStep} size="lg" className="flex-1" loading={isLoading}>
                   {teamEmails.trim() ? 'Send invites & continue' : 'Skip for now'}
                 </Button>
               </div>
@@ -523,7 +525,7 @@ const Auth = () => {
                   Please check your inbox and click the confirmation link to activate your account.
                 </p>
               </div>
-              <Button onClick={handleCompleteSetup} className="w-full h-11">
+              <Button onClick={handleCompleteSetup} size="lg" className="w-full">
                 Go to Sign In
               </Button>
             </div>
@@ -609,11 +611,11 @@ const Auth = () => {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         disabled={isLoading}
-                        className="h-11"
+                        className="h-10"
                       />
                     </div>
 
-                    <Button type="submit" className="w-full h-11" loading={isLoading}>
+                    <Button type="submit" size="lg" className="w-full" loading={isLoading}>
                       Send reset link
                     </Button>
 
@@ -655,7 +657,7 @@ const Auth = () => {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         disabled={isLoading}
-                        className="h-11"
+                        className="h-10"
                       />
                     </div>
                     
@@ -668,7 +670,7 @@ const Auth = () => {
                           placeholder="••••••••"
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
-                          className="h-11 pr-10"
+                          className="h-10 pr-10"
                           disabled={isLoading}
                         />
                         <button
@@ -698,14 +700,15 @@ const Auth = () => {
                       </button>
                     </div>
 
-                    <Button type="submit" className="w-full h-11" loading={isLoading}>
+                    <Button type="submit" size="lg" className="w-full" loading={isLoading}>
                       Sign in
                     </Button>
 
                     <Button 
                       type="button" 
                       variant="outline" 
-                      className="w-full h-11" 
+                      size="lg"
+                      className="w-full" 
                       disabled={isLoading}
                       onClick={handleGoogleSignIn}
                     >
@@ -721,7 +724,8 @@ const Auth = () => {
                     <Button 
                       type="button" 
                       variant="outline" 
-                      className="w-full h-11" 
+                      size="lg"
+                      className="w-full" 
                       disabled={isLoading}
                       onClick={handleMicrosoftSignIn}
                     >
