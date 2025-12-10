@@ -197,7 +197,7 @@ export const HomeView = ({
                         onClick={() => onQuickActionClick(action.action || action.actionType)}
                       >
                         <div className="flex items-start gap-3">
-                          <div className="p-2 rounded-lg" style={{ backgroundColor: `${config.primaryColor}15` }}>
+                          <div className="p-2 rounded-lg bg-muted">
                             <div style={{ color: config.primaryColor }}>{getQuickActionIcon(action.icon)}</div>
                           </div>
                           <div className="flex-1">
