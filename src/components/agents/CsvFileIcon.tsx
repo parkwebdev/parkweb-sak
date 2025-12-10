@@ -13,13 +13,13 @@ export const CsvFileIcon = ({ className, size = 40 }: CsvFileIconProps) => (
   >
     <path
       stroke="currentColor"
-      className="text-border"
+      className="text-muted-foreground"
       strokeWidth={1.5}
       d="M7.75 4A3.25 3.25 0 0 1 11 .75h16c.121 0 .238.048.323.134l10.793 10.793a.46.46 0 0 1 .134.323v24A3.25 3.25 0 0 1 35 39.25H11A3.25 3.25 0 0 1 7.75 36z"
     />
     <path 
       stroke="currentColor" 
-      className="text-border"
+      className="text-muted-foreground"
       strokeWidth={1.5} 
       d="M27 .5V8a4 4 0 0 0 4 4h7.5" 
     />
