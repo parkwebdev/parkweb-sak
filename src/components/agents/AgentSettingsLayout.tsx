@@ -143,7 +143,7 @@ export const AgentSettingsLayout = <T extends string = string>({
       </div>
 
       {/* Content Area */}
-      <div className="flex-1 min-w-0 h-full min-h-0 overflow-y-auto">
+      <div className="flex-1 min-w-0 h-full min-h-0 overflow-y-auto pl-2 lg:pl-4">
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}
