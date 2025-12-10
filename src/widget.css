@@ -1,7 +1,7 @@
 /**
  * Minimal Widget CSS
  * Stripped-down styles for the embedded widget only
- * No dark mode, no compact mode, no view transitions
+ * Supports automatic dark mode via prefers-color-scheme
  */
 
 @tailwind base;
@@ -70,6 +70,39 @@
     /* Chart colors - minimal set for widget */
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
+  }
+
+  /* Dark mode - automatically respects user's system preference */
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --background: 0 0% 7%;
+      --foreground: 0 0% 98%;
+      --card: 0 0% 10%;
+      --card-foreground: 0 0% 98%;
+      --popover: 0 0% 10%;
+      --popover-foreground: 0 0% 98%;
+      --primary: 0 0% 98%;
+      --primary-foreground: 0 0% 9%;
+      --secondary: 0 0% 15%;
+      --secondary-foreground: 0 0% 98%;
+      --muted: 0 0% 15%;
+      --muted-foreground: 0 0% 63%;
+      --accent: 0 0% 15%;
+      --accent-foreground: 0 0% 98%;
+      --destructive: 0 62.8% 30.6%;
+      --destructive-foreground: 0 0% 98%;
+      --border: 0 0% 20%;
+      --input: 0 0% 20%;
+      --ring: 0 0% 83.1%;
+      
+      /* Status Colors - slightly muted for dark mode */
+      --success: 120 61% 40%;
+      --success-foreground: 355 100% 97%;
+      --warning: 38 92% 40%;
+      --warning-foreground: 48 96% 5%;
+      --info: 221 83% 53%;
+      --info-foreground: 210 40% 98%;
+    }
   }
 }
 
