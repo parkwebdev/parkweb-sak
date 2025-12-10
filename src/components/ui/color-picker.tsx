@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Color from "color";
-import { Dropper, Check } from "@untitledui/icons";
+import { Dropper } from "@untitledui/icons";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,17 +11,14 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 // Type alias for Color instance
 type ColorInstance = InstanceType<typeof Color>;
 
-// Default preset colors
-const DEFAULT_PRESETS = [
-  "#000000", "#FFFFFF", "#1E1E1E", "#6366F1",
-  "#8B5CF6", "#EC4899", "#F97316", "#EAB308",
-  "#22C55E", "#06B6D4", "#3B82F6", "#EF4444",
-];
+type ColorMode = "hex" | "rgb" | "hsl";
 
 // Color Picker Context
 interface ColorPickerContextValue {
   color: ColorInstance;
+  alpha: number;
   setColor: (color: ColorInstance) => void;
+  setAlpha: (alpha: number) => void;
 }
 
 const ColorPickerContext = React.createContext<ColorPickerContextValue | null>(null);
@@ -192,6 +189,80 @@ function ColorPickerHue({ className }: ColorPickerHueProps) {
   );
 }
 
+// Alpha Slider
+interface ColorPickerAlphaProps {
+  className?: string;
+}
+
+function ColorPickerAlpha({ className }: ColorPickerAlphaProps) {
+  const { color, alpha, setAlpha } = useColorPicker();
+  const sliderRef = React.useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = React.useState(false);
+
+  const updateAlpha = React.useCallback(
+    (clientX: number) => {
+      if (!sliderRef.current) return;
+      const rect = sliderRef.current.getBoundingClientRect();
+      const x = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+      setAlpha(Math.round(x * 100));
+    },
+    [setAlpha]
+  );
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+    updateAlpha(e.clientX);
+  };
+
+  React.useEffect(() => {
+    if (!isDragging) return;
+
+    const handlePointerMove = (e: PointerEvent) => {
+      updateAlpha(e.clientX);
+    };
+
+    const handlePointerUp = () => {
+      setIsDragging(false);
+    };
+
+    document.addEventListener("pointermove", handlePointerMove);
+    document.addEventListener("pointerup", handlePointerUp);
+
+    return () => {
+      document.removeEventListener("pointermove", handlePointerMove);
+      document.removeEventListener("pointerup", handlePointerUp);
+    };
+  }, [isDragging, updateAlpha]);
+
+  const colorHex = color.hex();
+
+  return (
+    <div
+      ref={sliderRef}
+      className={cn(
+        "relative h-3 w-full cursor-pointer rounded-full",
+        className
+      )}
+      style={{
+        background: `
+          linear-gradient(to right, transparent, ${colorHex}),
+          repeating-conic-gradient(#ccc 0% 25%, #fff 0% 50%) 50% / 8px 8px
+        `,
+      }}
+      onPointerDown={handlePointerDown}
+    >
+      <div
+        className="pointer-events-none absolute top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white shadow-md"
+        style={{
+          left: `${alpha}%`,
+          backgroundColor: colorHex,
+        }}
+      />
+    </div>
+  );
+}
+
 // Eye Dropper Button
 interface ColorPickerEyeDropperProps {
   className?: string;
@@ -231,57 +302,187 @@ function ColorPickerEyeDropper({ className }: ColorPickerEyeDropperProps) {
   );
 }
 
-// RGB Input Fields
+// Color Format Inputs with Mode Tabs
 interface ColorPickerFormatProps {
   className?: string;
+  mode: ColorMode;
+  onModeChange: (mode: ColorMode) => void;
 }
 
-function ColorPickerFormat({ className }: ColorPickerFormatProps) {
-  const { color, setColor } = useColorPicker();
+function ColorPickerFormat({ className, mode, onModeChange }: ColorPickerFormatProps) {
+  const { color, setColor, alpha, setAlpha } = useColorPicker();
 
   const rgb = color.rgb().object();
+  const hsl = color.hsl().object();
 
-  const handleChange = (channel: "r" | "g" | "b", value: string) => {
+  const handleRgbChange = (channel: "r" | "g" | "b", value: string) => {
     const num = Math.max(0, Math.min(255, parseInt(value) || 0));
     const newRgb = { ...rgb, [channel]: num };
     setColor(Color.rgb(newRgb.r, newRgb.g, newRgb.b));
   };
 
+  const handleHslChange = (channel: "h" | "s" | "l", value: string) => {
+    const max = channel === "h" ? 360 : 100;
+    const num = Math.max(0, Math.min(max, parseInt(value) || 0));
+    const newHsl = { ...hsl, [channel]: num };
+    setColor(Color.hsl(newHsl.h, newHsl.s, newHsl.l));
+  };
+
+  const handleHexChange = (value: string) => {
+    let hex = value;
+    if (!hex.startsWith("#")) {
+      hex = "#" + hex;
+    }
+    if (hex.length <= 7) {
+      try {
+        setColor(Color(hex));
+      } catch {
+        // Invalid hex
+      }
+    }
+  };
+
   return (
-    <div className={cn("flex items-center gap-1.5", className)}>
-      <div className="flex flex-1 items-center gap-1">
-        <span className="text-xs text-muted-foreground w-3">R</span>
-        <Input
-          type="number"
-          min={0}
-          max={255}
-          value={Math.round(rgb.r)}
-          onChange={(e) => handleChange("r", e.target.value)}
-          className="h-7 px-1.5 text-xs text-center"
-        />
+    <div className={cn("space-y-2", className)}>
+      {/* Mode Tabs */}
+      <div className="flex gap-1 border-b border-border pb-2">
+        {(["hex", "rgb", "hsl"] as ColorMode[]).map((m) => (
+          <button
+            key={m}
+            type="button"
+            onClick={() => onModeChange(m)}
+            className={cn(
+              "px-2 py-1 text-xs font-medium rounded-sm uppercase",
+              mode === m
+                ? "bg-muted text-foreground"
+                : "text-muted-foreground"
+            )}
+          >
+            {m}
+          </button>
+        ))}
       </div>
-      <div className="flex flex-1 items-center gap-1">
-        <span className="text-xs text-muted-foreground w-3">G</span>
-        <Input
-          type="number"
-          min={0}
-          max={255}
-          value={Math.round(rgb.g)}
-          onChange={(e) => handleChange("g", e.target.value)}
-          className="h-7 px-1.5 text-xs text-center"
-        />
-      </div>
-      <div className="flex flex-1 items-center gap-1">
-        <span className="text-xs text-muted-foreground w-3">B</span>
-        <Input
-          type="number"
-          min={0}
-          max={255}
-          value={Math.round(rgb.b)}
-          onChange={(e) => handleChange("b", e.target.value)}
-          className="h-7 px-1.5 text-xs text-center"
-        />
-      </div>
+
+      {/* Inputs based on mode */}
+      {mode === "hex" && (
+        <div className="flex items-center gap-2">
+          <Input
+            value={color.hex().toUpperCase()}
+            onChange={(e) => handleHexChange(e.target.value)}
+            placeholder="#000000"
+            className="font-mono text-xs h-7"
+          />
+          <div className="flex items-center gap-1">
+            <span className="text-xs text-muted-foreground">A</span>
+            <Input
+              type="number"
+              min={0}
+              max={100}
+              value={alpha}
+              onChange={(e) => setAlpha(Math.max(0, Math.min(100, parseInt(e.target.value) || 0)))}
+              className="h-7 w-14 px-1.5 text-xs text-center"
+            />
+          </div>
+        </div>
+      )}
+
+      {mode === "rgb" && (
+        <div className="flex items-center gap-1.5">
+          <div className="flex flex-1 items-center gap-1">
+            <span className="text-xs text-muted-foreground w-3">R</span>
+            <Input
+              type="number"
+              min={0}
+              max={255}
+              value={Math.round(rgb.r)}
+              onChange={(e) => handleRgbChange("r", e.target.value)}
+              className="h-7 px-1.5 text-xs text-center"
+            />
+          </div>
+          <div className="flex flex-1 items-center gap-1">
+            <span className="text-xs text-muted-foreground w-3">G</span>
+            <Input
+              type="number"
+              min={0}
+              max={255}
+              value={Math.round(rgb.g)}
+              onChange={(e) => handleRgbChange("g", e.target.value)}
+              className="h-7 px-1.5 text-xs text-center"
+            />
+          </div>
+          <div className="flex flex-1 items-center gap-1">
+            <span className="text-xs text-muted-foreground w-3">B</span>
+            <Input
+              type="number"
+              min={0}
+              max={255}
+              value={Math.round(rgb.b)}
+              onChange={(e) => handleRgbChange("b", e.target.value)}
+              className="h-7 px-1.5 text-xs text-center"
+            />
+          </div>
+          <div className="flex items-center gap-1">
+            <span className="text-xs text-muted-foreground">A</span>
+            <Input
+              type="number"
+              min={0}
+              max={100}
+              value={alpha}
+              onChange={(e) => setAlpha(Math.max(0, Math.min(100, parseInt(e.target.value) || 0)))}
+              className="h-7 w-12 px-1.5 text-xs text-center"
+            />
+          </div>
+        </div>
+      )}
+
+      {mode === "hsl" && (
+        <div className="flex items-center gap-1.5">
+          <div className="flex flex-1 items-center gap-1">
+            <span className="text-xs text-muted-foreground w-3">H</span>
+            <Input
+              type="number"
+              min={0}
+              max={360}
+              value={Math.round(hsl.h)}
+              onChange={(e) => handleHslChange("h", e.target.value)}
+              className="h-7 px-1.5 text-xs text-center"
+            />
+          </div>
+          <div className="flex flex-1 items-center gap-1">
+            <span className="text-xs text-muted-foreground w-3">S</span>
+            <Input
+              type="number"
+              min={0}
+              max={100}
+              value={Math.round(hsl.s)}
+              onChange={(e) => handleHslChange("s", e.target.value)}
+              className="h-7 px-1.5 text-xs text-center"
+            />
+          </div>
+          <div className="flex flex-1 items-center gap-1">
+            <span className="text-xs text-muted-foreground w-3">L</span>
+            <Input
+              type="number"
+              min={0}
+              max={100}
+              value={Math.round(hsl.l)}
+              onChange={(e) => handleHslChange("l", e.target.value)}
+              className="h-7 px-1.5 text-xs text-center"
+            />
+          </div>
+          <div className="flex items-center gap-1">
+            <span className="text-xs text-muted-foreground">A</span>
+            <Input
+              type="number"
+              min={0}
+              max={100}
+              value={alpha}
+              onChange={(e) => setAlpha(Math.max(0, Math.min(100, parseInt(e.target.value) || 0)))}
+              className="h-7 w-12 px-1.5 text-xs text-center"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -290,19 +491,21 @@ function ColorPickerFormat({ className }: ColorPickerFormatProps) {
 interface ColorPickerProps {
   value: string;
   onChange: (value: string) => void;
-  presets?: string[];
   id?: string;
   className?: string;
+  showAlpha?: boolean;
 }
 
 export function ColorPicker({
   value,
   onChange,
-  presets = DEFAULT_PRESETS,
   id,
   className,
+  showAlpha = true,
 }: ColorPickerProps) {
   const [open, setOpen] = React.useState(false);
+  const [mode, setMode] = React.useState<ColorMode>("hex");
+  const [alpha, setAlphaState] = React.useState(100);
   const [color, setColorState] = React.useState(() => {
     try {
       return Color(value);
@@ -326,39 +529,35 @@ export function ColorPicker({
   const setColor = React.useCallback(
     (newColor: ColorInstance) => {
       setColorState(newColor);
-      onChange(newColor.hex().toUpperCase());
+      if (alpha < 100) {
+        const rgb = newColor.rgb().object();
+        onChange(`rgba(${Math.round(rgb.r)}, ${Math.round(rgb.g)}, ${Math.round(rgb.b)}, ${alpha / 100})`);
+      } else {
+        onChange(newColor.hex().toUpperCase());
+      }
     },
-    [onChange]
+    [onChange, alpha]
   );
 
-  const handleHexChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let newValue = e.target.value;
-    if (!newValue.startsWith("#")) {
-      newValue = "#" + newValue;
-    }
-    if (newValue.length <= 7) {
-      try {
-        const newColor = Color(newValue);
-        setColor(newColor);
-      } catch {
-        // Invalid color, just update the input
-        onChange(newValue.toUpperCase());
+  const setAlpha = React.useCallback(
+    (newAlpha: number) => {
+      setAlphaState(newAlpha);
+      const rgb = color.rgb().object();
+      if (newAlpha < 100) {
+        onChange(`rgba(${Math.round(rgb.r)}, ${Math.round(rgb.g)}, ${Math.round(rgb.b)}, ${newAlpha / 100})`);
+      } else {
+        onChange(color.hex().toUpperCase());
       }
-    }
-  };
+    },
+    [onChange, color]
+  );
 
-  const handlePresetClick = (presetColor: string) => {
-    try {
-      setColor(Color(presetColor));
-    } catch {
-      // Invalid preset
-    }
-  };
-
-  const isValidHex = /^#[0-9A-Fa-f]{6}$/.test(value);
+  const displayValue = alpha < 100 
+    ? `rgba(${Math.round(color.rgb().object().r)}, ${Math.round(color.rgb().object().g)}, ${Math.round(color.rgb().object().b)}, ${alpha / 100})`
+    : color.hex().toUpperCase();
 
   return (
-    <ColorPickerContext.Provider value={{ color, setColor }}>
+    <ColorPickerContext.Provider value={{ color, alpha, setColor, setAlpha }}>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
@@ -371,57 +570,24 @@ export function ColorPicker({
           >
             <div
               className="h-5 w-5 rounded-md border border-border shrink-0"
-              style={{ backgroundColor: isValidHex ? value : "#000000" }}
-            />
-            <span className="text-sm font-mono">{value}</span>
+              style={{
+                backgroundColor: color.hex(),
+                opacity: alpha / 100,
+                backgroundImage: alpha < 100 
+                  ? "repeating-conic-gradient(#ccc 0% 25%, #fff 0% 50%) 50% / 8px 8px"
+                  : undefined,
+              }}
+            >
+              <div
+                className="h-full w-full rounded-md"
+                style={{ backgroundColor: color.hex(), opacity: alpha / 100 }}
+              />
+            </div>
+            <span className="text-sm font-mono truncate">{displayValue}</span>
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-64 p-3" align="start">
           <div className="space-y-3">
-            {/* Hex Input */}
-            <div className="flex items-center gap-2">
-              <div
-                className="h-9 w-9 rounded-md border border-border shrink-0"
-                style={{ backgroundColor: color.hex() }}
-              />
-              <Input
-                value={value}
-                onChange={handleHexChange}
-                placeholder="#000000"
-                className="font-mono text-sm h-9"
-              />
-            </div>
-
-            {/* Preset Colors */}
-            <div className="grid grid-cols-6 gap-1.5">
-              {presets.map((presetColor) => {
-                const isSelected = value.toUpperCase() === presetColor.toUpperCase();
-                const isLight = isLightColor(presetColor);
-                return (
-                  <button
-                    key={presetColor}
-                    type="button"
-                    onClick={() => handlePresetClick(presetColor)}
-                    className={cn(
-                      "h-6 w-6 rounded-md border flex items-center justify-center",
-                      isSelected && "ring-2 ring-ring ring-offset-1",
-                      presetColor === "#FFFFFF" ? "border-border" : "border-transparent"
-                    )}
-                    style={{ backgroundColor: presetColor }}
-                  >
-                    {isSelected && (
-                      <Check
-                        className={cn(
-                          "h-3.5 w-3.5",
-                          isLight ? "text-foreground" : "text-white"
-                        )}
-                      />
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-
             {/* Color Selection Area */}
             <ColorPickerSelection />
 
@@ -431,20 +597,16 @@ export function ColorPicker({
               <ColorPickerHue className="flex-1" />
             </div>
 
-            {/* RGB Inputs */}
-            <ColorPickerFormat />
+            {/* Alpha Slider */}
+            {showAlpha && (
+              <ColorPickerAlpha />
+            )}
+
+            {/* Format Inputs with Mode Tabs */}
+            <ColorPickerFormat mode={mode} onModeChange={setMode} />
           </div>
         </PopoverContent>
       </Popover>
     </ColorPickerContext.Provider>
   );
-}
-
-// Helper to determine if a color is light (for contrast)
-function isLightColor(hex: string): boolean {
-  try {
-    return Color(hex).isLight();
-  } catch {
-    return false;
-  }
 }
