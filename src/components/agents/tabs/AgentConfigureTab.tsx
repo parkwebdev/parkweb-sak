@@ -576,7 +576,7 @@ export const AgentConfigureTab: React.FC<AgentConfigureTabProps> = ({ agent, onU
                   </SelectGroup>
 
                   {/* OpenAI Models */}
-                  <SelectGroup>
+                  <SelectGroup className="mt-2 pt-2 border-t border-border">
                     <SelectLabel className="flex items-center gap-2 pl-2">
                       {getModelIcon('openai', 14)}
                       <span>OpenAI</span>
@@ -601,7 +601,7 @@ export const AgentConfigureTab: React.FC<AgentConfigureTabProps> = ({ agent, onU
                   </SelectGroup>
 
                   {/* Anthropic Models */}
-                  <SelectGroup>
+                  <SelectGroup className="mt-2 pt-2 border-t border-border">
                     <SelectLabel className="flex items-center gap-2 pl-2">
                       {getModelIcon('claude', 14)}
                       <span>Anthropic</span>
@@ -626,7 +626,7 @@ export const AgentConfigureTab: React.FC<AgentConfigureTabProps> = ({ agent, onU
                   </SelectGroup>
 
                   {/* Other Models */}
-                  <SelectGroup>
+                  <SelectGroup className="mt-2 pt-2 border-t border-border">
                     <SelectLabel className="pl-2">Other Providers</SelectLabel>
                     {MODELS.filter(m => ['qwen', 'mistral', 'llama', 'deepseek'].includes(m.provider)).map((model) => (
                       <SelectItem key={model.value} value={model.value}>
