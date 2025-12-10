@@ -1,13 +1,13 @@
 import { useState, ReactNode } from 'react';
+import { motion } from 'motion/react';
 import { logger } from '@/utils/logger';
 import { AgentSettingsLayout } from '@/components/agents/AgentSettingsLayout';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { AnimatedList } from '@/components/ui/animated-list';
-import { AnimatedItem } from '@/components/ui/animated-item';
 import { Link03, CheckCircle, Mail01 } from '@untitledui/icons';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Facebook, Instagram, Google, Gmail } from '@ridemountainpig/svgl-react';
 
@@ -206,6 +206,7 @@ const calendarIntegrations: Integration[] = [
 
 export const AgentIntegrationsTab = ({ agentId }: AgentIntegrationsTabProps) => {
   const [activeTab, setActiveTab] = useState<IntegrationsTab>('social');
+  const prefersReducedMotion = useReducedMotion();
 
   const menuItems = [
     { 
@@ -328,13 +329,34 @@ export const AgentIntegrationsTab = ({ agentId }: AgentIntegrationsTabProps) => 
       description={menuItems.find(item => item.id === activeTab)?.description || ''}
     >
       <ScrollArea className="h-[calc(100vh-280px)]">
-        <AnimatedList className="space-y-3 pr-4" staggerDelay={0.08} initialDelay={0.05}>
+        <motion.div 
+          className="space-y-3 pr-4"
+          initial="hidden"
+          animate="visible"
+          variants={prefersReducedMotion ? {} : {
+            hidden: { opacity: 0 },
+            visible: {
+              opacity: 1,
+              transition: { staggerChildren: 0.08, delayChildren: 0.05 }
+            }
+          }}
+        >
           {getIntegrations().map((integration) => (
-            <AnimatedItem key={integration.id}>
+            <motion.div 
+              key={integration.id}
+              variants={prefersReducedMotion ? {} : {
+                hidden: { opacity: 0, y: 12 },
+                visible: { 
+                  opacity: 1, 
+                  y: 0,
+                  transition: { duration: 0.3, ease: [0.4, 0, 0.2, 1] }
+                }
+              }}
+            >
               <IntegrationCard integration={integration} />
-            </AnimatedItem>
+            </motion.div>
           ))}
-        </AnimatedList>
+        </motion.div>
 
         {getIntegrations().length === 0 && (
           <EmptyState
