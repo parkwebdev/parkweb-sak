@@ -187,7 +187,12 @@ export const useAnalytics = (
       const performance: AgentPerformance[] = [];
 
       for (const agent of agents || []) {
-        let countQuery = supabase
+        if (filters.agentId !== 'all' && filters.agentId !== agent.id) {
+          continue;
+        }
+
+        // Get conversation count
+        const { count } = await supabase
           .from('conversations')
           .select('*', { count: 'exact', head: true })
           .eq('agent_id', agent.id)
@@ -195,18 +200,75 @@ export const useAnalytics = (
           .gte('created_at', startDate.toISOString())
           .lte('created_at', endDate.toISOString());
 
-        if (filters.agentId !== 'all' && filters.agentId !== agent.id) {
-          continue;
+        // Get conversations with messages to calculate response time
+        const { data: convos } = await supabase
+          .from('conversations')
+          .select('id')
+          .eq('agent_id', agent.id)
+          .eq('user_id', user.id)
+          .gte('created_at', startDate.toISOString())
+          .lte('created_at', endDate.toISOString());
+
+        let avgResponseTime = 0;
+        if (convos && convos.length > 0) {
+          // Fetch messages for these conversations to calculate response times
+          const { data: messages } = await supabase
+            .from('messages')
+            .select('conversation_id, role, created_at')
+            .in('conversation_id', convos.map(c => c.id))
+            .order('created_at', { ascending: true });
+
+          if (messages && messages.length > 0) {
+            // Group messages by conversation
+            const msgsByConvo = new Map<string, { role: string; created_at: string }[]>();
+            messages.forEach((msg) => {
+              if (!msgsByConvo.has(msg.conversation_id)) {
+                msgsByConvo.set(msg.conversation_id, []);
+              }
+              msgsByConvo.get(msg.conversation_id)!.push(msg);
+            });
+
+            // Calculate response times (time between user message and next assistant message)
+            let totalResponseTime = 0;
+            let responseCount = 0;
+
+            msgsByConvo.forEach((msgs) => {
+              for (let i = 0; i < msgs.length - 1; i++) {
+                if (msgs[i].role === 'user' && msgs[i + 1].role === 'assistant') {
+                  const userTime = new Date(msgs[i].created_at).getTime();
+                  const assistantTime = new Date(msgs[i + 1].created_at).getTime();
+                  const diffSeconds = (assistantTime - userTime) / 1000;
+                  // Only count reasonable response times (under 5 minutes)
+                  if (diffSeconds > 0 && diffSeconds < 300) {
+                    totalResponseTime += diffSeconds;
+                    responseCount++;
+                  }
+                }
+              }
+            });
+
+            avgResponseTime = responseCount > 0 ? Math.round(totalResponseTime / responseCount) : 0;
+          }
         }
 
-        const { count } = await countQuery;
+        // Get satisfaction scores from conversation_ratings
+        const { data: ratings } = await supabase
+          .from('conversation_ratings')
+          .select('rating, conversation_id')
+          .in('conversation_id', (convos || []).map(c => c.id));
+
+        let satisfactionScore = 0;
+        if (ratings && ratings.length > 0) {
+          const avgRating = ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length;
+          satisfactionScore = Math.round(avgRating * 10) / 10; // Round to 1 decimal
+        }
 
         performance.push({
           agent_id: agent.id,
           agent_name: agent.name,
           total_conversations: count || 0,
-          avg_response_time: Math.random() * 60, // Placeholder
-          satisfaction_score: 4 + Math.random(), // Placeholder
+          avg_response_time: avgResponseTime,
+          satisfaction_score: satisfactionScore,
         });
       }
 

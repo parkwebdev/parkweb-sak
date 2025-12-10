@@ -64,7 +64,13 @@ export const Dashboard: React.FC = () => {
 
     if (showLoading) setLoading(true);
     try {
-      // Fetch conversations with agent and lead info
+      // Calculate date range for last 7 days
+      const today = new Date();
+      const sevenDaysAgo = new Date(today);
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+      sevenDaysAgo.setHours(0, 0, 0, 0);
+
+      // Fetch all conversations (for current stats) and historical (for trends)
       const { data: conversationsData, error: convError } = await supabase
         .from('conversations')
         .select(`
@@ -84,7 +90,7 @@ export const Dashboard: React.FC = () => {
       // Fetch leads separately to get names
       const { data: leadsData } = await supabase
         .from('leads')
-        .select('id, name, conversation_id')
+        .select('id, name, status, conversation_id, created_at')
         .eq('user_id', user.id);
 
       // Map leads to conversations
@@ -99,7 +105,7 @@ export const Dashboard: React.FC = () => {
 
       setConversations(conversationsWithLeads);
 
-      // Calculate stats
+      // Calculate current stats
       const total = conversationsWithLeads.length;
       const active = conversationsWithLeads.filter((c) => c.status === 'active').length;
       const totalMessages = conversationsWithLeads.reduce(
@@ -108,21 +114,54 @@ export const Dashboard: React.FC = () => {
       );
       const avgMsgs = total > 0 ? Math.round(totalMessages / total) : 0;
 
-      // Get leads for conversion rate
-      const { data: allLeads } = await supabase
-        .from('leads')
-        .select('id, status')
-        .eq('user_id', user.id);
-
-      const totalLeads = allLeads?.length || 0;
-      const convertedLeads = allLeads?.filter((l) => l.status === 'converted').length || 0;
+      const totalLeads = leadsData?.length || 0;
+      const convertedLeads = leadsData?.filter((l) => l.status === 'converted').length || 0;
       const convRate = totalLeads > 0 ? Math.round((convertedLeads / totalLeads) * 100) : 0;
 
-      // Generate trend data (last 7 days simulated for now)
-      const convTrend = [12, 15, 18, 14, 22, 19, total];
-      const activeTrend = [3, 5, 4, 6, 8, 5, active];
-      const msgTrend = [45, 52, 48, 60, 55, 62, avgMsgs];
-      const rateTrend = [18, 22, 20, 25, 28, 24, convRate];
+      // Calculate real 7-day trends
+      const convTrend: number[] = [];
+      const activeTrend: number[] = [];
+      const msgTrend: number[] = [];
+      const rateTrend: number[] = [];
+
+      for (let i = 0; i < 7; i++) {
+        const date = new Date(sevenDaysAgo);
+        date.setDate(date.getDate() + i);
+        const dateStr = date.toISOString().split('T')[0];
+
+        // Filter conversations created on or before this date
+        const convsUpToDate = conversationsWithLeads.filter((c) => {
+          const convDate = new Date(c.created_at).toISOString().split('T')[0];
+          return convDate <= dateStr;
+        });
+
+        // Conversations created on this specific date (for daily count)
+        const convsOnDate = conversationsWithLeads.filter((c) => {
+          const convDate = new Date(c.created_at).toISOString().split('T')[0];
+          return convDate === dateStr;
+        });
+
+        // Daily conversation count
+        convTrend.push(convsOnDate.length);
+
+        // Active conversations on this date (created before and still active OR created that day)
+        const activeOnDate = convsUpToDate.filter((c) => c.status === 'active').length;
+        activeTrend.push(activeOnDate);
+
+        // Average messages for conversations up to this date
+        const msgsUpToDate = convsUpToDate.reduce((sum, c) => sum + (c.messages?.length || 0), 0);
+        const avgMsgsOnDate = convsUpToDate.length > 0 ? Math.round(msgsUpToDate / convsUpToDate.length) : 0;
+        msgTrend.push(avgMsgsOnDate);
+
+        // Conversion rate up to this date
+        const leadsUpToDate = (leadsData || []).filter((l) => {
+          const leadDate = new Date(l.created_at).toISOString().split('T')[0];
+          return leadDate <= dateStr;
+        });
+        const convertedUpToDate = leadsUpToDate.filter((l) => l.status === 'converted').length;
+        const rateOnDate = leadsUpToDate.length > 0 ? Math.round((convertedUpToDate / leadsUpToDate.length) * 100) : 0;
+        rateTrend.push(rateOnDate);
+      }
 
       setStats({
         totalConversations: total,
