@@ -21,7 +21,10 @@
   /* Mobile-specific styles */
   @media (max-width: 480px) {
     /* Remove border radius on mobile for full-screen appearance */
+    #chatpad-widget-root,
     .chatpad-widget-root,
+    #chatpad-widget-root > div,
+    .rounded-3xl,
     body {
       border-radius: 0 !important;
     }
