@@ -108,7 +108,7 @@ export const AgentSettingsLayout = <T extends string = string>({
       </div>
       
       {/* Desktop Left Sidebar Menu */}
-      <div className="hidden lg:block w-56 flex-shrink-0">
+      <div className="hidden lg:block w-64 flex-shrink-0">
         <div className="sticky top-8">
           <div className="mb-6">
             <div className="flex items-center justify-between gap-2 mb-1">

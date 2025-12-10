@@ -147,7 +147,7 @@ export const AgentKnowledgeTab = ({ agentId, userId }: AgentKnowledgeTabProps) =
                 onClick={handleRetrainAll}
                 disabled={isRetraining || sources.every(s => s.status === 'processing')}
               >
-                <ZapSolidIcon size={16} className={`mr-1.5 ${isRetraining ? 'animate-pulse' : ''}`} />
+                <ZapSolidIcon size={16} className={`mr-1.5 text-orange-500 ${isRetraining ? 'animate-pulse' : ''}`} />
                 {isRetraining 
                   ? `Retraining ${retrainProgress.completed}/${retrainProgress.total}...`
                   : outdatedCount > 0 
