@@ -22,41 +22,41 @@ interface KeyboardShortcut {
 export const useKeyboardShortcuts = (shortcuts: KeyboardShortcut[] = []) => {
   const navigate = useNavigate();
 
-  // Default global shortcuts
+  // Default global shortcuts (using Alt+key to avoid browser conflicts)
   const defaultShortcuts: KeyboardShortcut[] = [
     {
       key: 'd',
-      ctrlKey: true,
+      altKey: true,
       description: 'Go to Dashboard',
       action: () => navigate('/dashboard')
     },
     {
       key: 'a',
-      ctrlKey: true,
+      altKey: true,
       description: 'Go to Agents',
       action: () => navigate('/agents')
     },
     {
       key: 'c',
-      ctrlKey: true,
+      altKey: true,
       description: 'Go to Conversations',
       action: () => navigate('/conversations')
     },
     {
       key: 'l',
-      ctrlKey: true,
+      altKey: true,
       description: 'Go to Leads',
       action: () => navigate('/leads')
     },
     {
       key: 'y',
-      ctrlKey: true,
+      altKey: true,
       description: 'Go to Analytics',
       action: () => navigate('/analytics')
     },
     {
-      key: ',',
-      ctrlKey: true,
+      key: 's',
+      altKey: true,
       description: 'Go to Settings',
       action: () => navigate('/settings')
     }

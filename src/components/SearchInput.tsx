@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { SearchSm as Search, Calendar, User01 as User, File05 as FileText, Mail01 as Mail, Bell01 as Bell, Settings01 as Settings, ChevronRight } from '@untitledui/icons';
+import React, { useState } from 'react';
+import { SearchSm as Search, User01 as User, File05 as FileText, Mail01 as Mail, Bell01 as Bell, Settings01 as Settings, ChevronRight, BookOpen01, Announcement01, Link01, Tool02, Database01 } from '@untitledui/icons';
 import {
   CommandDialog,
   CommandInput,
@@ -76,16 +76,26 @@ export const SearchInput: React.FC<SearchInputProps> = ({
         return User;
       case 'Team':
         return User;
+      case 'Help Articles':
+        return BookOpen01;
+      case 'News':
+        return Announcement01;
+      case 'Webhooks':
+        return Link01;
+      case 'Tools':
+        return Tool02;
+      case 'Knowledge':
+        return Database01;
       case 'Notifications':
         return Bell;
-      case 'Quick Actions':
+      case 'Settings':
         return Settings;
       default:
         return Search;
     }
   };
 
-  const priorityOrder = ['Navigation', 'Quick Actions', 'Agents', 'Conversations', 'Leads', 'Team', 'Notifications'];
+  const priorityOrder = ['Navigation', 'Agents', 'Conversations', 'Leads', 'Help Articles', 'News', 'Tools', 'Webhooks', 'Knowledge', 'Team', 'Settings'];
   const sortedCategories = Object.keys(groupedResults).sort((a, b) => {
     const aIndex = priorityOrder.indexOf(a);
     const bIndex = priorityOrder.indexOf(b);
@@ -112,10 +122,9 @@ export const SearchInput: React.FC<SearchInputProps> = ({
               readOnly
             />
           </div>
-          <div className="rounded border flex items-center justify-center text-xs text-muted-foreground font-medium px-1.5 py-0.5 border-border min-w-[28px] whitespace-nowrap flex-shrink-0">
-            <span className="text-muted-foreground text-xs leading-none">
-              ⌘K
-            </span>
+          <div className="flex items-center gap-0.5 flex-shrink-0">
+            <span className="rounded border border-border px-1.5 py-0.5 text-xs text-muted-foreground font-medium">⌘</span>
+            <span className="rounded border border-border px-1.5 py-0.5 text-xs text-muted-foreground font-medium">K</span>
           </div>
         </div>
       </div>
