@@ -893,15 +893,17 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
         </Card>
       )}
       
-      {/* FloatingButton - always visible, toggles between logo/X icon */}
-      <FloatingButton
-        onClick={() => setIsOpen(!isOpen)}
-        primaryColor={config.primaryColor}
-        useGradientHeader={config.useGradientHeader}
-        gradientStartColor={config.gradientStartColor}
-        gradientEndColor={config.gradientEndColor}
-        isOpen={isOpen}
-      />
+      {/* FloatingButton - only in contained preview mode, not iframe (parent handles button) */}
+      {!isIframeMode && (
+        <FloatingButton
+          onClick={() => setIsOpen(!isOpen)}
+          primaryColor={config.primaryColor}
+          useGradientHeader={config.useGradientHeader}
+          gradientStartColor={config.gradientStartColor}
+          gradientEndColor={config.gradientEndColor}
+          isOpen={isOpen}
+        />
+      )}
     </div>
   );
 
