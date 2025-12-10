@@ -1073,11 +1073,36 @@ IMPORTANT GUIDELINES FOR RESPONSES:
     const conversationMetadata = (conversation?.metadata || {}) as ConversationMetadata;
     let userContextSection = '';
     
+    // Detect initial message/inquiry from custom fields
+    // These are fields where the user explains why they're reaching out
+    let initialUserMessage: string | null = null;
+    const messageFieldPatterns = /message|question|help|inquiry|reason|about|need|looking for|interest|details|describe|explain|issue|problem|request|comment/i;
+    
+    // Create a copy of custom fields to process
+    const processedCustomFields: Record<string, string> = {};
+    
+    if (conversationMetadata.custom_fields) {
+      for (const [label, value] of Object.entries(conversationMetadata.custom_fields)) {
+        if (value && typeof value === 'string' && value.trim()) {
+          // Check if this looks like an initial message field
+          // Typically these are longer text fields where user explains their need
+          const isMessageField = messageFieldPatterns.test(label) && value.length > 20;
+          
+          if (isMessageField && !initialUserMessage) {
+            initialUserMessage = value as string;
+            console.log(`Detected initial user message from field "${label}": "${value.substring(0, 50)}..."`);
+          } else {
+            processedCustomFields[label] = value;
+          }
+        }
+      }
+    }
+    
     // Check if we have meaningful user context to add
     const hasUserName = conversationMetadata.lead_name;
-    const hasCustomFields = conversationMetadata.custom_fields && Object.keys(conversationMetadata.custom_fields).length > 0;
+    const hasCustomFields = Object.keys(processedCustomFields).length > 0;
     
-    if (hasUserName || hasCustomFields) {
+    if (hasUserName || hasCustomFields || initialUserMessage) {
       userContextSection = `
 
 USER INFORMATION (from contact form):`;
@@ -1097,20 +1122,26 @@ USER INFORMATION (from contact form):`;
         userContextSection += `\n- Location: ${location}`;
       }
       
-      // Add custom fields from contact form
-      if (conversationMetadata.custom_fields) {
-        for (const [label, value] of Object.entries(conversationMetadata.custom_fields)) {
-          if (value) {
-            userContextSection += `\n- ${label}: ${value}`;
-          }
-        }
+      // Add remaining custom fields (excluding the initial message)
+      for (const [label, value] of Object.entries(processedCustomFields)) {
+        userContextSection += `\n- ${label}: ${value}`;
       }
       
       userContextSection += `
 
 Use this information to personalize your responses when appropriate (e.g., address them by name, reference their company or interests). Be natural about it - don't force personalization if it doesn't fit the conversation.`;
       
-      console.log('Added user context to system prompt');
+      // Add initial user inquiry as a distinct, prominent section
+      if (initialUserMessage) {
+        userContextSection += `
+
+INITIAL USER INQUIRY (from contact form):
+"${initialUserMessage}"
+
+This is what the user wanted to discuss when they started the chat. Treat this as their first question - address it directly in your response. Do NOT ask "how can I help?" when they've already told you what they need.`;
+      }
+      
+      console.log('Added user context to system prompt', { hasInitialMessage: !!initialUserMessage });
     }
 
     // Append user context to system prompt
@@ -1126,8 +1157,27 @@ Use this information to personalize your responses when appropriate (e.g., addre
     
     // For greeting requests, add a special instruction and use empty messages
     if (isGreetingRequest) {
-      console.log('Handling greeting request - generating personalized welcome');
-      systemPrompt = systemPrompt + `
+      console.log('Handling greeting request - generating personalized welcome', { hasInitialMessage: !!initialUserMessage });
+      
+      if (initialUserMessage) {
+        // User already told us what they need - respond directly to their inquiry
+        systemPrompt = systemPrompt + `
+
+GREETING REQUEST WITH INITIAL INQUIRY:
+The user has already told you what they need in the contact form: "${initialUserMessage}"
+
+Your response should:
+- Greet them briefly by name if available (one short greeting)
+- IMMEDIATELY address their inquiry - provide a helpful, substantive response
+- Do NOT ask "how can I help?" or "what can I assist you with?" - they already told you
+- Be direct and efficient - they're waiting for real help, not pleasantries
+- If you need clarification, ask a specific follow-up question about their inquiry`;
+        
+        // Replace with a message that prompts the AI to respond to their inquiry
+        messagesToSend = [{ role: 'user', content: initialUserMessage }];
+      } else {
+        // No initial message - use standard greeting
+        systemPrompt = systemPrompt + `
 
 GREETING REQUEST:
 This is the start of a new conversation. The user has just filled out a contact form and is ready to chat.
@@ -1137,9 +1187,10 @@ Generate a warm, personalized greeting using the user information provided above
 - Keep it concise (1-2 sentences) and end with an invitation to ask questions
 - Be natural and friendly, not overly formal
 - Do NOT start with "Hello!" or "Hi there!" - be more creative and personal`;
-      
-      // Replace the greeting request with a user message asking for a greeting
-      messagesToSend = [{ role: 'user', content: 'Please greet me and ask how you can help.' }];
+        
+        // Replace the greeting request with a user message asking for a greeting
+        messagesToSend = [{ role: 'user', content: 'Please greet me and ask how you can help.' }];
+      }
     }
 
     // SMART MODEL ROUTING: Select optimal model based on query complexity
