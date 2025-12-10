@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { SavedIndicator } from '@/components/settings/SavedIndicator';
 import { AgentDeploymentConfig } from '@/types/metadata';
+import { usePlanLimits } from '@/hooks/usePlanLimits';
 
 type Agent = Tables<'agents'>;
 
@@ -174,7 +175,7 @@ const RESPONSE_LENGTH_PRESETS = [
   { value: 'custom', label: 'Custom', tokens: 0, description: 'Manual control' },
 ];
 
-type ConfigureSection = 'identity' | 'model' | 'behavior' | 'prompt';
+
 
 // Map slider IDs to capability keys
 type SliderCapabilityKey = 'temperature' | 'presencePenalty' | 'frequencyPenalty' | 'topP' | 'topK';
@@ -247,11 +248,12 @@ const BEHAVIOR_SLIDERS: Array<{
   },
 ];
 
-const CONFIGURE_MENU_ITEMS = [
-  { id: 'identity' as const, label: 'Identity', description: 'Set your agent\'s name and description' },
-  { id: 'model' as const, label: 'Model & Cost', description: 'Choose the AI model, response length, and view estimated costs' },
-  { id: 'behavior' as const, label: 'Behavior', description: 'Fine-tune creativity, topic diversity, and response variation' },
-  { id: 'prompt' as const, label: 'System Prompt', description: 'Define your agent\'s personality, role, and communication style' },
+type ConfigureSection = 'identity' | 'model-behavior' | 'prompt';
+
+const CONFIGURE_MENU_ITEMS: { id: ConfigureSection; label: string; description: string }[] = [
+  { id: 'identity', label: 'Identity', description: 'Set your agent\'s name, description, and activation status' },
+  { id: 'model-behavior', label: 'Model & Behavior', description: 'Choose your AI model and fine-tune response creativity' },
+  { id: 'prompt', label: 'System Prompt', description: 'Define your agent\'s personality, role, and communication style' },
 ];
 
 const calculateEstimatedCost = (model: string, maxTokens: number) => {
@@ -271,6 +273,8 @@ const calculateEstimatedCost = (model: string, maxTokens: number) => {
 
 export const AgentConfigureTab: React.FC<AgentConfigureTabProps> = ({ agent, onUpdate }) => {
   const [activeSection, setActiveSection] = useState<ConfigureSection>('identity');
+  const { planName } = usePlanLimits();
+  const isEnterprise = planName?.toLowerCase() === 'enterprise';
   const [activeSlider, setActiveSlider] = useState<string | null>(null);
   const [showSaved, setShowSaved] = useState(false);
   const saveTimerRef = useRef<NodeJS.Timeout>();
@@ -399,115 +403,9 @@ export const AgentConfigureTab: React.FC<AgentConfigureTabProps> = ({ agent, onU
     </div>
   );
 
-  const renderModelSection = () => (
-    <div className="space-y-6">
-      <div>
-        <Label htmlFor="model">AI Model</Label>
-        <Select
-          value={formData.model}
-          onValueChange={(value) => handleUpdate({ model: value })}
-        >
-          <SelectTrigger id="model" className="mt-1.5">
-            <SelectValue placeholder="Select a model">
-              {MODELS.find(m => m.value === formData.model)?.label || "Select a model"}
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            {MODELS.map((model) => (
-              <SelectItem key={model.value} value={model.value}>
-                <div className="flex flex-col gap-0.5">
-                  <span className="font-medium">{model.label}</span>
-                  <span className="text-xs text-muted-foreground">{model.description}</span>
-                </div>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div>
-        <Label htmlFor="response-length">Response Length</Label>
-        <Select
-          value={formData.response_length_preset}
-          onValueChange={(value) => handleUpdate({ response_length_preset: value })}
-        >
-          <SelectTrigger id="response-length" className="mt-1.5">
-            <SelectValue>
-              {RESPONSE_LENGTH_PRESETS.find(p => p.value === formData.response_length_preset)?.label}
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            {RESPONSE_LENGTH_PRESETS.map((preset) => (
-              <SelectItem key={preset.value} value={preset.value}>
-                <div className="flex flex-col gap-0.5">
-                  <span className="font-medium">{preset.label}</span>
-                  <span className="text-xs text-muted-foreground">{preset.description}</span>
-                </div>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      {formData.response_length_preset === 'custom' && (
-        <div>
-          <div className="flex items-center gap-1">
-            <Label htmlFor="max_tokens">Max Tokens (Advanced)</Label>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span className="inline-flex group">
-                  <InfoCircleIcon className="h-3.5 w-3.5 text-muted-foreground" />
-                  <InfoCircleIconFilled className="h-3.5 w-3.5 text-muted-foreground" />
-                </span>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Maximum response length in tokens. ~4 characters per token.</p>
-              </TooltipContent>
-            </Tooltip>
-          </div>
-          <Input
-            id="max_tokens"
-            type="number"
-            min={100}
-            max={32000}
-            step={100}
-            value={formData.max_tokens ?? 2000}
-            onChange={(e) => handleUpdate({ max_tokens: parseInt(e.target.value) })}
-            className="mt-1.5"
-          />
-        </div>
-      )}
-
-      {costEstimate && (
-        <Card className="p-4 bg-accent/50 border-border">
-          <div className="flex items-start justify-between mb-2">
-            <h4 className="text-sm font-semibold text-foreground">Estimated Cost</h4>
-            <Badge variant={costEstimate.tier === 'Budget' ? 'secondary' : costEstimate.tier === 'Standard' ? 'default' : 'destructive'}>
-              {costEstimate.tier}
-            </Badge>
-          </div>
-          <div className="space-y-1.5 text-sm">
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Per request:</span>
-              <span className="font-medium text-foreground">${costEstimate.perRequest.toFixed(6)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Per 1,000 requests:</span>
-              <span className="font-medium text-foreground">${costEstimate.per1000Requests.toFixed(2)}</span>
-            </div>
-            <p className="text-xs text-muted-foreground pt-2 border-t border-border/50">
-              Based on ~500 input tokens per request
-            </p>
-          </div>
-        </Card>
-      )}
-      
-      <SavedIndicator show={showSaved} className="mt-2" />
-    </div>
-  );
-
-  const renderBehaviorSection = () => {
+  const renderModelBehaviorSection = () => {
     const capabilities = getModelCapabilities(formData.model);
+    const selectedModel = MODELS.find(m => m.value === formData.model);
     
     // Filter sliders based on model capabilities
     const supportedSliders = BEHAVIOR_SLIDERS.filter(slider => {
@@ -516,82 +414,191 @@ export const AgentConfigureTab: React.FC<AgentConfigureTabProps> = ({ agent, onU
     });
     
     const currentSliderInfo = supportedSliders.find(s => s.id === activeSlider);
-    const modelName = MODELS.find(m => m.value === formData.model)?.label || formData.model;
     
-    // Helper to get slider min/max from capabilities (with slider defaults as fallback)
+    // Get slider range from model capabilities
     const getSliderRange = (slider: typeof BEHAVIOR_SLIDERS[0]) => {
       const cap = capabilities[slider.capabilityKey];
-      return {
-        min: cap?.min ?? slider.min,
-        max: cap?.max ?? slider.max,
-      };
+      if (cap?.supported) {
+        return { min: cap.min ?? slider.min, max: cap.max ?? slider.max };
+      }
+      return { min: slider.min, max: slider.max };
     };
     
-    // Helper to get default value for a slider
+    // Get default value from model capabilities
     const getDefaultValue = (slider: typeof BEHAVIOR_SLIDERS[0]) => {
       const cap = capabilities[slider.capabilityKey];
-      if (cap?.default !== undefined) return cap.default;
-      if (slider.id === 'top_p') return 1;
-      if (slider.id === 'temperature') return 0.7;
-      if (slider.id === 'top_k') return 40;
-      return 0;
+      return cap?.default ?? (slider.id === 'temperature' ? 0.7 : slider.id === 'top_p' ? 1.0 : 0);
     };
-    
+
     return (
       <div className="flex gap-8">
-        {/* Left column: Sliders */}
-        <div className="flex-1 space-y-6">
-          {/* Model indicator */}
-          <div className="flex items-center gap-2 text-sm text-muted-foreground pb-2 border-b border-border/50">
-            <span>Showing controls for</span>
-            <Badge variant="secondary" className="font-medium">
-              {modelName}
-            </Badge>
+        {/* Main content column */}
+        <div className="flex-1 space-y-8">
+          {/* Model Selection Section */}
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="model">AI Model</Label>
+              <Select
+                value={formData.model}
+                onValueChange={(value) => handleUpdate({ model: value })}
+              >
+                <SelectTrigger id="model" className="mt-1.5">
+                  <SelectValue>
+                    <div className="flex items-center gap-2">
+                      <span>{MODELS.find(m => m.value === formData.model)?.label || formData.model}</span>
+                    </div>
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {MODELS.map((model) => (
+                    <SelectItem key={model.value} value={model.value}>
+                      <div className="flex flex-col gap-0.5">
+                        <span className="font-medium">{model.label}</span>
+                        <span className="text-xs text-muted-foreground">{model.description}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="response-length">Response Length</Label>
+              <Select
+                value={formData.response_length_preset}
+                onValueChange={(value) => handleUpdate({ response_length_preset: value })}
+              >
+                <SelectTrigger id="response-length" className="mt-1.5">
+                  <SelectValue>
+                    {RESPONSE_LENGTH_PRESETS.find(p => p.value === formData.response_length_preset)?.label}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {RESPONSE_LENGTH_PRESETS.map((preset) => (
+                    <SelectItem key={preset.value} value={preset.value}>
+                      <div className="flex flex-col gap-0.5">
+                        <span className="font-medium">{preset.label}</span>
+                        <span className="text-xs text-muted-foreground">{preset.description}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {formData.response_length_preset === 'custom' && (
+              <div>
+                <div className="flex items-center gap-1">
+                  <Label htmlFor="max_tokens">Max Tokens (Advanced)</Label>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="inline-flex group">
+                        <InfoCircleIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                        <InfoCircleIconFilled className="h-3.5 w-3.5 text-muted-foreground" />
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Maximum response length in tokens. ~4 characters per token.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+                <Input
+                  id="max_tokens"
+                  type="number"
+                  min={100}
+                  max={32000}
+                  step={100}
+                  value={formData.max_tokens ?? 2000}
+                  onChange={(e) => handleUpdate({ max_tokens: parseInt(e.target.value) })}
+                  className="mt-1.5"
+                />
+              </div>
+            )}
+
+            {isEnterprise && costEstimate && (
+              <Card className="p-4 bg-accent/50 border-border">
+                <div className="flex items-start justify-between mb-2">
+                  <h4 className="text-sm font-semibold text-foreground">Estimated Cost</h4>
+                  <Badge variant={costEstimate.tier === 'Budget' ? 'secondary' : costEstimate.tier === 'Standard' ? 'default' : 'destructive'}>
+                    {costEstimate.tier}
+                  </Badge>
+                </div>
+                <div className="space-y-1.5 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Per request:</span>
+                    <span className="font-medium text-foreground">${costEstimate.perRequest.toFixed(6)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Per 1,000 requests:</span>
+                    <span className="font-medium text-foreground">${costEstimate.per1000Requests.toFixed(2)}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground pt-2 border-t border-border/50">
+                    Based on ~500 input tokens per request
+                  </p>
+                </div>
+              </Card>
+            )}
           </div>
-          
-          <AnimatePresence mode="popLayout">
-            {supportedSliders.map((slider) => {
-              const range = getSliderRange(slider);
-              const step = slider.id === 'top_k' ? 1 : 0.01;
-              
-              return (
-                <motion.div 
-                  key={slider.id}
-                  layout
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="space-y-3"
-                  onMouseEnter={() => setActiveSlider(slider.id)}
-                  onMouseLeave={() => setActiveSlider(null)}
-                >
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor={slider.id}>{slider.label}</Label>
-                    <span className="text-sm text-muted-foreground font-mono">
-                      {slider.id === 'top_k' 
-                        ? Math.round(formData[slider.id] || getDefaultValue(slider))
-                        : (formData[slider.id as keyof typeof formData] as number)?.toFixed(2) || getDefaultValue(slider).toFixed(2)
-                      }
-                    </span>
-                  </div>
-                  <Slider
-                    id={slider.id}
-                    min={range.min}
-                    max={range.max}
-                    step={step}
-                    value={[(formData[slider.id as keyof typeof formData] as number) ?? getDefaultValue(slider)]}
-                    onValueChange={([value]) => handleUpdate({ [slider.id]: value })}
-                    className="w-full"
-                  />
-                  <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>{slider.lowLabel}</span>
-                    <span>{slider.highLabel}</span>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </AnimatePresence>
+
+          {/* Divider */}
+          <div className="border-t border-border" />
+
+          {/* Behavior Controls Section */}
+          <div className="space-y-6">
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="text-xs font-normal">
+                {selectedModel?.label || formData.model}
+              </Badge>
+              <span className="text-xs text-muted-foreground">
+                {supportedSliders.length} behavior controls available
+              </span>
+            </div>
+
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={formData.model}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
+                className="space-y-6"
+              >
+                {supportedSliders.map((slider) => {
+                  const range = getSliderRange(slider);
+                  const defaultValue = getDefaultValue(slider);
+                  const currentValue = formData[slider.id] ?? defaultValue;
+                  
+                  return (
+                    <div 
+                      key={slider.id} 
+                      className="space-y-3"
+                      onMouseEnter={() => setActiveSlider(slider.id)}
+                      onMouseLeave={() => setActiveSlider(null)}
+                    >
+                      <div className="flex justify-between items-center">
+                        <Label className="text-sm">{slider.label}</Label>
+                        <span className="text-sm font-medium tabular-nums text-muted-foreground">
+                          {typeof currentValue === 'number' ? currentValue.toFixed(2) : currentValue}
+                        </span>
+                      </div>
+                      <Slider
+                        value={[typeof currentValue === 'number' ? currentValue : 0]}
+                        onValueChange={([value]) => handleUpdate({ [slider.id]: value })}
+                        min={range.min}
+                        max={range.max}
+                        step={0.01}
+                        className="w-full"
+                      />
+                      <div className="flex justify-between text-xs text-muted-foreground">
+                        <span>{slider.lowLabel}</span>
+                        <span>{slider.highLabel}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </motion.div>
+            </AnimatePresence>
+          </div>
           
           <SavedIndicator show={showSaved} className="mt-2" />
         </div>
@@ -677,8 +684,7 @@ export const AgentConfigureTab: React.FC<AgentConfigureTabProps> = ({ agent, onU
         description={CONFIGURE_MENU_ITEMS.find(item => item.id === activeSection)?.description || ''}
       >
         {activeSection === 'identity' && renderIdentitySection()}
-        {activeSection === 'model' && renderModelSection()}
-        {activeSection === 'behavior' && renderBehaviorSection()}
+        {activeSection === 'model-behavior' && renderModelBehaviorSection()}
         {activeSection === 'prompt' && renderPromptSection()}
       </AgentSettingsLayout>
     </TooltipProvider>
