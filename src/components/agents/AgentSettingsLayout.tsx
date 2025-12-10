@@ -2,6 +2,7 @@ import React from 'react';
 import { Menu01 as Menu } from '@untitledui/icons';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/lib/utils';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 interface AgentSettingsLayoutProps {
   children: React.ReactNode;
@@ -58,6 +59,7 @@ export const AgentSettingsLayout = <T extends string = string>({
   description,
   headerExtra,
 }: AgentSettingsLayoutContentProps<T>) => {
+  const prefersReducedMotion = useReducedMotion();
   return (
     <div className="flex flex-col lg:flex-row gap-4 lg:gap-8 w-full h-full min-h-0 flex-1">
       {/* Mobile header with menu button and tabs */}
@@ -142,7 +144,18 @@ export const AgentSettingsLayout = <T extends string = string>({
 
       {/* Content Area */}
       <div className="flex-1 min-w-0 h-full min-h-0 overflow-y-auto">
-        {children}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeTab}
+            initial={prefersReducedMotion ? false : { opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={prefersReducedMotion ? undefined : { opacity: 0, y: -10 }}
+            transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+            className="h-full"
+          >
+            {children}
+          </motion.div>
+        </AnimatePresence>
       </div>
     </div>
   );
