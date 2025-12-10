@@ -1,12 +1,12 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { GlobalSearch } from "@/components/GlobalSearch";
-import { AnimatePresence } from "motion/react";
+import { AppLayout } from "@/components/layout/AppLayout";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import RouteErrorFallback from "@/components/RouteErrorFallback";
 import Auth from "./pages/Auth";
@@ -22,54 +22,14 @@ import SettingsWrapper from "./pages/SettingsWrapper";
 
 const queryClient = new QueryClient();
 
-const AnimatedRoutes = () => {
-  const location = useLocation();
-  
-  return (
-    <AnimatePresence mode="wait">
-      <Routes location={location} key={location.pathname}>
-        <Route path="/login" element={<Auth />} />
-        <Route path="/widget" element={<WidgetPage />} />
-        <Route path="/" element={
-          <ProtectedRoute>
-            <DashboardWrapper />
-          </ProtectedRoute>
-        } />
-        <Route path="/agents" element={
-          <ProtectedRoute>
-            <AgentsWrapper />
-          </ProtectedRoute>
-        } />
-        <Route path="/agents/:agentId" element={
-          <ProtectedRoute>
-            <AgentConfigWrapper />
-          </ProtectedRoute>
-        } />
-        <Route path="/conversations" element={
-          <ProtectedRoute>
-            <ConversationsWrapper />
-          </ProtectedRoute>
-        } />
-        <Route path="/leads" element={
-          <ProtectedRoute>
-            <LeadsWrapper />
-          </ProtectedRoute>
-        } />
-        <Route path="/analytics" element={
-          <ProtectedRoute>
-            <AnalyticsWrapper />
-          </ProtectedRoute>
-        } />
-        <Route path="/settings" element={
-          <ProtectedRoute>
-            <SettingsWrapper />
-          </ProtectedRoute>
-        } />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </AnimatePresence>
-  );
-};
+// Shared layout for all protected routes - sidebar and header stay mounted
+const ProtectedLayout = () => (
+  <ProtectedRoute>
+    <AppLayout>
+      <Outlet />
+    </AppLayout>
+  </ProtectedRoute>
+);
 
 const App = () => (
   <ErrorBoundary fallback={<RouteErrorFallback />}>
@@ -80,7 +40,24 @@ const App = () => (
           <BrowserRouter>
             <AuthProvider>
               <GlobalSearch />
-              <AnimatedRoutes />
+              <Routes>
+                {/* Public routes */}
+                <Route path="/login" element={<Auth />} />
+                <Route path="/widget" element={<WidgetPage />} />
+                
+                {/* Protected routes with shared layout */}
+                <Route element={<ProtectedLayout />}>
+                  <Route path="/" element={<DashboardWrapper />} />
+                  <Route path="/agents" element={<AgentsWrapper />} />
+                  <Route path="/agents/:agentId" element={<AgentConfigWrapper />} />
+                  <Route path="/conversations" element={<ConversationsWrapper />} />
+                  <Route path="/leads" element={<LeadsWrapper />} />
+                  <Route path="/analytics" element={<AnalyticsWrapper />} />
+                  <Route path="/settings" element={<SettingsWrapper />} />
+                </Route>
+                
+                <Route path="*" element={<NotFound />} />
+              </Routes>
             </AuthProvider>
           </BrowserRouter>
         </TooltipProvider>
