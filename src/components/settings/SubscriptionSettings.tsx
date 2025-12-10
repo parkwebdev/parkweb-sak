@@ -1,21 +1,20 @@
 import { useState, useEffect, useRef } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import type { Tables } from '@/integrations/supabase/types';
-import type { PlanLimits, PlanFeatures } from '@/types/metadata';
 import { formatDate } from '@/lib/formatting';
-import { CheckCircle, Download01, LinkExternal01, RefreshCw01, Receipt } from '@untitledui/icons';
+import { CheckCircle, Download01, LinkExternal01, RefreshCw01, Receipt, Zap, Calendar, CreditCard01, ArrowUpRight } from '@untitledui/icons';
 import { EmptyState } from '@/components/ui/empty-state';
 import { toast } from '@/lib/toast';
 import { AnimatedTableRow } from '@/components/ui/animated-table-row';
 import { LoadingState } from '@/components/ui/loading-state';
 import { Spinner } from '@/components/ui/spinner';
 import { logger } from '@/utils/logger';
+import CreditCard from '@/components/shared-assets/credit-card/credit-card';
 
 type Subscription = Tables<'subscriptions'> & {
   plans?: Tables<'plans'>;
@@ -70,7 +69,6 @@ export const SubscriptionSettings = () => {
 
     setInvoicesLoading(true);
     try {
-      // Simply call the edge function - Supabase client handles auth automatically
       const { data, error } = await supabase.functions.invoke('get-invoices');
 
       if (error) throw error;
@@ -86,7 +84,6 @@ export const SubscriptionSettings = () => {
   };
 
   useEffect(() => {
-    // Use ref guard to prevent duplicate fetches from React Strict Mode / re-renders
     if (user && !hasFetchedInvoicesRef.current) {
       hasFetchedInvoicesRef.current = true;
       fetchInvoices();
@@ -98,8 +95,6 @@ export const SubscriptionSettings = () => {
   }
 
   const plan = subscription?.plans;
-  const features = plan?.features as PlanFeatures | undefined;
-  const limits = plan?.limits as PlanLimits | undefined;
 
   const getStatusColor = (status: string | null) => {
     switch (status) {
@@ -123,160 +118,222 @@ export const SubscriptionSettings = () => {
     }).format(amount / 100);
   };
 
+  // Calculate total spent this year from paid invoices
+  const currentYear = new Date().getFullYear();
+  const totalSpentThisYear = invoices
+    .filter(inv => inv.status === 'paid' && new Date(inv.date * 1000).getFullYear() === currentYear)
+    .reduce((sum, inv) => sum + inv.amount, 0);
+
+  const cardholderName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Card Holder';
+
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Current Plan</CardTitle>
-              <CardDescription>
-                Manage your subscription and billing
-              </CardDescription>
-            </div>
-            <Button>
-              Upgrade Plan
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {subscription && plan ? (
-            <>
-              <div className="flex items-center justify-between p-6 border rounded-lg bg-accent/50">
-                <div>
-                  <h3 className="text-base font-bold">{plan.name}</h3>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    ${(plan.price_monthly / 100).toFixed(2)}/month
-                  </p>
-                </div>
-                <Badge
-                  variant="outline"
-                  className={
-                    subscription.status === 'active'
-                      ? 'bg-success/10 text-success border-success/20'
-                      : 'bg-muted text-muted-foreground'
-                  }
-                >
-                  {subscription.status}
-                </Badge>
-              </div>
-
-              {subscription.current_period_end && (
-                <div className="text-sm text-muted-foreground">
-                  Renews on{' '}
-                  {formatDate(subscription.current_period_end, {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                  })}
-                </div>
-              )}
-
-              {features && (
-                <>
+    <div className="space-y-8">
+      {/* Hero Section: Plan + Payment Method */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Current Plan Card */}
+        <Card className="relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent" />
+          <CardContent className="relative p-6">
+            {subscription && plan ? (
+              <div className="space-y-6">
+                <div className="flex items-start justify-between">
                   <div>
-                    <h4 className="font-semibold mb-3">Plan Features</h4>
-                    <div className="space-y-2">
-                      {Object.entries(features).map(([key, value]) => (
-                        <div key={key} className="flex items-center gap-2 text-sm">
-                          <CheckCircle className="h-4 w-4 text-success shrink-0" />
-                          <span className="capitalize">{key.replace(/_/g, ' ')}</span>
-                        </div>
-                      ))}
+                    <div className="flex items-center gap-2 mb-1">
+                      <Zap className="h-4 w-4 text-primary" />
+                      <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Current Plan</span>
                     </div>
+                    <h2 className="text-2xl font-bold tracking-tight">{plan.name}</h2>
+                    <p className="text-muted-foreground mt-1">
+                      <span className="text-xl font-semibold text-foreground">${(plan.price_monthly / 100).toFixed(2)}</span>
+                      <span className="text-sm">/month</span>
+                    </p>
                   </div>
-                </>
-              )}
+                  <Badge
+                    variant="outline"
+                    className={
+                      subscription.status === 'active'
+                        ? 'bg-success/10 text-success border-success/20'
+                        : 'bg-muted text-muted-foreground'
+                    }
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <span className="h-1.5 w-1.5 rounded-full bg-current animate-pulse" />
+                      {subscription.status}
+                    </span>
+                  </Badge>
+                </div>
 
-              {limits && (
-                <>
-                  <div>
-                    <h4 className="font-semibold mb-3">Usage Limits</h4>
-                    <div className="space-y-4">
-                      {Object.entries(limits).map(([key, value]) => {
-                        const isUnlimited = value === -1;
-                        return (
-                          <div key={key}>
-                            <div className="flex items-center justify-between text-sm mb-2">
-                              <span className="capitalize">{key.replace(/_/g, ' ')}</span>
-                              <span className="text-muted-foreground">
-                                {isUnlimited ? 'Unlimited' : `0 / ${value}`}
-                              </span>
-                            </div>
-                            {!isUnlimited && (
-                              <Progress value={0} className="h-2" />
-                            )}
-                          </div>
-                        );
+                {subscription.current_period_end && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Calendar className="h-4 w-4" />
+                    <span>
+                      Renews{' '}
+                      {formatDate(subscription.current_period_end, {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
                       })}
-                    </div>
+                    </span>
                   </div>
-                </>
-              )}
-            </>
-          ) : (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground mb-4">No active subscription</p>
-              <Button>Choose a Plan</Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                )}
 
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Billing History</CardTitle>
-              <CardDescription>
-                View and download your invoices
-              </CardDescription>
+                <div className="flex gap-3 pt-2">
+                  <Button variant="outline" size="sm">
+                    <CreditCard01 className="h-4 w-4 mr-2" />
+                    Manage Subscription
+                  </Button>
+                  <Button size="sm">
+                    Upgrade Plan
+                    <ArrowUpRight className="h-4 w-4 ml-2" />
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
+                  <Zap className="h-6 w-6 text-muted-foreground" />
+                </div>
+                <h3 className="font-semibold mb-2">No active subscription</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Choose a plan to unlock all features
+                </p>
+                <Button>Choose a Plan</Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Payment Method Card */}
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <CreditCard01 className="h-4 w-4 text-muted-foreground" />
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Payment Method</span>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={fetchInvoices}
-              disabled={invoicesLoading}
-            >
-              {invoicesLoading ? <Spinner size="sm" className="mr-2" /> : <RefreshCw01 className="h-4 w-4 mr-2" />}
-              Refresh
-            </Button>
+            
+            <div className="flex flex-col items-center">
+              <CreditCard 
+                type="gray-dark" 
+                cardholderName={cardholderName}
+              />
+              <Button variant="outline" size="sm" className="mt-4">
+                Update Payment Method
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Quick Stats */}
+      <div className="grid gap-4 sm:grid-cols-3">
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Calendar className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Next Payment</p>
+                <p className="text-sm font-semibold">
+                  {subscription?.current_period_end
+                    ? formatDate(subscription.current_period_end, { month: 'short', day: 'numeric' })
+                    : '—'}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-lg bg-success/10 flex items-center justify-center">
+                <CheckCircle className="h-5 w-5 text-success" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Billing Cycle</p>
+                <p className="text-sm font-semibold">Monthly</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-lg bg-info/10 flex items-center justify-center">
+                <Receipt className="h-5 w-5 text-info" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Spent This Year</p>
+                <p className="text-sm font-semibold">
+                  {invoices.length > 0 && totalSpentThisYear > 0
+                    ? formatCurrency(totalSpentThisYear, invoices[0]?.currency || 'usd')
+                    : '$0.00'}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Billing History */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-semibold">Billing History</h3>
+            <p className="text-xs text-muted-foreground">View and download your past invoices</p>
           </div>
-        </CardHeader>
-        <CardContent>
-          {invoicesLoading ? (
-            <LoadingState size="md" />
-          ) : invoices.length === 0 ? (
-            <EmptyState
-              icon={<Receipt className="h-5 w-5 text-muted-foreground/50" />}
-              title="No billing history available"
-            />
-          ) : (
-            <div className="rounded-md border">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={fetchInvoices}
+            disabled={invoicesLoading}
+          >
+            {invoicesLoading ? <Spinner size="sm" className="mr-2" /> : <RefreshCw01 className="h-4 w-4 mr-2" />}
+            Refresh
+          </Button>
+        </div>
+
+        <Card>
+          <CardContent className="p-0">
+            {invoicesLoading ? (
+              <div className="p-8">
+                <LoadingState size="md" />
+              </div>
+            ) : invoices.length === 0 ? (
+              <div className="p-8">
+                <EmptyState
+                  icon={<Receipt className="h-5 w-5 text-muted-foreground/50" />}
+                  title="No billing history"
+                  description="Your invoices will appear here once you have an active subscription"
+                />
+              </div>
+            ) : (
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead>Invoice</TableHead>
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead className="pl-6">Invoice</TableHead>
                     <TableHead>Date</TableHead>
                     <TableHead>Amount</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead className="text-right pr-6">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {invoices.map((invoice, index) => (
-                    <AnimatedTableRow key={invoice.id} index={index}>
-                      <TableCell className="font-medium">
-                        {invoice.number || invoice.id.substring(0, 8)}
+                    <AnimatedTableRow key={invoice.id} index={index} className="group">
+                      <TableCell className="pl-6 font-medium">
+                        {invoice.number || `INV-${invoice.id.substring(0, 8).toUpperCase()}`}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="text-muted-foreground">
                         {formatDate(new Date(invoice.date * 1000), {
                           year: 'numeric',
                           month: 'short',
                           day: 'numeric',
                         })}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="font-medium">
                         {formatCurrency(invoice.amount, invoice.currency)}
                       </TableCell>
                       <TableCell>
@@ -287,12 +344,13 @@ export const SubscriptionSettings = () => {
                           {invoice.status || 'unknown'}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
+                      <TableCell className="text-right pr-6">
+                        <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           {invoice.hostedUrl && (
                             <Button
                               variant="ghost"
                               size="sm"
+                              className="h-8 w-8 p-0"
                               onClick={() => window.open(invoice.hostedUrl!, '_blank')}
                             >
                               <LinkExternal01 className="h-4 w-4" />
@@ -302,6 +360,7 @@ export const SubscriptionSettings = () => {
                             <Button
                               variant="ghost"
                               size="sm"
+                              className="h-8 w-8 p-0"
                               onClick={() => window.open(invoice.pdfUrl!, '_blank')}
                             >
                               <Download01 className="h-4 w-4" />
@@ -313,10 +372,10 @@ export const SubscriptionSettings = () => {
                   ))}
                 </TableBody>
               </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
