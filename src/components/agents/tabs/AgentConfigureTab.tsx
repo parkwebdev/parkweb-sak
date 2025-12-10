@@ -4,7 +4,7 @@ import { Tables } from '@/integrations/supabase/types';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { InfoCircleIcon, InfoCircleIconFilled } from '@/components/ui/info-circle-icon';
 import { LightbulbIcon, LightbulbIconFilled } from '@/components/ui/lightbulb-icon';
@@ -550,26 +550,105 @@ export const AgentConfigureTab: React.FC<AgentConfigureTabProps> = ({ agent, onU
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  {MODELS.map((model) => (
-                    <SelectItem key={model.value} value={model.value}>
-                      <div className="flex items-start gap-2.5">
-                        <div className="flex-shrink-0 mt-0.5">
-                          {getModelIcon(model.provider)}
-                        </div>
-                        <div className="flex flex-col gap-0.5">
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium">{model.label}</span>
-                            {model.recommended && (
-                              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 font-medium">
-                                Popular
-                              </Badge>
-                            )}
+                  {/* Google Models */}
+                  <SelectGroup>
+                    <SelectLabel className="flex items-center gap-2 pl-2">
+                      {getModelIcon('gemini', 14)}
+                      <span>Google</span>
+                    </SelectLabel>
+                    {MODELS.filter(m => m.provider === 'gemini').map((model) => (
+                      <SelectItem key={model.value} value={model.value}>
+                        <div className="flex items-start gap-2.5">
+                          <div className="flex flex-col gap-0.5">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">{model.label}</span>
+                              {model.recommended && (
+                                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 font-medium">
+                                  Popular
+                                </Badge>
+                              )}
+                            </div>
+                            <span className="text-xs text-muted-foreground">{model.description}</span>
                           </div>
-                          <span className="text-xs text-muted-foreground">{model.description}</span>
                         </div>
-                      </div>
-                    </SelectItem>
-                  ))}
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+
+                  {/* OpenAI Models */}
+                  <SelectGroup>
+                    <SelectLabel className="flex items-center gap-2 pl-2">
+                      {getModelIcon('openai', 14)}
+                      <span>OpenAI</span>
+                    </SelectLabel>
+                    {MODELS.filter(m => m.provider === 'openai').map((model) => (
+                      <SelectItem key={model.value} value={model.value}>
+                        <div className="flex items-start gap-2.5">
+                          <div className="flex flex-col gap-0.5">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">{model.label}</span>
+                              {model.recommended && (
+                                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 font-medium">
+                                  Popular
+                                </Badge>
+                              )}
+                            </div>
+                            <span className="text-xs text-muted-foreground">{model.description}</span>
+                          </div>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+
+                  {/* Anthropic Models */}
+                  <SelectGroup>
+                    <SelectLabel className="flex items-center gap-2 pl-2">
+                      {getModelIcon('claude', 14)}
+                      <span>Anthropic</span>
+                    </SelectLabel>
+                    {MODELS.filter(m => m.provider === 'claude').map((model) => (
+                      <SelectItem key={model.value} value={model.value}>
+                        <div className="flex items-start gap-2.5">
+                          <div className="flex flex-col gap-0.5">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">{model.label}</span>
+                              {model.recommended && (
+                                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 font-medium">
+                                  Popular
+                                </Badge>
+                              )}
+                            </div>
+                            <span className="text-xs text-muted-foreground">{model.description}</span>
+                          </div>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+
+                  {/* Other Models */}
+                  <SelectGroup>
+                    <SelectLabel className="pl-2">Other Providers</SelectLabel>
+                    {MODELS.filter(m => ['qwen', 'mistral', 'llama', 'deepseek'].includes(m.provider)).map((model) => (
+                      <SelectItem key={model.value} value={model.value}>
+                        <div className="flex items-start gap-2.5">
+                          <div className="flex-shrink-0 mt-0.5">
+                            {getModelIcon(model.provider)}
+                          </div>
+                          <div className="flex flex-col gap-0.5">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">{model.label}</span>
+                              {model.recommended && (
+                                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 font-medium">
+                                  Popular
+                                </Badge>
+                              )}
+                            </div>
+                            <span className="text-xs text-muted-foreground">{model.description}</span>
+                          </div>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
                 </SelectContent>
               </Select>
             </div>
