@@ -65,29 +65,17 @@ const WidgetPage = () => {
     hasValidAgentId ? null : 'Agent ID is required. Please provide a valid agentId parameter.'
   );
   
-  // Force light mode for widget
+  // Set up transparent background for widget iframe
   useEffect(() => {
-    const html = document.documentElement;
     const body = document.body;
     const root = document.getElementById('root');
-    const originalHtmlClass = html.className;
-    const originalBodyStyle = body.style.cssText;
     
-    // Force light mode
-    html.classList.remove('dark');
-    html.classList.add('light');
     body.style.background = 'transparent';
     body.style.backgroundColor = 'transparent';
     body.style.height = '100%';
     body.style.margin = '0';
-    html.style.height = '100%';
+    document.documentElement.style.height = '100%';
     if (root) root.style.height = '100%';
-    
-    return () => {
-      // Restore original state on unmount
-      html.className = originalHtmlClass;
-      body.style.cssText = originalBodyStyle;
-    };
   }, []);
   
   // Listen for config from parent window (sent by chatpad-widget.js)
@@ -156,18 +144,10 @@ const WidgetPage = () => {
 
   if (error) {
     return (
-      <div 
-        className="w-full h-full flex items-center justify-center bg-transparent light" 
-        style={{
-          colorScheme: 'light',
-          '--background': '0 0% 100%',
-          '--foreground': '0 0% 3.9%',
-          '--muted-foreground': '215.4 16.3% 46.9%',
-        } as React.CSSProperties
-      }>
+      <div className="w-full h-full flex items-center justify-center bg-transparent">
         <div className="text-center max-w-md p-6">
-          <div className="text-red-500 text-5xl mb-4">⚠️</div>
-          <h2 className="text-xl font-semibold mb-2">Unable to Load Widget</h2>
+          <div className="text-destructive text-5xl mb-4">⚠️</div>
+          <h2 className="text-xl font-semibold text-foreground mb-2">Unable to Load Widget</h2>
           <p className="text-muted-foreground">{error}</p>
         </div>
       </div>
@@ -176,14 +156,7 @@ const WidgetPage = () => {
 
   // Render immediately with defaults, then update when real config arrives
   return (
-    <div 
-      className="w-full h-full bg-transparent light" 
-      style={{
-        colorScheme: 'light',
-        '--background': '0 0% 100%',
-        '--foreground': '0 0% 3.9%',
-      } as React.CSSProperties
-    }>
+    <div className="w-full h-full bg-transparent">
       <ChatWidget config={config} previewMode={false} isLoading={!isConfigLoaded} />
     </div>
   );
