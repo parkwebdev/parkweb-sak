@@ -15,6 +15,7 @@ import { Card } from '@/components/ui/card';
 import { SavedIndicator } from '@/components/settings/SavedIndicator';
 import { AgentDeploymentConfig } from '@/types/metadata';
 import { usePlanLimits } from '@/hooks/usePlanLimits';
+import { Gemini, Claude, OpenAI, Meta, DeepSeek } from '@lobehub/icons';
 
 type Agent = Tables<'agents'>;
 
@@ -104,10 +105,29 @@ const getModelCapabilities = (model: string): ModelCapabilities => {
   };
 };
 
+// Helper to get model provider icon
+const getModelIcon = (provider: string, size: number = 18) => {
+  switch (provider) {
+    case 'gemini':
+      return <Gemini.Color size={size} />;
+    case 'claude':
+      return <Claude.Color size={size} />;
+    case 'openai':
+      return <OpenAI size={size} />;
+    case 'llama':
+      return <Meta.Color size={size} />;
+    case 'deepseek':
+      return <DeepSeek.Color size={size} />;
+    default:
+      return null;
+  }
+};
+
 const MODELS = [
   { 
     value: 'google/gemini-2.5-flash', 
     label: 'Gemini 2.5 Flash (Default)',
+    provider: 'gemini',
     description: 'Balanced speed and quality. Best for most use cases.',
     inputCostPer1M: 0.075,
     outputCostPer1M: 0.30
@@ -115,6 +135,7 @@ const MODELS = [
   { 
     value: 'google/gemini-2.5-pro', 
     label: 'Gemini 2.5 Pro',
+    provider: 'gemini',
     description: 'Strongest reasoning and multimodal capabilities.',
     inputCostPer1M: 1.25,
     outputCostPer1M: 5.00
@@ -122,6 +143,7 @@ const MODELS = [
   { 
     value: 'anthropic/claude-sonnet-4', 
     label: 'Claude Sonnet 4',
+    provider: 'claude',
     description: 'Most intelligent model with superior reasoning.',
     inputCostPer1M: 3.00,
     outputCostPer1M: 15.00
@@ -129,6 +151,7 @@ const MODELS = [
   { 
     value: 'anthropic/claude-3.5-haiku', 
     label: 'Claude 3.5 Haiku',
+    provider: 'claude',
     description: 'Fast and efficient for quick responses.',
     inputCostPer1M: 0.80,
     outputCostPer1M: 4.00
@@ -136,6 +159,7 @@ const MODELS = [
   { 
     value: 'openai/gpt-4o', 
     label: 'GPT-4o',
+    provider: 'openai',
     description: 'Powerful multimodal with excellent reasoning.',
     inputCostPer1M: 2.50,
     outputCostPer1M: 10.00
@@ -143,6 +167,7 @@ const MODELS = [
   { 
     value: 'openai/gpt-4o-mini', 
     label: 'GPT-4o Mini',
+    provider: 'openai',
     description: 'Fast and cost-effective alternative.',
     inputCostPer1M: 0.15,
     outputCostPer1M: 0.60
@@ -150,6 +175,7 @@ const MODELS = [
   { 
     value: 'meta-llama/llama-3.3-70b-instruct', 
     label: 'Llama 3.3 70B',
+    provider: 'llama',
     description: 'Open-source powerhouse with great performance.',
     inputCostPer1M: 0.40,
     outputCostPer1M: 0.40
@@ -157,6 +183,7 @@ const MODELS = [
   { 
     value: 'deepseek/deepseek-chat', 
     label: 'DeepSeek V3',
+    provider: 'deepseek',
     description: 'Excellent reasoning at very low cost.',
     inputCostPer1M: 0.14,
     outputCostPer1M: 0.28
@@ -445,6 +472,7 @@ export const AgentConfigureTab: React.FC<AgentConfigureTabProps> = ({ agent, onU
                 <SelectTrigger id="model" className="mt-1.5">
                   <SelectValue>
                     <div className="flex items-center gap-2">
+                      {getModelIcon(MODELS.find(m => m.value === formData.model)?.provider || '')}
                       <span>{MODELS.find(m => m.value === formData.model)?.label || formData.model}</span>
                     </div>
                   </SelectValue>
@@ -452,9 +480,14 @@ export const AgentConfigureTab: React.FC<AgentConfigureTabProps> = ({ agent, onU
                 <SelectContent>
                   {MODELS.map((model) => (
                     <SelectItem key={model.value} value={model.value}>
-                      <div className="flex flex-col gap-0.5">
-                        <span className="font-medium">{model.label}</span>
-                        <span className="text-xs text-muted-foreground">{model.description}</span>
+                      <div className="flex items-start gap-2.5">
+                        <div className="flex-shrink-0 mt-0.5">
+                          {getModelIcon(model.provider)}
+                        </div>
+                        <div className="flex flex-col gap-0.5">
+                          <span className="font-medium">{model.label}</span>
+                          <span className="text-xs text-muted-foreground">{model.description}</span>
+                        </div>
                       </div>
                     </SelectItem>
                   ))}
