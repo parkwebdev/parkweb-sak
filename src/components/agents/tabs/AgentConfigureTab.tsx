@@ -159,11 +159,12 @@ const getModelIcon = (provider: string, size: number = 18) => {
 const MODELS = [
   { 
     value: 'google/gemini-2.5-flash', 
-    label: 'Gemini 2.5 Flash (Default)',
+    label: 'Gemini 2.5 Flash',
     provider: 'gemini',
     description: 'Balanced speed and quality. Best for most use cases.',
     inputCostPer1M: 0.075,
-    outputCostPer1M: 0.30
+    outputCostPer1M: 0.30,
+    recommended: true
   },
   { 
     value: 'google/gemini-2.5-pro', 
@@ -179,7 +180,8 @@ const MODELS = [
     provider: 'openai',
     description: 'Latest frontier reasoning with improved instruction following.',
     inputCostPer1M: 1.25,
-    outputCostPer1M: 10.00
+    outputCostPer1M: 10.00,
+    recommended: true
   },
   { 
     value: 'openai/gpt-4o', 
@@ -211,7 +213,8 @@ const MODELS = [
     provider: 'claude',
     description: 'Most intelligent model with superior reasoning.',
     inputCostPer1M: 3.00,
-    outputCostPer1M: 15.00
+    outputCostPer1M: 15.00,
+    recommended: true
   },
   { 
     value: 'anthropic/claude-3.5-haiku', 
@@ -550,7 +553,14 @@ export const AgentConfigureTab: React.FC<AgentConfigureTabProps> = ({ agent, onU
                           {getModelIcon(model.provider)}
                         </div>
                         <div className="flex flex-col gap-0.5">
-                          <span className="font-medium">{model.label}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">{model.label}</span>
+                            {model.recommended && (
+                              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 font-medium">
+                                Popular
+                              </Badge>
+                            )}
+                          </div>
                           <span className="text-xs text-muted-foreground">{model.description}</span>
                         </div>
                       </div>
