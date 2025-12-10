@@ -19,6 +19,7 @@ interface ColorPickerContextValue {
   alpha: number;
   setColor: (color: ColorInstance) => void;
   setAlpha: (alpha: number) => void;
+  showAlpha: boolean;
 }
 
 const ColorPickerContext = React.createContext<ColorPickerContextValue | null>(null);
@@ -310,7 +311,7 @@ interface ColorPickerFormatProps {
 }
 
 function ColorPickerFormat({ className, mode, onModeChange }: ColorPickerFormatProps) {
-  const { color, setColor, alpha, setAlpha } = useColorPicker();
+  const { color, setColor, alpha, setAlpha, showAlpha } = useColorPicker();
 
   const rgb = color.rgb().object();
   const hsl = color.hsl().object();
@@ -370,19 +371,21 @@ function ColorPickerFormat({ className, mode, onModeChange }: ColorPickerFormatP
             value={color.hex().toUpperCase()}
             onChange={(e) => handleHexChange(e.target.value)}
             placeholder="#000000"
-            className="font-mono text-xs h-7"
+            className="font-mono text-xs h-7 flex-1"
           />
-          <div className="flex items-center gap-1">
-            <span className="text-xs text-muted-foreground">A</span>
-            <Input
-              type="number"
-              min={0}
-              max={100}
-              value={alpha}
-              onChange={(e) => setAlpha(Math.max(0, Math.min(100, parseInt(e.target.value) || 0)))}
-              className="h-7 w-14 px-1.5 text-xs text-center"
-            />
-          </div>
+          {showAlpha && (
+            <div className="flex items-center gap-1">
+              <span className="text-xs text-muted-foreground">A</span>
+              <Input
+                type="number"
+                min={0}
+                max={100}
+                value={alpha}
+                onChange={(e) => setAlpha(Math.max(0, Math.min(100, parseInt(e.target.value) || 0)))}
+                className="h-7 w-14 px-1.5 text-xs text-center"
+              />
+            </div>
+          )}
         </div>
       )}
 
@@ -421,17 +424,19 @@ function ColorPickerFormat({ className, mode, onModeChange }: ColorPickerFormatP
               className="h-7 px-1.5 text-xs text-center"
             />
           </div>
-          <div className="flex items-center gap-1">
-            <span className="text-xs text-muted-foreground">A</span>
-            <Input
-              type="number"
-              min={0}
-              max={100}
-              value={alpha}
-              onChange={(e) => setAlpha(Math.max(0, Math.min(100, parseInt(e.target.value) || 0)))}
-              className="h-7 w-12 px-1.5 text-xs text-center"
-            />
-          </div>
+          {showAlpha && (
+            <div className="flex items-center gap-1">
+              <span className="text-xs text-muted-foreground">A</span>
+              <Input
+                type="number"
+                min={0}
+                max={100}
+                value={alpha}
+                onChange={(e) => setAlpha(Math.max(0, Math.min(100, parseInt(e.target.value) || 0)))}
+                className="h-7 w-12 px-1.5 text-xs text-center"
+              />
+            </div>
+          )}
         </div>
       )}
 
@@ -470,17 +475,19 @@ function ColorPickerFormat({ className, mode, onModeChange }: ColorPickerFormatP
               className="h-7 px-1.5 text-xs text-center"
             />
           </div>
-          <div className="flex items-center gap-1">
-            <span className="text-xs text-muted-foreground">A</span>
-            <Input
-              type="number"
-              min={0}
-              max={100}
-              value={alpha}
-              onChange={(e) => setAlpha(Math.max(0, Math.min(100, parseInt(e.target.value) || 0)))}
-              className="h-7 w-12 px-1.5 text-xs text-center"
-            />
-          </div>
+          {showAlpha && (
+            <div className="flex items-center gap-1">
+              <span className="text-xs text-muted-foreground">A</span>
+              <Input
+                type="number"
+                min={0}
+                max={100}
+                value={alpha}
+                onChange={(e) => setAlpha(Math.max(0, Math.min(100, parseInt(e.target.value) || 0)))}
+                className="h-7 w-12 px-1.5 text-xs text-center"
+              />
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -557,7 +564,7 @@ export function ColorPicker({
     : color.hex().toUpperCase();
 
   return (
-    <ColorPickerContext.Provider value={{ color, alpha, setColor, setAlpha }}>
+    <ColorPickerContext.Provider value={{ color, alpha, setColor, setAlpha, showAlpha }}>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
