@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ChatWidget } from '@/widget/ChatWidget';
 import type { WidgetConfig } from '@/widget/api';
-import { useKeyboardHeight } from '@/widget/hooks/useKeyboardHeight';
+import { useKeyboardHeight, useSystemTheme } from '@/widget/hooks';
 
 // Simple hook to get search params without react-router dependency for widget bundle
 const useWidgetSearchParams = () => {
@@ -54,6 +54,7 @@ const WidgetPage = () => {
   const searchParams = useWidgetSearchParams();
   const agentId = searchParams.get('agentId');
   const { keyboardHeight, isKeyboardOpen } = useKeyboardHeight();
+  const systemTheme = useSystemTheme(); // Forces re-render on mobile theme change
   
   // Validate agentId is present and not empty
   const hasValidAgentId = agentId && agentId.trim().length > 0;
