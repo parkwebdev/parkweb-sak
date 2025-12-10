@@ -9,7 +9,7 @@ import { useReducedMotion } from "@/hooks/useReducedMotion"
 import { springs } from "@/lib/motion-variants"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-xs font-medium transition-colors disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-xs font-medium leading-none transition-colors disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
@@ -25,8 +25,8 @@ const buttonVariants = cva(
       },
       size: {
         default: "h-8 px-2.5",
-        sm: "h-8 rounded-md px-2.5",
-        lg: "h-10 rounded-md px-6",
+        sm: "h-8 px-2.5",
+        lg: "h-10 px-4",
         icon: "h-8 w-8",
       },
     },

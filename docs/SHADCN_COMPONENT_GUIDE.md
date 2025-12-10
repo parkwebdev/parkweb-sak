@@ -78,6 +78,39 @@ Senior UI/UX Engineer guidelines for ReactJS, TypeScript, component design syste
 
 ---
 
+## Button Sizing Standards
+
+All buttons across the app MUST use consistent sizing via the `size` prop. **NEVER** override button height via className.
+
+### Size Reference
+
+| Size | Height | Padding | Use Case |
+|------|--------|---------|----------|
+| `default` / `sm` | 32px (h-8) | px-2.5 | Standard UI buttons, toolbars, tables |
+| `lg` | 40px (h-10) | px-4 | Forms, prominent CTAs, auth pages |
+| `icon` | 32px square | - | Icon-only buttons |
+
+### Usage Examples
+
+```tsx
+// ✅ CORRECT - Use size prop
+<Button size="sm">Standard</Button>
+<Button size="lg">Form Submit</Button>
+<Button size="icon"><Icon /></Button>
+
+// ❌ WRONG - Never override height
+<Button className="h-9">Custom Height</Button>
+<Button className="h-11 px-4">Override</Button>
+```
+
+### When to Use Each Size
+
+- **`sm` / `default`**: Toolbar buttons, table actions, dialog footers, navigation
+- **`lg`**: Auth forms, hero CTAs, full-width form submits, prominent actions
+- **`icon`**: Icon-only toggle buttons, compact action buttons
+
+---
+
 ## ChatPad Design System
 
 ### Complete Color Token Reference

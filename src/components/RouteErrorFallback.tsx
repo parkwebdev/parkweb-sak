@@ -1,4 +1,5 @@
 import { AlertCircle } from '@untitledui/icons';
+import { Button } from '@/components/ui/button';
 
 interface RouteErrorFallbackProps {
   error?: Error;
@@ -18,18 +19,17 @@ const RouteErrorFallback = ({ error }: RouteErrorFallbackProps) => {
           We're sorry, but something unexpected happened. Please try refreshing the page or go back to the home page.
         </p>
         <div className="flex gap-3 justify-center">
-          <button
+          <Button
+            variant="secondary"
             onClick={() => window.location.href = '/'}
-            className="px-4 py-2 text-sm font-medium rounded-lg bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors"
           >
             Go Home
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={() => window.location.reload()}
-            className="px-4 py-2 text-sm font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
           >
             Refresh Page
-          </button>
+          </Button>
         </div>
         {import.meta.env.DEV && error && (
           <details className="mt-6 text-left p-4 bg-muted rounded-lg">

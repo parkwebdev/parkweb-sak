@@ -297,12 +297,12 @@ export function ConversationsDataTable({
               placeholder="Search"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              className="pl-9 pr-4 h-9 w-[200px] bg-background"
+              className="pl-9 pr-4 h-8 w-[200px] bg-background"
             />
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-9 gap-2">
+              <Button variant="outline" size="sm" className="gap-2">
                 <FilterLines className="h-4 w-4" />
                 Filters
                 {activeFilterCount > 0 && (
