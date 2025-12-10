@@ -104,11 +104,15 @@ export const AgentEmbedTab = ({ agent, onUpdate }: AgentEmbedTabProps) => {
     }
   };
 
+  const handleTabChange = (tab: EmbedSettingsTab) => {
+    setActiveTab(tab);
+  };
+
   return (
     <div className="h-full min-h-0">
-      <AgentSettingsLayout<EmbedSettingsTab>
+      <AgentSettingsLayout
         activeTab={activeTab}
-        onTabChange={setActiveTab}
+        onTabChange={handleTabChange}
         menuItems={MENU_ITEMS}
         title="Widget Settings"
         description={SECTION_DESCRIPTIONS[activeTab]}
