@@ -125,6 +125,96 @@ const MODEL_TIERS = {
   // premium uses agent's configured model
 } as const;
 
+// Model capability definitions - which parameters each model supports
+interface ModelCapability {
+  supported: boolean;
+}
+
+interface ModelCapabilities {
+  temperature: ModelCapability;
+  topP: ModelCapability;
+  presencePenalty: ModelCapability;
+  frequencyPenalty: ModelCapability;
+  topK: ModelCapability;
+}
+
+const MODEL_CAPABILITIES: Record<string, ModelCapabilities> = {
+  'google/gemini-2.5-flash': {
+    temperature: { supported: true },
+    topP: { supported: true },
+    presencePenalty: { supported: false },
+    frequencyPenalty: { supported: false },
+    topK: { supported: true },
+  },
+  'google/gemini-2.5-flash-lite': {
+    temperature: { supported: true },
+    topP: { supported: true },
+    presencePenalty: { supported: false },
+    frequencyPenalty: { supported: false },
+    topK: { supported: true },
+  },
+  'google/gemini-2.5-pro': {
+    temperature: { supported: true },
+    topP: { supported: true },
+    presencePenalty: { supported: false },
+    frequencyPenalty: { supported: false },
+    topK: { supported: true },
+  },
+  'anthropic/claude-sonnet-4': {
+    temperature: { supported: true },
+    topP: { supported: true },
+    presencePenalty: { supported: false },
+    frequencyPenalty: { supported: false },
+    topK: { supported: true },
+  },
+  'anthropic/claude-3.5-haiku': {
+    temperature: { supported: true },
+    topP: { supported: true },
+    presencePenalty: { supported: false },
+    frequencyPenalty: { supported: false },
+    topK: { supported: true },
+  },
+  'openai/gpt-4o': {
+    temperature: { supported: true },
+    topP: { supported: true },
+    presencePenalty: { supported: true },
+    frequencyPenalty: { supported: true },
+    topK: { supported: false },
+  },
+  'openai/gpt-4o-mini': {
+    temperature: { supported: true },
+    topP: { supported: true },
+    presencePenalty: { supported: true },
+    frequencyPenalty: { supported: true },
+    topK: { supported: false },
+  },
+  'meta-llama/llama-3.3-70b-instruct': {
+    temperature: { supported: true },
+    topP: { supported: true },
+    presencePenalty: { supported: true },
+    frequencyPenalty: { supported: true },
+    topK: { supported: true },
+  },
+  'deepseek/deepseek-chat': {
+    temperature: { supported: true },
+    topP: { supported: true },
+    presencePenalty: { supported: true },
+    frequencyPenalty: { supported: true },
+    topK: { supported: false },
+  },
+};
+
+// Get model capabilities with fallback to permissive defaults
+function getModelCapabilities(model: string): ModelCapabilities {
+  return MODEL_CAPABILITIES[model] || {
+    temperature: { supported: true },
+    topP: { supported: true },
+    presencePenalty: { supported: true },
+    frequencyPenalty: { supported: true },
+    topK: { supported: false },
+  };
+}
+
 // Select optimal model based on query complexity and RAG results
 function selectModelTier(
   query: string,
@@ -1208,9 +1298,10 @@ Generate a warm, personalized greeting using the user information provided above
     
     console.log(`Model routing: tier=${modelTier}, model=${selectedModel}, ragSimilarity=${maxSimilarity.toFixed(2)}, hasTools=${hasUserTools}`);
 
-    // Build the initial AI request with all behavior settings
+    // Build the initial AI request with only SUPPORTED behavior settings
+    const modelCaps = getModelCapabilities(selectedModel);
     const aiRequestBody: any = {
-      model: selectedModel, // Use smart-routed model instead of always agent.model
+      model: selectedModel,
       messages: [
         {
           role: 'system',
@@ -1218,13 +1309,26 @@ Generate a warm, personalized greeting using the user information provided above
         },
         ...messagesToSend,
       ],
-      stream: false, // Non-streaming for easier message persistence
+      stream: false,
       temperature: agent.temperature || 0.7,
       max_completion_tokens: agent.max_tokens || 2000,
-      top_p: deploymentConfig.top_p || 1.0,
-      presence_penalty: deploymentConfig.presence_penalty || 0,
-      frequency_penalty: deploymentConfig.frequency_penalty || 0,
     };
+
+    // Only add parameters the model supports
+    if (modelCaps.topP.supported) {
+      aiRequestBody.top_p = deploymentConfig.top_p || 1.0;
+    }
+    if (modelCaps.presencePenalty.supported) {
+      aiRequestBody.presence_penalty = deploymentConfig.presence_penalty || 0;
+    }
+    if (modelCaps.frequencyPenalty.supported) {
+      aiRequestBody.frequency_penalty = deploymentConfig.frequency_penalty || 0;
+    }
+    if (modelCaps.topK.supported && deploymentConfig.top_k) {
+      aiRequestBody.top_k = deploymentConfig.top_k;
+    }
+    
+    console.log(`Model capabilities applied: topP=${modelCaps.topP.supported}, penalties=${modelCaps.presencePenalty.supported}, topK=${modelCaps.topK.supported}`);
 
     // PHASE 7: Skip quick replies for lite model tier (reduces tool call overhead)
     // Also check agent config for enable_quick_replies setting (defaults to true)

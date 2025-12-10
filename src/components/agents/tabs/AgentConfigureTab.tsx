@@ -17,6 +17,92 @@ import { AgentDeploymentConfig } from '@/types/metadata';
 
 type Agent = Tables<'agents'>;
 
+// Model capability definitions - which parameters each model supports
+interface ParameterCapability {
+  supported: boolean;
+  min?: number;
+  max?: number;
+  default?: number;
+}
+
+interface ModelCapabilities {
+  temperature: ParameterCapability;
+  topP: ParameterCapability;
+  presencePenalty: ParameterCapability;
+  frequencyPenalty: ParameterCapability;
+  topK: ParameterCapability;
+}
+
+const MODEL_CAPABILITIES: Record<string, ModelCapabilities> = {
+  'google/gemini-2.5-flash': {
+    temperature: { supported: true, min: 0, max: 2, default: 0.7 },
+    topP: { supported: true, min: 0, max: 1, default: 1.0 },
+    presencePenalty: { supported: false },
+    frequencyPenalty: { supported: false },
+    topK: { supported: true, min: 1, max: 64, default: 40 },
+  },
+  'google/gemini-2.5-pro': {
+    temperature: { supported: true, min: 0, max: 2, default: 0.7 },
+    topP: { supported: true, min: 0, max: 1, default: 1.0 },
+    presencePenalty: { supported: false },
+    frequencyPenalty: { supported: false },
+    topK: { supported: true, min: 1, max: 64, default: 40 },
+  },
+  'anthropic/claude-sonnet-4': {
+    temperature: { supported: true, min: 0, max: 1, default: 1.0 },
+    topP: { supported: true, min: 0, max: 1, default: 1.0 },
+    presencePenalty: { supported: false },
+    frequencyPenalty: { supported: false },
+    topK: { supported: true, min: 1, max: 500, default: 0 },
+  },
+  'anthropic/claude-3.5-haiku': {
+    temperature: { supported: true, min: 0, max: 1, default: 1.0 },
+    topP: { supported: true, min: 0, max: 1, default: 1.0 },
+    presencePenalty: { supported: false },
+    frequencyPenalty: { supported: false },
+    topK: { supported: true, min: 1, max: 500, default: 0 },
+  },
+  'openai/gpt-4o': {
+    temperature: { supported: true, min: 0, max: 2, default: 1.0 },
+    topP: { supported: true, min: 0, max: 1, default: 1.0 },
+    presencePenalty: { supported: true, min: -2, max: 2, default: 0 },
+    frequencyPenalty: { supported: true, min: -2, max: 2, default: 0 },
+    topK: { supported: false },
+  },
+  'openai/gpt-4o-mini': {
+    temperature: { supported: true, min: 0, max: 2, default: 1.0 },
+    topP: { supported: true, min: 0, max: 1, default: 1.0 },
+    presencePenalty: { supported: true, min: -2, max: 2, default: 0 },
+    frequencyPenalty: { supported: true, min: -2, max: 2, default: 0 },
+    topK: { supported: false },
+  },
+  'meta-llama/llama-3.3-70b-instruct': {
+    temperature: { supported: true, min: 0, max: 2, default: 0.7 },
+    topP: { supported: true, min: 0, max: 1, default: 1.0 },
+    presencePenalty: { supported: true, min: -2, max: 2, default: 0 },
+    frequencyPenalty: { supported: true, min: -2, max: 2, default: 0 },
+    topK: { supported: true, min: 1, max: 128, default: 0 },
+  },
+  'deepseek/deepseek-chat': {
+    temperature: { supported: true, min: 0, max: 2, default: 1.0 },
+    topP: { supported: true, min: 0, max: 1, default: 1.0 },
+    presencePenalty: { supported: true, min: -2, max: 2, default: 0 },
+    frequencyPenalty: { supported: true, min: -2, max: 2, default: 0 },
+    topK: { supported: false },
+  },
+};
+
+// Get capabilities for a model (with fallback to permissive defaults)
+const getModelCapabilities = (model: string): ModelCapabilities => {
+  return MODEL_CAPABILITIES[model] || {
+    temperature: { supported: true, min: 0, max: 2, default: 0.7 },
+    topP: { supported: true, min: 0, max: 1, default: 1.0 },
+    presencePenalty: { supported: true, min: -2, max: 2, default: 0 },
+    frequencyPenalty: { supported: true, min: -2, max: 2, default: 0 },
+    topK: { supported: false },
+  };
+};
+
 const MODELS = [
   { 
     value: 'google/gemini-2.5-flash', 
@@ -90,9 +176,23 @@ const RESPONSE_LENGTH_PRESETS = [
 
 type ConfigureSection = 'identity' | 'model' | 'behavior' | 'prompt';
 
-const BEHAVIOR_SLIDERS = [
+// Map slider IDs to capability keys
+type SliderCapabilityKey = 'temperature' | 'presencePenalty' | 'frequencyPenalty' | 'topP' | 'topK';
+
+const BEHAVIOR_SLIDERS: Array<{
+  id: 'temperature' | 'presence_penalty' | 'frequency_penalty' | 'top_p' | 'top_k';
+  capabilityKey: SliderCapabilityKey;
+  label: string;
+  min: number;
+  max: number;
+  contextTitle: string;
+  contextDescription: string;
+  lowLabel: string;
+  highLabel: string;
+}> = [
   {
-    id: 'temperature' as const,
+    id: 'temperature',
+    capabilityKey: 'temperature',
     label: 'Temperature',
     min: 0,
     max: 2,
@@ -102,7 +202,19 @@ const BEHAVIOR_SLIDERS = [
     highLabel: 'Creative & Varied',
   },
   {
-    id: 'presence_penalty' as const,
+    id: 'top_k',
+    capabilityKey: 'topK',
+    label: 'Top K',
+    min: 1,
+    max: 64,
+    contextTitle: 'Token Selection Scope',
+    contextDescription: 'Top K limits the model to only consider the top K most likely tokens at each step. Lower values (1-10) make responses more focused and deterministic. Higher values allow more variety. This is Gemini\'s alternative to presence/frequency penalties for controlling response diversity.',
+    lowLabel: 'Very Focused',
+    highLabel: 'More Options',
+  },
+  {
+    id: 'presence_penalty',
+    capabilityKey: 'presencePenalty',
     label: 'Presence Penalty',
     min: 0,
     max: 2,
@@ -112,7 +224,8 @@ const BEHAVIOR_SLIDERS = [
     highLabel: 'Explores New Topics',
   },
   {
-    id: 'frequency_penalty' as const,
+    id: 'frequency_penalty',
+    capabilityKey: 'frequencyPenalty',
     label: 'Frequency Penalty',
     min: 0,
     max: 2,
@@ -122,7 +235,8 @@ const BEHAVIOR_SLIDERS = [
     highLabel: 'Varied Vocabulary',
   },
   {
-    id: 'top_p' as const,
+    id: 'top_p',
+    capabilityKey: 'topP',
     label: 'Top P',
     min: 0,
     max: 1,
@@ -160,7 +274,7 @@ export const AgentConfigureTab: React.FC<AgentConfigureTabProps> = ({ agent, onU
   const [activeSlider, setActiveSlider] = useState<string | null>(null);
   const [showSaved, setShowSaved] = useState(false);
   const saveTimerRef = useRef<NodeJS.Timeout>();
-  const deploymentConfig = (agent.deployment_config || {}) as AgentDeploymentConfig & { top_p?: number; presence_penalty?: number; frequency_penalty?: number };
+  const deploymentConfig = (agent.deployment_config || {}) as AgentDeploymentConfig;
   
   const getInitialPreset = () => {
     const tokens = agent.max_tokens || 2000;
@@ -180,13 +294,14 @@ export const AgentConfigureTab: React.FC<AgentConfigureTabProps> = ({ agent, onU
     top_p: deploymentConfig.top_p || 1.0,
     presence_penalty: deploymentConfig.presence_penalty || 0,
     frequency_penalty: deploymentConfig.frequency_penalty || 0,
+    top_k: deploymentConfig.top_k || 40,
     response_length_preset: getInitialPreset(),
     system_prompt: agent.system_prompt,
   });
 
   // Reset form when agent changes
   useEffect(() => {
-    const config = (agent.deployment_config || {}) as AgentDeploymentConfig & { top_p?: number; presence_penalty?: number; frequency_penalty?: number };
+    const config = (agent.deployment_config || {}) as AgentDeploymentConfig;
     setFormData({
       name: agent.name,
       description: agent.description || '',
@@ -197,6 +312,7 @@ export const AgentConfigureTab: React.FC<AgentConfigureTabProps> = ({ agent, onU
       top_p: config.top_p || 1.0,
       presence_penalty: config.presence_penalty || 0,
       frequency_penalty: config.frequency_penalty || 0,
+      top_k: config.top_k || 40,
       response_length_preset: getInitialPreset(),
       system_prompt: agent.system_prompt,
     });
@@ -210,7 +326,7 @@ export const AgentConfigureTab: React.FC<AgentConfigureTabProps> = ({ agent, onU
   }, []);
 
   const saveToDatabase = async (data: typeof formData) => {
-    const { top_p, presence_penalty, frequency_penalty, response_length_preset, system_prompt, ...coreFields } = data;
+    const { top_p, presence_penalty, frequency_penalty, top_k, response_length_preset, system_prompt, ...coreFields } = data;
     await onUpdate(agent.id, {
       ...coreFields,
       system_prompt,
@@ -219,6 +335,7 @@ export const AgentConfigureTab: React.FC<AgentConfigureTabProps> = ({ agent, onU
         top_p,
         presence_penalty,
         frequency_penalty,
+        top_k,
       },
     });
     setShowSaved(true);
@@ -390,40 +507,91 @@ export const AgentConfigureTab: React.FC<AgentConfigureTabProps> = ({ agent, onU
   );
 
   const renderBehaviorSection = () => {
-    const currentSliderInfo = BEHAVIOR_SLIDERS.find(s => s.id === activeSlider);
+    const capabilities = getModelCapabilities(formData.model);
+    
+    // Filter sliders based on model capabilities
+    const supportedSliders = BEHAVIOR_SLIDERS.filter(slider => {
+      const cap = capabilities[slider.capabilityKey];
+      return cap?.supported !== false;
+    });
+    
+    const currentSliderInfo = supportedSliders.find(s => s.id === activeSlider);
+    const modelName = MODELS.find(m => m.value === formData.model)?.label || formData.model;
+    
+    // Helper to get slider min/max from capabilities (with slider defaults as fallback)
+    const getSliderRange = (slider: typeof BEHAVIOR_SLIDERS[0]) => {
+      const cap = capabilities[slider.capabilityKey];
+      return {
+        min: cap?.min ?? slider.min,
+        max: cap?.max ?? slider.max,
+      };
+    };
+    
+    // Helper to get default value for a slider
+    const getDefaultValue = (slider: typeof BEHAVIOR_SLIDERS[0]) => {
+      const cap = capabilities[slider.capabilityKey];
+      if (cap?.default !== undefined) return cap.default;
+      if (slider.id === 'top_p') return 1;
+      if (slider.id === 'temperature') return 0.7;
+      if (slider.id === 'top_k') return 40;
+      return 0;
+    };
     
     return (
       <div className="flex gap-8">
         {/* Left column: Sliders */}
         <div className="flex-1 space-y-6">
-          {BEHAVIOR_SLIDERS.map((slider) => (
-            <div 
-              key={slider.id}
-              className="space-y-3"
-              onMouseEnter={() => setActiveSlider(slider.id)}
-              onMouseLeave={() => setActiveSlider(null)}
-            >
-              <div className="flex items-center justify-between">
-                <Label htmlFor={slider.id}>{slider.label}</Label>
-                <span className="text-sm text-muted-foreground font-mono">
-                  {(formData[slider.id as keyof typeof formData] as number)?.toFixed(2) || (slider.id === 'top_p' ? '1.00' : '0.00')}
-                </span>
-              </div>
-              <Slider
-                id={slider.id}
-                min={slider.min}
-                max={slider.max}
-                step={0.01}
-                value={[(formData[slider.id as keyof typeof formData] as number) || (slider.id === 'top_p' ? 1 : slider.id === 'temperature' ? 0.7 : 0)]}
-                onValueChange={([value]) => handleUpdate({ [slider.id]: value })}
-                className="w-full"
-              />
-              <div className="flex justify-between text-xs text-muted-foreground">
-                <span>{slider.lowLabel}</span>
-                <span>{slider.highLabel}</span>
-              </div>
-            </div>
-          ))}
+          {/* Model indicator */}
+          <div className="flex items-center gap-2 text-sm text-muted-foreground pb-2 border-b border-border/50">
+            <span>Showing controls for</span>
+            <Badge variant="secondary" className="font-medium">
+              {modelName}
+            </Badge>
+          </div>
+          
+          <AnimatePresence mode="popLayout">
+            {supportedSliders.map((slider) => {
+              const range = getSliderRange(slider);
+              const step = slider.id === 'top_k' ? 1 : 0.01;
+              
+              return (
+                <motion.div 
+                  key={slider.id}
+                  layout
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="space-y-3"
+                  onMouseEnter={() => setActiveSlider(slider.id)}
+                  onMouseLeave={() => setActiveSlider(null)}
+                >
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor={slider.id}>{slider.label}</Label>
+                    <span className="text-sm text-muted-foreground font-mono">
+                      {slider.id === 'top_k' 
+                        ? Math.round(formData[slider.id] || getDefaultValue(slider))
+                        : (formData[slider.id as keyof typeof formData] as number)?.toFixed(2) || getDefaultValue(slider).toFixed(2)
+                      }
+                    </span>
+                  </div>
+                  <Slider
+                    id={slider.id}
+                    min={range.min}
+                    max={range.max}
+                    step={step}
+                    value={[(formData[slider.id as keyof typeof formData] as number) ?? getDefaultValue(slider)]}
+                    onValueChange={([value]) => handleUpdate({ [slider.id]: value })}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>{slider.lowLabel}</span>
+                    <span>{slider.highLabel}</span>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
           
           <SavedIndicator show={showSaved} className="mt-2" />
         </div>
