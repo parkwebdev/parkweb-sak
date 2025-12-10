@@ -99,7 +99,7 @@ export function MetricCardWithChart({
         <ResponsiveContainer height={56}>
           <AreaChart
             data={chartData}
-            margin={{ left: 0, right: 0, top: 0, bottom: 0 }}
+            margin={{ left: 0, right: 0, top: 4, bottom: 0 }}
           >
             <defs>
               <linearGradient id={`gradient-${id}`} x1="0" y1="0" x2="0" y2="1">
