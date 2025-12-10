@@ -63,6 +63,13 @@ const MODEL_CAPABILITIES: Record<string, ModelCapabilities> = {
     frequencyPenalty: { supported: false },
     topK: { supported: true, min: 1, max: 500, default: 0 },
   },
+  'anthropic/claude-opus-4.1': {
+    temperature: { supported: true, min: 0, max: 1, default: 1.0 },
+    topP: { supported: true, min: 0, max: 1, default: 1.0 },
+    presencePenalty: { supported: false },
+    frequencyPenalty: { supported: false },
+    topK: { supported: true, min: 1, max: 500, default: 0 },
+  },
   'openai/gpt-4o': {
     temperature: { supported: true, min: 0, max: 2, default: 1.0 },
     topP: { supported: true, min: 0, max: 1, default: 1.0 },
@@ -71,6 +78,13 @@ const MODEL_CAPABILITIES: Record<string, ModelCapabilities> = {
     topK: { supported: false },
   },
   'openai/gpt-4o-mini': {
+    temperature: { supported: true, min: 0, max: 2, default: 1.0 },
+    topP: { supported: true, min: 0, max: 1, default: 1.0 },
+    presencePenalty: { supported: true, min: -2, max: 2, default: 0 },
+    frequencyPenalty: { supported: true, min: -2, max: 2, default: 0 },
+    topK: { supported: false },
+  },
+  'openai/gpt-5.1': {
     temperature: { supported: true, min: 0, max: 2, default: 1.0 },
     topP: { supported: true, min: 0, max: 1, default: 1.0 },
     presencePenalty: { supported: true, min: -2, max: 2, default: 0 },
@@ -91,6 +105,20 @@ const MODEL_CAPABILITIES: Record<string, ModelCapabilities> = {
     frequencyPenalty: { supported: true, min: -2, max: 2, default: 0 },
     topK: { supported: false },
   },
+  'qwen/qwen-2.5-72b-instruct': {
+    temperature: { supported: true, min: 0, max: 2, default: 0.7 },
+    topP: { supported: true, min: 0, max: 1, default: 1.0 },
+    presencePenalty: { supported: true, min: -2, max: 2, default: 0 },
+    frequencyPenalty: { supported: true, min: -2, max: 2, default: 0 },
+    topK: { supported: true, min: 1, max: 100, default: 50 },
+  },
+  'mistralai/mistral-medium-3.1': {
+    temperature: { supported: true, min: 0, max: 1.5, default: 0.7 },
+    topP: { supported: true, min: 0, max: 1, default: 1.0 },
+    presencePenalty: { supported: false },
+    frequencyPenalty: { supported: false },
+    topK: { supported: false },
+  },
 };
 
 // Get capabilities for a model (with fallback to permissive defaults)
@@ -104,62 +132,28 @@ const getModelCapabilities = (model: string): ModelCapabilities => {
   };
 };
 
-// Inline SVG icons for model providers
-const GeminiIcon = ({ size = 18 }: { size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-    <path d="M12 24C12 21.8 11.6 19.7 10.8 17.8C10 15.9 8.9 14.1 7.4 12.6C5.9 11.1 4.1 9.9 2.2 9.1C0.3 8.3 -1.7 7.9 -3.9 7.9C-1.7 7.9 0.3 7.5 2.2 6.7C4.1 5.9 5.9 4.7 7.4 3.2C8.9 1.7 10 -0.1 10.8 -2C11.6 -3.9 12 -6 12 -8.2C12 -6 12.4 -3.9 13.2 -2C14 -0.1 15.1 1.7 16.6 3.2C18.1 4.7 19.9 5.9 21.8 6.7C23.7 7.5 25.7 7.9 27.9 7.9C25.7 7.9 23.7 8.3 21.8 9.1C19.9 9.9 18.1 11.1 16.6 12.6C15.1 14.1 14 15.9 13.2 17.8C12.4 19.7 12 21.8 12 24Z" transform="translate(0 8)" fill="url(#gemini-gradient)"/>
-    <defs>
-      <linearGradient id="gemini-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#4285F4"/>
-        <stop offset="50%" stopColor="#9B72CB"/>
-        <stop offset="100%" stopColor="#D96570"/>
-      </linearGradient>
-    </defs>
-  </svg>
-);
-
-const ClaudeIcon = ({ size = 18 }: { size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-    <path d="M16.98 11.39L12 2L7.02 11.39L2 12L7.02 12.61L12 22L16.98 12.61L22 12L16.98 11.39Z" fill="#CC785C"/>
-  </svg>
-);
-
-const OpenAIIcon = ({ size = 18 }: { size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
-    <path d="M22.282 9.821a5.985 5.985 0 0 0-.516-4.91 6.046 6.046 0 0 0-6.51-2.9A6.065 6.065 0 0 0 4.981 4.18a5.985 5.985 0 0 0-3.998 2.9 6.046 6.046 0 0 0 .743 7.097 5.98 5.98 0 0 0 .51 4.911 6.051 6.051 0 0 0 6.515 2.9A5.985 5.985 0 0 0 13.26 24a6.056 6.056 0 0 0 5.772-4.206 5.99 5.99 0 0 0 3.997-2.9 6.056 6.056 0 0 0-.747-7.073zM13.26 22.43a4.476 4.476 0 0 1-2.876-1.04l.141-.081 4.779-2.758a.795.795 0 0 0 .392-.681v-6.737l2.02 1.168a.071.071 0 0 1 .038.052v5.583a4.504 4.504 0 0 1-4.494 4.494zM3.6 18.304a4.47 4.47 0 0 1-.535-3.014l.142.085 4.783 2.759a.771.771 0 0 0 .78 0l5.843-3.369v2.332a.08.08 0 0 1-.033.062L9.74 19.95a4.5 4.5 0 0 1-6.14-1.646zM2.34 7.896a4.485 4.485 0 0 1 2.366-1.973V11.6a.766.766 0 0 0 .388.676l5.815 3.355-2.02 1.168a.076.076 0 0 1-.071 0l-4.83-2.786A4.504 4.504 0 0 1 2.34 7.896zm16.597 3.855l-5.833-3.387L15.119 7.2a.076.076 0 0 1 .071 0l4.83 2.791a4.494 4.494 0 0 1-.676 8.105v-5.678a.79.79 0 0 0-.407-.667zm2.01-3.023l-.141-.085-4.774-2.782a.776.776 0 0 0-.785 0L9.409 9.23V6.897a.066.066 0 0 1 .028-.061l4.83-2.787a4.5 4.5 0 0 1 6.68 4.66zm-12.64 4.135l-2.02-1.164a.08.08 0 0 1-.038-.057V6.075a4.5 4.5 0 0 1 7.375-3.453l-.142.08L8.704 5.46a.795.795 0 0 0-.393.681zm1.097-2.365l2.602-1.5 2.607 1.5v2.999l-2.597 1.5-2.607-1.5z"/>
-  </svg>
-);
-
-const MetaIcon = ({ size = 18 }: { size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-    <path d="M6.915 4.03c-1.968 0-3.683 1.28-4.871 3.113C.704 9.208 0 11.883 0 14.449c0 .706.07 1.369.21 1.973a4.892 4.892 0 0 0 1.12 2.166c.549.6 1.239.96 2.039.96 1.041 0 1.99-.483 2.896-1.299.863-.778 1.682-1.86 2.454-3.154l.508-.853.504.85c.76 1.28 1.564 2.356 2.41 3.132.89.816 1.837 1.299 2.878 1.299.74 0 1.41-.296 1.943-.828.547-.543.952-1.325 1.193-2.3.147-.597.221-1.262.221-1.975 0-2.58-.711-5.263-2.064-7.323C15.015 5.299 13.279 4.03 11.3 4.03c-1.041 0-2 .493-2.9 1.325-.407.376-.796.804-1.166 1.282a14.18 14.18 0 0 0-1.164-1.279c-.9-.835-1.86-1.328-2.9-1.328h-.255zm.126 1.63c.696 0 1.377.324 2.073.95.667.599 1.316 1.455 1.93 2.527l.667 1.161.635-1.172c.627-1.158 1.292-2.035 1.97-2.603.673-.564 1.35-.863 2.03-.863 1.37 0 2.627.974 3.572 2.61 1.042 1.804 1.616 4.108 1.616 6.188 0 .61-.058 1.167-.168 1.66-.155.69-.425 1.239-.752 1.564a1.13 1.13 0 0 1-.834.354c-.597 0-1.235-.324-1.895-.922-.67-.607-1.326-1.458-1.94-2.528l-.707-1.233-.697 1.232c-.627 1.106-1.295 1.968-1.974 2.546-.673.573-1.348.89-2.035.89a1.4 1.4 0 0 1-1.088-.486 3.18 3.18 0 0 1-.72-1.418A7.058 7.058 0 0 1 1.5 14.44c0-2.098.567-4.39 1.602-6.18.937-1.621 2.178-2.6 3.555-2.6z" fill="#0081FB"/>
-  </svg>
-);
-
-const DeepSeekIcon = ({ size = 18 }: { size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-    <circle cx="12" cy="12" r="10" fill="#4D6BFE"/>
-    <path d="M8 12C8 9.79 9.79 8 12 8C14.21 8 16 9.79 16 12C16 14.21 14.21 16 12 16" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-    <circle cx="12" cy="12" r="2" fill="white"/>
-  </svg>
-);
+// Import model icons as assets
+import GeminiIcon from '@/assets/model-icons/gemini.svg';
+import OpenAIIcon from '@/assets/model-icons/openai.svg';
+import ClaudeIcon from '@/assets/model-icons/claude.svg';
+import MetaIcon from '@/assets/model-icons/meta.svg';
+import DeepSeekIcon from '@/assets/model-icons/deepseek.svg';
+import QwenIcon from '@/assets/model-icons/qwen.svg';
+import MistralIcon from '@/assets/model-icons/mistral.svg';
 
 // Helper to get model provider icon
 const getModelIcon = (provider: string, size: number = 18) => {
-  switch (provider) {
-    case 'gemini':
-      return <GeminiIcon size={size} />;
-    case 'claude':
-      return <ClaudeIcon size={size} />;
-    case 'openai':
-      return <OpenAIIcon size={size} />;
-    case 'llama':
-      return <MetaIcon size={size} />;
-    case 'deepseek':
-      return <DeepSeekIcon size={size} />;
-    default:
-      return null;
-  }
+  const iconMap: Record<string, string> = {
+    gemini: GeminiIcon,
+    openai: OpenAIIcon,
+    claude: ClaudeIcon,
+    llama: MetaIcon,
+    deepseek: DeepSeekIcon,
+    qwen: QwenIcon,
+    mistral: MistralIcon,
+  };
+  const src = iconMap[provider];
+  return src ? <img src={src} alt="" className="shrink-0" style={{ width: size, height: size }} /> : null;
 };
 
 const MODELS = [
@@ -180,20 +174,12 @@ const MODELS = [
     outputCostPer1M: 5.00
   },
   { 
-    value: 'anthropic/claude-sonnet-4', 
-    label: 'Claude Sonnet 4',
-    provider: 'claude',
-    description: 'Most intelligent model with superior reasoning.',
-    inputCostPer1M: 3.00,
-    outputCostPer1M: 15.00
-  },
-  { 
-    value: 'anthropic/claude-3.5-haiku', 
-    label: 'Claude 3.5 Haiku',
-    provider: 'claude',
-    description: 'Fast and efficient for quick responses.',
-    inputCostPer1M: 0.80,
-    outputCostPer1M: 4.00
+    value: 'openai/gpt-5.1', 
+    label: 'ChatGPT-5.1',
+    provider: 'openai',
+    description: 'Latest frontier reasoning with improved instruction following.',
+    inputCostPer1M: 1.25,
+    outputCostPer1M: 10.00
   },
   { 
     value: 'openai/gpt-4o', 
@@ -210,6 +196,46 @@ const MODELS = [
     description: 'Fast and cost-effective alternative.',
     inputCostPer1M: 0.15,
     outputCostPer1M: 0.60
+  },
+  { 
+    value: 'anthropic/claude-opus-4.1', 
+    label: 'Claude Opus 4.1',
+    provider: 'claude',
+    description: 'Top coding model with enhanced agentic capabilities.',
+    inputCostPer1M: 15.00,
+    outputCostPer1M: 75.00
+  },
+  { 
+    value: 'anthropic/claude-sonnet-4', 
+    label: 'Claude Sonnet 4',
+    provider: 'claude',
+    description: 'Most intelligent model with superior reasoning.',
+    inputCostPer1M: 3.00,
+    outputCostPer1M: 15.00
+  },
+  { 
+    value: 'anthropic/claude-3.5-haiku', 
+    label: 'Claude 3.5 Haiku',
+    provider: 'claude',
+    description: 'Fast and efficient for quick responses.',
+    inputCostPer1M: 0.80,
+    outputCostPer1M: 4.00
+  },
+  { 
+    value: 'qwen/qwen-2.5-72b-instruct', 
+    label: 'Qwen 2.5 72B',
+    provider: 'qwen',
+    description: 'Powerful open-source model with excellent multilingual support.',
+    inputCostPer1M: 0.07,
+    outputCostPer1M: 0.26
+  },
+  { 
+    value: 'mistralai/mistral-medium-3.1', 
+    label: 'Mistral Medium 3.1',
+    provider: 'mistral',
+    description: 'Enterprise-grade with frontier capabilities at lower cost.',
+    inputCostPer1M: 0.40,
+    outputCostPer1M: 2.00
   },
   { 
     value: 'meta-llama/llama-3.3-70b-instruct', 
