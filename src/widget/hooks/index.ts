@@ -42,3 +42,6 @@ export { useRealtimeConfig } from './useRealtimeConfig';
 
 /** Mobile keyboard height detection for viewport adjustments */
 export { useKeyboardHeight } from './useKeyboardHeight';
+
+/** System theme detection for mobile dark mode updates */
+export { useSystemTheme } from './useSystemTheme';
