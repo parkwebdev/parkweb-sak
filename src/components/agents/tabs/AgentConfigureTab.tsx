@@ -1,10 +1,9 @@
-import React, { useState, useEffect, useImperativeHandle, forwardRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Tables } from '@/integrations/supabase/types';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { InfoCircleIcon, InfoCircleIconFilled } from '@/components/ui/info-circle-icon';
@@ -13,6 +12,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { AgentSettingsLayout } from '@/components/agents/AgentSettingsLayout';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
+import { SavedIndicator } from '@/components/settings/SavedIndicator';
 import { AgentDeploymentConfig } from '@/types/metadata';
 
 type Agent = Tables<'agents'>;
@@ -79,12 +79,6 @@ const MODELS = [
 interface AgentConfigureTabProps {
   agent: Agent;
   onUpdate: (id: string, updates: Partial<Agent>) => Promise<Agent | null | void>;
-  onFormChange?: (hasChanges: boolean) => void;
-}
-
-/** Handle type for imperative save method */
-export interface AgentConfigureTabHandle {
-  handleSave: () => Promise<void>;
 }
 
 const RESPONSE_LENGTH_PRESETS = [
@@ -161,9 +155,11 @@ const calculateEstimatedCost = (model: string, maxTokens: number) => {
   };
 };
 
-export const AgentConfigureTab = forwardRef<AgentConfigureTabHandle, AgentConfigureTabProps>(({ agent, onUpdate, onFormChange }, ref) => {
+export const AgentConfigureTab: React.FC<AgentConfigureTabProps> = ({ agent, onUpdate }) => {
   const [activeSection, setActiveSection] = useState<ConfigureSection>('identity');
   const [activeSlider, setActiveSlider] = useState<string | null>(null);
+  const [showSaved, setShowSaved] = useState(false);
+  const saveTimerRef = useRef<NodeJS.Timeout>();
   const deploymentConfig = (agent.deployment_config || {}) as AgentDeploymentConfig & { top_p?: number; presence_penalty?: number; frequency_penalty?: number };
   
   const getInitialPreset = () => {
@@ -188,26 +184,48 @@ export const AgentConfigureTab = forwardRef<AgentConfigureTabHandle, AgentConfig
     system_prompt: agent.system_prompt,
   });
 
-  const hasChanges = JSON.stringify(formData) !== JSON.stringify({
-    name: agent.name,
-    description: agent.description || '',
-    model: agent.model,
-    temperature: agent.temperature || 0.7,
-    max_tokens: agent.max_tokens || 2000,
-    status: agent.status,
-    top_p: deploymentConfig.top_p || 1.0,
-    presence_penalty: deploymentConfig.presence_penalty || 0,
-    frequency_penalty: deploymentConfig.frequency_penalty || 0,
-    response_length_preset: getInitialPreset(),
-    system_prompt: agent.system_prompt,
-  });
-
+  // Reset form when agent changes
   useEffect(() => {
-    onFormChange?.(hasChanges);
-  }, [hasChanges, onFormChange]);
+    const config = (agent.deployment_config || {}) as AgentDeploymentConfig & { top_p?: number; presence_penalty?: number; frequency_penalty?: number };
+    setFormData({
+      name: agent.name,
+      description: agent.description || '',
+      model: agent.model,
+      temperature: agent.temperature || 0.7,
+      max_tokens: agent.max_tokens || 2000,
+      status: agent.status,
+      top_p: config.top_p || 1.0,
+      presence_penalty: config.presence_penalty || 0,
+      frequency_penalty: config.frequency_penalty || 0,
+      response_length_preset: getInitialPreset(),
+      system_prompt: agent.system_prompt,
+    });
+  }, [agent.id]);
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    };
+  }, []);
+
+  const saveToDatabase = async (data: typeof formData) => {
+    const { top_p, presence_penalty, frequency_penalty, response_length_preset, system_prompt, ...coreFields } = data;
+    await onUpdate(agent.id, {
+      ...coreFields,
+      system_prompt,
+      deployment_config: {
+        ...deploymentConfig,
+        top_p,
+        presence_penalty,
+        frequency_penalty,
+      },
+    });
+    setShowSaved(true);
+  };
 
   const handleUpdate = (updates: Partial<typeof formData>) => {
-    const newFormData = { ...formData, ...updates };
+    let newFormData = { ...formData, ...updates };
     
     if (updates.response_length_preset && updates.response_length_preset !== 'custom') {
       const preset = RESPONSE_LENGTH_PRESETS.find(p => p.value === updates.response_length_preset);
@@ -226,25 +244,13 @@ export const AgentConfigureTab = forwardRef<AgentConfigureTabHandle, AgentConfig
     }
     
     setFormData(newFormData);
-  };
 
-  useImperativeHandle(ref, () => ({
-    handleSave: async () => {
-      if (hasChanges) {
-        const { top_p, presence_penalty, frequency_penalty, response_length_preset, system_prompt, ...coreFields } = formData;
-        await onUpdate(agent.id, {
-          ...coreFields,
-          system_prompt,
-          deployment_config: {
-            ...deploymentConfig,
-            top_p,
-            presence_penalty,
-            frequency_penalty,
-          },
-        });
-      }
-    }
-  }), [hasChanges, formData, agent.id, onUpdate, deploymentConfig]);
+    // Debounced auto-save
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => {
+      saveToDatabase(newFormData);
+    }, 1000);
+  };
 
   const costEstimate = calculateEstimatedCost(formData.model, formData.max_tokens);
 
@@ -271,6 +277,8 @@ export const AgentConfigureTab = forwardRef<AgentConfigureTabHandle, AgentConfig
           className="mt-1.5 min-h-[80px]"
         />
       </div>
+      
+      <SavedIndicator show={showSaved} className="mt-2" />
     </div>
   );
 
@@ -356,7 +364,7 @@ export const AgentConfigureTab = forwardRef<AgentConfigureTabHandle, AgentConfig
       {costEstimate && (
         <Card className="p-4 bg-accent/50 border-border">
           <div className="flex items-start justify-between mb-2">
-            <h4 className="text-sm font-semibold text-foreground">💰 Estimated Cost</h4>
+            <h4 className="text-sm font-semibold text-foreground">Estimated Cost</h4>
             <Badge variant={costEstimate.tier === 'Budget' ? 'secondary' : costEstimate.tier === 'Standard' ? 'default' : 'destructive'}>
               {costEstimate.tier}
             </Badge>
@@ -376,6 +384,8 @@ export const AgentConfigureTab = forwardRef<AgentConfigureTabHandle, AgentConfig
           </div>
         </Card>
       )}
+      
+      <SavedIndicator show={showSaved} className="mt-2" />
     </div>
   );
 
@@ -414,6 +424,8 @@ export const AgentConfigureTab = forwardRef<AgentConfigureTabHandle, AgentConfig
               </div>
             </div>
           ))}
+          
+          <SavedIndicator show={showSaved} className="mt-2" />
         </div>
         
         {/* Right column: Contextual info panel */}
@@ -482,6 +494,8 @@ export const AgentConfigureTab = forwardRef<AgentConfigureTabHandle, AgentConfig
           className="min-h-[300px] font-mono text-sm"
         />
       </div>
+      
+      <SavedIndicator show={showSaved} className="mt-2" />
     </div>
   );
 
@@ -501,4 +515,4 @@ export const AgentConfigureTab = forwardRef<AgentConfigureTabHandle, AgentConfig
       </AgentSettingsLayout>
     </TooltipProvider>
   );
-});
+};

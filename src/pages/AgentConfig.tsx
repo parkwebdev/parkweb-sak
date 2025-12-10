@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useAgents } from '@/hooks/useAgents';
 import { AgentConfigHeader } from '@/components/agents/AgentConfigHeader';
@@ -24,10 +24,6 @@ const AgentConfig: React.FC<AgentConfigProps> = ({ onMenuClick }) => {
   const { agents, updateAgent } = useAgents();
   const [agent, setAgent] = useState<Agent | null>(null);
   const [activeTab, setActiveTab] = useState<AgentConfigTab>('configure');
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const [showSaved, setShowSaved] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const saveTimeoutRef = useRef<NodeJS.Timeout>();
 
   useEffect(() => {
     if (agentId) {
@@ -41,30 +37,6 @@ const AgentConfig: React.FC<AgentConfigProps> = ({ onMenuClick }) => {
     return await updateAgent(id, updates);
   };
 
-  const handleSave = async () => {
-    if (!agent || !hasUnsavedChanges) return;
-    
-    setIsSaving(true);
-    try {
-      // Tabs auto-save, so this just updates the indicator
-      // The save operation is handled by individual tab components
-      setHasUnsavedChanges(false);
-      setShowSaved(true);
-      
-      // Hide saved indicator after 2 seconds
-      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
-      saveTimeoutRef.current = setTimeout(() => setShowSaved(false), 2000);
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  useEffect(() => {
-    return () => {
-      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
-    };
-  }, []);
-
   if (!agent) {
     return (
       <main className="flex-1 bg-muted/30">
@@ -75,13 +47,7 @@ const AgentConfig: React.FC<AgentConfigProps> = ({ onMenuClick }) => {
 
   return (
     <div className="flex-1 h-full bg-muted/30 flex flex-col min-h-0">
-      <AgentConfigHeader
-          agent={agent}
-          hasUnsavedChanges={hasUnsavedChanges}
-          showSaved={showSaved}
-          onSave={handleSave}
-          isSaving={isSaving}
-        />
+      <AgentConfigHeader agent={agent} />
       
       <AgentConfigLayout
         activeTab={activeTab}
@@ -92,7 +58,6 @@ const AgentConfig: React.FC<AgentConfigProps> = ({ onMenuClick }) => {
             <AgentEmbedTab
               agent={agent}
               onUpdate={handleUpdate}
-              onFormChange={setHasUnsavedChanges}
             />
           </div>
         ) : (
@@ -101,7 +66,6 @@ const AgentConfig: React.FC<AgentConfigProps> = ({ onMenuClick }) => {
               <AgentConfigureTab
                 agent={agent}
                 onUpdate={handleUpdate}
-                onFormChange={setHasUnsavedChanges}
               />
             )}
             {activeTab === 'knowledge' && (
