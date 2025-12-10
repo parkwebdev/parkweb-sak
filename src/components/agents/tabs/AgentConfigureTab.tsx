@@ -828,9 +828,9 @@ export const AgentConfigureTab: React.FC<AgentConfigureTabProps> = ({ agent, onU
   };
 
   const renderPromptSection = () => (
-    <div className="space-y-6">
-      <div className="space-y-3">
-        <div className="flex items-center gap-2">
+    <div className="flex flex-col h-full">
+      <div className="flex flex-col flex-1 min-h-0">
+        <div className="flex items-center gap-2 mb-3">
           <Label htmlFor="system_prompt">System Prompt</Label>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -857,11 +857,11 @@ export const AgentConfigureTab: React.FC<AgentConfigureTabProps> = ({ agent, onU
           value={formData.system_prompt}
           onChange={(e) => handleUpdate({ system_prompt: e.target.value })}
           placeholder="You are a helpful assistant that..."
-          className="min-h-[300px] font-mono text-sm"
+          className="flex-1 min-h-[400px] font-mono text-sm resize-none"
         />
       </div>
       
-      <SavedIndicator show={showSaved} className="mt-2" />
+      <SavedIndicator show={showSaved} className="mt-4" />
     </div>
   );
 
