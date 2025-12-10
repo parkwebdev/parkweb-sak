@@ -23,9 +23,6 @@ export const QuickReplies = ({ suggestions, onSelect, primaryColor }: QuickRepli
           key={idx}
           onClick={() => onSelect(suggestion)}
           className="text-xs px-3 py-1.5 rounded-full border border-border bg-background hover:bg-accent transition-colors duration-150 text-left max-w-[200px] truncate"
-          style={{
-            borderColor: `${primaryColor}30`,
-          }}
           title={suggestion}
         >
           {suggestion}
