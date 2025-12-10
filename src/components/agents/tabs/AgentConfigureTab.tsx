@@ -153,7 +153,11 @@ const getModelIcon = (provider: string, size: number = 18) => {
     mistral: MistralIcon,
   };
   const src = iconMap[provider];
-  return src ? <img src={src} alt="" className="shrink-0" style={{ width: size, height: size }} /> : null;
+  if (!src) return null;
+  
+  // OpenAI logo needs invert in dark mode since it uses currentColor (black by default)
+  const darkModeClass = provider === 'openai' ? 'dark:invert' : '';
+  return <img src={src} alt="" className={`shrink-0 ${darkModeClass}`} style={{ width: size, height: size }} />;
 };
 
 const MODELS = [
