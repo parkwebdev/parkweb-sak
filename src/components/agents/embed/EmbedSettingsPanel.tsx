@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Trash01 } from '@untitledui/icons';
 import { CopyButton } from '@/components/ui/copy-button';
 import { ToggleSettingRow } from '@/components/ui/toggle-setting-row';
+import { ColorPicker } from '@/components/ui/color-picker';
 import type { EmbeddedChatConfig, CustomField } from '@/hooks/useEmbeddedChatConfig';
 import { toast } from '@/lib/toast';
 
@@ -70,20 +71,11 @@ export const EmbedSettingsPanel = ({ config, onConfigChange, embedCode }: EmbedS
           <AccordionContent className="space-y-4 pt-4">
             <div className="space-y-2">
               <Label htmlFor="primary-color" className="text-sm">Text/Button Color</Label>
-              <div className="flex items-center gap-2">
-                <Input
-                  id="primary-color"
-                  type="color"
-                  value={config.primaryColor}
-                  onChange={(e) => onConfigChange({ primaryColor: e.target.value })}
-                  className="w-16 h-9 cursor-pointer"
-                />
-                <Input
-                  value={config.primaryColor}
-                  onChange={(e) => onConfigChange({ primaryColor: e.target.value })}
-                  className="text-sm"
-                />
-              </div>
+              <ColorPicker
+                id="primary-color"
+                value={config.primaryColor}
+                onChange={(color) => onConfigChange({ primaryColor: color })}
+              />
             </div>
 
             <ToggleSettingRow
@@ -98,38 +90,20 @@ export const EmbedSettingsPanel = ({ config, onConfigChange, embedCode }: EmbedS
               <div className="space-y-3 pl-4 border-l-2">
                 <div className="space-y-2">
                   <Label htmlFor="gradient-start" className="text-sm">Primary Brand Color</Label>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      id="gradient-start"
-                      type="color"
-                      value={config.gradientStartColor}
-                      onChange={(e) => onConfigChange({ gradientStartColor: e.target.value })}
-                      className="w-16 h-9 cursor-pointer"
-                    />
-                    <Input
-                      value={config.gradientStartColor}
-                      onChange={(e) => onConfigChange({ gradientStartColor: e.target.value })}
-                      className="text-sm"
-                    />
-                  </div>
+                  <ColorPicker
+                    id="gradient-start"
+                    value={config.gradientStartColor}
+                    onChange={(color) => onConfigChange({ gradientStartColor: color })}
+                  />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="gradient-end" className="text-sm">Secondary Brand Color</Label>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      id="gradient-end"
-                      type="color"
-                      value={config.gradientEndColor}
-                      onChange={(e) => onConfigChange({ gradientEndColor: e.target.value })}
-                      className="w-16 h-9 cursor-pointer"
-                    />
-                    <Input
-                      value={config.gradientEndColor}
-                      onChange={(e) => onConfigChange({ gradientEndColor: e.target.value })}
-                      className="text-sm"
-                    />
-                  </div>
+                  <ColorPicker
+                    id="gradient-end"
+                    value={config.gradientEndColor}
+                    onChange={(color) => onConfigChange({ gradientEndColor: color })}
+                  />
                 </div>
               </div>
             )}
