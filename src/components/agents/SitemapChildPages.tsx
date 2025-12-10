@@ -112,7 +112,7 @@ export const SitemapChildPages: React.FC<SitemapChildPagesProps> = ({
               setSearchQuery(e.target.value);
               setVisibleCount(INITIAL_VISIBLE_COUNT);
             }}
-            className="pl-9 h-8 text-sm"
+            className="pl-9 text-xs h-8"
           />
         </div>
         <Select 
@@ -122,7 +122,7 @@ export const SitemapChildPages: React.FC<SitemapChildPagesProps> = ({
             setVisibleCount(INITIAL_VISIBLE_COUNT);
           }}
         >
-          <SelectTrigger className="w-[140px] h-8 text-sm">
+          <SelectTrigger size="sm" className="w-[140px]">
             <SelectValue placeholder="Filter status" />
           </SelectTrigger>
           <SelectContent>

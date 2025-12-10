@@ -109,7 +109,7 @@ export const AnalyticsToolbar = ({
                     value={filters.agentId}
                     onValueChange={(value) => onFiltersChange({ ...filters, agentId: value })}
                   >
-                    <SelectTrigger className="h-9">
+                    <SelectTrigger size="sm">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -129,7 +129,7 @@ export const AnalyticsToolbar = ({
                     value={filters.leadStatus}
                     onValueChange={(value) => onFiltersChange({ ...filters, leadStatus: value })}
                   >
-                    <SelectTrigger className="h-9">
+                    <SelectTrigger size="sm">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -148,7 +148,7 @@ export const AnalyticsToolbar = ({
                     value={filters.conversationStatus}
                     onValueChange={(value) => onFiltersChange({ ...filters, conversationStatus: value })}
                   >
-                    <SelectTrigger className="h-9">
+                    <SelectTrigger size="sm">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>

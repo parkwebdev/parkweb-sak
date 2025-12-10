@@ -360,7 +360,7 @@ export const BulkImportDialog = ({ open, onOpenChange, onImport, existingCategor
                                 setColumnMapping(prev => ({ ...prev, [index]: value }));
                               }}
                             >
-                              <SelectTrigger className="h-8 text-xs">
+                              <SelectTrigger size="sm">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
