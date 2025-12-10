@@ -123,12 +123,12 @@ export const HomeView = ({
           )}
         </div>
         
-        {/* Content area - container fades from transparent to white */}
+        {/* Content area - container fades from transparent to background */}
         <div className="relative flex-1 flex flex-col">
           <div 
             className="p-5 pt-8 space-y-4 flex-1"
             style={{
-              background: 'linear-gradient(to bottom, transparent 0%, transparent 80px, white 160px, white 100%)'
+              background: 'linear-gradient(to bottom, transparent 0%, transparent 80px, hsl(var(--background)) 160px, hsl(var(--background)) 100%)'
             }}
           >
             {isContentLoading ? (
@@ -154,7 +154,7 @@ export const HomeView = ({
                     {config.announcements.map((announcement) => (
                       <CSSAnimatedItem key={announcement.id}>
                         <div 
-                          className="rounded-lg overflow-hidden cursor-pointer transition-transform hover:scale-[1.02] active:scale-[0.98] bg-white border shadow-sm"
+                          className="rounded-lg overflow-hidden cursor-pointer transition-transform hover:scale-[1.02] active:scale-[0.98] bg-card border shadow-sm"
                           onClick={() => {
                             if (announcement.action_type === 'open_url' && announcement.action_url) {
                               window.open(announcement.action_url, '_blank', 'noopener,noreferrer');
@@ -220,7 +220,7 @@ export const HomeView = ({
         </div>
         
         {config.showBranding && (
-          <div className="text-center py-2 mt-auto bg-white border-t">
+          <div className="text-center py-2 mt-auto bg-background border-t">
             <span className="text-xs text-muted-foreground inline-flex items-center">
               Powered by
               <a 
