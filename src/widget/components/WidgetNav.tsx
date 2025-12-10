@@ -63,7 +63,7 @@ export const WidgetNav = ({
           active={currentView === 'home'} 
           hovered={hoveredNav === 'home'}
         />
-        <span className={`text-xs ${currentView === 'home' ? 'font-medium' : 'text-muted-foreground'}`} style={currentView === 'home' ? { color: primaryColor } : undefined}>
+        <span className={`text-xs ${currentView === 'home' ? 'font-medium text-foreground' : 'text-muted-foreground'}`}>
           Home
         </span>
       </button>
@@ -85,7 +85,7 @@ export const WidgetNav = ({
             </span>
           )}
         </div>
-        <span className={`text-xs ${currentView === 'messages' ? 'font-medium' : 'text-muted-foreground'}`} style={currentView === 'messages' ? { color: primaryColor } : undefined}>
+        <span className={`text-xs ${currentView === 'messages' ? 'font-medium text-foreground' : 'text-muted-foreground'}`}>
           Messages
         </span>
       </button>
@@ -101,7 +101,7 @@ export const WidgetNav = ({
             active={currentView === 'news'} 
             hovered={hoveredNav === 'news'}
           />
-          <span className={`text-xs ${currentView === 'news' ? 'font-medium' : 'text-muted-foreground'}`} style={currentView === 'news' ? { color: primaryColor } : undefined}>
+          <span className={`text-xs ${currentView === 'news' ? 'font-medium text-foreground' : 'text-muted-foreground'}`}>
             News
           </span>
         </button>
@@ -118,7 +118,7 @@ export const WidgetNav = ({
             active={currentView === 'help'} 
             hovered={hoveredNav === 'help'}
           />
-          <span className={`text-xs ${currentView === 'help' ? 'font-medium' : 'text-muted-foreground'}`} style={currentView === 'help' ? { color: primaryColor } : undefined}>
+          <span className={`text-xs ${currentView === 'help' ? 'font-medium text-foreground' : 'text-muted-foreground'}`}>
             Help
           </span>
         </button>

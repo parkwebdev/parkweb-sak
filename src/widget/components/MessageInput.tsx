@@ -185,10 +185,9 @@ export const MessageInput = ({
               <Button 
                 type="button"
                 size="icon" 
-                className="absolute right-1 bottom-1 h-7 w-7"
+                className="absolute right-1 bottom-1 h-7 w-7 bg-foreground text-background hover:bg-foreground/90"
                 onClick={onSend} 
                 disabled={disabled || !messageInput.trim()}
-                style={{ backgroundColor: primaryColor }}
               >
                 <Send01 className="h-3.5 w-3.5" />
               </Button>

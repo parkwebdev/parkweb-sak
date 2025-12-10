@@ -184,7 +184,7 @@ export const ContactForm = ({
             </div>
           ))}
           
-          <Button type="submit" size="sm" className="w-full h-10" style={{ backgroundColor: primaryColor }}>
+          <Button type="submit" size="sm" className="w-full h-10 text-white" style={{ backgroundColor: primaryColor }}>
             Start Chat
           </Button>
         </form>
