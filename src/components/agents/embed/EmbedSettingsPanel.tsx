@@ -75,6 +75,7 @@ export const EmbedSettingsPanel = ({ config, onConfigChange, embedCode }: EmbedS
                 id="primary-color"
                 value={config.primaryColor}
                 onChange={(color) => onConfigChange({ primaryColor: color })}
+                showAlpha={false}
               />
             </div>
 
@@ -94,6 +95,7 @@ export const EmbedSettingsPanel = ({ config, onConfigChange, embedCode }: EmbedS
                     id="gradient-start"
                     value={config.gradientStartColor}
                     onChange={(color) => onConfigChange({ gradientStartColor: color })}
+                    showAlpha={false}
                   />
                 </div>
 
@@ -103,6 +105,7 @@ export const EmbedSettingsPanel = ({ config, onConfigChange, embedCode }: EmbedS
                     id="gradient-end"
                     value={config.gradientEndColor}
                     onChange={(color) => onConfigChange({ gradientEndColor: color })}
+                    showAlpha={false}
                   />
                 </div>
               </div>
