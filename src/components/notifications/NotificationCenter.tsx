@@ -305,11 +305,11 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNotifi
                     placeholder="Search notifications..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-9 h-9 text-sm"
+                    className="pl-9 h-8 text-xs"
                   />
                 </div>
                 <Select value={filterType} onValueChange={setFilterType}>
-                  <SelectTrigger className="h-9 text-sm">
+                  <SelectTrigger size="sm">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>

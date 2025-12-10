@@ -147,18 +147,18 @@ export const ContactForm = ({
             className="absolute -left-[9999px] h-0 w-0 opacity-0 pointer-events-none"
             aria-hidden="true"
           />
-          <Input name="firstName" placeholder="First name" className="h-10 text-sm" required />
+          <Input name="firstName" placeholder="First name" className="text-sm" required />
           {formErrors.firstName && <p className="text-xs text-destructive">{formErrors.firstName}</p>}
-          <Input name="lastName" placeholder="Last name" className="h-10 text-sm" required />
+          <Input name="lastName" placeholder="Last name" className="text-sm" required />
           {formErrors.lastName && <p className="text-xs text-destructive">{formErrors.lastName}</p>}
-          <Input name="email" type="email" placeholder="Email" className="h-10 text-sm" required />
+          <Input name="email" type="email" placeholder="Email" className="text-sm" required />
           {formErrors.email && <p className="text-xs text-destructive">{formErrors.email}</p>}
           
           {customFields.map(field => (
             <div key={field.id}>
               {field.fieldType === 'select' ? (
                 <Select name={field.id} required={field.required}>
-                  <SelectTrigger className="h-10 text-sm">
+                  <SelectTrigger className="text-sm">
                     <SelectValue placeholder={field.label} />
                   </SelectTrigger>
                   <SelectContent>
@@ -170,16 +170,16 @@ export const ContactForm = ({
               ) : field.fieldType === 'textarea' ? (
                 <Textarea name={field.id} placeholder={field.label} className="text-sm" required={field.required} />
               ) : field.fieldType === 'phone' ? (
-                <Suspense fallback={<Input placeholder={field.label} className="h-10 text-sm" disabled />}>
+                <Suspense fallback={<Input placeholder={field.label} className="text-sm" disabled />}>
                   <PhoneInputField 
                     name={field.id}
                     placeholder={field.label}
-                    className="h-10 text-sm"
+                    className="text-sm"
                     required={field.required}
                   />
                 </Suspense>
               ) : (
-                <Input name={field.id} type={field.fieldType === 'email' ? 'email' : 'text'} placeholder={field.label} className="h-10 text-sm" required={field.required} />
+                <Input name={field.id} type={field.fieldType === 'email' ? 'email' : 'text'} placeholder={field.label} className="text-sm" required={field.required} />
               )}
             </div>
           ))}
