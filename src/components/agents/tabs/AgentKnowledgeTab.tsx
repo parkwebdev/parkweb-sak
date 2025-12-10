@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
-import { Database01, RefreshCcw01, Globe01 } from '@untitledui/icons';
+import { Database01, ZapFast, Globe01 } from '@untitledui/icons';
 import { useKnowledgeSources } from '@/hooks/useKnowledgeSources';
 import { KnowledgeSourceCard } from '@/components/agents/KnowledgeSourceCard';
 import { AddKnowledgeDialog } from '@/components/agents/AddKnowledgeDialog';
@@ -146,7 +146,7 @@ export const AgentKnowledgeTab = ({ agentId, userId }: AgentKnowledgeTabProps) =
                 onClick={handleRetrainAll}
                 disabled={isRetraining || sources.every(s => s.status === 'processing')}
               >
-                <RefreshCcw01 className={`h-4 w-4 mr-2 ${isRetraining ? 'animate-spin' : ''}`} />
+                <ZapFast className={`h-4 w-4 mr-1.5 ${isRetraining ? 'animate-pulse' : ''}`} />
                 {isRetraining 
                   ? `Retraining ${retrainProgress.completed}/${retrainProgress.total}...`
                   : outdatedCount > 0 
