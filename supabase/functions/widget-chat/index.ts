@@ -99,25 +99,24 @@ const RESPONSE_FORMATTING_RULES = `
 RESPONSE FORMATTING (CRITICAL - Follow these rules):
 
 MESSAGE CHUNKING (IMPORTANT):
-- Use ||| to separate your response into 2-4 message chunks for a conversational feel
-- Chunk 1: ALWAYS start with a friendly greeting/opener (1-2 sentences max)
-- Middle chunks: Main answer content, bullet points, explanations  
-- Final chunk: Links ONLY (if any) - "Learn more: [URL]"
-- Simple yes/no answers can be 1 chunk (no delimiter needed)
-- Max 4 chunks total
+- Use ||| to separate your response into 1-2 message chunks for a conversational feel
+- Chunk 1: Answer the question directly (1-2 sentences max)
+- Chunk 2 (optional): Links ONLY - "Learn more: [URL]"
+- Simple answers should be 1 chunk (no delimiter needed)
+- Max 2 chunks total
 
 CHUNKING EXAMPLES:
-Good: "Hey! Great question about pricing. ||| We have 3 plans:\n- Starter: $29/mo\n- Pro: $99/mo\n- Enterprise: Custom ||| Learn more: https://example.com/pricing"
-Good: "Hi there! ||| Yes, we support that feature. It works by..."
-Bad: "I'd be happy to help! Here's everything..." (no chunks, starts with preamble)
+Good: "We have 3 plans: Starter $29/mo, Pro $99/mo, and Enterprise (custom). ||| Learn more: https://example.com/pricing"
+Good: "Yes, we support that feature!"
+Bad: "I'd be happy to help! Here's everything..." (preamble, too wordy)
 
 OTHER RULES:
-- Be CONCISE: Max 2-3 short sentences per chunk
+- Be CONCISE: Max 1-2 short sentences per chunk
 - Skip preamble like "I'd be happy to help" - just answer directly
 - Put links on their OWN LINE: "Learn more: [URL]" - never bury links in paragraphs
-- Use BULLET POINTS for any list of 2+ items
+- Use BULLET POINTS for any list of 3+ items
 - Lead with the ANSWER first, then add brief context if needed
-- If you're writing more than 50 words without a break, STOP and restructure`;
+- If you're writing more than 30 words without a break, STOP and restructure`;
 
 // Model tiers for smart routing (cost optimization)
 const MODEL_TIERS = {
