@@ -17,6 +17,7 @@ export const AppearanceSection = ({ config, onConfigChange }: AppearanceSectionP
           id="primary-color"
           value={config.primaryColor}
           onChange={(color) => onConfigChange({ primaryColor: color })}
+          showAlpha={false}
         />
       </div>
 
@@ -36,6 +37,7 @@ export const AppearanceSection = ({ config, onConfigChange }: AppearanceSectionP
               id="gradient-start"
               value={config.gradientStartColor}
               onChange={(color) => onConfigChange({ gradientStartColor: color })}
+              showAlpha={false}
             />
           </div>
 
@@ -45,6 +47,7 @@ export const AppearanceSection = ({ config, onConfigChange }: AppearanceSectionP
               id="gradient-end"
               value={config.gradientEndColor}
               onChange={(color) => onConfigChange({ gradientEndColor: color })}
+              showAlpha={false}
             />
           </div>
         </div>
