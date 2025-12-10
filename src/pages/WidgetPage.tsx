@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ChatWidget } from '@/widget/ChatWidget';
 import type { WidgetConfig } from '@/widget/api';
+import { useKeyboardHeight } from '@/widget/hooks/useKeyboardHeight';
 
 // Simple hook to get search params without react-router dependency for widget bundle
 const useWidgetSearchParams = () => {
@@ -52,6 +53,7 @@ const getDefaultConfig = (agentId: string): WidgetConfig => ({
 const WidgetPage = () => {
   const searchParams = useWidgetSearchParams();
   const agentId = searchParams.get('agentId');
+  const { keyboardHeight, isKeyboardOpen } = useKeyboardHeight();
   
   // Validate agentId is present and not empty
   const hasValidAgentId = agentId && agentId.trim().length > 0;
@@ -154,9 +156,17 @@ const WidgetPage = () => {
     );
   }
 
+  // Calculate dynamic height when keyboard is open
+  const containerStyle = isKeyboardOpen
+    ? { height: `calc(100% - ${keyboardHeight}px)` }
+    : { height: '100%' };
+
   // Render immediately with defaults, then update when real config arrives
   return (
-    <div className="w-full h-full bg-transparent">
+    <div 
+      className="w-full bg-transparent widget-keyboard-aware" 
+      style={containerStyle}
+    >
       <ChatWidget config={config} previewMode={false} isLoading={!isConfigLoaded} />
     </div>
   );

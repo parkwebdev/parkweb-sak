@@ -39,3 +39,6 @@ export { useConversations } from './useConversations';
 
 /** Real-time config updates via Supabase */
 export { useRealtimeConfig } from './useRealtimeConfig';
+
+/** Mobile keyboard height detection for viewport adjustments */
+export { useKeyboardHeight } from './useKeyboardHeight';
