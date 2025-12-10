@@ -7,7 +7,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { EmptyState } from '@/components/ui/empty-state';
-import { BookOpen01, Upload01, XClose, Image01 } from '@untitledui/icons';
+import { BookOpen01, XClose, Image01 } from '@untitledui/icons';
+import { CsvFileIcon } from './CsvFileIcon';
 import { LoadingState } from '@/components/ui/loading-state';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { useHelpArticles } from '@/hooks/useHelpArticles';
@@ -371,7 +372,7 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
             )}
             
             <Button size="sm" variant="outline" onClick={() => setBulkImportOpen(true)}>
-              <Upload01 className="w-3.5 h-3.5 mr-1.5" />
+              <CsvFileIcon size={16} className="mr-1.5" />
               Import CSV
             </Button>
             
