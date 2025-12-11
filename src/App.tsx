@@ -19,6 +19,7 @@ import ConversationsWrapper from "./pages/ConversationsWrapper";
 import LeadsWrapper from "./pages/LeadsWrapper";
 import AnalyticsWrapper from "./pages/AnalyticsWrapper";
 import SettingsWrapper from "./pages/SettingsWrapper";
+import CalendarWrapper from "./pages/CalendarWrapper";
 
 const queryClient = new QueryClient();
 
@@ -51,6 +52,7 @@ const App = () => (
                   <Route path="/agents" element={<AgentsWrapper />} />
                   <Route path="/agents/:agentId" element={<AgentConfigWrapper />} />
                   <Route path="/conversations" element={<ConversationsWrapper />} />
+                  <Route path="/calendar" element={<CalendarWrapper />} />
                   <Route path="/leads" element={<LeadsWrapper />} />
                   <Route path="/analytics" element={<AnalyticsWrapper />} />
                   <Route path="/settings" element={<SettingsWrapper />} />
