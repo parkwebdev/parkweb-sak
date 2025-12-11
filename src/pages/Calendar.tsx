@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { PageHeader } from '@/components/ui/page-header';
+import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FullCalendar } from '@/components/calendar/FullCalendar';
 import { CreateEventDialog } from '@/components/calendar/CreateEventDialog';
@@ -326,7 +327,14 @@ const Calendar: React.FC = () => {
       <PageHeader
         title="Calendar"
         description="Manage your property showings and bookings"
-      />
+      >
+        <Button variant="outline">
+          Connect Calendar
+        </Button>
+        <Button onClick={handleAddEvent}>
+          Add event
+        </Button>
+      </PageHeader>
 
       <div className="px-4 lg:px-8 mt-6 pb-8 space-y-6">
         {/* Tabs & Color Legend */}
