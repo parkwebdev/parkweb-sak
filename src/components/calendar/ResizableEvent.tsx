@@ -100,62 +100,7 @@ export const ResizableEvent: React.FC<ResizableEventProps> = ({
     document.addEventListener('mouseup', handleMouseUp);
   };
 
-  // Handle horizontal resize for month view (date-based)
-  const handleMonthResizeMouseDown = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    isResizeIntent.current = true;
-    setIsResizing(true);
-    const startX = e.clientX;
-    const dayWidth = (e.currentTarget.closest('.calendar-day-cell') as HTMLElement)?.offsetWidth || 100;
-    originalEndTime.current = new Date(event.end);
-    onResizeStart?.(event.id);
-
-    const handleMouseMove = (moveEvent: MouseEvent) => {
-      moveEvent.preventDefault();
-      moveEvent.stopPropagation();
-      const deltaX = moveEvent.clientX - startX;
-      const daysDelta = Math.round(deltaX / dayWidth);
-      const newEndDate = new Date(originalEndTime.current);
-      newEndDate.setDate(newEndDate.getDate() + daysDelta);
-      
-      // Enforce minimum 1 day duration
-      if (newEndDate <= eventStart) {
-        const minEnd = new Date(eventStart);
-        minEnd.setDate(minEnd.getDate() + 1);
-        onResizeMove?.(event.id, minEnd);
-      } else {
-        onResizeMove?.(event.id, newEndDate);
-      }
-    };
-
-    const handleMouseUp = (upEvent: MouseEvent) => {
-      const deltaX = upEvent.clientX - startX;
-      const daysDelta = Math.round(deltaX / dayWidth);
-      const newEndDate = new Date(originalEndTime.current);
-      newEndDate.setDate(newEndDate.getDate() + daysDelta);
-      
-      // Enforce minimum 1 day duration
-      let finalEnd = newEndDate;
-      if (newEndDate <= eventStart) {
-        finalEnd = new Date(eventStart);
-        finalEnd.setDate(finalEnd.getDate() + 1);
-      }
-      
-      setIsResizing(false);
-      isResizeIntent.current = false;
-      onResizeEnd?.(event.id, finalEnd);
-      
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-  };
-
-  // Month view - with right-edge resize handle for date extension
+  // Month view - with bottom resize handle for time-based resizing (same as week/day)
   if (variant === 'month') {
     return (
       <div
@@ -200,16 +145,16 @@ export const ResizableEvent: React.FC<ResizableEventProps> = ({
           )}
         </div>
         
-        {/* Right-edge resize handle for date extension */}
+        {/* Bottom resize handle for time extension */}
         <div
           className={cn(
-            "absolute top-0 right-0 bottom-0 w-3 cursor-ew-resize z-10",
+            "absolute bottom-0 left-0 right-0 h-3 cursor-ns-resize z-10",
             "opacity-0 group-hover:opacity-100 transition-opacity"
           )}
-          onMouseDown={handleMonthResizeMouseDown}
+          onMouseDown={handleResizeMouseDown}
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="absolute right-0.5 top-1/2 -translate-y-1/2 w-1 h-4 rounded-full bg-current opacity-60" />
+          <div className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-8 h-1 rounded-full bg-current opacity-60" />
         </div>
       </div>
     );
