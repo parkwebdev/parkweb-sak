@@ -16,6 +16,7 @@ interface DeleteEventDialogProps {
   onOpenChange: (open: boolean) => void;
   event: CalendarEvent | null;
   onConfirmDelete: () => void;
+  isDeleting?: boolean;
 }
 
 export const DeleteEventDialog: React.FC<DeleteEventDialogProps> = ({
@@ -23,6 +24,7 @@ export const DeleteEventDialog: React.FC<DeleteEventDialogProps> = ({
   onOpenChange,
   event,
   onConfirmDelete,
+  isDeleting = false,
 }) => {
   if (!event) return null;
 
@@ -36,12 +38,13 @@ export const DeleteEventDialog: React.FC<DeleteEventDialogProps> = ({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
           <AlertDialogAction
             onClick={onConfirmDelete}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            disabled={isDeleting}
           >
-            Delete
+            {isDeleting ? 'Deleting...' : 'Delete'}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
