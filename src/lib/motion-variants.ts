@@ -19,9 +19,6 @@ export const springs = {
   
   /** Quick micro-interaction */
   micro: { type: 'spring', stiffness: 500, damping: 35 } as Transition,
-  
-  /** Sidebar collapse/expand - smooth and polished */
-  sidebar: { type: 'spring', stiffness: 350, damping: 35, mass: 0.8 } as Transition,
 } as const;
 
 // =============================================================================

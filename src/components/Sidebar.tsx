@@ -89,11 +89,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
   return (
     <motion.aside 
       className="flex h-screen bg-sidebar"
-      initial={false}
       animate={{ 
         width: isCollapsed ? 64 : 240 
       }}
-      transition={prefersReducedMotion ? { duration: 0 } : springs.sidebar}
+      transition={prefersReducedMotion ? { duration: 0 } : springs.smooth}
       onMouseEnter={() => setCollapsed(false)}
       onMouseLeave={() => setCollapsed(true)}
     >
