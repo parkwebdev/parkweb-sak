@@ -1,11 +1,10 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback } from 'react';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FullCalendar } from '@/components/calendar/FullCalendar';
 import { CreateEventDialog } from '@/components/calendar/CreateEventDialog';
-import { ViewEventDialog } from '@/components/calendar/ViewEventDialog';
-import { EditEventDialog } from '@/components/calendar/EditEventDialog';
+import { EventDetailDialog } from '@/components/calendar/EventDetailDialog';
 import { DeleteEventDialog } from '@/components/calendar/DeleteEventDialog';
 import { TimeChangeReasonDialog } from '@/components/calendar/TimeChangeReasonDialog';
 import type { CalendarEvent, TimeChangeRecord } from '@/types/calendar';
@@ -142,8 +141,7 @@ const Calendar: React.FC = () => {
   
   // Dialog states
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [viewDialogOpen, setViewDialogOpen] = useState(false);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [eventDetailOpen, setEventDetailOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -170,7 +168,7 @@ const Calendar: React.FC = () => {
 
   const handleEventClick = (event: CalendarEvent) => {
     setSelectedEvent(event);
-    setViewDialogOpen(true);
+    setEventDetailOpen(true);
   };
 
   const handleAddEvent = () => {
@@ -238,14 +236,13 @@ const Calendar: React.FC = () => {
           newEnd,
         });
         setTimeChangeDialogOpen(true);
-        setEditDialogOpen(false);
+        setEventDetailOpen(false);
         return;
       }
     }
     
     setEvents(prev => prev.map(e => e.id === updatedEvent.id ? updatedEvent : e));
-    setEditDialogOpen(false);
-    setViewDialogOpen(false);
+    setEventDetailOpen(false);
     setSelectedEvent(null);
   };
 
@@ -253,7 +250,7 @@ const Calendar: React.FC = () => {
     if (selectedEvent) {
       setEvents(prev => prev.filter(e => e.id !== selectedEvent.id));
       setDeleteDialogOpen(false);
-      setViewDialogOpen(false);
+      setEventDetailOpen(false);
       setSelectedEvent(null);
     }
   };
@@ -261,18 +258,13 @@ const Calendar: React.FC = () => {
   const handleMarkComplete = () => {
     if (selectedEvent) {
       setEvents(prev => prev.map(e => e.id === selectedEvent.id ? { ...e, status: 'completed' } : e));
-      setViewDialogOpen(false);
+      setEventDetailOpen(false);
       setSelectedEvent(null);
     }
   };
 
-  const handleEditFromView = () => {
-    setViewDialogOpen(false);
-    setEditDialogOpen(true);
-  };
-
-  const handleDeleteFromView = () => {
-    setViewDialogOpen(false);
+  const handleDeleteFromDetail = () => {
+    setEventDetailOpen(false);
     setDeleteDialogOpen(true);
   };
 
@@ -384,20 +376,13 @@ const Calendar: React.FC = () => {
         onCreateEvent={handleCreateEvent}
       />
 
-      <ViewEventDialog
-        open={viewDialogOpen}
-        onOpenChange={setViewDialogOpen}
-        event={selectedEvent}
-        onEdit={handleEditFromView}
-        onDelete={handleDeleteFromView}
-        onMarkComplete={handleMarkComplete}
-      />
-
-      <EditEventDialog
-        open={editDialogOpen}
-        onOpenChange={setEditDialogOpen}
+      <EventDetailDialog
+        open={eventDetailOpen}
+        onOpenChange={setEventDetailOpen}
         event={selectedEvent}
         onUpdateEvent={handleUpdateEvent}
+        onDelete={handleDeleteFromDetail}
+        onMarkComplete={handleMarkComplete}
       />
 
       <DeleteEventDialog
