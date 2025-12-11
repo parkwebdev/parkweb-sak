@@ -79,30 +79,26 @@ const Calendar: React.FC = () => {
 
   return (
     <main className="flex-1 bg-muted/30 h-screen overflow-auto">
-      <div className="px-4 lg:px-8 pt-4 lg:pt-8 pb-8 space-y-6">
-        {/* Page Header */}
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <PageHeader
-            title="Calendar"
-            description="Manage your bookings and appointments"
+      <PageHeader
+        title="Calendar"
+        description="Manage your bookings and appointments"
+      >
+        <div className="relative w-full lg:w-80">
+          <SearchLg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search events..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
           />
-          <div className="flex items-center gap-3">
-            <div className="relative w-full lg:w-80">
-              <SearchLg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search events..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9"
-              />
-            </div>
-            <Button variant="outline" size="default">
-              <Link01 className="h-4 w-4 mr-2" />
-              Connect Calendar
-            </Button>
-          </div>
         </div>
+        <Button variant="outline" size="default">
+          <Link01 className="h-4 w-4 mr-2" />
+          Connect Calendar
+        </Button>
+      </PageHeader>
 
+      <div className="px-4 lg:px-8 mt-6 pb-8 space-y-6">
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList>
