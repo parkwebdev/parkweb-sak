@@ -134,7 +134,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
                       }`}
                       title={isCollapsed ? item.label : ''}
                     >
-                      <div className="items-center flex gap-2 my-auto w-full overflow-hidden">
+                      <div className="items-center flex gap-2 my-auto w-full">
                         <div className="items-center flex my-auto w-[18px] flex-shrink-0 relative">
                           <item.icon size={14} className="self-stretch my-auto" />
                           {/* Collapsed state unread indicator */}

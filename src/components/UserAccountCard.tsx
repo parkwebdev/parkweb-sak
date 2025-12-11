@@ -85,27 +85,26 @@ export const UserAccountCard: React.FC<UserAccountCardProps> = ({ isCollapsed = 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className={`relative flex items-center gap-3 w-full ${isCollapsed ? 'p-1 justify-center' : 'p-[11px]'} hover:bg-accent/50 rounded-md transition-colors`}>
+        <button className={`relative flex items-center w-full ${isCollapsed ? 'justify-center p-[6px]' : 'gap-3 p-[11px]'} hover:bg-accent/50 rounded-md transition-all duration-150`}>
           <div className="relative flex-shrink-0">
-          <Avatar className="h-8 w-8">
-            <AvatarImage src={avatarUrl} alt={displayName} />
-            <AvatarFallback className="font-medium text-xs">
+            <Avatar className="h-8 w-8">
+              <AvatarImage src={avatarUrl} alt={displayName} />
+              <AvatarFallback className="font-medium text-xs">
                 {initials}
               </AvatarFallback>
             </Avatar>
-            <div className="bg-green-500 absolute rounded-full border-[1.5px] border-sidebar w-1.5 h-1.5 -bottom-0 -right-0" />
+            <div className="bg-green-500 absolute rounded-full border-[1.5px] border-sidebar w-2.5 h-2.5 bottom-0 right-0" />
           </div>
-          <div 
-            className="text-left min-w-0 flex-1 overflow-hidden"
-            style={{ opacity: isCollapsed ? 0 : 1, transition: 'opacity 0.15s ease' }}
-          >
-          <div className="text-foreground text-xs font-semibold leading-tight truncate">
-            {displayName}
-          </div>
-          <div className="text-muted-foreground text-[11px] font-normal leading-tight truncate">
-              {email}
+          {!isCollapsed && (
+            <div className="text-left min-w-0 flex-1 overflow-hidden">
+              <div className="text-foreground text-xs font-semibold leading-tight truncate">
+                {displayName}
+              </div>
+              <div className="text-muted-foreground text-[11px] font-normal leading-tight truncate">
+                {email}
+              </div>
             </div>
-          </div>
+          )}
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48 bg-background border shadow-lg z-50">
