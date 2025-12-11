@@ -23,6 +23,7 @@ import { ResizableEvent } from './ResizableEvent';
 import { DroppableTimeSlot } from './DroppableTimeSlot';
 import { DroppableDayCell } from './DroppableDayCell';
 import { DraggedEventPreview } from './DraggedEventPreview';
+import { useCalendarKeyboardShortcuts } from '@/hooks/useCalendarKeyboardShortcuts';
 import type { CalendarEvent, CalendarView } from '@/types/calendar';
 
 // Time slots for week/day view (6 AM to 10 PM)
@@ -213,6 +214,14 @@ export const FullCalendar: React.FC<FullCalendarProps> = ({
   };
 
   const goToToday = () => setCurrentDate(new Date());
+
+  // Keyboard shortcuts for calendar navigation
+  useCalendarKeyboardShortcuts({
+    onPrevious: goToPrevious,
+    onNext: goToNext,
+    onToday: goToToday,
+    onViewChange: setView,
+  });
 
   // Dynamic header title based on view
   const getHeaderTitle = () => {
