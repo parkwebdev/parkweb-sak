@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { SearchLg, Link01 } from '@untitledui/icons';
 import { PageHeader } from '@/components/ui/page-header';
 import { Input } from '@/components/ui/input';
@@ -207,6 +207,14 @@ const Calendar: React.FC = () => {
     setDeleteDialogOpen(true);
   };
 
+  const handleEventMove = useCallback((eventId: string, newStart: Date, newEnd: Date) => {
+    setEvents(prev => prev.map(event => 
+      event.id === eventId 
+        ? { ...event, start: newStart, end: newEnd }
+        : event
+    ));
+  }, []);
+
   return (
     <main className="flex-1 bg-muted/30 h-full overflow-auto">
       <PageHeader
@@ -261,6 +269,7 @@ const Calendar: React.FC = () => {
           onDateClick={handleDateClick}
           onEventClick={handleEventClick}
           onAddEvent={handleAddEvent}
+          onEventMove={handleEventMove}
         />
       </div>
 
