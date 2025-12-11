@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Settings04 as Settings, Grid01 as Grid, MessageCircle02, User03, Cube01 as Bot, PieChart01 } from '@untitledui/icons';
+import { X, Settings04 as Settings, Grid01 as Grid, MessageSquare01, User03, Cube01 as Bot, PieChart01 } from '@untitledui/icons';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { UserAccountCard } from './UserAccountCard';
@@ -34,7 +34,7 @@ const navigationItems: NavigationItem[] = [
   {
     id: 'conversations',
     label: 'Conversations',
-    icon: MessageCircle02,
+    icon: MessageSquare01,
     path: '/conversations'
   },
   {
@@ -90,7 +90,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
     <motion.aside 
       className="flex h-screen bg-sidebar"
       animate={{ 
-        width: isCollapsed ? 72 : 240 
+        width: isCollapsed ? 64 : 240 
       }}
       transition={prefersReducedMotion ? { duration: 0 } : springs.smooth}
       onMouseEnter={() => setCollapsed(false)}
@@ -127,7 +127,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
                   >
                     <Link 
                       to={item.path}
-                      className={`items-center flex w-full px-2.5 py-2 rounded-md transition-colors text-sm overflow-hidden ${
+                      className={`items-center flex w-full p-2.5 rounded-md transition-colors text-sm overflow-hidden ${
                         isActive 
                           ? 'bg-accent text-accent-foreground' 
                           : 'bg-transparent hover:bg-accent/50 text-muted-foreground hover:text-foreground'
@@ -191,7 +191,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
                     >
                       <Link 
                         to={item.path}
-                        className={`items-center flex w-full px-2.5 py-2 rounded-md transition-colors text-sm overflow-hidden ${
+                        className={`items-center flex w-full p-2.5 rounded-md transition-colors text-sm overflow-hidden ${
                           isActive 
                             ? 'bg-accent text-accent-foreground' 
                             : 'bg-transparent hover:bg-accent/50 text-muted-foreground hover:text-foreground'
