@@ -1,3 +1,15 @@
+export type RecurrenceFrequency = 'daily' | 'weekly' | 'monthly' | 'yearly';
+export type RecurrenceEndType = 'never' | 'after' | 'on';
+
+export interface RecurrenceRule {
+  frequency: RecurrenceFrequency;
+  interval: number; // e.g., every 2 weeks
+  endType: RecurrenceEndType;
+  endAfterOccurrences?: number;
+  endDate?: Date;
+  daysOfWeek?: number[]; // 0-6 for Sun-Sat (for weekly)
+}
+
 export interface CalendarEvent {
   id: string;
   title: string;
@@ -7,6 +19,11 @@ export interface CalendarEvent {
   color?: string;
   source?: 'google' | 'microsoft' | 'calendly' | 'calcom' | 'native';
   metadata?: Record<string, unknown>;
+  
+  // Recurrence fields
+  recurrence?: RecurrenceRule;
+  recurrence_id?: string; // Links recurring instances to parent
+  is_recurring_instance?: boolean;
   
   // Booking-specific fields
   type?: 'showing' | 'move_in' | 'inspection' | 'maintenance' | 'meeting';

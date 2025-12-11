@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import {
   Select,
   SelectContent,
@@ -27,7 +28,8 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
-import type { CalendarEvent, EventType } from '@/types/calendar';
+import { RecurrenceSettings } from './RecurrenceSettings';
+import type { CalendarEvent, EventType, RecurrenceRule } from '@/types/calendar';
 import { EVENT_TYPE_CONFIG } from '@/types/calendar';
 
 interface CreateEventDialogProps {
@@ -66,6 +68,8 @@ export const CreateEventDialog: React.FC<CreateEventDialogProps> = ({
   const [community, setCommunity] = useState('');
   const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [recurrence, setRecurrence] = useState<RecurrenceRule | undefined>(undefined);
 
   // Sync date and time when initialDate prop changes
   useEffect(() => {
@@ -95,6 +99,8 @@ export const CreateEventDialog: React.FC<CreateEventDialogProps> = ({
     setProperty('');
     setCommunity('');
     setNotes('');
+    setIsRecurring(false);
+    setRecurrence(undefined);
   };
 
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
@@ -126,6 +132,7 @@ export const CreateEventDialog: React.FC<CreateEventDialogProps> = ({
         notes: notes || undefined,
         status: 'confirmed',
         source: 'native',
+        recurrence: isRecurring ? recurrence : undefined,
       });
 
       resetForm();
@@ -133,7 +140,7 @@ export const CreateEventDialog: React.FC<CreateEventDialogProps> = ({
     } finally {
       setIsSubmitting(false);
     }
-  }, [date, title, startTime, endTime, eventType, leadName, leadEmail, leadPhone, property, community, notes, onCreateEvent, onOpenChange]);
+  }, [date, title, startTime, endTime, eventType, leadName, leadEmail, leadPhone, property, community, notes, isRecurring, recurrence, onCreateEvent, onOpenChange]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -243,6 +250,25 @@ export const CreateEventDialog: React.FC<CreateEventDialogProps> = ({
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          {/* Recurrence Settings */}
+          <div className="space-y-3 pt-2 border-t">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="recurring" className="text-sm font-medium">Repeat</Label>
+              <Switch
+                id="recurring"
+                checked={isRecurring}
+                onCheckedChange={setIsRecurring}
+              />
+            </div>
+            {isRecurring && date && (
+              <RecurrenceSettings
+                recurrence={recurrence}
+                onChange={setRecurrence}
+                baseDate={date}
+              />
+            )}
           </div>
 
           {/* Lead Info */}

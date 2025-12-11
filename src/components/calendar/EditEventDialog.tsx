@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
 import {
   Select,
   SelectContent,
@@ -27,7 +28,8 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
-import type { CalendarEvent, EventType, EventStatus } from '@/types/calendar';
+import { RecurrenceSettings } from './RecurrenceSettings';
+import type { CalendarEvent, EventType, EventStatus, RecurrenceRule } from '@/types/calendar';
 import { EVENT_TYPE_CONFIG, EVENT_STATUS_CONFIG } from '@/types/calendar';
 
 interface EditEventDialogProps {
@@ -73,6 +75,8 @@ export const EditEventDialog: React.FC<EditEventDialogProps> = ({
   const [community, setCommunity] = useState('');
   const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [recurrence, setRecurrence] = useState<RecurrenceRule | undefined>(undefined);
 
   useEffect(() => {
     if (event) {
@@ -88,6 +92,8 @@ export const EditEventDialog: React.FC<EditEventDialogProps> = ({
       setProperty(event.property || '');
       setCommunity(event.community || '');
       setNotes(event.notes || '');
+      setIsRecurring(!!event.recurrence);
+      setRecurrence(event.recurrence);
     }
   }, [event]);
 
@@ -120,6 +126,7 @@ export const EditEventDialog: React.FC<EditEventDialogProps> = ({
         property: property || undefined,
         community: community || undefined,
         notes: notes || undefined,
+        recurrence: isRecurring ? recurrence : undefined,
       });
 
       onOpenChange(false);

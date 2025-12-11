@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Plus } from '@untitledui/icons';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
+import { ChevronLeft, ChevronRight, Plus, Repeat02 } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -14,8 +14,13 @@ import {
   format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, 
   addDays, addMonths, subMonths, addWeeks, subWeeks,
   isSameMonth, isSameDay, isToday, getWeek, getHours, setHours, setMinutes,
-  differenceInMinutes
+  differenceInMinutes, addMinutes
 } from 'date-fns';
+import { DndContext, DragEndEvent, DragStartEvent, DragOverlay, useSensor, useSensors, PointerSensor } from '@dnd-kit/core';
+import { expandRecurringEvents } from '@/lib/recurrence';
+import { DraggableEvent } from './DraggableEvent';
+import { DroppableTimeSlot } from './DroppableTimeSlot';
+import { DraggedEventPreview } from './DraggedEventPreview';
 import type { CalendarEvent, CalendarView } from '@/types/calendar';
 
 // Time slots for week/day view (6 AM to 10 PM)
@@ -28,6 +33,7 @@ interface FullCalendarProps {
   onDateClick?: (date: Date) => void;
   onEventClick?: (event: CalendarEvent) => void;
   onAddEvent?: () => void;
+  onEventMove?: (eventId: string, newStart: Date, newEnd: Date) => void;
 }
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -38,15 +44,61 @@ export const FullCalendar: React.FC<FullCalendarProps> = ({
   onDateClick,
   onEventClick,
   onAddEvent,
+  onEventMove,
 }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<CalendarView>('month');
+  const [activeDragEvent, setActiveDragEvent] = useState<CalendarEvent | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
   const calendarStart = startOfWeek(monthStart);
   const calendarEnd = endOfWeek(monthEnd);
+
+  // Expand recurring events for the current view
+  const expandedEvents = useMemo(() => {
+    const viewStart = view === 'month' ? calendarStart : 
+                      view === 'week' ? startOfWeek(currentDate) : 
+                      currentDate;
+    const viewEnd = view === 'month' ? calendarEnd : 
+                    view === 'week' ? endOfWeek(currentDate) : 
+                    addDays(currentDate, 1);
+    return expandRecurringEvents(events, viewStart, viewEnd);
+  }, [events, view, currentDate, calendarStart, calendarEnd]);
+
+  // DnD sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 8 }
+    })
+  );
+
+  const handleDragStart = (event: DragStartEvent) => {
+    const draggedEvent = expandedEvents.find(e => e.id === event.active.id);
+    setActiveDragEvent(draggedEvent || null);
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    setActiveDragEvent(null);
+    if (!event.over || !event.active || !onEventMove) return;
+    
+    const eventId = event.active.id as string;
+    const dropData = event.over.data.current as { date: Date; hour: number; minute: number } | undefined;
+    if (!dropData) return;
+    
+    const originalEvent = expandedEvents.find(e => e.id === eventId);
+    if (!originalEvent) return;
+    
+    // For recurring instances, use the original event ID
+    const actualEventId = originalEvent.recurrence_id || eventId;
+    
+    const duration = differenceInMinutes(new Date(originalEvent.end), new Date(originalEvent.start));
+    const newStart = setMinutes(setHours(new Date(dropData.date), dropData.hour), dropData.minute);
+    const newEnd = addMinutes(newStart, duration);
+    
+    onEventMove(actualEventId, newStart, newEnd);
+  };
 
   // Auto-scroll to current time in week/day views
   useEffect(() => {
@@ -86,7 +138,7 @@ export const FullCalendar: React.FC<FullCalendarProps> = ({
 
   // Get events that START in a specific hour (for positioning)
   const getEventsStartingInHour = (date: Date, hour: number) => {
-    return events.filter((event) => {
+    return expandedEvents.filter((event) => {
       if (event.allDay) return false;
       const eventDate = new Date(event.start);
       return isSameDay(eventDate, date) && getHours(eventDate) === hour;
@@ -95,7 +147,7 @@ export const FullCalendar: React.FC<FullCalendarProps> = ({
 
   // Get all-day events for a date
   const getAllDayEvents = (date: Date) => {
-    return events.filter((event) => event.allDay && isSameDay(new Date(event.start), date));
+    return expandedEvents.filter((event) => event.allDay && isSameDay(new Date(event.start), date));
   };
 
   // Calculate event style for duration-based rendering
@@ -129,7 +181,7 @@ export const FullCalendar: React.FC<FullCalendarProps> = ({
 
   // Get events for a specific day
   const getEventsForDay = (date: Date) => {
-    return events.filter(event => isSameDay(new Date(event.start), date));
+    return expandedEvents.filter(event => isSameDay(new Date(event.start), date));
   };
 
   const today = new Date();
@@ -209,6 +261,9 @@ export const FullCalendar: React.FC<FullCalendarProps> = ({
                       <span className="font-medium text-xs text-muted-foreground">All day</span>
                     )}
                     <span className="truncate">{event.title}</span>
+                    {event.recurrence && !event.is_recurring_instance && (
+                      <Repeat02 className="h-3 w-3 flex-shrink-0 opacity-70" />
+                    )}
                   </div>
                 ))}
                 {dayEvents.length > 3 && (
@@ -225,7 +280,7 @@ export const FullCalendar: React.FC<FullCalendarProps> = ({
   );
 
   // Render current time indicator line
-  const renderCurrentTimeLine = (containerWidth: 'single' | 'multi') => {
+  const renderCurrentTimeLine = () => {
     const now = new Date();
     const currentHour = now.getHours();
     const currentMinutes = now.getMinutes();
@@ -300,7 +355,7 @@ export const FullCalendar: React.FC<FullCalendarProps> = ({
 
         {/* Time grid */}
         <div ref={scrollContainerRef} className="overflow-y-auto max-h-[600px] relative">
-          {renderCurrentTimeLine('multi')}
+          {renderCurrentTimeLine()}
           {TIME_SLOTS.map((hour) => (
             <div key={hour} className="grid grid-cols-[60px_repeat(7,1fr)]" style={{ height: `${HOUR_HEIGHT}px` }}>
               <div className="text-xs text-muted-foreground p-1 text-right pr-2 border-r border-border">
@@ -313,36 +368,28 @@ export const FullCalendar: React.FC<FullCalendarProps> = ({
                     key={day.toISOString() + hour}
                     className="border-l border-t border-border relative"
                   >
-                    {/* Click zones for 30-min precision */}
-                    <div 
-                      className="absolute inset-x-0 top-0 h-1/2 hover:bg-accent/30 cursor-pointer z-0"
+                    {/* Droppable time slots */}
+                    <DroppableTimeSlot 
+                      date={day} 
+                      hour={hour} 
+                      minute={0} 
                       onClick={() => onDateClick?.(setMinutes(setHours(day, hour), 0))}
                     />
-                    <div 
-                      className="absolute inset-x-0 bottom-0 h-1/2 hover:bg-accent/30 cursor-pointer z-0"
+                    <DroppableTimeSlot 
+                      date={day} 
+                      hour={hour} 
+                      minute={30} 
                       onClick={() => onDateClick?.(setMinutes(setHours(day, hour), 30))}
                     />
-                    {/* Events with duration-based height */}
+                    {/* Draggable events */}
                     {cellEvents.map((event) => (
-                      <div
+                      <DraggableEvent
                         key={event.id}
-                        className="text-xs px-1.5 py-0.5 rounded truncate cursor-pointer overflow-hidden"
-                        style={{
-                          ...getEventStyle(event, hour),
-                          backgroundColor: event.color ? `${event.color}20` : 'hsl(var(--primary) / 0.1)',
-                          color: event.color || 'hsl(var(--primary))',
-                          borderLeft: `2px solid ${event.color || 'hsl(var(--primary))'}`,
-                        }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onEventClick?.(event);
-                        }}
-                      >
-                        <div className="font-medium truncate">{event.title}</div>
-                        <div className="text-[10px] opacity-75">
-                          {format(new Date(event.start), 'h:mm a')}
-                        </div>
-                      </div>
+                        event={event}
+                        style={getEventStyle(event, hour)}
+                        onClick={() => onEventClick?.(event)}
+                        variant="week"
+                      />
                     ))}
                   </div>
                 );
@@ -398,7 +445,7 @@ export const FullCalendar: React.FC<FullCalendarProps> = ({
 
         {/* Time grid */}
         <div ref={view === 'day' ? scrollContainerRef : undefined} className="overflow-y-auto max-h-[600px] relative">
-          {renderCurrentTimeLine('single')}
+          {renderCurrentTimeLine()}
           {TIME_SLOTS.map((hour) => {
             const cellEvents = getEventsStartingInHour(currentDate, hour);
             return (
@@ -407,36 +454,28 @@ export const FullCalendar: React.FC<FullCalendarProps> = ({
                   {format(setHours(new Date(), hour), 'h a')}
                 </div>
                 <div className="border-t border-border relative">
-                  {/* Click zones for 30-min precision */}
-                  <div 
-                    className="absolute inset-x-0 top-0 h-1/2 hover:bg-accent/30 cursor-pointer z-0"
+                  {/* Droppable time slots */}
+                  <DroppableTimeSlot 
+                    date={currentDate} 
+                    hour={hour} 
+                    minute={0} 
                     onClick={() => onDateClick?.(setMinutes(setHours(currentDate, hour), 0))}
                   />
-                  <div 
-                    className="absolute inset-x-0 bottom-0 h-1/2 hover:bg-accent/30 cursor-pointer z-0"
+                  <DroppableTimeSlot 
+                    date={currentDate} 
+                    hour={hour} 
+                    minute={30} 
                     onClick={() => onDateClick?.(setMinutes(setHours(currentDate, hour), 30))}
                   />
-                  {/* Events with duration-based height */}
+                  {/* Draggable events */}
                   {cellEvents.map((event) => (
-                    <div
+                    <DraggableEvent
                       key={event.id}
-                      className="flex flex-col text-sm px-2 py-1 rounded cursor-pointer overflow-hidden"
-                      style={{
-                        ...getEventStyle(event, hour),
-                        backgroundColor: event.color ? `${event.color}20` : 'hsl(var(--primary) / 0.1)',
-                        color: event.color || 'hsl(var(--primary))',
-                        borderLeft: `3px solid ${event.color || 'hsl(var(--primary))'}`,
-                      }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onEventClick?.(event);
-                      }}
-                    >
-                      <span className="font-medium truncate">{event.title}</span>
-                      <span className="text-xs opacity-75">
-                        {format(new Date(event.start), 'h:mm a')} - {format(new Date(event.end), 'h:mm a')}
-                      </span>
-                    </div>
+                      event={event}
+                      style={getEventStyle(event, hour)}
+                      onClick={() => onEventClick?.(event)}
+                      variant="day"
+                    />
                   ))}
                 </div>
               </div>
@@ -448,80 +487,91 @@ export const FullCalendar: React.FC<FullCalendarProps> = ({
   };
 
   return (
-    <div className={cn("bg-card border border-border rounded-xl overflow-hidden", className)}>
-      {/* Enhanced Calendar Header */}
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between px-6 py-4 border-b border-border">
-        {/* Left: Mini date + Title info */}
-        <div className="flex items-center gap-4">
-          {/* Mini date indicator */}
-          <div className="flex flex-col items-center justify-center bg-muted rounded-lg px-3 py-1.5 min-w-[52px]">
-            <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
-              {format(today, 'MMM')}
-            </span>
-            <span className="text-xl font-semibold text-foreground leading-tight">
-              {format(today, 'd')}
-            </span>
-          </div>
-          
-          {/* Dynamic title + week badge */}
-          <div className="flex flex-col">
-            <div className="flex items-center gap-2">
-              <h2 className="text-lg font-semibold text-foreground">
-                {getHeaderTitle()}
-              </h2>
-              <Badge variant="secondary" className="text-xs">
-                Week {getWeek(currentDate)}
-              </Badge>
+    <DndContext 
+      sensors={sensors}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+    >
+      <div className={cn("bg-card border border-border rounded-xl overflow-hidden", className)}>
+        {/* Enhanced Calendar Header */}
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between px-6 py-4 border-b border-border">
+          {/* Left: Mini date + Title info */}
+          <div className="flex items-center gap-4">
+            {/* Mini date indicator */}
+            <div className="flex flex-col items-center justify-center bg-muted rounded-lg px-3 py-1.5 min-w-[52px]">
+              <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
+                {format(today, 'MMM')}
+              </span>
+              <span className="text-xl font-semibold text-foreground leading-tight">
+                {format(today, 'd')}
+              </span>
             </div>
-            <span className="text-sm text-muted-foreground">
-              {view === 'month' 
-                ? `${format(monthStart, 'MMM d, yyyy')} – ${format(monthEnd, 'MMM d, yyyy')}`
-                : view === 'week'
-                ? `${format(startOfWeek(currentDate), 'MMM d')} – ${format(endOfWeek(currentDate), 'MMM d, yyyy')}`
-                : format(currentDate, 'MMMM yyyy')
-              }
-            </span>
-          </div>
-        </div>
-        
-        {/* Right: Navigation + View + Add Event */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon" onClick={goToPrevious}>
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <Button variant="outline" size="sm" onClick={goToToday}>
-              Today
-            </Button>
-            <Button variant="ghost" size="icon" onClick={goToNext}>
-              <ChevronRight className="h-4 w-4" />
-            </Button>
+            
+            {/* Dynamic title + week badge */}
+            <div className="flex flex-col">
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-semibold text-foreground">
+                  {getHeaderTitle()}
+                </h2>
+                <Badge variant="secondary" className="text-xs">
+                  Week {getWeek(currentDate)}
+                </Badge>
+              </div>
+              <span className="text-sm text-muted-foreground">
+                {view === 'month' 
+                  ? `${format(monthStart, 'MMM d, yyyy')} – ${format(monthEnd, 'MMM d, yyyy')}`
+                  : view === 'week'
+                  ? `${format(startOfWeek(currentDate), 'MMM d')} – ${format(endOfWeek(currentDate), 'MMM d, yyyy')}`
+                  : format(currentDate, 'MMMM yyyy')
+                }
+              </span>
+            </div>
           </div>
           
-          {/* View Selector */}
-          <Select value={view} onValueChange={(v) => setView(v as CalendarView)}>
-            <SelectTrigger className="w-[130px]">
-              <SelectValue placeholder="Month view" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="month">Month view</SelectItem>
-              <SelectItem value="week">Week view</SelectItem>
-              <SelectItem value="day">Day view</SelectItem>
-            </SelectContent>
-          </Select>
-          
-          {/* Add Event Button */}
-          <Button onClick={onAddEvent}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add event
-          </Button>
+          {/* Right: Navigation + View + Add Event */}
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1">
+              <Button variant="ghost" size="icon" onClick={goToPrevious}>
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <Button variant="outline" size="sm" onClick={goToToday}>
+                Today
+              </Button>
+              <Button variant="ghost" size="icon" onClick={goToNext}>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            {/* View Selector */}
+            <Select value={view} onValueChange={(v) => setView(v as CalendarView)}>
+              <SelectTrigger className="w-[130px]">
+                <SelectValue placeholder="Month view" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="month">Month view</SelectItem>
+                <SelectItem value="week">Week view</SelectItem>
+                <SelectItem value="day">Day view</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            {/* Add Event Button */}
+            <Button onClick={onAddEvent}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add event
+            </Button>
+          </div>
         </div>
+
+        {/* Render based on selected view */}
+        {view === 'month' && renderMonthView()}
+        {view === 'week' && renderWeekView()}
+        {view === 'day' && renderDayView()}
       </div>
 
-      {/* Render based on selected view */}
-      {view === 'month' && renderMonthView()}
-      {view === 'week' && renderWeekView()}
-      {view === 'day' && renderDayView()}
-    </div>
+      {/* Drag overlay */}
+      <DragOverlay>
+        {activeDragEvent && <DraggedEventPreview event={activeDragEvent} />}
+      </DragOverlay>
+    </DndContext>
   );
 };
