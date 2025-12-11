@@ -5,11 +5,21 @@ import { cn } from '@/lib/utils';
 interface DroppableTimeSlotProps {
   date: Date;
   hour: number;
-  minute: 0 | 30;
+  minute: 0 | 15 | 30 | 45;
   children?: React.ReactNode;
   onClick?: () => void;
   className?: string;
 }
+
+// Get position class based on minute value
+const getPositionClass = (minute: 0 | 15 | 30 | 45): string => {
+  switch (minute) {
+    case 0: return 'top-0';
+    case 15: return 'top-1/4';
+    case 30: return 'top-1/2';
+    case 45: return 'top-3/4';
+  }
+};
 
 export const DroppableTimeSlot: React.FC<DroppableTimeSlotProps> = ({
   date,
@@ -30,8 +40,8 @@ export const DroppableTimeSlot: React.FC<DroppableTimeSlotProps> = ({
     <div
       ref={setNodeRef}
       className={cn(
-        "absolute inset-x-0 h-1/2 cursor-pointer transition-colors z-0",
-        minute === 0 ? "top-0" : "bottom-0",
+        "absolute inset-x-0 h-1/4 cursor-pointer transition-colors z-0",
+        getPositionClass(minute),
         "hover:bg-accent/30",
         isOver && "bg-primary/20 ring-2 ring-primary ring-inset",
         className

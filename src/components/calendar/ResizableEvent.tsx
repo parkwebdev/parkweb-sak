@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { CalendarEvent } from '@/types/calendar';
 
-const HOUR_HEIGHT = 60; // pixels per hour
+const HOUR_HEIGHT = 96; // pixels per hour (24px per 15-minute slot)
 const MIN_DURATION_MINUTES = 15;
 const SNAP_MINUTES = 15;
 
