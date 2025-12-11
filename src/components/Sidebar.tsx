@@ -1,7 +1,7 @@
 import React from 'react';
-import { X, Settings01 as Settings, Grid01 as Grid, MessageCircle02, User03, Cube01 as Bot, PieChart01 } from '@untitledui/icons';
+import { X, Settings04 as Settings, Grid01 as Grid, MessageCircle02, User03, Cube01 as Bot, PieChart01 } from '@untitledui/icons';
 import { Link, useLocation } from 'react-router-dom';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion } from 'motion/react';
 import { UserAccountCard } from './UserAccountCard';
 import { useSidebar } from '@/hooks/use-sidebar';
 import { useConversations } from '@/hooks/useConversations';
@@ -98,12 +98,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
     >
       <nav className="w-full flex flex-col pt-6 px-3 pb-4">
         <header className="w-full px-2 mb-6">
-          <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'}`}>
-            <ChatPadLogo className="h-6 w-6 text-foreground" />
+          <div className="flex items-center justify-start">
+            <ChatPadLogo className="h-6 w-6 text-foreground flex-shrink-0" />
             {onClose && (
               <button
                 onClick={onClose}
-                className="lg:hidden p-1 rounded-md hover:bg-accent/50 text-muted-foreground hover:text-foreground"
+                className="lg:hidden p-1 rounded-md hover:bg-accent/50 text-muted-foreground hover:text-foreground ml-auto"
               >
                 <X size={16} />
               </button>
@@ -120,22 +120,22 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
                 return (
                   <motion.div 
                     key={item.id} 
-                    className="items-center flex w-full overflow-hidden px-0 py-0.5"
+                    className="items-center flex w-full overflow-hidden py-0.5"
                     initial={prefersReducedMotion ? false : { opacity: 0, x: -12 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.03, ...springs.smooth }}
                   >
                     <Link 
                       to={item.path}
-                      className={`items-center flex w-full gap-2.5 flex-1 shrink basis-[0%] my-auto transition-colors text-sm ${
-                        isCollapsed 
-                          ? `px-2.5 py-2.5 rounded-md justify-center ${isActive ? 'bg-accent text-accent-foreground' : 'bg-transparent hover:bg-accent/50 text-muted-foreground hover:text-foreground'}`
-                          : `px-2.5 py-1.5 rounded-md ${isActive ? 'bg-accent text-accent-foreground' : 'bg-transparent hover:bg-accent/50 text-muted-foreground hover:text-foreground'}`
+                      className={`items-center flex w-full px-2.5 py-2 rounded-md transition-colors text-sm overflow-hidden ${
+                        isActive 
+                          ? 'bg-accent text-accent-foreground' 
+                          : 'bg-transparent hover:bg-accent/50 text-muted-foreground hover:text-foreground'
                       }`}
                       title={isCollapsed ? item.label : ''}
                     >
-                      <div className={`items-center flex gap-2 my-auto ${isCollapsed ? 'justify-center' : 'w-full flex-1 shrink basis-[0%]'}`}>
-                        <div className={`items-center flex my-auto relative ${isCollapsed ? '' : 'w-[18px] pr-0.5'}`}>
+                      <div className="items-center flex gap-2 my-auto w-full overflow-hidden">
+                        <div className="items-center flex my-auto w-[18px] flex-shrink-0 relative">
                           <item.icon size={14} className="self-stretch my-auto" />
                           {/* Collapsed state unread indicator */}
                           {isCollapsed && item.id === 'conversations' && unreadConversationsCount > 0 && (
@@ -147,33 +147,28 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
                             />
                           )}
                         </div>
-                        <AnimatePresence mode="wait">
-                          {!isCollapsed && (
+                        <motion.div 
+                          className="flex items-center justify-between flex-1 overflow-hidden"
+                          initial={false}
+                          animate={{ opacity: isCollapsed ? 0 : 1 }}
+                          transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.15 }}
+                        >
+                          <div className={`text-sm font-normal leading-4 my-auto whitespace-nowrap ${
+                            isActive ? 'font-medium' : ''
+                          }`}>
+                            {item.label}
+                          </div>
+                          {item.id === 'conversations' && unreadConversationsCount > 0 && (
                             <motion.div 
-                              className="flex items-center justify-between flex-1"
-                              initial={prefersReducedMotion ? false : { opacity: 0, width: 0 }}
-                              animate={{ opacity: 1, width: 'auto' }}
-                              exit={{ opacity: 0, width: 0 }}
-                              transition={springs.snappy}
+                              className="bg-destructive text-destructive-foreground text-[10px] font-semibold rounded-full h-5 min-w-[20px] px-1.5 flex items-center justify-center ml-auto"
+                              initial={prefersReducedMotion ? false : { scale: 0 }}
+                              animate={{ scale: 1 }}
+                              transition={springs.bouncy}
                             >
-                              <div className={`text-sm font-normal leading-4 self-stretch my-auto whitespace-nowrap ${
-                                isActive ? 'text-accent-foreground font-medium' : ''
-                              }`}>
-                                {item.label}
-                              </div>
-                              {item.id === 'conversations' && unreadConversationsCount > 0 && (
-                                <motion.div 
-                                  className="bg-destructive text-destructive-foreground text-[10px] font-semibold rounded-full h-5 min-w-[20px] px-1.5 flex items-center justify-center"
-                                  initial={prefersReducedMotion ? false : { scale: 0 }}
-                                  animate={{ scale: 1 }}
-                                  transition={springs.bouncy}
-                                >
-                                  {unreadConversationsCount}
-                                </motion.div>
-                              )}
+                              {unreadConversationsCount}
                             </motion.div>
                           )}
-                        </AnimatePresence>
+                        </motion.div>
                       </div>
                     </Link>
                   </motion.div>
@@ -189,39 +184,34 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
                   return (
                     <motion.div 
                       key={item.id} 
-                      className="items-center flex w-full overflow-hidden px-0 py-0.5"
+                      className="items-center flex w-full overflow-hidden py-0.5"
                       initial={prefersReducedMotion ? false : { opacity: 0, x: -12 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: (navigationItems.length + index) * 0.03, ...springs.smooth }}
                     >
                       <Link 
                         to={item.path}
-                        className={`items-center flex w-full gap-2.5 flex-1 shrink basis-[0%] my-auto transition-colors text-sm ${
-                          isCollapsed 
-                            ? `px-2.5 py-2.5 rounded-md justify-center ${isActive ? 'bg-accent text-accent-foreground' : 'bg-transparent hover:bg-accent/50 text-muted-foreground hover:text-foreground'}`
-                            : `px-2.5 py-1.5 rounded-md ${isActive ? 'bg-accent text-accent-foreground' : 'bg-transparent hover:bg-accent/50 text-muted-foreground hover:text-foreground'}`
+                        className={`items-center flex w-full px-2.5 py-2 rounded-md transition-colors text-sm overflow-hidden ${
+                          isActive 
+                            ? 'bg-accent text-accent-foreground' 
+                            : 'bg-transparent hover:bg-accent/50 text-muted-foreground hover:text-foreground'
                         }`}
                         title={isCollapsed ? item.label : ''}
                       >
-                        <div className={`items-center flex gap-2 my-auto ${isCollapsed ? 'justify-center' : 'w-full flex-1 shrink basis-[0%]'}`}>
-                          <div className={`items-center flex my-auto ${isCollapsed ? '' : 'w-[18px] pr-0.5'}`}>
+                        <div className="items-center flex gap-2 my-auto w-full overflow-hidden">
+                          <div className="items-center flex my-auto w-[18px] flex-shrink-0">
                             <item.icon size={14} className="self-stretch my-auto" />
                           </div>
-                          <AnimatePresence mode="wait">
-                            {!isCollapsed && (
-                              <motion.div
-                                className={`text-sm font-normal leading-4 self-stretch my-auto whitespace-nowrap ${
-                                  isActive ? 'text-accent-foreground font-medium' : ''
-                                }`}
-                                initial={prefersReducedMotion ? false : { opacity: 0, width: 0 }}
-                                animate={{ opacity: 1, width: 'auto' }}
-                                exit={{ opacity: 0, width: 0 }}
-                                transition={springs.snappy}
-                              >
-                                {item.label}
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
+                          <motion.div
+                            className={`text-sm font-normal leading-4 my-auto whitespace-nowrap ${
+                              isActive ? 'font-medium' : ''
+                            }`}
+                            initial={false}
+                            animate={{ opacity: isCollapsed ? 0 : 1 }}
+                            transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.15 }}
+                          >
+                            {item.label}
+                          </motion.div>
                         </div>
                       </Link>
                     </motion.div>
