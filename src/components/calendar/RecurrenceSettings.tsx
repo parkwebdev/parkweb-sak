@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { CalendarDate } from '@untitledui/icons';
+
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { getRecurrenceDescription } from '@/lib/recurrence';
@@ -151,7 +151,6 @@ export const RecurrenceSettings: React.FC<RecurrenceSettingsProps> = ({
                     !rule.endDate && "text-muted-foreground"
                   )}
                 >
-                  <CalendarDate className="mr-2 h-4 w-4" />
                   {rule.endDate ? format(new Date(rule.endDate), 'PPP') : 'Pick end date'}
                 </Button>
               </PopoverTrigger>
