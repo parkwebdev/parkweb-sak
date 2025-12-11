@@ -1,12 +1,10 @@
-import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Cube01 as Bot } from '@untitledui/icons';
 import { LoadingState } from '@/components/ui/loading-state';
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
 import { MetricCardWithChart } from '@/components/dashboard/MetricCardWithChart';
-import { ConversationsDataTable, ConversationRow } from '@/components/dashboard/ConversationsDataTable';
-import { formatDistanceToNow } from 'date-fns';
 import { logger } from '@/utils/logger';
 
 interface ConversationWithAgent {
@@ -19,19 +17,6 @@ interface ConversationWithAgent {
   leads: { name: string | null } | null;
   messages: { id: string }[];
 }
-
-interface TabConfig {
-  id: string;
-  label: string;
-  count?: number;
-}
-
-const baseTabs: TabConfig[] = [
-  { id: 'all', label: 'All' },
-  { id: 'active', label: 'Active' },
-  { id: 'human_takeover', label: 'Human' },
-  { id: 'closed', label: 'Closed' },
-];
 
 // Add visual variance to sparse data for interesting sparkline curves
 const ensureVisualVariance = (trend: number[]): number[] => {
@@ -71,15 +56,8 @@ const generateChartData = (dailyCounts: number[]): { value: number }[] => {
   return visualTrend.map((count) => ({ value: count }));
 };
 
-// Format duration from created_at
-const formatDuration = (createdAt: string): string => {
-  return formatDistanceToNow(new Date(createdAt), { addSuffix: false });
-};
-
 export const Dashboard: React.FC = () => {
   const { user, loading: authLoading } = useAuth();
-  const [selectedTab, setSelectedTab] = useState('all');
-  const [conversations, setConversations] = useState<ConversationWithAgent[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalConversations: 0,
@@ -135,8 +113,6 @@ export const Dashboard: React.FC = () => {
         ...conv,
         leads: leadsMap.get(conv.id) || null,
       })) as ConversationWithAgent[];
-
-      setConversations(conversationsWithLeads);
 
       // Calculate current stats
       const total = conversationsWithLeads.length;
@@ -281,38 +257,6 @@ export const Dashboard: React.FC = () => {
     };
   }, [user, debouncedFetch]);
 
-  // Filter conversations based on selected tab
-  const filteredConversations = useMemo(() => {
-    if (selectedTab === 'all') return conversations;
-    return conversations.filter((c) => c.status === selectedTab);
-  }, [conversations, selectedTab]);
-
-  // Transform to table rows
-  const tableData: ConversationRow[] = useMemo(() => {
-    const total = filteredConversations.length;
-    return filteredConversations.map((conv) => ({
-      id: conv.id,
-      agentName: conv.agents?.name || 'Unknown Agent',
-      leadName: conv.leads?.name || undefined,
-      messageCount: conv.messages?.length || 0,
-      duration: formatDuration(conv.created_at),
-      percentageOfTotal: total > 0 ? ((conv.messages?.length || 0) / Math.max(1, conversations.reduce((s, c) => s + (c.messages?.length || 0), 0))) * 100 : 0,
-      status: conv.status,
-      createdAt: conv.created_at,
-    }));
-  }, [filteredConversations, conversations]);
-
-  // Update tab counts
-  const tabsWithCounts: TabConfig[] = useMemo(() => {
-    return baseTabs.map((tab) => ({
-      ...tab,
-      count:
-        tab.id === 'all'
-          ? conversations.length
-          : conversations.filter((c) => c.status === tab.id).length,
-    }));
-  }, [conversations]);
-
   // Calculate trend changes
   const calculateChange = (trend: number[]): number => {
     if (trend.length < 2) return 0;
@@ -357,56 +301,36 @@ export const Dashboard: React.FC = () => {
             <LoadingState size="lg" className="py-16" />
           </div>
         ) : (
-          <>
-            <div className="grid grid-cols-1 gap-4 px-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6 lg:px-8">
-              <MetricCardWithChart
-                title={stats.totalConversations.toLocaleString()}
-                subtitle="Total Conversations"
-                change={calculateChange(stats.conversationTrend)}
-                changeLabel="vs last period"
-                chartData={generateChartData(stats.conversationTrend)}
-              />
-              <MetricCardWithChart
-                title={stats.activeConversations.toLocaleString()}
-                subtitle="Active Sessions"
-                change={calculateChange(stats.activeTrend)}
-                changeLabel="vs last period"
-                chartData={generateChartData(stats.activeTrend)}
-              />
-              <MetricCardWithChart
-                title={stats.avgMessages.toLocaleString()}
-                subtitle="Avg Messages"
-                change={calculateChange(stats.messageTrend)}
-                changeLabel="vs last period"
-                chartData={generateChartData(stats.messageTrend)}
-              />
-              <MetricCardWithChart
-                title={`${stats.conversionRate}%`}
-                subtitle="Conversion Rate"
-                change={calculateChange(stats.conversionTrend)}
-                changeLabel="vs last period"
-                chartData={generateChartData(stats.conversionTrend)}
-              />
-            </div>
-
-            {/* Data Table with Tabs Inside */}
-            <div className="px-4 lg:px-8">
-              <ConversationsDataTable
-                data={tableData}
-                tabs={tabsWithCounts}
-                selectedTab={selectedTab}
-                onTabChange={setSelectedTab}
-                onDelete={async (ids: string[]) => {
-                  const { error } = await supabase
-                    .from('conversations')
-                    .delete()
-                    .in('id', ids);
-                  if (error) throw error;
-                }}
-                title="Conversations"
-              />
-            </div>
-          </>
+          <div className="grid grid-cols-1 gap-4 px-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6 lg:px-8">
+            <MetricCardWithChart
+              title={stats.totalConversations.toLocaleString()}
+              subtitle="Total Conversations"
+              change={calculateChange(stats.conversationTrend)}
+              changeLabel="vs last period"
+              chartData={generateChartData(stats.conversationTrend)}
+            />
+            <MetricCardWithChart
+              title={stats.activeConversations.toLocaleString()}
+              subtitle="Active Sessions"
+              change={calculateChange(stats.activeTrend)}
+              changeLabel="vs last period"
+              chartData={generateChartData(stats.activeTrend)}
+            />
+            <MetricCardWithChart
+              title={stats.avgMessages.toLocaleString()}
+              subtitle="Avg Messages"
+              change={calculateChange(stats.messageTrend)}
+              changeLabel="vs last period"
+              chartData={generateChartData(stats.messageTrend)}
+            />
+            <MetricCardWithChart
+              title={`${stats.conversionRate}%`}
+              subtitle="Conversion Rate"
+              change={calculateChange(stats.conversionTrend)}
+              changeLabel="vs last period"
+              chartData={generateChartData(stats.conversionTrend)}
+            />
+          </div>
         )}
       </div>
     </main>

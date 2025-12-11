@@ -34,7 +34,7 @@ const navigationItems: NavigationItem[] = [
   },
   {
     id: 'conversations',
-    label: 'Conversations',
+    label: 'Inbox',
     icon: MessageSquare01,
     path: '/conversations'
   },
