@@ -1,15 +1,14 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
-import { SearchLg } from '@untitledui/icons';
+import { SearchLg, ChevronDown } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import { 
   format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, 
@@ -680,16 +679,28 @@ export const FullCalendar: React.FC<FullCalendarProps> = ({
             </div>
             
             {/* View Selector */}
-            <Select value={view} onValueChange={(v) => setView(v as CalendarView)}>
-              <SelectTrigger className="w-[130px]">
-                <SelectValue placeholder="Month view" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="month">Month view</SelectItem>
-                <SelectItem value="week">Week view</SelectItem>
-                <SelectItem value="day">Day view</SelectItem>
-              </SelectContent>
-            </Select>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="w-[130px] justify-between">
+                  {view === 'month' ? 'Month view' : view === 'week' ? 'Week view' : 'Day view'}
+                  <ChevronDown className="ml-2 h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setView('month')} className="justify-between">
+                  <span>Month view</span>
+                  <span className="rounded border border-border bg-muted px-1.5 py-0.5 text-xs text-muted-foreground font-medium">M</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setView('week')} className="justify-between">
+                  <span>Week view</span>
+                  <span className="rounded border border-border bg-muted px-1.5 py-0.5 text-xs text-muted-foreground font-medium">W</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setView('day')} className="justify-between">
+                  <span>Day view</span>
+                  <span className="rounded border border-border bg-muted px-1.5 py-0.5 text-xs text-muted-foreground font-medium">D</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             
           </div>
         </div>
