@@ -1,0 +1,34 @@
+import React from 'react';
+import { useDroppable } from '@dnd-kit/core';
+import { cn } from '@/lib/utils';
+
+interface DroppableDayCellProps {
+  date: Date;
+  children: React.ReactNode;
+  className?: string;
+  onClick?: () => void;
+}
+
+export const DroppableDayCell: React.FC<DroppableDayCellProps> = ({
+  date,
+  children,
+  className,
+  onClick,
+}) => {
+  const slotId = `day-${date.toISOString().split('T')[0]}`;
+  
+  const { setNodeRef, isOver } = useDroppable({
+    id: slotId,
+    data: { type: 'day', date },
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={cn(className, isOver && "bg-primary/10 ring-2 ring-primary ring-inset")}
+      onClick={onClick}
+    >
+      {children}
+    </div>
+  );
+};

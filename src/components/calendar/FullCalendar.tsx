@@ -20,6 +20,7 @@ import { DndContext, DragEndEvent, DragStartEvent, DragOverlay, useSensor, useSe
 import { expandRecurringEvents } from '@/lib/recurrence';
 import { DraggableEvent } from './DraggableEvent';
 import { DroppableTimeSlot } from './DroppableTimeSlot';
+import { DroppableDayCell } from './DroppableDayCell';
 import { DraggedEventPreview } from './DraggedEventPreview';
 import type { CalendarEvent, CalendarView } from '@/types/calendar';
 
@@ -84,7 +85,7 @@ export const FullCalendar: React.FC<FullCalendarProps> = ({
     if (!event.over || !event.active || !onEventMove) return;
     
     const eventId = event.active.id as string;
-    const dropData = event.over.data.current as { date: Date; hour: number; minute: number } | undefined;
+    const dropData = event.over.data.current as { type?: string; date: Date; hour?: number; minute?: number } | undefined;
     if (!dropData) return;
     
     const originalEvent = expandedEvents.find(e => e.id === eventId);
@@ -94,10 +95,29 @@ export const FullCalendar: React.FC<FullCalendarProps> = ({
     const actualEventId = originalEvent.recurrence_id || eventId;
     
     const duration = differenceInMinutes(new Date(originalEvent.end), new Date(originalEvent.start));
-    const newStart = setMinutes(setHours(new Date(dropData.date), dropData.hour), dropData.minute);
-    const newEnd = addMinutes(newStart, duration);
     
-    onEventMove(actualEventId, newStart, newEnd);
+    // Handle month view day drops (preserve original time, change date only)
+    if (dropData.type === 'day') {
+      const newDate = new Date(dropData.date);
+      const originalStart = new Date(originalEvent.start);
+      const originalEnd = new Date(originalEvent.end);
+      
+      const newStart = new Date(newDate);
+      newStart.setHours(originalStart.getHours(), originalStart.getMinutes(), 0, 0);
+      
+      const newEnd = new Date(newDate);
+      newEnd.setHours(originalEnd.getHours(), originalEnd.getMinutes(), 0, 0);
+      
+      onEventMove(actualEventId, newStart, newEnd);
+      return;
+    }
+    
+    // Handle week/day view time slot drops
+    if (dropData.hour !== undefined && dropData.minute !== undefined) {
+      const newStart = setMinutes(setHours(new Date(dropData.date), dropData.hour), dropData.minute);
+      const newEnd = addMinutes(newStart, duration);
+      onEventMove(actualEventId, newStart, newEnd);
+    }
   };
 
   // Auto-scroll to current time in week/day views
@@ -210,8 +230,9 @@ export const FullCalendar: React.FC<FullCalendarProps> = ({
           const isLastRow = index >= days.length - 7;
 
           return (
-            <div
+            <DroppableDayCell
               key={index}
+              date={dayDate}
               className={cn(
                 "min-h-[100px] p-2 border-r border-b border-border cursor-pointer transition-colors hover:bg-accent/50",
                 !isCurrentMonth && "bg-muted/30",
@@ -236,35 +257,12 @@ export const FullCalendar: React.FC<FullCalendarProps> = ({
               {/* Events */}
               <div className="space-y-1">
                 {dayEvents.slice(0, 3).map((event) => (
-                  <div
+                  <DraggableEvent
                     key={event.id}
-                    className="flex items-center gap-1.5 text-xs px-2 py-1 rounded truncate cursor-pointer transition-colors"
-                    style={{
-                      backgroundColor: event.color ? `${event.color}15` : undefined,
-                      color: event.color || 'hsl(var(--primary))',
-                    }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onEventClick?.(event);
-                    }}
-                  >
-                    <span 
-                      className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-                      style={{ backgroundColor: event.color || 'hsl(var(--primary))' }}
-                    />
-                    {!event.allDay && (
-                      <span className="font-medium truncate">
-                        {format(new Date(event.start), 'h:mm a')}
-                      </span>
-                    )}
-                    {event.allDay && (
-                      <span className="font-medium text-xs text-muted-foreground">All day</span>
-                    )}
-                    <span className="truncate">{event.title}</span>
-                    {event.recurrence && !event.is_recurring_instance && (
-                      <Repeat02 className="h-3 w-3 flex-shrink-0 opacity-70" />
-                    )}
-                  </div>
+                    event={event}
+                    onClick={() => onEventClick?.(event)}
+                    variant="month"
+                  />
                 ))}
                 {dayEvents.length > 3 && (
                   <div className="text-xs text-muted-foreground px-2 font-medium">
@@ -272,7 +270,7 @@ export const FullCalendar: React.FC<FullCalendarProps> = ({
                   </div>
                 )}
               </div>
-            </div>
+            </DroppableDayCell>
           );
         })}
       </div>

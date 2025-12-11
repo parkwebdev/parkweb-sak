@@ -212,8 +212,9 @@ export const CreateEventDialog: React.FC<CreateEventDialogProps> = ({
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
+                    size="lg"
                     className={cn(
-                      "w-full justify-start text-left font-normal",
+                      "w-full justify-start text-left font-normal text-sm",
                       !date && "text-muted-foreground"
                     )}
                   >
