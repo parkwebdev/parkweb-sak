@@ -52,7 +52,7 @@ export function MetricCardWithChart({
   return (
     <motion.div 
       className={cn(
-        "flex flex-col overflow-hidden rounded-xl bg-muted/50 shadow-sm ring-1 ring-border/50 ring-inset",
+        "flex flex-col overflow-hidden rounded-xl bg-muted/50 shadow-sm border border-border",
         className
       )}
       variants={prefersReducedMotion ? reducedVariants : cardVariants}
@@ -66,7 +66,7 @@ export function MetricCardWithChart({
       </div>
 
       {/* Inner card with metric, trend, chart */}
-      <div className="relative flex flex-col gap-4 rounded-xl bg-card px-4 py-5 shadow-sm ring-1 ring-border/50 ring-inset md:gap-5 md:px-5">
+      <div className="relative flex flex-col gap-4 rounded-xl bg-card px-4 py-5 shadow-sm border border-border md:gap-5 md:px-5">
         {/* Metric Value + Trend */}
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-3">
