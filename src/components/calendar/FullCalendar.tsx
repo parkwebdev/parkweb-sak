@@ -10,8 +10,15 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
-import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, addMonths, subMonths, isSameMonth, isSameDay, isToday, getWeek } from 'date-fns';
+import { 
+  format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, 
+  addDays, addMonths, subMonths, addWeeks, subWeeks,
+  isSameMonth, isSameDay, isToday, getWeek, getHours, setHours 
+} from 'date-fns';
 import type { CalendarEvent, CalendarView } from '@/types/calendar';
+
+// Time slots for week/day view (6 AM to 10 PM)
+const TIME_SLOTS = Array.from({ length: 17 }, (_, i) => i + 6);
 
 interface FullCalendarProps {
   events?: CalendarEvent[];
@@ -38,9 +45,39 @@ export const FullCalendar: React.FC<FullCalendarProps> = ({
   const calendarStart = startOfWeek(monthStart);
   const calendarEnd = endOfWeek(monthEnd);
 
-  const goToPreviousMonth = () => setCurrentDate(subMonths(currentDate, 1));
-  const goToNextMonth = () => setCurrentDate(addMonths(currentDate, 1));
+  // View-aware navigation
+  const goToPrevious = () => {
+    if (view === 'month') setCurrentDate(subMonths(currentDate, 1));
+    else if (view === 'week') setCurrentDate(subWeeks(currentDate, 1));
+    else setCurrentDate(addDays(currentDate, -1));
+  };
+
+  const goToNext = () => {
+    if (view === 'month') setCurrentDate(addMonths(currentDate, 1));
+    else if (view === 'week') setCurrentDate(addWeeks(currentDate, 1));
+    else setCurrentDate(addDays(currentDate, 1));
+  };
+
   const goToToday = () => setCurrentDate(new Date());
+
+  // Dynamic header title based on view
+  const getHeaderTitle = () => {
+    if (view === 'month') return format(currentDate, 'MMMM yyyy');
+    if (view === 'week') {
+      const weekStart = startOfWeek(currentDate);
+      const weekEnd = endOfWeek(currentDate);
+      return `${format(weekStart, 'MMM d')} – ${format(weekEnd, 'd, yyyy')}`;
+    }
+    return format(currentDate, 'EEEE, MMMM d, yyyy');
+  };
+
+  // Get events for a specific time slot
+  const getEventsForTimeSlot = (date: Date, hour: number) => {
+    return events.filter((event) => {
+      const eventDate = new Date(event.start);
+      return isSameDay(eventDate, date) && getHours(eventDate) === hour;
+    });
+  };
 
   // Generate all days for the calendar grid
   const days: Date[] = [];
@@ -57,72 +94,9 @@ export const FullCalendar: React.FC<FullCalendarProps> = ({
 
   const today = new Date();
 
-  return (
-    <div className={cn("bg-card border border-border rounded-xl overflow-hidden", className)}>
-      {/* Enhanced Calendar Header */}
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between px-6 py-4 border-b border-border">
-        {/* Left: Mini date + Month info */}
-        <div className="flex items-center gap-4">
-          {/* Mini date indicator */}
-          <div className="flex flex-col items-center justify-center bg-muted rounded-lg px-3 py-1.5 min-w-[52px]">
-            <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
-              {format(today, 'MMM')}
-            </span>
-            <span className="text-xl font-semibold text-foreground leading-tight">
-              {format(today, 'd')}
-            </span>
-          </div>
-          
-          {/* Month title + week + date range */}
-          <div className="flex flex-col">
-            <div className="flex items-center gap-2">
-              <h2 className="text-lg font-semibold text-foreground">
-                {format(currentDate, 'MMMM yyyy')}
-              </h2>
-              <Badge variant="secondary" className="text-xs">
-                Week {getWeek(currentDate)}
-              </Badge>
-            </div>
-            <span className="text-sm text-muted-foreground">
-              {format(monthStart, 'MMM d, yyyy')} – {format(monthEnd, 'MMM d, yyyy')}
-            </span>
-          </div>
-        </div>
-        
-        {/* Right: Navigation + View + Add Event */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon" onClick={goToPreviousMonth}>
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <Button variant="outline" size="sm" onClick={goToToday}>
-              Today
-            </Button>
-            <Button variant="ghost" size="icon" onClick={goToNextMonth}>
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-          
-          {/* View Selector */}
-          <Select value={view} onValueChange={(v) => setView(v as CalendarView)}>
-            <SelectTrigger className="w-[130px]">
-              <SelectValue placeholder="Month view" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="month">Month view</SelectItem>
-              <SelectItem value="week">Week view</SelectItem>
-              <SelectItem value="day">Day view</SelectItem>
-            </SelectContent>
-          </Select>
-          
-          {/* Add Event Button */}
-          <Button onClick={onAddEvent}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add event
-          </Button>
-        </div>
-      </div>
-
+  // Render month view grid
+  const renderMonthView = () => (
+    <>
       {/* Weekday Headers */}
       <div className="grid grid-cols-7 border-b border-border bg-muted/30">
         {WEEKDAYS.map((weekday) => (
@@ -202,6 +176,208 @@ export const FullCalendar: React.FC<FullCalendarProps> = ({
           );
         })}
       </div>
+    </>
+  );
+
+  // Render week view with time grid
+  const renderWeekView = () => {
+    const weekStart = startOfWeek(currentDate);
+    const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+
+    return (
+      <div className="flex flex-col">
+        {/* Day headers */}
+        <div className="grid grid-cols-[60px_repeat(7,1fr)] border-b border-border bg-muted/30">
+          <div className="p-2" />
+          {weekDays.map((day) => (
+            <div key={day.toISOString()} className="p-2 text-center border-l border-border">
+              <div className="text-xs text-muted-foreground">{format(day, 'EEE')}</div>
+              <div
+                className={cn(
+                  "text-lg font-medium mx-auto flex items-center justify-center",
+                  isToday(day) && "bg-primary text-primary-foreground rounded-full w-8 h-8"
+                )}
+              >
+                {format(day, 'd')}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Time grid */}
+        <div className="overflow-y-auto max-h-[600px]">
+          {TIME_SLOTS.map((hour) => (
+            <div key={hour} className="grid grid-cols-[60px_repeat(7,1fr)] min-h-[60px]">
+              <div className="text-xs text-muted-foreground p-1 text-right pr-2 border-r border-border">
+                {format(setHours(new Date(), hour), 'h a')}
+              </div>
+              {weekDays.map((day) => {
+                const cellDate = setHours(day, hour);
+                const cellEvents = getEventsForTimeSlot(day, hour);
+                return (
+                  <div
+                    key={day.toISOString() + hour}
+                    className="border-l border-t border-border hover:bg-accent/50 cursor-pointer relative p-0.5"
+                    onClick={() => onDateClick?.(cellDate)}
+                  >
+                    {cellEvents.map((event) => (
+                      <div
+                        key={event.id}
+                        className="text-xs px-1.5 py-0.5 rounded truncate cursor-pointer"
+                        style={{
+                          backgroundColor: event.color ? `${event.color}20` : 'hsl(var(--primary) / 0.1)',
+                          color: event.color || 'hsl(var(--primary))',
+                          borderLeft: `2px solid ${event.color || 'hsl(var(--primary))'}`,
+                        }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onEventClick?.(event);
+                        }}
+                      >
+                        {event.title}
+                      </div>
+                    ))}
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  // Render day view with single column time grid
+  const renderDayView = () => (
+    <div className="flex flex-col">
+      {/* Day header */}
+      <div className="p-4 text-center border-b border-border bg-muted/30">
+        <div className="text-sm text-muted-foreground">{format(currentDate, 'EEEE')}</div>
+        <div
+          className={cn(
+            "text-3xl font-semibold mx-auto flex items-center justify-center",
+            isToday(currentDate) && "text-primary"
+          )}
+        >
+          {format(currentDate, 'd')}
+        </div>
+      </div>
+
+      {/* Time grid */}
+      <div className="overflow-y-auto max-h-[600px]">
+        {TIME_SLOTS.map((hour) => {
+          const cellDate = setHours(currentDate, hour);
+          const cellEvents = getEventsForTimeSlot(currentDate, hour);
+          return (
+            <div key={hour} className="grid grid-cols-[60px_1fr] min-h-[60px]">
+              <div className="text-xs text-muted-foreground p-1 text-right pr-2 border-r border-border">
+                {format(setHours(new Date(), hour), 'h a')}
+              </div>
+              <div
+                className="border-t border-border hover:bg-accent/50 cursor-pointer relative p-1"
+                onClick={() => onDateClick?.(cellDate)}
+              >
+                {cellEvents.map((event) => (
+                  <div
+                    key={event.id}
+                    className="flex items-center gap-2 text-sm px-2 py-1.5 rounded cursor-pointer mb-1"
+                    style={{
+                      backgroundColor: event.color ? `${event.color}20` : 'hsl(var(--primary) / 0.1)',
+                      color: event.color || 'hsl(var(--primary))',
+                      borderLeft: `3px solid ${event.color || 'hsl(var(--primary))'}`,
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEventClick?.(event);
+                    }}
+                  >
+                    <span className="font-medium">{format(new Date(event.start), 'h:mm a')}</span>
+                    <span>{event.title}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+
+  return (
+    <div className={cn("bg-card border border-border rounded-xl overflow-hidden", className)}>
+      {/* Enhanced Calendar Header */}
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between px-6 py-4 border-b border-border">
+        {/* Left: Mini date + Title info */}
+        <div className="flex items-center gap-4">
+          {/* Mini date indicator */}
+          <div className="flex flex-col items-center justify-center bg-muted rounded-lg px-3 py-1.5 min-w-[52px]">
+            <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
+              {format(today, 'MMM')}
+            </span>
+            <span className="text-xl font-semibold text-foreground leading-tight">
+              {format(today, 'd')}
+            </span>
+          </div>
+          
+          {/* Dynamic title + week badge */}
+          <div className="flex flex-col">
+            <div className="flex items-center gap-2">
+              <h2 className="text-lg font-semibold text-foreground">
+                {getHeaderTitle()}
+              </h2>
+              <Badge variant="secondary" className="text-xs">
+                Week {getWeek(currentDate)}
+              </Badge>
+            </div>
+            <span className="text-sm text-muted-foreground">
+              {view === 'month' 
+                ? `${format(monthStart, 'MMM d, yyyy')} – ${format(monthEnd, 'MMM d, yyyy')}`
+                : view === 'week'
+                ? `${format(startOfWeek(currentDate), 'MMM d')} – ${format(endOfWeek(currentDate), 'MMM d, yyyy')}`
+                : format(currentDate, 'MMMM yyyy')
+              }
+            </span>
+          </div>
+        </div>
+        
+        {/* Right: Navigation + View + Add Event */}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1">
+            <Button variant="ghost" size="icon" onClick={goToPrevious}>
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <Button variant="outline" size="sm" onClick={goToToday}>
+              Today
+            </Button>
+            <Button variant="ghost" size="icon" onClick={goToNext}>
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+          
+          {/* View Selector */}
+          <Select value={view} onValueChange={(v) => setView(v as CalendarView)}>
+            <SelectTrigger className="w-[130px]">
+              <SelectValue placeholder="Month view" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="month">Month view</SelectItem>
+              <SelectItem value="week">Week view</SelectItem>
+              <SelectItem value="day">Day view</SelectItem>
+            </SelectContent>
+          </Select>
+          
+          {/* Add Event Button */}
+          <Button onClick={onAddEvent}>
+            <Plus className="h-4 w-4 mr-2" />
+            Add event
+          </Button>
+        </div>
+      </div>
+
+      {/* Render based on selected view */}
+      {view === 'month' && renderMonthView()}
+      {view === 'week' && renderWeekView()}
+      {view === 'day' && renderDayView()}
     </div>
   );
 };
