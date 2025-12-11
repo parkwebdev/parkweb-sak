@@ -69,13 +69,14 @@ export const RecurrenceSettings: React.FC<RecurrenceSettingsProps> = ({
           max={99}
           value={rule.interval}
           onChange={(e) => updateRule({ interval: Math.max(1, parseInt(e.target.value) || 1) })}
-          className="w-16 h-9"
+          size="sm"
+          className="w-16"
         />
         <Select
           value={rule.frequency}
           onValueChange={(v) => updateRule({ frequency: v as RecurrenceFrequency })}
         >
-          <SelectTrigger className="w-[120px] h-9">
+          <SelectTrigger size="sm" className="w-[120px]">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -98,7 +99,7 @@ export const RecurrenceSettings: React.FC<RecurrenceSettingsProps> = ({
                 type="button"
                 variant={rule.daysOfWeek?.includes(day.value) ? 'default' : 'outline'}
                 size="sm"
-                className="w-9 h-9 p-0"
+                className="w-8 h-8 p-0"
                 onClick={() => toggleDayOfWeek(day.value)}
                 title={day.fullLabel}
               >
@@ -117,7 +118,7 @@ export const RecurrenceSettings: React.FC<RecurrenceSettingsProps> = ({
             value={rule.endType}
             onValueChange={(v) => updateRule({ endType: v as RecurrenceEndType })}
           >
-            <SelectTrigger className="h-9">
+            <SelectTrigger size="sm">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -135,7 +136,8 @@ export const RecurrenceSettings: React.FC<RecurrenceSettingsProps> = ({
                 max={365}
                 value={rule.endAfterOccurrences || 10}
                 onChange={(e) => updateRule({ endAfterOccurrences: Math.max(1, parseInt(e.target.value) || 10) })}
-                className="w-20 h-9"
+                size="sm"
+                className="w-20"
               />
               <span className="text-sm text-muted-foreground">occurrences</span>
             </div>
@@ -146,8 +148,9 @@ export const RecurrenceSettings: React.FC<RecurrenceSettingsProps> = ({
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
+                  size="sm"
                   className={cn(
-                    "justify-start text-left font-normal h-9",
+                    "justify-start text-left font-normal",
                     !rule.endDate && "text-muted-foreground"
                   )}
                 >
