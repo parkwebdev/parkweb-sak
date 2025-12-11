@@ -77,6 +77,7 @@ export const EditEventDialog: React.FC<EditEventDialogProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRecurring, setIsRecurring] = useState(false);
   const [recurrence, setRecurrence] = useState<RecurrenceRule | undefined>(undefined);
+  const [allDay, setAllDay] = useState(false);
 
   useEffect(() => {
     if (event) {
@@ -94,6 +95,7 @@ export const EditEventDialog: React.FC<EditEventDialogProps> = ({
       setNotes(event.notes || '');
       setIsRecurring(!!event.recurrence);
       setRecurrence(event.recurrence);
+      setAllDay(event.allDay || false);
     }
   }, [event]);
 
@@ -117,6 +119,7 @@ export const EditEventDialog: React.FC<EditEventDialogProps> = ({
         title,
         start: startDate,
         end: endDate,
+        allDay,
         type: eventType,
         status,
         color: EVENT_TYPE_CONFIG[eventType!]?.color,
@@ -133,7 +136,7 @@ export const EditEventDialog: React.FC<EditEventDialogProps> = ({
     } finally {
       setIsSubmitting(false);
     }
-  }, [date, title, event, startTime, endTime, eventType, status, leadName, leadEmail, leadPhone, property, community, notes, onUpdateEvent, onOpenChange]);
+  }, [date, title, event, startTime, endTime, eventType, status, leadName, leadEmail, leadPhone, property, community, notes, isRecurring, recurrence, allDay, onUpdateEvent, onOpenChange]);
 
   if (!event) return null;
 
@@ -201,6 +204,16 @@ export const EditEventDialog: React.FC<EditEventDialogProps> = ({
             </div>
           </div>
 
+          {/* All Day Toggle */}
+          <div className="flex items-center justify-between h-10 px-3 border rounded-md bg-background">
+            <span className="text-sm">All-day event</span>
+            <Switch
+              id="edit-all-day"
+              checked={allDay}
+              onCheckedChange={setAllDay}
+            />
+          </div>
+
           {/* Date & Time */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -230,10 +243,31 @@ export const EditEventDialog: React.FC<EditEventDialogProps> = ({
               </Popover>
             </div>
 
+            {!allDay && (
+              <div className="space-y-2">
+                <Label>Start Time</Label>
+                <Select value={startTime} onValueChange={setStartTime}>
+                  <SelectTrigger>
+                    <Clock className="mr-2 h-4 w-4" />
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TIME_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </div>
+
+          {!allDay && (
             <div className="space-y-2">
-              <Label>Start Time</Label>
-              <Select value={startTime} onValueChange={setStartTime}>
-                <SelectTrigger>
+              <Label>End Time</Label>
+              <Select value={endTime} onValueChange={setEndTime}>
+                <SelectTrigger className="w-1/2">
                   <Clock className="mr-2 h-4 w-4" />
                   <SelectValue />
                 </SelectTrigger>
@@ -246,23 +280,25 @@ export const EditEventDialog: React.FC<EditEventDialogProps> = ({
                 </SelectContent>
               </Select>
             </div>
-          </div>
+          )}
 
-          <div className="space-y-2">
-            <Label>End Time</Label>
-            <Select value={endTime} onValueChange={setEndTime}>
-              <SelectTrigger className="w-1/2">
-                <Clock className="mr-2 h-4 w-4" />
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {TIME_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          {/* Recurrence Settings */}
+          <div className="space-y-3 pt-2 border-t">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="edit-recurring" className="text-sm font-medium">Repeat</Label>
+              <Switch
+                id="edit-recurring"
+                checked={isRecurring}
+                onCheckedChange={setIsRecurring}
+              />
+            </div>
+            {isRecurring && date && (
+              <RecurrenceSettings
+                recurrence={recurrence}
+                onChange={setRecurrence}
+                baseDate={date}
+              />
+            )}
           </div>
 
           {/* Lead Info */}

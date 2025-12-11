@@ -70,6 +70,7 @@ export const CreateEventDialog: React.FC<CreateEventDialogProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRecurring, setIsRecurring] = useState(false);
   const [recurrence, setRecurrence] = useState<RecurrenceRule | undefined>(undefined);
+  const [allDay, setAllDay] = useState(false);
 
   // Sync date and time when initialDate prop changes
   useEffect(() => {
@@ -101,6 +102,7 @@ export const CreateEventDialog: React.FC<CreateEventDialogProps> = ({
     setNotes('');
     setIsRecurring(false);
     setRecurrence(undefined);
+    setAllDay(false);
   };
 
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
@@ -122,6 +124,7 @@ export const CreateEventDialog: React.FC<CreateEventDialogProps> = ({
         title,
         start: startDate,
         end: endDate,
+        allDay,
         type: eventType,
         color: EVENT_TYPE_CONFIG[eventType!]?.color,
         lead_name: leadName || undefined,
@@ -140,7 +143,7 @@ export const CreateEventDialog: React.FC<CreateEventDialogProps> = ({
     } finally {
       setIsSubmitting(false);
     }
-  }, [date, title, startTime, endTime, eventType, leadName, leadEmail, leadPhone, property, community, notes, isRecurring, recurrence, onCreateEvent, onOpenChange]);
+  }, [date, title, startTime, endTime, eventType, leadName, leadEmail, leadPhone, property, community, notes, isRecurring, recurrence, allDay, onCreateEvent, onOpenChange]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -165,27 +168,41 @@ export const CreateEventDialog: React.FC<CreateEventDialogProps> = ({
             />
           </div>
 
-          {/* Event Type */}
-          <div className="space-y-2">
-            <Label>Event Type</Label>
-            <Select value={eventType} onValueChange={(v) => setEventType(v as EventType)}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.entries(EVENT_TYPE_CONFIG).map(([key, config]) => (
-                  <SelectItem key={key} value={key}>
-                    <div className="flex items-center gap-2">
-                      <span
-                        className="w-2.5 h-2.5 rounded-full"
-                        style={{ backgroundColor: config.color }}
-                      />
-                      {config.label}
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          {/* Event Type & All Day */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Event Type</Label>
+              <Select value={eventType} onValueChange={(v) => setEventType(v as EventType)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(EVENT_TYPE_CONFIG).map(([key, config]) => (
+                    <SelectItem key={key} value={key}>
+                      <div className="flex items-center gap-2">
+                        <span
+                          className="w-2.5 h-2.5 rounded-full"
+                          style={{ backgroundColor: config.color }}
+                        />
+                        {config.label}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>&nbsp;</Label>
+              <div className="flex items-center justify-between h-10 px-3 border rounded-md bg-background">
+                <span className="text-sm">All-day event</span>
+                <Switch
+                  id="all-day"
+                  checked={allDay}
+                  onCheckedChange={setAllDay}
+                />
+              </div>
+            </div>
           </div>
 
           {/* Date & Time */}
@@ -217,10 +234,31 @@ export const CreateEventDialog: React.FC<CreateEventDialogProps> = ({
               </Popover>
             </div>
 
+            {!allDay && (
+              <div className="space-y-2">
+                <Label>Start Time</Label>
+                <Select value={startTime} onValueChange={setStartTime}>
+                  <SelectTrigger>
+                    <Clock className="mr-2 h-4 w-4" />
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TIME_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </div>
+
+          {!allDay && (
             <div className="space-y-2">
-              <Label>Start Time</Label>
-              <Select value={startTime} onValueChange={setStartTime}>
-                <SelectTrigger>
+              <Label>End Time</Label>
+              <Select value={endTime} onValueChange={setEndTime}>
+                <SelectTrigger className="w-1/2">
                   <Clock className="mr-2 h-4 w-4" />
                   <SelectValue />
                 </SelectTrigger>
@@ -233,24 +271,7 @@ export const CreateEventDialog: React.FC<CreateEventDialogProps> = ({
                 </SelectContent>
               </Select>
             </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label>End Time</Label>
-            <Select value={endTime} onValueChange={setEndTime}>
-              <SelectTrigger className="w-1/2">
-                <Clock className="mr-2 h-4 w-4" />
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {TIME_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          )}
 
           {/* Recurrence Settings */}
           <div className="space-y-3 pt-2 border-t">
