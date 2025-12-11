@@ -1,20 +1,69 @@
 import React, { useState } from 'react';
-import { SearchLg, Plus, Calendar as CalendarIcon, Link01 } from '@untitledui/icons';
+import { SearchLg, Plus, Link01 } from '@untitledui/icons';
 import { PageHeader } from '@/components/ui/page-header';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FullCalendar } from '@/components/calendar/FullCalendar';
-import { EmptyState } from '@/components/ui/empty-state';
 import type { CalendarEvent } from '@/types/calendar';
 
-// Placeholder events for demonstration
-const placeholderEvents: CalendarEvent[] = [];
+// Sample events for demonstration
+const sampleEvents: CalendarEvent[] = [
+  {
+    id: '1',
+    title: 'Marketing site kickoff',
+    start: new Date(2025, 11, 2, 9, 30),
+    end: new Date(2025, 11, 2, 10, 30),
+    color: '#3B82F6'
+  },
+  {
+    id: '2',
+    title: 'Team standup',
+    start: new Date(2025, 11, 5, 9, 0),
+    end: new Date(2025, 11, 5, 9, 30),
+    color: '#8B5CF6'
+  },
+  {
+    id: '3',
+    title: 'Design review',
+    start: new Date(2025, 11, 11, 14, 0),
+    end: new Date(2025, 11, 11, 15, 0),
+    color: '#10B981'
+  },
+  {
+    id: '4',
+    title: 'Product planning',
+    start: new Date(2025, 11, 11, 10, 0),
+    end: new Date(2025, 11, 11, 11, 30),
+    color: '#F59E0B'
+  },
+  {
+    id: '5',
+    title: 'Client call',
+    start: new Date(2025, 11, 15, 11, 0),
+    end: new Date(2025, 11, 15, 12, 0),
+    color: '#EF4444'
+  },
+  {
+    id: '6',
+    title: 'Sprint retrospective',
+    start: new Date(2025, 11, 18, 15, 0),
+    end: new Date(2025, 11, 18, 16, 0),
+    color: '#06B6D4'
+  },
+  {
+    id: '7',
+    title: 'Quarterly review',
+    start: new Date(2025, 11, 22, 13, 0),
+    end: new Date(2025, 11, 22, 14, 30),
+    color: '#8B5CF6'
+  },
+];
 
 const Calendar: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('all');
-  const [events] = useState<CalendarEvent[]>(placeholderEvents);
+  const [events] = useState<CalendarEvent[]>(sampleEvents);
 
   const handleDateClick = (date: Date) => {
     console.log('Date clicked:', date);
@@ -26,7 +75,10 @@ const Calendar: React.FC = () => {
     // Future: Open event details sheet
   };
 
-  const hasEvents = events.length > 0;
+  const handleAddEvent = () => {
+    console.log('Add event clicked');
+    // Future: Open create event dialog
+  };
 
   return (
     <div className="flex flex-col h-full">
@@ -51,10 +103,6 @@ const Calendar: React.FC = () => {
               <Link01 className="h-4 w-4 mr-2" />
               Connect Calendar
             </Button>
-            <Button size="default">
-              <Plus className="h-4 w-4 mr-2" />
-              New Event
-            </Button>
           </div>
         </div>
 
@@ -69,36 +117,15 @@ const Calendar: React.FC = () => {
         </Tabs>
       </div>
 
-      {/* Calendar Content */}
+      {/* Calendar Content - Always show */}
       <div className="flex-1 px-6 pb-6">
-        {hasEvents ? (
-          <FullCalendar
-            events={events}
-            onDateClick={handleDateClick}
-            onEventClick={handleEventClick}
-            className="h-full"
-          />
-        ) : (
-          <div className="h-full flex items-center justify-center">
-            <EmptyState
-              icon={<CalendarIcon className="h-5 w-5 text-muted-foreground" />}
-              title="No events yet"
-              description="Connect your calendar or create your first event to get started with bookings and appointments."
-              action={
-                <div className="flex items-center gap-3">
-                  <Button variant="outline">
-                    <Link01 className="h-4 w-4 mr-2" />
-                    Connect Calendar
-                  </Button>
-                  <Button>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Create Event
-                  </Button>
-                </div>
-              }
-            />
-          </div>
-        )}
+        <FullCalendar
+          events={events}
+          onDateClick={handleDateClick}
+          onEventClick={handleEventClick}
+          onAddEvent={handleAddEvent}
+          className="h-full"
+        />
       </div>
     </div>
   );
