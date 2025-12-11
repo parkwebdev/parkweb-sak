@@ -9,6 +9,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { 
   format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, 
@@ -667,15 +672,36 @@ export const FullCalendar: React.FC<FullCalendarProps> = ({
           {/* Right: Navigation + View + Connect + Add Event */}
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1">
-              <Button variant="ghost" size="sm" onClick={goToPrevious}>
-                ‹
-              </Button>
-              <Button variant="outline" size="sm" onClick={goToToday}>
-                Today
-              </Button>
-              <Button variant="ghost" size="sm" onClick={goToNext}>
-                ›
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="sm" onClick={goToPrevious}>
+                    ‹
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Previous <span className="rounded border border-border bg-muted px-1 py-0.5 text-xs font-medium ml-1">←</span></p>
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="outline" size="sm" onClick={goToToday}>
+                    Today
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Go to today <span className="rounded border border-border bg-muted px-1 py-0.5 text-xs font-medium ml-1">T</span></p>
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="ghost" size="sm" onClick={goToNext}>
+                    ›
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Next <span className="rounded border border-border bg-muted px-1 py-0.5 text-xs font-medium ml-1">→</span></p>
+                </TooltipContent>
+              </Tooltip>
             </div>
             
             {/* View Selector */}
