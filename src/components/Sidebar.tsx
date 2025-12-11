@@ -127,7 +127,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
                   >
                     <Link 
                       to={item.path}
-                      className={`items-center flex w-full p-2.5 rounded-md transition-colors text-sm overflow-hidden ${
+                      className={`items-center flex w-full p-[11px] rounded-md transition-colors text-sm overflow-hidden ${
                         isActive 
                           ? 'bg-accent text-accent-foreground' 
                           : 'bg-transparent hover:bg-accent/50 text-muted-foreground hover:text-foreground'
@@ -191,7 +191,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
                     >
                       <Link 
                         to={item.path}
-                        className={`items-center flex w-full p-2.5 rounded-md transition-colors text-sm overflow-hidden ${
+                        className={`items-center flex w-full p-[11px] rounded-md transition-colors text-sm overflow-hidden ${
                           isActive 
                             ? 'bg-accent text-accent-foreground' 
                             : 'bg-transparent hover:bg-accent/50 text-muted-foreground hover:text-foreground'

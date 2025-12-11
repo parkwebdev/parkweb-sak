@@ -71,7 +71,7 @@ export const UserAccountCard: React.FC<UserAccountCardProps> = ({ isCollapsed = 
 
   if (!user || loading) {
     return (
-      <div className="relative flex w-full gap-3 bg-card rounded-xl p-2.5 border shadow-sm border-border">
+      <div className="relative flex w-full gap-3 p-[11px] rounded-md">
         <Spinner size="sm" />
       </div>
     );
@@ -83,59 +83,57 @@ export const UserAccountCard: React.FC<UserAccountCardProps> = ({ isCollapsed = 
   const initials = displayName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
 
   return (
-    <div className="relative flex w-full bg-card rounded-xl p-2.5 border shadow-sm border-border overflow-hidden">
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button className="flex items-center gap-3 flex-1 min-w-0 hover:bg-accent/50 rounded-lg transition-colors">
-            <div className="relative flex-shrink-0">
-              <Avatar className="h-7 w-7">
-                <AvatarImage src={avatarUrl} alt={displayName} />
-                <AvatarFallback className="font-medium text-[10px]">
-                  {initials}
-                </AvatarFallback>
-              </Avatar>
-              <div className="bg-green-500 absolute rounded-full border-2 border-background w-2 h-2 -bottom-0 -right-0" />
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button className="relative flex items-center gap-3 w-full p-[11px] hover:bg-accent/50 rounded-md transition-colors overflow-hidden">
+          <div className="relative flex-shrink-0">
+            <Avatar className="h-[18px] w-[18px]">
+              <AvatarImage src={avatarUrl} alt={displayName} />
+              <AvatarFallback className="font-medium text-[8px]">
+                {initials}
+              </AvatarFallback>
+            </Avatar>
+            <div className="bg-green-500 absolute rounded-full border-[1.5px] border-sidebar w-1.5 h-1.5 -bottom-0 -right-0" />
+          </div>
+          <div 
+            className="text-left min-w-0 flex-1 overflow-hidden"
+            style={{ opacity: isCollapsed ? 0 : 1, transition: 'opacity 0.15s ease' }}
+          >
+            <div className="text-foreground text-xs font-semibold leading-5 truncate">
+              {displayName}
             </div>
-            <div 
-              className="text-left min-w-0 flex-1 overflow-hidden"
-              style={{ opacity: isCollapsed ? 0 : 1, transition: 'opacity 0.15s ease' }}
-            >
-              <div className="text-foreground text-xs font-semibold leading-5 truncate">
-                {displayName}
-              </div>
-              <div className="text-muted-foreground text-[11px] font-normal leading-5 truncate">
-                {email}
-              </div>
+            <div className="text-muted-foreground text-[11px] font-normal leading-5 truncate">
+              {email}
             </div>
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-48 bg-background border shadow-lg z-50">
-            <DropdownMenuItem asChild>
-              <Link to="/settings?tab=profile" className="w-full flex items-center gap-2">
-                <User size={16} />
-                Profile
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link to="/settings?tab=billing" className="w-full flex items-center gap-2">
-                <CreditCard01 size={16} />
-                Billing
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link to="/settings" className="w-full flex items-center gap-2">
-                <Settings size={16} />
-                Settings
-              </Link>
-            </DropdownMenuItem>
-            <KeyboardShortcutsDropdown />
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
-            <LogOut size={16} className="mr-2" />
-            Sign Out
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </div>
+          </div>
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-48 bg-background border shadow-lg z-50">
+        <DropdownMenuItem asChild>
+          <Link to="/settings?tab=profile" className="w-full flex items-center gap-2">
+            <User size={16} />
+            Profile
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link to="/settings?tab=billing" className="w-full flex items-center gap-2">
+            <CreditCard01 size={16} />
+            Billing
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link to="/settings" className="w-full flex items-center gap-2">
+            <Settings size={16} />
+            Settings
+          </Link>
+        </DropdownMenuItem>
+        <KeyboardShortcutsDropdown />
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
+          <LogOut size={16} className="mr-2" />
+          Sign Out
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 };
