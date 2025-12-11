@@ -15,6 +15,7 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -50,30 +51,29 @@ export const ViewEventDialog: React.FC<ViewEventDialogProps> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[450px]">
         <DialogHeader>
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-1">
-                {typeConfig && (
-                  <span
-                    className="w-3 h-3 rounded-full"
-                    style={{ backgroundColor: typeConfig.color }}
-                  />
-                )}
-                <DialogTitle className="text-lg">{event.title}</DialogTitle>
-              </div>
-              <div className="flex items-center gap-2 mt-2">
-                {typeConfig && (
-                  <Badge variant="secondary" className="text-xs">
-                    {typeConfig.label}
-                  </Badge>
-                )}
-                {statusConfig && (
-                  <Badge variant={statusConfig.variant} className="text-xs">
-                    {statusConfig.label}
-                  </Badge>
-                )}
-              </div>
-            </div>
+          <div className="flex items-center gap-2">
+            {typeConfig && (
+              <span
+                className="w-3 h-3 rounded-full shrink-0"
+                style={{ backgroundColor: typeConfig.color }}
+              />
+            )}
+            <DialogTitle>{event.title}</DialogTitle>
+          </div>
+          <DialogDescription>
+            View booking details and manage this event.
+          </DialogDescription>
+          <div className="flex items-center gap-2 pt-1">
+            {typeConfig && (
+              <Badge variant="secondary" className="text-xs">
+                {typeConfig.label}
+              </Badge>
+            )}
+            {statusConfig && (
+              <Badge variant={statusConfig.variant} className="text-xs">
+                {statusConfig.label}
+              </Badge>
+            )}
           </div>
         </DialogHeader>
 

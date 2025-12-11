@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { format } from 'date-fns';
 import { CalendarDate, Clock } from '@untitledui/icons';
 import {
@@ -65,6 +65,7 @@ export const CreateEventDialog: React.FC<CreateEventDialogProps> = ({
   const [property, setProperty] = useState('');
   const [community, setCommunity] = useState('');
   const [notes, setNotes] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const resetForm = () => {
     setTitle('');
@@ -80,38 +81,43 @@ export const CreateEventDialog: React.FC<CreateEventDialogProps> = ({
     setNotes('');
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     if (!date || !title) return;
 
-    const [startHour, startMinute] = startTime.split(':').map(Number);
-    const [endHour, endMinute] = endTime.split(':').map(Number);
+    setIsSubmitting(true);
+    try {
+      const [startHour, startMinute] = startTime.split(':').map(Number);
+      const [endHour, endMinute] = endTime.split(':').map(Number);
 
-    const startDate = new Date(date);
-    startDate.setHours(startHour, startMinute, 0, 0);
+      const startDate = new Date(date);
+      startDate.setHours(startHour, startMinute, 0, 0);
 
-    const endDate = new Date(date);
-    endDate.setHours(endHour, endMinute, 0, 0);
+      const endDate = new Date(date);
+      endDate.setHours(endHour, endMinute, 0, 0);
 
-    onCreateEvent({
-      title,
-      start: startDate,
-      end: endDate,
-      type: eventType,
-      color: EVENT_TYPE_CONFIG[eventType!]?.color,
-      lead_name: leadName || undefined,
-      lead_email: leadEmail || undefined,
-      lead_phone: leadPhone || undefined,
-      property: property || undefined,
-      community: community || undefined,
-      notes: notes || undefined,
-      status: 'confirmed',
-      source: 'native',
-    });
+      onCreateEvent({
+        title,
+        start: startDate,
+        end: endDate,
+        type: eventType,
+        color: EVENT_TYPE_CONFIG[eventType!]?.color,
+        lead_name: leadName || undefined,
+        lead_email: leadEmail || undefined,
+        lead_phone: leadPhone || undefined,
+        property: property || undefined,
+        community: community || undefined,
+        notes: notes || undefined,
+        status: 'confirmed',
+        source: 'native',
+      });
 
-    resetForm();
-    onOpenChange(false);
-  };
+      resetForm();
+      onOpenChange(false);
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [date, title, startTime, endTime, eventType, leadName, leadEmail, leadPhone, property, community, notes, onCreateEvent, onOpenChange]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -273,14 +279,14 @@ export const CreateEventDialog: React.FC<CreateEventDialogProps> = ({
             />
           </div>
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={!title || !date}>
-              Create Booking
-            </Button>
-          </DialogFooter>
+        <DialogFooter>
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
+            Cancel
+          </Button>
+          <Button type="submit" disabled={!title || !date} loading={isSubmitting}>
+            Create Booking
+          </Button>
+        </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
