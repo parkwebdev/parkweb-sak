@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Settings04 as Settings, Grid01 as Grid, MessageSquare01, User03, PieChart01 } from '@untitledui/icons';
+import { X, Settings04 as Settings, Grid01 as Grid, MessageSquare01, User03, PieChart01, Calendar } from '@untitledui/icons';
 import AriAgentsIcon from './icons/AriAgentsIcon';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'motion/react';
@@ -37,6 +37,12 @@ const navigationItems: NavigationItem[] = [
     label: 'Inbox',
     icon: MessageSquare01,
     path: '/conversations'
+  },
+  {
+    id: 'calendar',
+    label: 'Calendar',
+    icon: Calendar,
+    path: '/calendar'
   },
   {
     id: 'leads',
