@@ -71,7 +71,7 @@ export const UserAccountCard: React.FC<UserAccountCardProps> = ({ isCollapsed = 
 
   if (!user || loading) {
     return (
-      <div className="relative flex w-full gap-3 bg-card rounded-xl p-2 border shadow-sm border-border">
+      <div className="relative flex w-full gap-3 bg-card rounded-xl p-2.5 border shadow-sm border-border">
         <Spinner size="sm" />
       </div>
     );
@@ -83,10 +83,10 @@ export const UserAccountCard: React.FC<UserAccountCardProps> = ({ isCollapsed = 
   const initials = displayName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
 
   return (
-    <div className="relative flex w-full bg-card rounded-xl p-2 border shadow-sm border-border overflow-hidden">
+    <div className="relative flex w-full bg-card rounded-xl p-2.5 border shadow-sm border-border overflow-hidden">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className="flex items-center gap-3 flex-1 min-w-0 p-1 -m-1 hover:bg-accent/50 rounded-lg transition-colors">
+          <button className="flex items-center gap-3 flex-1 min-w-0 hover:bg-accent/50 rounded-lg transition-colors">
             <div className="relative flex-shrink-0">
               <Avatar className="h-7 w-7">
                 <AvatarImage src={avatarUrl} alt={displayName} />
