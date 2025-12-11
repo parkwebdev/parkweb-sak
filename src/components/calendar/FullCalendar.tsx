@@ -58,7 +58,7 @@ export const FullCalendar: React.FC<FullCalendarProps> = ({
   const today = new Date();
 
   return (
-    <div className={cn("bg-card border border-border rounded-xl overflow-hidden flex flex-col", className)}>
+    <div className={cn("bg-card border border-border rounded-xl overflow-hidden", className)}>
       {/* Enhanced Calendar Header */}
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between px-6 py-4 border-b border-border">
         {/* Left: Mini date + Month info */}
@@ -136,7 +136,7 @@ export const FullCalendar: React.FC<FullCalendarProps> = ({
       </div>
 
       {/* Calendar Grid */}
-      <div className="grid grid-cols-7 flex-1">
+      <div className="grid grid-cols-7">
         {days.map((dayDate, index) => {
           const dayEvents = getEventsForDay(dayDate);
           const isCurrentMonth = isSameMonth(dayDate, currentDate);

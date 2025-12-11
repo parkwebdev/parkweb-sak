@@ -67,23 +67,20 @@ const Calendar: React.FC = () => {
 
   const handleDateClick = (date: Date) => {
     console.log('Date clicked:', date);
-    // Future: Open create event dialog
   };
 
   const handleEventClick = (event: CalendarEvent) => {
     console.log('Event clicked:', event);
-    // Future: Open event details sheet
   };
 
   const handleAddEvent = () => {
     console.log('Add event clicked');
-    // Future: Open create event dialog
   };
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Page Header */}
-      <div className="px-6 pt-6 pb-4 space-y-4">
+    <main className="flex-1 bg-muted/30 h-screen overflow-auto">
+      <div className="px-4 lg:px-8 pt-4 lg:pt-8 pb-8 space-y-6">
+        {/* Page Header */}
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <PageHeader
             title="Calendar"
@@ -115,19 +112,16 @@ const Calendar: React.FC = () => {
             <TabsTrigger value="cancelled">Cancelled</TabsTrigger>
           </TabsList>
         </Tabs>
-      </div>
 
-      {/* Calendar Content - Always show */}
-      <div className="flex-1 px-6 pb-6">
+        {/* Calendar Content */}
         <FullCalendar
           events={events}
           onDateClick={handleDateClick}
           onEventClick={handleEventClick}
           onAddEvent={handleAddEvent}
-          className="h-full"
         />
       </div>
-    </div>
+    </main>
   );
 };
 
