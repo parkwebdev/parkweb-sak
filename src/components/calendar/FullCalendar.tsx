@@ -72,12 +72,10 @@ export const FullCalendar: React.FC<FullCalendarProps> = ({
     return expandRecurringEvents(events, viewStart, viewEnd);
   }, [events, view, currentDate, calendarStart, calendarEnd]);
 
-  // Use lenient constraints for month view (no resize conflict), stricter for week/day
+  // Use distance-only constraints - resize conflict handled by isResizeIntent flag
   const sensors = useSensors(
     useSensor(PointerSensor, {
-      activationConstraint: view === 'month' 
-        ? { distance: 5 }
-        : { distance: 12, delay: 150, tolerance: 5 },
+      activationConstraint: { distance: view === 'month' ? 5 : 8 },
     })
   );
 
