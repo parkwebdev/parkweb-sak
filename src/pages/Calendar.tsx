@@ -1,8 +1,5 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { SearchLg } from '@untitledui/icons';
 import { PageHeader } from '@/components/ui/page-header';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FullCalendar } from '@/components/calendar/FullCalendar';
 import { CreateEventDialog } from '@/components/calendar/CreateEventDialog';
@@ -329,20 +326,7 @@ const Calendar: React.FC = () => {
       <PageHeader
         title="Calendar"
         description="Manage your property showings and bookings"
-      >
-        <div className="relative w-full lg:w-80">
-          <SearchLg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search bookings..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9"
-          />
-        </div>
-        <Button variant="outline" size="default">
-          Connect Calendar
-        </Button>
-      </PageHeader>
+      />
 
       <div className="px-4 lg:px-8 mt-6 pb-8 space-y-6">
         {/* Tabs & Color Legend */}
@@ -379,6 +363,8 @@ const Calendar: React.FC = () => {
           onAddEvent={handleAddEvent}
           onEventMove={handleEventMove}
           onEventResize={handleEventResize}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
         />
       </div>
 
