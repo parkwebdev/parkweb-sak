@@ -22,18 +22,11 @@ import { ResizableEvent } from './ResizableEvent';
 import { DroppableTimeSlot } from './DroppableTimeSlot';
 import { DroppableDayCell } from './DroppableDayCell';
 import { DraggedEventPreview } from './DraggedEventPreview';
-import { TimePickerDialog } from './TimePickerDialog';
 import type { CalendarEvent, CalendarView } from '@/types/calendar';
 
 // Time slots for week/day view (6 AM to 10 PM)
 const TIME_SLOTS = Array.from({ length: 17 }, (_, i) => i + 6);
 const HOUR_HEIGHT = 60; // pixels per hour
-
-interface PendingDrop {
-  eventId: string;
-  targetDate: Date;
-  originalEvent: CalendarEvent;
-}
 
 interface FullCalendarProps {
   events?: CalendarEvent[];
@@ -61,7 +54,6 @@ export const FullCalendar: React.FC<FullCalendarProps> = ({
   const [activeDragEvent, setActiveDragEvent] = useState<CalendarEvent | null>(null);
   const [resizingEventId, setResizingEventId] = useState<string | null>(null);
   const [resizePreviewEnd, setResizePreviewEnd] = useState<Date | null>(null);
-  const [pendingDrop, setPendingDrop] = useState<PendingDrop | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const monthStart = startOfMonth(currentDate);
@@ -112,14 +104,19 @@ export const FullCalendar: React.FC<FullCalendarProps> = ({
     
     const duration = differenceInMinutes(new Date(originalEvent.end), new Date(originalEvent.start));
     
-    // Handle month view day drops - open time picker dialog
+    // Handle month view day drops - move to new date, preserve original time
     if (dropData.type === 'day') {
       const targetDate = new Date(dropData.date);
-      setPendingDrop({
-        eventId: actualEventId,
-        targetDate,
-        originalEvent,
-      });
+      const originalStart = new Date(originalEvent.start);
+      
+      // Preserve original time, change only the date
+      const newStart = setMinutes(
+        setHours(targetDate, originalStart.getHours()), 
+        originalStart.getMinutes()
+      );
+      const newEnd = addMinutes(newStart, duration);
+      
+      onEventMove(actualEventId, newStart, newEnd);
       return;
     }
     
@@ -130,20 +127,6 @@ export const FullCalendar: React.FC<FullCalendarProps> = ({
       onEventMove(actualEventId, newStart, newEnd);
     }
   };
-
-  // Handle time picker confirmation for month view drops
-  const handleTimePickerConfirm = useCallback((hour: number, minute: number) => {
-    if (!pendingDrop || !onEventMove) return;
-    
-    const { eventId, targetDate, originalEvent } = pendingDrop;
-    const duration = differenceInMinutes(new Date(originalEvent.end), new Date(originalEvent.start));
-    
-    const newStart = setMinutes(setHours(new Date(targetDate), hour), minute);
-    const newEnd = addMinutes(newStart, duration);
-    
-    onEventMove(eventId, newStart, newEnd);
-    setPendingDrop(null);
-  }, [pendingDrop, onEventMove]);
 
   // Resize handlers
   const handleResizeStart = useCallback((eventId: string) => {
@@ -281,7 +264,7 @@ export const FullCalendar: React.FC<FullCalendarProps> = ({
               key={index}
               date={dayDate}
               className={cn(
-                "min-h-[100px] p-2 border-r border-b border-border cursor-pointer transition-colors hover:bg-accent/50",
+                "min-h-[130px] p-2 border-r border-b border-border cursor-pointer transition-colors hover:bg-accent/50",
                 !isCurrentMonth && "bg-muted/30",
                 index % 7 === 6 && "border-r-0",
                 isLastRow && "border-b-0"
@@ -308,9 +291,6 @@ export const FullCalendar: React.FC<FullCalendarProps> = ({
                     key={event.id}
                     event={event}
                     onClick={() => onEventClick?.(event)}
-                    onResizeStart={handleResizeStart}
-                    onResizeMove={handleResizeMove}
-                    onResizeEnd={handleResizeEnd}
                     variant="month"
                   />
                 ))}
@@ -625,19 +605,6 @@ export const FullCalendar: React.FC<FullCalendarProps> = ({
       <DragOverlay>
         {activeDragEvent && <DraggedEventPreview event={activeDragEvent} />}
       </DragOverlay>
-
-      {/* Time picker dialog for month view drops */}
-      {pendingDrop && (
-        <TimePickerDialog
-          open={!!pendingDrop}
-          onOpenChange={(open) => !open && setPendingDrop(null)}
-          targetDate={pendingDrop.targetDate}
-          eventTitle={pendingDrop.originalEvent.title}
-          onConfirm={handleTimePickerConfirm}
-          defaultHour={new Date(pendingDrop.originalEvent.start).getHours()}
-          defaultMinute={new Date(pendingDrop.originalEvent.start).getMinutes()}
-        />
-      )}
     </DndContext>
   );
 };

@@ -100,62 +100,42 @@ export const ResizableEvent: React.FC<ResizableEventProps> = ({
     document.addEventListener('mouseup', handleMouseUp);
   };
 
-  // Month view - with bottom resize handle for time-based resizing (same as week/day)
+  // Month view - click to view, drag to move to different day (no resize)
   if (variant === 'month') {
     return (
       <div
         ref={setNodeRef}
+        {...attributes}
+        {...listeners}
         className={cn(
-          "flex items-center gap-1.5 px-2 py-1 text-xs rounded overflow-hidden touch-none select-none group relative",
-          !isResizing && "cursor-grab active:cursor-grabbing",
+          "flex items-center gap-1.5 px-2 py-1 text-xs rounded overflow-hidden touch-none select-none cursor-grab active:cursor-grabbing",
           isDragging && "opacity-50 shadow-lg ring-2 ring-primary"
         )}
         style={{
           backgroundColor: event.color ? `${event.color}15` : 'hsl(var(--primary) / 0.1)',
           color: event.color || 'hsl(var(--primary))',
         }}
+        onClick={(e) => {
+          e.stopPropagation();
+          onClick?.();
+        }}
       >
-        {/* Drag handle - main content */}
-        <div
-          {...attributes}
-          {...listeners}
-          className="flex items-center gap-1.5 flex-1 min-w-0"
-          onClick={(e) => {
-            if (!isResizing) {
-              e.stopPropagation();
-              onClick?.();
-            }
-          }}
-        >
-          <span 
-            className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-            style={{ backgroundColor: event.color || 'hsl(var(--primary))' }}
-          />
-          {!event.allDay && (
-            <span className="font-medium truncate">
-              {format(eventStart, 'h:mm a')}
-            </span>
-          )}
-          {event.allDay && (
-            <span className="font-medium text-xs text-muted-foreground">All day</span>
-          )}
-          <span className="truncate">{event.title}</span>
-          {event.recurrence && !event.is_recurring_instance && (
-            <Repeat02 className="h-3 w-3 flex-shrink-0 opacity-70" />
-          )}
-        </div>
-        
-        {/* Bottom resize handle for time extension */}
-        <div
-          className={cn(
-            "absolute bottom-0 left-0 right-0 h-3 cursor-ns-resize z-10",
-            "opacity-0 group-hover:opacity-100 transition-opacity"
-          )}
-          onMouseDown={handleResizeMouseDown}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-8 h-1 rounded-full bg-current opacity-60" />
-        </div>
+        <span 
+          className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+          style={{ backgroundColor: event.color || 'hsl(var(--primary))' }}
+        />
+        {!event.allDay && (
+          <span className="font-medium truncate">
+            {format(eventStart, 'h:mm a')}
+          </span>
+        )}
+        {event.allDay && (
+          <span className="font-medium text-xs text-muted-foreground">All day</span>
+        )}
+        <span className="truncate">{event.title}</span>
+        {event.recurrence && !event.is_recurring_instance && (
+          <Repeat02 className="h-3 w-3 flex-shrink-0 opacity-70" />
+        )}
       </div>
     );
   }
