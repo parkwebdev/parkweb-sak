@@ -1360,25 +1360,71 @@ Generate a warm, personalized greeting using the user information provided above
     } : null;
 
     // Built-in tool to mark conversation as complete (triggers satisfaction rating)
+    // Calculate conversation length for context (user messages only)
+    const userMessageCount = conversationHistory.filter(m => m.role === 'user').length;
+    
     const markCompleteTool = {
       type: 'function',
       function: {
         name: 'mark_conversation_complete',
-        description: 'Call this when you are highly confident the user\'s question has been fully answered and they appear satisfied. Look for signals like "thanks", "got it", "perfect", "that helps", or explicit confirmation that their issue is resolved. Only call with HIGH confidence.',
+        description: `Intelligently determine if a conversation has reached a natural conclusion. Current conversation has ${userMessageCount} user messages.
+
+CONTEXT REQUIREMENTS:
+- Minimum 3 user message exchanges before considering HIGH confidence completion
+- Short conversations (1-2 exchanges) should use MEDIUM confidence at most
+
+HIGH CONFIDENCE SIGNALS (multiple should apply):
+- User expresses gratitude WITH finality: "thanks, that's exactly what I needed!", "perfect, you've been very helpful!", "great, I'm all set now"
+- No pending questions or unresolved topics from the user
+- User's original inquiry has been addressed
+- Last user message does NOT contain a follow-up question
+- Conversation has sufficient depth (3+ exchanges)
+
+NEGATIVE SIGNALS (DO NOT mark complete if present):
+- "Thanks" or "got it" followed by "but...", "however...", "one more thing...", or a new question
+- User expressing confusion, frustration, or dissatisfaction
+- Conversation ends mid-topic without resolution
+- User says "thanks" but immediately asks another question
+- Any explicit "I have another question" or "Also..." or "What about..."
+- Questions marks in the user's last message after acknowledgment
+
+MEDIUM CONFIDENCE (log only, no rating prompt):
+- Single acknowledgment words without elaboration: just "ok", "thanks", "got it"
+- Short conversations (under 3 user exchanges) even with positive signals
+- User appears satisfied but hasn't explicitly confirmed resolution
+
+NEVER mark complete when:
+- User is frustrated or upset (negative sentiment)
+- There are unanswered questions
+- The conversation is still actively exploring a topic
+- User gave perfunctory acknowledgment mid-conversation`,
         parameters: {
           type: 'object',
           properties: {
             reason: {
               type: 'string',
-              description: 'Why the conversation appears complete (e.g., "user confirmed answer was helpful", "question fully addressed")'
+              description: 'Detailed explanation of why the conversation appears complete, referencing specific user signals observed'
             },
             confidence: {
               type: 'string',
               enum: ['high', 'medium'],
-              description: 'Confidence level - only triggers rating prompt if HIGH'
+              description: 'HIGH: Clear resolution with explicit satisfaction AND 3+ exchanges. MEDIUM: Likely complete but ambiguous signals or short conversation.'
+            },
+            user_signal: {
+              type: 'string',
+              description: 'The specific phrase or message from the user that indicates completion (quote directly)'
+            },
+            sentiment: {
+              type: 'string',
+              enum: ['satisfied', 'neutral', 'uncertain', 'frustrated'],
+              description: 'Overall sentiment of the user based on their final messages'
+            },
+            has_pending_questions: {
+              type: 'boolean',
+              description: 'Whether the user has any unanswered questions or unresolved topics'
             }
           },
-          required: ['reason', 'confidence']
+          required: ['reason', 'confidence', 'user_signal', 'sentiment']
         }
       }
     };
@@ -1463,12 +1509,31 @@ Generate a warm, personalized greeting using the user information provided above
         
         // Handle built-in mark_conversation_complete tool
         if (toolName === 'mark_conversation_complete') {
-          console.log('AI called mark_conversation_complete:', toolArgs);
-          if (toolArgs.confidence === 'high') {
+          console.log('AI called mark_conversation_complete:', JSON.stringify(toolArgs, null, 2));
+          
+          const sentiment = toolArgs.sentiment || 'neutral';
+          const hasPendingQuestions = toolArgs.has_pending_questions || false;
+          const userSignal = toolArgs.user_signal || '';
+          
+          // Validation: require minimum exchanges for high confidence
+          const meetsMinimumExchanges = userMessageCount >= 3;
+          const hasPositiveSentiment = sentiment === 'satisfied' || sentiment === 'neutral';
+          const noPendingQuestions = !hasPendingQuestions;
+          
+          // Additional signal validation: check for question marks or "but" patterns in user signal
+          const hasNegativePattern = /\?|but\s|however\s|also\s|what about|one more/i.test(userSignal);
+          
+          if (toolArgs.confidence === 'high' && meetsMinimumExchanges && hasPositiveSentiment && noPendingQuestions && !hasNegativePattern) {
             aiMarkedComplete = true;
-            console.log('Conversation marked complete with HIGH confidence, will trigger rating prompt');
+            console.log('Conversation marked complete with HIGH confidence', {
+              reason: toolArgs.reason,
+              userSignal,
+              sentiment,
+              userMessageCount,
+              hasPendingQuestions,
+            });
             
-            // Update conversation metadata to track this
+            // Update conversation metadata with rich completion context
             const currentMeta = conversation?.metadata || {};
             await supabase
               .from('conversations')
@@ -1478,11 +1543,28 @@ Generate a warm, personalized greeting using the user information provided above
                   ai_marked_complete: true,
                   ai_complete_reason: toolArgs.reason,
                   ai_complete_at: new Date().toISOString(),
+                  ai_complete_signal: userSignal,
+                  ai_complete_sentiment: sentiment,
+                  ai_complete_exchange_count: userMessageCount,
                 },
               })
               .eq('id', activeConversationId);
           } else {
-            console.log('AI marked complete with MEDIUM confidence, skipping rating prompt');
+            // Log detailed reason for not triggering
+            const rejectionReasons = [];
+            if (toolArgs.confidence !== 'high') rejectionReasons.push(`confidence=${toolArgs.confidence}`);
+            if (!meetsMinimumExchanges) rejectionReasons.push(`only ${userMessageCount} exchanges (need 3+)`);
+            if (!hasPositiveSentiment) rejectionReasons.push(`negative sentiment: ${sentiment}`);
+            if (hasPendingQuestions) rejectionReasons.push('has pending questions');
+            if (hasNegativePattern) rejectionReasons.push(`negative pattern in signal: "${userSignal}"`);
+            
+            console.log('Completion not triggered:', {
+              confidence: toolArgs.confidence,
+              rejectionReasons,
+              userSignal,
+              sentiment,
+              userMessageCount,
+            });
           }
           // Don't add to toolResults - this is a client-side only tool
           continue;
