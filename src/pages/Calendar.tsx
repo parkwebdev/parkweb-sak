@@ -78,7 +78,7 @@ const Calendar: React.FC = () => {
   };
 
   return (
-    <main className="flex-1 bg-muted/30 h-screen overflow-auto">
+    <main className="flex-1 bg-muted/30 h-full overflow-auto">
       <PageHeader
         title="Calendar"
         description="Manage your bookings and appointments"
