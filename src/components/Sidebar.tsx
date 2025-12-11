@@ -1,5 +1,6 @@
 import React from 'react';
-import { X, Settings04 as Settings, Grid01 as Grid, MessageSquare01, User03, Cube01 as Bot, PieChart01 } from '@untitledui/icons';
+import { X, Settings04 as Settings, Grid01 as Grid, MessageSquare01, User03, PieChart01 } from '@untitledui/icons';
+import AriAgentsIcon from './icons/AriAgentsIcon';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { UserAccountCard } from './UserAccountCard';
@@ -27,8 +28,8 @@ const navigationItems: NavigationItem[] = [
   },
   {
     id: 'agents',
-    label: 'Agents',
-    icon: Bot,
+    label: 'Ari Agents',
+    icon: AriAgentsIcon,
     path: '/agents'
   },
   {
