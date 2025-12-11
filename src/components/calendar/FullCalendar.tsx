@@ -18,7 +18,6 @@ import {
 } from 'date-fns';
 import { DndContext, DragEndEvent, DragStartEvent, DragOverlay, useSensor, useSensors, PointerSensor } from '@dnd-kit/core';
 import { expandRecurringEvents } from '@/lib/recurrence';
-import { DraggableEvent } from './DraggableEvent';
 import { ResizableEvent } from './ResizableEvent';
 import { DroppableTimeSlot } from './DroppableTimeSlot';
 import { DroppableDayCell } from './DroppableDayCell';
@@ -284,7 +283,7 @@ export const FullCalendar: React.FC<FullCalendarProps> = ({
               {/* Events */}
               <div className="space-y-1">
                 {dayEvents.slice(0, 3).map((event) => (
-                  <DraggableEvent
+                  <ResizableEvent
                     key={event.id}
                     event={event}
                     onClick={() => onEventClick?.(event)}
