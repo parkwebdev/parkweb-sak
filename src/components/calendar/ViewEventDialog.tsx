@@ -7,10 +7,7 @@ import {
   Phone, 
   User01, 
   Home02, 
-  Building07,
-  Edit02,
-  Trash01,
-  CheckCircle
+  Building07
 } from '@untitledui/icons';
 import {
   Dialog,
@@ -176,18 +173,15 @@ export const ViewEventDialog: React.FC<ViewEventDialogProps> = ({
             className="text-destructive hover:text-destructive"
             onClick={onDelete}
           >
-            <Trash01 className="h-4 w-4 mr-2" />
             Delete
           </Button>
           <div className="flex items-center gap-2">
             {event.status !== 'completed' && (
               <Button variant="outline" size="sm" onClick={onMarkComplete}>
-                <CheckCircle className="h-4 w-4 mr-2" />
                 Complete
               </Button>
             )}
             <Button size="sm" onClick={onEdit}>
-              <Edit02 className="h-4 w-4 mr-2" />
               Edit
             </Button>
           </div>

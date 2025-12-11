@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { ChevronLeft, ChevronRight, Plus, Repeat02 } from '@untitledui/icons';
+import { Repeat02 } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -531,14 +531,14 @@ export const FullCalendar: React.FC<FullCalendarProps> = ({
           {/* Right: Navigation + View + Add Event */}
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1">
-              <Button variant="ghost" size="icon" onClick={goToPrevious}>
-                <ChevronLeft className="h-4 w-4" />
+              <Button variant="ghost" size="sm" onClick={goToPrevious}>
+                ‹
               </Button>
               <Button variant="outline" size="sm" onClick={goToToday}>
                 Today
               </Button>
-              <Button variant="ghost" size="icon" onClick={goToNext}>
-                <ChevronRight className="h-4 w-4" />
+              <Button variant="ghost" size="sm" onClick={goToNext}>
+                ›
               </Button>
             </div>
             
@@ -556,7 +556,6 @@ export const FullCalendar: React.FC<FullCalendarProps> = ({
             
             {/* Add Event Button */}
             <Button onClick={onAddEvent}>
-              <Plus className="h-4 w-4 mr-2" />
               Add event
             </Button>
           </div>

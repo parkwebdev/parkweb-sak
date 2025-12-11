@@ -1,6 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { format } from 'date-fns';
-import { CalendarDate, Clock } from '@untitledui/icons';
 import {
   Dialog,
   DialogContent,
@@ -218,7 +217,6 @@ export const CreateEventDialog: React.FC<CreateEventDialogProps> = ({
                       !date && "text-muted-foreground"
                     )}
                   >
-                    <CalendarDate className="mr-2 h-4 w-4" />
                     {date ? format(date, "PPP") : "Pick a date"}
                   </Button>
                 </PopoverTrigger>
@@ -239,7 +237,6 @@ export const CreateEventDialog: React.FC<CreateEventDialogProps> = ({
                 <Label>Start Time</Label>
                 <Select value={startTime} onValueChange={setStartTime}>
                   <SelectTrigger>
-                    <Clock className="mr-2 h-4 w-4" />
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -259,7 +256,6 @@ export const CreateEventDialog: React.FC<CreateEventDialogProps> = ({
               <Label>End Time</Label>
               <Select value={endTime} onValueChange={setEndTime}>
                 <SelectTrigger className="w-1/2">
-                  <Clock className="mr-2 h-4 w-4" />
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

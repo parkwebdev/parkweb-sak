@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { SearchLg, Link01 } from '@untitledui/icons';
+import { SearchLg } from '@untitledui/icons';
 import { PageHeader } from '@/components/ui/page-header';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -231,7 +231,6 @@ const Calendar: React.FC = () => {
           />
         </div>
         <Button variant="outline" size="default">
-          <Link01 className="h-4 w-4 mr-2" />
           Connect Calendar
         </Button>
       </PageHeader>
