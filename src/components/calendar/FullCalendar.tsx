@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
-import { Repeat02 } from '@untitledui/icons';
+import { SearchLg } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
@@ -36,6 +37,8 @@ interface FullCalendarProps {
   onAddEvent?: () => void;
   onEventMove?: (eventId: string, newStart: Date, newEnd: Date) => void;
   onEventResize?: (eventId: string, newStart: Date, newEnd: Date) => void;
+  searchQuery?: string;
+  onSearchChange?: (value: string) => void;
 }
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -48,6 +51,8 @@ export const FullCalendar: React.FC<FullCalendarProps> = ({
   onAddEvent,
   onEventMove,
   onEventResize,
+  searchQuery = '',
+  onSearchChange,
 }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<CalendarView>('month');
@@ -614,7 +619,20 @@ export const FullCalendar: React.FC<FullCalendarProps> = ({
             </div>
           </div>
           
-          {/* Right: Navigation + View + Add Event */}
+          {/* Center: Search input */}
+          <div className="hidden lg:flex flex-1 max-w-sm mx-6">
+            <div className="relative w-full">
+              <SearchLg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search bookings..."
+                value={searchQuery}
+                onChange={(e) => onSearchChange?.(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+          </div>
+          
+          {/* Right: Navigation + View + Connect + Add Event */}
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1">
               <Button variant="ghost" size="sm" onClick={goToPrevious}>
@@ -639,6 +657,11 @@ export const FullCalendar: React.FC<FullCalendarProps> = ({
                 <SelectItem value="day">Day view</SelectItem>
               </SelectContent>
             </Select>
+            
+            {/* Connect Calendar Button */}
+            <Button variant="outline">
+              Connect Calendar
+            </Button>
             
             {/* Add Event Button */}
             <Button onClick={onAddEvent}>
