@@ -72,6 +72,47 @@ export const FullCalendar: React.FC<FullCalendarProps> = ({
     return expandRecurringEvents(events, viewStart, viewEnd);
   }, [events, view, currentDate, calendarStart, calendarEnd]);
 
+  // Detect schedule conflicts (overlapping events)
+  const conflictMap = useMemo(() => {
+    const conflicts = new Map<string, { ids: string[]; titles: string[] }>();
+    
+    // Only check non-all-day events for conflicts
+    const timedEvents = expandedEvents.filter(e => !e.allDay);
+    
+    for (let i = 0; i < timedEvents.length; i++) {
+      for (let j = i + 1; j < timedEvents.length; j++) {
+        const a = timedEvents[i];
+        const b = timedEvents[j];
+        
+        const aStart = new Date(a.start).getTime();
+        const aEnd = new Date(a.end).getTime();
+        const bStart = new Date(b.start).getTime();
+        const bEnd = new Date(b.end).getTime();
+        
+        // Check overlap: a starts before b ends AND a ends after b starts
+        if (aStart < bEnd && aEnd > bStart) {
+          // Add b as conflict for a
+          const aConflicts = conflicts.get(a.id) || { ids: [], titles: [] };
+          if (!aConflicts.ids.includes(b.id)) {
+            aConflicts.ids.push(b.id);
+            aConflicts.titles.push(b.title);
+          }
+          conflicts.set(a.id, aConflicts);
+          
+          // Add a as conflict for b
+          const bConflicts = conflicts.get(b.id) || { ids: [], titles: [] };
+          if (!bConflicts.ids.includes(a.id)) {
+            bConflicts.ids.push(a.id);
+            bConflicts.titles.push(a.title);
+          }
+          conflicts.set(b.id, bConflicts);
+        }
+      }
+    }
+    
+    return conflicts;
+  }, [expandedEvents]);
+
   // Use distance-only constraints - resize conflict handled by isResizeIntent flag
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -282,14 +323,19 @@ export const FullCalendar: React.FC<FullCalendarProps> = ({
               
               {/* Events */}
               <div className="space-y-1">
-                {dayEvents.slice(0, 3).map((event) => (
-                  <ResizableEvent
-                    key={event.id}
-                    event={event}
-                    onClick={() => onEventClick?.(event)}
-                    variant="month"
-                  />
-                ))}
+                {dayEvents.slice(0, 3).map((event) => {
+                  const eventConflicts = conflictMap.get(event.id);
+                  return (
+                    <ResizableEvent
+                      key={event.id}
+                      event={event}
+                      onClick={() => onEventClick?.(event)}
+                      variant="month"
+                      hasConflict={!!eventConflicts}
+                      conflictingEvents={eventConflicts?.titles || []}
+                    />
+                  );
+                })}
                 {dayEvents.length > 3 && (
                   <div className="text-xs text-muted-foreground px-2 font-medium">
                     +{dayEvents.length - 3} more
@@ -406,18 +452,23 @@ export const FullCalendar: React.FC<FullCalendarProps> = ({
                       onClick={() => onDateClick?.(setMinutes(setHours(day, hour), 30))}
                     />
                     {/* Resizable events */}
-                    {cellEvents.map((event) => (
-                      <ResizableEvent
-                        key={event.id}
-                        event={event}
-                        style={getEventStyle(event, hour)}
-                        onClick={() => onEventClick?.(event)}
-                        onResizeStart={handleResizeStart}
-                        onResizeMove={handleResizeMove}
-                        onResizeEnd={handleResizeEnd}
-                        variant="week"
-                      />
-                    ))}
+                    {cellEvents.map((event) => {
+                      const eventConflicts = conflictMap.get(event.id);
+                      return (
+                        <ResizableEvent
+                          key={event.id}
+                          event={event}
+                          style={getEventStyle(event, hour)}
+                          onClick={() => onEventClick?.(event)}
+                          onResizeStart={handleResizeStart}
+                          onResizeMove={handleResizeMove}
+                          onResizeEnd={handleResizeEnd}
+                          variant="week"
+                          hasConflict={!!eventConflicts}
+                          conflictingEvents={eventConflicts?.titles || []}
+                        />
+                      );
+                    })}
                   </div>
                 );
               })}
@@ -495,18 +546,23 @@ export const FullCalendar: React.FC<FullCalendarProps> = ({
                     onClick={() => onDateClick?.(setMinutes(setHours(currentDate, hour), 30))}
                   />
                   {/* Resizable events */}
-                  {cellEvents.map((event) => (
-                    <ResizableEvent
-                      key={event.id}
-                      event={event}
-                      style={getEventStyle(event, hour)}
-                      onClick={() => onEventClick?.(event)}
-                      onResizeStart={handleResizeStart}
-                      onResizeMove={handleResizeMove}
-                      onResizeEnd={handleResizeEnd}
-                      variant="day"
-                    />
-                  ))}
+                  {cellEvents.map((event) => {
+                    const eventConflicts = conflictMap.get(event.id);
+                    return (
+                      <ResizableEvent
+                        key={event.id}
+                        event={event}
+                        style={getEventStyle(event, hour)}
+                        onClick={() => onEventClick?.(event)}
+                        onResizeStart={handleResizeStart}
+                        onResizeMove={handleResizeMove}
+                        onResizeEnd={handleResizeEnd}
+                        variant="day"
+                        hasConflict={!!eventConflicts}
+                        conflictingEvents={eventConflicts?.titles || []}
+                      />
+                    );
+                  })}
                 </div>
               </div>
             );
