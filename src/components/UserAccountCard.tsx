@@ -85,11 +85,11 @@ export const UserAccountCard: React.FC<UserAccountCardProps> = ({ isCollapsed = 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="relative flex items-center gap-3 w-full p-[11px] hover:bg-accent/50 rounded-md transition-colors overflow-hidden">
+        <button className="relative flex items-center gap-3 w-full p-[11px] hover:bg-accent/50 rounded-md transition-colors">
           <div className="relative flex-shrink-0">
-            <Avatar className="h-[18px] w-[18px]">
-              <AvatarImage src={avatarUrl} alt={displayName} />
-              <AvatarFallback className="font-medium text-[8px]">
+          <Avatar className="h-8 w-8">
+            <AvatarImage src={avatarUrl} alt={displayName} />
+            <AvatarFallback className="font-medium text-xs">
                 {initials}
               </AvatarFallback>
             </Avatar>
@@ -99,10 +99,10 @@ export const UserAccountCard: React.FC<UserAccountCardProps> = ({ isCollapsed = 
             className="text-left min-w-0 flex-1 overflow-hidden"
             style={{ opacity: isCollapsed ? 0 : 1, transition: 'opacity 0.15s ease' }}
           >
-            <div className="text-foreground text-xs font-semibold leading-5 truncate">
-              {displayName}
-            </div>
-            <div className="text-muted-foreground text-[11px] font-normal leading-5 truncate">
+          <div className="text-foreground text-xs font-semibold leading-tight truncate">
+            {displayName}
+          </div>
+          <div className="text-muted-foreground text-[11px] font-normal leading-tight truncate">
               {email}
             </div>
           </div>
