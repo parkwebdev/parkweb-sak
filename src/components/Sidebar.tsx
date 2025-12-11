@@ -120,14 +120,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
                 return (
                   <motion.div 
                     key={item.id} 
-                    className="items-center flex w-full overflow-hidden py-0.5"
+                    className="items-center flex w-full py-0.5"
                     initial={prefersReducedMotion ? false : { opacity: 0, x: -12 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.03, ...springs.smooth }}
                   >
                     <Link 
                       to={item.path}
-                      className={`items-center flex w-full p-[11px] rounded-md transition-colors text-sm overflow-hidden ${
+                      className={`items-center flex w-full p-[11px] rounded-md transition-colors text-sm ${
                         isActive 
                           ? 'bg-accent text-accent-foreground' 
                           : 'bg-transparent hover:bg-accent/50 text-muted-foreground hover:text-foreground'
@@ -184,14 +184,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
                   return (
                     <motion.div 
                       key={item.id} 
-                      className="items-center flex w-full overflow-hidden py-0.5"
+                      className="items-center flex w-full py-0.5"
                       initial={prefersReducedMotion ? false : { opacity: 0, x: -12 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: (navigationItems.length + index) * 0.03, ...springs.smooth }}
                     >
                       <Link 
                         to={item.path}
-                        className={`items-center flex w-full p-[11px] rounded-md transition-colors text-sm overflow-hidden ${
+                        className={`items-center flex w-full p-[11px] rounded-md transition-colors text-sm ${
                           isActive 
                             ? 'bg-accent text-accent-foreground' 
                             : 'bg-transparent hover:bg-accent/50 text-muted-foreground hover:text-foreground'
