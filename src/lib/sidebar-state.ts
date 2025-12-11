@@ -32,7 +32,7 @@
  */
 class SidebarState {
   /** Current collapsed state */
-  private collapsed = false;
+  private collapsed = true;
   /** Array of listener callbacks */
   private listeners: (() => void)[] = [];
 

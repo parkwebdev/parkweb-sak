@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, ChevronRight, Settings01 as Settings, Grid01 as Grid, MessageCircle02, User03, Cube01 as Bot, PieChart01 } from '@untitledui/icons';
+import { X, Settings01 as Settings, Grid01 as Grid, MessageCircle02, User03, Cube01 as Bot, PieChart01 } from '@untitledui/icons';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { UserAccountCard } from './UserAccountCard';
@@ -66,7 +66,7 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
   const location = useLocation();
-  const { isCollapsed, toggle } = useSidebar();
+  const { isCollapsed, setCollapsed } = useSidebar();
   const { conversations } = useConversations();
   const prefersReducedMotion = useReducedMotion();
   
@@ -93,47 +93,21 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
         width: isCollapsed ? 72 : 240 
       }}
       transition={prefersReducedMotion ? { duration: 0 } : springs.smooth}
+      onMouseEnter={() => setCollapsed(false)}
+      onMouseLeave={() => setCollapsed(true)}
     >
       <nav className="w-full flex flex-col pt-6 px-3 pb-4">
         <header className="w-full px-2 mb-6">
-          <div className="flex items-center justify-between">
-            <AnimatePresence mode="wait">
-              {!isCollapsed && (
-                <motion.div
-                  initial={prefersReducedMotion ? false : { opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  transition={springs.snappy}
-                >
-                  <ChatPadLogo className="h-6 w-6 text-foreground" />
-                </motion.div>
-              )}
-            </AnimatePresence>
-            
-            <div className={`flex items-center gap-2 ${isCollapsed ? 'mx-auto' : 'ml-auto'}`}>
-              <motion.button
-                onClick={toggle}
-                className="p-1 rounded-md hover:bg-accent/50 text-muted-foreground hover:text-foreground"
-                title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-                whileHover={prefersReducedMotion ? undefined : { scale: 1.1 }}
-                whileTap={prefersReducedMotion ? undefined : { scale: 0.95 }}
+          <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'}`}>
+            <ChatPadLogo className="h-6 w-6 text-foreground" />
+            {onClose && (
+              <button
+                onClick={onClose}
+                className="lg:hidden p-1 rounded-md hover:bg-accent/50 text-muted-foreground hover:text-foreground"
               >
-                <motion.div
-                  animate={{ rotate: isCollapsed ? 0 : 180 }}
-                  transition={prefersReducedMotion ? { duration: 0 } : springs.snappy}
-                >
-                  <ChevronRight size={16} />
-                </motion.div>
-              </motion.button>
-              {onClose && (
-                <button
-                  onClick={onClose}
-                  className="lg:hidden p-1 rounded-md hover:bg-accent/50 text-muted-foreground hover:text-foreground"
-                >
-                  <X size={16} />
-                </button>
-              )}
-            </div>
+                <X size={16} />
+              </button>
+            )}
           </div>
         </header>
 
