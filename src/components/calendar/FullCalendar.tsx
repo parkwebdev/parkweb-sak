@@ -27,7 +27,7 @@ import type { CalendarEvent, CalendarView } from '@/types/calendar';
 
 // Time slots for week/day view (6 AM to 10 PM)
 const TIME_SLOTS = Array.from({ length: 17 }, (_, i) => i + 6);
-const HOUR_HEIGHT = 60; // pixels per hour
+const HOUR_HEIGHT = 96; // pixels per hour (24px per 15-minute slot)
 
 interface FullCalendarProps {
   events?: CalendarEvent[];
@@ -443,7 +443,7 @@ export const FullCalendar: React.FC<FullCalendarProps> = ({
                     key={day.toISOString() + hour}
                     className="border-l border-t border-border relative"
                   >
-                    {/* Droppable time slots */}
+                    {/* Droppable time slots - 4 per hour for 15-minute precision */}
                     <DroppableTimeSlot 
                       date={day} 
                       hour={hour} 
@@ -453,8 +453,20 @@ export const FullCalendar: React.FC<FullCalendarProps> = ({
                     <DroppableTimeSlot 
                       date={day} 
                       hour={hour} 
+                      minute={15} 
+                      onClick={() => onDateClick?.(setMinutes(setHours(day, hour), 15))}
+                    />
+                    <DroppableTimeSlot 
+                      date={day} 
+                      hour={hour} 
                       minute={30} 
                       onClick={() => onDateClick?.(setMinutes(setHours(day, hour), 30))}
+                    />
+                    <DroppableTimeSlot 
+                      date={day} 
+                      hour={hour} 
+                      minute={45} 
+                      onClick={() => onDateClick?.(setMinutes(setHours(day, hour), 45))}
                     />
                     {/* Resizable events */}
                     {cellEvents.map((event) => {
@@ -537,7 +549,7 @@ export const FullCalendar: React.FC<FullCalendarProps> = ({
                   {format(setHours(new Date(), hour), 'h a')}
                 </div>
                 <div className="border-t border-border relative">
-                  {/* Droppable time slots */}
+                  {/* Droppable time slots - 4 per hour for 15-minute precision */}
                   <DroppableTimeSlot 
                     date={currentDate} 
                     hour={hour} 
@@ -547,8 +559,20 @@ export const FullCalendar: React.FC<FullCalendarProps> = ({
                   <DroppableTimeSlot 
                     date={currentDate} 
                     hour={hour} 
+                    minute={15} 
+                    onClick={() => onDateClick?.(setMinutes(setHours(currentDate, hour), 15))}
+                  />
+                  <DroppableTimeSlot 
+                    date={currentDate} 
+                    hour={hour} 
                     minute={30} 
                     onClick={() => onDateClick?.(setMinutes(setHours(currentDate, hour), 30))}
+                  />
+                  <DroppableTimeSlot 
+                    date={currentDate} 
+                    hour={hour} 
+                    minute={45} 
+                    onClick={() => onDateClick?.(setMinutes(setHours(currentDate, hour), 45))}
                   />
                   {/* Resizable events */}
                   {cellEvents.map((event) => {
