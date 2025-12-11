@@ -72,10 +72,14 @@ export const FullCalendar: React.FC<FullCalendarProps> = ({
     return expandRecurringEvents(events, viewStart, viewEnd);
   }, [events, view, currentDate, calendarStart, calendarEnd]);
 
-  // DnD sensors
+  // DnD sensors with increased activation constraints to prevent conflict with resize
   const sensors = useSensors(
     useSensor(PointerSensor, {
-      activationConstraint: { distance: 8 }
+      activationConstraint: { 
+        distance: 12,
+        delay: 150,
+        tolerance: 5
+      }
     })
   );
 

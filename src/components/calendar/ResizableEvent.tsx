@@ -6,8 +6,8 @@ import { cn } from '@/lib/utils';
 import type { CalendarEvent } from '@/types/calendar';
 
 const HOUR_HEIGHT = 60; // pixels per hour
-const MIN_DURATION_MINUTES = 5;
-const SNAP_MINUTES = 5;
+const MIN_DURATION_MINUTES = 15;
+const SNAP_MINUTES = 15;
 
 interface ResizableEventProps {
   event: CalendarEvent;
@@ -29,13 +29,14 @@ export const ResizableEvent: React.FC<ResizableEventProps> = ({
   variant = 'week',
 }) => {
   const [isResizing, setIsResizing] = useState(false);
+  const isResizeIntent = useRef(false);
   const resizeStartY = useRef<number>(0);
   const originalEndTime = useRef<Date>(new Date(event.end));
 
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: event.id,
     data: { type: 'event', event },
-    disabled: isResizing,
+    disabled: isResizing || isResizeIntent.current,
   });
 
   const eventStart = new Date(event.start);
@@ -68,12 +69,16 @@ export const ResizableEvent: React.FC<ResizableEventProps> = ({
     e.preventDefault();
     e.stopPropagation();
     
+    // Set intent BEFORE any async operations to prevent drag activation
+    isResizeIntent.current = true;
     setIsResizing(true);
     resizeStartY.current = e.clientY;
     originalEndTime.current = new Date(event.end);
     onResizeStart?.(event.id);
 
     const handleMouseMove = (moveEvent: MouseEvent) => {
+      moveEvent.preventDefault();
+      moveEvent.stopPropagation();
       const deltaY = moveEvent.clientY - resizeStartY.current;
       const newEndTime = calculateNewEndTime(deltaY);
       onResizeMove?.(event.id, newEndTime);
@@ -84,6 +89,7 @@ export const ResizableEvent: React.FC<ResizableEventProps> = ({
       const newEndTime = calculateNewEndTime(deltaY);
       
       setIsResizing(false);
+      isResizeIntent.current = false;
       onResizeEnd?.(event.id, newEndTime);
       
       document.removeEventListener('mousemove', handleMouseMove);
@@ -138,14 +144,10 @@ export const ResizableEvent: React.FC<ResizableEventProps> = ({
   return (
     <div
       ref={setNodeRef}
-      {...attributes}
-      {...listeners}
       className={cn(
-        "text-xs px-1.5 py-0.5 rounded overflow-hidden touch-none select-none group relative",
-        !isResizing && "cursor-grab active:cursor-grabbing",
-        isResizing && "cursor-ns-resize",
+        "text-xs rounded overflow-hidden touch-none select-none group relative",
         isDragging && "opacity-50 shadow-lg ring-2 ring-primary",
-        variant === 'day' && "flex flex-col text-sm px-2 py-1"
+        variant === 'day' && "flex flex-col text-sm"
       )}
       style={{
         ...style,
@@ -153,28 +155,39 @@ export const ResizableEvent: React.FC<ResizableEventProps> = ({
         color: event.color || 'hsl(var(--primary))',
         borderLeft: `${variant === 'day' ? 3 : 2}px solid ${event.color || 'hsl(var(--primary))'}`,
       }}
-      onClick={(e) => {
-        if (!isResizing) {
-          e.stopPropagation();
-          onClick?.();
-        }
-      }}
     >
-      <div className="font-medium truncate flex items-center gap-1">
-        {event.title}
-        {event.recurrence && !event.is_recurring_instance && (
-          <Repeat02 className="h-3 w-3 flex-shrink-0 opacity-70" />
+      {/* Drag handle - main content area */}
+      <div
+        {...attributes}
+        {...listeners}
+        className={cn(
+          "px-1.5 py-0.5 pb-5",
+          !isResizing && "cursor-grab active:cursor-grabbing",
+          variant === 'day' && "px-2 py-1 pb-5"
         )}
-      </div>
-      <div className={cn("opacity-75", variant === 'week' ? 'text-[10px]' : 'text-xs')}>
-        {format(eventStart, 'h:mm a')}
-        {variant === 'day' && ` - ${format(eventEnd, 'h:mm a')}`}
+        onClick={(e) => {
+          if (!isResizing) {
+            e.stopPropagation();
+            onClick?.();
+          }
+        }}
+      >
+        <div className="font-medium truncate flex items-center gap-1">
+          {event.title}
+          {event.recurrence && !event.is_recurring_instance && (
+            <Repeat02 className="h-3 w-3 flex-shrink-0 opacity-70" />
+          )}
+        </div>
+        <div className={cn("opacity-75", variant === 'week' ? 'text-[10px]' : 'text-xs')}>
+          {format(eventStart, 'h:mm a')}
+          {variant === 'day' && ` - ${format(eventEnd, 'h:mm a')}`}
+        </div>
       </div>
       
-      {/* Resize handle - bottom edge */}
+      {/* Resize handle - bottom edge (separate from drag area) */}
       <div
         className={cn(
-          "absolute bottom-0 left-0 right-0 h-2 cursor-ns-resize",
+          "absolute bottom-0 left-0 right-0 h-5 cursor-ns-resize z-10",
           "opacity-0 group-hover:opacity-100 transition-opacity",
           "bg-gradient-to-t from-black/20 to-transparent",
           "hover:from-black/40"
@@ -182,7 +195,7 @@ export const ResizableEvent: React.FC<ResizableEventProps> = ({
         onMouseDown={handleResizeMouseDown}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-8 h-1 rounded-full bg-current opacity-50" />
+        <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-10 h-1.5 rounded-full bg-current opacity-60" />
       </div>
     </div>
   );
