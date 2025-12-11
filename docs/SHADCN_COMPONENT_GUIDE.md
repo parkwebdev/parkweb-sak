@@ -123,24 +123,24 @@ All form inputs (Input, SelectTrigger, PhoneInputField) MUST use consistent sizi
 | `sm` | 32px (h-8) | Data tables, toolbars, compact UIs, popovers |
 
 ### Components Affected
-- `Input` — default h-10, no size prop yet (use default)
+- `Input` — supports `size="default"` (40px) and `size="sm"` (32px)
 - `SelectTrigger` — supports `size="default"` (40px) and `size="sm"` (32px)
 - `PhoneInputField` — inherits Input sizing
 
 ### Usage Examples
 
 ```tsx
-// ✅ CORRECT - Use size prop for SelectTrigger
+// ✅ CORRECT - Use size prop
+<Input placeholder="Email" />                 // 40px default
+<Input size="sm" placeholder="Search" />      // 32px compact
+
 <SelectTrigger>...</SelectTrigger>           // 40px default
 <SelectTrigger size="sm">...</SelectTrigger> // 32px compact
 
-// ✅ CORRECT - Input uses default height
-<Input placeholder="Email" />                 // 40px default
-
 // ❌ WRONG - Never override height via className
+<Input className="h-9" />
 <SelectTrigger className="h-8">...</SelectTrigger>
 <SelectTrigger className="h-9">...</SelectTrigger>
-<Input className="h-10" />  // Redundant, already default
 ```
 
 ### When to Use Each Size
