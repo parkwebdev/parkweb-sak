@@ -10,6 +10,16 @@ export interface RecurrenceRule {
   daysOfWeek?: number[]; // 0-6 for Sun-Sat (for weekly)
 }
 
+export interface TimeChangeRecord {
+  timestamp: Date;
+  previousStart: Date;
+  previousEnd: Date;
+  newStart: Date;
+  newEnd: Date;
+  reason?: string;
+  changedBy?: string;
+}
+
 export interface CalendarEvent {
   id: string;
   title: string;
@@ -35,6 +45,9 @@ export interface CalendarEvent {
   community?: string;
   notes?: string;
   status?: 'confirmed' | 'pending' | 'cancelled' | 'completed';
+  
+  // Time change tracking
+  time_change_history?: TimeChangeRecord[];
 }
 
 export type CalendarView = 'month' | 'week' | 'day';

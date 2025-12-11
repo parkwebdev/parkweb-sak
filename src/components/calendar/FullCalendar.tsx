@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { Repeat02 } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -19,6 +19,7 @@ import {
 import { DndContext, DragEndEvent, DragStartEvent, DragOverlay, useSensor, useSensors, PointerSensor } from '@dnd-kit/core';
 import { expandRecurringEvents } from '@/lib/recurrence';
 import { DraggableEvent } from './DraggableEvent';
+import { ResizableEvent } from './ResizableEvent';
 import { DroppableTimeSlot } from './DroppableTimeSlot';
 import { DroppableDayCell } from './DroppableDayCell';
 import { DraggedEventPreview } from './DraggedEventPreview';
@@ -35,6 +36,7 @@ interface FullCalendarProps {
   onEventClick?: (event: CalendarEvent) => void;
   onAddEvent?: () => void;
   onEventMove?: (eventId: string, newStart: Date, newEnd: Date) => void;
+  onEventResize?: (eventId: string, newStart: Date, newEnd: Date) => void;
 }
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -46,10 +48,13 @@ export const FullCalendar: React.FC<FullCalendarProps> = ({
   onEventClick,
   onAddEvent,
   onEventMove,
+  onEventResize,
 }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<CalendarView>('month');
   const [activeDragEvent, setActiveDragEvent] = useState<CalendarEvent | null>(null);
+  const [resizingEventId, setResizingEventId] = useState<string | null>(null);
+  const [resizePreviewEnd, setResizePreviewEnd] = useState<Date | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const monthStart = startOfMonth(currentDate);
@@ -120,6 +125,25 @@ export const FullCalendar: React.FC<FullCalendarProps> = ({
     }
   };
 
+  // Resize handlers
+  const handleResizeStart = useCallback((eventId: string) => {
+    setResizingEventId(eventId);
+  }, []);
+
+  const handleResizeMove = useCallback((eventId: string, newEndTime: Date) => {
+    setResizePreviewEnd(newEndTime);
+  }, []);
+
+  const handleResizeEnd = useCallback((eventId: string, newEndTime: Date) => {
+    const event = expandedEvents.find(e => e.id === eventId);
+    if (event && onEventResize) {
+      const actualEventId = event.recurrence_id || eventId;
+      onEventResize(actualEventId, new Date(event.start), newEndTime);
+    }
+    setResizingEventId(null);
+    setResizePreviewEnd(null);
+  }, [expandedEvents, onEventResize]);
+
   // Auto-scroll to current time in week/day views
   useEffect(() => {
     if ((view === 'week' || view === 'day') && scrollContainerRef.current) {
@@ -171,9 +195,12 @@ export const FullCalendar: React.FC<FullCalendarProps> = ({
   };
 
   // Calculate event style for duration-based rendering
-  const getEventStyle = (event: CalendarEvent, slotHour: number) => {
+  const getEventStyle = useCallback((event: CalendarEvent, slotHour: number) => {
     const eventStart = new Date(event.start);
-    const eventEnd = new Date(event.end);
+    // Use preview end time if this event is being resized
+    const eventEnd = (resizingEventId === event.id && resizePreviewEnd) 
+      ? resizePreviewEnd 
+      : new Date(event.end);
     const startHour = eventStart.getHours() + eventStart.getMinutes() / 60;
     const durationMinutes = differenceInMinutes(eventEnd, eventStart);
     const durationHours = durationMinutes / 60;
@@ -187,9 +214,9 @@ export const FullCalendar: React.FC<FullCalendarProps> = ({
       height: `${height}px`,
       left: '2px',
       right: '2px',
-      zIndex: 10,
+      zIndex: resizingEventId === event.id ? 20 : 10,
     };
-  };
+  }, [resizingEventId, resizePreviewEnd]);
 
   // Generate all days for the calendar grid
   const days: Date[] = [];
@@ -379,13 +406,16 @@ export const FullCalendar: React.FC<FullCalendarProps> = ({
                       minute={30} 
                       onClick={() => onDateClick?.(setMinutes(setHours(day, hour), 30))}
                     />
-                    {/* Draggable events */}
+                    {/* Resizable events */}
                     {cellEvents.map((event) => (
-                      <DraggableEvent
+                      <ResizableEvent
                         key={event.id}
                         event={event}
                         style={getEventStyle(event, hour)}
                         onClick={() => onEventClick?.(event)}
+                        onResizeStart={handleResizeStart}
+                        onResizeMove={handleResizeMove}
+                        onResizeEnd={handleResizeEnd}
                         variant="week"
                       />
                     ))}
@@ -465,13 +495,16 @@ export const FullCalendar: React.FC<FullCalendarProps> = ({
                     minute={30} 
                     onClick={() => onDateClick?.(setMinutes(setHours(currentDate, hour), 30))}
                   />
-                  {/* Draggable events */}
+                  {/* Resizable events */}
                   {cellEvents.map((event) => (
-                    <DraggableEvent
+                    <ResizableEvent
                       key={event.id}
                       event={event}
                       style={getEventStyle(event, hour)}
                       onClick={() => onEventClick?.(event)}
+                      onResizeStart={handleResizeStart}
+                      onResizeMove={handleResizeMove}
+                      onResizeEnd={handleResizeEnd}
                       variant="day"
                     />
                   ))}

@@ -9,9 +9,18 @@ import { CreateEventDialog } from '@/components/calendar/CreateEventDialog';
 import { ViewEventDialog } from '@/components/calendar/ViewEventDialog';
 import { EditEventDialog } from '@/components/calendar/EditEventDialog';
 import { DeleteEventDialog } from '@/components/calendar/DeleteEventDialog';
+import { TimeChangeReasonDialog } from '@/components/calendar/TimeChangeReasonDialog';
 import { Badge } from '@/components/ui/badge';
-import type { CalendarEvent } from '@/types/calendar';
+import type { CalendarEvent, TimeChangeRecord } from '@/types/calendar';
 import { EVENT_TYPE_CONFIG } from '@/types/calendar';
+
+interface PendingTimeChange {
+  event: CalendarEvent;
+  originalStart: Date;
+  originalEnd: Date;
+  newStart: Date;
+  newEnd: Date;
+}
 
 // Mobile home park booking sample data
 const sampleEvents: CalendarEvent[] = [
@@ -139,6 +148,10 @@ const Calendar: React.FC = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  
+  // Time change reason dialog state
+  const [timeChangeDialogOpen, setTimeChangeDialogOpen] = useState(false);
+  const [pendingTimeChange, setPendingTimeChange] = useState<PendingTimeChange | null>(null);
 
   // Filter events based on active tab and search
   const filteredEvents = events.filter(event => {
@@ -175,7 +188,62 @@ const Calendar: React.FC = () => {
     setCreateDialogOpen(false);
   };
 
+  // Apply time change with optional reason
+  const applyTimeChange = useCallback((reason?: string) => {
+    if (!pendingTimeChange) return;
+    
+    const { event, originalStart, originalEnd, newStart, newEnd } = pendingTimeChange;
+    
+    const timeChangeRecord: TimeChangeRecord = {
+      timestamp: new Date(),
+      previousStart: originalStart,
+      previousEnd: originalEnd,
+      newStart,
+      newEnd,
+      reason,
+    };
+    
+    setEvents(prev => prev.map(e => {
+      if (e.id === event.id) {
+        return {
+          ...e,
+          start: newStart,
+          end: newEnd,
+          time_change_history: [...(e.time_change_history || []), timeChangeRecord],
+        };
+      }
+      return e;
+    }));
+    
+    setPendingTimeChange(null);
+    setTimeChangeDialogOpen(false);
+  }, [pendingTimeChange]);
+
   const handleUpdateEvent = (updatedEvent: CalendarEvent) => {
+    // Check if time changed from original
+    if (selectedEvent) {
+      const originalStart = new Date(selectedEvent.start);
+      const originalEnd = new Date(selectedEvent.end);
+      const newStart = new Date(updatedEvent.start);
+      const newEnd = new Date(updatedEvent.end);
+      
+      const timeChanged = originalStart.getTime() !== newStart.getTime() || 
+                         originalEnd.getTime() !== newEnd.getTime();
+      
+      if (timeChanged) {
+        setPendingTimeChange({
+          event: updatedEvent,
+          originalStart,
+          originalEnd,
+          newStart,
+          newEnd,
+        });
+        setTimeChangeDialogOpen(true);
+        setEditDialogOpen(false);
+        return;
+      }
+    }
+    
     setEvents(prev => prev.map(e => e.id === updatedEvent.id ? updatedEvent : e));
     setEditDialogOpen(false);
     setViewDialogOpen(false);
@@ -193,7 +261,9 @@ const Calendar: React.FC = () => {
 
   const handleMarkComplete = () => {
     if (selectedEvent) {
-      handleUpdateEvent({ ...selectedEvent, status: 'completed' });
+      setEvents(prev => prev.map(e => e.id === selectedEvent.id ? { ...e, status: 'completed' } : e));
+      setViewDialogOpen(false);
+      setSelectedEvent(null);
     }
   };
 
@@ -207,13 +277,51 @@ const Calendar: React.FC = () => {
     setDeleteDialogOpen(true);
   };
 
+  // Handle drag-based time changes (move)
   const handleEventMove = useCallback((eventId: string, newStart: Date, newEnd: Date) => {
-    setEvents(prev => prev.map(event => 
-      event.id === eventId 
-        ? { ...event, start: newStart, end: newEnd }
-        : event
-    ));
-  }, []);
+    const event = events.find(e => e.id === eventId);
+    if (!event) return;
+    
+    const originalStart = new Date(event.start);
+    const originalEnd = new Date(event.end);
+    
+    // Check if time actually changed
+    if (originalStart.getTime() === newStart.getTime() && originalEnd.getTime() === newEnd.getTime()) {
+      return;
+    }
+    
+    setPendingTimeChange({
+      event,
+      originalStart,
+      originalEnd,
+      newStart,
+      newEnd,
+    });
+    setTimeChangeDialogOpen(true);
+  }, [events]);
+
+  // Handle resize-based time changes
+  const handleEventResize = useCallback((eventId: string, newStart: Date, newEnd: Date) => {
+    const event = events.find(e => e.id === eventId);
+    if (!event) return;
+    
+    const originalStart = new Date(event.start);
+    const originalEnd = new Date(event.end);
+    
+    // Check if time actually changed
+    if (originalEnd.getTime() === newEnd.getTime()) {
+      return;
+    }
+    
+    setPendingTimeChange({
+      event,
+      originalStart,
+      originalEnd,
+      newStart,
+      newEnd,
+    });
+    setTimeChangeDialogOpen(true);
+  }, [events]);
 
   return (
     <main className="flex-1 bg-muted/30 h-full overflow-auto">
@@ -269,6 +377,7 @@ const Calendar: React.FC = () => {
           onEventClick={handleEventClick}
           onAddEvent={handleAddEvent}
           onEventMove={handleEventMove}
+          onEventResize={handleEventResize}
         />
       </div>
 
@@ -301,6 +410,18 @@ const Calendar: React.FC = () => {
         onOpenChange={setDeleteDialogOpen}
         event={selectedEvent}
         onConfirmDelete={handleDeleteEvent}
+      />
+
+      <TimeChangeReasonDialog
+        open={timeChangeDialogOpen}
+        onOpenChange={setTimeChangeDialogOpen}
+        event={pendingTimeChange?.event || null}
+        originalStart={pendingTimeChange?.originalStart || null}
+        originalEnd={pendingTimeChange?.originalEnd || null}
+        newStart={pendingTimeChange?.newStart || null}
+        newEnd={pendingTimeChange?.newEnd || null}
+        onConfirm={applyTimeChange}
+        onSkip={() => applyTimeChange()}
       />
     </main>
   );
