@@ -1,8 +1,9 @@
 import React, { useRef, useState, useCallback } from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { format } from 'date-fns';
-import { Repeat02 } from '@untitledui/icons';
+import { Repeat02, AlertTriangle } from '@untitledui/icons';
 import { cn } from '@/lib/utils';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { CalendarEvent } from '@/types/calendar';
 
 const HOUR_HEIGHT = 60; // pixels per hour
@@ -17,6 +18,8 @@ interface ResizableEventProps {
   onResizeMove?: (eventId: string, newEndTime: Date) => void;
   onResizeEnd?: (eventId: string, newEndTime: Date) => void;
   variant?: 'week' | 'day' | 'month';
+  hasConflict?: boolean;
+  conflictingEvents?: string[];
 }
 
 export const ResizableEvent: React.FC<ResizableEventProps> = ({
@@ -27,6 +30,8 @@ export const ResizableEvent: React.FC<ResizableEventProps> = ({
   onResizeMove,
   onResizeEnd,
   variant = 'week',
+  hasConflict = false,
+  conflictingEvents = [],
 }) => {
   const [isResizing, setIsResizing] = useState(false);
   const isResizeIntent = useRef(false);
@@ -102,14 +107,15 @@ export const ResizableEvent: React.FC<ResizableEventProps> = ({
 
   // Month view - click to view, drag to move to different day (no resize)
   if (variant === 'month') {
-    return (
+    const content = (
       <div
         ref={setNodeRef}
         {...attributes}
         {...listeners}
         className={cn(
           "flex items-center gap-1.5 px-2 py-1 text-xs rounded overflow-hidden touch-none select-none cursor-grab active:cursor-grabbing",
-          isDragging && "opacity-50 shadow-lg ring-2 ring-primary"
+          isDragging && "opacity-50 shadow-lg ring-2 ring-primary",
+          hasConflict && "ring-1 ring-amber-500"
         )}
         style={{
           backgroundColor: event.color ? `${event.color}15` : 'hsl(var(--primary) / 0.1)',
@@ -120,6 +126,9 @@ export const ResizableEvent: React.FC<ResizableEventProps> = ({
           onClick?.();
         }}
       >
+        {hasConflict && (
+          <AlertTriangle className="h-3 w-3 flex-shrink-0 text-amber-500" />
+        )}
         <span 
           className="w-1.5 h-1.5 rounded-full flex-shrink-0"
           style={{ backgroundColor: event.color || 'hsl(var(--primary))' }}
@@ -138,24 +147,47 @@ export const ResizableEvent: React.FC<ResizableEventProps> = ({
         )}
       </div>
     );
+
+    if (hasConflict && conflictingEvents.length > 0) {
+      return (
+        <Tooltip>
+          <TooltipTrigger asChild>{content}</TooltipTrigger>
+          <TooltipContent>
+            <p className="text-xs">⚠️ Conflicts with: {conflictingEvents.join(', ')}</p>
+          </TooltipContent>
+        </Tooltip>
+      );
+    }
+
+    return content;
   }
 
   // Week/Day view with resize handle
-  return (
+  const weekDayContent = (
     <div
       ref={setNodeRef}
       className={cn(
         "text-xs rounded overflow-hidden touch-none select-none group relative",
         isDragging && "opacity-50 shadow-lg ring-2 ring-primary",
-        variant === 'day' && "flex flex-col text-sm"
+        variant === 'day' && "flex flex-col text-sm",
+        hasConflict && "ring-1 ring-amber-500"
       )}
       style={{
         ...style,
         backgroundColor: event.color ? `${event.color}20` : 'hsl(var(--primary) / 0.1)',
         color: event.color || 'hsl(var(--primary))',
-        borderLeft: `${variant === 'day' ? 3 : 2}px solid ${event.color || 'hsl(var(--primary))'}`,
+        borderLeft: hasConflict 
+          ? `${variant === 'day' ? 3 : 2}px solid hsl(var(--warning))` 
+          : `${variant === 'day' ? 3 : 2}px solid ${event.color || 'hsl(var(--primary))'}`,
       }}
     >
+      {/* Conflict indicator */}
+      {hasConflict && (
+        <div className="absolute top-1 right-1 z-10">
+          <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
+        </div>
+      )}
+      
       {/* Drag handle - main content area */}
       <div
         {...attributes}
@@ -172,7 +204,7 @@ export const ResizableEvent: React.FC<ResizableEventProps> = ({
           }
         }}
       >
-        <div className="font-medium truncate flex items-center gap-1">
+        <div className="font-medium truncate flex items-center gap-1 pr-4">
           {event.title}
           {event.recurrence && !event.is_recurring_instance && (
             <Repeat02 className="h-3 w-3 flex-shrink-0 opacity-70" />
@@ -197,4 +229,17 @@ export const ResizableEvent: React.FC<ResizableEventProps> = ({
       </div>
     </div>
   );
+
+  if (hasConflict && conflictingEvents.length > 0) {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>{weekDayContent}</TooltipTrigger>
+        <TooltipContent>
+          <p className="text-xs">⚠️ Conflicts with: {conflictingEvents.join(', ')}</p>
+        </TooltipContent>
+      </Tooltip>
+    );
+  }
+
+  return weekDayContent;
 };

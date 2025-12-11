@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { SearchLg } from '@untitledui/icons';
 import { PageHeader } from '@/components/ui/page-header';
 import { Input } from '@/components/ui/input';
@@ -10,7 +10,6 @@ import { ViewEventDialog } from '@/components/calendar/ViewEventDialog';
 import { EditEventDialog } from '@/components/calendar/EditEventDialog';
 import { DeleteEventDialog } from '@/components/calendar/DeleteEventDialog';
 import { TimeChangeReasonDialog } from '@/components/calendar/TimeChangeReasonDialog';
-import { Badge } from '@/components/ui/badge';
 import type { CalendarEvent, TimeChangeRecord } from '@/types/calendar';
 import { EVENT_TYPE_CONFIG } from '@/types/calendar';
 
@@ -22,119 +21,121 @@ interface PendingTimeChange {
   newEnd: Date;
 }
 
-// Mobile home park booking sample data
-const sampleEvents: CalendarEvent[] = [
-  {
-    id: '1',
-    title: 'Home Showing - Johnson Family',
-    start: new Date(2025, 11, 11, 10, 0),
-    end: new Date(2025, 11, 11, 11, 0),
-    type: 'showing',
-    color: '#3B82F6',
-    lead_name: 'Sarah Johnson',
-    lead_email: 'sarah.johnson@email.com',
-    lead_phone: '(555) 123-4567',
-    property: 'Lot 42 - 3BR/2BA Clayton Home',
-    community: 'Sunset Valley MHP',
-    status: 'confirmed',
-    notes: 'Family of 4, interested in schools nearby. First-time home buyers.'
-  },
-  {
-    id: '2',
-    title: 'Move-in Walkthrough - Martinez',
-    start: new Date(2025, 11, 12, 14, 0),
-    end: new Date(2025, 11, 12, 15, 30),
-    type: 'move_in',
-    color: '#10B981',
-    lead_name: 'Carlos Martinez',
-    lead_email: 'carlos.m@email.com',
-    lead_phone: '(555) 234-5678',
-    property: 'Lot 18 - 2BR/1BA Champion',
-    community: 'Riverside Estates',
-    status: 'confirmed',
-    notes: 'Bringing utility setup documents. Keys handoff scheduled.'
-  },
-  {
-    id: '3',
-    title: 'Annual Inspection - Lot 7',
-    start: new Date(2025, 11, 13, 9, 0),
-    end: new Date(2025, 11, 13, 10, 30),
-    type: 'inspection',
-    color: '#F59E0B',
-    property: 'Lot 7 - 3BR/2BA Skyline',
-    community: 'Pinewood Community',
-    status: 'pending',
-    notes: 'Annual safety inspection. Check HVAC and water heater.'
-  },
-  {
-    id: '4',
-    title: 'Home Showing - Williams',
-    start: new Date(2025, 11, 15, 11, 0),
-    end: new Date(2025, 11, 15, 12, 0),
-    type: 'showing',
-    color: '#3B82F6',
-    lead_name: 'Michael Williams',
-    lead_email: 'm.williams@email.com',
-    lead_phone: '(555) 345-6789',
-    property: 'Lot 23 - 4BR/2BA Palm Harbor',
-    community: 'Sunset Valley MHP',
-    status: 'confirmed',
-    notes: 'Relocating from out of state. Pre-approved financing.'
-  },
-  {
-    id: '5',
-    title: 'HVAC Maintenance - Lot 31',
-    start: new Date(2025, 11, 16, 8, 0),
-    end: new Date(2025, 11, 16, 10, 0),
-    type: 'maintenance',
-    color: '#8B5CF6',
-    property: 'Lot 31 - 2BR/2BA Fleetwood',
-    community: 'Riverside Estates',
-    status: 'confirmed',
-    notes: 'Scheduled AC unit service. Tenant notified.'
-  },
-  {
-    id: '6',
-    title: 'Community Meeting',
-    start: new Date(2025, 11, 18, 18, 0),
-    end: new Date(2025, 11, 18, 19, 30),
-    type: 'meeting',
-    color: '#6366F1',
-    community: 'Sunset Valley MHP',
-    status: 'confirmed',
-    notes: 'Monthly community meeting. Agenda: Holiday decorations, parking rules.'
-  },
-  {
-    id: '7',
-    title: 'Home Showing - Garcia Family',
-    start: new Date(2025, 11, 19, 14, 0),
-    end: new Date(2025, 11, 19, 15, 0),
-    type: 'showing',
-    color: '#3B82F6',
-    lead_name: 'Maria Garcia',
-    lead_email: 'maria.g@email.com',
-    lead_phone: '(555) 456-7890',
-    property: 'Lot 55 - 3BR/2BA Clayton',
-    community: 'Pinewood Community',
-    status: 'pending',
-    notes: 'Downsizing from larger home. Interested in senior-friendly features.'
-  },
-  {
-    id: '8',
-    title: 'Move-in Walkthrough - Thompson',
-    start: new Date(2025, 11, 22, 10, 0),
-    end: new Date(2025, 11, 22, 11, 30),
-    type: 'move_in',
-    color: '#10B981',
-    lead_name: 'David Thompson',
-    lead_email: 'd.thompson@email.com',
-    lead_phone: '(555) 567-8901',
-    property: 'Lot 12 - 2BR/1BA Oakwood',
-    community: 'Riverside Estates',
-    status: 'confirmed',
-    notes: 'Final walkthrough before key handoff tomorrow.'
-  },
-];
+// Helper to create demo events relative to today
+const createSampleEvents = (): CalendarEvent[] => {
+  const today = new Date();
+  const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  
+  return [
+    {
+      id: '1',
+      title: 'Home Showing - Johnson Family',
+      start: new Date(todayStart.getTime() + 10 * 60 * 60 * 1000), // Today at 10:00 AM
+      end: new Date(todayStart.getTime() + 11 * 60 * 60 * 1000), // Today at 11:00 AM
+      type: 'showing',
+      color: '#3B82F6',
+      lead_name: 'Sarah Johnson',
+      lead_email: 'sarah.johnson@email.com',
+      lead_phone: '(555) 123-4567',
+      property: 'Lot 42 - 3BR/2BA Clayton Home',
+      community: 'Sunset Valley MHP',
+      status: 'confirmed',
+      notes: 'Family of 4, interested in schools nearby. First-time home buyers.'
+    },
+    {
+      id: '2',
+      title: 'Move-in Walkthrough - Martinez',
+      start: new Date(todayStart.getTime() + 24 * 60 * 60 * 1000 + 14 * 60 * 60 * 1000), // Tomorrow at 2:00 PM
+      end: new Date(todayStart.getTime() + 24 * 60 * 60 * 1000 + 15.5 * 60 * 60 * 1000), // Tomorrow at 3:30 PM
+      type: 'move_in',
+      color: '#10B981',
+      lead_name: 'Carlos Martinez',
+      lead_email: 'carlos.m@email.com',
+      lead_phone: '(555) 234-5678',
+      property: 'Lot 18 - 2BR/1BA Champion',
+      community: 'Riverside Estates',
+      status: 'confirmed',
+      notes: 'Bringing utility setup documents. Keys handoff scheduled.'
+    },
+    {
+      id: '3',
+      title: 'Annual Inspection - Lot 7',
+      start: new Date(todayStart.getTime() + 2 * 24 * 60 * 60 * 1000 + 9 * 60 * 60 * 1000), // 2 days at 9:00 AM
+      end: new Date(todayStart.getTime() + 2 * 24 * 60 * 60 * 1000 + 10.5 * 60 * 60 * 1000), // 2 days at 10:30 AM
+      type: 'inspection',
+      color: '#F59E0B',
+      property: 'Lot 7 - 3BR/2BA Skyline',
+      community: 'Pinewood Community',
+      status: 'pending',
+      notes: 'Annual safety inspection. Check HVAC and water heater.'
+    },
+    {
+      id: '4',
+      title: 'Home Showing - Williams',
+      start: new Date(todayStart.getTime() + 4 * 24 * 60 * 60 * 1000 + 11 * 60 * 60 * 1000), // 4 days at 11:00 AM
+      end: new Date(todayStart.getTime() + 4 * 24 * 60 * 60 * 1000 + 12 * 60 * 60 * 1000), // 4 days at 12:00 PM
+      type: 'showing',
+      color: '#3B82F6',
+      lead_name: 'Michael Williams',
+      lead_email: 'm.williams@email.com',
+      lead_phone: '(555) 345-6789',
+      property: 'Lot 23 - 4BR/2BA Palm Harbor',
+      community: 'Sunset Valley MHP',
+      status: 'confirmed',
+      notes: 'Relocating from out of state. Pre-approved financing.'
+    },
+    {
+      id: '5',
+      title: 'HVAC Maintenance - Lot 31',
+      start: new Date(todayStart.getTime() + 5 * 24 * 60 * 60 * 1000 + 8 * 60 * 60 * 1000), // 5 days at 8:00 AM
+      end: new Date(todayStart.getTime() + 5 * 24 * 60 * 60 * 1000 + 10 * 60 * 60 * 1000), // 5 days at 10:00 AM
+      type: 'maintenance',
+      color: '#8B5CF6',
+      property: 'Lot 31 - 2BR/2BA Fleetwood',
+      community: 'Riverside Estates',
+      status: 'confirmed',
+      notes: 'Scheduled AC unit service. Tenant notified.'
+    },
+    {
+      id: '6',
+      title: 'Community Meeting',
+      start: new Date(todayStart.getTime() + 7 * 24 * 60 * 60 * 1000 + 18 * 60 * 60 * 1000), // 7 days at 6:00 PM
+      end: new Date(todayStart.getTime() + 7 * 24 * 60 * 60 * 1000 + 19.5 * 60 * 60 * 1000), // 7 days at 7:30 PM
+      type: 'meeting',
+      color: '#6366F1',
+      community: 'Sunset Valley MHP',
+      status: 'confirmed',
+      notes: 'Monthly community meeting. Agenda: Holiday decorations, parking rules.'
+    },
+    // Overlapping event to test conflict detection (conflicts with event 1)
+    {
+      id: '7',
+      title: 'Overlapping Meeting',
+      start: new Date(todayStart.getTime() + 10.5 * 60 * 60 * 1000), // Today at 10:30 AM
+      end: new Date(todayStart.getTime() + 12 * 60 * 60 * 1000), // Today at 12:00 PM
+      type: 'meeting',
+      color: '#EC4899',
+      status: 'confirmed',
+    },
+    {
+      id: '8',
+      title: 'Move-in Walkthrough - Thompson',
+      start: new Date(todayStart.getTime() + 11 * 24 * 60 * 60 * 1000 + 10 * 60 * 60 * 1000), // 11 days at 10:00 AM
+      end: new Date(todayStart.getTime() + 11 * 24 * 60 * 60 * 1000 + 11.5 * 60 * 60 * 1000), // 11 days at 11:30 AM
+      type: 'move_in',
+      color: '#10B981',
+      lead_name: 'David Thompson',
+      lead_email: 'd.thompson@email.com',
+      lead_phone: '(555) 567-8901',
+      property: 'Lot 12 - 2BR/1BA Oakwood',
+      community: 'Riverside Estates',
+      status: 'confirmed',
+      notes: 'Final walkthrough before key handoff tomorrow.'
+    },
+  ];
+};
+
+const sampleEvents = createSampleEvents();
 
 const Calendar: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
