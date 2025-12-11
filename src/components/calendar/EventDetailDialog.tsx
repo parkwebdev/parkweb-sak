@@ -97,10 +97,17 @@ export const EventDetailDialog: React.FC<EventDetailDialogProps> = ({
   const [recurrence, setRecurrence] = useState<RecurrenceRule | undefined>(undefined);
   const [allDay, setAllDay] = useState(false);
 
-  // Reset mode and form when dialog opens/closes or event changes
+  // Handle dialog close - reset mode immediately to prevent animation on reopen
+  const handleOpenChange = (newOpen: boolean) => {
+    if (!newOpen) {
+      setMode('view');
+    }
+    onOpenChange(newOpen);
+  };
+
+  // Populate form when dialog opens or event changes
   useEffect(() => {
     if (open && event) {
-      setMode('view');
       // Populate form state
       setTitle(event.title);
       setDate(new Date(event.start));
@@ -165,7 +172,7 @@ export const EventDetailDialog: React.FC<EventDetailDialogProps> = ({
   const statusConfig = event.status ? EVENT_STATUS_CONFIG[event.status] : null;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-hidden p-0">
         <AnimatePresence mode="wait" initial={false}>
           {mode === 'view' ? (
@@ -536,7 +543,7 @@ export const EventDetailDialog: React.FC<EventDetailDialogProps> = ({
                   <Button 
                     type="button" 
                     variant="outline" 
-                    onClick={() => setMode('view')} 
+                    onClick={() => handleOpenChange(false)} 
                     disabled={isSubmitting}
                   >
                     Cancel
