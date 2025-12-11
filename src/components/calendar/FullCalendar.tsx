@@ -658,15 +658,6 @@ export const FullCalendar: React.FC<FullCalendarProps> = ({
               </SelectContent>
             </Select>
             
-            {/* Connect Calendar Button */}
-            <Button variant="outline">
-              Connect Calendar
-            </Button>
-            
-            {/* Add Event Button */}
-            <Button onClick={onAddEvent}>
-              Add event
-            </Button>
           </div>
         </div>
 
