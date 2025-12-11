@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { format } from 'date-fns';
 import { CalendarDate, Clock } from '@untitledui/icons';
 import {
@@ -67,11 +67,27 @@ export const CreateEventDialog: React.FC<CreateEventDialogProps> = ({
   const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Sync date and time when initialDate prop changes
+  useEffect(() => {
+    if (initialDate) {
+      setDate(initialDate);
+      const hour = initialDate.getHours();
+      const minutes = initialDate.getMinutes();
+      const startTimeValue = `${hour.toString().padStart(2, '0')}:${minutes >= 30 ? '30' : '00'}`;
+      setStartTime(startTimeValue);
+      // Auto-set end time to 1 hour later
+      const endHour = hour + 1;
+      setEndTime(`${endHour.toString().padStart(2, '0')}:${minutes >= 30 ? '30' : '00'}`);
+    }
+  }, [initialDate]);
+
   const resetForm = () => {
     setTitle('');
     setDate(initialDate || new Date());
-    setStartTime('09:00');
-    setEndTime('10:00');
+    const hour = initialDate?.getHours() ?? 9;
+    const minutes = initialDate?.getMinutes() ?? 0;
+    setStartTime(`${hour.toString().padStart(2, '0')}:${minutes >= 30 ? '30' : '00'}`);
+    setEndTime(`${(hour + 1).toString().padStart(2, '0')}:${minutes >= 30 ? '30' : '00'}`);
     setEventType('showing');
     setLeadName('');
     setLeadEmail('');

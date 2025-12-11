@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Plus } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -13,12 +13,14 @@ import { cn } from '@/lib/utils';
 import { 
   format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, 
   addDays, addMonths, subMonths, addWeeks, subWeeks,
-  isSameMonth, isSameDay, isToday, getWeek, getHours, setHours 
+  isSameMonth, isSameDay, isToday, getWeek, getHours, setHours, setMinutes,
+  differenceInMinutes
 } from 'date-fns';
 import type { CalendarEvent, CalendarView } from '@/types/calendar';
 
 // Time slots for week/day view (6 AM to 10 PM)
 const TIME_SLOTS = Array.from({ length: 17 }, (_, i) => i + 6);
+const HOUR_HEIGHT = 60; // pixels per hour
 
 interface FullCalendarProps {
   events?: CalendarEvent[];
@@ -39,11 +41,22 @@ export const FullCalendar: React.FC<FullCalendarProps> = ({
 }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<CalendarView>('month');
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
   const calendarStart = startOfWeek(monthStart);
   const calendarEnd = endOfWeek(monthEnd);
+
+  // Auto-scroll to current time in week/day views
+  useEffect(() => {
+    if ((view === 'week' || view === 'day') && scrollContainerRef.current) {
+      const currentHour = new Date().getHours();
+      const scrollToHour = Math.max(currentHour - 2, 6);
+      const scrollPosition = (scrollToHour - 6) * HOUR_HEIGHT;
+      scrollContainerRef.current.scrollTo({ top: scrollPosition, behavior: 'smooth' });
+    }
+  }, [view]);
 
   // View-aware navigation
   const goToPrevious = () => {
@@ -71,12 +84,39 @@ export const FullCalendar: React.FC<FullCalendarProps> = ({
     return format(currentDate, 'EEEE, MMMM d, yyyy');
   };
 
-  // Get events for a specific time slot
-  const getEventsForTimeSlot = (date: Date, hour: number) => {
+  // Get events that START in a specific hour (for positioning)
+  const getEventsStartingInHour = (date: Date, hour: number) => {
     return events.filter((event) => {
+      if (event.allDay) return false;
       const eventDate = new Date(event.start);
       return isSameDay(eventDate, date) && getHours(eventDate) === hour;
     });
+  };
+
+  // Get all-day events for a date
+  const getAllDayEvents = (date: Date) => {
+    return events.filter((event) => event.allDay && isSameDay(new Date(event.start), date));
+  };
+
+  // Calculate event style for duration-based rendering
+  const getEventStyle = (event: CalendarEvent, slotHour: number) => {
+    const eventStart = new Date(event.start);
+    const eventEnd = new Date(event.end);
+    const startHour = eventStart.getHours() + eventStart.getMinutes() / 60;
+    const durationMinutes = differenceInMinutes(eventEnd, eventStart);
+    const durationHours = durationMinutes / 60;
+    
+    const topOffset = (startHour - slotHour) * HOUR_HEIGHT;
+    const height = Math.max(durationHours * HOUR_HEIGHT, 24); // min 24px height
+    
+    return {
+      position: 'absolute' as const,
+      top: `${topOffset}px`,
+      height: `${height}px`,
+      left: '2px',
+      right: '2px',
+      zIndex: 10,
+    };
   };
 
   // Generate all days for the calendar grid
@@ -160,9 +200,14 @@ export const FullCalendar: React.FC<FullCalendarProps> = ({
                       className="w-1.5 h-1.5 rounded-full flex-shrink-0"
                       style={{ backgroundColor: event.color || 'hsl(var(--primary))' }}
                     />
-                    <span className="font-medium truncate">
-                      {format(new Date(event.start), 'h:mm a')}
-                    </span>
+                    {!event.allDay && (
+                      <span className="font-medium truncate">
+                        {format(new Date(event.start), 'h:mm a')}
+                      </span>
+                    )}
+                    {event.allDay && (
+                      <span className="font-medium text-xs text-muted-foreground">All day</span>
+                    )}
                     <span className="truncate">{event.title}</span>
                   </div>
                 ))}
@@ -179,10 +224,32 @@ export const FullCalendar: React.FC<FullCalendarProps> = ({
     </>
   );
 
+  // Render current time indicator line
+  const renderCurrentTimeLine = (containerWidth: 'single' | 'multi') => {
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinutes = now.getMinutes();
+    
+    if (currentHour < 6 || currentHour > 22) return null;
+    
+    const topPosition = ((currentHour - 6) * HOUR_HEIGHT) + (currentMinutes * HOUR_HEIGHT / 60);
+    
+    return (
+      <div 
+        className="absolute left-0 right-0 z-20 pointer-events-none flex items-center"
+        style={{ top: `${topPosition}px` }}
+      >
+        <div className="w-2.5 h-2.5 rounded-full bg-destructive -ml-1" />
+        <div className="flex-1 border-t-2 border-destructive" />
+      </div>
+    );
+  };
+
   // Render week view with time grid
   const renderWeekView = () => {
     const weekStart = startOfWeek(currentDate);
     const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+    const hasAllDayEvents = weekDays.some(d => getAllDayEvents(d).length > 0);
 
     return (
       <div className="flex flex-col">
@@ -204,27 +271,64 @@ export const FullCalendar: React.FC<FullCalendarProps> = ({
           ))}
         </div>
 
+        {/* All-day events row */}
+        {hasAllDayEvents && (
+          <div className="grid grid-cols-[60px_repeat(7,1fr)] border-b border-border bg-muted/20">
+            <div className="text-xs text-muted-foreground p-1 text-right pr-2">All day</div>
+            {weekDays.map((day) => {
+              const allDayEvents = getAllDayEvents(day);
+              return (
+                <div key={day.toISOString() + '-allday'} className="border-l border-border p-1 min-h-[32px]">
+                  {allDayEvents.map((event) => (
+                    <div
+                      key={event.id}
+                      className="text-xs px-1.5 py-0.5 rounded truncate cursor-pointer mb-0.5"
+                      style={{
+                        backgroundColor: event.color ? `${event.color}20` : 'hsl(var(--primary) / 0.1)',
+                        color: event.color || 'hsl(var(--primary))',
+                      }}
+                      onClick={() => onEventClick?.(event)}
+                    >
+                      {event.title}
+                    </div>
+                  ))}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
         {/* Time grid */}
-        <div className="overflow-y-auto max-h-[600px]">
+        <div ref={scrollContainerRef} className="overflow-y-auto max-h-[600px] relative">
+          {renderCurrentTimeLine('multi')}
           {TIME_SLOTS.map((hour) => (
-            <div key={hour} className="grid grid-cols-[60px_repeat(7,1fr)] min-h-[60px]">
+            <div key={hour} className="grid grid-cols-[60px_repeat(7,1fr)]" style={{ height: `${HOUR_HEIGHT}px` }}>
               <div className="text-xs text-muted-foreground p-1 text-right pr-2 border-r border-border">
                 {format(setHours(new Date(), hour), 'h a')}
               </div>
               {weekDays.map((day) => {
-                const cellDate = setHours(day, hour);
-                const cellEvents = getEventsForTimeSlot(day, hour);
+                const cellEvents = getEventsStartingInHour(day, hour);
                 return (
                   <div
                     key={day.toISOString() + hour}
-                    className="border-l border-t border-border hover:bg-accent/50 cursor-pointer relative p-0.5"
-                    onClick={() => onDateClick?.(cellDate)}
+                    className="border-l border-t border-border relative"
                   >
+                    {/* Click zones for 30-min precision */}
+                    <div 
+                      className="absolute inset-x-0 top-0 h-1/2 hover:bg-accent/30 cursor-pointer z-0"
+                      onClick={() => onDateClick?.(setMinutes(setHours(day, hour), 0))}
+                    />
+                    <div 
+                      className="absolute inset-x-0 bottom-0 h-1/2 hover:bg-accent/30 cursor-pointer z-0"
+                      onClick={() => onDateClick?.(setMinutes(setHours(day, hour), 30))}
+                    />
+                    {/* Events with duration-based height */}
                     {cellEvents.map((event) => (
                       <div
                         key={event.id}
-                        className="text-xs px-1.5 py-0.5 rounded truncate cursor-pointer"
+                        className="text-xs px-1.5 py-0.5 rounded truncate cursor-pointer overflow-hidden"
                         style={{
+                          ...getEventStyle(event, hour),
                           backgroundColor: event.color ? `${event.color}20` : 'hsl(var(--primary) / 0.1)',
                           color: event.color || 'hsl(var(--primary))',
                           borderLeft: `2px solid ${event.color || 'hsl(var(--primary))'}`,
@@ -234,7 +338,10 @@ export const FullCalendar: React.FC<FullCalendarProps> = ({
                           onEventClick?.(event);
                         }}
                       >
-                        {event.title}
+                        <div className="font-medium truncate">{event.title}</div>
+                        <div className="text-[10px] opacity-75">
+                          {format(new Date(event.start), 'h:mm a')}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -248,60 +355,97 @@ export const FullCalendar: React.FC<FullCalendarProps> = ({
   };
 
   // Render day view with single column time grid
-  const renderDayView = () => (
-    <div className="flex flex-col">
-      {/* Day header */}
-      <div className="p-4 text-center border-b border-border bg-muted/30">
-        <div className="text-sm text-muted-foreground">{format(currentDate, 'EEEE')}</div>
-        <div
-          className={cn(
-            "text-3xl font-semibold mx-auto flex items-center justify-center",
-            isToday(currentDate) && "text-primary"
-          )}
-        >
-          {format(currentDate, 'd')}
+  const renderDayView = () => {
+    const allDayEvents = getAllDayEvents(currentDate);
+    
+    return (
+      <div className="flex flex-col">
+        {/* Day header */}
+        <div className="p-4 text-center border-b border-border bg-muted/30">
+          <div className="text-sm text-muted-foreground">{format(currentDate, 'EEEE')}</div>
+          <div
+            className={cn(
+              "text-3xl font-semibold mx-auto flex items-center justify-center",
+              isToday(currentDate) && "text-primary"
+            )}
+          >
+            {format(currentDate, 'd')}
+          </div>
+        </div>
+
+        {/* All-day events row */}
+        {allDayEvents.length > 0 && (
+          <div className="grid grid-cols-[60px_1fr] border-b border-border bg-muted/20">
+            <div className="text-xs text-muted-foreground p-2 text-right pr-2">All day</div>
+            <div className="p-2 space-y-1">
+              {allDayEvents.map((event) => (
+                <div
+                  key={event.id}
+                  className="text-sm px-2 py-1.5 rounded cursor-pointer"
+                  style={{
+                    backgroundColor: event.color ? `${event.color}20` : 'hsl(var(--primary) / 0.1)',
+                    color: event.color || 'hsl(var(--primary))',
+                    borderLeft: `3px solid ${event.color || 'hsl(var(--primary))'}`,
+                  }}
+                  onClick={() => onEventClick?.(event)}
+                >
+                  {event.title}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Time grid */}
+        <div ref={view === 'day' ? scrollContainerRef : undefined} className="overflow-y-auto max-h-[600px] relative">
+          {renderCurrentTimeLine('single')}
+          {TIME_SLOTS.map((hour) => {
+            const cellEvents = getEventsStartingInHour(currentDate, hour);
+            return (
+              <div key={hour} className="grid grid-cols-[60px_1fr]" style={{ height: `${HOUR_HEIGHT}px` }}>
+                <div className="text-xs text-muted-foreground p-1 text-right pr-2 border-r border-border">
+                  {format(setHours(new Date(), hour), 'h a')}
+                </div>
+                <div className="border-t border-border relative">
+                  {/* Click zones for 30-min precision */}
+                  <div 
+                    className="absolute inset-x-0 top-0 h-1/2 hover:bg-accent/30 cursor-pointer z-0"
+                    onClick={() => onDateClick?.(setMinutes(setHours(currentDate, hour), 0))}
+                  />
+                  <div 
+                    className="absolute inset-x-0 bottom-0 h-1/2 hover:bg-accent/30 cursor-pointer z-0"
+                    onClick={() => onDateClick?.(setMinutes(setHours(currentDate, hour), 30))}
+                  />
+                  {/* Events with duration-based height */}
+                  {cellEvents.map((event) => (
+                    <div
+                      key={event.id}
+                      className="flex flex-col text-sm px-2 py-1 rounded cursor-pointer overflow-hidden"
+                      style={{
+                        ...getEventStyle(event, hour),
+                        backgroundColor: event.color ? `${event.color}20` : 'hsl(var(--primary) / 0.1)',
+                        color: event.color || 'hsl(var(--primary))',
+                        borderLeft: `3px solid ${event.color || 'hsl(var(--primary))'}`,
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onEventClick?.(event);
+                      }}
+                    >
+                      <span className="font-medium truncate">{event.title}</span>
+                      <span className="text-xs opacity-75">
+                        {format(new Date(event.start), 'h:mm a')} - {format(new Date(event.end), 'h:mm a')}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
-
-      {/* Time grid */}
-      <div className="overflow-y-auto max-h-[600px]">
-        {TIME_SLOTS.map((hour) => {
-          const cellDate = setHours(currentDate, hour);
-          const cellEvents = getEventsForTimeSlot(currentDate, hour);
-          return (
-            <div key={hour} className="grid grid-cols-[60px_1fr] min-h-[60px]">
-              <div className="text-xs text-muted-foreground p-1 text-right pr-2 border-r border-border">
-                {format(setHours(new Date(), hour), 'h a')}
-              </div>
-              <div
-                className="border-t border-border hover:bg-accent/50 cursor-pointer relative p-1"
-                onClick={() => onDateClick?.(cellDate)}
-              >
-                {cellEvents.map((event) => (
-                  <div
-                    key={event.id}
-                    className="flex items-center gap-2 text-sm px-2 py-1.5 rounded cursor-pointer mb-1"
-                    style={{
-                      backgroundColor: event.color ? `${event.color}20` : 'hsl(var(--primary) / 0.1)',
-                      color: event.color || 'hsl(var(--primary))',
-                      borderLeft: `3px solid ${event.color || 'hsl(var(--primary))'}`,
-                    }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onEventClick?.(event);
-                    }}
-                  >
-                    <span className="font-medium">{format(new Date(event.start), 'h:mm a')}</span>
-                    <span>{event.title}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className={cn("bg-card border border-border rounded-xl overflow-hidden", className)}>
