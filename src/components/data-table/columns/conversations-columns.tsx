@@ -139,8 +139,9 @@ export const createConversationsColumns = (
             size="icon"
             className="h-8 w-8 text-muted-foreground hover:text-foreground"
             onClick={() => options.onView?.(row.original.id)}
+            aria-label="View conversation"
           >
-            <Edit02 className="h-4 w-4" />
+            <Edit02 className="h-4 w-4" aria-hidden="true" />
           </Button>
         )}
         {options.onDelete && (
@@ -149,8 +150,9 @@ export const createConversationsColumns = (
             size="icon"
             className="h-8 w-8 text-muted-foreground hover:text-destructive"
             onClick={() => options.onDelete?.(row.original.id)}
+            aria-label="Delete conversation"
           >
-            <Trash01 className="h-4 w-4" />
+            <Trash01 className="h-4 w-4" aria-hidden="true" />
           </Button>
         )}
       </div>
