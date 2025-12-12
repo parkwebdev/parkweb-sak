@@ -1,3 +1,29 @@
+/**
+ * Dialog Component
+ * 
+ * A modal dialog with animated overlay and content transitions.
+ * Built on Radix UI Dialog primitive with spring-based animations.
+ * 
+ * @module components/ui/dialog
+ * 
+ * @example
+ * ```tsx
+ * <Dialog>
+ *   <DialogTrigger asChild>
+ *     <Button>Open Dialog</Button>
+ *   </DialogTrigger>
+ *   <DialogContent>
+ *     <DialogHeader>
+ *       <DialogTitle>Dialog Title</DialogTitle>
+ *       <DialogDescription>Dialog description</DialogDescription>
+ *     </DialogHeader>
+ *     <DialogFooter>
+ *       <Button>Save</Button>
+ *     </DialogFooter>
+ *   </DialogContent>
+ * </Dialog>
+ * ```
+ */
 import * as React from "react"
 import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { X } from "@untitledui/icons"

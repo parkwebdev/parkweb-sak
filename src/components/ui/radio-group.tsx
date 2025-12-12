@@ -1,3 +1,19 @@
+/**
+ * Radio Group Component
+ * 
+ * A set of radio buttons for selecting a single option from multiple choices.
+ * Built on Radix UI with animated selection indicator.
+ * 
+ * @module components/ui/radio-group
+ * 
+ * @example
+ * ```tsx
+ * <RadioGroup value={value} onValueChange={setValue}>
+ *   <RadioGroupItem value="option1">Option 1</RadioGroupItem>
+ *   <RadioGroupItem value="option2">Option 2</RadioGroupItem>
+ * </RadioGroup>
+ * ```
+ */
 import * as React from "react"
 import * as RadioGroupPrimitive from "@radix-ui/react-radio-group"
 import { motion } from "motion/react"

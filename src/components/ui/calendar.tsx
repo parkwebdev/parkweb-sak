@@ -1,3 +1,16 @@
+/**
+ * Calendar Component
+ * 
+ * A date picker calendar using react-day-picker with custom
+ * styling and navigation icons.
+ * 
+ * @module components/ui/calendar
+ * 
+ * @example
+ * ```tsx
+ * <Calendar mode="single" selected={date} onSelect={setDate} />
+ * ```
+ */
 import * as React from "react";
 import { ChevronLeft, ChevronRight } from "@untitledui/icons";
 import { DayPicker } from "react-day-picker";

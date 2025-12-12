@@ -1,3 +1,21 @@
+/**
+ * Tooltip Component
+ * 
+ * A floating tooltip that appears on hover with positioning
+ * and animation support. Built on Radix UI Tooltip primitive.
+ * 
+ * @module components/ui/tooltip
+ * 
+ * @example
+ * ```tsx
+ * <TooltipProvider>
+ *   <Tooltip>
+ *     <TooltipTrigger>Hover me</TooltipTrigger>
+ *     <TooltipContent>Tooltip text</TooltipContent>
+ *   </Tooltip>
+ * </TooltipProvider>
+ * ```
+ */
 import * as React from "react"
 import * as TooltipPrimitive from "@radix-ui/react-tooltip"
 

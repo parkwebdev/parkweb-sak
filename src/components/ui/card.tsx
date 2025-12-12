@@ -1,3 +1,29 @@
+/**
+ * Card Components
+ * 
+ * A set of card components for displaying content in a contained,
+ * visually distinct container. Includes static and motion variants.
+ * 
+ * @module components/ui/card
+ * 
+ * @example
+ * ```tsx
+ * // Static card
+ * <Card>
+ *   <CardHeader>
+ *     <CardTitle>Title</CardTitle>
+ *     <CardDescription>Description</CardDescription>
+ *   </CardHeader>
+ *   <CardContent>Content</CardContent>
+ *   <CardFooter>Footer</CardFooter>
+ * </Card>
+ * 
+ * // Motion card with hover effects
+ * <MotionCard hoverEffect tapEffect>
+ *   Interactive content
+ * </MotionCard>
+ * ```
+ */
 import * as React from "react"
 import { motion, type HTMLMotionProps } from "motion/react"
 

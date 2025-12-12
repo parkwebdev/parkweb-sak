@@ -1,3 +1,21 @@
+/**
+ * Chart Components
+ * 
+ * A set of components for building data visualization charts
+ * using Recharts with consistent theming and styling.
+ * 
+ * @module components/ui/chart
+ * 
+ * @example
+ * ```tsx
+ * <ChartContainer config={chartConfig}>
+ *   <AreaChart data={data}>
+ *     <Area dataKey="value" />
+ *     <ChartTooltip content={<ChartTooltipContent />} />
+ *   </AreaChart>
+ * </ChartContainer>
+ * ```
+ */
 import * as React from "react"
 import * as RechartsPrimitive from "recharts"
 

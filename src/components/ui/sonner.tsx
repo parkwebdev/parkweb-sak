@@ -1,3 +1,20 @@
+/**
+ * Toaster Component
+ * 
+ * A toast notification container using Sonner with
+ * theme-aware styling and consistent positioning.
+ * 
+ * @module components/ui/sonner
+ * 
+ * @example
+ * ```tsx
+ * // In app root
+ * <Toaster />
+ * 
+ * // Usage
+ * toast.success("Action completed")
+ * ```
+ */
 import { useTheme } from "next-themes"
 import { Toaster as Sonner, toast } from "sonner"
 

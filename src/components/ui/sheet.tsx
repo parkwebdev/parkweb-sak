@@ -1,3 +1,25 @@
+/**
+ * Sheet Component
+ * 
+ * A slide-out panel from any edge of the screen with animated
+ * transitions. Built on Radix UI Dialog with Framer Motion.
+ * 
+ * @module components/ui/sheet
+ * 
+ * @example
+ * ```tsx
+ * <Sheet>
+ *   <SheetTrigger>Open Panel</SheetTrigger>
+ *   <SheetContent side="right">
+ *     <SheetHeader>
+ *       <SheetTitle>Panel Title</SheetTitle>
+ *       <SheetDescription>Panel description</SheetDescription>
+ *     </SheetHeader>
+ *     Panel content...
+ *   </SheetContent>
+ * </Sheet>
+ * ```
+ */
 import * as SheetPrimitive from "@radix-ui/react-dialog"
 import { cva, type VariantProps } from "class-variance-authority"
 import { X } from "@untitledui/icons"

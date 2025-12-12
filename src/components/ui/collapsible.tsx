@@ -1,3 +1,19 @@
+/**
+ * Collapsible Component
+ * 
+ * An animated expandable/collapsible section with smooth
+ * height transitions. Built on Radix UI with Framer Motion.
+ * 
+ * @module components/ui/collapsible
+ * 
+ * @example
+ * ```tsx
+ * <Collapsible>
+ *   <CollapsibleTrigger>Toggle Section</CollapsibleTrigger>
+ *   <CollapsibleContent>Hidden content</CollapsibleContent>
+ * </Collapsible>
+ * ```
+ */
 'use client';
 
 import * as React from 'react';

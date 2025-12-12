@@ -1,3 +1,29 @@
+/**
+ * Table Components
+ * 
+ * A set of components for building accessible data tables
+ * with proper semantics and styling.
+ * 
+ * @module components/ui/table
+ * 
+ * @example
+ * ```tsx
+ * <Table>
+ *   <TableHeader>
+ *     <TableRow>
+ *       <TableHead>Name</TableHead>
+ *       <TableHead>Email</TableHead>
+ *     </TableRow>
+ *   </TableHeader>
+ *   <TableBody>
+ *     <TableRow>
+ *       <TableCell>John Doe</TableCell>
+ *       <TableCell>john@example.com</TableCell>
+ *     </TableRow>
+ *   </TableBody>
+ * </Table>
+ * ```
+ */
 import * as React from "react"
 
 import { cn } from "@/lib/utils"

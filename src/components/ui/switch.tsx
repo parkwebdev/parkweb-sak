@@ -1,3 +1,17 @@
+/**
+ * Switch Component
+ * 
+ * A toggle switch with smooth spring-based animations.
+ * Supports icons inside the switch and custom thumb sizing.
+ * 
+ * @module components/ui/switch
+ * 
+ * @example
+ * ```tsx
+ * <Switch checked={enabled} onCheckedChange={setEnabled} />
+ * <Switch startIcon={<Check />} endIcon={<X />} />
+ * ```
+ */
 import * as React from "react"
 import * as SwitchPrimitives from "@radix-ui/react-switch"
 import { motion, useSpring, useTransform } from "motion/react"

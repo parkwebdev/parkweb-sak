@@ -1,3 +1,16 @@
+/**
+ * Copy Button Component
+ * 
+ * A button that copies content to clipboard with animated
+ * feedback showing success state.
+ * 
+ * @module components/ui/copy-button
+ * 
+ * @example
+ * ```tsx
+ * <CopyButton content="Text to copy" toastMessage="Code copied!" />
+ * ```
+ */
 import * as React from "react"
 import { CheckCircle, Copy01 } from "@untitledui/icons"
 import { motion, AnimatePresence } from "motion/react"

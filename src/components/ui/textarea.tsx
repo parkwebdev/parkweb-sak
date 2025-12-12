@@ -1,3 +1,16 @@
+/**
+ * Textarea Component
+ * 
+ * A multi-line text input component with consistent styling
+ * and proper accessibility attributes.
+ * 
+ * @module components/ui/textarea
+ * 
+ * @example
+ * ```tsx
+ * <Textarea placeholder="Enter your message..." rows={4} />
+ * ```
+ */
 import * as React from "react"
 
 import { cn } from "@/lib/utils"

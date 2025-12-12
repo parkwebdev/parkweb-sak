@@ -1,3 +1,23 @@
+/**
+ * Tabs Component
+ * 
+ * A set of tab components for organizing content into
+ * switchable panels. Built on Radix UI Tabs primitive.
+ * 
+ * @module components/ui/tabs
+ * 
+ * @example
+ * ```tsx
+ * <Tabs defaultValue="tab1">
+ *   <TabsList>
+ *     <TabsTrigger value="tab1">Tab 1</TabsTrigger>
+ *     <TabsTrigger value="tab2">Tab 2</TabsTrigger>
+ *   </TabsList>
+ *   <TabsContent value="tab1">Content 1</TabsContent>
+ *   <TabsContent value="tab2">Content 2</TabsContent>
+ * </Tabs>
+ * ```
+ */
 import * as React from "react"
 import * as TabsPrimitive from "@radix-ui/react-tabs"
 

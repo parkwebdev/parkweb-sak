@@ -1,3 +1,18 @@
+/**
+ * Progress Component
+ * 
+ * A visual indicator for progress or loading states with multiple
+ * variants, optional labels, and animation support.
+ * 
+ * @module components/ui/progress
+ * 
+ * @example
+ * ```tsx
+ * <Progress value={75} />
+ * <Progress value={50} showLabel variant="success" />
+ * <Progress value={25} animated />
+ * ```
+ */
 import * as React from "react"
 import * as ProgressPrimitive from "@radix-ui/react-progress"
 

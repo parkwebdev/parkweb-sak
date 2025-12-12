@@ -1,3 +1,24 @@
+/**
+ * Dropdown Menu Component
+ * 
+ * A menu that appears on click with support for items, checkboxes,
+ * radio groups, separators, and submenus. Built on Radix UI.
+ * 
+ * @module components/ui/dropdown-menu
+ * 
+ * @example
+ * ```tsx
+ * <DropdownMenu>
+ *   <DropdownMenuTrigger>Open Menu</DropdownMenuTrigger>
+ *   <DropdownMenuContent>
+ *     <DropdownMenuItem>Profile</DropdownMenuItem>
+ *     <DropdownMenuItem>Settings</DropdownMenuItem>
+ *     <DropdownMenuSeparator />
+ *     <DropdownMenuItem>Logout</DropdownMenuItem>
+ *   </DropdownMenuContent>
+ * </DropdownMenu>
+ * ```
+ */
 import * as React from "react"
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu"
 import { Check, ChevronRight, Dotpoints01 as Circle } from "@untitledui/icons"

@@ -1,3 +1,31 @@
+/**
+ * Form Components
+ * 
+ * A set of form components integrated with React Hook Form for
+ * validation, error handling, and accessibility.
+ * 
+ * @module components/ui/form
+ * 
+ * @example
+ * ```tsx
+ * <Form {...form}>
+ *   <FormField
+ *     control={form.control}
+ *     name="email"
+ *     render={({ field }) => (
+ *       <FormItem>
+ *         <FormLabel>Email</FormLabel>
+ *         <FormControl>
+ *           <Input {...field} />
+ *         </FormControl>
+ *         <FormDescription>Enter your email</FormDescription>
+ *         <FormMessage />
+ *       </FormItem>
+ *     )}
+ *   />
+ * </Form>
+ * ```
+ */
 import * as React from "react"
 import * as LabelPrimitive from "@radix-ui/react-label"
 import { Slot } from "@radix-ui/react-slot"

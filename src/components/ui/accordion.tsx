@@ -1,3 +1,21 @@
+/**
+ * Accordion Component
+ * 
+ * An animated, accessible accordion component built on Radix UI primitives
+ * with smooth expand/collapse animations using Framer Motion.
+ * 
+ * @module components/ui/accordion
+ * 
+ * @example
+ * ```tsx
+ * <Accordion type="single" collapsible>
+ *   <AccordionItem value="item-1">
+ *     <AccordionTrigger>Section Title</AccordionTrigger>
+ *     <AccordionContent>Content goes here</AccordionContent>
+ *   </AccordionItem>
+ * </Accordion>
+ * ```
+ */
 "use client"
 
 import * as React from "react"
