@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { format } from 'date-fns';
+import { AlertTriangle } from '@untitledui/icons';
 import {
   Dialog,
   DialogContent,
@@ -23,6 +24,7 @@ interface TimeChangeReasonDialogProps {
   newEnd: Date | null;
   onConfirm: (reason?: string) => void;
   onSkip: () => void;
+  existingEvents?: CalendarEvent[];
 }
 
 const QUICK_REASONS = [
@@ -44,8 +46,25 @@ export const TimeChangeReasonDialog: React.FC<TimeChangeReasonDialogProps> = ({
   newEnd,
   onConfirm,
   onSkip,
+  existingEvents,
 }) => {
   const [reason, setReason] = useState('');
+
+  const conflictingEvents = useMemo(() => {
+    if (!newStart || !newEnd || !existingEvents || !event) return [];
+    
+    return existingEvents.filter(e => {
+      if (e.allDay) return false;
+      if (e.id === event.id) return false;
+      
+      const eStart = new Date(e.start).getTime();
+      const eEnd = new Date(e.end).getTime();
+      const pStart = newStart.getTime();
+      const pEnd = newEnd.getTime();
+      
+      return pStart < eEnd && pEnd > eStart;
+    });
+  }, [newStart, newEnd, existingEvents, event]);
   const [selectedQuickReason, setSelectedQuickReason] = useState<string | null>(null);
 
   const handleQuickReasonClick = (quickReason: string) => {
@@ -90,6 +109,21 @@ export const TimeChangeReasonDialog: React.FC<TimeChangeReasonDialogProps> = ({
         </DialogHeader>
 
         <div className="space-y-4 py-4">
+          {/* Conflict warning */}
+          {conflictingEvents.length > 0 && (
+            <div className="flex items-start gap-3 p-3 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800">
+              <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-500 shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                  Schedule Conflict Detected
+                </p>
+                <p className="text-xs text-amber-700 dark:text-amber-300">
+                  This time overlaps with: {conflictingEvents.map(e => e.title).join(', ')}
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Time change summary */}
           <div className="space-y-2 p-3 bg-muted/50 rounded-lg">
             <div className="flex items-center gap-2">
