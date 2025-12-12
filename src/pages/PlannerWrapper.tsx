@@ -1,13 +1,13 @@
 import React from 'react';
-import Calendar from './Calendar';
+import Planner from './Planner';
 import { PageTransition } from '@/components/ui/page-transition';
 
-const CalendarWrapper = () => {
+const PlannerWrapper = () => {
   return (
     <PageTransition>
-      <Calendar />
+      <Planner />
     </PageTransition>
   );
 };
 
-export default CalendarWrapper;
+export default PlannerWrapper;

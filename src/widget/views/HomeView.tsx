@@ -154,7 +154,7 @@ export const HomeView = ({
                     {config.announcements.map((announcement) => (
                       <CSSAnimatedItem key={announcement.id}>
                         <div 
-                          className="rounded-lg overflow-hidden cursor-pointer transition-transform hover:scale-[1.02] active:scale-[0.98] bg-card border shadow-sm"
+                          className="rounded-lg overflow-hidden cursor-pointer transition-colors bg-card border shadow-sm hover:bg-accent/50"
                           onClick={() => {
                             if (announcement.action_type === 'open_url' && announcement.action_url) {
                               window.open(announcement.action_url, '_blank', 'noopener,noreferrer');

@@ -55,7 +55,7 @@ export const MessageReactions: React.FC<MessageReactionsProps> = ({
           key={reaction.emoji}
           variant="ghost"
           size="sm"
-          className={`h-6 px-2 text-xs gap-1 transition-all hover:scale-110 animate-scale-in ${
+          className={`h-6 px-2 text-xs gap-1 transition-all animate-scale-in ${
             reaction.userReacted ? 'bg-primary/10 border border-primary/30' : ''
           }`}
           onClick={() => handleReactionClick(reaction)}

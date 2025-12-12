@@ -39,10 +39,10 @@ const navigationItems: NavigationItem[] = [
     path: '/conversations'
   },
   {
-    id: 'calendar',
-    label: 'Calendar',
+    id: 'planner',
+    label: 'Planner',
     icon: Calendar,
-    path: '/calendar'
+    path: '/planner'
   },
   {
     id: 'leads',
