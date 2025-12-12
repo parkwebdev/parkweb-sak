@@ -435,9 +435,10 @@ const AnnouncementDialog = ({
                   variant="secondary"
                   size="icon"
                   className="absolute top-2 right-2 h-7 w-7"
+                  aria-label="Remove image"
                   onClick={handleRemoveImage}
                 >
-                  <XClose className="h-4 w-4" />
+                  <XClose className="h-4 w-4" aria-hidden="true" />
                 </Button>
               </div>
             ) : (
@@ -737,9 +738,10 @@ const NewsDialog = ({
                   variant="secondary"
                   size="icon"
                   className="absolute top-2 right-2 h-7 w-7"
+                  aria-label="Remove image"
                   onClick={handleRemoveImage}
                 >
-                  <XClose className="h-4 w-4" />
+                  <XClose className="h-4 w-4" aria-hidden="true" />
                 </Button>
               </div>
             ) : (

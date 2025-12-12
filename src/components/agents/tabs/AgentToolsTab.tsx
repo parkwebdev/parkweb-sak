@@ -531,17 +531,19 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8"
+                        aria-label="Edit tool"
                         onClick={() => setEditingTool(tool)}
                       >
-                        <Edit03 className="h-4 w-4" />
+                        <Edit03 className="h-4 w-4" aria-hidden="true" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8"
+                        aria-label="Delete tool"
                         onClick={() => deleteTool(tool.id)}
                       >
-                        <Trash01 className="h-4 w-4 text-destructive" />
+                        <Trash01 className="h-4 w-4 text-destructive" aria-hidden="true" />
                       </Button>
                     </div>
                   </div>
@@ -656,17 +658,19 @@ export const AgentToolsTab = ({ agentId, agent, onUpdate }: AgentToolsTabProps) 
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8"
+                            aria-label="Edit webhook"
                             onClick={() => setEditingWebhook(webhook)}
                           >
-                            <Edit03 className="h-4 w-4" />
+                            <Edit03 className="h-4 w-4" aria-hidden="true" />
                           </Button>
                           <Button
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8"
+                            aria-label="Delete webhook"
                             onClick={() => setWebhookToDelete(webhook.id)}
                           >
-                            <Trash01 className="h-4 w-4 text-destructive" />
+                            <Trash01 className="h-4 w-4 text-destructive" aria-hidden="true" />
                           </Button>
                         </div>
                       </div>

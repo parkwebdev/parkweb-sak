@@ -80,9 +80,10 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ onMenuClick }) => {
           variant="ghost"
           size="sm"
           className="lg:hidden"
+          aria-label="Open navigation menu"
           onClick={onMenuClick}
         >
-          <Menu size={18} />
+          <Menu size={18} aria-hidden="true" />
         </Button>
 
         {/* Search - hidden on mobile */}
@@ -99,7 +100,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ onMenuClick }) => {
         {/* User Avatar Dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="rounded-full p-0">
+          <Button variant="ghost" size="icon" className="rounded-full p-0" aria-label="User menu">
             <Avatar className="h-8 w-8">
                 <AvatarImage src={profile?.avatar_url || undefined} />
                 <AvatarFallback className="bg-primary text-primary-foreground text-xs">
