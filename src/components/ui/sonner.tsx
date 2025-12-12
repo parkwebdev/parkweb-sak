@@ -24,27 +24,29 @@ const Toaster = ({ ...props }: ToasterProps) => {
   const { theme = "system" } = useTheme()
 
   return (
-    <Sonner
-      theme={theme as ToasterProps["theme"]}
-      className="toaster group"
-      position="top-right"
-      gap={8}
-      toastOptions={{
-        classNames: {
-          toast:
-            "group toast group-[.toaster]:bg-background group-[.toaster]:text-foreground group-[.toaster]:border-border group-[.toaster]:shadow-lg group-[.toaster]:rounded-lg",
-          description: "group-[.toast]:text-muted-foreground",
-          actionButton:
-            "group-[.toast]:bg-primary group-[.toast]:text-primary-foreground",
-          cancelButton:
-            "group-[.toast]:bg-muted group-[.toast]:text-muted-foreground",
-        },
-        duration: 4000,
-      }}
-      // Custom animation using CSS - Sonner handles its own animations
-      // We enhance with additional styling
-      {...props}
-    />
+    <div role="region" aria-label="Notifications" aria-live="polite" aria-atomic="false">
+      <Sonner
+        theme={theme as ToasterProps["theme"]}
+        className="toaster group"
+        position="top-right"
+        gap={8}
+        toastOptions={{
+          classNames: {
+            toast:
+              "group toast group-[.toaster]:bg-background group-[.toaster]:text-foreground group-[.toaster]:border-border group-[.toaster]:shadow-lg group-[.toaster]:rounded-lg",
+            description: "group-[.toast]:text-muted-foreground",
+            actionButton:
+              "group-[.toast]:bg-primary group-[.toast]:text-primary-foreground",
+            cancelButton:
+              "group-[.toast]:bg-muted group-[.toast]:text-muted-foreground",
+          },
+          duration: 4000,
+        }}
+        // Custom animation using CSS - Sonner handles its own animations
+        // We enhance with additional styling
+        {...props}
+      />
+    </div>
   )
 }
 

@@ -22,6 +22,13 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
 
   return (
     <div className="flex h-screen bg-app-background">
+      {/* Skip Navigation Link - WCAG AAA */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
+      >
+        Skip to main content
+      </a>
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div 
@@ -46,7 +53,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
           <AppHeader onMenuClick={() => setSidebarOpen(true)} />
           
           {/* Page Content - flex-1 fills remaining space, min-h-0 enables children overflow */}
-          <main className="flex-1 min-h-0 overflow-hidden">
+          <main id="main-content" className="flex-1 min-h-0 overflow-hidden" tabIndex={-1}>
             {children}
           </main>
         </div>

@@ -331,7 +331,7 @@ export const ProfileSettings: React.FC = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5 sm:col-span-2 md:col-span-1">
               <Label htmlFor="display_name" className="text-xs">Display Name</Label>
               <Input
@@ -340,6 +340,7 @@ export const ProfileSettings: React.FC = () => {
                 onChange={(e) => handleInputChange('display_name', e.target.value)}
                 disabled={updating}
                 className="text-sm"
+                autoComplete="name"
               />
               <SavedIndicator show={savedFields.display_name} />
             </div>
@@ -352,6 +353,7 @@ export const ProfileSettings: React.FC = () => {
                 onChange={(e) => handleInputChange('email', e.target.value)}
                 disabled={updating}
                 className="text-sm"
+                autoComplete="email"
               />
               <SavedIndicator show={savedFields.email} />
             </div>
@@ -378,6 +380,7 @@ export const ProfileSettings: React.FC = () => {
               onChange={(e) => handlePasswordChange('current', e.target.value)}
               disabled={updating}
               className="text-sm"
+              autoComplete="current-password"
             />
           </div>
           <div className="space-y-1.5">
@@ -389,6 +392,7 @@ export const ProfileSettings: React.FC = () => {
               onChange={(e) => handlePasswordChange('new', e.target.value)}
               disabled={updating}
               className="text-sm"
+              autoComplete="new-password"
             />
             <PasswordStrengthIndicator password={passwords.new} />
           </div>
@@ -401,6 +405,7 @@ export const ProfileSettings: React.FC = () => {
               onChange={(e) => handlePasswordChange('confirm', e.target.value)}
               disabled={updating}
               className="text-sm"
+              autoComplete="new-password"
             />
             {passwords.confirm && passwords.new !== passwords.confirm && (
               <p className="text-xs text-destructive">Passwords don't match</p>
