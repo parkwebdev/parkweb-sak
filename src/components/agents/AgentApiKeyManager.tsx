@@ -138,16 +138,18 @@ export const AgentApiKeyManager = ({ agentId }: AgentApiKeyManagerProps) => {
                       size="icon"
                       className="h-8 w-8"
                       onClick={() => handleEditKey(key)}
+                      aria-label={`Edit API key: ${key.name}`}
                     >
-                      <Edit03 className="h-4 w-4" />
+                      <Edit03 className="h-4 w-4" aria-hidden="true" />
                     </Button>
                     <Button
                       variant="ghost"
                       size="icon"
                       className="h-8 w-8"
                       onClick={() => setKeyToRevoke(key.id)}
+                      aria-label={`Revoke API key: ${key.name}`}
                     >
-                      <Trash01 className="h-4 w-4 text-destructive" />
+                      <Trash01 className="h-4 w-4 text-destructive" aria-hidden="true" />
                     </Button>
                   </div>
                 </div>

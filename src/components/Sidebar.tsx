@@ -101,7 +101,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
       onMouseEnter={() => setCollapsed(false)}
       onMouseLeave={() => setCollapsed(true)}
     >
-      <nav className="w-full flex flex-col pt-6 px-3 pb-4">
+      <nav className="w-full flex flex-col pt-6 px-3 pb-4" aria-label="Main navigation">
         {/* Header with logo */}
         <header className="w-full px-2 mb-6">
           <div className="flex items-center justify-start">
@@ -135,6 +135,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
                 >
                   <Link 
                     to={item.path}
+                    aria-current={isActive ? 'page' : undefined}
                     className={`items-center flex w-full p-[11px] rounded-md transition-colors text-sm ${
                       isActive 
                         ? 'bg-accent text-accent-foreground' 
@@ -172,6 +173,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
                             initial={prefersReducedMotion ? false : { scale: 0 }}
                             animate={{ scale: 1 }}
                             transition={springs.bouncy}
+                            role="status"
+                            aria-label={`${unreadConversationsCount} unread conversations`}
                           >
                             {unreadConversationsCount}
                           </motion.div>
@@ -199,6 +202,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
                   >
                     <Link 
                       to={item.path}
+                      aria-current={isActive ? 'page' : undefined}
                       className={`items-center flex w-full p-[11px] rounded-md transition-colors text-sm ${
                         isActive 
                           ? 'bg-accent text-accent-foreground' 

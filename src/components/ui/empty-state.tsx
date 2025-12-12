@@ -39,7 +39,7 @@ export function EmptyState({
       "text-center py-12 px-8 rounded-lg border border-dashed bg-muted/30",
       className
     )}>
-      <div className="w-12 h-12 rounded-full bg-muted/50 border border-border flex items-center justify-center mx-auto mb-3">
+      <div className="w-12 h-12 rounded-full bg-muted/50 border border-border flex items-center justify-center mx-auto mb-3" aria-hidden="true">
         {icon}
       </div>
       <p className="text-sm text-muted-foreground mb-2">

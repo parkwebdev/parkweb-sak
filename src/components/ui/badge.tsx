@@ -39,12 +39,15 @@ const badgeVariants = cva(
 
 export interface BadgeProps
   extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof badgeVariants> {}
+    VariantProps<typeof badgeVariants> {
+  /** Optional ARIA role for status badges */
+  role?: "status" | "alert" | undefined
+}
 
 const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
-  ({ className, variant, ...props }, ref) => {
+  ({ className, variant, role, ...props }, ref) => {
     return (
-      <div ref={ref} className={cn(badgeVariants({ variant }), className)} {...props} />
+      <div ref={ref} role={role} className={cn(badgeVariants({ variant }), className)} {...props} />
     )
   }
 )

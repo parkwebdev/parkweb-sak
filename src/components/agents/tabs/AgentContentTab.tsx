@@ -129,8 +129,9 @@ const SortableAnnouncementCard = ({ announcement, onEdit, onDelete }: {
                       e.stopPropagation();
                       onEdit();
                     }}
+                    aria-label={`Edit announcement: ${announcement.title}`}
                   >
-                    <Edit02 className="h-4 w-4" />
+                    <Edit02 className="h-4 w-4" aria-hidden="true" />
                   </Button>
                   <Button 
                     variant="ghost" 
@@ -139,8 +140,9 @@ const SortableAnnouncementCard = ({ announcement, onEdit, onDelete }: {
                       e.stopPropagation();
                       onDelete();
                     }}
+                    aria-label={`Delete announcement: ${announcement.title}`}
                   >
-                    <Trash01 className="h-4 w-4 text-destructive" />
+                    <Trash01 className="h-4 w-4 text-destructive" aria-hidden="true" />
                   </Button>
                 </div>
               </div>
@@ -237,8 +239,9 @@ const SortableNewsCard = ({ newsItem, onEdit, onDelete }: {
                       e.stopPropagation();
                       onEdit();
                     }}
+                    aria-label={`Edit news item: ${newsItem.title}`}
                   >
-                    <Edit02 className="h-4 w-4" />
+                    <Edit02 className="h-4 w-4" aria-hidden="true" />
                   </Button>
                   <Button 
                     variant="ghost" 
@@ -247,8 +250,9 @@ const SortableNewsCard = ({ newsItem, onEdit, onDelete }: {
                       e.stopPropagation();
                       onDelete();
                     }}
+                    aria-label={`Delete news item: ${newsItem.title}`}
                   >
-                    <Trash01 className="h-4 w-4 text-destructive" />
+                    <Trash01 className="h-4 w-4 text-destructive" aria-hidden="true" />
                   </Button>
                 </div>
               </div>

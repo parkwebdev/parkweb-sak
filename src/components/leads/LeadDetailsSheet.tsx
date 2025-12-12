@@ -174,8 +174,9 @@ export const LeadDetailsSheet = ({
               variant="destructive"
               size="icon"
               onClick={handleDelete}
+              aria-label="Delete lead"
             >
-              <Trash02 className="h-4 w-4" />
+              <Trash02 className="h-4 w-4" aria-hidden="true" />
             </Button>
           </div>
         </div>
