@@ -374,6 +374,7 @@ const Planner: React.FC = () => {
         onOpenChange={setCreateDialogOpen}
         initialDate={selectedDate || undefined}
         onCreateEvent={handleCreateEvent}
+        existingEvents={events}
       />
 
       <EventDetailDialog
@@ -383,6 +384,7 @@ const Planner: React.FC = () => {
         onUpdateEvent={handleUpdateEvent}
         onDelete={handleDeleteFromDetail}
         onMarkComplete={handleMarkComplete}
+        existingEvents={events}
       />
 
       <DeleteEventDialog
