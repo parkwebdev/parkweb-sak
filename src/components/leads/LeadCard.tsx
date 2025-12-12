@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Lead card component for grid view display.
+ * Shows lead info with status badge and view button.
+ */
+
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';

@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Takeover confirmation dialog for human intervention.
+ * Allows team members to take control of a conversation with optional reason.
+ */
+
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';

@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Plan limits card showing usage vs limits for current plan.
+ * Displays progress bars with warning colors near limits.
+ */
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';

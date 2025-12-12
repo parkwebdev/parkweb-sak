@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Lead status dropdown with color-coded badges.
+ * Provides status options: new, contacted, qualified, converted, lost.
+ */
+
 import { useState, useRef } from 'react';
 import {
   DropdownMenu,

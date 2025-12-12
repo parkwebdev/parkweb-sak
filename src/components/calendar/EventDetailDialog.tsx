@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Event detail dialog for viewing and editing calendar events.
+ * Provides a two-mode interface: view mode for quick access and edit mode
+ * for full event modification including recurrence settings.
+ */
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'motion/react';

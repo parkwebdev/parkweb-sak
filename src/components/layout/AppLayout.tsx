@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Main application layout wrapper.
+ * Provides sidebar navigation, header, and responsive content area.
+ */
+
 import React, { useState } from 'react';
 import { Sidebar } from '@/components/Sidebar';
 import { AppHeader } from './AppHeader';

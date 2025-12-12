@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Application header with search, notifications, and user menu.
+ * Provides navigation to settings and sign out functionality.
+ */
+
 import React, { useEffect, useState } from 'react';
 import { Menu01 as Menu } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';

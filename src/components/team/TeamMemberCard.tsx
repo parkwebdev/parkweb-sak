@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Team member card for grid view display.
+ * Shows avatar, name, email, role badge, and management actions.
+ */
+
 import React from 'react';
 import { Settings01 as Settings, Edit01 as Edit, Shield01 as Shield, X } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';

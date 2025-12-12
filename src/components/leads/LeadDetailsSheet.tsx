@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Lead details sheet with editable fields and actions.
+ * Displays contact info, custom data, timeline, and related conversation link.
+ */
+
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Conversation details sheet with message history.
+ * Provides conversation management actions including takeover,
+ * return to AI, close, and reopen with real-time message updates.
+ */
+
 import { useState, useEffect } from 'react';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';

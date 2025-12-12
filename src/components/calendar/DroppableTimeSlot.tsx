@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Droppable time slot for calendar week/day views.
+ * Provides 15-minute precision drop targets for event placement.
+ */
+
 import React from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { cn } from '@/lib/utils';

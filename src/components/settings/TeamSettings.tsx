@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Team settings page with member management.
+ * Handles member invitations, role editing, and profile management.
+ */
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { RoleManagementDialog } from './RoleManagementDialog';

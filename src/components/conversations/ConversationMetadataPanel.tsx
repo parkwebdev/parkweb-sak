@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Conversation metadata panel showing contact info, session details,
+ * user journey, visited pages, priority, tags, and internal notes.
+ * Collapsible accordion sections with auto-save for notes and tags.
+ */
+
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';

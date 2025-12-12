@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Message reactions component with emoji picker.
+ * Displays existing reactions and allows adding/removing reactions.
+ */
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import * as PopoverPrimitive from "@radix-ui/react-popover";

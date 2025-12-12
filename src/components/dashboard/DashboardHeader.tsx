@@ -1,3 +1,7 @@
+/**
+ * @fileoverview Dashboard header component with title, subtitle, and export button.
+ */
+
 import { Download01 } from "@untitledui/icons";
 import { Button } from "@/components/ui/button";
 

@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Reusable data table component built on TanStack Table.
+ * Features animated rows, loading states, and empty state messages.
+ */
+
 import React from 'react';
 import {
   ColumnDef,

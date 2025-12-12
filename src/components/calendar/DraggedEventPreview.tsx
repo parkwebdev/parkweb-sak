@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Dragged event preview overlay.
+ * Shows event title and time during drag operations.
+ */
+
 import React from 'react';
 import { format } from 'date-fns';
 import type { CalendarEvent } from '@/types/calendar';

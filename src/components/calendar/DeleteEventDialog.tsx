@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Delete event confirmation dialog.
+ * Shows event title and warning about permanent deletion.
+ */
+
 import React from 'react';
 import {
   AlertDialog,

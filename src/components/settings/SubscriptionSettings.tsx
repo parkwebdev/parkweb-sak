@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Subscription and billing settings with invoice history.
+ * Displays current plan, payment method, and billing history table.
+ */
+
 import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';

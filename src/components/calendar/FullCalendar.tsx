@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Full-featured calendar component with month, week, and day views.
+ * Supports drag-and-drop event moving, event resizing, recurring events,
+ * conflict detection, and keyboard navigation.
+ */
+
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { SearchLg, ChevronDown } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';

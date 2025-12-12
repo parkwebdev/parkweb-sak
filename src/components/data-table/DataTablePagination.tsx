@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Data table pagination component with page size selector.
+ * Displays current page info, navigation buttons, and optional row selection count.
+ */
+
 import React from 'react';
 import { Table } from '@tanstack/react-table';
 import {

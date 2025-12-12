@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Row actions dropdown menu for data tables.
+ * Provides view, edit, and delete actions with customizable labels.
+ */
+
 import React from 'react';
 import { DotsVertical, Eye, Edit02, Trash01 } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
