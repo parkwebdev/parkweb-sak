@@ -92,9 +92,9 @@ export const ViewEventDialog: React.FC<ViewEventDialogProps> = ({
             <>
               <Separator />
               <div className="space-y-2.5">
-                <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                   Lead Contact
-                </h4>
+                </h3>
                 {event.lead_name && (
                   <div className="flex items-center gap-3 text-sm">
                     <User01 className="h-4 w-4 text-muted-foreground" />
@@ -132,9 +132,9 @@ export const ViewEventDialog: React.FC<ViewEventDialogProps> = ({
             <>
               <Separator />
               <div className="space-y-2.5">
-                <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                   Property Details
-                </h4>
+                </h3>
                 {event.property && (
                   <div className="flex items-center gap-3 text-sm">
                     <Home02 className="h-4 w-4 text-muted-foreground" />
@@ -156,9 +156,9 @@ export const ViewEventDialog: React.FC<ViewEventDialogProps> = ({
             <>
               <Separator />
               <div className="space-y-2">
-                <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                   Notes
-                </h4>
+                </h3>
                 <p className="text-sm text-muted-foreground">{event.notes}</p>
               </div>
             </>

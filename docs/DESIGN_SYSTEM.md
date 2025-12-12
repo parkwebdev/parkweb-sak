@@ -69,15 +69,45 @@ Geist is loaded via Google Fonts in `index.html`:
 | Semibold (600) | `font-semibold` | Headings, buttons |
 | Bold (700) | `font-bold` | Emphasis, important content |
 
+### Heading Hierarchy (WCAG AAA Compliance)
+
+Proper heading hierarchy ensures accessibility and SEO compliance. **Never skip heading levels**.
+
+| Component | Semantic Level | Visual Class | Notes |
+|-----------|---------------|--------------|-------|
+| `PageHeader` | `<h1>` | `text-base font-semibold` | One per page |
+| `CardTitle` | `<h2>` or `<h3>` | `text-2xl font-semibold` | Use `as="h2"` prop when top-level |
+| `SectionHeader` | `<h3>` | `text-xs uppercase` | Section labels within cards |
+| `AlertTitle` | `<h4>` | `font-medium` | Alert headings |
+| Dialog sections | `<h3>` | `text-xs uppercase` | Section labels inside dialogs |
+
+#### CardTitle `as` Prop
+
+CardTitle supports a dynamic `as` prop for semantic heading level:
+
+```tsx
+// In a card that's a top-level section
+<CardTitle as="h2">Dashboard Overview</CardTitle>
+
+// In a nested card or secondary context (default)
+<CardTitle as="h3">Recent Activity</CardTitle>
+<CardTitle>Widget Settings</CardTitle> {/* defaults to h3 */}
+```
+
 ### Usage Examples
 
 ```tsx
-// ✅ Correct - semantic heading styles
+// ✅ Correct - semantic heading styles with proper hierarchy
 <h1 className="text-base font-semibold">Page Title</h1>
 <h2 className="text-sm font-semibold">Section Title</h2>
+<h3 className="text-xs font-medium uppercase">Subsection</h3>
 <p className="text-sm text-muted-foreground">Description text</p>
 
-// ❌ Wrong - arbitrary sizes
+// ❌ Wrong - skipping levels (h1 → h3)
+<h1>Page</h1>
+<h3>Should be h2</h3>
+
+// ❌ Wrong - arbitrary sizes that don't match semantics
 <h1 className="text-2xl font-bold">Too large</h1>
 ```
 
@@ -301,12 +331,13 @@ Standard hover pattern for interactive cards:
 
 ### Focus Rings
 
-```tsx
-// Default focus ring
-className="focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+Focus states use subtle 1px rings for refined accessibility:
 
-// Alternative for dark backgrounds
-className="focus-visible:ring-2 focus-visible:ring-ring"
+```tsx
+// Default focus ring - subtle and refined
+className="focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/70"
+
+// All form components use this pattern for consistent, subtle focus states
 ```
 
 ### Transitions
