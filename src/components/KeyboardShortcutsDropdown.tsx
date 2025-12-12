@@ -1,18 +1,34 @@
+/**
+ * KeyboardShortcutsDropdown Component
+ * 
+ * Submenu component displaying available keyboard shortcuts.
+ * Used within the user account dropdown to show navigation
+ * and action shortcuts grouped by category.
+ * 
+ * @component
+ */
+
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger } from '@/components/ui/dropdown-menu';
 import { Keyboard01 } from '@untitledui/icons';
 
+/** Keyboard shortcut definition */
 interface KeyboardShortcut {
+  /** The key to press */
   key: string;
+  /** Whether Ctrl/Cmd is required */
   ctrlKey?: boolean;
+  /** Whether Alt is required */
   altKey?: boolean;
+  /** Whether Shift is required */
   shiftKey?: boolean;
+  /** Human-readable description */
   description: string;
 }
 
-// Define shortcuts statically since they're consistent across the app
+/** Available keyboard shortcuts */
 const shortcuts: KeyboardShortcut[] = [
   { key: 'k', ctrlKey: true, description: 'Global Search' },
   { key: 'd', altKey: true, description: 'Go to Dashboard' },

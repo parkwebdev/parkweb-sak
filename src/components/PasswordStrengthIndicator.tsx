@@ -1,10 +1,24 @@
+/**
+ * PasswordStrengthIndicator Component
+ * 
+ * Visual feedback component for password strength during signup/password change.
+ * Displays a progress bar, strength score, and detailed requirements checklist.
+ * 
+ * @component
+ * @example
+ * <PasswordStrengthIndicator password={passwordValue} />
+ */
+
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { validatePasswordStrength } from '@/utils/input-validation';
 import { CheckCircle, XCircle, AlertCircle } from '@untitledui/icons';
 
+/** Props for the PasswordStrengthIndicator component */
 interface PasswordStrengthIndicatorProps {
+  /** The password to evaluate */
   password: string;
+  /** Additional CSS classes */
   className?: string;
 }
 

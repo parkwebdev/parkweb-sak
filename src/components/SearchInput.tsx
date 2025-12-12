@@ -1,3 +1,15 @@
+/**
+ * SearchInput Component
+ * 
+ * Global search dialog trigger with Command+K keyboard shortcut support.
+ * Displays a search input that opens a command palette for searching
+ * across agents, conversations, leads, articles, and navigation.
+ * 
+ * @component
+ * @example
+ * <SearchInput placeholder="Search everything..." />
+ */
+
 import React, { useState } from 'react';
 import { SearchSm as Search, User01 as User, File05 as FileText, Mail01 as Mail, Bell01 as Bell, Settings01 as Settings, ChevronRight, BookOpen01, Announcement01, Link01, Tool02, Database01 } from '@untitledui/icons';
 import {
@@ -11,20 +23,33 @@ import {
 import { useGlobalSearch } from '@/hooks/useGlobalSearch';
 import { useSearchData } from '@/hooks/useSearchData';
 
+/** Search result item structure */
 interface SearchResult {
+  /** Unique identifier for the result */
   id: string;
+  /** Display title */
   title: string;
+  /** Optional description text */
   description?: string;
+  /** Category for grouping results */
   category?: string;
+  /** Action to execute when selected */
   action?: () => void;
 }
 
+/** Props for the SearchInput component */
 interface SearchInputProps {
+  /** Placeholder text for the search input */
   placeholder?: string;
+  /** Controlled search value */
   value?: string;
+  /** Change handler for controlled mode */
   onChange?: (value: string) => void;
+  /** Additional CSS classes */
   className?: string;
+  /** External search results to display */
   searchResults?: SearchResult[];
+  /** Handler for result selection */
   onSelect?: (result: SearchResult) => void;
 }
 
