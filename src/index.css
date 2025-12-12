@@ -12,7 +12,16 @@
     display: none;  /* Chrome, Safari, Opera */
   }
 
+  /* WCAG 2.2 - Focus Not Obscured (2.4.11) - Ensure focused elements scroll into view */
+  *:focus-visible {
+    scroll-margin-top: 80px;
+    scroll-margin-bottom: 40px;
+  }
+
   :root {
+    /* WCAG 2.2 Focus Ring (2.4.13) - 2px minimum outline with 3:1 contrast */
+    --ring-width: 2px;
+    --ring-offset: 2px;
     --background: 0 0% 100%;
     --foreground: 0 0% 3.9%;
     --card: 0 0% 100%;

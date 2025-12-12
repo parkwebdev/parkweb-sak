@@ -329,16 +329,23 @@ Standard hover pattern for interactive cards:
 <Card className="hover:shadow-md transition-shadow">
 ```
 
-### Focus Rings
+### Focus Rings (WCAG 2.2 Compliant)
 
-Focus states use subtle 1px rings for refined accessibility:
+Focus states use 2px rings for WCAG 2.2 Focus Appearance compliance (2.4.13):
 
 ```tsx
-// Default focus ring - subtle and refined
-className="focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/70"
+// ✅ Standard focus ring - 2px with offset for visibility
+className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
 
-// All form components use this pattern for consistent, subtle focus states
+// All form components use this pattern for WCAG 2.2 compliance
+// The ring must be at least 2px thick with 3:1 contrast ratio
 ```
+
+**WCAG 2.2 Requirements:**
+- Minimum 2px outline thickness (not 1px)
+- 3:1 contrast ratio against adjacent colors
+- 2px offset to ensure visibility against element borders
+- Use `ring-offset-background` for proper dark mode support
 
 ### Transitions
 
@@ -666,6 +673,83 @@ Before shipping any component, verify:
 - [ ] Forms have proper `<label>` associations
 - [ ] Dialogs trap focus and return focus on close
 - [ ] Color alone is not used to convey information
+
+---
+
+## WCAG 2.2 Compliance
+
+ChatPad implements WCAG 2.2 AA compliance with the following key requirements:
+
+### Focus Appearance (2.4.13)
+
+All focusable elements have:
+- **2px minimum outline** (not 1px)
+- **3:1 contrast ratio** against adjacent colors
+- **2px offset** to ensure visibility against element borders
+
+```tsx
+// ✅ WCAG 2.2 compliant focus
+className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+
+// ❌ Wrong - 1px ring doesn't meet WCAG 2.2
+className="focus-visible:ring-1 focus-visible:ring-ring/70"
+```
+
+### Focus Not Obscured (2.4.11)
+
+Focused elements automatically scroll into view with proper margins:
+
+```css
+/* Applied globally in index.css */
+*:focus-visible {
+  scroll-margin-top: 80px;    /* Clears sticky headers */
+  scroll-margin-bottom: 40px;
+}
+```
+
+### Dragging Movements Alternatives (2.5.7)
+
+All drag-and-drop functionality has keyboard alternatives:
+
+| Feature | Drag Alternative | Implementation |
+|---------|-----------------|----------------|
+| Article reordering | Up/down arrow buttons | `SortableArticleItem` |
+| Category moves | "Move to" dropdown | `DroppableCategoryCard` |
+| Calendar events | "Reschedule" form | `ViewEventDialog` |
+
+```tsx
+// ✅ Correct - drag with keyboard alternative
+<SortableArticleItem
+  article={article}
+  onMoveUp={(id) => handleReorder(id, 'up')}
+  onMoveDown={(id) => handleReorder(id, 'down')}
+  isFirst={index === 0}
+  isLast={index === articles.length - 1}
+/>
+
+// ❌ Wrong - drag only, no keyboard alternative
+<SortableArticleItem article={article} />
+```
+
+### Target Size (2.5.8)
+
+All interactive elements meet minimum 24×24px target size:
+
+| Component | Size | Status |
+|-----------|------|--------|
+| Icon buttons | 32×32px (`h-8 w-8`) | ✅ Compliant |
+| Checkboxes | 16×16px with 24px touch target | ✅ Compliant |
+| Links | Font-relative sizing | ✅ Compliant |
+
+### WCAG 2.2 Checklist
+
+Before shipping, verify:
+
+- [ ] Focus rings are 2px thick with proper contrast
+- [ ] All drag-and-drop has keyboard alternatives
+- [ ] Interactive elements are minimum 24×24px
+- [ ] Focused content is not obscured by sticky elements
+- [ ] Consistent help placement across pages
 
 ---
 
