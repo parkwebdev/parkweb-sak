@@ -1,3 +1,16 @@
+/**
+ * Checkbox Component
+ * 
+ * An animated checkbox with smooth check mark animation.
+ * Built on Radix UI Checkbox primitive with Framer Motion.
+ * 
+ * @module components/ui/checkbox
+ * 
+ * @example
+ * ```tsx
+ * <Checkbox checked={isChecked} onCheckedChange={setIsChecked} />
+ * ```
+ */
 "use client"
 
 import React from "react"

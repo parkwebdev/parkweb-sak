@@ -1,3 +1,19 @@
+/**
+ * Alert Component
+ * 
+ * Displays important messages or notifications to users with
+ * variant-based styling for different message types.
+ * 
+ * @module components/ui/alert
+ * 
+ * @example
+ * ```tsx
+ * <Alert variant="destructive">
+ *   <AlertTitle>Error</AlertTitle>
+ *   <AlertDescription>Something went wrong.</AlertDescription>
+ * </Alert>
+ * ```
+ */
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 

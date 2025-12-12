@@ -1,3 +1,21 @@
+/**
+ * Page Header Component
+ * 
+ * A consistent header for page titles with optional description,
+ * mobile menu toggle, and action buttons.
+ * 
+ * @module components/ui/page-header
+ * 
+ * @example
+ * ```tsx
+ * <PageHeader
+ *   title="Dashboard"
+ *   description="Overview of your account"
+ * >
+ *   <Button>Add New</Button>
+ * </PageHeader>
+ * ```
+ */
 import { ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { Menu01 as Menu } from '@untitledui/icons';

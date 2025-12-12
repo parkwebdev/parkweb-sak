@@ -1,3 +1,23 @@
+/**
+ * Loading State Components
+ * 
+ * A set of components for displaying loading states with animated
+ * spinners, skeletons, and content transitions.
+ * 
+ * @module components/ui/loading-state
+ * 
+ * @example
+ * ```tsx
+ * // Basic loading state
+ * <LoadingState text="Loading..." />
+ * 
+ * // Skeleton list
+ * <SkeletonList count={5} />
+ * 
+ * // Content transition wrapper
+ * <ContentTransition isLoading={loading}>{content}</ContentTransition>
+ * ```
+ */
 import * as React from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { cn } from "@/lib/utils";

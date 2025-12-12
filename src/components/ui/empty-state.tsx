@@ -1,3 +1,21 @@
+/**
+ * Empty State Component
+ * 
+ * A placeholder UI for empty data states with icon, title,
+ * description, and optional action button.
+ * 
+ * @module components/ui/empty-state
+ * 
+ * @example
+ * ```tsx
+ * <EmptyState
+ *   icon={<FolderIcon />}
+ *   title="No items found"
+ *   description="Get started by creating your first item."
+ *   action={<Button>Create Item</Button>}
+ * />
+ * ```
+ */
 import * as React from "react";
 import { cn } from "@/lib/utils";
 

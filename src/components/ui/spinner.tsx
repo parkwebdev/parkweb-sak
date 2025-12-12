@@ -1,3 +1,16 @@
+/**
+ * Spinner Component
+ * 
+ * An animated loading spinner with size variants.
+ * Uses SVG with CSS animation for smooth rotation.
+ * 
+ * @module components/ui/spinner
+ * 
+ * @example
+ * ```tsx
+ * <Spinner size="lg" />
+ * ```
+ */
 import { cn } from "@/lib/utils"
 
 interface SpinnerProps {

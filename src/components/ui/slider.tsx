@@ -1,3 +1,16 @@
+/**
+ * Slider Component
+ * 
+ * An input for selecting a value from a range with gradient
+ * track visualization. Built on Radix UI Slider primitive.
+ * 
+ * @module components/ui/slider
+ * 
+ * @example
+ * ```tsx
+ * <Slider value={[50]} min={0} max={100} step={1} onValueChange={setValue} />
+ * ```
+ */
 import * as React from "react"
 import * as SliderPrimitive from "@radix-ui/react-slider"
 

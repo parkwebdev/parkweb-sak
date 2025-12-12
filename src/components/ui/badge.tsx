@@ -1,3 +1,17 @@
+/**
+ * Badge Component
+ * 
+ * A small visual indicator for labels, statuses, or counts.
+ * Supports multiple variants for different use cases.
+ * 
+ * @module components/ui/badge
+ * 
+ * @example
+ * ```tsx
+ * <Badge variant="secondary">New</Badge>
+ * <Badge variant="destructive">Error</Badge>
+ * ```
+ */
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 

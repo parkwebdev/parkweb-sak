@@ -1,3 +1,19 @@
+/**
+ * Avatar Component
+ * 
+ * Displays a user avatar with image support and fallback initials.
+ * Built on Radix UI Avatar primitive with automatic image loading states.
+ * 
+ * @module components/ui/avatar
+ * 
+ * @example
+ * ```tsx
+ * <Avatar>
+ *   <AvatarImage src="/avatars/user.jpg" alt="User" />
+ *   <AvatarFallback>JD</AvatarFallback>
+ * </Avatar>
+ * ```
+ */
 import * as React from "react"
 import * as AvatarPrimitive from "@radix-ui/react-avatar"
 

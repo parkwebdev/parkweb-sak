@@ -1,3 +1,28 @@
+/**
+ * Alert Dialog Component
+ * 
+ * A modal dialog for critical user confirmations with animated overlay
+ * and content transitions. Built on Radix UI Alert Dialog primitive.
+ * 
+ * @module components/ui/alert-dialog
+ * 
+ * @example
+ * ```tsx
+ * <AlertDialog>
+ *   <AlertDialogTrigger>Delete Item</AlertDialogTrigger>
+ *   <AlertDialogContent>
+ *     <AlertDialogHeader>
+ *       <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+ *       <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+ *     </AlertDialogHeader>
+ *     <AlertDialogFooter>
+ *       <AlertDialogCancel>Cancel</AlertDialogCancel>
+ *       <AlertDialogAction>Continue</AlertDialogAction>
+ *     </AlertDialogFooter>
+ *   </AlertDialogContent>
+ * </AlertDialog>
+ * ```
+ */
 import * as React from "react"
 import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog"
 import { motion, AnimatePresence } from "motion/react"

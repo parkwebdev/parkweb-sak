@@ -1,3 +1,16 @@
+/**
+ * Color Picker Component
+ * 
+ * A comprehensive color picker with selection area, hue slider,
+ * alpha slider, multiple color modes (HEX/RGB/HSL), and eyedropper.
+ * 
+ * @module components/ui/color-picker
+ * 
+ * @example
+ * ```tsx
+ * <ColorPicker value="#3B82F6" onChange={setColor} showAlpha />
+ * ```
+ */
 "use client";
 
 import * as React from "react";

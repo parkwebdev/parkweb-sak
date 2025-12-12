@@ -1,3 +1,19 @@
+/**
+ * Popover Component
+ * 
+ * A floating content container that appears relative to a trigger.
+ * Built on Radix UI Popover with positioning and animation support.
+ * 
+ * @module components/ui/popover
+ * 
+ * @example
+ * ```tsx
+ * <Popover>
+ *   <PopoverTrigger>Open</PopoverTrigger>
+ *   <PopoverContent>Popover content</PopoverContent>
+ * </Popover>
+ * ```
+ */
 import * as React from "react"
 import * as PopoverPrimitive from "@radix-ui/react-popover"
 

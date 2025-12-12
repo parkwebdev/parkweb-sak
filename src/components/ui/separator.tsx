@@ -1,3 +1,17 @@
+/**
+ * Separator Component
+ * 
+ * A visual divider for separating content sections.
+ * Supports horizontal and vertical orientations.
+ * 
+ * @module components/ui/separator
+ * 
+ * @example
+ * ```tsx
+ * <Separator />
+ * <Separator orientation="vertical" />
+ * ```
+ */
 import * as React from "react"
 import * as SeparatorPrimitive from "@radix-ui/react-separator"
 

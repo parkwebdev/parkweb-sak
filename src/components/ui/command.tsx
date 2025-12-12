@@ -1,3 +1,23 @@
+/**
+ * Command Component
+ * 
+ * A command palette / command menu component using cmdk library
+ * for keyboard-driven navigation and search.
+ * 
+ * @module components/ui/command
+ * 
+ * @example
+ * ```tsx
+ * <CommandDialog open={open} onOpenChange={setOpen}>
+ *   <CommandInput placeholder="Search..." />
+ *   <CommandList>
+ *     <CommandGroup heading="Actions">
+ *       <CommandItem>Action 1</CommandItem>
+ *     </CommandGroup>
+ *   </CommandList>
+ * </CommandDialog>
+ * ```
+ */
 import * as React from "react"
 import { type DialogProps } from "@radix-ui/react-dialog"
 import { Command as CommandPrimitive } from "cmdk"

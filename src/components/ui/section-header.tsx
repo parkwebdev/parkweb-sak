@@ -1,3 +1,16 @@
+/**
+ * Section Header Component
+ * 
+ * A small uppercase header for labeling content sections
+ * within pages or cards.
+ * 
+ * @module components/ui/section-header
+ * 
+ * @example
+ * ```tsx
+ * <SectionHeader>Account Settings</SectionHeader>
+ * ```
+ */
 import { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 

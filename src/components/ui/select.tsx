@@ -1,3 +1,24 @@
+/**
+ * Select Component
+ * 
+ * A dropdown selection component with searchable options,
+ * groups, and custom styling. Built on Radix UI Select primitive.
+ * 
+ * @module components/ui/select
+ * 
+ * @example
+ * ```tsx
+ * <Select value={value} onValueChange={setValue}>
+ *   <SelectTrigger>
+ *     <SelectValue placeholder="Select option" />
+ *   </SelectTrigger>
+ *   <SelectContent>
+ *     <SelectItem value="option1">Option 1</SelectItem>
+ *     <SelectItem value="option2">Option 2</SelectItem>
+ *   </SelectContent>
+ * </Select>
+ * ```
+ */
 import * as React from "react"
 import * as SelectPrimitive from "@radix-ui/react-select"
 import { ChevronDown, ChevronUp } from "@untitledui/icons"
