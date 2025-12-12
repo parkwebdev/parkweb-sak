@@ -321,6 +321,7 @@ const Auth = () => {
                   onChange={(e) => setDisplayName(e.target.value)}
                   className="h-10"
                   disabled={isLoading}
+                  autoComplete="name"
                 />
               </div>
               <div className="space-y-2">
@@ -333,6 +334,7 @@ const Auth = () => {
                   onChange={(e) => setEmail(e.target.value)}
                   className="h-10"
                   disabled={isLoading}
+                  autoComplete="email"
                 />
               </div>
               <Button onClick={handleNextStep} size="lg" className="w-full" disabled={isLoading}>
@@ -416,6 +418,7 @@ const Auth = () => {
                     onChange={(e) => setPassword(e.target.value)}
                     className="h-10 pr-10"
                     disabled={isLoading}
+                    autoComplete="new-password"
                   />
                   <button
                     type="button"
@@ -437,6 +440,7 @@ const Auth = () => {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   className="h-10"
                   disabled={isLoading}
+                  autoComplete="new-password"
                 />
               </div>
               <div className="flex gap-3">
@@ -612,6 +616,7 @@ const Auth = () => {
                         onChange={(e) => setEmail(e.target.value)}
                         disabled={isLoading}
                         className="h-10"
+                        autoComplete="email"
                       />
                     </div>
 
@@ -658,6 +663,7 @@ const Auth = () => {
                         onChange={(e) => setEmail(e.target.value)}
                         disabled={isLoading}
                         className="h-10"
+                        autoComplete="email"
                       />
                     </div>
                     
@@ -672,6 +678,7 @@ const Auth = () => {
                           onChange={(e) => setPassword(e.target.value)}
                           className="h-10 pr-10"
                           disabled={isLoading}
+                          autoComplete="current-password"
                         />
                         <button
                           type="button"

@@ -61,6 +61,9 @@ export function LoadingState({
       initial="hidden"
       animate="visible"
       exit="exit"
+      role="status"
+      aria-live="polite"
+      aria-label={text || "Loading"}
     >
       <motion.div
         animate={prefersReducedMotion ? {} : { 
@@ -72,7 +75,7 @@ export function LoadingState({
           ease: "easeInOut",
         }}
       >
-        <Spinner size={size} />
+        <Spinner size={size} aria-hidden="true" />
       </motion.div>
       {text && (
         <motion.p 

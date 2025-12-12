@@ -147,12 +147,12 @@ export const ContactForm = ({
             className="absolute -left-[9999px] h-0 w-0 opacity-0 pointer-events-none"
             aria-hidden="true"
           />
-          <Input name="firstName" placeholder="First name" className="text-sm" required />
-          {formErrors.firstName && <p className="text-xs text-destructive">{formErrors.firstName}</p>}
-          <Input name="lastName" placeholder="Last name" className="text-sm" required />
-          {formErrors.lastName && <p className="text-xs text-destructive">{formErrors.lastName}</p>}
-          <Input name="email" type="email" placeholder="Email" className="text-sm" required />
-          {formErrors.email && <p className="text-xs text-destructive">{formErrors.email}</p>}
+          <Input name="firstName" placeholder="First name" className="text-sm" required autoComplete="given-name" />
+          {formErrors.firstName && <p className="text-xs text-destructive" role="alert">{formErrors.firstName}</p>}
+          <Input name="lastName" placeholder="Last name" className="text-sm" required autoComplete="family-name" />
+          {formErrors.lastName && <p className="text-xs text-destructive" role="alert">{formErrors.lastName}</p>}
+          <Input name="email" type="email" placeholder="Email" className="text-sm" required autoComplete="email" />
+          {formErrors.email && <p className="text-xs text-destructive" role="alert">{formErrors.email}</p>}
           
           {customFields.map(field => (
             <div key={field.id}>
