@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Column visibility options dropdown for data tables.
+ * Allows users to toggle column visibility with checkboxes.
+ */
+
 import React from 'react';
 import { Table } from '@tanstack/react-table';
 import { Settings02 } from '@untitledui/icons';

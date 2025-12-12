@@ -1,3 +1,7 @@
+/**
+ * @fileoverview Usage settings page displaying plan usage limits.
+ */
+
 import { PlanLimitsCard } from './PlanLimitsCard';
 import { AnimatedList } from '@/components/ui/animated-list';
 import { AnimatedItem } from '@/components/ui/animated-item';

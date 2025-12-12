@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Recent activity feed for dashboard.
+ * Shows latest conversations, leads, and agents with timestamps and navigation.
+ */
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';

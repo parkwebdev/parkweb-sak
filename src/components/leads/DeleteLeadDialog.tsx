@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Delete lead confirmation dialog with conversation handling.
+ * Supports bulk deletion with type confirmation and conversation cleanup options.
+ */
+
 import { useState } from 'react';
 import {
   AlertDialog,

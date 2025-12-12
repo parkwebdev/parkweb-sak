@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Dashboard tab navigation component with optional count badges.
+ * Provides horizontal scrollable tabs for mobile and desktop views.
+ */
+
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 

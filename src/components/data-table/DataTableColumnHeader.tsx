@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Sortable column header component for data tables.
+ * Shows sort direction indicators and handles sort toggle.
+ */
+
 import React from 'react';
 import { Column } from '@tanstack/react-table';
 import { cn } from '@/lib/utils';

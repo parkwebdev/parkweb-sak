@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Data table toolbar with search input.
+ * Supports column-specific filtering or global search with clear button.
+ */
+
 import React from 'react';
 import { Table } from '@tanstack/react-table';
 import { SearchMd, XClose } from '@untitledui/icons';

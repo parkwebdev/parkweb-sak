@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Droppable day cell for calendar drag-and-drop.
+ * Uses @dnd-kit to enable events to be dropped onto calendar days.
+ */
+
 import React from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { cn } from '@/lib/utils';

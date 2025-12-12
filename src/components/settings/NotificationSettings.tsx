@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Notification preferences settings with browser permission handling.
+ * Manages email, browser, and sound notification toggles with auto-save.
+ */
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';

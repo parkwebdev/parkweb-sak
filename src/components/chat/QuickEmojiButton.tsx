@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Quick emoji picker button component.
+ * Provides a popover with frequently used emojis for quick selection.
+ */
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';

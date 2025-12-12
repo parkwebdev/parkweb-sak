@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Settings page layout with sidebar navigation.
+ * Provides responsive tabs for mobile and sidebar for desktop.
+ */
+
 import React, { useState } from 'react';
 import { Menu01 as Menu } from '@untitledui/icons';
 import { cn } from '@/lib/utils';

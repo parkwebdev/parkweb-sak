@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Team members data table with role and profile management.
+ * Uses TanStack Table with custom column definitions.
+ */
+
 import React from 'react';
 import {
   useReactTable,

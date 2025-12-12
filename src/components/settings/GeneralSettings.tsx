@@ -1,3 +1,8 @@
+/**
+ * @fileoverview General application settings with theme and preferences.
+ * Auto-saves changes with debouncing and visual saved indicators.
+ */
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';

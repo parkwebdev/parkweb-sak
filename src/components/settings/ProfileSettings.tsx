@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Profile settings with avatar upload and password management.
+ * Features auto-save for profile changes and password strength indicator.
+ */
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Camera01 as Camera, User01 as User } from '@untitledui/icons';
 import { Input } from '@/components/ui/input';

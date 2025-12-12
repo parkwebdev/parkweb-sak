@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Agent status overview card for dashboard.
+ * Displays user's agents with status badges and active conversation counts.
+ */
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';

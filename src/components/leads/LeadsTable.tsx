@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Leads data table with sorting, selection, and pagination.
+ * Integrates with TanStack Table for row selection and status updates.
+ */
+
 import { useMemo } from 'react';
 import {
   useReactTable,

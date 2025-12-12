@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Conversation card component for conversation list display.
+ * Shows agent name, status badge, lead info, and timestamps.
+ */
+
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';

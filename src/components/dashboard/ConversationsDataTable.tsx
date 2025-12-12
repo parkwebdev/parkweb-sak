@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Conversations data table with filtering, sorting, and bulk actions.
+ * Features tabbed navigation, search, date/status/agent filters, row selection,
+ * and delete confirmations with persistent sort state.
+ */
+
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {

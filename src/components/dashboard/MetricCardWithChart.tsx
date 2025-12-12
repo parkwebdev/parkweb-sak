@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Metric card with sparkline chart and trend indicator.
+ * Displays a KPI value with percentage change and animated area chart.
+ */
+
 import { useId } from "react";
 import { TrendUp01, TrendDown01, DotsVertical } from "@untitledui/icons";
 import { Area, AreaChart, ResponsiveContainer } from "recharts";

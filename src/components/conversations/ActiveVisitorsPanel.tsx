@@ -1,3 +1,9 @@
+/**
+ * @fileoverview Active visitors panel showing real-time widget visitors.
+ * Uses Supabase Realtime Presence to track visitors across agents,
+ * displaying current page, lead info, and session duration.
+ */
+
 import React, { useState, useEffect } from 'react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';

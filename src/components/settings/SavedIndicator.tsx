@@ -1,3 +1,8 @@
+/**
+ * @fileoverview Animated saved indicator with auto-hide functionality.
+ * Displays a green checkmark with fade animation.
+ */
+
 import { CheckCircle } from '@untitledui/icons';
 import { cn } from '@/lib/utils';
 import { useEffect, useState } from 'react';
