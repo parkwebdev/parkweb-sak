@@ -1,6 +1,12 @@
 # ChatPad System Architecture
 
+> **Last Updated**: December 2024  
+> **Status**: Active  
+> **Related**: [AI Architecture](./AI_ARCHITECTURE.md), [Database Schema](./DATABASE_SCHEMA.md), [Security](./SECURITY.md)
+
 Detailed system architecture documentation for the ChatPad platform.
+
+---
 
 ## Table of Contents
 
@@ -9,8 +15,9 @@ Detailed system architecture documentation for the ChatPad platform.
 3. [AI Integration](#ai-integration)
 4. [Deployment Methods](#deployment-methods)
 5. [Data Flow](#data-flow)
-6. [Plan Tiers](#plan-tiers)
-7. [Monitoring & Analytics](#monitoring--analytics)
+6. [Monitoring & Analytics](#monitoring--analytics)
+7. [Integration Points](#integration-points)
+8. [Scaling Considerations](#scaling-considerations)
 
 ---
 
@@ -174,42 +181,33 @@ super_admin
 2. **Extract**: Content extracted from source
 3. **Chunk**: Content split into chunks
 4. **Embed**: Qwen3 generates vector embeddings (via OpenRouter)
-5. **Store**: Vectors stored in `knowledge_sources`
+5. **Store**: Vectors stored in `knowledge_chunks`
 
 ### Vector Search
 
 ```sql
-CREATE FUNCTION search_knowledge_sources(
+CREATE FUNCTION search_knowledge_chunks(
   p_agent_id uuid,
-  p_query_embedding vector,
-  p_match_threshold float DEFAULT 0.7,
+  p_query_embedding vector(1024),
+  p_match_threshold float DEFAULT 0.4,
   p_match_count int DEFAULT 5
 )
-RETURNS TABLE(id uuid, source text, content text, type text, similarity float)
-AS $$
-  SELECT
-    ks.id, ks.source, ks.content, ks.type::text,
-    1 - (ks.embedding <=> p_query_embedding) as similarity
-  FROM knowledge_sources ks
-  WHERE ks.agent_id = p_agent_id
-    AND ks.status = 'ready'
-    AND 1 - (ks.embedding <=> p_query_embedding) > p_match_threshold
-  ORDER BY ks.embedding <=> p_query_embedding
-  LIMIT p_match_count;
-$$;
+RETURNS TABLE(...)
 ```
 
 ### Model Selection
 
-Available models via Lovable AI Gateway:
+Available models via OpenRouter:
 
 | Model | Use Case | Cost |
 |-------|----------|------|
 | `google/gemini-2.5-flash` | Fast, economical (default) | $ |
+| `google/gemini-2.5-flash-lite` | Simple queries | $ |
 | `google/gemini-2.5-pro` | Complex reasoning | $$ |
 | `openai/gpt-4o` | High quality | $$$ |
-| `openai/gpt-4o-mini` | Fast OpenAI option | $$ |
-| `anthropic/claude-3.5-sonnet` | Nuanced responses | $$$ |
+| `anthropic/claude-sonnet-4` | Nuanced responses | $$$ |
+
+See [AI Architecture](./AI_ARCHITECTURE.md) for complete details.
 
 ---
 
@@ -240,7 +238,7 @@ Primary deployment method - JavaScript snippet for websites:
 Direct link to full-page chat interface:
 
 ```
-https://app.chatpad.com/chat/[agent-id]
+https://app.chatpad.com/widget/[agent-id]
 ```
 
 **Use Cases:**
@@ -253,7 +251,6 @@ https://app.chatpad.com/chat/[agent-id]
 REST API for custom integrations:
 
 ```typescript
-// Example: Send message
 const response = await fetch(`${SUPABASE_URL}/functions/v1/widget-chat`, {
   method: 'POST',
   headers: {
@@ -341,49 +338,6 @@ const response = await fetch(`${SUPABASE_URL}/functions/v1/widget-chat`, {
 
 ---
 
-## Plan Tiers
-
-### Basic Plan
-
-| Feature | Limit |
-|---------|-------|
-| Agents | 1 |
-| Conversations/month | 100 |
-| Knowledge sources | 5 |
-| Team members | 1 |
-| File storage | 100MB |
-
-### Advanced Plan
-
-| Feature | Limit |
-|---------|-------|
-| Agents | 5 |
-| Conversations/month | 1,000 |
-| Knowledge sources | 25 |
-| Team members | 5 |
-| File storage | 1GB |
-| Custom branding | ✓ |
-| Webhooks | ✓ |
-| API access | ✓ |
-
-### Pro Plan
-
-| Feature | Limit |
-|---------|-------|
-| Agents | Unlimited |
-| Conversations/month | 10,000 |
-| Knowledge sources | 100 |
-| Team members | Unlimited |
-| File storage | 10GB |
-| Custom branding | ✓ |
-| Webhooks | ✓ |
-| API access | ✓ |
-| Custom domains | ✓ |
-| Priority support | ✓ |
-| White-label | ✓ |
-
----
-
 ## Monitoring & Analytics
 
 ### Platform Metrics
@@ -403,7 +357,7 @@ Available in Analytics dashboard:
 - **Messages**: Total, per conversation average
 - **Leads**: Capture rate, conversion rate
 - **Response Time**: AI response latency
-- **User Satisfaction**: Based on conversation outcomes
+- **User Satisfaction**: Star ratings from conversations
 
 ### Scheduled Reports
 
@@ -447,16 +401,16 @@ Subscribe to events:
 | `/widget-chat` | POST | Send/receive messages |
 | `/get-widget-config` | POST | Fetch agent config |
 | `/create-widget-lead` | POST | Create lead |
-| `/validate-api-key` | POST | Validate API key |
+| `/send-human-message` | POST | Send human response |
+| `/mark-messages-read` | POST | Mark messages as read |
 
 ### External Services
 
 | Service | Purpose |
 |---------|---------|
-| **Lovable AI Gateway** | AI model access |
-| **OpenAI** | Embeddings generation |
+| **OpenRouter** | AI model access (unified API) |
 | **Resend** | Email delivery |
-| **Stripe** | Billing and subscriptions |
+| **Stripe** | Billing and subscriptions (planned) |
 
 ---
 
@@ -478,7 +432,7 @@ Subscribe to events:
 
 - Separate build (~50KB gzipped)
 - Lazy-loaded components
-- CSS-only animations
+- CSS-only animations where possible
 - Preload on hover
 
 ### Real-time
@@ -489,73 +443,10 @@ Subscribe to events:
 
 ---
 
-## Multi-Account Integration Architecture
-
-ChatPad supports multi-account integrations, enabling users to connect multiple accounts per integration type (e.g., multiple Facebook pages, Gmail accounts, Google Calendars) per agent.
-
-### Use Case Example
-
-A Mobile Home Park Operator with 20 communities can:
-- Connect 20 Facebook pages (one per community)
-- Connect 20 email accounts
-- Connect 20 calendar accounts
-- AI agent routes messages/bookings to the correct account based on context
-
-### Architecture Overview
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                      Connected Accounts                          │
-├─────────────────┬─────────────────┬─────────────────────────────┤
-│   Social        │   Email         │   Calendar                   │
-│   - Facebook    │   - Gmail       │   - Google Calendar          │
-│   - Instagram   │   - Outlook     │   - Outlook Calendar         │
-│   - X (Twitter) │   - SMTP        │   - Calendly                 │
-└────────┬────────┴────────┬────────┴──────────┬──────────────────┘
-         │                 │                   │
-         ▼                 ▼                   ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                   Routing Intelligence                           │
-│   • Location-based routing                                       │
-│   • Context-aware routing                                        │
-│   • Pre-chat location selection                                  │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-### Planned Database Tables
-
-```sql
--- Locations for multi-site businesses
-CREATE TABLE locations (
-  id uuid PRIMARY KEY,
-  user_id uuid NOT NULL,
-  name text NOT NULL,
-  address text,
-  metadata jsonb DEFAULT '{}'
-);
-
--- Connected integration accounts
-CREATE TABLE connected_accounts (
-  id uuid PRIMARY KEY,
-  user_id uuid NOT NULL,
-  agent_id uuid,
-  location_id uuid,
-  integration_type text NOT NULL, -- 'facebook', 'gmail', etc.
-  account_identifier text NOT NULL,
-  credentials jsonb, -- Encrypted OAuth tokens
-  metadata jsonb DEFAULT '{}'
-);
-```
-
-For detailed implementation plans, see [Multi-Account Integrations](./MULTI_ACCOUNT_INTEGRATIONS.md).
-
----
-
 ## Related Documentation
 
-- [Database Schema](./DATABASE_SCHEMA.md) - Complete table reference
+- [AI Architecture](./AI_ARCHITECTURE.md) - RAG and model details
+- [Database Schema](./DATABASE_SCHEMA.md) - Table reference
 - [Edge Functions](./EDGE_FUNCTIONS.md) - API documentation
+- [Security](./SECURITY.md) - Security practices
 - [Widget Architecture](./WIDGET_ARCHITECTURE.md) - Widget details
-- [Security](./SECURITY.md) - Security implementation
-- [Application Overview](./APPLICATION_OVERVIEW.md) - Development guide
-- [Multi-Account Integrations](./MULTI_ACCOUNT_INTEGRATIONS.md) - Integration architecture

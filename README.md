@@ -1,169 +1,212 @@
 # ChatPad - AI Agent Platform
 
-A comprehensive multi-tenant AI agent platform that enables organizations to build, deploy, and manage conversational AI agents with RAG (Retrieval Augmented Generation) capabilities.
+A comprehensive multi-tenant AI agent platform for building, deploying, and managing conversational AI agents with RAG (Retrieval Augmented Generation) capabilities.
 
-## Project Info
-
-**URL**: https://lovable.dev/projects/28cc9f18-cb6b-496b-b8a6-8c8f349e3c54
+---
 
 ## Features
 
-- 🤖 **AI Agents** - Create and configure AI agents with custom system prompts
-- 💬 **Conversations** - Manage agent conversations with human takeover
-- 📚 **Knowledge Base** - RAG-powered knowledge management
-- 👥 **Leads** - Capture and track leads from conversations
-- 📊 **Analytics** - Monitor agent performance and usage
-- 🏢 **Multi-Tenancy** - Organization-based multi-tenant architecture
-- 🎨 **White Label** - Custom branding and domain support
-- 🔌 **Integrations** - Webhooks and API access
-- 🚀 **Deployment** - Widget, hosted page, and API deployment options
+- **AI Agents** - Create and configure agents with custom system prompts and model selection
+- **Knowledge Base** - RAG-powered responses using PDFs, URLs, sitemaps, and more
+- **Conversations** - Real-time messaging with human takeover capability
+- **Leads** - Capture and manage leads from widget conversations
+- **Analytics** - Track performance metrics with scheduled reports
+- **Team Collaboration** - Invite team members with role-based access
+- **Embeddable Widget** - Deploy chat widget on any website
+- **Webhooks** - Integrate with external systems via event webhooks
+- **Custom Tools** - Extend agent capabilities with API integrations
+
+---
 
 ## Technology Stack
 
 ### Frontend
-- **React 18** with TypeScript
-- **Vite** - Fast build tool
-- **Tailwind CSS** - Utility-first styling
-- **Radix UI** & **shadcn/ui** - Accessible components
-- **TanStack Query** - Data fetching and caching
-- **React Router** - Client-side routing
+
+| Technology | Purpose |
+|------------|---------|
+| React 18 | UI framework |
+| TypeScript | Type safety |
+| Vite | Build tool |
+| Tailwind CSS | Styling |
+| shadcn/ui | Component library |
+| TanStack Query | Data fetching |
+| React Router | Routing |
 
 ### Backend
-- **Supabase** - Backend-as-a-Service
-  - PostgreSQL with Row Level Security
-  - Real-time subscriptions
-  - Edge Functions (Deno)
-  - File storage
-  - Built-in authentication
 
-### AI Integration
-- **Google Gemini** - Default AI model
-- **OpenAI GPT-4** - Alternative model
-- **Anthropic Claude** - Alternative model
-- **Vector Embeddings** - RAG knowledge search
+| Technology | Purpose |
+|------------|---------|
+| Supabase | Backend-as-a-Service |
+| PostgreSQL | Database with RLS |
+| Edge Functions | Serverless API (Deno) |
+| Realtime | WebSocket subscriptions |
+| Storage | File uploads |
+
+### Design
+
+| Element | Choice |
+|---------|--------|
+| Font | Geist, Geist Mono |
+| Icons | UntitledUI Icons |
+| Animations | Framer Motion, CSS |
+
+---
 
 ## Getting Started
 
 ### Prerequisites
-- Node.js & npm ([install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating))
+
+- Node.js 18+ ([install with nvm](https://github.com/nvm-sh/nvm))
+- npm or bun
 
 ### Installation
 
-```sh
+```bash
 # Clone the repository
 git clone <YOUR_GIT_URL>
-
-# Navigate to the project
 cd <YOUR_PROJECT_NAME>
 
 # Install dependencies
-npm i
+npm install
 
 # Start development server
 npm run dev
 ```
 
+### Environment Variables
+
+The following secrets are managed in Supabase:
+
+| Variable | Description |
+|----------|-------------|
+| `OPENROUTER_API_KEY` | OpenRouter API access |
+| `RESEND_API_KEY` | Email delivery (Resend) |
+| `SUPABASE_URL` | Supabase project URL |
+| `SUPABASE_ANON_KEY` | Public Supabase key |
+| `SUPABASE_SERVICE_ROLE_KEY` | Admin Supabase key |
+
+---
+
 ## Project Structure
 
 ```
-src/
-├── components/        # Reusable UI components
-│   ├── agents/       # Agent management
-│   ├── analytics/    # Analytics & charts
-│   ├── chat/         # Chat interfaces
-│   ├── conversations/# Conversation management
-│   ├── leads/        # Lead management
-│   ├── settings/     # Settings & configuration
-│   ├── team/         # Team management
-│   └── ui/           # Base UI components
-├── hooks/            # Custom React hooks
-├── pages/            # Route components
-├── contexts/         # React contexts
-├── lib/              # Utility functions
-└── integrations/     # External integrations
-
-supabase/
-├── functions/        # Edge functions
-└── migrations/       # Database migrations
+├── docs/                    # Documentation
+│   ├── README.md            # Documentation index
+│   ├── DESIGN_SYSTEM.md     # Design tokens & standards
+│   ├── HOOKS_REFERENCE.md   # Custom hooks reference
+│   ├── APPLICATION_OVERVIEW.md
+│   ├── CHATPAD_ARCHITECTURE.md
+│   ├── AI_ARCHITECTURE.md
+│   ├── DATABASE_SCHEMA.md
+│   ├── EDGE_FUNCTIONS.md
+│   ├── WIDGET_ARCHITECTURE.md
+│   └── ...
+│
+├── src/
+│   ├── components/          # React components
+│   │   ├── ui/              # Base UI (shadcn)
+│   │   ├── agents/          # Agent management
+│   │   ├── conversations/   # Conversation UI
+│   │   ├── analytics/       # Charts & metrics
+│   │   └── ...
+│   ├── hooks/               # Custom React hooks
+│   ├── pages/               # Route pages
+│   ├── contexts/            # React contexts
+│   ├── lib/                 # Utilities
+│   ├── widget/              # Embedded widget
+│   ├── index.css            # Design tokens
+│   └── App.tsx              # Main app
+│
+├── supabase/
+│   ├── functions/           # Edge functions
+│   └── migrations/          # Database migrations
+│
+├── tailwind.config.ts       # Tailwind configuration
+└── vite.config.ts           # Vite configuration
 ```
 
-## Core Concepts
-
-### Organizations
-Multi-tenant workspace system where each organization has:
-- Team members with roles (owner, admin, member)
-- Custom branding
-- Subscription plans
-- Usage limits
-
-### Agents
-AI agents with:
-- Configurable system prompts
-- Model selection
-- Knowledge bases
-- Tool integrations
-- Multiple deployment methods
-
-### Knowledge Base
-RAG (Retrieval Augmented Generation) system:
-- Upload documents (PDF, URLs, etc.)
-- Vector embeddings for semantic search
-- Context injection into agent responses
-
-### Conversations
-Agent chat sessions with:
-- Real-time messaging
-- Human takeover capability
-- Lead capture
-- Conversation history
-
-## Deployment
-
-### Using Lovable
-1. Open your [Lovable Project](https://lovable.dev/projects/28cc9f18-cb6b-496b-b8a6-8c8f349e3c54)
-2. Click **Share** → **Publish**
-3. Your app will be deployed automatically
-
-### Custom Domain
-1. Navigate to **Project** → **Settings** → **Domains**
-2. Click **Connect Domain**
-3. Follow the DNS configuration instructions
-
-Read more: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain)
-
-## Development
-
-### Code Editing Options
-
-**Via Lovable**
-Visit the [Lovable Project](https://lovable.dev/projects/28cc9f18-cb6b-496b-b8a6-8c8f349e3c54) and start prompting. Changes are committed automatically.
-
-**Local IDE**
-Clone the repo and push changes. They'll sync with Lovable automatically.
-
-**GitHub Codespaces**
-Click **Code** → **Codespaces** → **New codespace** to launch a cloud development environment.
-
-### Environment Variables
-
-Required secrets (managed in Supabase):
-- `OPENAI_API_KEY` - OpenAI API access
-- `RESEND_API_KEY` - Email delivery
-- `SUPABASE_URL` - Supabase project URL
-- `SUPABASE_ANON_KEY` - Public Supabase key
-- `SUPABASE_SERVICE_ROLE_KEY` - Admin Supabase key
+---
 
 ## Documentation
 
-- [Lovable Docs](https://docs.lovable.dev/)
-- [ChatPad Architecture](docs/CHATPAD_ARCHITECTURE.md)
-- [Application Overview](docs/APPLICATION_OVERVIEW.md)
+Comprehensive documentation is available in the `/docs` directory:
 
-## Support
+### Quick Start
+- [Application Overview](docs/APPLICATION_OVERVIEW.md) - Features and architecture
+- [Design System](docs/DESIGN_SYSTEM.md) - Typography, colors, spacing
+- [Hooks Reference](docs/HOOKS_REFERENCE.md) - Custom hooks documentation
 
-- [Lovable Discord](https://discord.com/channels/1119885301872070706/1280461670979993613)
-- [Lovable Documentation](https://docs.lovable.dev/)
+### Architecture
+- [System Architecture](docs/CHATPAD_ARCHITECTURE.md) - Architecture and data flow
+- [AI Architecture](docs/AI_ARCHITECTURE.md) - RAG and model routing
+- [Database Schema](docs/DATABASE_SCHEMA.md) - Tables and RLS policies
+- [Edge Functions](docs/EDGE_FUNCTIONS.md) - API reference
+
+### Development
+- [Supabase Integration](docs/SUPABASE_INTEGRATION_GUIDE.md) - Full-stack patterns
+- [shadcn Components](docs/SHADCN_COMPONENT_GUIDE.md) - Component guide
+- [Widget Architecture](docs/WIDGET_ARCHITECTURE.md) - Widget development
+
+---
+
+## Development
+
+### Code Style
+
+- **Components**: PascalCase, one per file
+- **Hooks**: `use` prefix, in `src/hooks/`
+- **Icons**: UntitledUI only (never Lucide)
+- **Colors**: Always use semantic tokens from design system
+
+```tsx
+// ✅ Correct
+<div className="bg-background text-foreground border-border">
+  <Button className="bg-primary text-primary-foreground">Action</Button>
+</div>
+
+// ❌ Wrong
+<div className="bg-white text-black border-gray-200">
+  <Button className="bg-black text-white">Action</Button>
+</div>
+```
+
+### Scripts
+
+```bash
+npm run dev          # Development server
+npm run build        # Production build
+npm run preview      # Preview production build
+npm run build:widget # Build widget bundle
+```
+
+---
+
+## Deployment
+
+### Lovable
+
+1. Open your [Lovable Project](https://lovable.dev/projects/28cc9f18-cb6b-496b-b8a6-8c8f349e3c54)
+2. Click **Share** → **Publish**
+3. App deploys automatically
+
+### Custom Domain
+
+1. Navigate to **Project** → **Settings** → **Domains**
+2. Click **Connect Domain**
+3. Follow DNS configuration instructions
+
+---
+
+## Contributing
+
+1. Read the [Design System](docs/DESIGN_SYSTEM.md) before making UI changes
+2. Follow existing patterns in [Hooks Reference](docs/HOOKS_REFERENCE.md)
+3. Add JSDoc comments to all new components and functions
+4. Use semantic color tokens, never direct colors
+5. Test both light and dark modes
+
+---
 
 ## License
 
-This project is built with Lovable.
+This project is built with [Lovable](https://lovable.dev).

@@ -1,0 +1,527 @@
+# ChatPad Design System
+
+> **Last Updated**: December 2024  
+> **Status**: Active  
+> **Related**: [Application Overview](./APPLICATION_OVERVIEW.md), [shadcn Component Guide](./SHADCN_COMPONENT_GUIDE.md)
+
+Comprehensive design system documentation for consistent UI development.
+
+---
+
+## Table of Contents
+
+1. [Typography](#typography)
+2. [Color System](#color-system)
+3. [Spacing & Layout](#spacing--layout)
+4. [Component Sizing](#component-sizing)
+5. [Shadows & Effects](#shadows--effects)
+6. [Border Radius](#border-radius)
+7. [Animations](#animations)
+8. [Icon System](#icon-system)
+9. [Usage Examples](#usage-examples)
+
+---
+
+## Typography
+
+### Font Family
+
+ChatPad uses **Geist** as the primary font family with **Geist Mono** for code.
+
+```css
+/* Primary font */
+font-family: 'Geist', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 
+             'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+
+/* Monospace font */
+font-family: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, 
+             Consolas, 'Liberation Mono', 'Courier New', monospace;
+```
+
+### Font Loading
+
+Geist is loaded via Google Fonts in `index.html`:
+
+```html
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+```
+
+### Type Scale
+
+| Element | Tailwind Class | Size | Line Height | Letter Spacing |
+|---------|---------------|------|-------------|----------------|
+| Body | `text-sm` | 14px | 1.6 | -0.011em |
+| H1 | `text-base font-semibold` | 16px | 1.25 | -0.022em |
+| H2 | `text-sm font-semibold` | 14px | 1.3 | -0.022em |
+| H3 | `text-sm font-medium` | 14px | 1.4 | -0.022em |
+| H4 | `text-xs font-medium` | 12px | 1.4 | -0.022em |
+| Caption | `text-xs` | 12px | 1.5 | -0.011em |
+| Code | `text-xs font-mono` | 12px | 1.6 | -0.01em |
+
+### Font Weights
+
+| Weight | Tailwind Class | Usage |
+|--------|---------------|-------|
+| Regular (400) | `font-normal` | Body text, descriptions |
+| Medium (500) | `font-medium` | Labels, subtitles |
+| Semibold (600) | `font-semibold` | Headings, buttons |
+| Bold (700) | `font-bold` | Emphasis, important content |
+
+### Usage Examples
+
+```tsx
+// ✅ Correct - semantic heading styles
+<h1 className="text-base font-semibold">Page Title</h1>
+<h2 className="text-sm font-semibold">Section Title</h2>
+<p className="text-sm text-muted-foreground">Description text</p>
+
+// ❌ Wrong - arbitrary sizes
+<h1 className="text-2xl font-bold">Too large</h1>
+```
+
+---
+
+## Color System
+
+All colors are defined as HSL values in CSS custom properties for theme flexibility.
+
+### Core Colors
+
+| Token | Light Mode | Dark Mode | Usage |
+|-------|------------|-----------|-------|
+| `--background` | `0 0% 100%` | `0 0% 3.9%` | Page background |
+| `--foreground` | `0 0% 3.9%` | `0 0% 98%` | Primary text |
+| `--card` | `0 0% 100%` | `0 0% 3.9%` | Card backgrounds |
+| `--card-foreground` | `0 0% 3.9%` | `0 0% 98%` | Card text |
+| `--popover` | `0 0% 100%` | `0 0% 3.9%` | Popover backgrounds |
+| `--popover-foreground` | `0 0% 3.9%` | `0 0% 98%` | Popover text |
+
+### Interactive Colors
+
+| Token | Light Mode | Dark Mode | Usage |
+|-------|------------|-----------|-------|
+| `--primary` | `0 0% 9%` | `0 0% 98%` | Primary buttons, links |
+| `--primary-foreground` | `0 0% 98%` | `0 0% 9%` | Text on primary |
+| `--secondary` | `0 0% 96.1%` | `0 0% 14.9%` | Secondary buttons |
+| `--secondary-foreground` | `0 0% 9%` | `0 0% 98%` | Text on secondary |
+| `--muted` | `0 0% 96.1%` | `0 0% 9.4%` | Muted backgrounds |
+| `--muted-foreground` | `0 0% 45.1%` | `0 0% 63.9%` | Muted text |
+| `--accent` | `0 0% 96.1%` | `0 0% 14.9%` | Accent highlights |
+| `--accent-foreground` | `0 0% 9%` | `0 0% 98%` | Text on accent |
+
+### Status Colors
+
+| Token | Value | Usage |
+|-------|-------|-------|
+| `--destructive` | Light: `0 84.2% 60.2%` / Dark: `355 59.1% 46.9%` | Errors, delete actions |
+| `--destructive-foreground` | `0 0% 98%` | Text on destructive |
+| `--success` | `146 59.1% 46.9%` | Success states, positive trends |
+| `--success-foreground` | Light: `355 100% 97%` / Dark: `144 61% 20%` | Text on success |
+| `--warning` | `38 92% 50%` | Warnings, caution states |
+| `--warning-foreground` | `48 96% 5%` | Text on warning |
+| `--info` | Light: `221 83% 53%` / Dark: `217 91% 60%` | Informational |
+| `--info-foreground` | Light: `210 40% 98%` / Dark: `222 84% 5%` | Text on info |
+
+### Border & Input Colors
+
+| Token | Light Mode | Dark Mode | Usage |
+|-------|------------|-----------|-------|
+| `--border` | `0 0% 89.8%` | `0 0% 14%` | Borders, dividers |
+| `--input` | `0 0% 89.8%` | `0 0% 14%` | Input borders |
+| `--ring` | `0 0% 3.9%` | `0 0% 83.1%` | Focus rings |
+
+### Chart Colors
+
+| Token | Light Mode | Dark Mode |
+|-------|------------|-----------|
+| `--chart-1` | `12 76% 61%` | `220 70% 50%` |
+| `--chart-2` | `173 58% 39%` | `160 60% 45%` |
+| `--chart-3` | `197 37% 24%` | `30 80% 55%` |
+| `--chart-4` | `43 74% 66%` | `280 65% 60%` |
+| `--chart-5` | `27 87% 67%` | `340 75% 55%` |
+
+### Sidebar Colors
+
+| Token | Light Mode | Dark Mode |
+|-------|------------|-----------|
+| `--sidebar` | `0 0% 97%` | `0 0% 3.9%` |
+| `--sidebar-foreground` | `0 0% 3.9%` | `0 0% 98%` |
+| `--app-background` | `0 0% 96%` | `0 0% 3.9%` |
+
+### Usage Examples
+
+```tsx
+// ✅ Correct - use semantic color tokens
+<div className="bg-background text-foreground">
+  <Card className="bg-card border-border">
+    <p className="text-muted-foreground">Description</p>
+    <Button className="bg-primary text-primary-foreground">Action</Button>
+  </Card>
+</div>
+
+// ✅ Correct - status colors
+<Badge className="bg-success text-success-foreground">Active</Badge>
+<Badge className="bg-destructive text-destructive-foreground">Error</Badge>
+
+// ❌ Wrong - direct color values
+<div className="bg-white text-black border-gray-200">
+<Button className="bg-black text-white">
+```
+
+---
+
+## Spacing & Layout
+
+### Spacing Scale
+
+Based on Tailwind's default 4px base unit:
+
+| Token | Value | Usage |
+|-------|-------|-------|
+| `0.5` | 2px | Micro gaps |
+| `1` | 4px | Icon padding |
+| `1.5` | 6px | Tight spacing |
+| `2` | 8px | Small gaps |
+| `3` | 12px | Compact content |
+| `4` | 16px | Standard card padding |
+| `5` | 20px | Medium spacing |
+| `6` | 24px | Large card padding |
+| `8` | 32px | Section spacing |
+| `10` | 40px | Large section spacing |
+| `12` | 48px | Page sections |
+
+### Standard Patterns
+
+| Pattern | Classes | Usage |
+|---------|---------|-------|
+| Card Padding | `p-4` or `p-6` | Card content areas |
+| Card Header | `py-3 px-4` | Compact card headers |
+| Section Gap | `gap-4` or `gap-6` | Between cards/sections |
+| Item Gap | `gap-2` | Between list items |
+| Form Fields | `space-y-4` | Between form inputs |
+| Button Group | `gap-2` | Between buttons |
+
+### Container Max Widths
+
+| Screen | Class | Width |
+|--------|-------|-------|
+| Default | `container` | 100% with 2rem padding |
+| 2xl | `max-w-[1400px]` | 1400px |
+
+### Breakpoints
+
+| Breakpoint | Size | Usage |
+|------------|------|-------|
+| `xs` | 475px | Small mobile |
+| `sm` | 640px | Mobile |
+| `md` | 768px | Tablet |
+| `lg` | 1024px | Desktop |
+| `xl` | 1280px | Large desktop |
+| `2xl` | 1536px | Extra large |
+
+### Compact Mode
+
+Enable with `compact-mode` class on body. Reduces all spacing proportionally:
+
+```css
+body.compact-mode {
+  --spacing-xs: 0.25rem;   /* 4px → 4px */
+  --spacing-sm: 0.375rem;  /* 8px → 6px */
+  --spacing-md: 0.5rem;    /* 12px → 8px */
+  --spacing-lg: 0.75rem;   /* 16px → 12px */
+  --spacing-xl: 1rem;      /* 24px → 16px */
+}
+```
+
+---
+
+## Component Sizing
+
+### Buttons
+
+| Size | Height | Padding | Usage |
+|------|--------|---------|-------|
+| Default | 40px (`h-10`) | `px-4 py-2` | Standard buttons |
+| Small | 32px (`h-8`) | `px-3` | Compact areas |
+| Large | 44px (`h-11`) | `px-8` | Hero CTAs |
+| Icon | 32px (`h-8 w-8`) | `p-0` | Icon-only buttons |
+| Icon (lg) | 40px (`h-10 w-10`) | `p-0` | Large icon buttons |
+
+### Inputs
+
+| Size | Height | Usage |
+|------|--------|-------|
+| Default | 40px (`h-10`) | Standard inputs |
+| Small | 32px (`h-8`) | Compact forms, filters |
+
+### Avatars
+
+| Size | Class | Usage |
+|------|-------|-------|
+| Small | `h-6 w-6` | Inline mentions |
+| Default | `h-8 w-8` | Lists, cards |
+| Medium | `h-10 w-10` | Profile headers |
+| Large | `h-12 w-12` | Profile pages |
+| XL | `h-16 w-16` | Hero profiles |
+
+### Icons
+
+| Size | Class | Usage |
+|------|-------|-------|
+| XS | `h-3 w-3` | Badges, inline |
+| Small | `h-4 w-4` | Buttons, inputs |
+| Default | `h-5 w-5` | Navigation, cards |
+| Large | `h-6 w-6` | Headers, heroes |
+
+---
+
+## Shadows & Effects
+
+### Shadow Scale
+
+| Token | Class | Usage |
+|-------|-------|-------|
+| None | `shadow-none` | Flat elements |
+| Small | `shadow-sm` | Subtle elevation |
+| Default | `shadow` | Cards, dropdowns |
+| Medium | `shadow-md` | Hover states, modals |
+| Large | `shadow-lg` | Dialogs, popovers |
+| XL | `shadow-xl` | Floating elements |
+
+### Hover Effects
+
+Standard hover pattern for interactive cards:
+
+```tsx
+// ✅ Standard card hover
+<Card className="hover:shadow-md transition-shadow">
+```
+
+### Focus Rings
+
+```tsx
+// Default focus ring
+className="focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+
+// Alternative for dark backgrounds
+className="focus-visible:ring-2 focus-visible:ring-ring"
+```
+
+### Transitions
+
+| Pattern | Class | Usage |
+|---------|-------|-------|
+| Default | `transition` | General transitions |
+| Colors | `transition-colors` | Background/text changes |
+| Shadow | `transition-shadow` | Elevation changes |
+| Transform | `transition-transform` | Scale/translate |
+| All | `transition-all` | Multiple properties |
+
+Standard duration: 150ms (Tailwind default)
+
+---
+
+## Border Radius
+
+| Token | Value | Class | Usage |
+|-------|-------|-------|-------|
+| `--radius` | 0.5rem (8px) | `rounded-lg` | Cards, buttons |
+| `--radius - 2px` | 6px | `rounded-md` | Inputs, smaller elements |
+| `--radius - 4px` | 4px | `rounded-sm` | Badges, small elements |
+| Full | 9999px | `rounded-full` | Avatars, pills |
+
+### Common Patterns
+
+```tsx
+// Cards
+<Card className="rounded-lg">
+
+// Buttons
+<Button className="rounded-md">
+
+// Avatars
+<Avatar className="rounded-full">
+
+// Input fields
+<Input className="rounded-md">
+```
+
+---
+
+## Animations
+
+### Keyframe Animations
+
+| Animation | Class | Duration | Usage |
+|-----------|-------|----------|-------|
+| Fade In | `animate-fade-in` | 300ms | Page transitions |
+| Accordion Down | `animate-accordion-down` | 200ms | Expand content |
+| Accordion Up | `animate-accordion-up` | 200ms | Collapse content |
+| Ping | `animate-ping` | 2s loop | Notification dots |
+| Pulse Slow | `animate-pulse-slow` | 2.5s loop | Status indicators |
+| Pulse Ring | `animate-pulse-ring` | 1.5s loop | Active states |
+| Slide In Left | `animate-slide-in-left` | 200ms | List items |
+| Slide In Right | `animate-slide-in-right` | 200ms | List items |
+| Ripple | `animate-ripple` | 3s loop | Background effects |
+| Slow Pulse | `animate-slow-pulse` | 3s loop | Subtle animations |
+
+### Custom Animations
+
+```css
+/* Subtle ring animation for active indicators */
+@keyframes subtle-ring {
+  0%, 100% { transform: scale(1); opacity: 0; }
+  50% { transform: scale(1.4); opacity: 0.3; }
+}
+
+/* Progress bar shimmer */
+@keyframes progress-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+```
+
+### Reduced Motion
+
+Respect user preferences:
+
+```tsx
+import { useReducedMotion } from '@/hooks/useReducedMotion';
+
+const Component = () => {
+  const prefersReducedMotion = useReducedMotion();
+  
+  return (
+    <div className={prefersReducedMotion ? '' : 'animate-fade-in'}>
+      Content
+    </div>
+  );
+};
+```
+
+---
+
+## Icon System
+
+### UntitledUI Icons
+
+ChatPad uses **UntitledUI Icons** exclusively. Never use Lucide or other icon libraries.
+
+```tsx
+// ✅ Correct - UntitledUI Icons
+import { Home01, Settings01, Users01 } from '@untitledui/icons';
+
+// ❌ Wrong - Lucide Icons
+import { Home, Settings, Users } from 'lucide-react';
+```
+
+### Icon Sizing
+
+| Size | Class | Usage |
+|------|-------|-------|
+| XS | `size={12}` or `h-3 w-3` | Inline badges |
+| Small | `size={16}` or `h-4 w-4` | Buttons, inputs |
+| Default | `size={20}` or `h-5 w-5` | Navigation, cards |
+| Large | `size={24}` or `h-6 w-6` | Headers |
+
+### Icon Colors
+
+Icons inherit text color by default:
+
+```tsx
+// ✅ Correct - inherit from parent
+<Button className="text-muted-foreground hover:text-foreground">
+  <Settings01 className="h-4 w-4" />
+</Button>
+
+// ✅ Correct - explicit semantic color
+<AlertCircle className="h-5 w-5 text-destructive" />
+<CheckCircle className="h-5 w-5 text-success" />
+```
+
+### Common Icon Mappings
+
+| Usage | Icon |
+|-------|------|
+| Home | `Home01` |
+| Settings | `Settings01` |
+| Users | `Users01` |
+| Search | `SearchMd` |
+| Add | `Plus` |
+| Close | `XClose` |
+| Menu | `Menu01` |
+| Notifications | `Bell01` |
+| Analytics | `BarChart07` |
+| Conversations | `MessageSquare01` |
+| Leads | `UserPlus01` |
+| Agents | `Bot` or custom `AriAgentsIcon` |
+
+---
+
+## Usage Examples
+
+### Card Component
+
+```tsx
+<Card className="p-6 hover:shadow-md transition-shadow">
+  <CardHeader className="p-0 pb-4">
+    <CardTitle className="text-sm font-semibold">Title</CardTitle>
+    <CardDescription className="text-xs text-muted-foreground">
+      Description
+    </CardDescription>
+  </CardHeader>
+  <CardContent className="p-0">
+    <p className="text-sm">Content</p>
+  </CardContent>
+</Card>
+```
+
+### Form Layout
+
+```tsx
+<form className="space-y-4">
+  <div className="space-y-1.5">
+    <Label className="text-sm font-medium">Field Label</Label>
+    <Input className="h-10" placeholder="Enter value..." />
+  </div>
+  
+  <div className="flex gap-2 justify-end">
+    <Button variant="outline" size="sm">Cancel</Button>
+    <Button size="sm">Save</Button>
+  </div>
+</form>
+```
+
+### Status Badge
+
+```tsx
+<Badge className="bg-success/10 text-success border-0">
+  <CheckCircle className="h-3 w-3 mr-1" />
+  Active
+</Badge>
+```
+
+### Page Header
+
+```tsx
+<div className="flex items-center justify-between pb-6">
+  <div className="space-y-1">
+    <h1 className="text-base font-semibold">Page Title</h1>
+    <p className="text-sm text-muted-foreground">Page description</p>
+  </div>
+  <Button>
+    <Plus className="h-4 w-4 mr-2" />
+    Add New
+  </Button>
+</div>
+```
+
+---
+
+## Related Documentation
+
+- [shadcn Component Guide](./SHADCN_COMPONENT_GUIDE.md) - Component patterns and motion
+- [Application Overview](./APPLICATION_OVERVIEW.md) - Project structure
+- [Hooks Reference](./HOOKS_REFERENCE.md) - Custom hook documentation
