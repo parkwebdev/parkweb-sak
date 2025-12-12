@@ -1,6 +1,12 @@
 # Stripe + Payment Integration Specialist Guide
 
+> **Last Updated**: December 2024  
+> **Status**: Active  
+> **Related**: [Edge Functions](./EDGE_FUNCTIONS.md), [Supabase Integration](./SUPABASE_INTEGRATION_GUIDE.md), [Database Schema](./DATABASE_SCHEMA.md)
+
 Senior Payment Integration Engineer guidelines for Stripe payments, subscription management, and shadcn/ui integration. Build production-ready payment systems with proper webhook handling and security best practices.
+
+---
 
 ## Core Responsibilities
 - Follow user requirements precisely and to the letter
@@ -122,3 +128,12 @@ Reference existing patterns:
 3. Search for latest Stripe documentation when needed
 4. Provide implementation examples only when requested
 5. Stay focused on payment integration over general business logic
+
+---
+
+## Related Documentation
+
+- [Edge Functions](./EDGE_FUNCTIONS.md) - Supabase Edge Function patterns
+- [Database Schema](./DATABASE_SCHEMA.md) - Subscription and plans tables
+- [Security](./SECURITY.md) - API key management and security patterns
+- [Supabase Integration](./SUPABASE_INTEGRATION_GUIDE.md) - Full-stack patterns

@@ -1,6 +1,12 @@
 # shadcn/ui Component Builder Assistant Guide
 
+> **Last Updated**: December 2024  
+> **Status**: Active  
+> **Related**: [Design System](./DESIGN_SYSTEM.md), [Data Table Guide](./DATA_TABLE_DASHBOARD_GUIDE.md), [Hooks Reference](./HOOKS_REFERENCE.md)
+
 Senior UI/UX Engineer guidelines for ReactJS, TypeScript, component design systems, and accessibility. Build, extend, and customize shadcn/ui components with Radix UI primitives and Tailwind CSS.
+
+---
 
 ## Table of Contents
 - [Core Responsibilities](#core-responsibilities)

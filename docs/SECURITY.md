@@ -1,6 +1,12 @@
 # ChatPad Security Documentation
 
+> **Last Updated**: December 2024  
+> **Status**: Active  
+> **Related**: [Database Schema](./DATABASE_SCHEMA.md), [Edge Functions](./EDGE_FUNCTIONS.md), [Widget Architecture](./WIDGET_ARCHITECTURE.md)
+
 Security implementation details for the ChatPad platform.
+
+---
 
 ## Table of Contents
 
@@ -622,3 +628,12 @@ USING (is_admin(auth.uid()));
 3. Review access logs
 4. Document incident timeline
 5. Notify affected users per legal requirements
+
+---
+
+## Related Documentation
+
+- [Database Schema](./DATABASE_SCHEMA.md) - RLS policies and table structures
+- [Edge Functions](./EDGE_FUNCTIONS.md) - Server-side security implementation
+- [Widget Architecture](./WIDGET_ARCHITECTURE.md) - Widget security patterns
+- [Supabase Integration](./SUPABASE_INTEGRATION_GUIDE.md) - Authentication patterns

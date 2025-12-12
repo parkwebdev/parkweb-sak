@@ -1,6 +1,12 @@
 # ChatPad Database Schema
 
+> **Last Updated**: December 2024  
+> **Status**: Active  
+> **Related**: [Security](./SECURITY.md), [Supabase Integration](./SUPABASE_INTEGRATION_GUIDE.md), [Edge Functions](./EDGE_FUNCTIONS.md)
+
 Complete database schema documentation for the ChatPad platform.
+
+---
 
 ## Table of Contents
 
@@ -1044,3 +1050,12 @@ Import types via the barrel export:
 ```typescript
 import { ConversationMetadata, ReportData, getErrorMessage } from '@/types';
 ```
+
+---
+
+## Related Documentation
+
+- [Security](./SECURITY.md) - RLS policies and authentication patterns
+- [Edge Functions](./EDGE_FUNCTIONS.md) - Server-side database operations
+- [Supabase Integration](./SUPABASE_INTEGRATION_GUIDE.md) - React Query hooks and patterns
+- [AI Architecture](./AI_ARCHITECTURE.md) - Vector embeddings and RAG tables

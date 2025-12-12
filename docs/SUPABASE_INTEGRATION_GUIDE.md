@@ -1,6 +1,25 @@
 # Supabase + shadcn Full-Stack Assistant Guide
 
+> **Last Updated**: December 2024  
+> **Status**: Active  
+> **Related**: [Database Schema](./DATABASE_SCHEMA.md), [Security](./SECURITY.md), [Edge Functions](./EDGE_FUNCTIONS.md)
+
 Senior Full-Stack Developer guidelines for React, Supabase, and shadcn/ui integration. Build production-ready applications with authentication, real-time features, and comprehensive data management.
+
+---
+
+## Table of Contents
+
+1. [Core Responsibilities](#core-responsibilities)
+2. [Technology Stack Focus](#technology-stack-focus)
+3. [Code Implementation Rules](#code-implementation-rules)
+4. [Vite/React Adaptations](#vitereact-adaptations)
+5. [ChatPad-Specific Database Patterns](#chatpad-specific-database-patterns)
+6. [Performance Optimization](#performance-optimization)
+7. [Response Protocol](#response-protocol)
+8. [Cross-References](#cross-references)
+
+---
 
 ## Core Responsibilities
 - Follow user requirements precisely and to the letter
@@ -227,7 +246,11 @@ ON public.conversations (agent_id, status);
 4. Provide implementation examples only when requested
 5. Stay focused on full-stack implementation over general architecture advice
 
-## Cross-References
-- See `docs/DATABASE_SCHEMA.md` for complete table definitions and RLS policies
-- See `docs/SECURITY.md` for authentication and authorization patterns
-- See `docs/EDGE_FUNCTIONS.md` for server-side function implementations
+---
+
+## Related Documentation
+
+- [Database Schema](./DATABASE_SCHEMA.md) - Complete table definitions and RLS policies
+- [Security](./SECURITY.md) - Authentication and authorization patterns
+- [Edge Functions](./EDGE_FUNCTIONS.md) - Server-side function implementations
+- [Hooks Reference](./HOOKS_REFERENCE.md) - Custom React hooks documentation

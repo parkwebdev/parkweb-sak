@@ -1,6 +1,12 @@
 # ChatPad Edge Functions
 
+> **Last Updated**: December 2024  
+> **Status**: Active  
+> **Related**: [Supabase Integration](./SUPABASE_INTEGRATION_GUIDE.md), [Security](./SECURITY.md), [AI Architecture](./AI_ARCHITECTURE.md)
+
 Documentation for all Supabase Edge Functions in the ChatPad platform.
+
+---
 
 ## Table of Contents
 
@@ -814,3 +820,13 @@ logStep('Response generated', { tokenCount: response.length });
 ```
 
 View logs at: `https://supabase.com/dashboard/project/{project_id}/functions/{function_name}/logs`
+
+---
+
+## Related Documentation
+
+- [Supabase Integration](./SUPABASE_INTEGRATION_GUIDE.md) - Client-side Supabase patterns
+- [Security](./SECURITY.md) - Authentication and RLS policies
+- [AI Architecture](./AI_ARCHITECTURE.md) - AI-related edge function details
+- [Database Schema](./DATABASE_SCHEMA.md) - Table structures and relationships
+- [Widget Architecture](./WIDGET_ARCHITECTURE.md) - Widget-specific functions

@@ -1,6 +1,12 @@
 # ChatPad Widget Architecture
 
+> **Last Updated**: December 2024  
+> **Status**: Active  
+> **Related**: [Security](./SECURITY.md), [Edge Functions](./EDGE_FUNCTIONS.md), [AI Architecture](./AI_ARCHITECTURE.md)
+
 Technical documentation for the ChatPad embeddable chat widget.
+
+---
 
 ## Table of Contents
 
