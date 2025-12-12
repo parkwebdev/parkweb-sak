@@ -1,3 +1,11 @@
+/**
+ * AgentPerformanceChart Component
+ * 
+ * Bar chart displaying agent performance metrics.
+ * Shows conversations, response time, and satisfaction by agent.
+ * @module components/analytics/AgentPerformanceChart
+ */
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from '@/components/ui/chart';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';

@@ -1,3 +1,11 @@
+/**
+ * ScheduledReportsManager Component
+ * 
+ * Management interface for scheduled analytics reports.
+ * Lists, enables/disables, and configures automated report delivery.
+ * @module components/analytics/ScheduledReportsManager
+ */
+
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';

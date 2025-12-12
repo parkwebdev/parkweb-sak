@@ -1,3 +1,11 @@
+/**
+ * AnalyticsToolbar Component
+ * 
+ * Toolbar with date range picker, filters, and export options.
+ * Supports agent filtering, comparison mode, and CSV/PDF export.
+ * @module components/analytics/AnalyticsToolbar
+ */
+
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';

@@ -1,3 +1,11 @@
+/**
+ * DateRangePicker Component
+ * 
+ * Dual calendar picker for selecting date ranges.
+ * Used throughout analytics for filtering by time period.
+ * @module components/analytics/DateRangePicker
+ */
+
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 

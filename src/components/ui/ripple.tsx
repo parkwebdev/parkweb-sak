@@ -1,3 +1,11 @@
+/**
+ * Ripple Component
+ * 
+ * Animated concentric circle ripple effect for backgrounds.
+ * Used in loading screens and decorative elements.
+ * @module components/ui/ripple
+ */
+
 "use client";
 
 import React, { ComponentPropsWithoutRef } from "react";

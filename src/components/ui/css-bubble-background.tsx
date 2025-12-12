@@ -1,3 +1,12 @@
+/**
+ * CSSBubbleBackground Component
+ * 
+ * Animated lava lamp-style background with morphing bubble effects.
+ * Uses SVG goo filter for blob merging and CSS animations for movement.
+ * Optimized for mobile with simpler blur fallback.
+ * @module components/ui/css-bubble-background
+ */
+
 import * as React from 'react';
 import { cn } from '@/lib/utils';
 

@@ -1,3 +1,11 @@
+/**
+ * SortableArticleItem Component
+ * 
+ * Draggable article item for reordering within categories.
+ * Displays thumbnail, title, content preview, and embedding status.
+ * @module components/agents/SortableArticleItem
+ */
+
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Button } from '@/components/ui/button';

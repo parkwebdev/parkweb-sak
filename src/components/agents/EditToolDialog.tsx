@@ -1,3 +1,11 @@
+/**
+ * EditToolDialog Component
+ * 
+ * Dialog for editing existing custom tool configurations.
+ * Allows modification of endpoint, parameters, headers, and timeout.
+ * @module components/agents/EditToolDialog
+ */
+
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

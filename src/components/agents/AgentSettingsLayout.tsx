@@ -1,3 +1,12 @@
+/**
+ * AgentSettingsLayout Component
+ * 
+ * Responsive sidebar layout for agent settings sections.
+ * Features desktop sidebar menu and mobile horizontal tabs.
+ * Includes animated content transitions.
+ * @module components/agents/AgentSettingsLayout
+ */
+
 import React from 'react';
 import { Menu01 as Menu } from '@untitledui/icons';
 import { motion, AnimatePresence } from 'motion/react';

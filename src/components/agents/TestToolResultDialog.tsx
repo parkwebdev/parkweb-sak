@@ -1,3 +1,11 @@
+/**
+ * TestToolResultDialog Component
+ * 
+ * Dialog displaying results from testing a custom tool endpoint.
+ * Shows status, response time, body, and error messages.
+ * @module components/agents/TestToolResultDialog
+ */
+
 import {
   Dialog,
   DialogContent,

@@ -1,3 +1,11 @@
+/**
+ * TrafficSourceChart Component
+ * 
+ * Pie chart showing traffic distribution by referrer source.
+ * Displays organic, direct, social, and referral traffic.
+ * @module components/analytics/TrafficSourceChart
+ */
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';

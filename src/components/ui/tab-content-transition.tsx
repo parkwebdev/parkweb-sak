@@ -1,3 +1,11 @@
+/**
+ * TabContentTransition Component
+ * 
+ * Animated wrapper for tab content with smooth enter/exit transitions.
+ * Keyed by activeKey to trigger animations on tab change.
+ * @module components/ui/tab-content-transition
+ */
+
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 

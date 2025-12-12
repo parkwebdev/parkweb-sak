@@ -1,3 +1,11 @@
+/**
+ * ComparisonPeriodSelector Component
+ * 
+ * Selector for choosing comparison date ranges in analytics.
+ * Supports presets like previous period, previous year, and custom.
+ * @module components/analytics/ComparisonPeriodSelector
+ */
+
 import { useState } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DateRangePicker } from './DateRangePicker';

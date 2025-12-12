@@ -1,3 +1,11 @@
+/**
+ * AgentCard Component
+ * 
+ * Card display for an AI agent with status, model info, and deployment badges.
+ * Includes dropdown menu for configure, pause/activate, and delete actions.
+ * @module components/agents/AgentCard
+ */
+
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';

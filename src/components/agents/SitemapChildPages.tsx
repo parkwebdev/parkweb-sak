@@ -1,3 +1,11 @@
+/**
+ * SitemapChildPages Component
+ * 
+ * Paginated list of sitemap child pages with search and filter.
+ * Shows status, chunk counts, and per-page retry/delete actions.
+ * @module components/agents/SitemapChildPages
+ */
+
 import React, { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

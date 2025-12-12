@@ -1,3 +1,11 @@
+/**
+ * AnimatedItem Component
+ * 
+ * A flexible motion wrapper for animating individual items with various animation styles.
+ * Supports slide, scale, and fade animations with configurable directions.
+ * @module components/ui/animated-item
+ */
+
 import React from 'react';
 import { motion, type Variants } from 'motion/react';
 import { cn } from '@/lib/utils';

@@ -1,3 +1,11 @@
+/**
+ * BackgroundPattern Component
+ * 
+ * SVG-based decorative background patterns for visual interest.
+ * Supports grid and dots patterns with size variants.
+ * @module components/ui/background-pattern
+ */
+
 import * as React from "react";
 import { cn } from "@/lib/utils";
 

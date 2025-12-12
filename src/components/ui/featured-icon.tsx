@@ -1,3 +1,11 @@
+/**
+ * FeaturedIcon Component
+ * 
+ * Styled icon container with size and color variants.
+ * Used for highlighting icons in cards, empty states, and feature sections.
+ * @module components/ui/featured-icon
+ */
+
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";

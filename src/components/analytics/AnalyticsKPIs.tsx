@@ -1,3 +1,11 @@
+/**
+ * AnalyticsKPIs Component
+ * 
+ * Key Performance Indicator cards with trend indicators.
+ * Displays value, change percentage, and trend direction.
+ * @module components/analytics/AnalyticsKPIs
+ */
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TrendUp01, TrendDown01 } from '@untitledui/icons';
 

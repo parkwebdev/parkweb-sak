@@ -1,3 +1,11 @@
+/**
+ * ConversationChart Component
+ * 
+ * Line chart showing conversation trends over time.
+ * Displays total, active, and closed conversation counts.
+ * @module components/analytics/ConversationChart
+ */
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from '@/components/ui/chart';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid } from 'recharts';

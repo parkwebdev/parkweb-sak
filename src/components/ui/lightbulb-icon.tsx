@@ -1,3 +1,11 @@
+/**
+ * LightbulbIcon Component
+ * 
+ * Custom lightbulb icon with outline and filled variants.
+ * Supports hover state transitions for interactive UI patterns.
+ * @module components/ui/lightbulb-icon
+ */
+
 import * as React from "react";
 import { cn } from "@/lib/utils";
 

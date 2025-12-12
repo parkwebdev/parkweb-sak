@@ -1,3 +1,11 @@
+/**
+ * StepProgress Component
+ * 
+ * Vertical step progress indicator with icons and connecting lines.
+ * Shows completion status and highlights current step.
+ * @module components/ui/step-progress
+ */
+
 import * as React from "react";
 import { cn } from "@/lib/utils";
 import { Check } from "@untitledui/icons";

@@ -1,3 +1,11 @@
+/**
+ * RichTextToolbar Component
+ * 
+ * Toolbar for the RichTextEditor with formatting buttons.
+ * Includes text styling, headings, lists, links, images, and code formatting.
+ * @module components/ui/rich-text-toolbar
+ */
+
 import { Editor } from '@tiptap/react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';

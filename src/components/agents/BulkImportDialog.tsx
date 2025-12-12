@@ -1,3 +1,11 @@
+/**
+ * BulkImportDialog Component
+ * 
+ * Multi-step dialog for importing help articles from CSV files.
+ * Features auto-column mapping, preview validation, and batch import.
+ * @module components/agents/BulkImportDialog
+ */
+
 import { useState, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';

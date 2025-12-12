@@ -1,3 +1,11 @@
+/**
+ * ReportBuilder Component
+ * 
+ * Configuration interface for building custom analytics reports.
+ * Allows selection of metrics, date ranges, and report format.
+ * @module components/analytics/ReportBuilder
+ */
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';

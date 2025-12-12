@@ -1,3 +1,11 @@
+/**
+ * ActiveVisitorsCard Component
+ * 
+ * Real-time display of active visitors across all agents.
+ * Uses Supabase presence channel for live updates.
+ * @module components/analytics/ActiveVisitorsCard
+ */
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';

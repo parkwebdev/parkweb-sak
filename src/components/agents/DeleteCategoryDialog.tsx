@@ -1,3 +1,11 @@
+/**
+ * DeleteCategoryDialog Component
+ * 
+ * Confirmation dialog for deleting help article categories.
+ * Offers options to move articles to another category or delete all.
+ * @module components/agents/DeleteCategoryDialog
+ */
+
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';

@@ -1,3 +1,11 @@
+/**
+ * KnowledgeSourceCard Component
+ * 
+ * Card display for a knowledge source with status, progress, and actions.
+ * Supports sitemaps with expandable child pages and progress tracking.
+ * @module components/agents/KnowledgeSourceCard
+ */
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';

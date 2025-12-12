@@ -1,3 +1,12 @@
+/**
+ * RichTextEditor Component
+ * 
+ * Full-featured rich text editor built on Tiptap.
+ * Supports formatting, images, links, and code blocks.
+ * Includes drag-and-drop and paste image upload.
+ * @module components/ui/rich-text-editor
+ */
+
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
