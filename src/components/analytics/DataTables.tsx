@@ -1,3 +1,11 @@
+/**
+ * DataTables Component
+ * 
+ * Analytics data tables with sorting and export functionality.
+ * Displays tabular data for various analytics metrics.
+ * @module components/analytics/DataTables
+ */
+
 import React, { useMemo } from 'react';
 import {
   ColumnDef,

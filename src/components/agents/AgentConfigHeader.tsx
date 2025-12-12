@@ -1,3 +1,11 @@
+/**
+ * AgentConfigHeader Component
+ * 
+ * Hero header for agent configuration page with dotted grid background.
+ * Displays agent name, status badge, and description.
+ * @module components/agents/AgentConfigHeader
+ */
+
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';

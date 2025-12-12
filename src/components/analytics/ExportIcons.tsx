@@ -1,3 +1,10 @@
+/**
+ * ExportIcons Component
+ * 
+ * SVG icons for PDF and CSV file types used in export buttons.
+ * @module components/analytics/ExportIcons
+ */
+
 export const PdfIcon = ({ className }: { className?: string }) => (
   <svg width={40} height={40} fill="none" viewBox="0 0 40 40" className={className}>
     <path

@@ -1,3 +1,11 @@
+/**
+ * MultiStepLoader Component
+ * 
+ * Animated multi-step loading indicator with checklist visualization.
+ * Shows progress through a list of loading states with animated transitions.
+ * @module components/ui/multi-step-loader
+ */
+
 "use client";
 
 import { cn } from "@/lib/utils";

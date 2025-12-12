@@ -1,3 +1,12 @@
+/**
+ * PhoneInputField Component
+ * 
+ * International phone number input with auto-formatting and country detection.
+ * Displays country flag based on detected phone number format.
+ * Uses libphonenumber-js for parsing and formatting.
+ * @module components/ui/phone-input
+ */
+
 import { useState, useEffect, forwardRef, ChangeEvent } from 'react';
 import { AsYouType, parsePhoneNumber, CountryCode } from 'libphonenumber-js/min';
 import { Input } from '@/components/ui/input';

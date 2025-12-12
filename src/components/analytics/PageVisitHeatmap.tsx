@@ -1,3 +1,11 @@
+/**
+ * PageVisitHeatmap Component
+ * 
+ * Heatmap visualization of page visits by hour and day.
+ * Shows traffic patterns with color intensity.
+ * @module components/analytics/PageVisitHeatmap
+ */
+
 import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';

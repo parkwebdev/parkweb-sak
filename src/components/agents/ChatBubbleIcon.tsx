@@ -1,3 +1,10 @@
+/**
+ * ChatBubbleIcon Component
+ * 
+ * Custom ChatPad logo SVG icon used in branding and widget display.
+ * @module components/agents/ChatBubbleIcon
+ */
+
 import * as React from "react";
 
 interface ChatBubbleIconProps extends React.SVGProps<SVGSVGElement> {

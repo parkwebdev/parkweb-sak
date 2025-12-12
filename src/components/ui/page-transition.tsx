@@ -1,3 +1,11 @@
+/**
+ * PageTransition Component
+ * 
+ * Wrapper for page-level animations during navigation.
+ * Provides smooth slide and fade transitions between pages.
+ * @module components/ui/page-transition
+ */
+
 import React from 'react';
 import { motion } from 'motion/react';
 

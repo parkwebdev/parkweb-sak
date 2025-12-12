@@ -1,3 +1,11 @@
+/**
+ * ComparisonView Component
+ * 
+ * Side-by-side comparison of metrics between two time periods.
+ * Shows percentage change and trend indicators.
+ * @module components/analytics/ComparisonView
+ */
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ArrowUp, ArrowDown, Minus } from '@untitledui/icons';

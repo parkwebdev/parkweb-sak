@@ -1,3 +1,11 @@
+/**
+ * LandingPagesTable Component
+ * 
+ * Table displaying landing page analytics with visitor counts.
+ * Sortable columns for page URL, visits, and bounce rate.
+ * @module components/analytics/LandingPagesTable
+ */
+
 import React from 'react';
 import {
   useReactTable,

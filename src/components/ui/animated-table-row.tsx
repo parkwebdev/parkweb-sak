@@ -1,3 +1,11 @@
+/**
+ * AnimatedTableRow Component
+ * 
+ * Motion-enabled table row with staggered animation and hover effects.
+ * Respects reduced motion preferences for accessibility.
+ * @module components/ui/animated-table-row
+ */
+
 import React from 'react';
 import { motion, HTMLMotionProps } from 'motion/react';
 import { cn } from '@/lib/utils';

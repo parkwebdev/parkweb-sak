@@ -1,3 +1,11 @@
+/**
+ * PaginationDots Component
+ * 
+ * Dot-based pagination indicator for carousels and step wizards.
+ * Highlights the current step with configurable sizes.
+ * @module components/ui/pagination-dots
+ */
+
 import * as React from "react";
 import { cn } from "@/lib/utils";
 

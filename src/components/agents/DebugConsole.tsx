@@ -1,3 +1,12 @@
+/**
+ * DebugConsole Component
+ * 
+ * Collapsible debug log panel for testing tools and webhooks.
+ * Features color-coded log levels, timestamps, and expandable details.
+ * Includes useDebugLogs hook for log management.
+ * @module components/agents/DebugConsole
+ */
+
 import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { ChevronDown, ChevronUp, Trash01, CheckCircle, XCircle, AlertCircle, InfoCircle } from '@untitledui/icons';

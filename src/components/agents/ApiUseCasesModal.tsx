@@ -1,3 +1,11 @@
+/**
+ * ApiUseCasesModal Component
+ * 
+ * Modal showcasing API integration use cases and examples.
+ * Displays use case cards, example cURL commands, and rate limit information.
+ * @module components/agents/ApiUseCasesModal
+ */
+
 import {
   Dialog,
   DialogContent,

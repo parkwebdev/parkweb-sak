@@ -1,3 +1,11 @@
+/**
+ * ExportButtons Component
+ * 
+ * Buttons for exporting analytics reports as CSV or PDF.
+ * Generates and downloads report files with configured data.
+ * @module components/analytics/ExportButtons
+ */
+
 import { Button } from '@/components/ui/button';
 import { PdfIcon, CsvIcon } from './ExportIcons';
 import { generateCSVReport, generatePDFReport } from '@/lib/report-export';

@@ -1,3 +1,11 @@
+/**
+ * CreateAgentDialog Component
+ * 
+ * Dialog for creating a new AI agent with basic configuration.
+ * Includes name, description, model selection, system prompt, and parameters.
+ * @module components/agents/CreateAgentDialog
+ */
+
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';

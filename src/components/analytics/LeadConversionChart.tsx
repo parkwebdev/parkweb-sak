@@ -1,3 +1,11 @@
+/**
+ * LeadConversionChart Component
+ * 
+ * Area chart showing lead conversion funnel over time.
+ * Visualizes lead status progression through the pipeline.
+ * @module components/analytics/LeadConversionChart
+ */
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from '@/components/ui/chart';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid } from 'recharts';

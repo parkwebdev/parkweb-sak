@@ -1,3 +1,11 @@
+/**
+ * CreateToolDialog Component
+ * 
+ * Dialog for creating custom tools that agents can invoke.
+ * Configures endpoint URL, parameters (JSON Schema), headers, and timeout.
+ * @module components/agents/CreateToolDialog
+ */
+
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

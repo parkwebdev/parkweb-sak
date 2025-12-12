@@ -1,3 +1,11 @@
+/**
+ * CreateScheduledReportDialog Component
+ * 
+ * Dialog for creating automated scheduled reports.
+ * Configures frequency, recipients, and report content.
+ * @module components/analytics/CreateScheduledReportDialog
+ */
+
 import { useState } from 'react';
 import { logger } from '@/utils/logger';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';

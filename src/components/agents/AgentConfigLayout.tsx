@@ -1,3 +1,11 @@
+/**
+ * AgentConfigLayout Component
+ * 
+ * Tab-based layout for agent configuration sections.
+ * Includes Configure, Knowledge, Content, Tools, Integrations, and Embed tabs.
+ * @module components/agents/AgentConfigLayout
+ */
+
 import React from 'react';
 import { Settings01 as Settings, Database01, GitBranch01, Code01, Announcement01, Link03 } from '@untitledui/icons';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';

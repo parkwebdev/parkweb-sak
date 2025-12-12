@@ -1,3 +1,11 @@
+/**
+ * DroppableCategoryCard Component
+ * 
+ * Category card that accepts drag-and-drop articles.
+ * Displays category header, description, and sortable article list.
+ * @module components/agents/DroppableCategoryCard
+ */
+
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { Card, CardContent } from '@/components/ui/card';

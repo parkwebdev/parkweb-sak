@@ -1,3 +1,12 @@
+/**
+ * HelpArticlesManager Component
+ * 
+ * Full management interface for help articles and categories.
+ * Features drag-and-drop reordering, category management, bulk import,
+ * rich text editing, and RAG embedding functionality.
+ * @module components/agents/HelpArticlesManager
+ */
+
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';

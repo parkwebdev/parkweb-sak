@@ -1,3 +1,11 @@
+/**
+ * AnimatedList Component
+ * 
+ * Container for staggered list animations with configurable timing.
+ * Wraps children with motion animations for smooth enter/exit effects.
+ * @module components/ui/animated-list
+ */
+
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/lib/utils';

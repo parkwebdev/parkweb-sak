@@ -1,3 +1,12 @@
+/**
+ * AddKnowledgeDialog Component
+ * 
+ * Dialog for adding knowledge sources to an agent.
+ * Supports file uploads (PDF, CSV, JSON, XML), URLs, sitemaps, and text input.
+ * Includes plan limit checking and sitemap advanced options.
+ * @module components/agents/AddKnowledgeDialog
+ */
+
 import React, { useState } from 'react';
 import {
   Dialog,

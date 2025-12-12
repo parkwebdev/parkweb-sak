@@ -1,3 +1,11 @@
+/**
+ * ReportFilters Component
+ * 
+ * Filter controls for analytics reports including agent and date selection.
+ * Provides consistent filtering interface across analytics views.
+ * @module components/analytics/ReportFilters
+ */
+
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAgents } from '@/hooks/useAgents';

@@ -1,3 +1,11 @@
+/**
+ * UsageMetricsChart Component
+ * 
+ * Line chart displaying usage metrics over time.
+ * Shows API calls, messages, and token usage trends.
+ * @module components/analytics/UsageMetricsChart
+ */
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from '@/components/ui/chart';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid } from 'recharts';

@@ -1,3 +1,12 @@
+/**
+ * AppLoadingScreen Component
+ * 
+ * Full-screen loading overlay with animated logo and ripple effects.
+ * Displays after user sign-in with minimum display time for smooth animation.
+ * Features liquid-fill logo animation and ripple background.
+ * @module components/ui/app-loading-screen
+ */
+
 "use client";
 
 import * as React from "react";

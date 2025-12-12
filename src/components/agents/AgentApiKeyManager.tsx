@@ -1,3 +1,11 @@
+/**
+ * AgentApiKeyManager Component
+ * 
+ * Manages API keys for programmatic agent access.
+ * Supports creating, editing, and revoking API keys with rate limit configuration.
+ * @module components/agents/AgentApiKeyManager
+ */
+
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
