@@ -276,7 +276,7 @@ export const AgentIntegrationsTab = ({ agentId }: AgentIntegrationsTabProps) => 
         
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <h4 className="text-sm font-medium">{integration.name}</h4>
+            <h3 className="text-sm font-medium">{integration.name}</h3>
             {integration.comingSoon && (
               <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
                 Coming Soon

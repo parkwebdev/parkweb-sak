@@ -56,7 +56,7 @@ export const DroppableCategoryCard = ({
       <CardContent className="p-4">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <h4 className="font-semibold">{category.name}</h4>
+            <h3 className="font-semibold text-sm">{category.name}</h3>
             <span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
               {articles.length}
             </span>

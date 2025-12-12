@@ -305,7 +305,8 @@ const Auth = () => {
                 <User01 />
               </FeaturedIcon>
               <div className="z-10 flex flex-col gap-2">
-                <h1 className="text-2xl font-semibold text-foreground">Your details</h1>
+                <h1 className="sr-only">Authentication</h1>
+                <h2 className="text-2xl font-semibold text-foreground">Your details</h2>
                 <p className="text-sm text-muted-foreground">Please provide your name and email</p>
               </div>
             </div>
@@ -401,7 +402,7 @@ const Auth = () => {
                 <Key01 />
               </FeaturedIcon>
               <div className="flex flex-col gap-2">
-                <h1 className="text-2xl font-semibold text-foreground">Choose a password</h1>
+                <h2 className="text-2xl font-semibold text-foreground">Choose a password</h2>
                 <p className="text-sm text-muted-foreground">Must be at least 8 characters</p>
               </div>
             </div>
@@ -469,7 +470,7 @@ const Auth = () => {
                 <UsersPlus />
               </FeaturedIcon>
               <div className="flex flex-col gap-2">
-                <h1 className="text-2xl font-semibold text-foreground">Invite your team</h1>
+                <h2 className="text-2xl font-semibold text-foreground">Invite your team</h2>
                 <p className="text-sm text-muted-foreground">Start collaborating with your team members</p>
               </div>
             </div>
@@ -516,7 +517,7 @@ const Auth = () => {
                 <CheckCircle />
               </FeaturedIcon>
               <div className="flex flex-col gap-2">
-                <h1 className="text-2xl font-semibold text-foreground">You're all set!</h1>
+                <h2 className="text-2xl font-semibold text-foreground">You're all set!</h2>
                 <p className="text-sm text-muted-foreground">
                   We've sent a confirmation email to <span className="font-medium text-foreground">{email}</span>
                 </p>

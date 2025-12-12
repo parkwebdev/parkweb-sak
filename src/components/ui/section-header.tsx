@@ -21,11 +21,11 @@ interface SectionHeaderProps {
 
 export const SectionHeader = ({ children, className }: SectionHeaderProps) => {
   return (
-    <h4 className={cn(
+    <h3 className={cn(
       "text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3",
       className
     )}>
       {children}
-    </h4>
+    </h3>
   );
 };

@@ -218,9 +218,9 @@ export const RoleManagementDialog: React.FC<RoleManagementDialogProps> = ({
             <div className="space-y-3 max-h-64 overflow-y-auto">
               {Object.entries(PERMISSION_GROUPS).map(([group, groupPermissions]) => (
                 <div key={group} className="space-y-2">
-                  <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                     {group}
-                  </h4>
+                  </h3>
                   <div className="space-y-2 pl-2">
                     {groupPermissions.map((permission) => (
                       <div key={permission} className="flex items-center space-x-2">
