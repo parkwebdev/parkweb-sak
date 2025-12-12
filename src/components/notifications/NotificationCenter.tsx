@@ -263,12 +263,15 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNotifi
           variant="ghost"
           size="sm"
           className="relative p-2 h-auto"
+          aria-label={unreadCount > 0 ? `Notifications, ${unreadCount} unread` : 'Notifications'}
         >
-          <Bell size={18} />
+          <Bell size={18} aria-hidden="true" />
           {unreadCount > 0 && (
             <Badge 
               variant="destructive" 
               className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
+              role="status"
+              aria-label={`${unreadCount > 99 ? '99+' : unreadCount} unread notifications`}
             >
               {unreadCount > 99 ? '99+' : unreadCount}
             </Badge>
@@ -351,11 +354,12 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNotifi
               <CardContent className="p-0">
                 {filteredNotifications.map((notification, index) => (
                   <div key={notification.id}>
-                    <div
+                    <article
                       className={`p-4 cursor-pointer hover:bg-accent/50 transition-colors ${
                         !notification.read ? 'bg-accent/20' : ''
                       }`}
                       onClick={() => handleNotificationClick(notification)}
+                      aria-label={`${notification.title}: ${notification.message}`}
                     >
                       <div className="flex items-start gap-3">
                         <div className="flex-shrink-0 mt-0.5">
@@ -380,8 +384,9 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNotifi
                                   e.stopPropagation();
                                   deleteNotification(notification.id);
                                 }}
+                                aria-label={`Delete notification: ${notification.title}`}
                               >
-                                <X size={12} />
+                                <X size={12} aria-hidden="true" />
                               </Button>
                             </div>
                           </div>
@@ -394,7 +399,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ onNotifi
                           </p>
                         </div>
                       </div>
-                    </div>
+                    </article>
                     {index < filteredNotifications.length - 1 && <Separator />}
                   </div>
                 ))}

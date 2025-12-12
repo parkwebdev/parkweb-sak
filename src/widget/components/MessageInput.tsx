@@ -123,8 +123,9 @@ export const MessageInput = ({
                   variant="destructive"
                   onClick={() => onRemoveFile(i)} 
                   className="absolute -top-1 -right-1 h-5 w-5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                  aria-label={`Remove ${pf.file.name}`}
                 >
-                  <X className="h-3 w-3" />
+                  <X className="h-3 w-3" aria-hidden="true" />
                 </Button>
               </div>
             </div>
@@ -154,8 +155,9 @@ export const MessageInput = ({
                 onClick={onAttachFiles}
                 disabled={disabled}
                 className={`h-8 w-8 shrink-0 ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                aria-label="Attach file"
               >
-                <Attachment01 className="h-4 w-4" />
+                <Attachment01 className="h-4 w-4" aria-hidden="true" />
               </Button>
             )}
             {enableVoiceMessages && (
@@ -166,8 +168,9 @@ export const MessageInput = ({
                 onClick={onStartRecording}
                 disabled={disabled}
                 className={`h-8 w-8 shrink-0 ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                aria-label="Record voice message"
               >
-                <Microphone01 className="h-4 w-4" />
+                <Microphone01 className="h-4 w-4" aria-hidden="true" />
               </Button>
             )}
             
@@ -188,8 +191,9 @@ export const MessageInput = ({
                 className="absolute right-1 bottom-1 h-7 w-7 bg-foreground text-background hover:bg-foreground/90"
                 onClick={onSend} 
                 disabled={disabled || !messageInput.trim()}
+                aria-label="Send message"
               >
-                <Send01 className="h-3.5 w-3.5" />
+                <Send01 className="h-3.5 w-3.5" aria-hidden="true" />
               </Button>
             </div>
           </div>

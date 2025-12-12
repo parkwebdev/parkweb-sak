@@ -551,6 +551,124 @@ Icons inherit text color by default:
 
 ---
 
+## Accessibility (ARIA)
+
+All interactive components must be accessible to screen readers and keyboard users.
+
+### Icon Buttons
+
+Every icon-only button **must** have an `aria-label`:
+
+```tsx
+// ✅ Correct
+<Button size="icon" aria-label="Delete item">
+  <Trash01 className="h-4 w-4" aria-hidden="true" />
+</Button>
+
+// ❌ Wrong - no accessible label
+<Button size="icon">
+  <Trash01 className="h-4 w-4" />
+</Button>
+```
+
+### Loading Spinners
+
+Use `role="status"` for loading indicators:
+
+```tsx
+// ✅ Correct - Spinner component handles this automatically
+<Spinner label="Loading data" />
+
+// The component wraps the SVG:
+<div role="status" aria-label="Loading data">
+  <svg aria-hidden="true">...</svg>
+  <span className="sr-only">Loading data</span>
+</div>
+```
+
+### Status Badges
+
+Use `role="status"` for dynamic badges that update:
+
+```tsx
+// ✅ Correct - notification count badge
+<Badge role="status" aria-label="5 unread notifications">
+  5
+</Badge>
+
+// No role needed for static descriptive badges
+<Badge>Active</Badge>
+```
+
+### Navigation
+
+Current page must be indicated with `aria-current`:
+
+```tsx
+// ✅ Correct
+<nav aria-label="Main navigation">
+  <Link to="/dashboard" aria-current={isActive ? 'page' : undefined}>
+    Dashboard
+  </Link>
+</nav>
+```
+
+### Decorative Elements
+
+Hide decorative icons and images from screen readers:
+
+```tsx
+// ✅ Correct - decorative icon
+<div aria-hidden="true">
+  <DecorationIcon className="h-12 w-12" />
+</div>
+
+// ✅ Correct - inline with button
+<Button aria-label="Send message">
+  <Send01 aria-hidden="true" />
+</Button>
+```
+
+### Avatar Fallbacks
+
+Avatar fallbacks should have meaningful labels:
+
+```tsx
+// ✅ Correct - AvatarFallback auto-generates label from children
+<Avatar>
+  <AvatarImage src="/avatar.jpg" alt="John Doe" />
+  <AvatarFallback>JD</AvatarFallback>
+</Avatar>
+
+// Custom aria-label for complex cases
+<AvatarFallback aria-label="User John Doe initials">JD</AvatarFallback>
+```
+
+### Focus Management
+
+Ensure focus states are always visible (handled via `--ring` token):
+
+```tsx
+// Focus ring is applied automatically via Tailwind
+// Custom focus styling:
+className="focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+```
+
+### ARIA Checklist
+
+Before shipping any component, verify:
+
+- [ ] All icon buttons have `aria-label`
+- [ ] Decorative icons have `aria-hidden="true"`
+- [ ] Loading states use `role="status"`
+- [ ] Dynamic count badges have `role="status"` and `aria-label`
+- [ ] Navigation shows `aria-current="page"` for active routes
+- [ ] Forms have proper `<label>` associations
+- [ ] Dialogs trap focus and return focus on close
+- [ ] Color alone is not used to convey information
+
+---
+
 ## Related Documentation
 
 - [shadcn Component Guide](./SHADCN_COMPONENT_GUIDE.md) - Component patterns and motion

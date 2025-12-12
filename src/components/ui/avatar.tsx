@@ -46,18 +46,27 @@ const AvatarImage = React.forwardRef<
 ))
 AvatarImage.displayName = AvatarPrimitive.Image.displayName
 
+interface AvatarFallbackProps extends React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Fallback> {
+  /** Accessible label for the fallback (e.g., user's initials) */
+  "aria-label"?: string
+}
+
 const AvatarFallback = React.forwardRef<
   React.ElementRef<typeof AvatarPrimitive.Fallback>,
-  React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Fallback>
->(({ className, ...props }, ref) => (
+  AvatarFallbackProps
+>(({ className, "aria-label": ariaLabel, children, ...props }, ref) => (
   <AvatarPrimitive.Fallback
     ref={ref}
+    role="img"
+    aria-label={ariaLabel || (typeof children === 'string' ? `Avatar: ${children}` : undefined)}
     className={cn(
       "flex h-full w-full items-center justify-center rounded-full bg-muted",
       className
     )}
     {...props}
-  />
+  >
+    {children}
+  </AvatarPrimitive.Fallback>
 ))
 AvatarFallback.displayName = AvatarPrimitive.Fallback.displayName
 
