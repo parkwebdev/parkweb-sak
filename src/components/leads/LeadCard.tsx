@@ -25,7 +25,7 @@ export const LeadCard = ({ lead, onView }: LeadCardProps) => {
   };
 
   return (
-    <Card className="hover:shadow-lg transition-shadow">
+    <Card className="hover:shadow-md transition-shadow">
       <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
         <div className="space-y-1">
           <h3 className="font-semibold text-lg">{lead.name || 'Unknown'}</h3>
