@@ -146,8 +146,9 @@ export const ScheduledReportsManager = () => {
                         variant="ghost"
                         size="icon"
                         onClick={() => setDeleteId(report.id)}
+                        aria-label="Delete scheduled report"
                       >
-                        <Trash01 className="h-4 w-4" />
+                        <Trash01 className="h-4 w-4" aria-hidden="true" />
                       </Button>
                     </TableCell>
                   </TableRow>

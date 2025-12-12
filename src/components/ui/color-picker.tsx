@@ -310,8 +310,9 @@ function ColorPickerEyeDropper({ className }: ColorPickerEyeDropperProps) {
       size="icon"
       className={cn("h-8 w-8 shrink-0 [&_svg]:!h-4 [&_svg]:!w-4", className)}
       onClick={handleClick}
+      aria-label="Pick color from screen"
     >
-      <Dropper className="h-4 w-4" />
+      <Dropper className="h-4 w-4" aria-hidden="true" />
     </Button>
   );
 }

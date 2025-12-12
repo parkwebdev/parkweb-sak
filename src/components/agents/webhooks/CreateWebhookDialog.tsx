@@ -280,8 +280,9 @@ export const CreateWebhookDialog = ({ open, onOpenChange, agentId }: CreateWebho
                       size="icon"
                       onClick={() => removeHeader(index)}
                       disabled={customHeaders.length === 1}
+                      aria-label="Remove header"
                     >
-                      ✕
+                      <span aria-hidden="true">✕</span>
                     </Button>
                   </div>
                 ))}

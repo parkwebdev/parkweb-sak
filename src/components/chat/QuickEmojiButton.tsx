@@ -35,8 +35,9 @@ export const QuickEmojiButton: React.FC<QuickEmojiButtonProps> = ({
           size="icon"
           disabled={disabled}
           className="h-9 w-9 shrink-0"
+          aria-label="Add emoji"
         >
-          <FaceSmile size={18} className="text-muted-foreground" />
+          <FaceSmile size={18} className="text-muted-foreground" aria-hidden="true" />
         </Button>
       </PopoverTrigger>
       <PopoverContent 

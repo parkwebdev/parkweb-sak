@@ -1106,8 +1106,9 @@ const Conversations: React.FC = () => {
                     onClick={() => fileInputRef.current?.click()}
                     disabled={sendingMessage}
                     className="h-10 w-10"
+                    aria-label="Attach files"
                   >
-                    <Attachment01 size={18} />
+                    <Attachment01 size={18} aria-hidden="true" />
                   </Button>
                   
                   <div className="relative flex-1">
@@ -1129,8 +1130,9 @@ const Conversations: React.FC = () => {
                       size="icon"
                       className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
                       disabled={sendingMessage || (!messageInput.trim() && !pendingFiles)}
+                      aria-label="Send message"
                     >
-                      <Send01 size={16} />
+                      <Send01 size={16} aria-hidden="true" />
                     </Button>
                   </div>
                 </form>

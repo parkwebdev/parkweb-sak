@@ -134,8 +134,9 @@ export const ConditionBuilder = ({ conditions, onChange, eventType }: ConditionB
                   variant="outline"
                   size="icon"
                   onClick={() => removeCondition(index)}
+                  aria-label="Remove condition"
                 >
-                  ✕
+                  <span aria-hidden="true">✕</span>
                 </Button>
               </div>
             ))}

@@ -601,7 +601,7 @@ const Auth = () => {
                       <Mail01 />
                     </FeaturedIcon>
                     <div className="flex flex-col gap-2">
-                      <h1 className="text-2xl font-semibold text-foreground">Forgot password?</h1>
+                      <h2 className="text-2xl font-semibold text-foreground">Forgot password?</h2>
                       <p className="text-sm text-muted-foreground">No worries, we'll send you reset instructions.</p>
                     </div>
                   </div>
@@ -648,7 +648,7 @@ const Auth = () => {
                       <Key01 />
                     </FeaturedIcon>
                     <div className="flex flex-col gap-2">
-                      <h1 className="text-2xl font-semibold text-foreground">Welcome back</h1>
+                      <h2 className="text-2xl font-semibold text-foreground">Welcome back</h2>
                       <p className="text-sm text-muted-foreground">Welcome back! Please enter your details.</p>
                     </div>
                   </div>
