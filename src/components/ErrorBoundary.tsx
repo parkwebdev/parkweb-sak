@@ -1,30 +1,78 @@
+/**
+ * Error Boundary Component
+ * 
+ * Catches JavaScript errors anywhere in the child component tree,
+ * logs the error, and displays a fallback UI instead of crashing.
+ * 
+ * @module components/ErrorBoundary
+ */
+
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { logger } from '@/utils/logger';
 
+/**
+ * Props for the ErrorBoundary component
+ */
 interface Props {
+  /** Child components to render */
   children: ReactNode;
+  /** Optional custom fallback UI to display on error */
   fallback?: ReactNode;
 }
 
+/**
+ * Internal state for error tracking
+ * @internal
+ */
 interface State {
+  /** Whether an error has been caught */
   hasError: boolean;
+  /** The caught error object */
   error: Error | null;
 }
 
+/**
+ * React Error Boundary for catching and handling component errors.
+ * Provides a graceful fallback UI and logging when errors occur.
+ * 
+ * @example
+ * // Basic usage
+ * <ErrorBoundary>
+ *   <MyComponent />
+ * </ErrorBoundary>
+ * 
+ * @example
+ * // With custom fallback
+ * <ErrorBoundary fallback={<CustomErrorPage />}>
+ *   <App />
+ * </ErrorBoundary>
+ */
 class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
     this.state = { hasError: false, error: null };
   }
 
+  /**
+   * Update state when an error is caught
+   * @internal
+   */
   static getDerivedStateFromError(error: Error): State {
     return { hasError: true, error };
   }
 
+  /**
+   * Log error details for debugging
+   * @internal
+   */
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     logger.error('ErrorBoundary caught an error:', { error, errorInfo });
   }
 
+  /**
+   * Reset error state to retry rendering
+   * @internal
+   */
   handleReset = () => {
     this.setState({ hasError: false, error: null });
   };
@@ -44,6 +92,7 @@ class ErrorBoundary extends Component<Props, State> {
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
+                aria-hidden="true"
               >
                 <path
                   strokeLinecap="round"

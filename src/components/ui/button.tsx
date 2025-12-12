@@ -1,3 +1,12 @@
+/**
+ * Button Component
+ * 
+ * A versatile button component with multiple variants, sizes, and loading states.
+ * Built on Radix UI Slot for composition and Framer Motion for animations.
+ * 
+ * @module components/ui/button
+ */
+
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
@@ -5,9 +14,11 @@ import { motion } from "motion/react"
 
 import { cn } from "@/lib/utils"
 import { Spinner } from "./spinner"
-import { useReducedMotion } from "@/hooks/useReducedMotion"
-import { springs } from "@/lib/motion-variants"
 
+/**
+ * Button variant styles using class-variance-authority
+ * @internal
+ */
 const buttonVariants = cva(
   "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-xs font-medium leading-none transition-colors disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
@@ -37,19 +48,45 @@ const buttonVariants = cva(
   }
 )
 
-// Omit conflicting event handlers between React and Framer Motion
+/**
+ * Props that conflict between React and Framer Motion
+ * @internal
+ */
 type ConflictingProps = 'onAnimationStart' | 'onDragStart' | 'onDragEnd' | 'onDrag'
 
+/**
+ * Button component props
+ */
 export interface ButtonProps
   extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, ConflictingProps>,
     VariantProps<typeof buttonVariants> {
+  /** Render as child component using Radix Slot */
   asChild?: boolean
+  /** Show loading spinner and disable interactions */
   loading?: boolean
 }
 
+/**
+ * Button component with variants for different use cases.
+ * 
+ * @example
+ * // Default button
+ * <Button>Click me</Button>
+ * 
+ * @example
+ * // Destructive button with loading state
+ * <Button variant="destructive" loading={isDeleting}>
+ *   Delete
+ * </Button>
+ * 
+ * @example
+ * // Button as link using asChild
+ * <Button asChild>
+ *   <Link to="/dashboard">Go to Dashboard</Link>
+ * </Button>
+ */
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, loading = false, disabled, children, ...props }, ref) => {
-    const prefersReducedMotion = useReducedMotion()
     const Comp = asChild ? Slot : "button"
     
     // When asChild is true, Slot requires exactly one child element
@@ -67,15 +104,11 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       )
     }
 
-    // Motion config - no scale animations
-    const motionProps = {}
-    
     return (
       <motion.button
         className={cn(buttonVariants({ variant, size, className }))}
         ref={ref}
         disabled={disabled || loading}
-        {...motionProps}
         {...props}
       >
         {loading ? <Spinner size="sm" /> : children}

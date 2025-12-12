@@ -1,3 +1,12 @@
+/**
+ * Protected Route Component
+ * 
+ * Wraps routes that require authentication. Redirects unauthenticated users
+ * to the login page and shows a loading animation for fresh sign-ins.
+ * 
+ * @module components/ProtectedRoute
+ */
+
 import React, { useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -5,16 +14,33 @@ import { AppLoadingScreen } from '@/components/ui/app-loading-screen';
 import { motion } from 'motion/react';
 import { toast } from 'sonner';
 
+/**
+ * Props for the ProtectedRoute component
+ */
 interface ProtectedRouteProps {
+  /** Child components to render when authenticated */
   children: React.ReactNode;
 }
 
+/**
+ * Route wrapper that enforces authentication.
+ * Shows loading animation on fresh sign-in, redirects to login if unauthenticated.
+ * 
+ * @example
+ * <ProtectedRoute>
+ *   <DashboardPage />
+ * </ProtectedRoute>
+ */
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { user, loading, justSignedIn, clearJustSignedIn } = useAuth();
   const location = useLocation();
   const [loadingComplete, setLoadingComplete] = useState(false);
   const [hasShownToast, setHasShownToast] = useState(false);
 
+  /**
+   * Handle loading screen completion
+   * @internal
+   */
   const handleLoadingComplete = () => {
     setLoadingComplete(true);
     clearJustSignedIn();
@@ -25,6 +51,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     return null;
   }
 
+  // Redirect to login if not authenticated
   if (!user) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }

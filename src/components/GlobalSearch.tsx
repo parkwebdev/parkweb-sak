@@ -1,3 +1,13 @@
+/**
+ * Global Search Component
+ * 
+ * Command palette for searching across all app content including
+ * agents, conversations, leads, and navigation items.
+ * Activated via Cmd/Ctrl+K keyboard shortcut.
+ * 
+ * @module components/GlobalSearch
+ */
+
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -12,6 +22,15 @@ import { useGlobalSearch } from '@/hooks/useGlobalSearch';
 import { useSearchData, type SearchResult } from '@/hooks/useSearchData';
 import * as Icons from '@untitledui/icons';
 
+/**
+ * Global search command palette component.
+ * Provides unified search across all application content.
+ * 
+ * @remarks
+ * - Opens with Cmd/Ctrl+K
+ * - Groups results by category
+ * - Supports navigation and custom actions
+ */
 export const GlobalSearch = () => {
   const { open, setOpen } = useGlobalSearch();
   const { searchResults, loading } = useSearchData();
@@ -19,6 +38,7 @@ export const GlobalSearch = () => {
   const [search, setSearch] = useState('');
   const navigate = useNavigate();
 
+  // Filter results based on search query
   useEffect(() => {
     if (!search) {
       setFilteredResults(searchResults);
@@ -35,7 +55,7 @@ export const GlobalSearch = () => {
     setFilteredResults(filtered);
   }, [search, searchResults]);
 
-  // Group results by category
+  // Group results by category for organized display
   const groupedResults = filteredResults.reduce((acc, result) => {
     if (!acc[result.category]) {
       acc[result.category] = [];
@@ -44,6 +64,10 @@ export const GlobalSearch = () => {
     return acc;
   }, {} as Record<string, SearchResult[]>);
 
+  /**
+   * Handle result selection - navigate or execute action
+   * @internal
+   */
   const handleSelect = (result: SearchResult) => {
     if (result.action) {
       result.action();
