@@ -404,6 +404,7 @@ const Planner: React.FC = () => {
         newEnd={pendingTimeChange?.newEnd || null}
         onConfirm={applyTimeChange}
         onSkip={() => applyTimeChange()}
+        existingEvents={events}
       />
     </main>
   );
