@@ -1,3 +1,13 @@
+/**
+ * Planner Page (Calendar)
+ * 
+ * Full-featured calendar for scheduling property showings, move-ins,
+ * inspections, and maintenance. Supports month/week/day views,
+ * drag-and-drop, event resizing, recurrence, and conflict detection.
+ * 
+ * @page
+ */
+
 import React, { useState, useCallback } from 'react';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';

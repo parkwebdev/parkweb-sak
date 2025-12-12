@@ -1,3 +1,12 @@
+/**
+ * Agents Page
+ * 
+ * Lists all AI agents for the current user with search and status filtering.
+ * Provides agent creation, configuration access, and status management.
+ * 
+ * @page
+ */
+
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -15,7 +24,9 @@ import { AnimatedItem } from '@/components/ui/animated-item';
 
 type Agent = Tables<'agents'>;
 
+/** Props for the Agents page */
 interface AgentsProps {
+  /** Handler for mobile menu toggle */
   onMenuClick?: () => void;
 }
 

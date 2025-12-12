@@ -1,20 +1,51 @@
+/**
+ * Team Type Definitions
+ * 
+ * Type-safe interfaces for team member management,
+ * roles, and permissions.
+ * 
+ * @module types/team
+ */
+
+/**
+ * Team member profile with role information.
+ * Combined from profiles and user_roles tables.
+ */
 export interface TeamMember {
+  /** Profile record ID */
   id: string;
+  /** User ID (auth.users reference) */
   user_id: string;
+  /** Display name for the team member */
   display_name: string | null;
+  /** Email address (only visible to self/owner) */
   email: string | null;
+  /** Avatar image URL */
   avatar_url: string | null;
+  /** Profile creation timestamp */
   created_at: string;
+  /** Profile last update timestamp */
   updated_at?: string;
+  /** User's role in the team */
   role?: string;
+  /** List of specific permissions */
   permissions?: string[];
 }
 
+/**
+ * Data required to invite a new team member.
+ */
 export interface InviteMemberData {
+  /** Email address to send invitation */
   email: string;
+  /** Initial role for the invited member */
   role?: string;
 }
 
+/**
+ * Available user roles in the system.
+ * Ordered from highest to lowest privilege.
+ */
 export type UserRole = 'super_admin' | 'admin' | 'manager' | 'member' | 'client';
 
 /** App permissions matching the database enum */

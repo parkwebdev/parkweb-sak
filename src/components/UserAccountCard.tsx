@@ -1,3 +1,15 @@
+/**
+ * UserAccountCard Component
+ * 
+ * Displays the current user's avatar, name, and email in the sidebar.
+ * Includes a dropdown menu with navigation to profile, billing, settings,
+ * keyboard shortcuts, and sign out functionality.
+ * 
+ * @component
+ * @example
+ * <UserAccountCard isCollapsed={false} />
+ */
+
 import React from 'react';
 import { User01 as User, Settings04 as Settings, LogOut01 as LogOut, CreditCard01 } from '@untitledui/icons';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -11,13 +23,19 @@ import { KeyboardShortcutsDropdown } from '@/components/KeyboardShortcutsDropdow
 import { Spinner } from '@/components/ui/spinner';
 import { logger } from '@/utils/logger';
 
+/** User profile data from database */
 interface UserProfile {
+  /** Display name */
   display_name: string | null;
+  /** Email address */
   email: string | null;
+  /** Avatar image URL */
   avatar_url: string | null;
 }
 
+/** Props for the UserAccountCard component */
 interface UserAccountCardProps {
+  /** Whether the sidebar is collapsed (shows avatar only) */
   isCollapsed?: boolean;
 }
 

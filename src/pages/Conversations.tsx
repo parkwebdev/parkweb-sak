@@ -1,3 +1,13 @@
+/**
+ * Conversations Page (Inbox)
+ * 
+ * Real-time conversation management interface for viewing and responding
+ * to widget conversations. Features human takeover, emoji reactions,
+ * file attachments, typing indicators, and conversation metadata panel.
+ * 
+ * @page
+ */
+
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';

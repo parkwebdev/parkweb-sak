@@ -1,3 +1,20 @@
+/**
+ * Analytics Page
+ * 
+ * Comprehensive analytics dashboard providing insights into conversations,
+ * leads, agent performance, traffic sources, and usage metrics.
+ * Features include:
+ * - KPI overview with trend indicators
+ * - Date range and filter controls
+ * - Comparison mode for period-over-period analysis
+ * - Multiple chart visualizations
+ * - Report generation (CSV/PDF export)
+ * - Scheduled report management
+ * - Real-time data tables
+ * 
+ * @page
+ */
+
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAnalytics } from '@/hooks/useAnalytics';

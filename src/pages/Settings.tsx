@@ -1,3 +1,17 @@
+/**
+ * Settings Page
+ * 
+ * Centralized settings management with tabs for:
+ * - General: Organization-wide preferences
+ * - Profile: User profile and avatar
+ * - Team: Team member management and invitations
+ * - Notifications: Email and browser notification preferences
+ * - Billing: Subscription and payment management
+ * - Usage: Resource usage metrics and limits
+ * 
+ * @page
+ */
+
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -10,9 +24,12 @@ import { SubscriptionSettings } from '@/components/settings/SubscriptionSettings
 import { UsageSettings } from '@/components/settings/UsageSettings';
 import { TeamSettings } from '@/components/settings/TeamSettings';
 
+/** Available settings tabs */
 export type SettingsTab = 'general' | 'profile' | 'team' | 'notifications' | 'billing' | 'usage';
 
+/** Props for the Settings page */
 interface SettingsProps {
+  /** Handler for mobile menu toggle */
   onMenuClick?: () => void;
 }
 

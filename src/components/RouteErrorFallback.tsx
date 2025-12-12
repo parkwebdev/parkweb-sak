@@ -1,7 +1,21 @@
+/**
+ * RouteErrorFallback Component
+ * 
+ * Error boundary fallback UI displayed when a route component crashes.
+ * Shows user-friendly error message with recovery options.
+ * In development mode, displays detailed error information.
+ * 
+ * @component
+ * @example
+ * <RouteErrorFallback error={error} />
+ */
+
 import { AlertCircle } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 
+/** Props for the RouteErrorFallback component */
 interface RouteErrorFallbackProps {
+  /** The error that caused the fallback to render */
   error?: Error;
 }
 

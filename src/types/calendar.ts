@@ -1,15 +1,41 @@
+/**
+ * Calendar Type Definitions
+ * 
+ * Type-safe interfaces for calendar events, recurrence rules,
+ * and booking management features.
+ * 
+ * @module types/calendar
+ */
+
+/** Recurrence frequency options for repeating events */
 export type RecurrenceFrequency = 'daily' | 'weekly' | 'monthly' | 'yearly';
+
+/** How a recurrence pattern ends */
 export type RecurrenceEndType = 'never' | 'after' | 'on';
 
+/**
+ * Recurrence rule for repeating events.
+ * Supports daily, weekly, monthly, and yearly patterns.
+ */
 export interface RecurrenceRule {
+  /** How often the event repeats */
   frequency: RecurrenceFrequency;
-  interval: number; // e.g., every 2 weeks
+  /** Interval between occurrences (e.g., every 2 weeks) */
+  interval: number;
+  /** How the recurrence ends */
   endType: RecurrenceEndType;
+  /** Number of occurrences before ending (if endType is 'after') */
   endAfterOccurrences?: number;
+  /** Date when recurrence ends (if endType is 'on') */
   endDate?: Date;
-  daysOfWeek?: number[]; // 0-6 for Sun-Sat (for weekly)
+  /** Days of week for weekly recurrence (0=Sun, 6=Sat) */
+  daysOfWeek?: number[];
 }
 
+/**
+ * Record of a time change made to an event.
+ * Used for tracking scheduling changes and audit logging.
+ */
 export interface TimeChangeRecord {
   timestamp: Date;
   previousStart: Date;

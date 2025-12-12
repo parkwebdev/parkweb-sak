@@ -1,8 +1,35 @@
+/**
+ * Validation Utilities
+ * 
+ * Common validation and formatting functions for user data.
+ * 
+ * @module utils/validation
+ */
+
+/**
+ * Validates an email address format.
+ * 
+ * @param email - The email address to validate
+ * @returns True if the email format is valid
+ * 
+ * @example
+ * isValidEmail('user@example.com') // true
+ * isValidEmail('invalid-email') // false
+ */
 export const isValidEmail = (email: string): boolean => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
 };
 
+/**
+ * Formats a date string for display as a join date.
+ * 
+ * @param dateString - ISO date string to format
+ * @returns Formatted date string (e.g., "Jan 15, 2024")
+ * 
+ * @example
+ * formatJoinDate('2024-01-15T00:00:00Z') // 'Jan 15, 2024'
+ */
 export const formatJoinDate = (dateString: string): string => {
   return new Date(dateString).toLocaleDateString('en-US', {
     year: 'numeric',
@@ -11,6 +38,16 @@ export const formatJoinDate = (dateString: string): string => {
   });
 };
 
+/**
+ * Returns Tailwind CSS classes for role badge styling.
+ * Includes light and dark mode variants.
+ * 
+ * @param role - User role (super_admin, admin, manager, or member)
+ * @returns Tailwind CSS class string for badge styling
+ * 
+ * @example
+ * getRoleColor('admin') // 'bg-red-100 text-red-800 ...'
+ */
 export const getRoleColor = (role: string): string => {
   switch (role) {
     case 'super_admin':

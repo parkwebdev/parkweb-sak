@@ -1,3 +1,16 @@
+/**
+ * Leads Page
+ * 
+ * Manages leads captured from widget contact forms. Features include:
+ * - Grid and table view modes
+ * - Search and status filtering
+ * - Bulk selection and deletion
+ * - Lead details sheet with conversation linkage
+ * - CSV export functionality
+ * 
+ * @page
+ */
+
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,7 +28,9 @@ import type { Tables, Enums } from '@/integrations/supabase/types';
 import { AnimatedList } from '@/components/ui/animated-list';
 import { AnimatedItem } from '@/components/ui/animated-item';
 
+/** Props for the Leads page */
 interface LeadsProps {
+  /** Handler for mobile menu toggle */
   onMenuClick?: () => void;
 }
 
