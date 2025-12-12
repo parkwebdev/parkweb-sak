@@ -66,7 +66,7 @@ export function LinkPreviewCard({ data, compact = false }: LinkPreviewCardProps)
           <img
             src={data.image}
             alt={data.title || 'Link preview'}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            className="w-full h-full object-cover transition-opacity duration-300"
             onError={() => setImageError(true)}
           />
         </div>

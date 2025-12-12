@@ -41,7 +41,7 @@ export function VideoEmbed({ embedUrl, videoType, title, thumbnail, compact = fa
           <img 
             src={displayThumbnail} 
             alt={title || 'Video thumbnail'}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            className="w-full h-full object-cover transition-opacity duration-300"
             onError={() => setThumbnailError(true)}
           />
         ) : (
@@ -52,7 +52,7 @@ export function VideoEmbed({ embedUrl, videoType, title, thumbnail, compact = fa
         
         {/* Play button overlay */}
         <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">
-          <div className="w-14 h-14 rounded-full bg-primary/90 flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg">
+          <div className="w-14 h-14 rounded-full bg-primary/90 flex items-center justify-center shadow-lg">
             <PlayCircle className="w-8 h-8 text-primary-foreground" />
           </div>
         </div>

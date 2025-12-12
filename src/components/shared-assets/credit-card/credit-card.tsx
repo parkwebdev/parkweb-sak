@@ -28,7 +28,7 @@ const CreditCard = React.forwardRef<HTMLDivElement, CreditCardProps>(
         ref={ref}
         className={cn(
           "relative w-full max-w-[340px] aspect-[1.586/1] rounded-2xl p-5 overflow-hidden",
-          "shadow-lg transition-transform duration-300 hover:scale-[1.02]",
+          "shadow-lg transition-colors",
           isDark 
             ? "bg-gradient-to-br from-[hsl(0,0%,18%)] via-[hsl(0,0%,12%)] to-[hsl(0,0%,8%)]" 
             : "bg-gradient-to-br from-[hsl(250,60%,96%)] via-[hsl(220,60%,94%)] to-[hsl(200,60%,92%)]",

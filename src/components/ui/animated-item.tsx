@@ -9,9 +9,6 @@ import {
   slideDownVariants,
   slideLeftVariants,
   slideRightVariants,
-  springs,
-  hoverLift,
-  tapScale,
 } from '@/lib/motion-variants';
 
 interface AnimatedItemProps {
@@ -96,8 +93,8 @@ export const AnimatedItem = ({
       initial="hidden"
       animate="visible"
       exit="exit"
-      whileHover={whileHover && !prefersReducedMotion ? hoverLift : undefined}
-      whileTap={whileTap && !prefersReducedMotion ? tapScale : undefined}
+      whileHover={undefined}
+      whileTap={undefined}
       layout={layout && !prefersReducedMotion ? layout : undefined}
       layoutId={layoutId}
       {...motionProps}

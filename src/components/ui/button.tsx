@@ -67,12 +67,8 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       )
     }
 
-    // Motion tap/hover config - subtle feedback
-    const motionProps = prefersReducedMotion ? {} : {
-      whileTap: { scale: 0.98 },
-      whileHover: variant !== 'link' ? { scale: 1.01 } : undefined,
-      transition: springs.micro,
-    }
+    // Motion config - no scale animations
+    const motionProps = {}
     
     return (
       <motion.button

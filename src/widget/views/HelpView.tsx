@@ -154,7 +154,7 @@ export const HelpView = ({
                     return (
                       <CSSAnimatedItem key={category.id}>
                         <button
-                          className="w-full p-4 border rounded-lg bg-card hover:bg-accent/50 cursor-pointer transition-all text-left active:scale-[0.98]"
+                          className="w-full p-4 border rounded-lg bg-card hover:bg-accent/50 cursor-pointer transition-colors text-left"
                           onClick={() => setSelectedCategory(category.id)}
                         >
                           <div className="flex items-center gap-3">
@@ -225,7 +225,7 @@ export const HelpView = ({
                 {filteredArticles.map((article) => (
                   <CSSAnimatedItem key={article.id}>
                     <button
-                      className="w-full p-3 border rounded-lg hover:bg-accent cursor-pointer transition-colors text-left active:scale-[0.98]"
+                      className="w-full p-3 border rounded-lg hover:bg-accent cursor-pointer transition-colors text-left"
                       onClick={() => setSelectedArticle(article)}
                     >
                       <div className="flex items-center justify-between gap-2">

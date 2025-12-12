@@ -134,7 +134,7 @@ const createSampleEvents = (): CalendarEvent[] => {
 
 const sampleEvents = createSampleEvents();
 
-const Calendar: React.FC = () => {
+const Planner: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('all');
   const [events, setEvents] = useState<CalendarEvent[]>(sampleEvents);
@@ -317,7 +317,7 @@ const Calendar: React.FC = () => {
   return (
     <main className="flex-1 bg-muted/30 h-full overflow-auto">
       <PageHeader
-        title="Calendar"
+        title="Planner"
         description="Manage your property showings and bookings"
       >
         <Button variant="outline">
@@ -407,4 +407,4 @@ const Calendar: React.FC = () => {
   );
 };
 
-export default Calendar;
+export default Planner;
