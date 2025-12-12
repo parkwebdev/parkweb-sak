@@ -1,6 +1,12 @@
 # ChatPad Application Overview
 
+> **Last Updated**: December 2024  
+> **Status**: Active  
+> **Related**: [Design System](./DESIGN_SYSTEM.md), [ChatPad Architecture](./CHATPAD_ARCHITECTURE.md)
+
 Comprehensive overview of the ChatPad AI agent platform.
+
+---
 
 ## Table of Contents
 
@@ -62,6 +68,15 @@ ChatPad is a multi-tenant AI agent platform for building, deploying, and managin
 | **Sonner** | Toast notifications |
 | **Tiptap** | Rich text editor |
 | **Recharts** | Charts and graphs |
+| **Framer Motion** | Animations |
+
+### Design
+
+| Element | Choice |
+|---------|--------|
+| **Font** | Geist (primary), Geist Mono (code) |
+| **Icons** | UntitledUI Icons (never Lucide) |
+| **Colors** | HSL-based semantic tokens |
 
 ---
 
@@ -70,37 +85,71 @@ ChatPad is a multi-tenant AI agent platform for building, deploying, and managin
 ### 1. Dashboard
 **Location:** `src/pages/Dashboard.tsx`
 
-Overview of key metrics: conversations, agents, leads, usage.
+Overview of key metrics: conversations, agents, leads, usage with sparkline trends.
 
 ### 2. AI Agents
 **Location:** `src/pages/Agents.tsx`, `src/pages/AgentConfig.tsx`
 
-Create and configure agents with system prompts, knowledge sources, help center content, webhooks, and embed settings.
+Create and configure agents with:
+- System prompts and model selection
+- Behavior parameters (temperature, top P, etc.)
+- Knowledge sources (PDFs, URLs, sitemaps)
+- Help center content
+- Custom tools and webhooks
+- Widget embed settings
 
-### 3. Conversations
+### 3. Inbox (Conversations)
 **Location:** `src/pages/Conversations.tsx`
 
-View, search, filter conversations with human takeover capability and real-time messaging.
+View, search, and filter conversations with:
+- Real-time messaging
+- Human takeover capability
+- Typing indicators
+- Message reactions
+- Lead context
 
 ### 4. Leads
 **Location:** `src/pages/Leads.tsx`
 
-Manage captured leads with status updates and conversation linking.
+Manage captured leads with status tracking and conversation linking.
 
 ### 5. Analytics
 **Location:** `src/pages/Analytics.tsx`
 
-Track performance with metrics, charts, and scheduled reports.
+Track performance with:
+- Metrics and KPIs
+- Charts and trends
+- Data tables
+- Scheduled reports
 
-### 6. Settings
+### 6. Planner (Calendar)
+**Location:** `src/pages/Planner.tsx`
+
+Calendar with:
+- Month/Week/Day views
+- Drag-and-drop scheduling
+- Recurring events
+- Conflict detection
+
+### 7. Settings
 **Location:** `src/pages/Settings.tsx`
 
-Configure profile, team, notifications, API keys, subscriptions, and domains.
+Configure:
+- Profile and preferences
+- Team members and roles
+- Notification settings
+- Subscription and usage
+- API keys
 
-### 7. Widget
+### 8. Widget
 **Location:** `src/pages/WidgetPage.tsx`, `src/widget/`
 
-Embeddable chat interface with AI conversations, help center, and contact forms.
+Embeddable chat interface with:
+- AI conversations
+- Help center
+- Contact forms
+- Voice messages
+- File attachments
 
 ---
 
@@ -154,8 +203,12 @@ ChatPad uses a **user-based ownership** model with team sharing:
 ```
 chatpad/
 ├── docs/                          # Documentation
+│   ├── README.md                  # Documentation index
+│   ├── DESIGN_SYSTEM.md           # Design tokens & standards
+│   ├── HOOKS_REFERENCE.md         # Custom hooks reference
 │   ├── APPLICATION_OVERVIEW.md    # This file
 │   ├── CHATPAD_ARCHITECTURE.md    # System architecture
+│   ├── AI_ARCHITECTURE.md         # AI/RAG documentation
 │   ├── DATABASE_SCHEMA.md         # Database reference
 │   ├── EDGE_FUNCTIONS.md          # API documentation
 │   ├── WIDGET_ARCHITECTURE.md     # Widget details
@@ -174,8 +227,10 @@ chatpad/
 │   │   │   ├── embed/             # Widget embed settings
 │   │   │   └── webhooks/          # Webhook configuration
 │   │   ├── analytics/             # Analytics components
+│   │   ├── calendar/              # Calendar components
 │   │   ├── chat/                  # Chat UI components
 │   │   ├── conversations/         # Conversation management
+│   │   ├── data-table/            # Table components
 │   │   ├── layout/                # App layout components
 │   │   ├── leads/                 # Lead management
 │   │   ├── notifications/         # Notification components
@@ -196,26 +251,30 @@ chatpad/
 │   ├── lib/                       # Utility libraries
 │   │   ├── utils.ts               # General utilities
 │   │   ├── formatting.ts          # Date formatting
-│   │   ├── time-formatting.ts     # Time/name formatting (shared)
+│   │   ├── time-formatting.ts     # Time/name formatting
 │   │   └── color-utils.ts         # Color manipulation
 │   │
 │   ├── pages/                     # Route pages
 │   │
+│   ├── types/                     # TypeScript types
+│   │
+│   ├── utils/                     # Utility functions
+│   │
 │   ├── widget/                    # Widget (modular architecture)
-│   │   ├── ChatWidget.tsx         # Orchestrator (~530 lines)
+│   │   ├── ChatWidget.tsx         # Orchestrator component
 │   │   ├── types.ts               # TypeScript interfaces
 │   │   ├── constants.ts           # CSS vars, lazy imports
 │   │   ├── api.ts                 # Widget API functions
-│   │   ├── hooks/                 # 9 custom hooks
-│   │   ├── components/            # 8 UI components
-│   │   ├── views/                 # 4 view components
-│   │   └── utils/                 # 5 utility modules
+│   │   ├── hooks/                 # Widget-specific hooks
+│   │   ├── components/            # Widget UI components
+│   │   ├── views/                 # Widget view components
+│   │   └── utils/                 # Widget utilities
 │   │
 │   ├── App.tsx                    # Main app component
 │   ├── main.tsx                   # Main app entry
 │   ├── widget-entry.tsx           # Widget entry (separate build)
-│   ├── index.css                  # Main stylesheet
-│   └── widget.css                 # Widget stylesheet (minimal)
+│   ├── index.css                  # Design tokens & styles
+│   └── widget.css                 # Widget stylesheet
 │
 ├── supabase/
 │   ├── config.toml                # Supabase configuration
@@ -232,23 +291,37 @@ chatpad/
 
 ### Layout Components
 
-**`AppLayout`** - Main application shell with sidebar and header.
-
-**`AgentConfigLayout`** - Agent configuration page with sticky tab navigation.
+| Component | Purpose |
+|-----------|---------|
+| `AppLayout` | Main application shell with sidebar and header |
+| `AppHeader` | Top navigation bar |
+| `Sidebar` | Collapsible navigation sidebar |
+| `AgentConfigLayout` | Agent config page with sticky tabs |
 
 ### Agent Components
 
-**`AgentCard`** - Agent list item with status and quick actions.
+| Component | Purpose |
+|-----------|---------|
+| `AgentCard` | Agent list item with status |
+| `CreateAgentDialog` | New agent modal |
+| `AgentSettingsLayout` | Settings tab navigation |
+| `AgentConfigureTab` | Model and behavior settings |
+| `AgentKnowledgeTab` | Knowledge source management |
+| `AgentToolsTab` | Custom tool configuration |
+| `AgentEmbedTab` | Widget customization |
 
-**`AgentSettingsLayout`** - Side menu navigation for settings tabs.
+### Widget Components
 
-### Widget Components (Modular)
-
-**`ChatWidget`** - Orchestrator component (~530 lines).
-
-**`HomeView`**, **`ChatView`**, **`HelpView`**, **`MessagesView`** - View components.
-
-**`MessageBubble`**, **`MessageInput`**, **`ContactForm`** - UI components.
+| Component | Purpose |
+|-----------|---------|
+| `ChatWidget` | Orchestrator component |
+| `HomeView` | Widget home with announcements |
+| `ChatView` | Chat interface |
+| `HelpView` | Help center |
+| `MessagesView` | Conversation history |
+| `MessageBubble` | Individual message |
+| `MessageInput` | Text input with attachments |
+| `ContactForm` | Lead capture form |
 
 ---
 
@@ -264,8 +337,9 @@ npm run dev
 ### Code Conventions
 
 - **Components**: PascalCase, one per file
-- **Hooks**: camelCase with `use` prefix, in `src/hooks/`
+- **Hooks**: `use` prefix, in `src/hooks/`
 - **Utilities**: camelCase, in `src/lib/` or `src/utils/`
+- **Icons**: UntitledUI only, never Lucide
 
 ### Styling Guidelines
 
@@ -279,11 +353,23 @@ Use Tailwind with design system tokens:
 <div className="bg-white text-black border-gray-200">
 ```
 
+See [Design System](./DESIGN_SYSTEM.md) for complete styling reference.
+
+### Adding New Features
+
+1. Check existing patterns in similar features
+2. Create focused components (avoid monolithic files)
+3. Use custom hooks for data and state
+4. Add JSDoc comments
+5. Follow design system tokens
+6. Update documentation
+
 ---
 
 ## Related Documentation
 
-- [Database Schema](./DATABASE_SCHEMA.md)
-- [Widget Architecture](./WIDGET_ARCHITECTURE.md)
-- [Edge Functions](./EDGE_FUNCTIONS.md)
-- [Security](./SECURITY.md)
+- [Design System](./DESIGN_SYSTEM.md) - Colors, typography, spacing
+- [Hooks Reference](./HOOKS_REFERENCE.md) - Custom hooks
+- [ChatPad Architecture](./CHATPAD_ARCHITECTURE.md) - System architecture
+- [Database Schema](./DATABASE_SCHEMA.md) - Database reference
+- [Widget Architecture](./WIDGET_ARCHITECTURE.md) - Widget details

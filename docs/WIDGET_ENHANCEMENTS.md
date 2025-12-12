@@ -1,298 +1,323 @@
 # Widget Enhancement Features
 
-This document catalogs recommended chat widget improvements based on industry standards. Features are prioritized by business value and implementation complexity.
+> **Last Updated**: December 2024  
+> **Status**: Active  
+> **Related**: [Widget Architecture](./WIDGET_ARCHITECTURE.md), [AI Architecture](./AI_ARCHITECTURE.md)
+
+This document catalogs chat widget improvements based on industry standards. Features are prioritized by business value and implementation complexity.
 
 ---
 
-## High Priority Features
+## Table of Contents
 
-### 1. Satisfaction Ratings ⭐
-**Status**: ✅ Implemented
+1. [Completed Features](#completed-features)
+2. [High Priority Features](#high-priority-features)
+3. [Medium Priority Features](#medium-priority-features)
+4. [Nice to Have Features](#nice-to-have-features)
+5. [Implementation Roadmap](#implementation-roadmap)
+
+---
+
+## Completed Features
+
+### Satisfaction Ratings ⭐
+**Status**: ✅ Completed  
 **Complexity**: Medium  
-**Business Value**: High - Direct feedback on AI/team performance
+**Business Value**: High
 
-**Description**: Post-conversation 1-5 star rating with optional text feedback. Triggers when:
+Post-conversation 1-5 star rating with optional text feedback. Triggers when:
 1. Team member closes conversation
 2. AI determines conversation is complete (via tool calling)
 
-**Technical Approach**:
+**Implementation**:
 - AI uses `mark_conversation_complete` tool when confident user is satisfied
 - Widget shows rating prompt after trigger (3-second delay)
 - Ratings stored in `conversation_ratings` table
 - Dashboard analytics for rating trends
 
-**Database Schema**:
-```sql
-CREATE TABLE conversation_ratings (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  conversation_id UUID NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
-  rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
-  feedback TEXT,
-  trigger_type TEXT NOT NULL CHECK (trigger_type IN ('team_closed', 'ai_marked_complete')),
-  created_at TIMESTAMPTZ DEFAULT now()
-);
-```
+---
+
+### Human Takeover
+**Status**: ✅ Completed  
+**Complexity**: High  
+**Business Value**: Critical
+
+Real-time handoff from AI to human team members:
+- Team member clicks "Takeover" in admin
+- Widget displays "You're chatting with a team member" banner
+- AI stops responding until returned to AI mode
+- Bidirectional typing indicators
+- Message reactions
 
 ---
 
-### 2. Message Copy Button
+### Voice Messages
+**Status**: ✅ Completed  
+**Complexity**: Medium  
+**Business Value**: Medium
+
+Record and send voice messages:
+- Hold-to-record button
+- Audio preview before send
+- Playback in message bubbles
+
+---
+
+### File Attachments
+**Status**: ✅ Completed  
+**Complexity**: Medium  
+**Business Value**: Medium
+
+Upload and send files:
+- Image uploads with thumbnail preview
+- Document uploads (PDF, DOC, etc.)
+- File type icons and size display
+- Download functionality
+
+---
+
+### Help Center
+**Status**: ✅ Completed  
+**Complexity**: Medium  
+**Business Value**: High
+
+Self-service help articles:
+- Categorized article organization
+- Rich text content with images
+- Article feedback (helpful/not helpful)
+- Search functionality
+
+---
+
+### Contact Form
+**Status**: ✅ Completed  
+**Complexity**: Low  
+**Business Value**: High
+
+Configurable lead capture:
+- Customizable form fields
+- Required/optional fields
+- Phone number formatting with country detection
+- Lead creation and conversation linking
+
+---
+
+### Link Previews
+**Status**: ✅ Completed  
+**Complexity**: Medium  
+**Business Value**: Medium
+
+Rich previews for URLs shared in messages:
+- Title, description, image extraction
+- Server-side fetching
+- Graceful fallback for unavailable previews
+
+---
+
+### Message Reactions
+**Status**: ✅ Completed  
+**Complexity**: Medium  
+**Business Value**: Low
+
+Emoji reactions on messages:
+- Quick emoji picker
+- Bidirectional sync between widget and admin
+- Real-time updates via Supabase
+
+---
+
+## High Priority Features
+
+### Message Copy Button
 **Status**: Not Started  
 **Complexity**: Low  
-**Business Value**: Medium - Better UX for code/links/instructions
+**Business Value**: Medium
 
-**Description**: One-click copy button appears on hover for assistant messages. Especially useful for:
+One-click copy button for assistant messages. Useful for:
 - Code snippets
 - URLs and links
 - Step-by-step instructions
 - Account details
 
 **Technical Approach**:
-- Add copy icon button to `MessageBubble` component
+- Add copy icon to `MessageBubble` component
 - Show on hover (desktop) or tap-hold (mobile)
 - Use `navigator.clipboard.writeText()`
-- Show brief "Copied!" toast feedback
+- Brief "Copied!" toast feedback
 
 ---
 
-### 3. Proactive Messages
+### Proactive Messages
 **Status**: Not Started  
 **Complexity**: Medium-High  
-**Business Value**: High - Increase engagement, reduce bounce
+**Business Value**: High
 
-**Description**: Automatically triggered messages based on:
-- Time on page (e.g., "Need help finding something?" after 30 seconds)
-- Specific page visits (e.g., pricing page → "Have questions about plans?")
+Automatically triggered messages based on:
+- Time on page (e.g., "Need help?" after 30 seconds)
+- Specific page visits (e.g., pricing page triggers)
 - Scroll depth or exit intent
 - Return visitor detection
 
 **Technical Approach**:
 - Add `proactive_messages` table with trigger conditions
 - Widget tracks page time, scroll depth, URL patterns
-- Evaluate triggers on interval (every 5 seconds)
-- Show message as system notification or open widget
+- Evaluate triggers on interval
 - Cooldown to prevent repeated triggers
-
-**Database Schema**:
-```sql
-CREATE TABLE proactive_messages (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  agent_id UUID NOT NULL REFERENCES agents(id) ON DELETE CASCADE,
-  message TEXT NOT NULL,
-  trigger_type TEXT NOT NULL, -- 'time_on_page', 'page_url', 'scroll_depth', 'exit_intent'
-  trigger_config JSONB NOT NULL, -- { delay_seconds: 30 } or { url_pattern: '/pricing*' }
-  enabled BOOLEAN DEFAULT true,
-  cooldown_hours INTEGER DEFAULT 24,
-  created_at TIMESTAMPTZ DEFAULT now()
-);
-```
 
 ---
 
-### 4. Pre-chat Bot Flows
+### Pre-chat Bot Flows
 **Status**: Not Started  
 **Complexity**: High  
-**Business Value**: High - Better routing, reduced AI load
+**Business Value**: High
 
-**Description**: Guided button-based flows before free-text input:
+Guided button-based flows before free-text:
 1. "What can I help with?" → [Sales] [Support] [Billing] [Other]
-2. Based on selection, show relevant sub-options or route to specific team/AI persona
+2. Based on selection, show relevant sub-options
 3. Captures intent before conversation starts
 
 **Technical Approach**:
 - Add `bot_flows` and `bot_flow_nodes` tables
 - Flow builder UI in agent config
-- Widget renders flow nodes as button options
-- Flow completion populates conversation metadata with selections
-- AI receives flow context in system prompt
-
----
-
-### 5. Conversation Search
-**Status**: Not Started  
-**Complexity**: Medium  
-**Business Value**: Medium - Better UX for returning users
-
-**Description**: Search through conversation history in Messages view:
-- Full-text search across all user's conversations
-- Highlights matching messages
-- Jump to specific message in conversation
-
-**Technical Approach**:
-- Add search input to MessagesView header
-- Client-side filtering for current conversations
-- Server-side full-text search for older conversations
-- Use PostgreSQL `to_tsvector` for efficient search
+- Widget renders flow nodes as buttons
+- Flow completion populates conversation metadata
 
 ---
 
 ## Medium Priority Features
 
-### 6. Message Timestamps Toggle
+### Conversation Search
 **Status**: Not Started  
-**Complexity**: Low  
-**Business Value**: Low - Nice UX polish
+**Complexity**: Medium  
+**Business Value**: Medium
 
-**Description**: Option to show/hide timestamps on individual messages. Currently only shown on conversation cards.
-
-**Technical Approach**:
-- Add toggle in widget settings or per-message hover
-- Format: "2:34 PM" for today, "Mon 2:34 PM" for this week, "Dec 5" for older
+Search through conversation history:
+- Full-text search across messages
+- Highlight matching content
+- Jump to specific message
 
 ---
 
-### 7. "Is This Helpful?" on AI Responses
+### Message Timestamps Toggle
+**Status**: Not Started  
+**Complexity**: Low  
+**Business Value**: Low
+
+Option to show/hide timestamps on individual messages:
+- Format: "2:34 PM" for today
+- "Mon 2:34 PM" for this week
+- "Dec 5" for older
+
+---
+
+### "Is This Helpful?" Feedback
 **Status**: Not Started  
 **Complexity**: Low-Medium  
-**Business Value**: Medium - Granular feedback per response
+**Business Value**: Medium
 
-**Description**: Thumbs up/down on individual AI messages (separate from conversation rating):
+Thumbs up/down on individual AI messages:
 - Helps identify which responses need improvement
 - Feeds into knowledge source quality metrics
-- Can trigger human review for downvoted responses
-
-**Technical Approach**:
-- Add `message_feedback` table
-- Icons appear below AI messages
-- Aggregate stats in analytics dashboard
-- Optionally trigger webhook on negative feedback
+- Can trigger human review for negative feedback
 
 ---
 
-### 8. Conversation Tags/Topics
+### Conversation Tags/Topics
 **Status**: Not Started  
 **Complexity**: Medium  
-**Business Value**: Medium - Better organization for admins
+**Business Value**: Medium
 
-**Description**: Auto-categorize conversations by topic:
-- AI auto-tags based on content (billing, technical, sales, etc.)
+Auto-categorize conversations:
+- AI auto-tags based on content
 - Admins can manually add/remove tags
-- Filter conversations by tag in admin panel
-
-**Technical Approach**:
-- Add `conversation_tags` table (many-to-many)
-- AI extracts topics via tool calling
-- Tag filter in Conversations page
-- Tag distribution in analytics
+- Filter by tag in admin panel
 
 ---
 
-### 9. Offline Mode Indicator
+### Offline Mode Indicator
 **Status**: Not Started  
 **Complexity**: Low  
-**Business Value**: Low-Medium - Transparency when unavailable
+**Business Value**: Low-Medium
 
-**Description**: Show clear indicator when:
+Clear indicator when:
 - Widget loses internet connection
 - AI service is unavailable
-- Outside business hours (if configured)
-
-**Technical Approach**:
-- Monitor `navigator.onLine` events
-- Catch API errors and show friendly message
 - Queue messages for retry when back online
-- Optional business hours config with "We'll respond when back" message
-
----
-
-### 10. Scheduled Messages
-**Status**: Not Started  
-**Complexity**: Medium  
-**Business Value**: Low - Niche use case
-
-**Description**: Team members can schedule messages to send later:
-- "Send this response at 9 AM tomorrow"
-- Useful for different time zones
-- Reminder to follow up
-
-**Technical Approach**:
-- Add `scheduled_at` column to messages
-- Background job checks for pending scheduled messages
-- Edge function cron trigger
 
 ---
 
 ## Nice to Have Features
 
-### 11. Message Editing
-**Status**: Not Started  
-**Complexity**: Medium  
-**Business Value**: Low - Correcting typos
-
-**Description**: Edit sent messages within time window (e.g., 5 minutes):
-- Shows "edited" indicator
-- Stores edit history
-- Only for user messages, not AI
-
----
-
-### 12. Rich Message Types
+### Rich Message Types
 **Status**: Not Started  
 **Complexity**: High  
-**Business Value**: Medium - Better product showcases
+**Business Value**: Medium
 
-**Description**: Support for:
+Support for:
 - Image carousels
 - Button cards with actions
 - Quick action grids
 - Embedded videos
-- Location maps
 
 ---
 
-### 13. Screen Sharing / Co-browsing
-**Status**: Not Started  
-**Complexity**: Very High  
-**Business Value**: High for support - Complex implementation
-
-**Description**: Team member can request to view user's screen or highlight elements on their page for guided support.
-
----
-
-### 14. Language Auto-detection
+### Language Auto-detection
 **Status**: Not Started  
 **Complexity**: Medium  
-**Business Value**: Medium - International support
+**Business Value**: Medium
 
-**Description**: Detect user's language from first message and:
+Detect user's language from first message:
 - Switch widget UI language
 - Inform AI to respond in detected language
 - Track language distribution in analytics
 
 ---
 
-### 15. Widget Themes
+### Widget Themes
 **Status**: Not Started  
 **Complexity**: Low-Medium  
-**Business Value**: Low - Brand customization beyond colors
+**Business Value**: Low
 
-**Description**: Pre-built theme presets:
+Pre-built theme presets:
 - Minimal/Clean
 - Playful/Rounded
 - Corporate/Sharp
-- Dark mode only
 - Custom CSS injection
+
+---
+
+### Screen Sharing / Co-browsing
+**Status**: Not Started  
+**Complexity**: Very High  
+**Business Value**: High (for support)
+
+Team member can view user's screen or highlight elements. Requires external service integration.
 
 ---
 
 ## Implementation Roadmap
 
 ### Phase 1 (Completed)
-1. ✅ Satisfaction Ratings (implemented)
+- ✅ Satisfaction Ratings
+- ✅ Human Takeover
+- ✅ Voice Messages
+- ✅ File Attachments
+- ✅ Help Center
+- ✅ Contact Form
+- ✅ Link Previews
+- ✅ Message Reactions
 
-### Phase 2 (Next Sprint)
-2. Message Copy Button
-
-### Phase 2
-3. Proactive Messages
-4. "Is This Helpful?" per message
+### Phase 2 (Next)
+- Message Copy Button
+- "Is This Helpful?" per message
 
 ### Phase 3
-5. Pre-chat Bot Flows
-6. Conversation Tags
+- Proactive Messages
+- Conversation Tags
 
 ### Phase 4
-7. Conversation Search
-8. Offline Mode Indicator
+- Pre-chat Bot Flows
+- Conversation Search
 
 ### Future Consideration
 - Rich Message Types
@@ -302,6 +327,7 @@ CREATE TABLE proactive_messages (
 ---
 
 ## Related Documentation
-- [Widget Architecture](./WIDGET_ARCHITECTURE.md)
-- [AI Architecture](./AI_ARCHITECTURE.md)
-- [Edge Functions](./EDGE_FUNCTIONS.md)
+
+- [Widget Architecture](./WIDGET_ARCHITECTURE.md) - Technical implementation
+- [AI Architecture](./AI_ARCHITECTURE.md) - AI integration details
+- [Edge Functions](./EDGE_FUNCTIONS.md) - API reference

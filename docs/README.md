@@ -1,71 +1,179 @@
 # ChatPad Documentation
 
+> **Last Updated**: December 2024
+
 Welcome to the ChatPad documentation. This index provides quick access to all technical guides and architecture documentation.
 
 ---
 
-## 📋 Project Documentation
+## Quick Start
+
+| Resource | Description |
+|----------|-------------|
+| [Application Overview](./APPLICATION_OVERVIEW.md) | High-level overview of ChatPad features and architecture |
+| [Design System](./DESIGN_SYSTEM.md) | Typography, colors, spacing, and component standards |
+| [Hooks Reference](./HOOKS_REFERENCE.md) | Complete custom hooks documentation |
+
+---
+
+## Core Architecture
 
 | Document | Description |
 |----------|-------------|
-| [Application Overview](./APPLICATION_OVERVIEW.md) | High-level overview of ChatPad features and functionality |
-| [ChatPad Architecture](./CHATPAD_ARCHITECTURE.md) | System architecture, components, and data flow |
-| [AI Architecture](./AI_ARCHITECTURE.md) | AI integration, RAG, model routing, and cost optimization |
-| [Database Schema](./DATABASE_SCHEMA.md) | Database tables, relationships, and RLS policies |
-| [Edge Functions](./EDGE_FUNCTIONS.md) | Supabase Edge Functions reference and usage |
-| [Widget Architecture](./WIDGET_ARCHITECTURE.md) | Embedded chat widget technical documentation |
-| [Security](./SECURITY.md) | Security practices, RLS policies, and data protection |
+| [ChatPad Architecture](./CHATPAD_ARCHITECTURE.md) | System architecture, access control, and data flow |
+| [AI Architecture](./AI_ARCHITECTURE.md) | RAG pipeline, model routing, and cost optimization |
+| [Database Schema](./DATABASE_SCHEMA.md) | Tables, relationships, and RLS policies |
+| [Edge Functions](./EDGE_FUNCTIONS.md) | Supabase Edge Functions reference |
+| [Security](./SECURITY.md) | Security practices and data protection |
+
+---
+
+## Developer Guides
+
+### Full-Stack Development
+
+| Guide | Description |
+|-------|-------------|
+| [Supabase Integration Guide](./SUPABASE_INTEGRATION_GUIDE.md) | Full-stack patterns with Supabase and React Query |
+| [Stripe Payment Guide](./STRIPE_PAYMENT_GUIDE.md) | Payment integration and subscriptions |
+
+### UI/UX Development
+
+| Guide | Description |
+|-------|-------------|
+| [Design System](./DESIGN_SYSTEM.md) | Colors, typography, spacing, icons |
+| [shadcn Component Guide](./SHADCN_COMPONENT_GUIDE.md) | Component patterns and animation |
+| [Data Table & Dashboard Guide](./DATA_TABLE_DASHBOARD_GUIDE.md) | TanStack Table and Recharts |
+
+### Widget Development
+
+| Guide | Description |
+|-------|-------------|
+| [Widget Architecture](./WIDGET_ARCHITECTURE.md) | Embedded chat widget technical docs |
+| [Widget Enhancements](./WIDGET_ENHANCEMENTS.md) | Feature roadmap and implementation |
+
+### Feature Planning
+
+| Guide | Description |
+|-------|-------------|
 | [Multi-Account Integrations](./MULTI_ACCOUNT_INTEGRATIONS.md) | Multi-location integration architecture |
 
 ---
 
-## 🛠️ Development Guides
+## Quick Reference
 
-### Full-Stack Development
-| Guide | Description |
-|-------|-------------|
-| [Supabase Integration Guide](./SUPABASE_INTEGRATION_GUIDE.md) | Full-stack patterns with Supabase, React Query, and shadcn/ui |
-| [Stripe Payment Guide](./STRIPE_PAYMENT_GUIDE.md) | Payment integration, subscriptions, and webhooks |
+### Tech Stack
 
-### UI/UX Development
-| Guide | Description |
-|-------|-------------|
-| [shadcn Component Guide](./SHADCN_COMPONENT_GUIDE.md) | Building and extending shadcn/ui components (includes motion/animation) |
-| [Data Table & Dashboard Guide](./DATA_TABLE_DASHBOARD_GUIDE.md) | TanStack Table, Recharts, and data visualization |
+| Category | Technology |
+|----------|------------|
+| **Frontend** | React 18, TypeScript, Vite, Tailwind CSS |
+| **Components** | shadcn/ui, Radix UI |
+| **Icons** | UntitledUI Icons (never Lucide) |
+| **State** | TanStack Query (React Query) |
+| **Backend** | Supabase (PostgreSQL, Edge Functions, Auth, Realtime) |
+| **AI** | OpenRouter (Google Gemini default) |
+| **Fonts** | Geist, Geist Mono |
 
-### Feature Planning
-| Guide | Description |
-|-------|-------------|
-| [Widget Enhancements](./WIDGET_ENHANCEMENTS.md) | Planned and implemented widget feature improvements |
+### Key File Locations
+
+| Purpose | Location |
+|---------|----------|
+| Design tokens | `src/index.css` |
+| Tailwind config | `tailwind.config.ts` |
+| UI components | `src/components/ui/` |
+| Custom hooks | `src/hooks/` |
+| Edge functions | `supabase/functions/` |
+| Widget source | `src/widget/` |
+| Database types | `src/integrations/supabase/types.ts` (read-only) |
+
+### Common Commands
+
+```bash
+# Development
+npm run dev          # Start dev server
+npm run build        # Production build
+
+# Widget
+npm run build:widget # Build widget bundle
+
+# Supabase
+supabase functions serve   # Local edge functions
+supabase db diff           # Generate migration
+```
 
 ---
 
-## 🚀 Quick Links
-
-- **Tech Stack**: React, Vite, TypeScript, Tailwind CSS, shadcn/ui, Supabase
-- **Icons**: UntitledUI Icons (not Lucide)
-- **State Management**: React Query (TanStack Query)
-- **Database**: Supabase PostgreSQL with Row Level Security
-- **AI Provider**: OpenRouter (consolidated billing)
-
----
-
-## 📁 File Structure
+## File Structure
 
 ```
 docs/
 ├── README.md                      # This index file
+│
+├── # Quick Start
 ├── APPLICATION_OVERVIEW.md        # Feature overview
+├── DESIGN_SYSTEM.md               # Design tokens and standards
+├── HOOKS_REFERENCE.md             # Custom hooks documentation
+│
+├── # Architecture
 ├── CHATPAD_ARCHITECTURE.md        # System architecture
-├── AI_ARCHITECTURE.md             # AI integration and cost optimization
-├── DATABASE_SCHEMA.md             # Database documentation
+├── AI_ARCHITECTURE.md             # AI/RAG documentation
+├── DATABASE_SCHEMA.md             # Database reference
 ├── EDGE_FUNCTIONS.md              # Edge functions reference
-├── WIDGET_ARCHITECTURE.md         # Widget documentation
-├── WIDGET_ENHANCEMENTS.md         # Widget feature roadmap
 ├── SECURITY.md                    # Security documentation
-├── MULTI_ACCOUNT_INTEGRATIONS.md  # Multi-account architecture
-├── SUPABASE_INTEGRATION_GUIDE.md  # Full-stack development guide
-├── STRIPE_PAYMENT_GUIDE.md        # Payment integration guide
-├── SHADCN_COMPONENT_GUIDE.md      # Component building guide (includes animation)
-└── DATA_TABLE_DASHBOARD_GUIDE.md  # Data visualization guide
+│
+├── # Widget
+├── WIDGET_ARCHITECTURE.md         # Widget technical docs
+├── WIDGET_ENHANCEMENTS.md         # Widget feature roadmap
+│
+├── # Guides
+├── SUPABASE_INTEGRATION_GUIDE.md  # Full-stack development
+├── STRIPE_PAYMENT_GUIDE.md        # Payment integration
+├── SHADCN_COMPONENT_GUIDE.md      # Component patterns
+├── DATA_TABLE_DASHBOARD_GUIDE.md  # Data visualization
+│
+└── # Planning
+    └── MULTI_ACCOUNT_INTEGRATIONS.md  # Multi-account architecture
+```
+
+---
+
+## Contributing to Documentation
+
+When adding or updating documentation:
+
+1. **Use consistent structure**: Include metadata header, table of contents, and related docs footer
+2. **Keep examples current**: Ensure code examples match actual implementation
+3. **Cross-reference**: Link to related documentation
+4. **Update this index**: Add new documents to the appropriate section
+
+### Document Template
+
+```markdown
+# Document Title
+
+> **Last Updated**: Month Year  
+> **Status**: Active | Draft | Deprecated  
+> **Related**: [Link1](./LINK1.md), [Link2](./LINK2.md)
+
+Brief description of what this document covers.
+
+---
+
+## Table of Contents
+
+1. [Section 1](#section-1)
+2. [Section 2](#section-2)
+
+---
+
+## Section 1
+
+Content...
+
+---
+
+## Related Documentation
+
+- [Related Doc 1](./RELATED1.md)
+- [Related Doc 2](./RELATED2.md)
 ```
