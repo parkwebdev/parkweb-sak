@@ -1,15 +1,36 @@
+/**
+ * Theme Provider Component
+ * 
+ * Manages application-wide theme state (light/dark/system).
+ * Persists theme preference to localStorage and applies CSS class to document.
+ * 
+ * @module components/ThemeProvider
+ */
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 
+/** Available theme options */
 type Theme = 'dark' | 'light' | 'system';
 
+/**
+ * Props for the ThemeProvider component
+ */
 type ThemeProviderProps = {
+  /** Child components to wrap */
   children: React.ReactNode;
+  /** Initial theme if no preference is stored */
   defaultTheme?: Theme;
+  /** localStorage key for persisting theme preference */
   storageKey?: string;
 };
 
+/**
+ * Shape of the theme context value
+ */
 type ThemeProviderState = {
+  /** Current theme setting */
   theme: Theme;
+  /** Function to update theme */
   setTheme: (theme: Theme) => void;
 };
 
@@ -20,6 +41,15 @@ const initialState: ThemeProviderState = {
 
 const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
 
+/**
+ * Theme provider component that manages dark/light mode.
+ * Automatically syncs with system preference when set to 'system'.
+ * 
+ * @example
+ * <ThemeProvider defaultTheme="dark" storageKey="app-theme">
+ *   <App />
+ * </ThemeProvider>
+ */
 export function ThemeProvider({
   children,
   defaultTheme = 'system',
@@ -30,6 +60,7 @@ export function ThemeProvider({
     () => (localStorage.getItem(storageKey) as Theme) || defaultTheme
   );
 
+  // Apply theme class to document and handle system theme changes
   useEffect(() => {
     const root = window.document.documentElement;
 
@@ -52,7 +83,6 @@ export function ThemeProvider({
       
       mediaQuery.addEventListener('change', handleChange);
       
-      // Cleanup listener
       return () => mediaQuery.removeEventListener('change', handleChange);
     }
 
@@ -74,6 +104,17 @@ export function ThemeProvider({
   );
 }
 
+/**
+ * Hook to access the theme context.
+ * Must be used within a ThemeProvider.
+ * 
+ * @throws Error if used outside ThemeProvider
+ * @returns Theme context with current theme and setter
+ * 
+ * @example
+ * const { theme, setTheme } = useTheme();
+ * setTheme('dark');
+ */
 export const useTheme = () => {
   const context = useContext(ThemeProviderContext);
 

@@ -1,3 +1,12 @@
+/**
+ * Dashboard Page Component
+ * 
+ * Main dashboard displaying key performance indicators and metrics.
+ * Shows real-time conversation stats, lead conversion rates, and trends.
+ * 
+ * @module pages/Dashboard
+ */
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -7,6 +16,10 @@ import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
 import { MetricCardWithChart } from '@/components/dashboard/MetricCardWithChart';
 import { logger } from '@/utils/logger';
 
+/**
+ * Conversation data structure with related agent info
+ * @internal
+ */
 interface ConversationWithAgent {
   id: string;
   status: 'active' | 'human_takeover' | 'closed';
@@ -67,7 +80,7 @@ export const Dashboard: React.FC = () => {
     conversationTrend: [] as number[],
     activeTrend: [] as number[],
     messageTrend: [] as number[],
-    conversionTrend: [] as number[],
+    rateTrend: [] as number[],
   });
 
   const fetchData = useCallback(async (showLoading = true) => {
@@ -180,7 +193,7 @@ export const Dashboard: React.FC = () => {
         conversationTrend: convTrend,
         activeTrend: activeTrend,
         messageTrend: msgTrend,
-        conversionTrend: rateTrend,
+        rateTrend: rateTrend,
       });
     } catch (error) {
       logger.error('Error fetching dashboard data:', error);
@@ -326,9 +339,9 @@ export const Dashboard: React.FC = () => {
             <MetricCardWithChart
               title={`${stats.conversionRate}%`}
               subtitle="Conversion Rate"
-              change={calculateChange(stats.conversionTrend)}
+              change={calculateChange(stats.rateTrend)}
               changeLabel="vs last period"
-              chartData={generateChartData(stats.conversionTrend)}
+              chartData={generateChartData(stats.rateTrend)}
             />
           </div>
         )}

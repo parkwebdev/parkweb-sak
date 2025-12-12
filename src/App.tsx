@@ -1,3 +1,16 @@
+/**
+ * Application Root Component
+ * 
+ * Sets up the core application structure including:
+ * - React Query for server state management
+ * - Theme provider for dark/light mode
+ * - Authentication context
+ * - Routing configuration
+ * - Global error boundaries
+ * 
+ * @module App
+ */
+
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -21,9 +34,14 @@ import AnalyticsWrapper from "./pages/AnalyticsWrapper";
 import SettingsWrapper from "./pages/SettingsWrapper";
 import PlannerWrapper from "./pages/PlannerWrapper";
 
+/** React Query client instance with default configuration */
 const queryClient = new QueryClient();
 
-// Shared layout for all protected routes - sidebar and header stay mounted
+/**
+ * Layout wrapper for protected routes.
+ * Ensures authentication and renders the shared sidebar/header layout.
+ * @internal
+ */
 const ProtectedLayout = () => (
   <ProtectedRoute>
     <AppLayout>
@@ -32,6 +50,10 @@ const ProtectedLayout = () => (
   </ProtectedRoute>
 );
 
+/**
+ * Root application component.
+ * Configures providers and routes for the entire application.
+ */
 const App = () => (
   <ErrorBoundary fallback={<RouteErrorFallback />}>
     <QueryClientProvider client={queryClient}>

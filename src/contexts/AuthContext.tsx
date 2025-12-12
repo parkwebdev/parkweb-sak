@@ -1,19 +1,50 @@
+/**
+ * Authentication Context Provider
+ * 
+ * Manages user authentication state throughout the application.
+ * Handles Supabase auth events, session management, and profile creation.
+ * 
+ * @module contexts/AuthContext
+ */
+
 import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/utils/logger';
 
+/**
+ * Shape of the authentication context value
+ */
 interface AuthContextType {
+  /** Currently authenticated user or null */
   user: User | null;
+  /** Current auth session or null */
   session: Session | null;
+  /** Whether auth state is being determined */
   loading: boolean;
+  /** Flag indicating user just completed sign-in (for loading screen) */
   justSignedIn: boolean;
+  /** Clear the justSignedIn flag after loading animation */
   clearJustSignedIn: () => void;
+  /** Sign out the current user */
   signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+/**
+ * Hook to access authentication context.
+ * Must be used within an AuthProvider.
+ * 
+ * @throws Error if used outside AuthProvider
+ * @returns Authentication context value
+ * 
+ * @example
+ * const { user, signOut } = useAuth();
+ * if (user) {
+ *   console.log('Logged in as:', user.email);
+ * }
+ */
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
@@ -26,6 +57,15 @@ interface AuthProviderProps {
   children: React.ReactNode;
 }
 
+/**
+ * Authentication provider component.
+ * Wraps the application to provide auth state and methods.
+ * 
+ * @example
+ * <AuthProvider>
+ *   <App />
+ * </AuthProvider>
+ */
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -79,8 +119,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     });
 
     return () => subscription.unsubscribe();
-  }, []); // Empty dependency array - run once on mount
+  }, []);
 
+  /**
+   * Create or update user profile after authentication.
+   * Also creates default notification preferences if missing.
+   * @internal
+   */
   const createOrUpdateProfile = async (user: User) => {
     try {
       // Check if profile exists
@@ -131,6 +176,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  /**
+   * Sign out the current user.
+   * @throws Error if sign out fails
+   */
   const signOut = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) {
@@ -139,6 +188,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  /** Clear the justSignedIn flag after loading animation completes */
   const clearJustSignedIn = () => setJustSignedIn(false);
 
   const value = {

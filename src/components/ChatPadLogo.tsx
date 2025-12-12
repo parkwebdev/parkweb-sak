@@ -1,10 +1,30 @@
+/**
+ * ChatPad Logo Component
+ * 
+ * SVG logo for the ChatPad/Ari application.
+ * Renders a stylized chat bubble with smile design.
+ * 
+ * @module components/ChatPadLogo
+ */
+
 import * as React from "react";
 
+/**
+ * ChatPad brand logo as an SVG component.
+ * Accepts all standard SVG props for styling and sizing.
+ * 
+ * @example
+ * <ChatPadLogo className="h-8 w-8 text-primary" />
+ * 
+ * @example
+ * <ChatPadLogo width={32} height={32} />
+ */
 const ChatPadLogo = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 270.69 270.02"
     fill="currentColor"
+    aria-label="ChatPad logo"
     {...props}
   >
     <g>
