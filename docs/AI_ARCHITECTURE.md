@@ -1,5 +1,9 @@
 # ChatPad AI Architecture
 
+> **Last Updated**: December 2024  
+> **Status**: Active  
+> **Related**: [Edge Functions](./EDGE_FUNCTIONS.md), [Database Schema](./DATABASE_SCHEMA.md), [Widget Architecture](./WIDGET_ARCHITECTURE.md)
+
 Complete documentation of how AI is used throughout the ChatPad platform.
 
 ---
@@ -820,3 +824,12 @@ Only `OPENROUTER_API_KEY` is now required for all AI operations:
 - Embeddings (consolidated from OPENAI_API_KEY)
 
 The `OPENAI_API_KEY` is no longer used for embeddings but may still be configured for other purposes.
+
+---
+
+## Related Documentation
+
+- [Edge Functions](./EDGE_FUNCTIONS.md) - Server-side function implementations
+- [Database Schema](./DATABASE_SCHEMA.md) - Knowledge tables and vector storage
+- [Widget Architecture](./WIDGET_ARCHITECTURE.md) - Widget-side AI integration
+- [Supabase Integration](./SUPABASE_INTEGRATION_GUIDE.md) - Database patterns

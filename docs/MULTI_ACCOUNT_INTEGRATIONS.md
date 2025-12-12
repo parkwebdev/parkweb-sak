@@ -1,8 +1,23 @@
 # Multi-Account Integrations Architecture
 
-> **Status**: Planning Phase  
 > **Last Updated**: December 2024  
-> **Related Features**: Agent Integrations, Widget, AI Routing
+> **Status**: Planning  
+> **Related**: [ChatPad Architecture](./CHATPAD_ARCHITECTURE.md), [Database Schema](./DATABASE_SCHEMA.md), [Widget Architecture](./WIDGET_ARCHITECTURE.md)
+
+---
+
+## Table of Contents
+
+1. [Executive Summary](#executive-summary)
+2. [Problem Statement](#problem-statement)
+3. [Core Concepts](#core-concepts)
+4. [Architecture Options](#architecture-options)
+5. [Routing Intelligence](#routing-intelligence)
+6. [Widget Experience](#widget-experience)
+7. [Admin UI Design](#admin-ui-design)
+8. [Implementation Phases](#implementation-phases)
+
+---
 
 ## Executive Summary
 
@@ -794,4 +809,9 @@ ChatPad can be the first to offer **native multi-location AI routing** with:
 
 ---
 
-*This document is a living spec. Update as decisions are made.*
+## Related Documentation
+
+- [ChatPad Architecture](./CHATPAD_ARCHITECTURE.md) - Overall system architecture
+- [Database Schema](./DATABASE_SCHEMA.md) - Table structures for implementation
+- [Widget Architecture](./WIDGET_ARCHITECTURE.md) - Widget integration points
+- [Edge Functions](./EDGE_FUNCTIONS.md) - Server-side integration handlers

@@ -1,6 +1,26 @@
 # Data Table & Dashboard Guide
 
+> **Last Updated**: December 2024  
+> **Status**: Active  
+> **Related**: [shadcn Component Guide](./SHADCN_COMPONENT_GUIDE.md), [Design System](./DESIGN_SYSTEM.md), [Hooks Reference](./HOOKS_REFERENCE.md)
+
 This document outlines the TanStack Table architecture and patterns used throughout the ChatPad application.
+
+---
+
+## Table of Contents
+
+1. [Architecture Overview](#architecture-overview)
+2. [Core Components](#core-components)
+3. [Column Definition Patterns](#column-definition-patterns)
+4. [Motion Integration](#motion-integration)
+5. [Table Implementation Example](#table-implementation-example)
+6. [Available Column Definitions](#available-column-definitions)
+7. [Best Practices](#best-practices)
+8. [File Structure](#file-structure)
+9. [ChatPad-Specific Patterns](#chatpad-specific-patterns)
+
+---
 
 ## Architecture Overview
 
@@ -371,3 +391,12 @@ Role-based action visibility with avatar rendering and role badges.
 
 ### Analytics Data Tables
 Dynamic column selection based on active tab with CSV export functionality.
+
+---
+
+## Related Documentation
+
+- [shadcn Component Guide](./SHADCN_COMPONENT_GUIDE.md) - Component patterns and CVA usage
+- [Design System](./DESIGN_SYSTEM.md) - Color tokens and styling standards
+- [Hooks Reference](./HOOKS_REFERENCE.md) - Data fetching hooks for tables
+- [Application Overview](./APPLICATION_OVERVIEW.md) - Overall architecture context
