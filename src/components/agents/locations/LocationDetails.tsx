@@ -43,7 +43,7 @@ export const LocationDetails: React.FC<LocationDetailsProps> = ({
     phone: location.phone || '',
     email: location.email || '',
     business_hours: (location.business_hours as BusinessHours) || {},
-    wordpress_slug: (location as any).wordpress_slug || '',
+    wordpress_slug: location.wordpress_slug || '',
   });
   const [isSaved, setIsSaved] = useState(true);
   const [saveTimeout, setSaveTimeout] = useState<NodeJS.Timeout | null>(null);
@@ -61,7 +61,7 @@ export const LocationDetails: React.FC<LocationDetailsProps> = ({
       phone: location.phone || '',
       email: location.email || '',
       business_hours: (location.business_hours as BusinessHours) || {},
-      wordpress_slug: (location as any).wordpress_slug || '',
+      wordpress_slug: location.wordpress_slug || '',
     });
     setIsSaved(true);
   }, [location.id]);
@@ -234,9 +234,9 @@ export const LocationDetails: React.FC<LocationDetailsProps> = ({
               The URL slug of the community on your WordPress site. Used for automatic location detection when visitors browse community or home pages.
             </p>
           </div>
-          {(location as any).wordpress_community_id && (
+          {location.wordpress_community_id && (
             <div className="text-xs text-muted-foreground">
-              WordPress ID: {(location as any).wordpress_community_id}
+              WordPress ID: {location.wordpress_community_id}
             </div>
           )}
         </CardContent>
