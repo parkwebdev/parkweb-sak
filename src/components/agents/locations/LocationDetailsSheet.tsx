@@ -2,24 +2,18 @@
  * LocationDetailsSheet Component
  * 
  * Sheet for viewing and editing location details with proper exit animations.
+ * Uses a custom implementation to ensure exit animations work correctly.
  * 
  * @module components/agents/locations/LocationDetailsSheet
  */
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import {
-  Sheet,
-  SheetHeader,
-  SheetTitle,
-  SheetPortal,
-} from '@/components/ui/sheet';
-import * as SheetPrimitive from '@radix-ui/react-dialog';
+import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { X } from '@untitledui/icons';
 import { LocationDetails } from './LocationDetails';
 import { cn } from '@/lib/utils';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
-import { springs } from '@/lib/motion-variants';
 import type { Tables } from '@/integrations/supabase/types';
 import type { LocationFormData } from '@/types/locations';
 
@@ -38,20 +32,20 @@ const slideVariants = {
   visible: { 
     x: 0, 
     opacity: 1,
-    transition: springs.smooth
+    transition: { type: "spring" as const, damping: 30, stiffness: 300 }
   },
   exit: { 
     x: "100%", 
     opacity: 0.8,
-    transition: { ...springs.snappy, duration: 0.2 }
+    transition: { duration: 0.2 }
   },
-};
+} as const;
 
 const reducedVariants = {
   hidden: { opacity: 0 },
   visible: { opacity: 1, transition: { duration: 0.15 } },
   exit: { opacity: 0, transition: { duration: 0.1 } },
-};
+} as const;
 
 const overlayVariants = {
   hidden: { opacity: 0 },
@@ -68,61 +62,92 @@ export const LocationDetailsSheet: React.FC<LocationDetailsSheetProps> = ({
 }) => {
   const prefersReducedMotion = useReducedMotion();
   const variants = prefersReducedMotion ? reducedVariants : slideVariants;
+  
+  // Track internal open state for exit animations
+  const [internalOpen, setInternalOpen] = useState(open);
+  const [shouldRender, setShouldRender] = useState(open);
+
+  useEffect(() => {
+    if (open) {
+      setShouldRender(true);
+      setInternalOpen(true);
+    } else {
+      setInternalOpen(false);
+    }
+  }, [open]);
+
+  const handleAnimationComplete = (definition: string) => {
+    if (definition === 'exit') {
+      setShouldRender(false);
+    }
+  };
+
+  const handleClose = () => {
+    onOpenChange(false);
+  };
+
+  if (!shouldRender) return null;
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <AnimatePresence>
-        {open && (
-          <SheetPortal forceMount>
-            {/* Overlay */}
-            <SheetPrimitive.Overlay asChild forceMount>
-              <motion.div
-                className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm"
-                variants={overlayVariants}
-                initial="hidden"
-                animate="visible"
-                exit="exit"
-                onClick={() => onOpenChange(false)}
-              />
-            </SheetPrimitive.Overlay>
+    <DialogPrimitive.Root open={true} onOpenChange={handleClose}>
+      <DialogPrimitive.Portal forceMount>
+        <AnimatePresence mode="wait" onExitComplete={() => setShouldRender(false)}>
+          {internalOpen && (
+            <>
+              {/* Overlay */}
+              <DialogPrimitive.Overlay asChild forceMount>
+                <motion.div
+                  key="overlay"
+                  className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm"
+                  variants={overlayVariants}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                  onClick={handleClose}
+                />
+              </DialogPrimitive.Overlay>
 
-            {/* Content */}
-            <SheetPrimitive.Content asChild forceMount>
-              <motion.div
-                className={cn(
-                  "fixed z-50 gap-4 bg-background p-6 shadow-lg",
-                  "inset-y-0 right-0 h-full w-full sm:max-w-xl border-l",
-                  "overflow-y-auto"
-                )}
-                variants={variants}
-                initial="hidden"
-                animate="visible"
-                exit="exit"
-              >
-                <SheetHeader className="mb-6">
-                  <SheetTitle>{location?.name || 'Location Details'}</SheetTitle>
-                </SheetHeader>
-                
-                {location && (
-                  <LocationDetails
-                    location={location}
-                    agentId={agentId}
-                    onUpdate={onUpdate}
-                  />
-                )}
-
-                <SheetPrimitive.Close 
-                  className="absolute right-4 top-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 disabled:pointer-events-none"
-                  onClick={() => onOpenChange(false)}
+              {/* Content */}
+              <DialogPrimitive.Content asChild forceMount>
+                <motion.div
+                  key="content"
+                  className={cn(
+                    "fixed z-50 gap-4 bg-background p-6 shadow-lg",
+                    "inset-y-0 right-0 h-full w-full sm:max-w-xl border-l",
+                    "overflow-y-auto focus:outline-none"
+                  )}
+                  variants={variants}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                  onAnimationComplete={handleAnimationComplete}
                 >
-                  <X className="h-4 w-4" />
-                  <span className="sr-only">Close</span>
-                </SheetPrimitive.Close>
-              </motion.div>
-            </SheetPrimitive.Content>
-          </SheetPortal>
-        )}
-      </AnimatePresence>
-    </Sheet>
+                  <div className="flex items-center justify-between mb-6">
+                    <DialogPrimitive.Title className="text-lg font-semibold">
+                      {location?.name || 'Location Details'}
+                    </DialogPrimitive.Title>
+                    <DialogPrimitive.Close 
+                      className="rounded-sm opacity-70 transition-opacity hover:opacity-100 disabled:pointer-events-none"
+                      onClick={handleClose}
+                    >
+                      <X className="h-4 w-4" />
+                      <span className="sr-only">Close</span>
+                    </DialogPrimitive.Close>
+                  </div>
+                  
+                  {location && (
+                    <LocationDetails
+                      location={location}
+                      agentId={agentId}
+                      onUpdate={onUpdate}
+                    />
+                  )}
+                </motion.div>
+              </DialogPrimitive.Content>
+            </>
+          )}
+        </AnimatePresence>
+      </DialogPrimitive.Portal>
+    </DialogPrimitive.Root>
   );
 };
