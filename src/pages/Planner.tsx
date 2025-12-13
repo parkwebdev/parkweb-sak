@@ -20,6 +20,8 @@ import { CreateEventDialog } from '@/components/calendar/CreateEventDialog';
 import { EventDetailDialog } from '@/components/calendar/EventDetailDialog';
 import { DeleteEventDialog } from '@/components/calendar/DeleteEventDialog';
 import { TimeChangeReasonDialog } from '@/components/calendar/TimeChangeReasonDialog';
+import { LoadingState } from '@/components/ui/loading-state';
+import { useCalendarEvents } from '@/hooks/useCalendarEvents';
 import type { CalendarEvent, TimeChangeRecord } from '@/types/calendar';
 import { EVENT_TYPE_CONFIG } from '@/types/calendar';
 
@@ -31,126 +33,19 @@ interface PendingTimeChange {
   newEnd: Date;
 }
 
-// Helper to create demo events relative to today
-const createSampleEvents = (): CalendarEvent[] => {
-  const today = new Date();
-  const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  
-  return [
-    {
-      id: '1',
-      title: 'Home Showing - Johnson Family',
-      start: new Date(todayStart.getTime() + 10 * 60 * 60 * 1000), // Today at 10:00 AM
-      end: new Date(todayStart.getTime() + 11 * 60 * 60 * 1000), // Today at 11:00 AM
-      type: 'showing',
-      color: '#3B82F6',
-      lead_name: 'Sarah Johnson',
-      lead_email: 'sarah.johnson@email.com',
-      lead_phone: '(555) 123-4567',
-      property: 'Lot 42 - 3BR/2BA Clayton Home',
-      community: 'Sunset Valley MHP',
-      status: 'confirmed',
-      notes: 'Family of 4, interested in schools nearby. First-time home buyers.'
-    },
-    {
-      id: '2',
-      title: 'Move-in Walkthrough - Martinez',
-      start: new Date(todayStart.getTime() + 24 * 60 * 60 * 1000 + 14 * 60 * 60 * 1000), // Tomorrow at 2:00 PM
-      end: new Date(todayStart.getTime() + 24 * 60 * 60 * 1000 + 15.5 * 60 * 60 * 1000), // Tomorrow at 3:30 PM
-      type: 'move_in',
-      color: '#10B981',
-      lead_name: 'Carlos Martinez',
-      lead_email: 'carlos.m@email.com',
-      lead_phone: '(555) 234-5678',
-      property: 'Lot 18 - 2BR/1BA Champion',
-      community: 'Riverside Estates',
-      status: 'confirmed',
-      notes: 'Bringing utility setup documents. Keys handoff scheduled.'
-    },
-    {
-      id: '3',
-      title: 'Annual Inspection - Lot 7',
-      start: new Date(todayStart.getTime() + 2 * 24 * 60 * 60 * 1000 + 9 * 60 * 60 * 1000), // 2 days at 9:00 AM
-      end: new Date(todayStart.getTime() + 2 * 24 * 60 * 60 * 1000 + 10.5 * 60 * 60 * 1000), // 2 days at 10:30 AM
-      type: 'inspection',
-      color: '#F59E0B',
-      property: 'Lot 7 - 3BR/2BA Skyline',
-      community: 'Pinewood Community',
-      status: 'pending',
-      notes: 'Annual safety inspection. Check HVAC and water heater.'
-    },
-    {
-      id: '4',
-      title: 'Home Showing - Williams',
-      start: new Date(todayStart.getTime() + 4 * 24 * 60 * 60 * 1000 + 11 * 60 * 60 * 1000), // 4 days at 11:00 AM
-      end: new Date(todayStart.getTime() + 4 * 24 * 60 * 60 * 1000 + 12 * 60 * 60 * 1000), // 4 days at 12:00 PM
-      type: 'showing',
-      color: '#3B82F6',
-      lead_name: 'Michael Williams',
-      lead_email: 'm.williams@email.com',
-      lead_phone: '(555) 345-6789',
-      property: 'Lot 23 - 4BR/2BA Palm Harbor',
-      community: 'Sunset Valley MHP',
-      status: 'confirmed',
-      notes: 'Relocating from out of state. Pre-approved financing.'
-    },
-    {
-      id: '5',
-      title: 'HVAC Maintenance - Lot 31',
-      start: new Date(todayStart.getTime() + 5 * 24 * 60 * 60 * 1000 + 8 * 60 * 60 * 1000), // 5 days at 8:00 AM
-      end: new Date(todayStart.getTime() + 5 * 24 * 60 * 60 * 1000 + 10 * 60 * 60 * 1000), // 5 days at 10:00 AM
-      type: 'maintenance',
-      color: '#8B5CF6',
-      property: 'Lot 31 - 2BR/2BA Fleetwood',
-      community: 'Riverside Estates',
-      status: 'confirmed',
-      notes: 'Scheduled AC unit service. Tenant notified.'
-    },
-    {
-      id: '6',
-      title: 'Community Meeting',
-      start: new Date(todayStart.getTime() + 7 * 24 * 60 * 60 * 1000 + 18 * 60 * 60 * 1000), // 7 days at 6:00 PM
-      end: new Date(todayStart.getTime() + 7 * 24 * 60 * 60 * 1000 + 19.5 * 60 * 60 * 1000), // 7 days at 7:30 PM
-      type: 'meeting',
-      color: '#6366F1',
-      community: 'Sunset Valley MHP',
-      status: 'confirmed',
-      notes: 'Monthly community meeting. Agenda: Holiday decorations, parking rules.'
-    },
-    // Overlapping event to test conflict detection (conflicts with event 1)
-    {
-      id: '7',
-      title: 'Overlapping Meeting',
-      start: new Date(todayStart.getTime() + 10.5 * 60 * 60 * 1000), // Today at 10:30 AM
-      end: new Date(todayStart.getTime() + 12 * 60 * 60 * 1000), // Today at 12:00 PM
-      type: 'meeting',
-      color: '#EC4899',
-      status: 'confirmed',
-    },
-    {
-      id: '8',
-      title: 'Move-in Walkthrough - Thompson',
-      start: new Date(todayStart.getTime() + 11 * 24 * 60 * 60 * 1000 + 10 * 60 * 60 * 1000), // 11 days at 10:00 AM
-      end: new Date(todayStart.getTime() + 11 * 24 * 60 * 60 * 1000 + 11.5 * 60 * 60 * 1000), // 11 days at 11:30 AM
-      type: 'move_in',
-      color: '#10B981',
-      lead_name: 'David Thompson',
-      lead_email: 'd.thompson@email.com',
-      lead_phone: '(555) 567-8901',
-      property: 'Lot 12 - 2BR/1BA Oakwood',
-      community: 'Riverside Estates',
-      status: 'confirmed',
-      notes: 'Final walkthrough before key handoff tomorrow.'
-    },
-  ];
-};
-
-const sampleEvents = createSampleEvents();
-
 const Planner: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('all');
-  const [events, setEvents] = useState<CalendarEvent[]>(sampleEvents);
+  
+  // Fetch real calendar events from database
+  const { 
+    events: dbEvents, 
+    isLoading, 
+    cancelEvent, 
+    completeEvent, 
+    rescheduleEvent,
+    refetch 
+  } = useCalendarEvents();
   
   // Dialog states
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -164,7 +59,7 @@ const Planner: React.FC = () => {
   const [pendingTimeChange, setPendingTimeChange] = useState<PendingTimeChange | null>(null);
 
   // Filter events based on active tab and search
-  const filteredEvents = events.filter(event => {
+  const filteredEvents = dbEvents.filter(event => {
     const matchesTab = activeTab === 'all' || event.type === activeTab;
     const matchesSearch = !searchQuery || 
       event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -190,44 +85,23 @@ const Planner: React.FC = () => {
   };
 
   const handleCreateEvent = (newEvent: Omit<CalendarEvent, 'id'>) => {
-    const event: CalendarEvent = {
-      ...newEvent,
-      id: crypto.randomUUID(),
-    };
-    setEvents(prev => [...prev, event]);
+    // TODO: Connect to database create when calendar accounts are connected
+    console.log('Create event:', newEvent);
     setCreateDialogOpen(false);
+    refetch();
   };
 
   // Apply time change with optional reason
-  const applyTimeChange = useCallback((reason?: string) => {
+  const applyTimeChange = useCallback(async (reason?: string) => {
     if (!pendingTimeChange) return;
     
-    const { event, originalStart, originalEnd, newStart, newEnd } = pendingTimeChange;
+    const { event, newStart, newEnd } = pendingTimeChange;
     
-    const timeChangeRecord: TimeChangeRecord = {
-      timestamp: new Date(),
-      previousStart: originalStart,
-      previousEnd: originalEnd,
-      newStart,
-      newEnd,
-      reason,
-    };
-    
-    setEvents(prev => prev.map(e => {
-      if (e.id === event.id) {
-        return {
-          ...e,
-          start: newStart,
-          end: newEnd,
-          time_change_history: [...(e.time_change_history || []), timeChangeRecord],
-        };
-      }
-      return e;
-    }));
+    await rescheduleEvent(event.id, newStart, newEnd, reason);
     
     setPendingTimeChange(null);
     setTimeChangeDialogOpen(false);
-  }, [pendingTimeChange]);
+  }, [pendingTimeChange, rescheduleEvent]);
 
   const handleUpdateEvent = (updatedEvent: CalendarEvent) => {
     // Check if time changed from original
@@ -254,23 +128,23 @@ const Planner: React.FC = () => {
       }
     }
     
-    setEvents(prev => prev.map(e => e.id === updatedEvent.id ? updatedEvent : e));
+    // No time change, just close
     setEventDetailOpen(false);
     setSelectedEvent(null);
   };
 
-  const handleDeleteEvent = () => {
+  const handleDeleteEvent = async () => {
     if (selectedEvent) {
-      setEvents(prev => prev.filter(e => e.id !== selectedEvent.id));
+      await cancelEvent(selectedEvent.id, 'Deleted by user');
       setDeleteDialogOpen(false);
       setEventDetailOpen(false);
       setSelectedEvent(null);
     }
   };
 
-  const handleMarkComplete = () => {
+  const handleMarkComplete = async () => {
     if (selectedEvent) {
-      setEvents(prev => prev.map(e => e.id === selectedEvent.id ? { ...e, status: 'completed' } : e));
+      await completeEvent(selectedEvent.id);
       setEventDetailOpen(false);
       setSelectedEvent(null);
     }
@@ -283,7 +157,7 @@ const Planner: React.FC = () => {
 
   // Handle drag-based time changes (move)
   const handleEventMove = useCallback((eventId: string, newStart: Date, newEnd: Date) => {
-    const event = events.find(e => e.id === eventId);
+    const event = dbEvents.find(e => e.id === eventId);
     if (!event) return;
     
     const originalStart = new Date(event.start);
@@ -302,11 +176,11 @@ const Planner: React.FC = () => {
       newEnd,
     });
     setTimeChangeDialogOpen(true);
-  }, [events]);
+  }, [dbEvents]);
 
   // Handle resize-based time changes
   const handleEventResize = useCallback((eventId: string, newStart: Date, newEnd: Date) => {
-    const event = events.find(e => e.id === eventId);
+    const event = dbEvents.find(e => e.id === eventId);
     if (!event) return;
     
     const originalStart = new Date(event.start);
@@ -325,7 +199,21 @@ const Planner: React.FC = () => {
       newEnd,
     });
     setTimeChangeDialogOpen(true);
-  }, [events]);
+  }, [dbEvents]);
+
+  if (isLoading) {
+    return (
+      <main className="flex-1 bg-muted/30 h-full overflow-auto">
+        <PageHeader
+          title="Planner"
+          description="Manage your property showings and bookings"
+        />
+        <div className="flex items-center justify-center h-[60vh]">
+          <LoadingState text="Loading calendar..." />
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="flex-1 bg-muted/30 h-full overflow-auto">
@@ -402,7 +290,7 @@ const Planner: React.FC = () => {
         onOpenChange={setCreateDialogOpen}
         initialDate={selectedDate || undefined}
         onCreateEvent={handleCreateEvent}
-        existingEvents={events}
+        existingEvents={dbEvents}
       />
 
       <EventDetailDialog
@@ -412,7 +300,7 @@ const Planner: React.FC = () => {
         onUpdateEvent={handleUpdateEvent}
         onDelete={handleDeleteFromDetail}
         onMarkComplete={handleMarkComplete}
-        existingEvents={events}
+        existingEvents={dbEvents}
       />
 
       <DeleteEventDialog
@@ -432,7 +320,7 @@ const Planner: React.FC = () => {
         newEnd={pendingTimeChange?.newEnd || null}
         onConfirm={applyTimeChange}
         onSkip={() => applyTimeChange()}
-        existingEvents={events}
+        existingEvents={dbEvents}
       />
     </main>
   );
