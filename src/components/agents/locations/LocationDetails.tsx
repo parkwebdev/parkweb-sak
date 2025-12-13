@@ -203,7 +203,7 @@ export const LocationDetails: React.FC<LocationDetailsProps> = ({
       )}
 
       {/* Business Hours - Collapsible */}
-      <Collapsible open={hoursOpen} onOpenChange={setHoursOpen}>
+      <Collapsible open={hoursOpen} onOpenChange={setHoursOpen} lazy>
         <CollapsibleTrigger className="flex items-center gap-2 w-full text-left py-2">
           {hoursOpen ? (
             <ChevronDown className="h-4 w-4 text-muted-foreground" />
@@ -220,8 +220,8 @@ export const LocationDetails: React.FC<LocationDetailsProps> = ({
         </CollapsibleContent>
       </Collapsible>
 
-      {/* Calendars - Collapsible */}
-      <Collapsible open={calendarsOpen} onOpenChange={setCalendarsOpen}>
+      {/* Calendars - Collapsible with lazy loading */}
+      <Collapsible open={calendarsOpen} onOpenChange={setCalendarsOpen} lazy>
         <CollapsibleTrigger className="flex items-center gap-2 w-full text-left py-2">
           {calendarsOpen ? (
             <ChevronDown className="h-4 w-4 text-muted-foreground" />
