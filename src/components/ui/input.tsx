@@ -8,11 +8,9 @@
  */
 
 import * as React from "react"
-import { motion } from "motion/react"
 import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
-import { useReducedMotion } from "@/hooks/useReducedMotion"
 
 /**
  * Input variant styles using class-variance-authority
@@ -37,7 +35,7 @@ const inputVariants = cva(
  * Input component props
  */
 interface InputProps 
-  extends Omit<React.ComponentProps<"input">, 'onAnimationStart' | 'onDragStart' | 'onDragEnd' | 'onDrag' | 'size'>,
+  extends Omit<React.ComponentProps<"input">, 'size'>,
     VariantProps<typeof inputVariants> {
   /** Show error state with red border and shake animation */
   error?: boolean
@@ -60,24 +58,15 @@ interface InputProps
  */
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
   ({ className, type, error, size, ...props }, ref) => {
-    const prefersReducedMotion = useReducedMotion()
-    
-    // Error shake animation respects reduced motion preference
-    const shakeAnimation = error && !prefersReducedMotion ? {
-      x: [0, -4, 4, -4, 4, 0],
-      transition: { duration: 0.4 }
-    } : {}
-
     return (
-      <motion.input
+      <input
         type={type}
         className={cn(
           inputVariants({ size }),
-          error && "border-destructive focus-visible:ring-destructive",
+          error && "border-destructive focus-visible:ring-destructive animate-shake",
           className
         )}
         ref={ref}
-        animate={shakeAnimation}
         {...props}
       />
     )
