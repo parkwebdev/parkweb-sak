@@ -87,7 +87,12 @@ export const GlobalSearch = () => {
       />
       <CommandList>
         {loading ? (
-          <div className="py-6 text-center text-sm text-muted-foreground">
+          <div 
+            className="py-6 text-center text-sm text-muted-foreground"
+            role="status"
+            aria-live="polite"
+            aria-label="Loading search results"
+          >
             Loading...
           </div>
         ) : (

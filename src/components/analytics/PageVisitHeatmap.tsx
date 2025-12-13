@@ -72,7 +72,13 @@ export const PageVisitHeatmap: React.FC<PageVisitHeatmapProps> = ({ data, loadin
           <CardTitle className="text-base">Page Visit Heatmap</CardTitle>
         </CardHeader>
         <CardContent className="h-[300px] flex items-center justify-center">
-          <span className="text-muted-foreground text-sm">Loading...</span>
+          <span 
+            className="text-muted-foreground text-sm"
+            role="status"
+            aria-live="polite"
+          >
+            Loading...
+          </span>
         </CardContent>
       </Card>
     );

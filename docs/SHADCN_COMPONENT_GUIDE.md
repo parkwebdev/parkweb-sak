@@ -58,13 +58,56 @@ Senior UI/UX Engineer guidelines for ReactJS, TypeScript, component design syste
 - Use conditional classes with cn() utility function
 - Support dark mode through CSS variables
 
-### Accessibility Standards
-- Implement ARIA labels, roles, and properties correctly
-- Ensure keyboard navigation works properly
-- Provide proper focus management and visual indicators
-- Include screen reader support with appropriate announcements
-- Test with assistive technologies in mind
-- Follow WCAG 2.1 AA guidelines
+### Accessibility Standards (WCAG 2.2 AA)
+
+#### Required ARIA Attributes
+- **Icon buttons**: Must use `IconButton` component with required `label` prop (enforces `aria-label`)
+- **Form fields with hints**: Link helper text using `aria-describedby` pointing to `FormHint` `id`
+- **Loading states**: Must include `role="status"` and `aria-live="polite"`
+- **Interactive elements**: Must have clear accessible names
+- **Icons inside interactive elements**: Add `aria-hidden="true"` to decorative icons
+
+#### Focus Management
+- All interactive elements MUST have visible focus rings (`focus-visible:ring-2`)
+- Focus ring must use `ring-ring` color token with `ring-offset-2`
+- Never override or hide focus indicators
+
+#### Keyboard Navigation
+- All interactive elements must be keyboard accessible
+- Use proper focus order (avoid positive `tabIndex`)
+- Implement keyboard shortcuts with visible hints
+
+#### Target Size (WCAG 2.5.8)
+- Minimum 24x24px for all touch/click targets
+- Icon buttons default to 32x32px (`size="icon"`)
+- Form inputs minimum 32px height (`size="sm"`)
+
+#### Screen Reader Support
+- Use semantic HTML elements (`<button>`, `<nav>`, `<main>`)
+- Announce dynamic content with `aria-live` regions
+- Provide context for complex interactions
+
+#### Implementation Examples
+```tsx
+// ✅ Icon button with required accessibility
+<IconButton label="Delete item" variant="ghost">
+  <Trash01 className="h-4 w-4" aria-hidden="true" />
+</IconButton>
+
+// ✅ Form field with accessible hint
+<Input id="email" aria-describedby="email-hint" />
+<FormHint id="email-hint">We'll never share your email.</FormHint>
+
+// ✅ Loading state with aria-live
+<div role="status" aria-live="polite" aria-label="Loading">
+  <Spinner />
+</div>
+
+// ❌ WRONG - Missing accessibility
+<Button size="icon"><Trash01 /></Button>  // No aria-label!
+<Input /><p className="text-xs">Hint</p>  // Not linked!
+<div>Loading...</div>                      // No aria-live!
+```
 
 ### shadcn/ui Specific
 - Extend existing shadcn components rather than rebuilding from scratch

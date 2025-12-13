@@ -45,7 +45,13 @@ export const TrafficSourceChart: React.FC<TrafficSourceChartProps> = ({ data, lo
           <CardTitle className="text-base">Traffic Sources</CardTitle>
         </CardHeader>
         <CardContent className="h-[300px] flex items-center justify-center">
-          <span className="text-muted-foreground text-sm">Loading...</span>
+          <span 
+            className="text-muted-foreground text-sm"
+            role="status"
+            aria-live="polite"
+          >
+            Loading...
+          </span>
         </CardContent>
       </Card>
     );

@@ -36,7 +36,7 @@ export function DataTable<TData, TValue>({
 }: DataTableProps<TData, TValue>) {
   if (isLoading) {
     return (
-      <div className="rounded-md border">
+      <div className="rounded-md border" role="status" aria-live="polite" aria-label="Loading table data">
         <Table>
           <TableHeader>
             <TableRow>

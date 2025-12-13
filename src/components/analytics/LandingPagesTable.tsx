@@ -45,7 +45,13 @@ export const LandingPagesTable: React.FC<LandingPagesTableProps> = ({ data, load
           <CardTitle className="text-base">Popular Landing Pages</CardTitle>
         </CardHeader>
         <CardContent className="h-[400px] flex items-center justify-center">
-          <span className="text-muted-foreground text-sm">Loading...</span>
+          <span 
+            className="text-muted-foreground text-sm"
+            role="status"
+            aria-live="polite"
+          >
+            Loading...
+          </span>
         </CardContent>
       </Card>
     );
