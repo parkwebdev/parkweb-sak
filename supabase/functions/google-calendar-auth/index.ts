@@ -70,6 +70,7 @@ Deno.serve(async (req) => {
 
         // Create state parameter with location and agent info
         const stateData = JSON.stringify({
+          provider: 'google',
           locationId: locationId || null,
           agentId,
           userId,
