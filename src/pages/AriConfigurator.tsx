@@ -185,9 +185,9 @@ const AriConfigurator = () => {
       case 'help-articles':
         return <AriHelpArticlesSection agentId={agent.id} userId={agent.user_id} />;
       case 'announcements':
-        return <AriAnnouncementsSection agentId={agent.id} />;
+        return <AriAnnouncementsSection agentId={agent.id} userId={agent.user_id} />;
       case 'news':
-        return <AriNewsSection agentId={agent.id} />;
+        return <AriNewsSection agentId={agent.id} userId={agent.user_id} />;
       case 'custom-tools':
         return <AriCustomToolsSection agentId={agent.id} />;
       case 'webhooks':
