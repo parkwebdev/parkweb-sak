@@ -21,6 +21,7 @@ import { HelpArticlesManager } from '@/components/agents/HelpArticlesManager';
 import { LocationDetails } from '@/components/agents/locations/LocationDetails';
 import { CreateLocationDialog } from '@/components/agents/locations/CreateLocationDialog';
 import { WordPressConnectionCard } from '@/components/agents/locations/WordPressConnectionCard';
+import { WordPressHomesCard } from '@/components/agents/locations/WordPressHomesCard';
 import { AgentSettingsLayout } from '@/components/agents/AgentSettingsLayout';
 import { LoadingState } from '@/components/ui/loading-state';
 import { ZapSolidIcon } from '@/components/ui/zap-solid-icon';
@@ -280,6 +281,9 @@ export const AgentDataSourcesTab = ({ agentId, userId }: AgentDataSourcesTabProp
         <div className="space-y-4">
           {/* WordPress Connection Card */}
           <WordPressConnectionCard agent={agent} onSyncComplete={refetchLocations} />
+          
+          {/* WordPress Homes Card - only shows when WordPress is connected */}
+          <WordPressHomesCard agent={agent} onSyncComplete={refetchLocations} />
           
           <div className="flex gap-6 h-full min-h-0">
             {/* Left Panel - Location List */}
