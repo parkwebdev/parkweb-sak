@@ -42,7 +42,7 @@ export const LocationDetailsSheet: React.FC<LocationDetailsSheetProps> = ({
           <SheetTitle>{location?.name || 'Location Details'}</SheetTitle>
         </SheetHeader>
         
-        {location && (
+        {open && location && (
           <LocationDetails
             location={location}
             agentId={agentId}

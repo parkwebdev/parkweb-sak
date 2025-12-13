@@ -24,11 +24,8 @@ import * as SheetPrimitive from "@radix-ui/react-dialog"
 import { cva, type VariantProps } from "class-variance-authority"
 import { X } from "@untitledui/icons"
 import * as React from "react"
-import { motion, AnimatePresence } from "motion/react"
 
 import { cn } from "@/lib/utils"
-import { useReducedMotion } from "@/hooks/useReducedMotion"
-import { springs, overlayVariants, sidebarVariants, getVariants, fadeReducedVariants } from "@/lib/motion-variants"
 
 const Sheet = SheetPrimitive.Root
 
@@ -41,25 +38,19 @@ const SheetPortal = SheetPrimitive.Portal
 const SheetOverlay = React.forwardRef<
   React.ElementRef<typeof SheetPrimitive.Overlay>,
   React.ComponentPropsWithoutRef<typeof SheetPrimitive.Overlay>
->(({ className, ...props }, ref) => {
-  const prefersReducedMotion = useReducedMotion();
-  const variants = getVariants(overlayVariants, fadeReducedVariants, prefersReducedMotion);
-
-  return (
-    <SheetPrimitive.Overlay ref={ref} asChild forceMount {...props}>
-      <motion.div
-        className={cn(
-          "fixed inset-0 z-50 bg-black/80 backdrop-blur-sm",
-          className
-        )}
-        variants={variants}
-        initial="hidden"
-        animate="visible"
-        exit="exit"
-      />
-    </SheetPrimitive.Overlay>
-  );
-})
+>(({ className, ...props }, ref) => (
+  <SheetPrimitive.Overlay
+    ref={ref}
+    className={cn(
+      "fixed inset-0 z-50 bg-black/80 backdrop-blur-sm",
+      "data-[state=open]:animate-in data-[state=closed]:animate-out",
+      "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+      "duration-300",
+      className
+    )}
+    {...props}
+  />
+))
 SheetOverlay.displayName = SheetPrimitive.Overlay.displayName
 
 const sheetVariants = cva(
@@ -79,37 +70,6 @@ const sheetVariants = cva(
   }
 )
 
-// Motion variants for each side
-const getSlideVariants = (side: "top" | "bottom" | "left" | "right") => {
-  const offScreen = {
-    top: { y: "-100%" },
-    bottom: { y: "100%" },
-    left: { x: "-100%" },
-    right: { x: "100%" },
-  };
-
-  return {
-    hidden: { ...offScreen[side], opacity: 0.8 },
-    visible: { 
-      x: 0, 
-      y: 0, 
-      opacity: 1,
-      transition: springs.smooth
-    },
-    exit: { 
-      ...offScreen[side], 
-      opacity: 0.8,
-      transition: { ...springs.snappy, duration: 0.2 }
-    },
-  };
-};
-
-const reducedSlideVariants = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { duration: 0.15 } },
-  exit: { opacity: 0, transition: { duration: 0.1 } },
-};
-
 interface SheetContentProps
   extends React.ComponentPropsWithoutRef<typeof SheetPrimitive.Content>,
   VariantProps<typeof sheetVariants> { }
@@ -118,30 +78,30 @@ const SheetContent = React.forwardRef<
   React.ElementRef<typeof SheetPrimitive.Content>,
   SheetContentProps
 >(({ side = "right", className, children, ...props }, ref) => {
-  const prefersReducedMotion = useReducedMotion();
-  const slideVariants = getSlideVariants(side!);
-  const variants = getVariants(slideVariants, reducedSlideVariants, prefersReducedMotion);
-
   return (
-    <SheetPortal forceMount>
-      <AnimatePresence mode="wait">
-        <SheetOverlay />
-        <SheetPrimitive.Content ref={ref} asChild forceMount {...props}>
-          <motion.div
-            className={cn(sheetVariants({ side }), className)}
-            variants={variants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-          >
-            {children}
-            <SheetPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 disabled:pointer-events-none data-[state=open]:bg-secondary">
-              <X className="h-4 w-4" />
-              <span className="sr-only">Close</span>
-            </SheetPrimitive.Close>
-          </motion.div>
-        </SheetPrimitive.Content>
-      </AnimatePresence>
+    <SheetPortal>
+      <SheetOverlay />
+      <SheetPrimitive.Content
+        ref={ref}
+        className={cn(
+          sheetVariants({ side }),
+          // CSS animations for open/close states
+          "data-[state=open]:animate-in data-[state=closed]:animate-out",
+          side === "right" && "data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right",
+          side === "left" && "data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left",
+          side === "top" && "data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top",
+          side === "bottom" && "data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
+          "duration-300",
+          className
+        )}
+        {...props}
+      >
+        {children}
+        <SheetPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 disabled:pointer-events-none data-[state=open]:bg-secondary">
+          <X className="h-4 w-4" />
+          <span className="sr-only">Close</span>
+        </SheetPrimitive.Close>
+      </SheetPrimitive.Content>
     </SheetPortal>
   );
 })
