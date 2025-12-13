@@ -144,7 +144,7 @@ export const ActiveVisitorsPanel: React.FC<ActiveVisitorsPanelProps> = ({
             >
               <div className="relative shrink-0">
                 <Avatar className="h-7 w-7">
-                  <AvatarFallback className="text-[10px] bg-primary/10">
+                  <AvatarFallback className="text-2xs bg-primary/10">
                     {visitor.leadName?.[0]?.toUpperCase() || '?'}
                   </AvatarFallback>
                 </Avatar>
@@ -157,7 +157,7 @@ export const ActiveVisitorsPanel: React.FC<ActiveVisitorsPanelProps> = ({
                 </p>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                    <div className="flex items-center gap-1 text-2xs text-muted-foreground">
                       <Globe01 className="h-3 w-3 shrink-0" />
                       <span className="truncate">{formatUrl(visitor.currentPage)}</span>
                     </div>
@@ -168,7 +168,7 @@ export const ActiveVisitorsPanel: React.FC<ActiveVisitorsPanelProps> = ({
                 </Tooltip>
               </div>
               
-              <span className="text-[10px] text-muted-foreground shrink-0">
+              <span className="text-2xs text-muted-foreground shrink-0">
                 {formatTimeActive(visitor.startedAt)}
               </span>
             </div>

@@ -101,7 +101,7 @@ export const MessageBubble = ({
       <div className="flex flex-col gap-0.5 max-w-[80%]">
         {/* Header: Name • Timestamp • Status - only show for first message in group */}
         {!isContinuation && (
-          <div className={`flex items-center gap-1.5 text-[11px] text-muted-foreground ${isUser ? 'justify-end' : ''}`}>
+          <div className={`flex items-center gap-1.5 text-2xs text-muted-foreground ${isUser ? 'justify-end' : ''}`}>
             <span className="font-medium">{displayName}</span>
             <span>•</span>
             <span>{formatShortTime(message.timestamp)}</span>

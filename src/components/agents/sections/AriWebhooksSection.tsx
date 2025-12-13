@@ -172,11 +172,11 @@ export const AriWebhooksSection: React.FC<AriWebhooksSectionProps> = ({ agentId 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <h4 className="text-sm font-medium">{webhook.name}</h4>
-                      <Badge variant="outline" className="text-[10px]">
+                      <Badge variant="outline" size="sm">
                         {webhook.method}
                       </Badge>
                       {!webhook.active && (
-                        <Badge variant="secondary" className="text-[10px]">Disabled</Badge>
+                        <Badge variant="secondary" size="sm">Disabled</Badge>
                       )}
                     </div>
                     <p className="text-xs font-mono text-muted-foreground truncate">

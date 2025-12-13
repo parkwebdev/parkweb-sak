@@ -309,7 +309,7 @@ export const AriCustomToolsSection: React.FC<AriCustomToolsSectionProps> = ({ ag
                       <div className="flex items-center gap-2 mb-1">
                         <h4 className="text-sm font-mono font-semibold">{tool.name}</h4>
                         {!tool.enabled && (
-                          <Badge variant="secondary" className="text-[10px]">Disabled</Badge>
+                          <Badge variant="secondary" size="sm">Disabled</Badge>
                         )}
                       </div>
                       <p className="text-xs text-muted-foreground mb-2">{tool.description}</p>

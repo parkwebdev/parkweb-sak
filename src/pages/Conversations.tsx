@@ -645,10 +645,10 @@ const Conversations: React.FC = () => {
                             </p>
                           )}
                           <div className="flex items-center gap-1.5">
-                            <Badge variant="outline" className={`${getStatusColor(conv.status)} text-[10px] px-2 py-0.5`}>
+                            <Badge variant="outline" size="sm" className={`${getStatusColor(conv.status)} px-2 py-0.5`}>
                               {conv.status === 'human_takeover' ? 'Human' : conv.status === 'active' ? 'AI' : conv.status}
                             </Badge>
-                            <span className="text-[10px] text-muted-foreground">
+                            <span className="text-2xs text-muted-foreground">
                               • {formatDistanceToNow(new Date(conv.updated_at), { addSuffix: true })}
                             </span>
                           </div>
@@ -839,7 +839,7 @@ const Conversations: React.FC = () => {
                             <div className="flex flex-col">
                               {/* Name + Timestamp header row - only show if !isContinuation */}
                               {!isContinuation && (
-                                <div className={`flex items-center gap-1.5 text-[11px] text-muted-foreground mb-1 ${isUser ? 'justify-end mr-1' : 'ml-1'}`}>
+                                <div className={`flex items-center gap-1.5 text-2xs text-muted-foreground mb-1 ${isUser ? 'justify-end mr-1' : 'ml-1'}`}>
                                   <span className="font-medium">
                                     {isUser ? (((selectedConversation?.metadata || {}) as ConversationMetadata).lead_name || 'Visitor') : (isHumanSent ? formatSenderName(msgMetadata.sender_name) : 'AI Agent')}
                                   </span>

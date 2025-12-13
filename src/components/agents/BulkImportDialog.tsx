@@ -460,7 +460,7 @@ export const BulkImportDialog = ({ open, onOpenChange, onImport, existingCategor
                             </span>
                           </div>
                           {!article.isValid && (
-                            <p className="text-[10px] text-destructive mt-0.5">
+                            <p className="text-2xs text-destructive mt-0.5">
                               {article.errors.join(', ')}
                             </p>
                           )}

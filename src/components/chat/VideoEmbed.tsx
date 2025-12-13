@@ -58,7 +58,7 @@ export function VideoEmbed({ embedUrl, videoType, title, thumbnail, compact = fa
         </div>
 
         {/* Platform badge */}
-        <div className="absolute bottom-2 left-2 px-2 py-0.5 rounded bg-black/60 text-white text-[10px] font-medium capitalize">
+        <div className="absolute bottom-2 left-2 px-2 py-0.5 rounded bg-black/60 text-white text-2xs font-medium capitalize">
           {videoType}
         </div>
       </div>

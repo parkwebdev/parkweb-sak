@@ -26,6 +26,9 @@ const config: Config = {
       '2xl': '1536px',
     },
     extend: {
+      fontSize: {
+        '2xs': ['0.625rem', { lineHeight: '0.875rem' }], // 10px with 14px line-height
+      },
       fontFamily: {
         sans: ['Geist', 'ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'Noto Sans', 'sans-serif'],
         mono: ['Geist Mono', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', 'monospace'],

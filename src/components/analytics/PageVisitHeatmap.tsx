@@ -124,7 +124,7 @@ export const PageVisitHeatmap: React.FC<PageVisitHeatmapProps> = ({ data, loadin
                       </span>
                       <div className="flex items-center gap-2 z-10">
                         {page.agentName && (
-                          <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                          <Badge variant="secondary" size="sm" className="px-1.5 py-0">
                             {page.agentName}
                           </Badge>
                         )}

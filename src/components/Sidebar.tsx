@@ -169,7 +169,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
                         </div>
                         {item.id === 'conversations' && unreadConversationsCount > 0 && (
                           <motion.div 
-                            className="bg-destructive text-destructive-foreground text-[10px] font-semibold rounded-full h-5 min-w-[20px] px-1.5 flex items-center justify-center ml-auto"
+                            className="bg-destructive text-destructive-foreground text-2xs font-semibold rounded-full h-5 min-w-[20px] px-1.5 flex items-center justify-center ml-auto"
                             initial={prefersReducedMotion ? false : { scale: 0 }}
                             animate={{ scale: 1 }}
                             transition={springs.bouncy}

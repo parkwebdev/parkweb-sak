@@ -118,7 +118,7 @@ export const UserAccountCard: React.FC<UserAccountCardProps> = ({ isCollapsed = 
               <div className="text-foreground text-xs font-semibold leading-tight truncate">
                 {displayName}
               </div>
-              <div className="text-muted-foreground text-[11px] font-normal leading-tight truncate">
+              <div className="text-muted-foreground text-2xs font-normal leading-tight truncate">
                 {email}
               </div>
             </div>

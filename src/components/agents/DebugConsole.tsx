@@ -137,7 +137,7 @@ export const DebugConsole = ({ logs, onClear, className }: DebugConsoleProps) =>
                       <span className="text-muted-foreground shrink-0">
                         {formatTime(log.timestamp)}
                       </span>
-                      <span className={cn('shrink-0 px-1.5 py-0.5 rounded text-[10px] uppercase font-semibold', config.bg, config.color)}>
+                      <span className={cn('shrink-0 px-1.5 py-0.5 rounded text-2xs uppercase font-semibold', config.bg, config.color)}>
                         {log.level}
                       </span>
                       <span className="flex-1 break-words">{log.message}</span>
@@ -149,7 +149,7 @@ export const DebugConsole = ({ logs, onClear, className }: DebugConsoleProps) =>
                     </div>
                     {hasDetails && isExpanded && (
                       <div className="mt-2 ml-[72px]">
-                        <pre className="p-2 rounded bg-muted/50 overflow-auto max-h-48 text-[10px] leading-relaxed">
+                        <pre className="p-2 rounded bg-muted/50 overflow-auto max-h-48 text-2xs leading-relaxed">
                           {typeof log.details === 'string' 
                             ? log.details 
                             : JSON.stringify(log.details, null, 2)}

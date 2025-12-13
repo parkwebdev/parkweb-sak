@@ -95,7 +95,7 @@ const CreditCard = React.forwardRef<HTMLDivElement, CreditCardProps>(
           <div className="flex items-end justify-between">
             <div>
               <p className={cn(
-                "text-[10px] uppercase tracking-wider mb-0.5",
+                "text-2xs uppercase tracking-wider mb-0.5",
                 isDark ? "text-white/50" : "text-muted-foreground"
               )}>
                 Card Holder
@@ -111,7 +111,7 @@ const CreditCard = React.forwardRef<HTMLDivElement, CreditCardProps>(
             <div className="flex items-end gap-4">
               <div className="text-right">
                 <p className={cn(
-                  "text-[10px] uppercase tracking-wider mb-0.5",
+                  "text-2xs uppercase tracking-wider mb-0.5",
                   isDark ? "text-white/50" : "text-muted-foreground"
                 )}>
                   Expires

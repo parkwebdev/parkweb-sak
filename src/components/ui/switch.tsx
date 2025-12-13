@@ -36,12 +36,12 @@ const Switch = React.forwardRef<
         )}
       >
         {startIcon && (
-          <span className="absolute left-1.5 z-10 text-[10px] text-primary-foreground opacity-0 transition-opacity duration-200 data-[state=checked]:opacity-100">
+          <span className="absolute left-1.5 z-10 text-2xs text-primary-foreground opacity-0 transition-opacity duration-200 data-[state=checked]:opacity-100">
             {startIcon}
           </span>
         )}
         {endIcon && (
-          <span className="absolute right-1.5 z-10 text-[10px] text-muted-foreground opacity-0 transition-opacity duration-200 data-[state=unchecked]:opacity-100">
+          <span className="absolute right-1.5 z-10 text-2xs text-muted-foreground opacity-0 transition-opacity duration-200 data-[state=unchecked]:opacity-100">
             {endIcon}
           </span>
         )}
@@ -52,7 +52,7 @@ const Switch = React.forwardRef<
             "data-[state=checked]:translate-x-5 data-[state=unchecked]:translate-x-0"
           )}
         >
-          {thumbIcon && <span className="text-[10px]">{thumbIcon}</span>}
+          {thumbIcon && <span className="text-2xs">{thumbIcon}</span>}
         </SwitchPrimitives.Thumb>
       </motion.button>
     </SwitchPrimitives.Root>

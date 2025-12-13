@@ -518,7 +518,7 @@ export const AriModelBehaviorSection: React.FC<AriModelBehaviorSectionProps> = (
                             <div className="flex items-center gap-2">
                               <span className="font-medium">{model.label}</span>
                               {model.recommended && (
-                                <Badge className="text-[10px] px-1.5 py-0 h-4 font-medium bg-foreground text-background">
+                                <Badge size="sm" className="px-1.5 py-0 h-4 font-medium bg-foreground text-background">
                                   Popular
                                 </Badge>
                               )}
@@ -543,7 +543,7 @@ export const AriModelBehaviorSection: React.FC<AriModelBehaviorSectionProps> = (
                             <div className="flex items-center gap-2">
                               <span className="font-medium">{model.label}</span>
                               {model.recommended && (
-                                <Badge className="text-[10px] px-1.5 py-0 h-4 font-medium bg-foreground text-background">
+                                <Badge size="sm" className="px-1.5 py-0 h-4 font-medium bg-foreground text-background">
                                   Popular
                                 </Badge>
                               )}
@@ -568,7 +568,7 @@ export const AriModelBehaviorSection: React.FC<AriModelBehaviorSectionProps> = (
                             <div className="flex items-center gap-2">
                               <span className="font-medium">{model.label}</span>
                               {model.recommended && (
-                                <Badge className="text-[10px] px-1.5 py-0 h-4 font-medium bg-foreground text-background">
+                                <Badge size="sm" className="px-1.5 py-0 h-4 font-medium bg-foreground text-background">
                                   Popular
                                 </Badge>
                               )}
@@ -593,7 +593,7 @@ export const AriModelBehaviorSection: React.FC<AriModelBehaviorSectionProps> = (
                             <div className="flex items-center gap-2">
                               <span className="font-medium">{model.label}</span>
                               {model.recommended && (
-                                <Badge className="text-[10px] px-1.5 py-0 h-4 font-medium bg-foreground text-background">
+                                <Badge size="sm" className="px-1.5 py-0 h-4 font-medium bg-foreground text-background">
                                   Popular
                                 </Badge>
                               )}
