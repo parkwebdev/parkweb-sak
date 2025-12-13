@@ -43,3 +43,5 @@ export * from './webhooks';
 export * from './errors';
 export * from './team';
 export * from './report';
+export * from './locations';
+export * from './properties';

@@ -353,6 +353,7 @@ export type Database = {
           created_at: string
           expires_at: string
           id: string
+          location_id: string | null
           metadata: Json | null
           status: Database["public"]["Enums"]["conversation_status"]
           updated_at: string
@@ -364,6 +365,7 @@ export type Database = {
           created_at?: string
           expires_at?: string
           id?: string
+          location_id?: string | null
           metadata?: Json | null
           status?: Database["public"]["Enums"]["conversation_status"]
           updated_at?: string
@@ -375,6 +377,7 @@ export type Database = {
           created_at?: string
           expires_at?: string
           id?: string
+          location_id?: string | null
           metadata?: Json | null
           status?: Database["public"]["Enums"]["conversation_status"]
           updated_at?: string
@@ -386,6 +389,13 @@ export type Database = {
             columns: ["agent_id"]
             isOneToOne: false
             referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
             referencedColumns: ["id"]
           },
         ]
@@ -582,11 +592,22 @@ export type Database = {
         Row: {
           agent_id: string
           content: string | null
+          content_hash: string | null
           created_at: string
+          default_location_id: string | null
           embedding: string | null
+          extraction_config: Json | null
           id: string
+          last_fetched_at: string | null
           metadata: Json | null
+          next_refresh_at: string | null
+          refresh_strategy:
+            | Database["public"]["Enums"]["refresh_strategy"]
+            | null
           source: string
+          source_type:
+            | Database["public"]["Enums"]["knowledge_source_type"]
+            | null
           status: string
           type: Database["public"]["Enums"]["knowledge_type"]
           updated_at: string
@@ -595,11 +616,22 @@ export type Database = {
         Insert: {
           agent_id: string
           content?: string | null
+          content_hash?: string | null
           created_at?: string
+          default_location_id?: string | null
           embedding?: string | null
+          extraction_config?: Json | null
           id?: string
+          last_fetched_at?: string | null
           metadata?: Json | null
+          next_refresh_at?: string | null
+          refresh_strategy?:
+            | Database["public"]["Enums"]["refresh_strategy"]
+            | null
           source: string
+          source_type?:
+            | Database["public"]["Enums"]["knowledge_source_type"]
+            | null
           status?: string
           type: Database["public"]["Enums"]["knowledge_type"]
           updated_at?: string
@@ -608,11 +640,22 @@ export type Database = {
         Update: {
           agent_id?: string
           content?: string | null
+          content_hash?: string | null
           created_at?: string
+          default_location_id?: string | null
           embedding?: string | null
+          extraction_config?: Json | null
           id?: string
+          last_fetched_at?: string | null
           metadata?: Json | null
+          next_refresh_at?: string | null
+          refresh_strategy?:
+            | Database["public"]["Enums"]["refresh_strategy"]
+            | null
           source?: string
+          source_type?:
+            | Database["public"]["Enums"]["knowledge_source_type"]
+            | null
           status?: string
           type?: Database["public"]["Enums"]["knowledge_type"]
           updated_at?: string
@@ -624,6 +667,13 @@ export type Database = {
             columns: ["agent_id"]
             isOneToOne: false
             referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "knowledge_sources_default_location_id_fkey"
+            columns: ["default_location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
             referencedColumns: ["id"]
           },
         ]
@@ -681,6 +731,77 @@ export type Database = {
             columns: ["conversation_id"]
             isOneToOne: false
             referencedRelation: "widget_conversations_secure"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      locations: {
+        Row: {
+          address: string | null
+          agent_id: string
+          business_hours: Json | null
+          city: string | null
+          country: string | null
+          created_at: string
+          email: string | null
+          id: string
+          is_active: boolean | null
+          metadata: Json | null
+          name: string
+          phone: string | null
+          state: string | null
+          timezone: string | null
+          updated_at: string
+          url_patterns: string[] | null
+          user_id: string
+          zip: string | null
+        }
+        Insert: {
+          address?: string | null
+          agent_id: string
+          business_hours?: Json | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_active?: boolean | null
+          metadata?: Json | null
+          name: string
+          phone?: string | null
+          state?: string | null
+          timezone?: string | null
+          updated_at?: string
+          url_patterns?: string[] | null
+          user_id: string
+          zip?: string | null
+        }
+        Update: {
+          address?: string | null
+          agent_id?: string
+          business_hours?: Json | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_active?: boolean | null
+          metadata?: Json | null
+          name?: string
+          phone?: string | null
+          state?: string | null
+          timezone?: string | null
+          updated_at?: string
+          url_patterns?: string[] | null
+          user_id?: string
+          zip?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "locations_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
             referencedColumns: ["id"]
           },
         ]
@@ -977,6 +1098,112 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      properties: {
+        Row: {
+          address: string | null
+          agent_id: string
+          baths: number | null
+          beds: number | null
+          city: string | null
+          created_at: string
+          description: string | null
+          external_id: string | null
+          features: string[] | null
+          first_seen_at: string
+          id: string
+          images: Json | null
+          knowledge_source_id: string
+          last_seen_at: string
+          listing_url: string | null
+          location_id: string | null
+          lot_number: string | null
+          price: number | null
+          price_type: Database["public"]["Enums"]["property_price_type"] | null
+          sqft: number | null
+          state: string | null
+          status: Database["public"]["Enums"]["property_status"] | null
+          updated_at: string
+          year_built: number | null
+          zip: string | null
+        }
+        Insert: {
+          address?: string | null
+          agent_id: string
+          baths?: number | null
+          beds?: number | null
+          city?: string | null
+          created_at?: string
+          description?: string | null
+          external_id?: string | null
+          features?: string[] | null
+          first_seen_at?: string
+          id?: string
+          images?: Json | null
+          knowledge_source_id: string
+          last_seen_at?: string
+          listing_url?: string | null
+          location_id?: string | null
+          lot_number?: string | null
+          price?: number | null
+          price_type?: Database["public"]["Enums"]["property_price_type"] | null
+          sqft?: number | null
+          state?: string | null
+          status?: Database["public"]["Enums"]["property_status"] | null
+          updated_at?: string
+          year_built?: number | null
+          zip?: string | null
+        }
+        Update: {
+          address?: string | null
+          agent_id?: string
+          baths?: number | null
+          beds?: number | null
+          city?: string | null
+          created_at?: string
+          description?: string | null
+          external_id?: string | null
+          features?: string[] | null
+          first_seen_at?: string
+          id?: string
+          images?: Json | null
+          knowledge_source_id?: string
+          last_seen_at?: string
+          listing_url?: string | null
+          location_id?: string | null
+          lot_number?: string | null
+          price?: number | null
+          price_type?: Database["public"]["Enums"]["property_price_type"] | null
+          sqft?: number | null
+          state?: string | null
+          status?: Database["public"]["Enums"]["property_status"] | null
+          updated_at?: string
+          year_built?: number | null
+          zip?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "properties_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "properties_knowledge_source_id_fkey"
+            columns: ["knowledge_source_id"]
+            isOneToOne: false
+            referencedRelation: "knowledge_sources"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "properties_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       query_embedding_cache: {
         Row: {
@@ -1611,9 +1838,30 @@ export type Database = {
         | "view_settings"
       app_role: "admin" | "manager" | "member" | "super_admin" | "client"
       conversation_status: "active" | "human_takeover" | "closed"
+      knowledge_source_type:
+        | "url"
+        | "sitemap"
+        | "property_listings"
+        | "property_feed"
       knowledge_type: "pdf" | "url" | "api" | "json" | "xml" | "csv"
       lead_status: "new" | "contacted" | "qualified" | "converted"
       org_role: "owner" | "admin" | "member"
+      property_price_type: "sale" | "rent_monthly" | "rent_weekly"
+      property_status:
+        | "available"
+        | "pending"
+        | "sold"
+        | "rented"
+        | "coming_soon"
+      refresh_strategy:
+        | "manual"
+        | "hourly_1"
+        | "hourly_2"
+        | "hourly_3"
+        | "hourly_4"
+        | "hourly_6"
+        | "hourly_12"
+        | "daily"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1756,9 +2004,33 @@ export const Constants = {
       ],
       app_role: ["admin", "manager", "member", "super_admin", "client"],
       conversation_status: ["active", "human_takeover", "closed"],
+      knowledge_source_type: [
+        "url",
+        "sitemap",
+        "property_listings",
+        "property_feed",
+      ],
       knowledge_type: ["pdf", "url", "api", "json", "xml", "csv"],
       lead_status: ["new", "contacted", "qualified", "converted"],
       org_role: ["owner", "admin", "member"],
+      property_price_type: ["sale", "rent_monthly", "rent_weekly"],
+      property_status: [
+        "available",
+        "pending",
+        "sold",
+        "rented",
+        "coming_soon",
+      ],
+      refresh_strategy: [
+        "manual",
+        "hourly_1",
+        "hourly_2",
+        "hourly_3",
+        "hourly_4",
+        "hourly_6",
+        "hourly_12",
+        "daily",
+      ],
     },
   },
 } as const

@@ -211,7 +211,43 @@ export interface KnowledgeSourceMetadata {
   processed_at?: string;
   /** ISO timestamp of last progress update (for stall detection) */
   last_progress_at?: string;
+  /** Embedding model used (for outdated detection) */
+  embedding_model?: string;
 }
+
+/**
+ * Knowledge source type enum for new source_type column.
+ */
+export type KnowledgeSourceType = 'url' | 'sitemap' | 'property_listings' | 'property_feed';
+
+/**
+ * Refresh strategy enum for automatic content refreshing.
+ */
+export type RefreshStrategy = 'manual' | 'hourly_1' | 'hourly_2' | 'hourly_3' | 'hourly_4' | 'hourly_6' | 'hourly_12' | 'daily';
+
+/**
+ * Refresh strategy display labels
+ */
+export const REFRESH_STRATEGY_LABELS: Record<RefreshStrategy, string> = {
+  manual: 'Manual only',
+  hourly_1: 'Every hour',
+  hourly_2: 'Every 2 hours',
+  hourly_3: 'Every 3 hours',
+  hourly_4: 'Every 4 hours',
+  hourly_6: 'Every 6 hours',
+  hourly_12: 'Every 12 hours',
+  daily: 'Daily',
+};
+
+/**
+ * Source type display labels
+ */
+export const SOURCE_TYPE_LABELS: Record<KnowledgeSourceType, string> = {
+  url: 'URL',
+  sitemap: 'Sitemap',
+  property_listings: 'Property Listings',
+  property_feed: 'Property Feed',
+};
 
 /**
  * Agent deployment configuration stored in agents.deployment_config JSONB field.

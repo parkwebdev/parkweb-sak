@@ -1,8 +1,9 @@
 /**
  * KnowledgeSourceCard Component
  * 
- * Card display for a knowledge source with status, progress, and actions.
- * Supports sitemaps with expandable child pages and progress tracking.
+ * Card display for a knowledge source with status, progress, refresh info, and actions.
+ * Supports sitemaps with expandable child pages, property listings with counts,
+ * and auto-refresh status display.
  * @module components/agents/KnowledgeSourceCard
  */
 
@@ -13,11 +14,16 @@ import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Progress } from '@/components/ui/progress';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { File06, Link03, Database01, Trash01, RefreshCcw01, CheckCircle, XCircle, Clock, AlertCircle, Globe01, ChevronDown, ChevronUp } from '@untitledui/icons';
+import { 
+  File06, Link03, Database01, Trash01, RefreshCcw01, CheckCircle, XCircle, 
+  Clock, AlertCircle, Globe01, ChevronDown, ChevronUp, Building07, 
+  Calendar, RefreshCw01 
+} from '@untitledui/icons';
 import { formatDistanceToNow } from 'date-fns';
 import { SitemapChildPages } from './SitemapChildPages';
 import type { Tables } from '@/integrations/supabase/types';
-import type { KnowledgeSourceMetadata } from '@/types/metadata';
+import type { KnowledgeSourceMetadata, RefreshStrategy } from '@/types/metadata';
+import { REFRESH_STRATEGY_LABELS, SOURCE_TYPE_LABELS } from '@/types/metadata';
 
 interface KnowledgeSourceCardProps {
   source: Tables<'knowledge_sources'>;
@@ -26,8 +32,11 @@ interface KnowledgeSourceCardProps {
   onResume?: (id: string) => void;
   onRetryChild?: (id: string) => void;
   onDeleteChild?: (id: string) => void;
+  onRefreshNow?: (id: string) => void;
   isOutdated?: boolean;
   childSources?: Tables<'knowledge_sources'>[];
+  propertyCount?: number;
+  locationName?: string;
 }
 
 const typeIcons = {
@@ -58,15 +67,32 @@ export const KnowledgeSourceCard: React.FC<KnowledgeSourceCardProps> = ({
   onResume,
   onRetryChild,
   onDeleteChild,
+  onRefreshNow,
   isOutdated = false,
   childSources = [],
+  propertyCount,
+  locationName,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const metadata = (source.metadata || {}) as KnowledgeSourceMetadata;
   const isSitemap = metadata.is_sitemap === true;
   
-  // Use Globe01 for sitemaps, otherwise use type-based icon
-  const Icon = isSitemap ? Globe01 : (typeIcons[source.type as keyof typeof typeIcons] || Database01);
+  // Get source type from new column (with fallback)
+  const sourceType = (source as unknown as { source_type?: string }).source_type || 
+    (isSitemap ? 'sitemap' : 'url');
+  const isPropertyListing = sourceType === 'property_listings' || sourceType === 'property_feed';
+  
+  // Get refresh info from new columns
+  const refreshStrategy = (source as unknown as { refresh_strategy?: RefreshStrategy }).refresh_strategy || 'manual';
+  const lastFetchedAt = (source as unknown as { last_fetched_at?: string }).last_fetched_at;
+  const nextRefreshAt = (source as unknown as { next_refresh_at?: string }).next_refresh_at;
+  
+  // Use appropriate icon based on source type
+  const Icon = isPropertyListing 
+    ? Building07 
+    : isSitemap 
+      ? Globe01 
+      : (typeIcons[source.type as keyof typeof typeIcons] || Database01);
   const StatusIcon = statusIcons[source.status as keyof typeof statusIcons] || Clock;
 
   // Calculate sitemap progress from child sources
@@ -99,6 +125,13 @@ export const KnowledgeSourceCard: React.FC<KnowledgeSourceCardProps> = ({
   const progress = getSitemapProgress();
 
   const getDisplayName = () => {
+    if (isPropertyListing) {
+      try {
+        return `Properties: ${new URL(source.source).hostname}`;
+      } catch {
+        return 'Property Listings';
+      }
+    }
     if (isSitemap) {
       try {
         return `Sitemap: ${new URL(source.source).hostname}`;
@@ -119,6 +152,9 @@ export const KnowledgeSourceCard: React.FC<KnowledgeSourceCardProps> = ({
   };
 
   const getContentPreview = () => {
+    if (isPropertyListing && propertyCount !== undefined) {
+      return `${propertyCount} properties synced`;
+    }
     if (isSitemap) {
       const urlsFound = metadata.urls_found || 0;
       const childSitemaps = metadata.child_sitemaps || 0;
@@ -141,19 +177,26 @@ export const KnowledgeSourceCard: React.FC<KnowledgeSourceCardProps> = ({
         <CardHeader>
           <div className="flex items-start justify-between">
             <div className="flex items-start gap-3 flex-1">
-              <div className={`p-2 rounded-lg ${isSitemap ? 'bg-primary/10' : 'bg-accent'}`}>
-                <Icon className={`h-5 w-5 ${isSitemap ? 'text-primary' : 'text-accent-foreground'}`} />
+              <div className={`p-2 rounded-lg ${isPropertyListing ? 'bg-primary/10' : isSitemap ? 'bg-primary/10' : 'bg-accent'}`}>
+                <Icon className={`h-5 w-5 ${isPropertyListing || isSitemap ? 'text-primary' : 'text-accent-foreground'}`} />
               </div>
               <div className="flex-1 min-w-0">
                 <CardTitle className="text-base truncate">{getDisplayName()}</CardTitle>
                 <div className="flex items-center gap-2 mt-2 flex-wrap">
-                  <Badge variant="outline">{isSitemap ? 'SITEMAP' : source.type.toUpperCase()}</Badge>
+                  {/* Source Type Badge */}
+                  <Badge variant="outline">
+                    {SOURCE_TYPE_LABELS[sourceType as keyof typeof SOURCE_TYPE_LABELS] || source.type.toUpperCase()}
+                  </Badge>
+                  
+                  {/* Status Badge (non-sitemap) */}
                   {!isSitemap && (
                     <Badge variant={statusColors[source.status as keyof typeof statusColors] || 'secondary'}>
                       <StatusIcon className="h-3 w-3 mr-1" />
                       {source.status}
                     </Badge>
                   )}
+                  
+                  {/* Sitemap Progress Badge */}
                   {isSitemap && progress && (
                     <Badge variant={progress.isComplete ? 'default' : 'secondary'}>
                       {progress.isComplete ? (
@@ -169,12 +212,51 @@ export const KnowledgeSourceCard: React.FC<KnowledgeSourceCardProps> = ({
                       )}
                     </Badge>
                   )}
+                  
+                  {/* Error Badge for Sitemaps */}
                   {isSitemap && progress && progress.errors > 0 && (
                     <Badge variant="destructive">
                       <XCircle className="h-3 w-3 mr-1" />
                       {progress.errors} failed
                     </Badge>
                   )}
+                  
+                  {/* Property Count Badge */}
+                  {isPropertyListing && propertyCount !== undefined && propertyCount > 0 && (
+                    <Badge variant="secondary">
+                      <Building07 className="h-3 w-3 mr-1" />
+                      {propertyCount} properties
+                    </Badge>
+                  )}
+                  
+                  {/* Location Badge */}
+                  {locationName && (
+                    <Badge variant="outline" className="text-primary">
+                      {locationName}
+                    </Badge>
+                  )}
+                  
+                  {/* Refresh Strategy Badge */}
+                  {refreshStrategy !== 'manual' && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Badge variant="outline" className="text-muted-foreground">
+                          <RefreshCw01 className="h-3 w-3 mr-1" />
+                          {REFRESH_STRATEGY_LABELS[refreshStrategy]}
+                        </Badge>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Auto-refreshes {REFRESH_STRATEGY_LABELS[refreshStrategy].toLowerCase()}</p>
+                        {nextRefreshAt && (
+                          <p className="text-xs text-muted-foreground">
+                            Next: {formatDistanceToNow(new Date(nextRefreshAt), { addSuffix: true })}
+                          </p>
+                        )}
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
+                  
+                  {/* Outdated Badge */}
                   {isOutdated && source.status === 'ready' && (
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -192,6 +274,22 @@ export const KnowledgeSourceCard: React.FC<KnowledgeSourceCardProps> = ({
               </div>
             </div>
             <div className="flex gap-2">
+              {/* Refresh Now Button (for auto-refresh sources) */}
+              {refreshStrategy !== 'manual' && onRefreshNow && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => onRefreshNow(source.id)}
+                      disabled={source.status === 'processing'}
+                    >
+                      <RefreshCw01 className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Refresh now</TooltipContent>
+                </Tooltip>
+              )}
               <Button
                 size="sm"
                 variant="ghost"
@@ -245,16 +343,20 @@ export const KnowledgeSourceCard: React.FC<KnowledgeSourceCardProps> = ({
               </div>
             )}
             
-            {/* Sitemap info - show page count and status */}
-            {isSitemap && (
-              <p className="text-xs text-muted-foreground">{getContentPreview()}</p>
-            )}
+            {/* Content preview / info */}
+            <p className="text-xs text-muted-foreground">{getContentPreview()}</p>
             
             <div className="flex items-center justify-between text-xs text-muted-foreground">
               <div className="flex items-center gap-3">
                 <span>Added {formatDistanceToNow(new Date(source.created_at), { addSuffix: true })}</span>
-                {!isSitemap && metadata.chunks_count && (
+                {!isSitemap && !isPropertyListing && metadata.chunks_count && (
                   <span className="text-primary font-medium">{metadata.chunks_count} chunks indexed</span>
+                )}
+                {lastFetchedAt && (
+                  <span className="flex items-center gap-1">
+                    <Calendar className="h-3 w-3" />
+                    Last fetched {formatDistanceToNow(new Date(lastFetchedAt), { addSuffix: true })}
+                  </span>
                 )}
               </div>
               {metadata.size && (
