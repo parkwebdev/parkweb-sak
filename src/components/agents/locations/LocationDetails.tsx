@@ -15,7 +15,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Separator } from '@/components/ui/separator';
 import { SavedIndicator } from '@/components/settings/SavedIndicator';
 import { BusinessHoursEditor } from './BusinessHoursEditor';
-import { UrlPatternsEditor } from './UrlPatternsEditor';
 import { CalendarConnections } from './CalendarConnections';
 import { US_TIMEZONES, type BusinessHours, type LocationFormData } from '@/types/locations';
 import type { Tables } from '@/integrations/supabase/types';
@@ -44,7 +43,7 @@ export const LocationDetails: React.FC<LocationDetailsProps> = ({
     phone: location.phone || '',
     email: location.email || '',
     business_hours: (location.business_hours as BusinessHours) || {},
-    url_patterns: location.url_patterns || [],
+    wordpress_slug: (location as any).wordpress_slug || '',
   });
   const [isSaved, setIsSaved] = useState(true);
   const [saveTimeout, setSaveTimeout] = useState<NodeJS.Timeout | null>(null);
@@ -62,7 +61,7 @@ export const LocationDetails: React.FC<LocationDetailsProps> = ({
       phone: location.phone || '',
       email: location.email || '',
       business_hours: (location.business_hours as BusinessHours) || {},
-      url_patterns: location.url_patterns || [],
+      wordpress_slug: (location as any).wordpress_slug || '',
     });
     setIsSaved(true);
   }, [location.id]);
@@ -216,17 +215,30 @@ export const LocationDetails: React.FC<LocationDetailsProps> = ({
         </CardContent>
       </Card>
 
-      {/* URL Patterns */}
+      {/* WordPress Integration */}
       <Card>
         <CardHeader className="pb-4">
-          <CardTitle className="text-base">URL Patterns</CardTitle>
-          <CardDescription>URLs that automatically route to this location</CardDescription>
+          <CardTitle className="text-base">WordPress Integration</CardTitle>
+          <CardDescription>Link this location to a WordPress community for automatic routing</CardDescription>
         </CardHeader>
-        <CardContent>
-          <UrlPatternsEditor
-            value={formData.url_patterns || []}
-            onChange={(patterns) => handleChange('url_patterns', patterns)}
-          />
+        <CardContent className="space-y-4">
+          <div>
+            <Label htmlFor="wordpress_slug">WordPress Community Slug</Label>
+            <Input
+              id="wordpress_slug"
+              value={formData.wordpress_slug || ''}
+              onChange={(e) => handleChange('wordpress_slug', e.target.value)}
+              placeholder="e.g., forge-at-the-lake"
+            />
+            <p className="text-xs text-muted-foreground mt-1.5">
+              The URL slug of the community on your WordPress site. Used for automatic location detection when visitors browse community or home pages.
+            </p>
+          </div>
+          {(location as any).wordpress_community_id && (
+            <div className="text-xs text-muted-foreground">
+              WordPress ID: {(location as any).wordpress_community_id}
+            </div>
+          )}
         </CardContent>
       </Card>
 

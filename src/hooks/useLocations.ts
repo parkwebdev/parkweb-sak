@@ -124,7 +124,7 @@ export const useLocations = (agentId?: string) => {
         phone: formData.phone || null,
         email: formData.email || null,
         business_hours: (formData.business_hours || {}) as unknown,
-        url_patterns: formData.url_patterns || [],
+        wordpress_slug: formData.wordpress_slug || null,
       };
 
       const { data, error } = await supabase

@@ -937,6 +937,8 @@ export type Database = {
           updated_at: string
           url_patterns: string[] | null
           user_id: string
+          wordpress_community_id: number | null
+          wordpress_slug: string | null
           zip: string | null
         }
         Insert: {
@@ -957,6 +959,8 @@ export type Database = {
           updated_at?: string
           url_patterns?: string[] | null
           user_id: string
+          wordpress_community_id?: number | null
+          wordpress_slug?: string | null
           zip?: string | null
         }
         Update: {
@@ -977,6 +981,8 @@ export type Database = {
           updated_at?: string
           url_patterns?: string[] | null
           user_id?: string
+          wordpress_community_id?: number | null
+          wordpress_slug?: string | null
           zip?: string | null
         }
         Relationships: [
