@@ -296,11 +296,11 @@ export const useEmbeddedChatConfig = (agentId: string) => {
     const optionalAttrs = locationAttrs.length > 0 ? '\n' + locationAttrs.join('\n') : '';
     
     // Simplified embed code - config loaded dynamically from edge function
+    // Note: primaryColor is hardcoded to #000000, not configurable
     return `<!-- ChatPad Widget -->
 <script
   src="${scriptUrl}"
   data-agent-id="${agentId}"
-  data-primary-color="${config.primaryColor}"
   data-position="${config.position}"${optionalAttrs}
 ></script>`;
   };
