@@ -7,7 +7,7 @@
  * @module hooks/useConnectedAccounts
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/lib/toast';
 import { logger } from '@/utils/logger';
@@ -65,6 +65,10 @@ export const useConnectedAccounts = (locationId?: string, agentId?: string) => {
     }
   }, [locationId, agentId]);
 
+  // Use ref to avoid re-subscribing when fetchAccounts changes
+  const fetchAccountsRef = useRef(fetchAccounts);
+  fetchAccountsRef.current = fetchAccounts;
+
   // Initial fetch and real-time subscription (deferred to prevent UI blocking)
   useEffect(() => {
     if (!agentId) return;
@@ -73,7 +77,7 @@ export const useConnectedAccounts = (locationId?: string, agentId?: string) => {
 
     // Defer subscription setup to prevent blocking UI
     const timeoutId = setTimeout(() => {
-      fetchAccounts();
+      fetchAccountsRef.current();
 
       // Subscribe to real-time updates
       const filter = locationId
@@ -122,7 +126,7 @@ export const useConnectedAccounts = (locationId?: string, agentId?: string) => {
         supabase.removeChannel(channel);
       }
     };
-  }, [agentId, locationId, fetchAccounts]);
+  }, [agentId, locationId]);
 
   /**
    * Disconnect an account (revoke and delete)
