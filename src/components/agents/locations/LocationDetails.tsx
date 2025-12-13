@@ -11,7 +11,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { SavedIndicator } from '@/components/settings/SavedIndicator';
 import { BusinessHoursEditor } from './BusinessHoursEditor';
@@ -89,172 +88,157 @@ export const LocationDetails: React.FC<LocationDetailsProps> = ({
   };
 
   return (
-    <div className="space-y-6 overflow-y-auto h-full pr-2">
+    <div className="space-y-6 overflow-y-auto h-full">
+      {/* Save indicator */}
+      <div className="flex justify-end">
+        <SavedIndicator show={isSaved} duration={0} />
+      </div>
+
       {/* Basic Info */}
-      <Card>
-        <CardHeader className="pb-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-base">Location Details</CardTitle>
-              <CardDescription>Basic information about this location</CardDescription>
-            </div>
-            <SavedIndicator show={isSaved} duration={0} />
+      <div className="space-y-4">
+        <h3 className="text-sm font-medium text-foreground">Location Details</h3>
+        
+        <div className="grid grid-cols-2 gap-4">
+          <div className="col-span-2">
+            <Label htmlFor="name">Name</Label>
+            <Input
+              id="name"
+              value={formData.name}
+              onChange={(e) => handleChange('name', e.target.value)}
+              placeholder="e.g., Downtown Community"
+            />
           </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2">
-              <Label htmlFor="name">Name</Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => handleChange('name', e.target.value)}
-                placeholder="e.g., Downtown Community"
-              />
-            </div>
-            
-            <div className="col-span-2">
-              <Label htmlFor="address">Street Address</Label>
-              <Input
-                id="address"
-                value={formData.address}
-                onChange={(e) => handleChange('address', e.target.value)}
-                placeholder="123 Main Street"
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="city">City</Label>
-              <Input
-                id="city"
-                value={formData.city}
-                onChange={(e) => handleChange('city', e.target.value)}
-                placeholder="Austin"
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="state">State</Label>
-              <Input
-                id="state"
-                value={formData.state}
-                onChange={(e) => handleChange('state', e.target.value)}
-                placeholder="TX"
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="zip">ZIP Code</Label>
-              <Input
-                id="zip"
-                value={formData.zip}
-                onChange={(e) => handleChange('zip', e.target.value)}
-                placeholder="78701"
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="timezone">Timezone</Label>
-              <Select
-                value={formData.timezone}
-                onValueChange={(value) => handleChange('timezone', value)}
-              >
-                <SelectTrigger id="timezone">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {US_TIMEZONES.map((tz) => (
-                    <SelectItem key={tz.value} value={tz.value}>
-                      {tz.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          
+          <div className="col-span-2">
+            <Label htmlFor="address">Street Address</Label>
+            <Input
+              id="address"
+              value={formData.address}
+              onChange={(e) => handleChange('address', e.target.value)}
+              placeholder="123 Main Street"
+            />
           </div>
+          
+          <div>
+            <Label htmlFor="city">City</Label>
+            <Input
+              id="city"
+              value={formData.city}
+              onChange={(e) => handleChange('city', e.target.value)}
+              placeholder="Austin"
+            />
+          </div>
+          
+          <div>
+            <Label htmlFor="state">State</Label>
+            <Input
+              id="state"
+              value={formData.state}
+              onChange={(e) => handleChange('state', e.target.value)}
+              placeholder="TX"
+            />
+          </div>
+          
+          <div>
+            <Label htmlFor="zip">ZIP Code</Label>
+            <Input
+              id="zip"
+              value={formData.zip}
+              onChange={(e) => handleChange('zip', e.target.value)}
+              placeholder="78701"
+            />
+          </div>
+          
+          <div>
+            <Label htmlFor="timezone">Timezone</Label>
+            <Select
+              value={formData.timezone}
+              onValueChange={(value) => handleChange('timezone', value)}
+            >
+              <SelectTrigger id="timezone">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {US_TIMEZONES.map((tz) => (
+                  <SelectItem key={tz.value} value={tz.value}>
+                    {tz.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
 
-          <Separator />
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="phone">Phone</Label>
-              <Input
-                id="phone"
-                type="tel"
-                value={formData.phone}
-                onChange={(e) => handleChange('phone', e.target.value)}
-                placeholder="(512) 555-0100"
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => handleChange('email', e.target.value)}
-                placeholder="info@example.com"
-              />
-            </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="phone">Phone</Label>
+            <Input
+              id="phone"
+              type="tel"
+              value={formData.phone}
+              onChange={(e) => handleChange('phone', e.target.value)}
+              placeholder="(512) 555-0100"
+            />
           </div>
-        </CardContent>
-      </Card>
+          
+          <div>
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              value={formData.email}
+              onChange={(e) => handleChange('email', e.target.value)}
+              placeholder="info@example.com"
+            />
+          </div>
+        </div>
+      </div>
+
+      <Separator />
 
       {/* Business Hours */}
-      <Card>
-        <CardHeader className="pb-4">
-          <CardTitle className="text-base">Business Hours</CardTitle>
-          <CardDescription>Set operating hours for this location</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <BusinessHoursEditor
-            value={formData.business_hours || {}}
-            onChange={(hours) => handleChange('business_hours', hours)}
-          />
-        </CardContent>
-      </Card>
+      <div className="space-y-4">
+        <h3 className="text-sm font-medium text-foreground">Business Hours</h3>
+        <BusinessHoursEditor
+          value={formData.business_hours || {}}
+          onChange={(hours) => handleChange('business_hours', hours)}
+        />
+      </div>
+
+      <Separator />
 
       {/* WordPress Integration */}
-      <Card>
-        <CardHeader className="pb-4">
-          <CardTitle className="text-base">WordPress Integration</CardTitle>
-          <CardDescription>Link this location to a WordPress community for automatic routing</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <Label htmlFor="wordpress_slug">WordPress Community Slug</Label>
-            <Input
-              id="wordpress_slug"
-              value={formData.wordpress_slug || ''}
-              onChange={(e) => handleChange('wordpress_slug', e.target.value)}
-              placeholder="e.g., forge-at-the-lake"
-            />
-            <p className="text-xs text-muted-foreground mt-1.5">
-              The URL slug of the community on your WordPress site. Used for automatic location detection when visitors browse community or home pages.
-            </p>
+      <div className="space-y-4">
+        <h3 className="text-sm font-medium text-foreground">WordPress Integration</h3>
+        <div>
+          <Label htmlFor="wordpress_slug">WordPress Community Slug</Label>
+          <Input
+            id="wordpress_slug"
+            value={formData.wordpress_slug || ''}
+            onChange={(e) => handleChange('wordpress_slug', e.target.value)}
+            placeholder="e.g., forge-at-the-lake"
+          />
+          <p className="text-xs text-muted-foreground mt-1.5">
+            The URL slug of the community on your WordPress site.
+          </p>
+        </div>
+        {location.wordpress_community_id && (
+          <div className="text-xs text-muted-foreground">
+            WordPress ID: {location.wordpress_community_id}
           </div>
-          {location.wordpress_community_id && (
-            <div className="text-xs text-muted-foreground">
-              WordPress ID: {location.wordpress_community_id}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+        )}
+      </div>
+
+      <Separator />
 
       {/* Calendar Connections */}
-      <Card>
-        <CardHeader className="pb-4">
-          <CardTitle className="text-base">Connected Calendars</CardTitle>
-          <CardDescription>Sync appointments and availability</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <CalendarConnections
-            locationId={location.id}
-            agentId={agentId}
-          />
-        </CardContent>
-      </Card>
+      <div className="space-y-4">
+        <h3 className="text-sm font-medium text-foreground">Connected Calendars</h3>
+        <CalendarConnections
+          locationId={location.id}
+          agentId={agentId}
+        />
+      </div>
     </div>
   );
 };
