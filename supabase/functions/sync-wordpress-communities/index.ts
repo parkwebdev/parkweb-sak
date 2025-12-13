@@ -470,7 +470,7 @@ async function syncCommunitiesToLocations(
       const state = extractAcfField(acf, 'state');
       const zip = extractAcfField(acf, 'zip', 'zipcode', 'postal', 'postal_code') || extractZipFromAddress(address);
       const phone = extractAcfField(acf, 'phone', 'telephone', 'tel', 'phone_number');
-      const email = extractAcfField(acf, 'email', 'mail', 'email_address');
+      const email = extractAcfField(acf, 'email', 'mail', 'email_address', 'contact_email', 'e_mail');
       const latitude = extractAcfNumber(acf, 'latitude', 'lat');
       const longitude = extractAcfNumber(acf, 'longitude', 'lng', 'long');
       
