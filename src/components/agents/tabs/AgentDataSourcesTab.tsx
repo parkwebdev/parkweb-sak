@@ -10,7 +10,7 @@
 import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
-import { Database01, Globe01, MarkerPin01, Building07, Plus, ChevronDown, ChevronRight } from '@untitledui/icons';
+import { Database01, Globe01, MarkerPin01, Building07, Plus, ChevronDown, ChevronRight, Trash01 } from '@untitledui/icons';
 import { useKnowledgeSources } from '@/hooks/useKnowledgeSources';
 import { useProperties } from '@/hooks/useProperties';
 import { useLocations } from '@/hooks/useLocations';
@@ -309,11 +309,11 @@ export const AgentDataSourcesTab = ({ agentId, userId }: AgentDataSourcesTabProp
                     const isSelected = selectedLocationId === location.id;
                     
                     return (
-                      <button
+                      <div
                         key={location.id}
                         onClick={() => setSelectedLocationId(location.id)}
                         className={cn(
-                          "w-full text-left p-3 rounded-lg border transition-colors",
+                          "group w-full text-left p-3 rounded-lg border transition-colors cursor-pointer",
                           isSelected 
                             ? "border-primary bg-primary/5" 
                             : "border-transparent hover:bg-muted/50"
@@ -328,13 +328,26 @@ export const AgentDataSourcesTab = ({ agentId, userId }: AgentDataSourcesTabProp
                               </div>
                             )}
                           </div>
-                          {propertyCount > 0 && (
-                            <Badge variant="secondary" className="text-xs shrink-0">
-                              {propertyCount} {propertyCount === 1 ? 'property' : 'properties'}
-                            </Badge>
-                          )}
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            {propertyCount > 0 && (
+                              <Badge variant="secondary" className="text-xs">
+                                {propertyCount} {propertyCount === 1 ? 'property' : 'properties'}
+                              </Badge>
+                            )}
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setDeleteLocationId(location.id);
+                              }}
+                            >
+                              <Trash01 size={14} className="text-muted-foreground hover:text-destructive" />
+                            </Button>
+                          </div>
                         </div>
-                      </button>
+                      </div>
                     );
                   })}
                 </div>
