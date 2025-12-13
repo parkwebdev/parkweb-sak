@@ -687,6 +687,40 @@ export const useKnowledgeSources = (agentId?: string) => {
     }
   };
 
+  // Manual refresh trigger for a single source
+  const triggerManualRefresh = async (sourceId: string) => {
+    try {
+      // Optimistic update - set status to processing
+      setSources((prev) =>
+        prev.map((s) =>
+          s.id === sourceId ? { ...s, status: 'processing' } : s
+        )
+      );
+
+      toast.success('Refreshing', {
+        description: 'Checking for content updates...',
+      });
+
+      const { error } = await supabase.functions.invoke('refresh-knowledge-sources', {
+        body: { sourceId },
+      });
+
+      if (error) {
+        logger.error('Manual refresh failed', error);
+        toast.error('Refresh failed', {
+          description: error.message,
+        });
+        await fetchSources();
+      }
+    } catch (error: unknown) {
+      logger.error('Error triggering manual refresh', error);
+      toast.error('Refresh failed', {
+        description: getErrorMessage(error),
+      });
+      await fetchSources();
+    }
+  };
+
   return {
     sources,
     loading,
@@ -701,6 +735,7 @@ export const useKnowledgeSources = (agentId?: string) => {
     resumeProcessing,
     retryChildSource,
     retrainAllSources,
+    triggerManualRefresh,
     isSourceOutdated,
     getChildSources,
     getParentSources,

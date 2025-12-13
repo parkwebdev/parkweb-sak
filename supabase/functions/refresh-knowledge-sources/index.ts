@@ -425,29 +425,65 @@ serve(async (req) => {
   }
 
   const startTime = Date.now();
-  console.log("Starting knowledge source refresh job...");
-
+  
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Query sources due for refresh
-    // Only get sources where:
-    // - refresh_strategy is not 'manual'
-    // - next_refresh_at is in the past or null (first refresh)
-    const { data: sourcesToRefresh, error: queryError } = await supabase
-      .from("knowledge_sources")
-      .select("id, source, source_type, content_hash, agent_id, default_location_id, metadata, refresh_strategy")
-      .neq("refresh_strategy", "manual")
-      .or(`next_refresh_at.is.null,next_refresh_at.lte.${new Date().toISOString()}`)
-      .limit(10); // Process max 10 per run to avoid timeout
-
-    if (queryError) {
-      throw queryError;
+    // Check for manual single-source refresh request
+    let body: { sourceId?: string } = {};
+    try {
+      body = await req.json();
+    } catch {
+      // No body or invalid JSON - that's fine for cron calls
     }
 
-    console.log(`Found ${sourcesToRefresh?.length || 0} sources to refresh`);
+    let sourcesToRefresh: Array<{
+      id: string;
+      source: string;
+      source_type: string;
+      content_hash: string | null;
+      agent_id: string;
+      default_location_id: string | null;
+      metadata: Record<string, unknown>;
+      refresh_strategy: string;
+    }> = [];
+
+    if (body.sourceId) {
+      // Manual refresh of a specific source
+      console.log(`Manual refresh requested for source: ${body.sourceId}`);
+      
+      const { data, error } = await supabase
+        .from("knowledge_sources")
+        .select("id, source, source_type, content_hash, agent_id, default_location_id, metadata, refresh_strategy")
+        .eq("id", body.sourceId)
+        .single();
+
+      if (error) {
+        throw new Error(`Source not found: ${error.message}`);
+      }
+
+      sourcesToRefresh = [data as typeof sourcesToRefresh[0]];
+    } else {
+      // Cron-triggered batch refresh
+      console.log("Starting scheduled knowledge source refresh job...");
+      
+      const { data, error: queryError } = await supabase
+        .from("knowledge_sources")
+        .select("id, source, source_type, content_hash, agent_id, default_location_id, metadata, refresh_strategy")
+        .neq("refresh_strategy", "manual")
+        .or(`next_refresh_at.is.null,next_refresh_at.lte.${new Date().toISOString()}`)
+        .limit(10);
+
+      if (queryError) {
+        throw queryError;
+      }
+
+      sourcesToRefresh = (data || []) as typeof sourcesToRefresh;
+    }
+
+    console.log(`Processing ${sourcesToRefresh.length} sources`);
 
     const results = {
       processed: 0,
@@ -456,17 +492,9 @@ serve(async (req) => {
       errors: 0,
     };
 
-    for (const source of sourcesToRefresh || []) {
+    for (const source of sourcesToRefresh) {
       try {
-        const result = await processSourceRefresh(supabase, source as {
-          id: string;
-          source: string;
-          source_type: string;
-          content_hash: string | null;
-          agent_id: string;
-          default_location_id: string | null;
-          metadata: Record<string, unknown>;
-        });
+        const result = await processSourceRefresh(supabase, source);
 
         results.processed++;
         if (result.error) {
@@ -477,13 +505,12 @@ serve(async (req) => {
           results.unchanged++;
         }
 
-        // Always update next_refresh_at and last_fetched_at
-        const refreshStrategy = (source as { refresh_strategy: string }).refresh_strategy;
+        // Update next_refresh_at and last_fetched_at
         await supabase
           .from("knowledge_sources")
           .update({
             last_fetched_at: new Date().toISOString(),
-            next_refresh_at: calculateNextRefresh(refreshStrategy),
+            next_refresh_at: calculateNextRefresh(source.refresh_strategy),
           })
           .eq("id", source.id);
       } catch (error) {
