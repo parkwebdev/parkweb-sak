@@ -160,7 +160,11 @@ export const AriLocationsSection: React.FC<AriLocationsSectionProps> = ({ agentI
     setDisplayCount(20);
   }, [calendarFilter, wordpressFilter, stateFilter, globalFilter]);
 
-  const displayedLocations = filteredLocations.slice(0, displayCount);
+  // CRITICAL: Memoize to prevent new array reference on every render
+  const displayedLocations = useMemo(
+    () => filteredLocations.slice(0, displayCount),
+    [filteredLocations, displayCount]
+  );
 
   const handleCreate = async (data: Parameters<typeof createLocation>[0]) => {
     const id = await createLocation(data, userId);
@@ -206,10 +210,15 @@ export const AriLocationsSection: React.FC<AriLocationsSectionProps> = ({ agentI
     setRowSelection({});
   };
 
+  // Stabilize onDelete callback
+  const handleSetDeleteLocation = useCallback((location: LocationWithCounts) => {
+    setDeleteLocation(location);
+  }, []);
+
   const columns = useMemo(() => createLocationsColumns({
     onView: handleView,
-    onDelete: setDeleteLocation,
-  }), [handleView]);
+    onDelete: handleSetDeleteLocation,
+  }), [handleView, handleSetDeleteLocation]);
 
   const table = useReactTable({
     data: displayedLocations,
