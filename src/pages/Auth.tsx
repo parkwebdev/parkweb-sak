@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { FormHint } from '@/components/ui/form-hint';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -425,8 +426,10 @@ const Auth = () => {
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    aria-pressed={showPassword}
                   >
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    {showPassword ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
                   </button>
                 </div>
                 {password && <PasswordStrengthIndicator password={password} className="mt-2" />}
@@ -487,9 +490,7 @@ const Auth = () => {
                   className="h-10"
                   disabled={isLoading}
                 />
-                <p className="text-xs text-muted-foreground">
-                  You can also invite team members later from settings
-                </p>
+                <FormHint>You can also invite team members later from settings</FormHint>
               </div>
               <div className="flex gap-3">
                 <Button variant="outline" size="lg" onClick={handlePrevStep}>
@@ -686,8 +687,10 @@ const Auth = () => {
                           onClick={() => setShowPassword(!showPassword)}
                           className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                           disabled={isLoading}
+                          aria-label={showPassword ? "Hide password" : "Show password"}
+                          aria-pressed={showPassword}
                         >
-                          {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                          {showPassword ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
                         </button>
                       </div>
                     </div>

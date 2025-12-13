@@ -8,6 +8,7 @@
  */
 
 import React, { useState } from 'react';
+import { FormHint } from '@/components/ui/form-hint';
 import {
   Dialog,
   DialogContent,
@@ -303,9 +304,7 @@ export const AddKnowledgeDialog: React.FC<AddKnowledgeDialogProps> = ({
                     ))}
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-muted-foreground mt-1">
-                  How often should we check for content updates?
-                </p>
+                <FormHint>How often should we check for content updates?</FormHint>
               </div>
 
               <Button type="submit" disabled={!url} loading={uploading}>
@@ -348,9 +347,7 @@ export const AddKnowledgeDialog: React.FC<AddKnowledgeDialogProps> = ({
                         value={excludePatterns}
                         onChange={(e) => setExcludePatterns(e.target.value)}
                       />
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Comma-separated URL patterns to skip. Use * as wildcard.
-                      </p>
+                      <FormHint>Comma-separated URL patterns to skip. Use * as wildcard.</FormHint>
                     </div>
                     
                     <div>
@@ -361,9 +358,7 @@ export const AddKnowledgeDialog: React.FC<AddKnowledgeDialogProps> = ({
                         value={includePatterns}
                         onChange={(e) => setIncludePatterns(e.target.value)}
                       />
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Only process URLs matching these patterns. Leave empty to include all.
-                      </p>
+                      <FormHint>Only process URLs matching these patterns. Leave empty to include all.</FormHint>
                     </div>
                     
                     <div>
@@ -377,9 +372,7 @@ export const AddKnowledgeDialog: React.FC<AddKnowledgeDialogProps> = ({
                         onChange={(e) => setPageLimit(Math.min(500, Math.max(1, parseInt(e.target.value) || 200)))}
                         className="w-32"
                       />
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Maximum number of pages to crawl (1-500).
-                      </p>
+                      <FormHint>Maximum number of pages to crawl (1-500).</FormHint>
                     </div>
                   </div>
                 </CollapsibleContent>
@@ -425,9 +418,7 @@ export const AddKnowledgeDialog: React.FC<AddKnowledgeDialogProps> = ({
                     ))}
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-muted-foreground mt-1">
-                  How often should we check for new/updated listings?
-                </p>
+                <FormHint>How often should we check for new/updated listings?</FormHint>
               </div>
 
               {locations.length > 0 && (
@@ -446,9 +437,7 @@ export const AddKnowledgeDialog: React.FC<AddKnowledgeDialogProps> = ({
                       ))}
                     </SelectContent>
                   </Select>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Link these properties to a specific community/location
-                  </p>
+                  <FormHint>Link these properties to a specific community/location</FormHint>
                 </div>
               )}
 

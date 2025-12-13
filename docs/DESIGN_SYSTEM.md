@@ -567,10 +567,17 @@ All interactive components must be accessible to screen readers and keyboard use
 
 ### Icon Buttons
 
-Every icon-only button **must** have an `aria-label`:
+Every icon-only button **must** have an accessible label. Use the `IconButton` component for enforced accessibility:
 
 ```tsx
-// ✅ Correct
+// ✅ Best - IconButton enforces aria-label
+import { IconButton } from '@/components/ui/icon-button';
+
+<IconButton label="Delete item" variant="ghost">
+  <Trash01 className="h-4 w-4" />
+</IconButton>
+
+// ✅ Also correct - manual aria-label
 <Button size="icon" aria-label="Delete item">
   <Trash01 className="h-4 w-4" aria-hidden="true" />
 </Button>
@@ -579,6 +586,24 @@ Every icon-only button **must** have an `aria-label`:
 <Button size="icon">
   <Trash01 className="h-4 w-4" />
 </Button>
+```
+
+### Form Field Hints
+
+Use `FormHint` for helper text below form fields (outside React Hook Form contexts):
+
+```tsx
+import { FormHint } from '@/components/ui/form-hint';
+
+// ✅ Correct - FormHint with aria-describedby linking
+<Input id="email" aria-describedby="email-hint" />
+<FormHint id="email-hint">We'll never share your email.</FormHint>
+
+// For React Hook Form, use FormDescription instead:
+<FormControl>
+  <Input {...field} />
+</FormControl>
+<FormDescription>Enter your email address</FormDescription>
 ```
 
 ### Loading Spinners
@@ -753,6 +778,10 @@ Before shipping, verify:
 - [ ] Interactive elements are minimum 24×24px
 - [ ] Focused content is not obscured by sticky elements
 - [ ] Consistent help placement across pages
+- [ ] All icon buttons have aria-labels (use `IconButton` component)
+- [ ] Form hints use `FormHint` component for consistency
+- [ ] Password visibility toggles have aria-label and aria-pressed
+- [ ] All images have descriptive alt text
 
 ---
 
