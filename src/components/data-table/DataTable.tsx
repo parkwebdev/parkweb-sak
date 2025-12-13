@@ -1,6 +1,6 @@
 /**
  * @fileoverview Reusable data table component built on TanStack Table.
- * Features animated rows, loading states, and empty state messages.
+ * Uses CSS-only animations for performance.
  */
 
 import React from 'react';
@@ -9,7 +9,6 @@ import {
   flexRender,
   Table as TanStackTable,
 } from '@tanstack/react-table';
-import { AnimatePresence, motion } from 'motion/react';
 import {
   Table,
   TableBody,
@@ -18,10 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { AnimatedTableRow } from '@/components/ui/animated-table-row';
-import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { cn } from '@/lib/utils';
-import { staggerContainerVariants, fadeReducedVariants, getVariants } from '@/lib/motion-variants';
 
 interface DataTableProps<TData, TValue> {
   table: TanStackTable<TData>;
@@ -38,13 +34,6 @@ export function DataTable<TData, TValue>({
   emptyMessage = 'No results found.',
   isLoading = false,
 }: DataTableProps<TData, TValue>) {
-  const prefersReducedMotion = useReducedMotion();
-  const containerVariants = getVariants(
-    staggerContainerVariants,
-    fadeReducedVariants,
-    prefersReducedMotion
-  );
-
   if (isLoading) {
     return (
       <div className="rounded-md border">
@@ -93,47 +82,40 @@ export function DataTable<TData, TValue>({
             </TableRow>
           ))}
         </TableHeader>
-        <motion.tbody
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-          className="[&_tr:last-child]:border-0"
-        >
-          <AnimatePresence mode="popLayout">
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row, index) => (
-                <AnimatedTableRow
-                  key={row.id}
-                  index={index}
-                  data-state={row.getIsSelected() ? 'selected' : undefined}
-                  className={cn(
-                    onRowClick && 'cursor-pointer',
-                    row.getIsSelected() && 'bg-muted/50'
-                  )}
-                  onClick={() => onRowClick?.(row.original)}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
-                </AnimatedTableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center text-muted-foreground"
-                >
-                  {emptyMessage}
-                </TableCell>
+        <TableBody>
+          {table.getRowModel().rows?.length ? (
+            table.getRowModel().rows.map((row) => (
+              <TableRow
+                key={row.id}
+                data-state={row.getIsSelected() ? 'selected' : undefined}
+                className={cn(
+                  'transition-colors',
+                  onRowClick && 'cursor-pointer hover:bg-muted/50',
+                  row.getIsSelected() && 'bg-muted/50'
+                )}
+                onClick={() => onRowClick?.(row.original)}
+              >
+                {row.getVisibleCells().map((cell) => (
+                  <TableCell key={cell.id}>
+                    {flexRender(
+                      cell.column.columnDef.cell,
+                      cell.getContext()
+                    )}
+                  </TableCell>
+                ))}
               </TableRow>
-            )}
-          </AnimatePresence>
-        </motion.tbody>
+            ))
+          ) : (
+            <TableRow>
+              <TableCell
+                colSpan={columns.length}
+                className="h-24 text-center text-muted-foreground"
+              >
+                {emptyMessage}
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
       </Table>
     </div>
   );
