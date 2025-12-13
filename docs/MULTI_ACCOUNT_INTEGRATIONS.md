@@ -1,7 +1,7 @@
 # Multi-Account Integrations Architecture
 
 > **Last Updated**: December 2024  
-> **Status**: Planning  
+> **Status**: In Progress (Phase 1)  
 > **Related**: [ChatPad Architecture](./CHATPAD_ARCHITECTURE.md), [Database Schema](./DATABASE_SCHEMA.md), [Widget Architecture](./WIDGET_ARCHITECTURE.md)
 
 ---
@@ -10,8 +10,8 @@
 
 1. [Executive Summary](#executive-summary)
 2. [Problem Statement](#problem-statement)
-3. [Core Concepts](#core-concepts)
-4. [Architecture Options](#architecture-options)
+3. [WordPress REST API Integration](#wordpress-rest-api-integration)
+4. [Core Architecture](#core-architecture)
 5. [Routing Intelligence](#routing-intelligence)
 6. [Widget Experience](#widget-experience)
 7. [Admin UI Design](#admin-ui-design)
@@ -22,6 +22,8 @@
 ## Executive Summary
 
 This document outlines the architecture for supporting multiple connected accounts per integration type (calendars, emails, social channels) within a single agent. The primary use case is multi-location businesses (e.g., property management companies with 20+ communities) that need intelligent routing to the correct account based on conversation context.
+
+**Key Innovation**: WordPress REST API integration for automatic community and home/property synchronization, eliminating manual data entry and enabling AI-powered location routing.
 
 ---
 
@@ -45,245 +47,286 @@ Multi-location businesses need:
 Client: Mobile Home Park Operator
 Communities: 20 locations across 5 states
 Need: AI agent that can:
+  - Know about all 200+ homes across all communities
+  - Route inquiries to the correct community
   - Respond to Facebook messages from any of 20 pages
   - Send emails from the correct community's email
   - Book property viewings on the correct community's calendar
-  - Route inquiries to the appropriate location
 ```
 
 ---
 
-## Core Concepts
+## WordPress REST API Integration
 
-### The Fundamental Question
-**What is the organizing principle for connected accounts?**
+### Overview
 
-| Approach | Description | Pros | Cons |
-|----------|-------------|------|------|
-| **Location-Centric** | Locations are first-class entities; accounts belong to locations | Clear mental model, natural hierarchy | Rigid structure, may not fit all use cases |
-| **Tag-Based** | Flat list of accounts with flexible tagging | Flexible, supports complex scenarios | Can become messy, harder to manage at scale |
-| **Hybrid** | Locations as primary with optional tags for edge cases | Best of both worlds | More complex to implement |
+For clients using WordPress with custom post types for communities and homes, ChatPad integrates directly with the WordPress REST API to:
+
+1. **Auto-import communities** as ChatPad Locations
+2. **Sync home/property listings** for AI knowledge and RAG
+3. **Enable smart widget detection** based on URL paths and taxonomy
+4. **Keep data fresh** with scheduled sync
+
+### WordPress Data Structure
+
+#### Community Post Type (`/wp-json/wp/v2/community`)
+
+```json
+{
+  "id": 135,
+  "slug": "forge-at-the-lake",
+  "title": { "rendered": "Forge at the Lake" },
+  "acf": {
+    "community_address": "123 Lakeside Dr",
+    "community_city": "Austin",
+    "community_state": "TX",
+    "community_zip": "78701",
+    "community_phone": "(512) 555-0100",
+    "community_email": "forge@example.com",
+    "community_amenities": ["Pool", "Clubhouse", "Fitness Center"]
+  }
+}
+```
+
+#### Home Post Type (`/wp-json/wp/v2/home`)
+
+```json
+{
+  "id": 459,
+  "slug": "forge-lake-home-123",
+  "title": { "rendered": "3BR/2BA at Forge Lake" },
+  "home_community": [135],  // Taxonomy linking to community ID
+  "acf": {
+    "price": 1250,
+    "bedrooms": 3,
+    "bathrooms": 2,
+    "square_feet": 1400,
+    "home_status": "available",
+    "home_address": "Lot 42",
+    "home_photos": [...]
+  },
+  "_embedded": {
+    "wp:featuredmedia": [...]
+  }
+}
+```
+
+### Sync Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                    WordPress Site Connector                          │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                      │
+│   Agent Settings                                                     │
+│   └── WordPress Site URL: https://example.com                       │
+│       └── [Test Connection] [Import Communities] [Sync Homes]       │
+│                                                                      │
+│   ┌────────────────────┐    ┌─────────────────────────────────┐     │
+│   │  /wp-json/wp/v2/   │    │  ChatPad Database               │     │
+│   │  community         │───▶│  locations table                │     │
+│   │  (20 communities)  │    │  - wordpress_slug               │     │
+│   └────────────────────┘    │  - wordpress_community_id       │     │
+│                              │  - name, address (from ACF)     │     │
+│   ┌────────────────────┐    └─────────────────────────────────┘     │
+│   │  /wp-json/wp/v2/   │    ┌─────────────────────────────────┐     │
+│   │  home              │───▶│  properties table               │     │
+│   │  (200+ homes)      │    │  - location_id (matched via     │     │
+│   │  + home_community  │    │    wordpress_community_id)      │     │
+│   └────────────────────┘    │  - price, beds, baths, images   │     │
+│                              └─────────────────────────────────┘     │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+### Database Schema Additions
+
+```sql
+-- Add WordPress linking columns to locations
+ALTER TABLE locations 
+  ADD COLUMN wordpress_slug TEXT,
+  ADD COLUMN wordpress_community_id INTEGER;
+
+-- Add unique constraint for WordPress sync matching
+CREATE UNIQUE INDEX idx_locations_wordpress 
+  ON locations(agent_id, wordpress_community_id) 
+  WHERE wordpress_community_id IS NOT NULL;
+
+-- Add wordpress_home to knowledge_source_type enum
+ALTER TYPE knowledge_source_type ADD VALUE IF NOT EXISTS 'wordpress_community';
+ALTER TYPE knowledge_source_type ADD VALUE IF NOT EXISTS 'wordpress_home';
+```
+
+### Agent WordPress Config
+
+Stored in `agents.deployment_config`:
+
+```json
+{
+  "wordpress": {
+    "site_url": "https://example.com",
+    "community_endpoint": "/wp-json/wp/v2/community",
+    "home_endpoint": "/wp-json/wp/v2/home",
+    "last_community_sync": "2024-12-13T10:00:00Z",
+    "last_home_sync": "2024-12-13T10:00:00Z",
+    "auto_sync_enabled": true,
+    "sync_interval": "daily"
+  }
+}
+```
 
 ---
 
-## Architecture Options
+## Core Architecture
 
-### Option A: Location-Centric Model
+### Location-Centric Model (Recommended)
 
 ```
 Agent
-└── Locations
-    ├── Phoenix Community
-    │   ├── Facebook: Phoenix MHP Page
-    │   ├── Email: phoenix@mhpcompany.com
-    │   └── Calendar: Phoenix Viewings
-    ├── Austin Community
-    │   ├── Facebook: Austin MHP Page
-    │   ├── Email: austin@mhpcompany.com
-    │   └── Calendar: Austin Viewings
-    └── Denver Community
-        ├── Facebook: Denver MHP Page
-        ├── Email: denver@mhpcompany.com
-        └── Calendar: Denver Viewings
+└── Locations (auto-imported from WordPress OR manual)
+    ├── Forge at the Lake
+    │   ├── wordpress_slug: "forge-at-the-lake"
+    │   ├── wordpress_community_id: 135
+    │   ├── Properties: 45 homes (from WP sync)
+    │   ├── Facebook: Forge Lake Page
+    │   ├── Email: forge@mhpcompany.com
+    │   └── Calendar: Forge Tours
+    ├── Clearview Estates
+    │   ├── wordpress_slug: "clearview-estates"
+    │   ├── wordpress_community_id: 142
+    │   ├── Properties: 62 homes
+    │   ├── Facebook: Clearview Page
+    │   └── Calendar: Clearview Tours
+    └── [Manual Location - No WordPress]
+        ├── Name: "Corporate Office"
+        ├── No wordpress fields
+        └── Calendar: HQ Calendar
 ```
 
-#### Database Schema
+### What's Retained
 
-```sql
--- Locations table
-CREATE TABLE locations (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  agent_id UUID REFERENCES agents(id) ON DELETE CASCADE,
-  user_id UUID NOT NULL,
-  name TEXT NOT NULL,
-  slug TEXT NOT NULL, -- URL-friendly identifier
-  address TEXT,
-  city TEXT,
-  state TEXT,
-  timezone TEXT DEFAULT 'America/New_York',
-  metadata JSONB DEFAULT '{}',
-  is_default BOOLEAN DEFAULT false,
-  created_at TIMESTAMPTZ DEFAULT now(),
-  updated_at TIMESTAMPTZ DEFAULT now(),
-  UNIQUE(agent_id, slug)
-);
+All existing knowledge source types and features remain available:
 
--- Connected accounts table
-CREATE TABLE connected_accounts (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  agent_id UUID REFERENCES agents(id) ON DELETE CASCADE,
-  location_id UUID REFERENCES locations(id) ON DELETE CASCADE,
-  user_id UUID NOT NULL,
-  
-  -- Integration type
-  integration_type TEXT NOT NULL, -- 'facebook', 'instagram', 'google_calendar', 'outlook', 'gmail', etc.
-  
-  -- Account details
-  account_name TEXT NOT NULL, -- Display name
-  account_id TEXT NOT NULL, -- External platform ID (FB page ID, calendar ID, etc.)
-  account_email TEXT, -- For email integrations
-  
-  -- OAuth/Auth data (encrypted)
-  access_token TEXT,
-  refresh_token TEXT,
-  token_expires_at TIMESTAMPTZ,
-  
-  -- Configuration
-  config JSONB DEFAULT '{}', -- Integration-specific settings
-  
-  -- Status
-  status TEXT DEFAULT 'active', -- 'active', 'disconnected', 'error'
-  last_sync_at TIMESTAMPTZ,
-  error_message TEXT,
-  
-  created_at TIMESTAMPTZ DEFAULT now(),
-  updated_at TIMESTAMPTZ DEFAULT now()
-);
+| Feature | Status |
+|---------|--------|
+| Manual URL knowledge sources | ✅ Retained |
+| Sitemap crawling | ✅ Retained |
+| Property Listings parser | ✅ Retained |
+| Text/Upload sources | ✅ Retained |
+| Refresh strategies (1/2/3/4/6/12/24hr) | ✅ Retained |
+| Business hours editor | ✅ Retained |
+| Calendar connections | ✅ Retained |
 
--- Add location context to conversations
-ALTER TABLE conversations ADD COLUMN location_id UUID REFERENCES locations(id);
+### What's Added
 
--- Index for efficient lookups
-CREATE INDEX idx_connected_accounts_agent_location ON connected_accounts(agent_id, location_id);
-CREATE INDEX idx_connected_accounts_type ON connected_accounts(integration_type);
-CREATE INDEX idx_locations_agent ON locations(agent_id);
-```
+| Feature | Description |
+|---------|-------------|
+| WordPress Site Connector | Connect WordPress site, auto-import communities |
+| `wordpress_slug` field | Links Location to WP community post |
+| `wordpress_community_id` field | Integer ID for sync matching |
+| Home/Property Sync | Import all homes with `home_community` taxonomy |
+| Smart Widget Detection | Auto-detect location from URL path |
+| AI Fallback | Ask user to select location when auto-detect fails |
 
-### Option B: Flat Multi-Account with Tagging
+### What's Removed
 
-```sql
-CREATE TABLE connected_accounts (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  agent_id UUID REFERENCES agents(id) ON DELETE CASCADE,
-  user_id UUID NOT NULL,
-  
-  integration_type TEXT NOT NULL,
-  account_name TEXT NOT NULL,
-  account_id TEXT NOT NULL,
-  
-  -- Flexible tagging instead of location FK
-  tags JSONB DEFAULT '[]', -- ['location:phoenix', 'region:southwest', 'type:residential']
-  labels JSONB DEFAULT '{}', -- { "location": "Phoenix", "manager": "John" }
-  
-  -- ... rest of fields
-);
-```
-
-### Option C: Hybrid Approach (Recommended)
-
-Locations as primary organizing principle, but with flexible metadata for edge cases:
-
-```sql
--- Locations with flexible metadata
-CREATE TABLE locations (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  agent_id UUID REFERENCES agents(id) ON DELETE CASCADE,
-  user_id UUID NOT NULL,
-  
-  name TEXT NOT NULL,
-  slug TEXT NOT NULL,
-  
-  -- Core location data
-  address JSONB, -- { street, city, state, zip, country }
-  coordinates JSONB, -- { lat, lng }
-  timezone TEXT,
-  
-  -- Contact info
-  phone TEXT,
-  email TEXT,
-  
-  -- Business hours (for availability)
-  business_hours JSONB, -- { mon: { open: "09:00", close: "17:00" }, ... }
-  
-  -- Flexible metadata for edge cases
-  metadata JSONB DEFAULT '{}',
-  tags TEXT[] DEFAULT '{}',
-  
-  -- Status
-  is_active BOOLEAN DEFAULT true,
-  is_default BOOLEAN DEFAULT false,
-  
-  created_at TIMESTAMPTZ DEFAULT now(),
-  updated_at TIMESTAMPTZ DEFAULT now()
-);
-```
+| Feature | Reason |
+|---------|--------|
+| URL Patterns Editor | Replaced by smart detection (URL path + WP taxonomy) |
 
 ---
 
 ## Routing Intelligence
 
-### How Does the AI Know Which Account to Use?
-
-The routing decision must happen intelligently based on available context:
+### Smart Location Detection Flow
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                     ROUTING DECISION TREE                        │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│  1. Explicit Context (Highest Priority)                         │
-│     └── Embed code includes location: data-location="phoenix"   │
-│                                                                  │
-│  2. Conversation Context                                         │
-│     └── User mentioned "Phoenix" or "Arizona" in chat           │
-│                                                                  │
-│  3. Referrer Detection                                           │
-│     └── User came from phoenix.mhpcompany.com                   │
-│                                                                  │
-│  4. Inbound Channel                                              │
-│     └── Message came FROM Phoenix Facebook Page                  │
-│                                                                  │
-│  5. User Selection                                               │
-│     └── AI asks: "Which community are you interested in?"       │
-│                                                                  │
-│  6. Default Fallback                                             │
-│     └── Use default location or corporate/general account       │
-│                                                                  │
-└─────────────────────────────────────────────────────────────────┘
+User visits: example.com/home/forge-lake-home-123/
+    │
+    ▼
+Widget initializes
+    │
+    ▼
+┌───────────────────────────────────────────────────────────────┐
+│  Detection Priority:                                           │
+│                                                                │
+│  1. Explicit embed: data-location="forge-at-the-lake"         │
+│     └── Direct match to wordpress_slug                         │
+│                                                                │
+│  2. URL Path Detection:                                        │
+│     └── /community/{slug}/ → extract slug, match Location     │
+│     └── /home/{slug}/ → fetch home_community from WP API      │
+│                                                                │
+│  3. Conversation Context:                                      │
+│     └── User mentions "Forge" or "the lake property"          │
+│                                                                │
+│  4. AI Fallback:                                               │
+│     └── "Which community are you interested in?"              │
+│     └── Present location picker buttons                        │
+│                                                                │
+└───────────────────────────────────────────────────────────────┘
+    │
+    ▼
+AI greets: "Welcome! I see you're looking at homes in 
+            Forge at the Lake. How can I help?"
 ```
 
-### Context Sources
+### Widget Configuration
 
-#### 1. Embed Code Configuration
 ```html
-<!-- Location-specific widget embed -->
+<!-- Option 1: Explicit location (most reliable) -->
 <script
   src="https://app.chatpad.ai/widget.js"
   data-agent-id="abc123"
-  data-location-id="phoenix-community"
+  data-location="forge-at-the-lake"
+></script>
+
+<!-- Option 2: Auto-detect from URL (requires WP sync) -->
+<script
+  src="https://app.chatpad.ai/widget.js"
+  data-agent-id="abc123"
+  data-auto-detect-location="true"
 ></script>
 ```
 
-#### 2. AI Intent Extraction
-```typescript
-interface ConversationContext {
-  detectedLocation?: {
-    locationId: string;
-    confidence: number; // 0-1
-    source: 'explicit' | 'inferred' | 'referrer' | 'channel';
-  };
-  mentionedLocations: string[]; // All locations mentioned
-  userIntent: 'inquiry' | 'booking' | 'support' | 'complaint';
-}
-```
-
-#### 3. Referrer URL Parsing
-```typescript
-function detectLocationFromReferrer(referrer: string, locations: Location[]): Location | null {
-  // Check subdomain: phoenix.mhpcompany.com
-  // Check path: mhpcompany.com/communities/phoenix
-  // Check query params: mhpcompany.com?location=phoenix
-}
-```
-
-#### 4. Inbound Channel Mapping
-When a message comes IN from a connected Facebook page, the location is implicit:
+### Detection Code (Widget)
 
 ```typescript
-interface InboundMessage {
-  channel: 'facebook' | 'instagram' | 'email';
-  externalAccountId: string; // The FB page ID, email address, etc.
-  // We can reverse-lookup which location this account belongs to
+async function detectLocation(config: WidgetConfig): Promise<string | null> {
+  // 1. Check explicit config
+  if (config.locationSlug) {
+    return config.locationSlug;
+  }
+  
+  // 2. Check URL path for /community/{slug}/
+  const communityMatch = window.location.pathname.match(/\/community\/([^\/]+)/);
+  if (communityMatch) {
+    return communityMatch[1];
+  }
+  
+  // 3. Check URL path for /home/{slug}/ and fetch taxonomy
+  const homeMatch = window.location.pathname.match(/\/home\/([^\/]+)/);
+  if (homeMatch && config.wordpressSiteUrl) {
+    try {
+      const response = await fetch(
+        `${config.wordpressSiteUrl}/wp-json/wp/v2/home?slug=${homeMatch[1]}&_fields=home_community`
+      );
+      const [home] = await response.json();
+      if (home?.home_community?.[0]) {
+        // Fetch community slug from ID
+        const communityId = home.home_community[0];
+        const commResponse = await fetch(
+          `${config.wordpressSiteUrl}/wp-json/wp/v2/community/${communityId}?_fields=slug`
+        );
+        const community = await commResponse.json();
+        return community.slug;
+      }
+    } catch (e) {
+      console.warn('Failed to detect location from WP:', e);
+    }
+  }
+  
+  // 4. Return null - AI will ask user
+  return null;
 }
 ```
 
@@ -291,24 +334,25 @@ interface InboundMessage {
 
 ## Widget Experience
 
-### Pre-Chat Location Selection
+### AI Fallback: Location Selection
 
-For cases where location can't be auto-detected:
+When location cannot be auto-detected:
 
 ```
 ┌────────────────────────────────────────┐
 │  🏠 Welcome to MHP Communities         │
 │                                        │
-│  Which community can we help you with? │
+│  AI: Hi! I'd be happy to help. Which   │
+│  community are you interested in?      │
 │                                        │
 │  ┌──────────────────────────────────┐  │
-│  │ 📍 Phoenix, AZ                   │  │
+│  │ 📍 Forge at the Lake             │  │
 │  └──────────────────────────────────┘  │
 │  ┌──────────────────────────────────┐  │
-│  │ 📍 Austin, TX                    │  │
+│  │ 📍 Clearview Estates             │  │
 │  └──────────────────────────────────┘  │
 │  ┌──────────────────────────────────┐  │
-│  │ 📍 Denver, CO                    │  │
+│  │ 📍 Pine Ridge                    │  │
 │  └──────────────────────────────────┘  │
 │                                        │
 │  [ General Inquiry ]                   │
@@ -316,408 +360,126 @@ For cases where location can't be auto-detected:
 └────────────────────────────────────────┘
 ```
 
-### In-Conversation Location Detection
+### AI Tool: `select_location`
 
-```
-┌────────────────────────────────────────┐
-│  AI: Hi! I'd be happy to help you      │
-│      schedule a tour. Which of our     │
-│      communities would you like to     │
-│      visit?                            │
-│                                        │
-│  User: I'm interested in the Phoenix   │
-│        location                        │
-│                                        │
-│  AI: Great choice! Phoenix Palms has   │
-│      beautiful mountain views. I can   │
-│      see we have availability this     │
-│      week. Would Thursday at 2pm or    │
-│      Friday at 10am work better?       │
-│                                        │
-│  [Context: AI detected "Phoenix" →     │
-│   Using Phoenix calendar for booking]  │
-└────────────────────────────────────────┘
-```
-
-### Calendar Booking Flow
-
-```
-User: "I'd like to schedule a tour"
-                │
-                ▼
-┌───────────────────────────────────┐
-│  Location Known?                  │
-│  (from context/embed/detection)   │
-└───────────────────────────────────┘
-        │               │
-       Yes              No
-        │               │
-        ▼               ▼
-┌─────────────┐  ┌─────────────────┐
-│ Fetch       │  │ Ask user which  │
-│ Location's  │  │ location        │
-│ Calendar    │  └─────────────────┘
-└─────────────┘          │
-        │                │
-        ▼                ▼
-┌─────────────────────────────────────┐
-│  Check Calendar Availability        │
-│  (respecting business hours)        │
-└─────────────────────────────────────┘
-                │
-                ▼
-┌─────────────────────────────────────┐
-│  Present Available Slots            │
-│  "Thursday 2pm or Friday 10am?"     │
-└─────────────────────────────────────┘
-                │
-                ▼
-┌─────────────────────────────────────┐
-│  Create Calendar Event              │
-│  - On location's calendar           │
-│  - Send confirmation from           │
-│    location's email                 │
-└─────────────────────────────────────┘
+```typescript
+{
+  name: "select_location",
+  description: "Present location options when user's community cannot be auto-detected",
+  parameters: {
+    type: "object",
+    properties: {
+      prompt: {
+        type: "string",
+        description: "Question to ask user"
+      },
+      include_general_option: {
+        type: "boolean",
+        default: true
+      }
+    }
+  }
+}
 ```
 
 ---
 
 ## Admin UI Design
 
-### Integrations Tab - Location View
+### Locations Tab - Simplified
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│  Integrations                                                        │
+│  Locations                                                           │
 ├─────────────────────────────────────────────────────────────────────┤
 │                                                                      │
-│  ┌──────────────┐  ┌────────────────────────────────────────────┐   │
-│  │              │  │                                            │   │
-│  │  Locations   │  │  Phoenix Community                         │   │
-│  │  ──────────  │  │  ════════════════                         │   │
-│  │              │  │                                            │   │
-│  │  ● Phoenix   │  │  📱 Social Channels                        │   │
-│  │    Austin    │  │  ┌─────────────────────────────────────┐  │   │
-│  │    Denver    │  │  │ f  Phoenix MHP Page    ✓ Connected  │  │   │
-│  │    Houston   │  │  │     @phoenixmhp                      │  │   │
-│  │    Portland  │  │  └─────────────────────────────────────┘  │   │
-│  │              │  │  ┌─────────────────────────────────────┐  │   │
-│  │  ──────────  │  │  │ 📷 Phoenix MHP         ✓ Connected  │  │   │
-│  │              │  │  │     @phoenixmhp                      │  │   │
-│  │  + Add       │  │  └─────────────────────────────────────┘  │   │
-│  │    Location  │  │                                            │   │
-│  │              │  │  📧 Email Accounts                         │   │
-│  │              │  │  ┌─────────────────────────────────────┐  │   │
-│  │              │  │  │ ✉️  phoenix@mhpcompany.com          │  │   │
-│  │              │  │  │     Google Workspace   ✓ Connected  │  │   │
-│  │              │  │  └─────────────────────────────────────┘  │   │
-│  │              │  │                                            │   │
-│  │              │  │  📅 Calendars                              │   │
-│  │              │  │  ┌─────────────────────────────────────┐  │   │
-│  │              │  │  │ 📅 Phoenix Tours Calendar           │  │   │
-│  │              │  │  │    Google Calendar     ✓ Connected  │  │   │
-│  │              │  │  └─────────────────────────────────────┘  │   │
-│  │              │  │                                            │   │
-│  │              │  │  [ + Add Integration ]                     │   │
-│  │              │  │                                            │   │
-│  └──────────────┘  └────────────────────────────────────────────┘   │
+│  ┌─────────────────────────────────────────────────────────────────┐│
+│  │ 🌐 WordPress Connection                                         ││
+│  │                                                                  ││
+│  │ Site URL: https://example.com                    [Test] [Sync]  ││
+│  │ Last synced: 2 hours ago • 20 communities, 245 homes           ││
+│  └─────────────────────────────────────────────────────────────────┘│
+│                                                                      │
+│  ┌────────────────┐  ┌──────────────────────────────────────────┐   │
+│  │   Locations    │  │                                          │   │
+│  │   ──────────   │  │  Forge at the Lake                       │   │
+│  │                │  │  ════════════════════                    │   │
+│  │   ● Forge      │  │                                          │   │
+│  │     Clearview  │  │  WordPress Slug: forge-at-the-lake       │   │
+│  │     Pine Ridge │  │  Address: 123 Lakeside Dr, Austin, TX    │   │
+│  │                │  │  Phone: (512) 555-0100                   │   │
+│  │   ──────────   │  │  Email: forge@example.com                │   │
+│  │                │  │                                          │   │
+│  │   + Add        │  │  Properties: 45 homes synced            │   │
+│  │     Location   │  │                                          │   │
+│  │                │  │  Business Hours: Mon-Fri 9-5, Sat 10-2   │   │
+│  │                │  │                                          │   │
+│  │                │  │  📅 Connected Calendars                   │   │
+│  │                │  │  └── Forge Tours (Google) ✓              │   │
+│  │                │  │                                          │   │
+│  └────────────────┘  └──────────────────────────────────────────┘   │
 │                                                                      │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
-### Location Management Panel
+### Location Details Form (Simplified)
 
-```
-┌─────────────────────────────────────────────────────────────────────┐
-│  Edit Location: Phoenix Community                            [ × ]  │
-├─────────────────────────────────────────────────────────────────────┤
-│                                                                      │
-│  Name                                                                │
-│  ┌─────────────────────────────────────────────────────────────┐    │
-│  │ Phoenix Community                                            │    │
-│  └─────────────────────────────────────────────────────────────┘    │
-│                                                                      │
-│  Identifier (for embed code)                                         │
-│  ┌─────────────────────────────────────────────────────────────┐    │
-│  │ phoenix-community                                            │    │
-│  └─────────────────────────────────────────────────────────────┘    │
-│                                                                      │
-│  Address                                                             │
-│  ┌─────────────────────────────────────────────────────────────┐    │
-│  │ 1234 Desert View Dr, Phoenix, AZ 85001                       │    │
-│  └─────────────────────────────────────────────────────────────┘    │
-│                                                                      │
-│  Timezone                                                            │
-│  ┌─────────────────────────────────────────────────────────────┐    │
-│  │ America/Phoenix (MST)                              ▼         │    │
-│  └─────────────────────────────────────────────────────────────┘    │
-│                                                                      │
-│  Business Hours                                                      │
-│  ┌─────────────────────────────────────────────────────────────┐    │
-│  │ Mon-Fri: 9:00 AM - 5:00 PM                                   │    │
-│  │ Sat: 10:00 AM - 2:00 PM                                      │    │
-│  │ Sun: Closed                                                  │    │
-│  └─────────────────────────────────────────────────────────────┘    │
-│                                                                      │
-│  ☑ Set as default location                                          │
-│                                                                      │
-│  ┌─────────────────┐  ┌─────────────────┐                           │
-│  │     Cancel      │  │      Save       │                           │
-│  └─────────────────┘  └─────────────────┘                           │
-│                                                                      │
-└─────────────────────────────────────────────────────────────────────┘
-```
+Fields shown:
+- **Name** (auto-filled from WP, editable)
+- **WordPress Slug** (read-only or manual entry for non-WP)
+- **Address, City, State, ZIP** (auto-filled from WP ACF)
+- **Timezone** (dropdown)
+- **Phone, Email** (auto-filled from WP ACF)
+- **Business Hours** (editor component)
+- **Connected Calendars** (existing component)
 
-### Connected Account Card States
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│  ✓ Connected                                                     │
-│  ┌───────────────────────────────────────────────────────────┐  │
-│  │  f  Phoenix MHP Page                         ● Connected   │  │
-│  │     @phoenixmhp • 15.2K followers                          │  │
-│  │     Last sync: 2 minutes ago                               │  │
-│  │                                                             │  │
-│  │     [ Disconnect ]  [ Refresh ]  [ Settings ]              │  │
-│  └───────────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────────────┐
-│  ⚠ Error State                                                   │
-│  ┌───────────────────────────────────────────────────────────┐  │
-│  │  f  Austin MHP Page                          ⚠ Error       │  │
-│  │     @austinmhp                                              │  │
-│  │     Token expired - reconnection required                  │  │
-│  │                                                             │  │
-│  │     [ Reconnect ]  [ Remove ]                              │  │
-│  └───────────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────────────────────────┐
-│  + Not Connected                                                 │
-│  ┌───────────────────────────────────────────────────────────┐  │
-│  │  f  Connect Facebook Page                                  │  │
-│  │     Link a Facebook Page for this location                 │  │
-│  │                                                             │  │
-│  │     [ Connect with Facebook ]                              │  │
-│  └───────────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────────┘
-```
-
----
-
-## AI Agent Integration
-
-### System Prompt Additions
-
-The AI agent needs context about available locations and their integrations:
-
-```typescript
-interface AgentLocationContext {
-  locations: {
-    id: string;
-    name: string;
-    slug: string;
-    address?: string;
-    timezone: string;
-    businessHours?: BusinessHours;
-    integrations: {
-      hasCalendar: boolean;
-      hasEmail: boolean;
-      hasFacebook: boolean;
-      hasInstagram: boolean;
-    };
-  }[];
-  defaultLocationId?: string;
-}
-```
-
-### Dynamic System Prompt Injection
-
-```typescript
-const locationContext = `
-## Available Locations
-
-You can help users with the following locations:
-
-${locations.map(loc => `
-### ${loc.name}
-- Address: ${loc.address}
-- Timezone: ${loc.timezone}
-- Can book tours: ${loc.integrations.hasCalendar ? 'Yes' : 'No'}
-- Can send emails: ${loc.integrations.hasEmail ? 'Yes' : 'No'}
-`).join('\n')}
-
-## Location Detection
-
-When a user asks about a specific location:
-1. If they mention a location name, use that location
-2. If unclear, ask which location they're interested in
-3. Use the default location if no preference is expressed
-
-## Booking Tours
-
-When booking a tour:
-1. Confirm the location
-2. Check availability for that location's calendar
-3. Present 2-3 available time slots
-4. Create the booking and send confirmation
-`;
-```
-
-### Tool Definitions
-
-```typescript
-const agentTools = [
-  {
-    name: "check_calendar_availability",
-    description: "Check available time slots for tours at a location",
-    parameters: {
-      type: "object",
-      properties: {
-        location_id: {
-          type: "string",
-          description: "The location ID to check availability for"
-        },
-        date_range: {
-          type: "object",
-          properties: {
-            start: { type: "string", format: "date" },
-            end: { type: "string", format: "date" }
-          }
-        },
-        duration_minutes: {
-          type: "number",
-          default: 30
-        }
-      },
-      required: ["location_id"]
-    }
-  },
-  {
-    name: "book_appointment",
-    description: "Book a tour or appointment at a location",
-    parameters: {
-      type: "object",
-      properties: {
-        location_id: { type: "string" },
-        datetime: { type: "string", format: "date-time" },
-        duration_minutes: { type: "number" },
-        attendee_name: { type: "string" },
-        attendee_email: { type: "string" },
-        attendee_phone: { type: "string" },
-        notes: { type: "string" }
-      },
-      required: ["location_id", "datetime", "attendee_name", "attendee_email"]
-    }
-  },
-  {
-    name: "send_email",
-    description: "Send an email from a location's email account",
-    parameters: {
-      type: "object",
-      properties: {
-        location_id: { type: "string" },
-        to: { type: "string" },
-        subject: { type: "string" },
-        body: { type: "string" }
-      },
-      required: ["location_id", "to", "subject", "body"]
-    }
-  }
-];
-```
-
----
-
-## Open Questions to Resolve
-
-### 1. Organizing Principle
-- [ ] **Location-centric** (recommended for multi-location businesses)
-- [ ] **Tag-based** (more flexible but potentially messy)
-- [ ] **Hybrid** (locations + tags for edge cases)
-
-### 2. Location Detection Strategy
-- [ ] **Embed code parameter** - Most reliable, requires separate embeds
-- [ ] **AI inference from conversation** - Flexible, less reliable
-- [ ] **Pre-chat selector** - Explicit, adds friction
-- [ ] **Referrer URL detection** - Automatic, depends on URL structure
-- [ ] **Combination of all** - Most robust
-
-### 3. Default/Fallback Behavior
-- [ ] What happens when location can't be determined?
-  - [ ] Ask the user
-  - [ ] Use default location
-  - [ ] Use "corporate" generic accounts
-  - [ ] Block certain actions (no booking without location)
-
-### 4. Cross-Location Scenarios
-- [ ] Can a user inquiry span multiple locations?
-- [ ] How to handle "I'm interested in Phoenix AND Austin"?
-- [ ] Should conversations be transferable between locations?
-
-### 5. Permission Model
-- [ ] Can team members be restricted to specific locations?
-- [ ] Should location managers only see their location's conversations?
-- [ ] How does this interact with existing role system?
-
-### 6. Conversation History
-- [ ] Is conversation history per-location or global per-user?
-- [ ] If a user talks about Phoenix, then Austin, are these separate conversations?
-
-### 7. Analytics & Reporting
-- [ ] Location-level analytics (conversations, bookings, leads)?
-- [ ] Compare performance across locations?
-- [ ] Which locations drive the most engagement?
-
-### 8. Scaling Considerations
-- [ ] What's the max number of locations per agent?
-- [ ] Performance impact of location lookups?
-- [ ] Rate limits per connected account?
-
-### 9. Integration Specifics
-- [ ] **Facebook**: Multiple pages = multiple OAuth connections?
-- [ ] **Google Calendar**: Multiple calendars under one Google account vs separate accounts?
-- [ ] **Email**: Shared inbox vs individual accounts?
-
-### 10. Widget Embed Variants
-- [ ] Single widget with location selector?
-- [ ] Location-specific widget embeds?
-- [ ] Location detection via subdomain/path?
+**Removed:**
+- URL Patterns Editor (replaced by smart detection)
 
 ---
 
 ## Implementation Phases
 
-### Phase 1: Foundation
-- [ ] Locations data model and CRUD
-- [ ] Connected accounts data model
-- [ ] Basic UI for managing locations
-- [ ] Location-aware embed code generation
+### Phase 1: Simplify Locations Tab ✅ IN PROGRESS
+- [x] Create locations table and basic CRUD
+- [x] Build LocationList and LocationDetails components
+- [x] Business hours editor
+- [x] Calendar connections
+- [ ] **Remove URL Patterns Editor**
+- [ ] **Add `wordpress_slug` field to UI**
+- [ ] **Database migration: add `wordpress_slug`, `wordpress_community_id`**
 
-### Phase 2: OAuth Integrations
-- [ ] Google OAuth (Calendar, Gmail)
-- [ ] Microsoft OAuth (Outlook Calendar, Email)
-- [ ] Facebook Pages OAuth
-- [ ] Instagram Business OAuth
+### Phase 2: WordPress Site Connector
+- [ ] Add WordPress Site URL field to agent config
+- [ ] Create `sync-wordpress-communities` edge function
+- [ ] Import communities as Locations with WP slug/ID
+- [ ] Pull ACF fields (address, phone, email, amenities)
+- [ ] Show sync status and "Re-sync" button
 
-### Phase 3: Routing Intelligence
-- [ ] Embed code location parameter
-- [ ] AI conversation analysis for location detection
-- [ ] Referrer URL parsing
-- [ ] Inbound message routing
+### Phase 3: Home/Property Sync
+- [ ] Create `sync-wordpress-homes` edge function
+- [ ] Map `home_community` taxonomy → ChatPad Location
+- [ ] Create/update Properties with home details
+- [ ] Generate embeddings for RAG
+- [ ] Add `wordpress_home` source type
 
-### Phase 4: AI Tools
-- [ ] Calendar availability checking
-- [ ] Appointment booking
-- [ ] Email sending
-- [ ] Tool execution with location context
+### Phase 4: Smart Widget Detection
+- [ ] Widget detects `/community/{slug}/` in URL
+- [ ] Widget fetches `home_community` for `/home/{slug}/`
+- [ ] Pass detected location to conversation
+- [ ] Store `location_id` on conversation for routing
 
-### Phase 5: Advanced Features
-- [ ] Location-based analytics
-- [ ] Team member location permissions
-- [ ] Multi-location conversation handling
-- [ ] Location-specific business rules
+### Phase 5: Scheduled Sync & Refresh
+- [ ] Apply existing refresh strategies to WordPress sync
+- [ ] Show "Last Synced" timestamp per location
+- [ ] "Re-sync Now" button per location
+- [ ] Handle community/home deletions gracefully
+
+### Phase 6: AI Fallback for Non-WordPress
+- [ ] Create `select_location` AI tool
+- [ ] AI presents location picker when undetected
+- [ ] Store selected location in conversation metadata
+- [ ] Route calendar/email to correct connected accounts
 
 ---
 
@@ -726,92 +488,38 @@ const agentTools = [
 ### OAuth Token Management
 ```typescript
 interface TokenManagement {
-  // Token storage (encrypted)
-  storage: 'database' | 'vault';
-  
-  // Refresh strategy
-  refreshStrategy: 'on-demand' | 'proactive' | 'scheduled';
-  
-  // Error handling
-  onTokenExpiry: 'notify-user' | 'auto-reconnect' | 'disable-integration';
+  storage: 'database';  // Encrypted in connected_accounts
+  refreshStrategy: 'on-demand';  // Refresh when token expires
+  onTokenExpiry: 'notify-user';  // Show reconnect prompt
 }
 ```
 
-### Rate Limiting
-```typescript
-interface RateLimits {
-  // Per integration type
-  facebook: {
-    messagesPerHour: 200,
-    apiCallsPerHour: 200
-  };
-  googleCalendar: {
-    queriesPerDay: 1000000, // Per-project quota
-    eventsPerCalendar: 500
-  };
-  email: {
-    sendsPerDay: 500 // Varies by provider
-  };
-}
-```
+### Refresh Strategies (Retained)
+All existing refresh intervals remain available:
+- `manual` - Only refresh on user action
+- `hourly_1` - Every hour
+- `hourly_2` - Every 2 hours
+- `hourly_3` - Every 3 hours
+- `hourly_4` - Every 4 hours
+- `hourly_6` - Every 6 hours
+- `hourly_12` - Every 12 hours
+- `daily` - Every 24 hours
 
 ### Caching Strategy
 ```typescript
 interface CachingStrategy {
-  // Calendar availability
-  calendarAvailability: {
-    ttl: '5 minutes',
-    invalidateOn: ['booking', 'cancellation']
-  };
-  
-  // Location list
-  locations: {
-    ttl: '1 hour',
-    invalidateOn: ['location-update']
-  };
-  
-  // Connected account status
-  accountStatus: {
-    ttl: '15 minutes',
-    invalidateOn: ['token-refresh', 'disconnect']
-  };
+  calendarAvailability: { ttl: '5 minutes' };
+  locations: { ttl: '1 hour' };
+  properties: { ttl: '6 hours' };  // WordPress homes
+  accountStatus: { ttl: '15 minutes' };
 }
 ```
-
----
-
-## Appendix: Competitor Analysis
-
-### How Others Handle Multi-Location
-
-| Platform | Approach | Notes |
-|----------|----------|-------|
-| Intercom | Single inbox, manual tagging | No native multi-location |
-| Drift | Playbooks per page/segment | URL-based routing |
-| HubSpot | Properties + workflows | CRM-centric approach |
-| Zendesk | Brands (separate instances) | Heavy-weight solution |
-
-### Differentiation Opportunity
-ChatPad can be the first to offer **native multi-location AI routing** with:
-- Automatic location detection
-- AI-powered context understanding
-- Seamless integration routing
-- Unified management interface
 
 ---
 
 ## References
 
+- [WordPress REST API Handbook](https://developer.wordpress.org/rest-api/)
 - [OAuth 2.0 Best Practices](https://oauth.net/2/)
 - [Google Calendar API](https://developers.google.com/calendar)
-- [Facebook Graph API](https://developers.facebook.com/docs/graph-api)
-- [Microsoft Graph API](https://learn.microsoft.com/en-us/graph/)
-
----
-
-## Related Documentation
-
-- [ChatPad Architecture](./CHATPAD_ARCHITECTURE.md) - Overall system architecture
-- [Database Schema](./DATABASE_SCHEMA.md) - Table structures for implementation
-- [Widget Architecture](./WIDGET_ARCHITECTURE.md) - Widget integration points
-- [Edge Functions](./EDGE_FUNCTIONS.md) - Server-side integration handlers
+- [ACF to REST API Plugin](https://wordpress.org/plugins/acf-to-rest-api/)

@@ -65,7 +65,8 @@ export interface LocationFormData {
   phone?: string;
   email?: string;
   business_hours?: BusinessHours;
-  url_patterns?: string[];
+  /** WordPress community slug for auto-detection */
+  wordpress_slug?: string;
 }
 
 /**
