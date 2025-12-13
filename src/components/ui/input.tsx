@@ -2,15 +2,17 @@
  * Input Component
  * 
  * A styled input field with size variants and error state animation.
- * Supports all standard HTML input attributes.
+ * Supports all standard HTML input attributes with Framer Motion.
  * 
  * @module components/ui/input
  */
 
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
+import { motion } from "motion/react"
 
 import { cn } from "@/lib/utils"
+import { useReducedMotion } from "@/hooks/useReducedMotion"
 
 /**
  * Input variant styles using class-variance-authority
@@ -41,6 +43,12 @@ interface InputProps
   error?: boolean
 }
 
+// Shake animation keyframes for error state
+const shakeAnimation = {
+  x: [0, -4, 4, -4, 4, -2, 2, 0],
+  transition: { duration: 0.4, ease: "easeInOut" as const }
+};
+
 /**
  * Input component with size variants and error state.
  * 
@@ -57,17 +65,26 @@ interface InputProps
  * <Input type="password" placeholder="Password" />
  */
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, type, error, size, ...props }, ref) => {
+  ({ className, type, error, size, onChange, onFocus, onBlur, value, placeholder, name, id, ...props }, ref) => {
+    const prefersReducedMotion = useReducedMotion();
+    
     return (
-      <input
+      <motion.input
         type={type}
         className={cn(
           inputVariants({ size }),
-          error && "border-destructive focus-visible:ring-destructive animate-shake",
+          error && "border-destructive focus-visible:ring-destructive",
           className
         )}
         ref={ref}
-        {...props}
+        name={name}
+        id={id}
+        value={value}
+        placeholder={placeholder}
+        onChange={onChange}
+        onFocus={onFocus}
+        onBlur={onBlur}
+        animate={error && !prefersReducedMotion ? shakeAnimation : undefined}
       />
     )
   }
