@@ -373,6 +373,81 @@ Shows "Saved" text with checkmark for auto-save feedback.
 <SavedIndicator show={justSaved} />
 ```
 
+#### FormHint (`src/components/ui/form-hint.tsx`)
+Standalone helper text for form fields (use outside React Hook Form).
+```tsx
+<Input aria-describedby="email-hint" />
+<FormHint id="email-hint">We'll never share your email.</FormHint>
+```
+- Use `id` prop for `aria-describedby` accessibility linking
+- Use `text-xs` size (12px) - NEVER use `text-[10px]` one-offs
+- For React Hook Form, use `FormDescription` instead
+
+#### IconButton (`src/components/ui/icon-button.tsx`)
+Accessible icon-only button with required `label` prop.
+```tsx
+import { Trash01 } from "@untitledui/icons";
+
+<IconButton label="Delete item" variant="ghost" size="sm">
+  <Trash01 className="h-4 w-4" />
+</IconButton>
+```
+- **Forces accessibility** - `label` is required, maps to `aria-label`
+- Inherits all Button variants and motion animations
+- Default size is `"icon"` (32x32px square)
+
+### Textarea Sizing Standards
+
+Textarea now supports size variants matching Input and Select.
+
+| Size | Min Height | Padding | Font Size |
+|------|------------|---------|-----------|
+| `default` | 80px | px-3 py-2 | text-sm |
+| `sm` | 60px | px-2.5 py-1.5 | text-xs |
+| `lg` | 120px | px-4 py-3 | text-base |
+
+```tsx
+<Textarea placeholder="Default size" />
+<Textarea size="sm" placeholder="Compact" />
+<Textarea size="lg" placeholder="Large" />
+```
+
+### Badge Size Variants
+
+Badge supports size variants for consistent small text use.
+
+| Size | Padding | Font Size |
+|------|---------|-----------|
+| `default` | px-2.5 py-0.5 | text-xs (12px) |
+| `sm` | px-2 py-0.5 | text-[10px] |
+| `lg` | px-3 py-1 | text-sm (14px) |
+
+```tsx
+<Badge>Default</Badge>
+<Badge size="sm">Small</Badge>  {/* Use for compact UI like notification counts */}
+<Badge size="lg">Large</Badge>
+```
+
+### Brand Color Tokens
+
+Semantic tokens for external platform brand colors. **Never use hex values directly.**
+
+| Token | Color | Usage |
+|-------|-------|-------|
+| `text-wordpress` | WordPress blue | WordPress icons/badges |
+| `text-facebook` | Facebook blue | Facebook channel icons |
+| `text-instagram` | Instagram pink | Instagram channel icons |
+| `text-twitter` | Twitter/X blue | Twitter/X channel icons |
+
+```tsx
+// ✅ CORRECT
+<WordPressIcon className="text-wordpress" />
+<FacebookIcon className="text-facebook" />
+
+// ❌ WRONG - Never use hex colors
+<WordPressIcon className="text-[#21759b]" />
+```
+
 ### Data Display Components
 
 #### DataTable (`src/components/data-table/DataTable.tsx`)

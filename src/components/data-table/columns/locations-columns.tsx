@@ -117,7 +117,7 @@ export const createLocationsColumns = ({
         return <span className="text-muted-foreground text-sm">-</span>;
       }
       return (
-        <WordPressIcon className="h-4 w-4 text-[#21759b]" />
+        <WordPressIcon className="h-4 w-4 text-wordpress" />
       );
     },
   },
