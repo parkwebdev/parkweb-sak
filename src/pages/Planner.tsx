@@ -12,6 +12,9 @@ import React, { useState, useCallback } from 'react';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { ChevronDown } from '@untitledui/icons';
+import { Svgl } from '@ridemountainpig/svgl-react';
 import { FullCalendar } from '@/components/calendar/FullCalendar';
 import { CreateEventDialog } from '@/components/calendar/CreateEventDialog';
 import { EventDetailDialog } from '@/components/calendar/EventDetailDialog';
@@ -330,9 +333,24 @@ const Planner: React.FC = () => {
         title="Planner"
         description="Manage your property showings and bookings"
       >
-        <Button variant="outline">
-          Connect Calendar
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline">
+              Connect Calendar
+              <ChevronDown size={16} className="ml-2" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem className="gap-2">
+              <Svgl name="google-calendar" className="w-4 h-4" />
+              Google Calendar
+            </DropdownMenuItem>
+            <DropdownMenuItem className="gap-2">
+              <Svgl name="microsoft-outlook" className="w-4 h-4" />
+              Outlook Calendar
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
         <Button onClick={handleAddEvent}>
           Add event
         </Button>
