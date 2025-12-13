@@ -1,10 +1,10 @@
 # Native Booking System: Complete Architecture & Implementation Plan
 
 > **Last Updated**: December 2024  
-> **Status**: Planning  
+> **Status**: In Progress (Phase 2)  
 > **Priority**: High  
 > **Estimated Timeline**: 4-6 weeks  
-> **Related**: [AI Architecture](./AI_ARCHITECTURE.md), [Database Schema](./DATABASE_SCHEMA.md), [Multi-Account Integrations](./MULTI_ACCOUNT_INTEGRATIONS.md)
+> **Related**: [AI Architecture](./AI_ARCHITECTURE.md), [Database Schema](./DATABASE_SCHEMA.md), [Social Channel Integrations](./SOCIAL_CHANNEL_INTEGRATIONS.md)
 
 This document provides the complete implementation blueprint for ChatPad's native booking system, enabling AI agents to intelligently route inquiries across multiple communities, maintain real-time property listings, check calendar availability, and book tours autonomously.
 
@@ -15,13 +15,16 @@ This document provides the complete implementation blueprint for ChatPad's nativ
 1. [Executive Summary](#executive-summary)
 2. [Problem Statement](#problem-statement)
 3. [Solution Architecture](#solution-architecture)
-4. [Phase 1: Living Data Sources Foundation](#phase-1-living-data-sources-foundation)
-5. [Phase 2: Locations & Calendar Integration](#phase-2-locations--calendar-integration)
-6. [Phase 3: AI Booking Tools](#phase-3-ai-booking-tools)
-7. [Phase 4: Polish & Optimization](#phase-4-polish--optimization)
-8. [Cost Analysis](#cost-analysis)
-9. [Risk Mitigation](#risk-mitigation)
-10. [Success Metrics](#success-metrics)
+4. [WordPress REST API Integration](#wordpress-rest-api-integration)
+5. [Phase 1: Living Data Sources Foundation](#phase-1-living-data-sources-foundation) ✅ Complete
+6. [Phase 2: Locations & Calendar Integration](#phase-2-locations--calendar-integration) 🔄 In Progress
+7. [Phase 3: WordPress Site Connector](#phase-3-wordpress-site-connector)
+8. [Phase 4: Home/Property Sync](#phase-4-homeproperty-sync)
+9. [Phase 5: Smart Widget Detection](#phase-5-smart-widget-detection)
+10. [Phase 6: AI Booking Tools](#phase-6-ai-booking-tools)
+11. [Cost Analysis](#cost-analysis)
+12. [Risk Mitigation](#risk-mitigation)
+13. [Success Metrics](#success-metrics)
 
 ---
 
@@ -201,12 +204,169 @@ Enable mobile home park operators (and similar multi-location businesses) to dep
 
 ---
 
-## Phase 1: Living Data Sources Foundation
+## WordPress REST API Integration
+
+### Overview
+
+For clients using WordPress with custom post types for communities and homes, ChatPad integrates directly with the WordPress REST API to:
+
+1. **Auto-import communities** as ChatPad Locations
+2. **Sync home/property listings** for AI knowledge and RAG
+3. **Enable smart widget detection** based on URL paths and taxonomy
+4. **Keep data fresh** with scheduled sync
+
+### WordPress Data Structure
+
+#### Community Post Type (`/wp-json/wp/v2/community`)
+
+```json
+{
+  "id": 135,
+  "slug": "forge-at-the-lake",
+  "title": { "rendered": "Forge at the Lake" },
+  "acf": {
+    "community_address": "123 Lakeside Dr",
+    "community_city": "Austin",
+    "community_state": "TX",
+    "community_zip": "78701",
+    "community_phone": "(512) 555-0100",
+    "community_email": "forge@example.com",
+    "community_amenities": ["Pool", "Clubhouse", "Fitness Center"]
+  }
+}
+```
+
+#### Home Post Type (`/wp-json/wp/v2/home`)
+
+```json
+{
+  "id": 459,
+  "slug": "forge-lake-home-123",
+  "title": { "rendered": "3BR/2BA at Forge Lake" },
+  "home_community": [135],  // Taxonomy linking to community ID
+  "acf": {
+    "price": 1250,
+    "bedrooms": 3,
+    "bathrooms": 2,
+    "square_feet": 1400,
+    "home_status": "available",
+    "home_address": "Lot 42",
+    "home_photos": [...]
+  },
+  "_embedded": {
+    "wp:featuredmedia": [...]
+  }
+}
+```
+
+### Sync Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                    WordPress Site Connector                          │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                      │
+│   Agent Settings                                                     │
+│   └── WordPress Site URL: https://example.com                       │
+│       └── [Test Connection] [Import Communities] [Sync Homes]       │
+│                                                                      │
+│   ┌────────────────────┐    ┌─────────────────────────────────┐     │
+│   │  /wp-json/wp/v2/   │    │  ChatPad Database               │     │
+│   │  community         │───▶│  locations table                │     │
+│   │  (20 communities)  │    │  - wordpress_slug               │     │
+│   └────────────────────┘    │  - wordpress_community_id       │     │
+│                              │  - name, address (from ACF)     │     │
+│   ┌────────────────────┐    └─────────────────────────────────┘     │
+│   │  /wp-json/wp/v2/   │    ┌─────────────────────────────────┐     │
+│   │  home              │───▶│  properties table               │     │
+│   │  (200+ homes)      │    │  - location_id (matched via     │     │
+│   │  + home_community  │    │    wordpress_community_id)      │     │
+│   └────────────────────┘    │  - price, beds, baths, images   │     │
+│                              └─────────────────────────────────┘     │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+### Database Schema Additions
+
+```sql
+-- Already applied in Phase 2:
+-- locations.wordpress_slug (TEXT)
+-- locations.wordpress_community_id (INTEGER)
+
+-- Planned for Phase 3:
+ALTER TYPE knowledge_source_type ADD VALUE IF NOT EXISTS 'wordpress_community';
+ALTER TYPE knowledge_source_type ADD VALUE IF NOT EXISTS 'wordpress_home';
+```
+
+### Agent WordPress Config
+
+Stored in `agents.deployment_config`:
+
+```json
+{
+  "wordpress": {
+    "site_url": "https://example.com",
+    "community_endpoint": "/wp-json/wp/v2/community",
+    "home_endpoint": "/wp-json/wp/v2/home",
+    "last_community_sync": "2024-12-13T10:00:00Z",
+    "last_home_sync": "2024-12-13T10:00:00Z",
+    "auto_sync_enabled": true,
+    "sync_interval": "daily"
+  }
+}
+```
+
+### Smart Widget Detection
+
+When widget loads, it detects location context:
+
+```typescript
+async function detectLocation(config: WidgetConfig): Promise<string | null> {
+  // 1. Check explicit config (data-location attribute)
+  if (config.locationSlug) {
+    return config.locationSlug;
+  }
+  
+  // 2. Check URL path for /community/{slug}/
+  const communityMatch = window.location.pathname.match(/\/community\/([^\/]+)/);
+  if (communityMatch) {
+    return communityMatch[1];
+  }
+  
+  // 3. Check URL path for /home/{slug}/ and fetch taxonomy
+  const homeMatch = window.location.pathname.match(/\/home\/([^\/]+)/);
+  if (homeMatch && config.wordpressSiteUrl) {
+    try {
+      const response = await fetch(
+        `${config.wordpressSiteUrl}/wp-json/wp/v2/home?slug=${homeMatch[1]}&_fields=home_community`
+      );
+      const [home] = await response.json();
+      if (home?.home_community?.[0]) {
+        const communityId = home.home_community[0];
+        const commResponse = await fetch(
+          `${config.wordpressSiteUrl}/wp-json/wp/v2/community/${communityId}?_fields=slug`
+        );
+        const community = await commResponse.json();
+        return community.slug;
+      }
+    } catch (e) {
+      console.warn('Failed to detect location from WP:', e);
+    }
+  }
+  
+  // 4. Return null - AI will ask user via select_location tool
+  return null;
+}
+```
+
+---
+
+## Phase 1: Living Data Sources Foundation ✅ COMPLETE
 
 ### Overview
 Build the infrastructure for automatic knowledge source refreshing with intelligent change detection and AI-powered property extraction.
 
-### Estimated Duration: 1-2 weeks
+### Status: ✅ Complete
 
 ---
 
@@ -665,22 +825,35 @@ Update `KnowledgeSourceCard.tsx` to display:
 
 ---
 
-## Phase 2: Locations & Calendar Integration
+## Phase 2: Locations & Calendar Integration 🔄 IN PROGRESS
 
 ### Overview
 Build location management UI and OAuth calendar connections enabling appointment scheduling.
 
-### Estimated Duration: 1-2 weeks
+### Status: 🔄 In Progress
 
 ---
 
 ### 2.1 Locations Management UI
 
-#### 2.1.1 Integrations Tab Redesign
+#### Completed ✅
 
-**File:** Create new `src/components/agents/tabs/AgentLocationsTab.tsx`
+- [x] `locations` table with all columns including `wordpress_slug` and `wordpress_community_id`
+- [x] `AgentLocationsTab.tsx` component
+- [x] `LocationList.tsx` component (left panel)
+- [x] `LocationDetails.tsx` component (right panel)
+- [x] `CreateLocationDialog.tsx` for create/edit
+- [x] `BusinessHoursEditor.tsx` component
+- [x] `useLocations` hook with CRUD operations
+- [x] Location tab added to agent config
+- [x] Empty state and loading states
+- [x] Delete confirmation dialog
 
-**Layout:**
+#### Removed (replaced by smart detection)
+
+- ~~`UrlPatternsEditor.tsx` component~~ - Replaced by WordPress slug-based smart detection
+
+#### Layout:
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
 │  Locations                                              [+ Add]     │
@@ -692,13 +865,16 @@ Build location management UI and OAuth calendar connections enabling appointment
 │  │   12 properties     │  │ Address: 123 Main St, Austin TX     │  │
 │  │   Last sync: 2h ago │  │ Timezone: America/Chicago           │  │
 │  │                     │  │                                     │  │
-│  │ ○ Mountain View     │  │ ┌─────────────────────────────────┐ │  │
-│  │   8 properties      │  │ │ Business Hours                  │ │  │
-│  │   Last sync: 1h ago │  │ │ Mon-Fri: 9:00 AM - 5:00 PM      │ │  │
-│  │                     │  │ │ Sat: 10:00 AM - 2:00 PM         │ │  │
-│  │ ○ Riverside Estates │  │ │ Sun: Closed                     │ │  │
-│  │   15 properties     │  │ └─────────────────────────────────┘ │  │
-│  │   Last sync: 30m    │  │                                     │  │
+│  │ ○ Mountain View     │  │ WordPress Slug: sunset-valley       │  │
+│  │   8 properties      │  │ (for smart widget detection)        │  │
+│  │   Last sync: 1h ago │  │                                     │  │
+│  │                     │  │ ┌─────────────────────────────────┐ │  │
+│  │ ○ Riverside Estates │  │ │ Business Hours                  │ │  │
+│  │   15 properties     │  │ │ Mon-Fri: 9:00 AM - 5:00 PM      │ │  │
+│  │   Last sync: 30m    │  │ │ Sat: 10:00 AM - 2:00 PM         │ │  │
+│  │                     │  │ │ Sun: Closed                     │ │  │
+│  │                     │  │ └─────────────────────────────────┘ │  │
+│  │                     │  │                                     │  │
 │  │                     │  │ ┌─────────────────────────────────┐ │  │
 │  │                     │  │ │ Connected Calendars             │ │  │
 │  │                     │  │ │                                 │ │  │
@@ -708,29 +884,9 @@ Build location management UI and OAuth calendar connections enabling appointment
 │  │                     │  │ │ [+ Connect Google Calendar]     │ │  │
 │  │                     │  │ │ [+ Connect Outlook Calendar]    │ │  │
 │  │                     │  │ └─────────────────────────────────┘ │  │
-│  │                     │  │                                     │  │
-│  │                     │  │ ┌─────────────────────────────────┐ │  │
-│  │                     │  │ │ URL Patterns (auto-detection)   │ │  │
-│  │                     │  │ │ • sunset-valley.example.com     │ │  │
-│  │                     │  │ │ • example.com/sunset-valley     │ │  │
-│  │                     │  │ │ [+ Add Pattern]                 │ │  │
-│  │                     │  │ └─────────────────────────────────┘ │  │
 │  └─────────────────────┘  └─────────────────────────────────────┘  │
 └─────────────────────────────────────────────────────────────────────┘
 ```
-
-**Checklist:**
-- [ ] Create `AgentLocationsTab.tsx` component
-- [ ] Create `LocationList.tsx` component (left panel)
-- [ ] Create `LocationDetails.tsx` component (right panel)
-- [ ] Create `LocationForm.tsx` for create/edit dialog
-- [ ] Create `BusinessHoursEditor.tsx` component
-- [ ] Create `UrlPatternsEditor.tsx` component
-- [ ] Create `useLocations` hook with CRUD operations
-- [ ] Add location to agent config tabs
-- [ ] Implement empty state for no locations
-- [ ] Add delete confirmation dialog
-- [ ] Add loading states
 
 #### 2.1.2 Create Location Dialog
 
@@ -929,29 +1085,308 @@ Local storage for bookings created through ChatPad:
 
 ### Phase 2 Completion Checklist
 
-- [ ] Locations table created and populated
-- [ ] Locations management UI complete
-- [ ] Google Calendar OAuth working end-to-end
-- [ ] Outlook Calendar OAuth working end-to-end
-- [ ] Connected accounts display in UI
+- [x] Locations table created with `wordpress_slug` and `wordpress_community_id` columns
+- [x] Locations management UI complete (LocationList, LocationDetails, CreateLocationDialog)
+- [x] BusinessHoursEditor component complete
+- [x] CalendarConnections component complete
+- [x] Google Calendar OAuth edge function created
+- [x] Outlook Calendar OAuth edge function created
+- [ ] End-to-end calendar OAuth testing
 - [ ] Calendar events table created
-- [ ] End-to-end test: Create location → Connect calendar → Verify token storage
+- [ ] Connected accounts display with disconnect functionality
 - [ ] Documentation updated
 
 ---
 
-## Phase 3: AI Booking Tools
+## Phase 3: WordPress Site Connector
+
+### Overview
+Enable automatic import of communities from WordPress sites using the REST API.
+
+### Status: 🔜 Next
+
+---
+
+### 3.1 WordPress Configuration UI
+
+Add WordPress connection card to Locations tab header:
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│ 🌐 WordPress Connection                                              │
+│                                                                      │
+│ Site URL: https://example.com                    [Test] [Sync]      │
+│ Last synced: 2 hours ago • 20 communities, 245 homes                │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+**Checklist:**
+- [ ] Add WordPress config section to AgentLocationsTab
+- [ ] Create WordPress URL input field
+- [ ] Create "Test Connection" button (validates `/wp-json/wp/v2/community` exists)
+- [ ] Create "Import Communities" button
+- [ ] Display sync status and counts
+- [ ] Store config in `agents.deployment_config.wordpress`
+
+### 3.2 Edge Function: sync-wordpress-communities
+
+**File:** `supabase/functions/sync-wordpress-communities/index.ts`
+
+```typescript
+// Pseudocode
+async function handler(req: Request) {
+  const { agentId } = await req.json();
+  
+  // 1. Get WordPress config from agent
+  const agent = await getAgent(agentId);
+  const wpConfig = agent.deployment_config?.wordpress;
+  
+  // 2. Fetch communities from WP REST API
+  const communities = await fetch(
+    `${wpConfig.site_url}/wp-json/wp/v2/community?per_page=100&_embed`
+  ).then(r => r.json());
+  
+  // 3. For each community, create/update Location
+  for (const community of communities) {
+    await supabase.from('locations').upsert({
+      agent_id: agentId,
+      user_id: agent.user_id,
+      name: community.title.rendered,
+      wordpress_slug: community.slug,
+      wordpress_community_id: community.id,
+      address: community.acf?.community_address,
+      city: community.acf?.community_city,
+      state: community.acf?.community_state,
+      zip: community.acf?.community_zip,
+      phone: community.acf?.community_phone,
+      email: community.acf?.community_email,
+    }, {
+      onConflict: 'agent_id,wordpress_community_id'
+    });
+  }
+  
+  // 4. Update last sync timestamp
+  await updateAgentWordPressConfig(agentId, {
+    last_community_sync: new Date().toISOString()
+  });
+}
+```
+
+**Checklist:**
+- [ ] Create edge function directory
+- [ ] Implement WordPress REST API fetching
+- [ ] Implement Location upsert logic
+- [ ] Handle ACF field mapping
+- [ ] Add error handling for API failures
+- [ ] Add to config.toml
+
+### Phase 3 Completion Checklist
+
+- [ ] WordPress connection UI in Locations tab
+- [ ] Test connection functionality
+- [ ] sync-wordpress-communities edge function deployed
+- [ ] Communities auto-import to Locations table
+- [ ] Sync status display with timestamps
+- [ ] Error handling for invalid WordPress URLs
+
+---
+
+## Phase 4: Home/Property Sync
+
+### Overview
+Sync home/property listings from WordPress to the properties table with location linking.
+
+### Status: 🔜 Planned
+
+---
+
+### 4.1 Edge Function: sync-wordpress-homes
+
+**File:** `supabase/functions/sync-wordpress-homes/index.ts`
+
+```typescript
+// Pseudocode
+async function handler(req: Request) {
+  const { agentId } = await req.json();
+  
+  // 1. Get WordPress config
+  const agent = await getAgent(agentId);
+  const wpConfig = agent.deployment_config?.wordpress;
+  
+  // 2. Fetch all locations with wordpress_community_id
+  const locations = await supabase
+    .from('locations')
+    .select('id, wordpress_community_id')
+    .eq('agent_id', agentId)
+    .not('wordpress_community_id', 'is', null);
+  
+  const locationMap = new Map(locations.map(l => [l.wordpress_community_id, l.id]));
+  
+  // 3. Fetch homes from WP REST API
+  const homes = await fetch(
+    `${wpConfig.site_url}/wp-json/wp/v2/home?per_page=100&_embed`
+  ).then(r => r.json());
+  
+  // 4. For each home, create/update Property
+  for (const home of homes) {
+    const communityId = home.home_community?.[0];
+    const locationId = communityId ? locationMap.get(communityId) : null;
+    
+    await supabase.from('properties').upsert({
+      agent_id: agentId,
+      knowledge_source_id: getOrCreateWordPressSource(agentId),
+      location_id: locationId,
+      external_id: `wp_home_${home.id}`,
+      address: home.acf?.home_address,
+      price: home.acf?.price * 100, // Convert to cents
+      beds: home.acf?.bedrooms,
+      baths: home.acf?.bathrooms,
+      sqft: home.acf?.square_feet,
+      status: mapStatus(home.acf?.home_status),
+      listing_url: home.link,
+      images: extractImages(home),
+    }, {
+      onConflict: 'knowledge_source_id,external_id'
+    });
+  }
+  
+  // 5. Update last sync timestamp
+  await updateAgentWordPressConfig(agentId, {
+    last_home_sync: new Date().toISOString()
+  });
+}
+```
+
+### 4.2 Database Updates
+
+```sql
+-- Add wordpress_home to knowledge_source_type enum
+ALTER TYPE knowledge_source_type ADD VALUE IF NOT EXISTS 'wordpress_home';
+
+-- Create knowledge source for WordPress homes (one per agent)
+-- This links all WP-synced homes to a single knowledge source
+```
+
+**Checklist:**
+- [ ] Create sync-wordpress-homes edge function
+- [ ] Implement home_community → location_id mapping
+- [ ] Handle ACF field extraction
+- [ ] Create WordPress knowledge source automatically
+- [ ] Generate embeddings for property descriptions
+- [ ] Add to config.toml
+
+### Phase 4 Completion Checklist
+
+- [ ] sync-wordpress-homes edge function deployed
+- [ ] Homes linked to correct Locations via taxonomy
+- [ ] Properties populated with price, beds, baths, images
+- [ ] Last sync timestamps updated
+- [ ] Scheduled sync support (reuse existing refresh strategies)
+
+---
+
+## Phase 5: Smart Widget Detection
+
+### Overview
+Enable the widget to automatically detect user's location context based on URL and WordPress taxonomy.
+
+### Status: 🔜 Planned
+
+---
+
+### 5.1 Widget Location Detection
+
+Update widget initialization to detect location:
+
+```typescript
+// In ChatWidget.tsx or parent initialization
+const detectedLocationSlug = await detectLocation({
+  locationSlug: config.dataLocation, // Explicit embed attribute
+  wordpressSiteUrl: config.wordpressSiteUrl,
+});
+
+if (detectedLocationSlug) {
+  // Fetch location_id from database
+  const location = await supabase
+    .from('locations')
+    .select('id')
+    .eq('agent_id', agentId)
+    .eq('wordpress_slug', detectedLocationSlug)
+    .single();
+  
+  // Store on conversation
+  setLocationId(location.id);
+}
+```
+
+### 5.2 AI Fallback: select_location Tool
+
+When location cannot be auto-detected, AI asks user:
+
+```typescript
+{
+  name: 'select_location',
+  description: 'Present location options when cannot auto-detect. Use when user needs to choose a community.',
+  parameters: {
+    type: 'object',
+    properties: {
+      prompt: { type: 'string', description: 'Question to ask user' }
+    }
+  }
+}
+```
+
+Widget renders location picker buttons when tool is called.
+
+### 5.3 Embed Configuration
+
+```html
+<!-- Explicit location (recommended for single-location pages) -->
+<script
+  src="https://app.chatpad.ai/widget.js"
+  data-agent-id="abc123"
+  data-location="forge-at-the-lake"
+></script>
+
+<!-- Auto-detect from URL (for multi-location sites) -->
+<script
+  src="https://app.chatpad.ai/widget.js"
+  data-agent-id="abc123"
+  data-wordpress-site="https://example.com"
+></script>
+```
+
+**Checklist:**
+- [ ] Add detectLocation function to widget
+- [ ] Implement URL path parsing (/community/{slug}/, /home/{slug}/)
+- [ ] Implement WordPress API fallback for home→community lookup
+- [ ] Add select_location AI tool to widget-chat
+- [ ] Create location picker UI component in widget
+- [ ] Update embed settings to include WordPress site URL
+- [ ] Store location_id on conversation metadata
+
+### Phase 5 Completion Checklist
+
+- [ ] Widget auto-detects location from URL
+- [ ] WordPress home→community lookup working
+- [ ] AI fallback presents location picker
+- [ ] Conversation stores detected location_id
+- [ ] Embed config supports data-location and data-wordpress-site
+
+---
+
+## Phase 6: AI Booking Tools
 
 ### Overview
 Extend widget-chat with built-in tools for property search, calendar availability, and appointment booking.
 
-### Estimated Duration: 1-2 weeks
+### Status: 🔜 Planned
 
 ---
 
-### 3.1 Built-in AI Tools
+### 6.1 Built-in AI Tools
 
-#### 3.1.1 Tool Definitions
+#### 6.1.1 Tool Definitions
 
 Add to `widget-chat/index.ts`:
 
@@ -1056,7 +1491,7 @@ const BOOKING_TOOLS = [
 - [ ] Add tools to widget-chat tool array
 - [ ] Conditionally include tools only for agents with locations configured
 
-#### 3.1.2 Tool Handlers in widget-chat
+#### 6.1.2 Tool Handlers in widget-chat
 
 ```typescript
 async function handleToolCall(toolName: string, args: any, agentId: string, conversationId: string) {
@@ -1094,7 +1529,7 @@ async function handleToolCall(toolName: string, args: any, agentId: string, conv
 
 ---
 
-### 3.2 Calendar Availability Edge Function
+### 6.2 Calendar Availability Edge Function
 
 **File:** `supabase/functions/check-calendar-availability/index.ts`
 
@@ -1146,7 +1581,7 @@ interface AvailabilityResponse {
 
 ---
 
-### 3.3 Booking Edge Function
+### 6.3 Booking Edge Function
 
 **File:** `supabase/functions/book-appointment/index.ts`
 
@@ -1203,74 +1638,16 @@ interface BookingResponse {
 
 ---
 
-### 3.4 Location Routing Intelligence
+### Phase 6 Completion Checklist
 
-#### 3.4.1 Multi-Layer Detection
-
-```typescript
-async function detectLocation(
-  agentId: string,
-  conversationId: string,
-  embedConfig: EmbedConfig | null,
-  referrer: string | null,
-  messageContent: string
-): Promise<string | null> {
-  // Layer 1: Explicit embed config
-  if (embedConfig?.location_id) {
-    return embedConfig.location_id;
-  }
-  
-  // Layer 2: Existing conversation context
-  const conversation = await getConversation(conversationId);
-  if (conversation?.location_id) {
-    return conversation.location_id;
-  }
-  
-  // Layer 3: Referrer URL pattern matching
-  if (referrer) {
-    const locations = await getLocationsWithPatterns(agentId);
-    for (const location of locations) {
-      for (const pattern of location.url_patterns || []) {
-        if (referrer.includes(pattern)) {
-          await setConversationLocation(conversationId, location.id);
-          return location.id;
-        }
-      }
-    }
-  }
-  
-  // Layer 4: AI extraction from message (future enhancement)
-  // Could analyze message for location mentions
-  
-  return null; // Location unknown - AI should ask
-}
-```
-
-**Checklist:**
-- [ ] Implement embed config location detection
-- [ ] Implement conversation context check
-- [ ] Implement referrer URL pattern matching
-- [ ] Create `setConversationLocation()` function
-- [ ] Add location context to AI system prompt
-- [ ] Implement graceful "which community?" fallback
-
-#### 3.4.2 Widget Embed Location Config
-
-Update widget embed code to support location:
-
-```html
-<script 
-  src="https://chatpad.io/widget.js" 
-  data-agent-id="xxx"
-  data-location-id="yyy"  <!-- NEW -->
-></script>
-```
-
-**Checklist:**
-- [ ] Update embed code generator to include location
-- [ ] Update widget loader to read location-id
-- [ ] Pass location to widget-chat endpoint
-- [ ] Update embed preview to show location selector
+- [ ] All 5 booking tools defined and implemented
+- [ ] Calendar availability edge function deployed
+- [ ] Booking edge function deployed
+- [ ] Widget embed supports location-id
+- [ ] End-to-end test: Chat → Search properties → Check availability → Book appointment
+- [ ] Booking appears on connected calendar
+- [ ] Webhook fires on booking
+- [ ] Documentation updated
 
 ---
 
@@ -1288,16 +1665,16 @@ Update widget embed code to support location:
 
 ---
 
-## Phase 4: Polish & Optimization
+## Phase 7: Polish & Optimization
 
 ### Overview
 Production hardening, monitoring, and UX enhancements.
 
-### Estimated Duration: 1 week
+### Status: 🔜 Planned
 
 ---
 
-### 4.1 Webhook Events for Bookings
+### 7.1 Webhook Events for Bookings
 
 Add new webhook event types:
 
@@ -1318,7 +1695,7 @@ Add new webhook event types:
 
 ---
 
-### 4.2 Admin Calendar View
+### 7.2 Admin Calendar View
 
 **Create `src/components/calendar/BookingsCalendar.tsx`:**
 
@@ -1339,7 +1716,7 @@ Display all ChatPad-created bookings across locations:
 
 ---
 
-### 4.3 Property Status in Chat
+### 7.3 Property Status in Chat
 
 Enhance AI responses with real-time property status:
 
@@ -1361,7 +1738,7 @@ Enhance AI responses with real-time property status:
 
 ---
 
-### 4.4 Multi-Timezone Support
+### 7.4 Multi-Timezone Support
 
 Ensure all times display correctly:
 - Store all times in UTC
@@ -1378,7 +1755,7 @@ Ensure all times display correctly:
 
 ---
 
-### 4.5 Error Handling & Monitoring
+### 7.5 Error Handling & Monitoring
 
 **Implement robust error handling:**
 - Calendar API failures → graceful fallback message
@@ -1400,7 +1777,7 @@ Ensure all times display correctly:
 
 ---
 
-### Phase 4 Completion Checklist
+### Phase 7 Completion Checklist
 
 - [ ] Webhook events for bookings implemented
 - [ ] Admin bookings calendar view complete
