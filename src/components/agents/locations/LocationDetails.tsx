@@ -70,16 +70,20 @@ export const LocationDetails: React.FC<LocationDetailsProps> = ({
     };
   }, []);
 
-  // Auto-save with debounce
+  // Use ref to avoid recreating debouncedSave when onUpdate changes
+  const onUpdateRef = useRef(onUpdate);
+  onUpdateRef.current = onUpdate;
+
+  // Auto-save with debounce - stable reference
   const debouncedSave = useCallback(
     (data: Partial<LocationFormData>) => {
       if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
       
       saveTimeoutRef.current = setTimeout(async () => {
-        await onUpdate(location.id, data);
+        await onUpdateRef.current(location.id, data);
       }, 1000);
     },
-    [location.id, onUpdate]
+    [location.id]
   );
 
   const handleChange = (field: keyof LocationFormData, value: string | BusinessHours | string[]) => {

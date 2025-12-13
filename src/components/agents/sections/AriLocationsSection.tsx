@@ -175,10 +175,10 @@ export const AriLocationsSection: React.FC<AriLocationsSectionProps> = ({ agentI
     }
   };
 
-  const handleView = (location: LocationWithCounts) => {
+  const handleView = useCallback((location: LocationWithCounts) => {
     setSelectedLocation(location);
     setSheetOpen(true);
-  };
+  }, []);
 
   const handleDelete = async () => {
     if (!deleteLocation_) return;
@@ -209,7 +209,7 @@ export const AriLocationsSection: React.FC<AriLocationsSectionProps> = ({ agentI
   const columns = useMemo(() => createLocationsColumns({
     onView: handleView,
     onDelete: setDeleteLocation,
-  }), []);
+  }), [handleView]);
 
   const table = useReactTable({
     data: displayedLocations,

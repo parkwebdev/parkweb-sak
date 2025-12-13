@@ -7,7 +7,7 @@
  * @module hooks/useLocations
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/lib/toast';
 import { logger } from '@/utils/logger';
@@ -52,10 +52,14 @@ export const useLocations = (agentId?: string) => {
   }, [agentId]);
 
   // Initial fetch and real-time subscription
+  // Use ref to avoid re-subscribing when fetchLocations changes
+  const fetchLocationsRef = useRef(fetchLocations);
+  fetchLocationsRef.current = fetchLocations;
+
   useEffect(() => {
     if (!agentId) return;
 
-    fetchLocations();
+    fetchLocationsRef.current();
 
     // Subscribe to real-time updates
     const channel = supabase
@@ -98,7 +102,7 @@ export const useLocations = (agentId?: string) => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [agentId, fetchLocations]);
+  }, [agentId]);
 
   /**
    * Create a new location
