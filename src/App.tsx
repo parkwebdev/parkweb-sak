@@ -26,8 +26,7 @@ import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import WidgetPage from "./pages/WidgetPage";
 import DashboardWrapper from "./pages/DashboardWrapper";
-import AgentsWrapper from "./pages/AgentsWrapper";
-import AgentConfigWrapper from "./pages/AgentConfigWrapper";
+import AriConfiguratorWrapper from "./pages/AriConfiguratorWrapper";
 import ConversationsWrapper from "./pages/ConversationsWrapper";
 import LeadsWrapper from "./pages/LeadsWrapper";
 import AnalyticsWrapper from "./pages/AnalyticsWrapper";
@@ -71,8 +70,7 @@ const App = () => (
                 {/* Protected routes with shared layout */}
                 <Route element={<ProtectedLayout />}>
                   <Route path="/" element={<DashboardWrapper />} />
-                  <Route path="/agents" element={<AgentsWrapper />} />
-                  <Route path="/agents/:agentId" element={<AgentConfigWrapper />} />
+                  <Route path="/ari" element={<AriConfiguratorWrapper />} />
                   <Route path="/conversations" element={<ConversationsWrapper />} />
                   <Route path="/planner" element={<PlannerWrapper />} />
                   <Route path="/leads" element={<LeadsWrapper />} />

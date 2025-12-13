@@ -40,7 +40,7 @@ interface NavigationItem {
 /** Main navigation items */
 const navigationItems: NavigationItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: Grid, path: '/' },
-  { id: 'agents', label: 'Ari Agents', icon: AriAgentsIcon, path: '/agents' },
+  { id: 'ari', label: 'Ari', icon: AriAgentsIcon, path: '/ari' },
   { id: 'conversations', label: 'Inbox', icon: MessageSquare01, path: '/conversations' },
   { id: 'planner', label: 'Planner', icon: Calendar, path: '/planner' },
   { id: 'leads', label: 'Leads', icon: User03, path: '/leads' },
