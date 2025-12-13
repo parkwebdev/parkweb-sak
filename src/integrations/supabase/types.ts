@@ -262,6 +262,189 @@ export type Database = {
           },
         ]
       }
+      calendar_events: {
+        Row: {
+          all_day: boolean | null
+          connected_account_id: string
+          conversation_id: string | null
+          created_at: string
+          description: string | null
+          end_time: string
+          event_type: string | null
+          external_event_id: string | null
+          id: string
+          lead_id: string | null
+          location_id: string | null
+          metadata: Json | null
+          notes: string | null
+          start_time: string
+          status: Database["public"]["Enums"]["calendar_event_status"] | null
+          timezone: string | null
+          title: string
+          updated_at: string
+          visitor_email: string | null
+          visitor_name: string | null
+          visitor_phone: string | null
+        }
+        Insert: {
+          all_day?: boolean | null
+          connected_account_id: string
+          conversation_id?: string | null
+          created_at?: string
+          description?: string | null
+          end_time: string
+          event_type?: string | null
+          external_event_id?: string | null
+          id?: string
+          lead_id?: string | null
+          location_id?: string | null
+          metadata?: Json | null
+          notes?: string | null
+          start_time: string
+          status?: Database["public"]["Enums"]["calendar_event_status"] | null
+          timezone?: string | null
+          title: string
+          updated_at?: string
+          visitor_email?: string | null
+          visitor_name?: string | null
+          visitor_phone?: string | null
+        }
+        Update: {
+          all_day?: boolean | null
+          connected_account_id?: string
+          conversation_id?: string | null
+          created_at?: string
+          description?: string | null
+          end_time?: string
+          event_type?: string | null
+          external_event_id?: string | null
+          id?: string
+          lead_id?: string | null
+          location_id?: string | null
+          metadata?: Json | null
+          notes?: string | null
+          start_time?: string
+          status?: Database["public"]["Enums"]["calendar_event_status"] | null
+          timezone?: string | null
+          title?: string
+          updated_at?: string
+          visitor_email?: string | null
+          visitor_name?: string | null
+          visitor_phone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendar_events_connected_account_id_fkey"
+            columns: ["connected_account_id"]
+            isOneToOne: false
+            referencedRelation: "connected_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calendar_events_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calendar_events_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "widget_conversations_secure"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calendar_events_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calendar_events_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      connected_accounts: {
+        Row: {
+          access_token: string
+          account_email: string
+          agent_id: string
+          calendar_id: string | null
+          calendar_name: string | null
+          created_at: string
+          id: string
+          is_active: boolean | null
+          last_synced_at: string | null
+          location_id: string | null
+          metadata: Json | null
+          provider: Database["public"]["Enums"]["calendar_provider"]
+          refresh_token: string | null
+          sync_error: string | null
+          token_expires_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_token: string
+          account_email: string
+          agent_id: string
+          calendar_id?: string | null
+          calendar_name?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          last_synced_at?: string | null
+          location_id?: string | null
+          metadata?: Json | null
+          provider: Database["public"]["Enums"]["calendar_provider"]
+          refresh_token?: string | null
+          sync_error?: string | null
+          token_expires_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_token?: string
+          account_email?: string
+          agent_id?: string
+          calendar_id?: string | null
+          calendar_name?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          last_synced_at?: string | null
+          location_id?: string | null
+          metadata?: Json | null
+          provider?: Database["public"]["Enums"]["calendar_provider"]
+          refresh_token?: string | null
+          sync_error?: string | null
+          token_expires_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "connected_accounts_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "connected_accounts_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conversation_ratings: {
         Row: {
           conversation_id: string
@@ -1837,6 +2020,8 @@ export type Database = {
         | "manage_settings"
         | "view_settings"
       app_role: "admin" | "manager" | "member" | "super_admin" | "client"
+      calendar_event_status: "confirmed" | "cancelled" | "completed" | "no_show"
+      calendar_provider: "google_calendar" | "outlook_calendar"
       conversation_status: "active" | "human_takeover" | "closed"
       knowledge_source_type:
         | "url"
@@ -2003,6 +2188,8 @@ export const Constants = {
         "view_settings",
       ],
       app_role: ["admin", "manager", "member", "super_admin", "client"],
+      calendar_event_status: ["confirmed", "cancelled", "completed", "no_show"],
+      calendar_provider: ["google_calendar", "outlook_calendar"],
       conversation_status: ["active", "human_takeover", "closed"],
       knowledge_source_type: [
         "url",
