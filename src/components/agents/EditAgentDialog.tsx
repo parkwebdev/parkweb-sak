@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AgentConfigureTab } from './tabs/AgentConfigureTab';
 import { AgentToolsTab } from './tabs/AgentToolsTab';
-import { AgentKnowledgeTab } from './tabs/AgentKnowledgeTab';
+import { AgentDataSourcesTab } from './tabs/AgentDataSourcesTab';
 import { AgentEmbedTab } from './tabs/AgentEmbedTab';
 import type { Tables } from '@/integrations/supabase/types';
 
@@ -33,14 +33,14 @@ export const EditAgentDialog = ({ agent, open, onOpenChange, onUpdate }: EditAge
         <DialogHeader>
           <DialogTitle>Configure Agent: {agent.name}</DialogTitle>
           <DialogDescription>
-            Manage your agent's settings, tools, knowledge sources, and deployment.
+            Manage your agent's settings, tools, data sources, and deployment.
           </DialogDescription>
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="configure">Configure</TabsTrigger>
-            <TabsTrigger value="knowledge">Knowledge</TabsTrigger>
+            <TabsTrigger value="data-sources">Data Sources</TabsTrigger>
             <TabsTrigger value="tools">Tools</TabsTrigger>
             <TabsTrigger value="embed">Embed</TabsTrigger>
           </TabsList>
@@ -50,8 +50,8 @@ export const EditAgentDialog = ({ agent, open, onOpenChange, onUpdate }: EditAge
               <AgentConfigureTab agent={agent} onUpdate={onUpdate} />
             </TabsContent>
 
-            <TabsContent value="knowledge" className="mt-0">
-              <AgentKnowledgeTab agentId={agent.id} userId={agent.user_id} />
+            <TabsContent value="data-sources" className="mt-0">
+              <AgentDataSourcesTab agentId={agent.id} userId={agent.user_id} />
             </TabsContent>
 
             <TabsContent value="tools" className="mt-0">

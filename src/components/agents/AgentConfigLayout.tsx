@@ -2,15 +2,15 @@
  * AgentConfigLayout Component
  * 
  * Tab-based layout for agent configuration sections.
- * Includes Configure, Knowledge, Content, Tools, Integrations, and Embed tabs.
+ * Includes Configure, Data Sources, Content, Tools, Integrations, and Embed tabs.
  * @module components/agents/AgentConfigLayout
  */
 
 import React from 'react';
-import { Settings01 as Settings, Database01, GitBranch01, Code01, Announcement01, Link03, MarkerPin01 } from '@untitledui/icons';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Settings01 as Settings, Database01, GitBranch01, Code01, Announcement01, Link03 } from '@untitledui/icons';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-export type AgentConfigTab = 'configure' | 'knowledge' | 'tools' | 'integrations' | 'embed' | 'content' | 'locations';
+export type AgentConfigTab = 'configure' | 'data-sources' | 'tools' | 'integrations' | 'embed' | 'content';
 
 interface AgentConfigLayoutProps {
   activeTab: AgentConfigTab;
@@ -39,11 +39,11 @@ export const AgentConfigLayout: React.FC<AgentConfigLayoutProps> = ({
             </TabsTrigger>
             
             <TabsTrigger
-              value="knowledge"
+              value="data-sources"
               className="h-11 px-0 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none text-sm"
             >
               <Database01 size={14} className="mr-1.5" />
-              Knowledge
+              Data Sources
             </TabsTrigger>
             
             <TabsTrigger
@@ -52,14 +52,6 @@ export const AgentConfigLayout: React.FC<AgentConfigLayoutProps> = ({
             >
               <Announcement01 size={14} className="mr-1.5" />
               Content
-            </TabsTrigger>
-            
-            <TabsTrigger
-              value="locations"
-              className="h-11 px-0 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none text-sm"
-            >
-              <MarkerPin01 size={14} className="mr-1.5" />
-              Locations
             </TabsTrigger>
             
             <TabsTrigger

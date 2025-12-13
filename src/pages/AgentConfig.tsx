@@ -3,12 +3,11 @@ import { useParams } from 'react-router-dom';
 import { useAgents } from '@/hooks/useAgents';
 import { AgentConfigHeader } from '@/components/agents/AgentConfigHeader';
 import { AgentConfigureTab } from '@/components/agents/tabs/AgentConfigureTab';
-import { AgentKnowledgeTab } from '@/components/agents/tabs/AgentKnowledgeTab';
+import { AgentDataSourcesTab } from '@/components/agents/tabs/AgentDataSourcesTab';
 import { AgentToolsTab } from '@/components/agents/tabs/AgentToolsTab';
 import { AgentIntegrationsTab } from '@/components/agents/tabs/AgentIntegrationsTab';
 import { AgentEmbedTab } from '@/components/agents/tabs/AgentEmbedTab';
 import { AgentContentTab } from '@/components/agents/tabs/AgentContentTab';
-import { AgentLocationsTab } from '@/components/agents/tabs/AgentLocationsTab';
 import { AgentConfigLayout, type AgentConfigTab } from '@/components/agents/AgentConfigLayout';
 import { TabContentTransition } from '@/components/ui/tab-content-transition';
 import { LoadingState } from '@/components/ui/loading-state';
@@ -161,8 +160,8 @@ const AgentConfig: React.FC<AgentConfigProps> = ({ onMenuClick }) => {
                 onUpdate={handleUpdate}
               />
             )}
-            {activeTab === 'knowledge' && (
-              <AgentKnowledgeTab agentId={agent.id} userId={agent.user_id} />
+            {activeTab === 'data-sources' && (
+              <AgentDataSourcesTab agentId={agent.id} userId={agent.user_id} />
             )}
             {activeTab === 'tools' && (
               <AgentToolsTab agentId={agent.id} agent={agent} onUpdate={handleUpdate} />
@@ -172,9 +171,6 @@ const AgentConfig: React.FC<AgentConfigProps> = ({ onMenuClick }) => {
             )}
             {activeTab === 'content' && (
               <AgentContentTab />
-            )}
-            {activeTab === 'locations' && (
-              <AgentLocationsTab agentId={agent.id} userId={agent.user_id} />
             )}
           </TabContentTransition>
         )}
