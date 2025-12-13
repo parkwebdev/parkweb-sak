@@ -1,12 +1,30 @@
 # Native Booking System: Complete Architecture & Implementation Plan
 
 > **Last Updated**: December 2024  
-> **Status**: Complete (Phase 7 Finished)  
+> **Status**: ✅ Complete (Phases 1-7 Implemented, OAuth Configuration Pending)  
 > **Priority**: High  
-> **Estimated Timeline**: 4-6 weeks  
 > **Related**: [AI Architecture](./AI_ARCHITECTURE.md), [Database Schema](./DATABASE_SCHEMA.md), [Social Channel Integrations](./SOCIAL_CHANNEL_INTEGRATIONS.md)
 
 This document provides the complete implementation blueprint for ChatPad's native booking system, enabling AI agents to intelligently route inquiries across multiple communities, maintain real-time property listings, check calendar availability, and book tours autonomously.
+
+---
+
+## Configuration Required
+
+Before the booking system is fully operational, the following must be configured:
+
+### OAuth Secrets (Supabase Edge Function Secrets)
+| Secret | Description |
+|--------|-------------|
+| `GOOGLE_CLIENT_ID` | Google OAuth client ID |
+| `GOOGLE_CLIENT_SECRET` | Google OAuth client secret |
+| `OUTLOOK_CLIENT_ID` | Microsoft OAuth client ID |
+| `OUTLOOK_CLIENT_SECRET` | Microsoft OAuth client secret |
+
+### Data Requirements
+- **Properties:** Sync properties via WordPress integration or manual entry to populate `properties` table
+- **Calendar Accounts:** Connect Google/Outlook calendars via Integrations tab to populate `connected_accounts` table
+- **Locations:** Create locations with business hours configured
 
 ---
 
@@ -20,7 +38,7 @@ This document provides the complete implementation blueprint for ChatPad's nativ
 6. [Phase 1: Living Data Sources Foundation](#phase-1-living-data-sources-foundation) ✅ Complete
 7. [Phase 2: Unified Data Sources Tab](#phase-2-unified-data-sources-tab) ✅ Complete
 8. [Phase 3: WordPress Site Connector](#phase-3-wordpress-site-connector) ✅ Complete
-9. [Phase 4: Home/Property Sync](#phase-4-homeproperty-sync) ✅ Complete
+9. [Phase 4: Home/Property Sync](#phase-4-homeproperty-sync) ✅ Schema Ready (Awaiting Data Sync)
 10. [Phase 5: Smart Widget Detection](#phase-5-smart-widget-detection) ✅ Complete
 11. [Phase 6: AI Booking Tools](#phase-6-ai-booking-tools) ✅ Complete
 12. [Phase 7: Polish & Optimization](#phase-7-polish--optimization) ✅ Complete
