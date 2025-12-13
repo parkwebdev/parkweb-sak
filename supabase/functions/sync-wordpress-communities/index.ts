@@ -90,10 +90,20 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // Check account access (owner or team member)
-    const { data: hasAccess } = await supabase.rpc('has_account_access', {
-      account_owner_id: agent.user_id
-    });
+    // Check account access (owner or team member) - direct check since RPC uses auth.uid() which isn't set with service role
+    let hasAccess = user.id === agent.user_id;
+    
+    if (!hasAccess) {
+      // Check if user is a team member
+      const { data: teamMember } = await supabase
+        .from('team_members')
+        .select('id')
+        .eq('owner_id', agent.user_id)
+        .eq('member_id', user.id)
+        .maybeSingle();
+      
+      hasAccess = !!teamMember;
+    }
 
     if (!hasAccess) {
       return new Response(
