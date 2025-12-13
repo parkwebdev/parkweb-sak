@@ -61,12 +61,13 @@ export const CalendarConnections: React.FC<CalendarConnectionsProps> = ({
 
       // Listen for OAuth callback message
       const handleMessage = async (event: MessageEvent) => {
-        if (event.data?.type === 'oauth-callback' && event.data?.provider === provider) {
+        if (event.data?.type === 'oauth-callback') {
           popup?.close();
           window.removeEventListener('message', handleMessage);
+          setConnecting(null);
           
           if (event.data.success) {
-            toast.success(`${provider === 'google' ? 'Google Calendar' : 'Outlook Calendar'} connected`);
+            toast.success(`${event.data.provider || (provider === 'google' ? 'Google Calendar' : 'Outlook Calendar')} connected`);
           } else {
             toast.error('Failed to connect calendar', { description: event.data.error });
           }
@@ -86,7 +87,6 @@ export const CalendarConnections: React.FC<CalendarConnectionsProps> = ({
     } catch (error) {
       console.error('OAuth initiation error:', error);
       toast.error('Failed to start calendar connection');
-    } finally {
       setConnecting(null);
     }
   };

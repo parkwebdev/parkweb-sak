@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Connecting Calendar...</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #fafafa;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .container {
+      text-align: center;
+      padding: 2rem;
+      max-width: 400px;
+    }
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 3px solid #e5e7eb;
+      border-top-color: #6366f1;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 1.5rem;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    h1 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #111827;
+      margin-bottom: 0.5rem;
+    }
+    p {
+      color: #6b7280;
+      font-size: 0.875rem;
+    }
+    .error {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-top: 1rem;
+    }
+    .error h2 {
+      color: #dc2626;
+      font-size: 1rem;
+      margin-bottom: 0.5rem;
+    }
+    .error p {
+      color: #991b1b;
+    }
+    .success {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-top: 1rem;
+    }
+    .success h2 {
+      color: #16a34a;
+      font-size: 1rem;
+      margin-bottom: 0.5rem;
+    }
+    .success p {
+      color: #166534;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="loading">
+      <div class="spinner"></div>
+      <h1>Connecting your calendar...</h1>
+      <p>Please wait while we complete the authorization.</p>
+    </div>
+    <div id="result" style="display: none;"></div>
+  </div>
+
+  <script>
+    (async function() {
+      const loadingEl = document.getElementById('loading');
+      const resultEl = document.getElementById('result');
+      
+      function showError(message) {
+        loadingEl.style.display = 'none';
+        resultEl.style.display = 'block';
+        resultEl.innerHTML = `
+          <div class="error">
+            <h2>Connection Failed</h2>
+            <p>${message}</p>
+            <p style="margin-top: 0.5rem;">You can close this window and try again.</p>
+          </div>
+        `;
+        // Notify parent window of failure
+        if (window.opener) {
+          window.opener.postMessage({ type: 'oauth-callback', success: false, error: message }, '*');
+        }
+      }
+      
+      function showSuccess(provider) {
+        loadingEl.style.display = 'none';
+        resultEl.style.display = 'block';
+        resultEl.innerHTML = `
+          <div class="success">
+            <h2>Calendar Connected!</h2>
+            <p>Your ${provider} calendar has been successfully connected.</p>
+            <p style="margin-top: 0.5rem;">This window will close automatically...</p>
+          </div>
+        `;
+        // Notify parent window of success
+        if (window.opener) {
+          window.opener.postMessage({ type: 'oauth-callback', success: true, provider }, '*');
+        }
+        // Close the popup after a short delay
+        setTimeout(() => window.close(), 1500);
+      }
+      
+      try {
+        // Extract parameters from URL
+        const params = new URLSearchParams(window.location.search);
+        const code = params.get('code');
+        const state = params.get('state');
+        const error = params.get('error');
+        const errorDescription = params.get('error_description');
+        
+        // Check for OAuth errors
+        if (error) {
+          showError(errorDescription || error);
+          return;
+        }
+        
+        if (!code) {
+          showError('No authorization code received.');
+          return;
+        }
+        
+        if (!state) {
+          showError('No state parameter received.');
+          return;
+        }
+        
+        // Parse state to get provider and other data
+        let stateData;
+        try {
+          stateData = JSON.parse(atob(state));
+        } catch (e) {
+          showError('Invalid state parameter.');
+          return;
+        }
+        
+        const { provider, agentId, locationId, userId } = stateData;
+        
+        if (!provider || !agentId || !userId) {
+          showError('Missing required state parameters.');
+          return;
+        }
+        
+        // Determine which edge function to call
+        const functionName = provider === 'google' ? 'google-calendar-auth' : 'outlook-calendar-auth';
+        const supabaseUrl = 'https://mvaimvwdukpgvkifkfpa.supabase.co';
+        
+        // Call the edge function to complete the OAuth flow
+        const response = await fetch(`${supabaseUrl}/functions/v1/${functionName}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            action: 'callback',
+            code,
+            state,
+            agentId,
+            locationId,
+            userId,
+          }),
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok || data.error) {
+          showError(data.error || 'Failed to complete calendar connection.');
+          return;
+        }
+        
+        // Success!
+        const providerName = provider === 'google' ? 'Google Calendar' : 'Outlook Calendar';
+        showSuccess(providerName);
+        
+      } catch (err) {
+        console.error('OAuth callback error:', err);
+        showError('An unexpected error occurred. Please try again.');
+      }
+    })();
+  </script>
+</body>
+</html>

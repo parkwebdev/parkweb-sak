@@ -72,6 +72,7 @@ Deno.serve(async (req) => {
 
         // Create state parameter with location and agent info
         const stateData = JSON.stringify({
+          provider: 'outlook',
           locationId: locationId || null,
           agentId,
           userId,
