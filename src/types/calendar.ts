@@ -2,10 +2,16 @@
  * Calendar Type Definitions
  * 
  * Type-safe interfaces for calendar events, recurrence rules,
- * and booking management features.
+ * booking management, and connected account management.
  * 
  * @module types/calendar
  */
+
+/** Calendar provider types for OAuth connections */
+export type CalendarProvider = 'google_calendar' | 'outlook_calendar';
+
+/** Calendar event status options */
+export type CalendarEventStatus = 'confirmed' | 'cancelled' | 'completed' | 'no_show';
 
 /** Recurrence frequency options for repeating events */
 export type RecurrenceFrequency = 'daily' | 'weekly' | 'monthly' | 'yearly';
