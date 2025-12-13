@@ -65,54 +65,62 @@ export const useConnectedAccounts = (locationId?: string, agentId?: string) => {
     }
   }, [locationId, agentId]);
 
-  // Initial fetch and real-time subscription
+  // Initial fetch and real-time subscription (deferred to prevent UI blocking)
   useEffect(() => {
     if (!agentId) return;
 
-    fetchAccounts();
+    let channel: ReturnType<typeof supabase.channel> | null = null;
 
-    // Subscribe to real-time updates
-    const filter = locationId
-      ? `agent_id=eq.${agentId},location_id=eq.${locationId}`
-      : `agent_id=eq.${agentId}`;
+    // Defer subscription setup to prevent blocking UI
+    const timeoutId = setTimeout(() => {
+      fetchAccounts();
 
-    const channel = supabase
-      .channel(`connected-accounts-${agentId}-${locationId || 'all'}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'connected_accounts',
-          filter,
-        },
-        (payload) => {
-          if (payload.eventType === 'INSERT') {
-            setAccounts((prev) => {
-              if (prev.some((a) => a.id === (payload.new as ConnectedAccount).id)) {
-                return prev;
-              }
-              return [...prev, payload.new as ConnectedAccount];
-            });
-          } else if (payload.eventType === 'UPDATE') {
-            setAccounts((prev) =>
-              prev.map((a) =>
-                a.id === (payload.new as ConnectedAccount).id
-                  ? (payload.new as ConnectedAccount)
-                  : a
-              )
-            );
-          } else if (payload.eventType === 'DELETE') {
-            setAccounts((prev) =>
-              prev.filter((a) => a.id !== (payload.old as { id: string }).id)
-            );
+      // Subscribe to real-time updates
+      const filter = locationId
+        ? `agent_id=eq.${agentId},location_id=eq.${locationId}`
+        : `agent_id=eq.${agentId}`;
+
+      channel = supabase
+        .channel(`connected-accounts-${agentId}-${locationId || 'all'}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'connected_accounts',
+            filter,
+          },
+          (payload) => {
+            if (payload.eventType === 'INSERT') {
+              setAccounts((prev) => {
+                if (prev.some((a) => a.id === (payload.new as ConnectedAccount).id)) {
+                  return prev;
+                }
+                return [...prev, payload.new as ConnectedAccount];
+              });
+            } else if (payload.eventType === 'UPDATE') {
+              setAccounts((prev) =>
+                prev.map((a) =>
+                  a.id === (payload.new as ConnectedAccount).id
+                    ? (payload.new as ConnectedAccount)
+                    : a
+                )
+              );
+            } else if (payload.eventType === 'DELETE') {
+              setAccounts((prev) =>
+                prev.filter((a) => a.id !== (payload.old as { id: string }).id)
+              );
+            }
           }
-        }
-      )
-      .subscribe();
+        )
+        .subscribe();
+    }, 100);
 
     return () => {
-      supabase.removeChannel(channel);
+      clearTimeout(timeoutId);
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
     };
   }, [agentId, locationId, fetchAccounts]);
 
