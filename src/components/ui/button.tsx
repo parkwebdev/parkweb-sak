@@ -2,7 +2,7 @@
  * Button Component
  * 
  * A versatile button component with multiple variants, sizes, and loading states.
- * Built on Radix UI Slot for composition.
+ * Built on Radix UI Slot for composition with Framer Motion micro-interactions.
  * 
  * @module components/ui/button
  */
@@ -10,9 +10,12 @@
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
+import { motion } from "motion/react"
 
 import { cn } from "@/lib/utils"
 import { Spinner } from "./spinner"
+import { useReducedMotion } from "@/hooks/useReducedMotion"
+import { tapScale } from "@/lib/motion-variants"
 
 /**
  * Button variant styles using class-variance-authority
@@ -63,18 +66,34 @@ export interface ButtonProps
  * Button component with variants for different use cases.
  */
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, loading = false, disabled, children, ...props }, ref) => {
-    const Comp = asChild ? Slot : "button"
+  ({ className, variant, size, asChild = false, loading = false, disabled, children, onClick, ...props }, ref) => {
+    const prefersReducedMotion = useReducedMotion();
+    
+    // For asChild, use Slot without motion wrapper
+    if (asChild) {
+      return (
+        <Slot
+          className={cn(buttonVariants({ variant, size, className }))}
+          ref={ref}
+          onClick={onClick}
+          {...props}
+        >
+          {children}
+        </Slot>
+      )
+    }
     
     return (
-      <Comp
+      <motion.button
         className={cn(buttonVariants({ variant, size, className }))}
         ref={ref}
         disabled={disabled || loading}
-        {...props}
+        onClick={onClick}
+        whileTap={prefersReducedMotion || disabled || loading ? undefined : tapScale}
+        transition={{ duration: 0.1 }}
       >
         {loading ? <Spinner size="sm" /> : children}
-      </Comp>
+      </motion.button>
     )
   }
 )
