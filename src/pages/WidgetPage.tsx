@@ -48,6 +48,9 @@ const getDefaultConfig = (agentId: string): WidgetConfig => ({
   allowedFileTypes: ['image/*', 'application/pdf'],
   enableMessageReactions: true,
   showReadReceipts: false,
+  // Phase 5: Location detection
+  locations: [],
+  enableAutoLocationDetection: true,
 });
 
 const WidgetPage = () => {
@@ -128,6 +131,11 @@ const WidgetPage = () => {
           helpArticles: data.helpArticles || [],
           helpCategories: data.helpCategories || [],
           newsItems: data.newsItems || [],
+          // Phase 5: Location detection
+          locations: data.locations || [],
+          wordpressSiteUrl: data.wordpressSiteUrl,
+          defaultLocationSlug: data.defaultLocationSlug,
+          enableAutoLocationDetection: data.enableAutoLocationDetection ?? true,
         };
         
         setConfig(widgetConfig);

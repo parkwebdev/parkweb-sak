@@ -209,6 +209,9 @@
         position: config.position || 'bottom-right',
         primaryColor: config.primaryColor || '#3b82f6',
         appUrl: config.appUrl || SUPABASE_URL,
+        // Location detection attributes (Phase 5)
+        wordpressSiteUrl: config.wordpressSiteUrl || null,
+        locationSlug: config.locationSlug || null,
       };
       this.isOpen = false;
       this.container = null;
@@ -378,12 +381,20 @@
       if (this.iframeLoaded) return;
       this.iframeLoaded = true;
       
-      // Build iframe URL with config params
+      // Build iframe URL with config params including location detection
       const params = new URLSearchParams({
         agentId: this.config.agentId,
         position: this.config.position,
         primaryColor: this.config.primaryColor,
       });
+      
+      // Add optional location params for Phase 5
+      if (this.config.wordpressSiteUrl) {
+        params.set('wpSite', this.config.wordpressSiteUrl);
+      }
+      if (this.config.locationSlug) {
+        params.set('location', this.config.locationSlug);
+      }
       
       this.iframe = document.createElement('iframe');
       this.iframe.className = 'chatpad-widget-iframe';
@@ -553,6 +564,9 @@
       position: currentScript.getAttribute('data-position') || 'bottom-right',
       primaryColor: currentScript.getAttribute('data-primary-color') || '#3b82f6',
       appUrl: currentScript.getAttribute('data-app-url') || SUPABASE_URL,
+      // Location detection attributes (Phase 5)
+      wordpressSiteUrl: currentScript.getAttribute('data-wordpress-site') || null,
+      locationSlug: currentScript.getAttribute('data-location') || null,
     };
     
     const widget = new ChatPadWidget(config);

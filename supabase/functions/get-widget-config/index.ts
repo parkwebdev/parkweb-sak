@@ -26,7 +26,7 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // OPTIMIZED: Run all queries in parallel for faster response
-    const [agentResult, announcementsResult, categoriesResult, articlesResult, newsResult] = await Promise.all([
+    const [agentResult, announcementsResult, categoriesResult, articlesResult, newsResult, locationsResult] = await Promise.all([
       // Fetch agent details and deployment config
       supabase
         .from('agents')
@@ -63,6 +63,14 @@ Deno.serve(async (req) => {
         .eq('agent_id', agentId)
         .eq('is_published', true)
         .order('published_at', { ascending: false }),
+      
+      // Fetch active locations for Phase 5 location picker
+      supabase
+        .from('locations')
+        .select('id, name, wordpress_slug, city, state')
+        .eq('agent_id', agentId)
+        .eq('is_active', true)
+        .order('name'),
     ]);
 
     const { data: agent, error: agentError } = agentResult;
@@ -70,6 +78,7 @@ Deno.serve(async (req) => {
     const { data: categories, error: categoriesError } = categoriesResult;
     const { data: articles, error: articlesError } = articlesResult;
     const { data: newsItems, error: newsError } = newsResult;
+    const { data: locations, error: locationsError } = locationsResult;
 
     if (agentError || !agent) {
       console.error('Agent fetch error:', agentError);
@@ -93,6 +102,10 @@ Deno.serve(async (req) => {
 
     if (newsError) {
       console.error('News items fetch error:', newsError);
+    }
+
+    if (locationsError) {
+      console.error('Locations fetch error:', locationsError);
     }
 
     const deploymentConfig = (agent.deployment_config || {}) as { embedded_chat?: Record<string, unknown> };
@@ -185,6 +198,18 @@ Deno.serve(async (req) => {
         cta_secondary_label: item.cta_secondary_label,
         cta_secondary_url: item.cta_secondary_url,
       })),
+      
+      // Phase 5: Location detection data
+      locations: (locations || []).map(loc => ({
+        id: loc.id,
+        name: loc.name,
+        slug: loc.wordpress_slug,
+        city: loc.city,
+        state: loc.state,
+      })),
+      wordpressSiteUrl: embeddedChatConfig.wordpressSiteUrl || null,
+      defaultLocationSlug: embeddedChatConfig.defaultLocationSlug || null,
+      enableAutoLocationDetection: embeddedChatConfig.enableAutoLocationDetection !== false,
     };
 
     return new Response(

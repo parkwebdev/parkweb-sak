@@ -93,6 +93,11 @@ export interface EmbeddedChatConfig {
   
   // AI Behavior
   enableQuickReplies: boolean;
+  
+  // Location Detection (Phase 5)
+  wordpressSiteUrl?: string;
+  defaultLocationSlug?: string;
+  enableAutoLocationDetection: boolean;
 }
 
 export const useEmbeddedChatConfig = (agentId: string) => {
@@ -166,6 +171,11 @@ export const useEmbeddedChatConfig = (agentId: string) => {
     
     // AI Behavior
     enableQuickReplies: true,
+    
+    // Location Detection
+    wordpressSiteUrl: '',
+    defaultLocationSlug: '',
+    enableAutoLocationDetection: true,
   });
 
   const [config, setConfig] = useState<EmbeddedChatConfig>(getDefaultConfig());
@@ -274,13 +284,24 @@ export const useEmbeddedChatConfig = (agentId: string) => {
   const generateEmbedCode = (): string => {
     const scriptUrl = `https://mvaimvwdukpgvkifkfpa.supabase.co/functions/v1/serve-widget`;
     
+    // Build optional attributes for location detection
+    const locationAttrs: string[] = [];
+    if (config.wordpressSiteUrl) {
+      locationAttrs.push(`  data-wordpress-site="${config.wordpressSiteUrl}"`);
+    }
+    if (config.defaultLocationSlug) {
+      locationAttrs.push(`  data-location="${config.defaultLocationSlug}"`);
+    }
+    
+    const optionalAttrs = locationAttrs.length > 0 ? '\n' + locationAttrs.join('\n') : '';
+    
     // Simplified embed code - config loaded dynamically from edge function
     return `<!-- ChatPad Widget -->
 <script
   src="${scriptUrl}"
   data-agent-id="${agentId}"
   data-primary-color="${config.primaryColor}"
-  data-position="${config.position}"
+  data-position="${config.position}"${optionalAttrs}
 ></script>`;
   };
 

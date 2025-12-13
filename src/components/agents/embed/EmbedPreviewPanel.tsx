@@ -93,6 +93,11 @@ export const EmbedPreviewPanel = ({ config }: EmbedPreviewPanelProps) => {
     enableMessageReactions: true,
     showReadReceipts: true,
     showBranding: config.showBranding,
+    // Phase 5: Location detection
+    locations: [],
+    wordpressSiteUrl: config.wordpressSiteUrl,
+    defaultLocationSlug: config.defaultLocationSlug,
+    enableAutoLocationDetection: config.enableAutoLocationDetection ?? true,
   };
 
   return (

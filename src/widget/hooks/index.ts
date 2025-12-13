@@ -45,3 +45,6 @@ export { useKeyboardHeight } from './useKeyboardHeight';
 
 /** System theme detection for mobile dark mode updates */
 export { useSystemTheme } from './useSystemTheme';
+
+/** Smart location detection from URL patterns and WordPress API */
+export { useLocationDetection } from './useLocationDetection';

@@ -127,6 +127,11 @@ const AgentConfig: React.FC<AgentConfigProps> = ({ onMenuClick }) => {
     enableMessageReactions: true,
     showReadReceipts: true,
     showBranding: embedConfig.showBranding,
+    // Phase 5: Location detection
+    locations: [],
+    wordpressSiteUrl: embedConfig.wordpressSiteUrl,
+    defaultLocationSlug: embedConfig.defaultLocationSlug,
+    enableAutoLocationDetection: embedConfig.enableAutoLocationDetection ?? true,
   } : null;
 
   if (!agent) {
