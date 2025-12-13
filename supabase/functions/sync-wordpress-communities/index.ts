@@ -24,15 +24,120 @@ interface WordPressCommunity {
   id: number;
   slug: string;
   title: { rendered: string };
-  acf?: {
-    address?: string;
-    city?: string;
-    state?: string;
-    zip?: string;
-    phone?: string;
-    email?: string;
-    timezone?: string;
-  };
+  acf?: Record<string, unknown>;
+}
+
+/**
+ * Intelligently extract a field from ACF data by searching for keywords
+ * Handles prefixed fields like "community_city" when looking for "city"
+ */
+function extractAcfField(acf: Record<string, unknown> | undefined, ...keywords: string[]): string | null {
+  if (!acf) return null;
+  
+  const keys = Object.keys(acf);
+  
+  for (const keyword of keywords) {
+    const lowerKeyword = keyword.toLowerCase();
+    
+    // Priority 1: Exact match
+    const exactMatch = keys.find(k => k.toLowerCase() === lowerKeyword);
+    if (exactMatch && acf[exactMatch] != null && acf[exactMatch] !== '') {
+      return String(acf[exactMatch]);
+    }
+    
+    // Priority 2: Ends with keyword (e.g., "community_city" ends with "city")
+    const suffixMatch = keys.find(k => k.toLowerCase().endsWith(`_${lowerKeyword}`) || k.toLowerCase().endsWith(lowerKeyword));
+    if (suffixMatch && acf[suffixMatch] != null && acf[suffixMatch] !== '') {
+      return String(acf[suffixMatch]);
+    }
+    
+    // Priority 3: Contains keyword (e.g., "phone_number" contains "phone")
+    const containsMatch = keys.find(k => k.toLowerCase().includes(lowerKeyword));
+    if (containsMatch && acf[containsMatch] != null && acf[containsMatch] !== '') {
+      return String(acf[containsMatch]);
+    }
+  }
+  
+  return null;
+}
+
+/**
+ * Extract numeric field from ACF data
+ */
+function extractAcfNumber(acf: Record<string, unknown> | undefined, ...keywords: string[]): number | null {
+  const value = extractAcfField(acf, ...keywords);
+  if (!value) return null;
+  const num = parseFloat(value.replace(/[^0-9.-]/g, ''));
+  return isNaN(num) ? null : num;
+}
+
+/**
+ * Infer timezone from state - supports abbreviations and full names
+ * Uses latitude/longitude if available for more accuracy
+ */
+function inferTimezone(
+  state: string | null, 
+  latitude?: number | null, 
+  longitude?: number | null
+): string {
+  // If we have coordinates, use longitude-based detection (more accurate)
+  if (longitude != null) {
+    // Rough US timezone boundaries by longitude
+    if (longitude >= -67 && longitude < -71) return 'America/New_York'; // Eastern edge
+    if (longitude >= -71 && longitude < -85) return 'America/New_York'; // Eastern
+    if (longitude >= -85 && longitude < -100) return 'America/Chicago'; // Central
+    if (longitude >= -100 && longitude < -115) return 'America/Denver'; // Mountain
+    if (longitude >= -115 && longitude < -125) return 'America/Los_Angeles'; // Pacific
+    if (longitude >= -125 && longitude < -140) return 'America/Anchorage'; // Alaska
+    if (longitude >= -155 && longitude < -162) return 'Pacific/Honolulu'; // Hawaii
+  }
+  
+  if (!state) return 'America/New_York';
+  
+  const normalized = state.toLowerCase().trim();
+  
+  // Map state names and abbreviations to timezones
+  // Eastern Time
+  const eastern = ['ct', 'connecticut', 'de', 'delaware', 'fl', 'florida', 'ga', 'georgia', 
+    'me', 'maine', 'md', 'maryland', 'ma', 'massachusetts', 'mi', 'michigan', 
+    'nh', 'new hampshire', 'nj', 'new jersey', 'ny', 'new york', 'nc', 'north carolina',
+    'oh', 'ohio', 'pa', 'pennsylvania', 'ri', 'rhode island', 'sc', 'south carolina',
+    'vt', 'vermont', 'va', 'virginia', 'wv', 'west virginia', 'dc', 'district of columbia'];
+  
+  // Central Time
+  const central = ['al', 'alabama', 'ar', 'arkansas', 'il', 'illinois', 'ia', 'iowa',
+    'ks', 'kansas', 'ky', 'kentucky', 'la', 'louisiana', 'mn', 'minnesota', 
+    'ms', 'mississippi', 'mo', 'missouri', 'ne', 'nebraska', 'nd', 'north dakota',
+    'ok', 'oklahoma', 'sd', 'south dakota', 'tn', 'tennessee', 'tx', 'texas', 'wi', 'wisconsin'];
+  
+  // Mountain Time
+  const mountain = ['co', 'colorado', 'id', 'idaho', 'mt', 'montana', 'nm', 'new mexico',
+    'ut', 'utah', 'wy', 'wyoming'];
+  
+  // Pacific Time
+  const pacific = ['ca', 'california', 'nv', 'nevada', 'or', 'oregon', 'wa', 'washington'];
+  
+  // Special cases
+  if (normalized === 'az' || normalized === 'arizona') return 'America/Phoenix'; // No DST
+  if (normalized === 'hi' || normalized === 'hawaii') return 'Pacific/Honolulu';
+  if (normalized === 'ak' || normalized === 'alaska') return 'America/Anchorage';
+  if (normalized === 'in' || normalized === 'indiana') return 'America/Indiana/Indianapolis';
+  
+  if (eastern.includes(normalized)) return 'America/New_York';
+  if (central.includes(normalized)) return 'America/Chicago';
+  if (mountain.includes(normalized)) return 'America/Denver';
+  if (pacific.includes(normalized)) return 'America/Los_Angeles';
+  
+  return 'America/New_York'; // Default fallback
+}
+
+/**
+ * Extract ZIP code from full address if not provided separately
+ */
+function extractZipFromAddress(address: string | null): string | null {
+  if (!address) return null;
+  const match = address.match(/\b(\d{5})(-\d{4})?\b/);
+  return match ? match[1] : null;
 }
 
 interface SyncResult {
@@ -358,19 +463,43 @@ async function syncCommunitiesToLocations(
 
   for (const community of communities) {
     try {
+      // Intelligently extract fields from ACF data
+      const acf = community.acf;
+      const address = extractAcfField(acf, 'full_address', 'address', 'street');
+      const city = extractAcfField(acf, 'city');
+      const state = extractAcfField(acf, 'state');
+      const zip = extractAcfField(acf, 'zip', 'zipcode', 'postal', 'postal_code') || extractZipFromAddress(address);
+      const phone = extractAcfField(acf, 'phone', 'telephone', 'tel', 'phone_number');
+      const email = extractAcfField(acf, 'email', 'mail', 'email_address');
+      const latitude = extractAcfNumber(acf, 'latitude', 'lat');
+      const longitude = extractAcfNumber(acf, 'longitude', 'lng', 'long');
+      
+      // Auto-detect timezone from state or coordinates
+      const timezone = inferTimezone(state, latitude, longitude);
+      
+      // Build metadata with any extra fields we find
+      const metadata: Record<string, unknown> = {};
+      if (latitude != null) metadata.latitude = latitude;
+      if (longitude != null) metadata.longitude = longitude;
+      const ageCategory = extractAcfField(acf, 'age', 'age_category', 'age_restriction');
+      if (ageCategory) metadata.age_category = ageCategory;
+      const communityType = extractAcfField(acf, 'type', 'community_type');
+      if (communityType) metadata.community_type = communityType;
+
       const locationData = {
         agent_id: agentId,
         user_id: userId,
         name: decodeHtmlEntities(community.title.rendered),
         wordpress_community_id: community.id,
         wordpress_slug: community.slug,
-        address: community.acf?.address || null,
-        city: community.acf?.city || null,
-        state: community.acf?.state || null,
-        zip: community.acf?.zip || null,
-        phone: community.acf?.phone || null,
-        email: community.acf?.email || null,
-        timezone: community.acf?.timezone || 'America/New_York',
+        address,
+        city,
+        state,
+        zip,
+        phone,
+        email,
+        timezone,
+        metadata: Object.keys(metadata).length > 0 ? metadata : null,
         is_active: true,
         updated_at: new Date().toISOString(),
       };
