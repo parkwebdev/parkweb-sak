@@ -2,7 +2,7 @@
  * Button Component
  * 
  * A versatile button component with multiple variants, sizes, and loading states.
- * Built on Radix UI Slot for composition and Framer Motion for animations.
+ * Built on Radix UI Slot for composition.
  * 
  * @module components/ui/button
  */
@@ -10,7 +10,6 @@
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
-import { motion } from "motion/react"
 
 import { cn } from "@/lib/utils"
 import { Spinner } from "./spinner"
@@ -49,16 +48,10 @@ const buttonVariants = cva(
 )
 
 /**
- * Props that conflict between React and Framer Motion
- * @internal
- */
-type ConflictingProps = 'onAnimationStart' | 'onDragStart' | 'onDragEnd' | 'onDrag'
-
-/**
  * Button component props
  */
 export interface ButtonProps
-  extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, ConflictingProps>,
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
   /** Render as child component using Radix Slot */
   asChild?: boolean
@@ -68,51 +61,20 @@ export interface ButtonProps
 
 /**
  * Button component with variants for different use cases.
- * 
- * @example
- * // Default button
- * <Button>Click me</Button>
- * 
- * @example
- * // Destructive button with loading state
- * <Button variant="destructive" loading={isDeleting}>
- *   Delete
- * </Button>
- * 
- * @example
- * // Button as link using asChild
- * <Button asChild>
- *   <Link to="/dashboard">Go to Dashboard</Link>
- * </Button>
  */
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, loading = false, disabled, children, ...props }, ref) => {
     const Comp = asChild ? Slot : "button"
     
-    // When asChild is true, Slot requires exactly one child element
-    // Don't show loading spinner or motion when asChild is used
-    if (asChild) {
-      return (
-        <Comp
-          className={cn(buttonVariants({ variant, size, className }))}
-          ref={ref}
-          disabled={disabled || loading}
-          {...props}
-        >
-          {children}
-        </Comp>
-      )
-    }
-
     return (
-      <motion.button
+      <Comp
         className={cn(buttonVariants({ variant, size, className }))}
         ref={ref}
         disabled={disabled || loading}
         {...props}
       >
         {loading ? <Spinner size="sm" /> : children}
-      </motion.button>
+      </Comp>
     )
   }
 )

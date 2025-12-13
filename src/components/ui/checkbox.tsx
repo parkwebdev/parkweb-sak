@@ -2,98 +2,49 @@
  * Checkbox Component
  * 
  * An animated checkbox with smooth check mark animation.
- * Built on Radix UI Checkbox primitive with Framer Motion.
+ * Built on Radix UI Checkbox primitive with CSS transitions.
  * 
  * @module components/ui/checkbox
- * 
- * @example
- * ```tsx
- * <Checkbox checked={isChecked} onCheckedChange={setIsChecked} />
- * ```
  */
 "use client"
 
-import React from "react"
+import * as React from "react"
 import * as CheckboxPrimitive from "@radix-ui/react-checkbox"
-import { motion } from "motion/react"
 
 import { cn } from "@/lib/utils"
-import { useControlledState } from "@/hooks/use-controlled-state"
 
-export function Checkbox({
-  className,
-  checked: checkedProp,
-  onCheckedChange,
-  disabled,
-  defaultChecked,
-  ...props
-}: React.ComponentProps<typeof CheckboxPrimitive.Root>) {
-  const [checked, setChecked] = useControlledState({
-    value: checkedProp,
-    defaultValue: defaultChecked ?? false,
-    onChange: onCheckedChange,
-  })
-
-  return (
-    <motion.div>
-      <CheckboxPrimitive.Root
-        checked={checked}
-        onCheckedChange={setChecked}
-        disabled={disabled}
-        className={cn(
-          "border-input focus-visible:border-ring focus-visible:ring-ring aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive hover:border-primary/20 flex size-4 shrink-0 items-center justify-center rounded-[4px] border transition-all duration-200 outline-none hover:shadow-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50",
-          className,
-        )}
-        {...props}
+export const Checkbox = React.forwardRef<
+  React.ElementRef<typeof CheckboxPrimitive.Root>,
+  React.ComponentPropsWithoutRef<typeof CheckboxPrimitive.Root>
+>(({ className, ...props }, ref) => (
+  <CheckboxPrimitive.Root
+    ref={ref}
+    className={cn(
+      "peer size-4 shrink-0 rounded-[4px] border border-input bg-background transition-colors duration-150",
+      "hover:border-primary/50 hover:shadow-sm",
+      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+      "disabled:cursor-not-allowed disabled:opacity-50",
+      "data-[state=checked]:bg-primary data-[state=checked]:border-primary data-[state=checked]:text-primary-foreground",
+      className
+    )}
+    {...props}
+  >
+    <CheckboxPrimitive.Indicator className="flex items-center justify-center text-current">
+      <svg
+        className="size-3"
+        viewBox="0 0 12 12"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
       >
-        <motion.svg
-          className="h-full w-full"
-          viewBox="0 0 12 12"
-          fill="none"
-          initial={false}
-          style={{ scale: 1, opacity: 1 }}
-        >
-          <motion.path
-            d="M2.5 6L4.5 8L9.5 3"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            fill="none"
-            animate={checked ? "checked" : "unchecked"}
-            variants={{
-              checked: {
-                pathLength: 1,
-                strokeDasharray: "1 1",
-                opacity: 1,
-                transition: {
-                  pathLength: { duration: 0.2, ease: "easeInOut", delay: 0.1 },
-                  strokeDasharray: {
-                    duration: 0.2,
-                    ease: "easeInOut",
-                    delay: 0.1,
-                  },
-                  opacity: { duration: 0.1, ease: "easeInOut" },
-                },
-              },
-              unchecked: {
-                pathLength: 0,
-                strokeDasharray: "0 1",
-                opacity: 0,
-                transition: {
-                  pathLength: { duration: 0.3, ease: "easeInOut" },
-                  strokeDasharray: {
-                    duration: 0.3,
-                    ease: "easeInOut",
-                    delay: 0.1,
-                  },
-                  opacity: { duration: 0.3, ease: "easeInOut", delay: 0.1 },
-                },
-              },
-            }}
-          />
-        </motion.svg>
-      </CheckboxPrimitive.Root>
-    </motion.div>
-  )
-}
+        <path
+          d="M2.5 6L4.5 8L9.5 3"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </CheckboxPrimitive.Indicator>
+  </CheckboxPrimitive.Root>
+))
+Checkbox.displayName = CheckboxPrimitive.Root.displayName
