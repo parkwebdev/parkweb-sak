@@ -125,6 +125,484 @@ const MODEL_TIERS = {
   // premium uses agent's configured model
 } as const;
 
+// ============================================
+// PHASE 6: BOOKING TOOLS DEFINITIONS
+// ============================================
+
+const BOOKING_TOOLS = [
+  {
+    type: 'function' as const,
+    function: {
+      name: 'search_properties',
+      description: 'Search for available properties/homes. Use when user asks about available units, homes for sale/rent, or property listings.',
+      parameters: {
+        type: 'object',
+        properties: {
+          city: { type: 'string', description: 'City to search in' },
+          state: { type: 'string', description: 'State to search in' },
+          min_price: { type: 'number', description: 'Minimum price' },
+          max_price: { type: 'number', description: 'Maximum price' },
+          min_beds: { type: 'integer', description: 'Minimum bedrooms' },
+          status: { 
+            type: 'string', 
+            enum: ['available', 'pending', 'all'],
+            description: 'Property status filter (default: available)'
+          },
+          location_id: { type: 'string', description: 'Specific location/community ID to search in' }
+        }
+      }
+    }
+  },
+  {
+    type: 'function' as const,
+    function: {
+      name: 'lookup_property',
+      description: 'Get details for a specific property by address, lot number, or ID. Use when user asks about a specific home.',
+      parameters: {
+        type: 'object',
+        properties: {
+          address: { type: 'string', description: 'Property address to look up' },
+          property_id: { type: 'string', description: 'Property ID' },
+          lot_number: { type: 'string', description: 'Lot number' }
+        }
+      }
+    }
+  },
+  {
+    type: 'function' as const,
+    function: {
+      name: 'get_locations',
+      description: 'Get list of communities/locations. Use when user needs to choose a location or asks about communities.',
+      parameters: {
+        type: 'object',
+        properties: {}
+      }
+    }
+  },
+  {
+    type: 'function' as const,
+    function: {
+      name: 'check_calendar_availability',
+      description: 'Check available appointment times for tours/viewings. Use when user wants to schedule a visit or tour.',
+      parameters: {
+        type: 'object',
+        properties: {
+          location_id: { type: 'string', description: 'Location ID for the appointment' },
+          date_from: { type: 'string', description: 'Start date to check (YYYY-MM-DD format)' },
+          date_to: { type: 'string', description: 'End date to check (YYYY-MM-DD format)' },
+          duration_minutes: { type: 'integer', description: 'Appointment duration in minutes (default: 30)' }
+        },
+        required: ['location_id']
+      }
+    }
+  },
+  {
+    type: 'function' as const,
+    function: {
+      name: 'book_appointment',
+      description: 'Book a tour/appointment. Use after user confirms a time slot. Requires location_id, start_time, and visitor_name.',
+      parameters: {
+        type: 'object',
+        properties: {
+          location_id: { type: 'string', description: 'Location ID' },
+          start_time: { type: 'string', description: 'Appointment start time (ISO 8601 format)' },
+          end_time: { type: 'string', description: 'Appointment end time (ISO 8601 format, optional)' },
+          duration_minutes: { type: 'integer', description: 'Appointment duration if end_time not provided (default: 30)' },
+          visitor_name: { type: 'string', description: 'Visitor full name' },
+          visitor_email: { type: 'string', description: 'Visitor email address' },
+          visitor_phone: { type: 'string', description: 'Visitor phone number' },
+          property_address: { type: 'string', description: 'Specific property address to view (if applicable)' },
+          notes: { type: 'string', description: 'Additional notes or special requests' }
+        },
+        required: ['location_id', 'start_time', 'visitor_name']
+      }
+    }
+  }
+];
+
+// ============================================
+// PHASE 6: BOOKING TOOL HANDLERS
+// ============================================
+
+async function searchProperties(
+  supabase: any,
+  agentId: string,
+  args: {
+    city?: string;
+    state?: string;
+    min_price?: number;
+    max_price?: number;
+    min_beds?: number;
+    status?: string;
+    location_id?: string;
+  }
+): Promise<{ success: boolean; result?: any; error?: string }> {
+  try {
+    let query = supabase
+      .from('properties')
+      .select(`
+        id, address, lot_number, city, state, zip,
+        price, price_type, beds, baths, sqft, status,
+        description, features, listing_url,
+        location_id, locations(name)
+      `)
+      .eq('agent_id', agentId);
+
+    // Apply filters
+    if (args.location_id) {
+      query = query.eq('location_id', args.location_id);
+    }
+    if (args.city) {
+      query = query.ilike('city', `%${args.city}%`);
+    }
+    if (args.state) {
+      query = query.ilike('state', `%${args.state}%`);
+    }
+    if (args.min_price) {
+      query = query.gte('price', args.min_price);
+    }
+    if (args.max_price) {
+      query = query.lte('price', args.max_price);
+    }
+    if (args.min_beds) {
+      query = query.gte('beds', args.min_beds);
+    }
+    if (args.status && args.status !== 'all') {
+      query = query.eq('status', args.status);
+    } else if (!args.status) {
+      query = query.eq('status', 'available');
+    }
+
+    query = query.order('price', { ascending: true }).limit(10);
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error('Property search error:', error);
+      return { success: false, error: 'Failed to search properties' };
+    }
+
+    if (!data || data.length === 0) {
+      return { 
+        success: true, 
+        result: { 
+          properties: [], 
+          message: 'No properties found matching your criteria.',
+          suggestion: 'Try adjusting your search filters or ask about our other communities.'
+        } 
+      };
+    }
+
+    const properties = data.map((p: any) => ({
+      id: p.id,
+      address: p.address || `Lot ${p.lot_number}`,
+      city: p.city,
+      state: p.state,
+      price: p.price,
+      price_formatted: p.price ? `$${p.price.toLocaleString()}${p.price_type === 'rent_monthly' ? '/mo' : ''}` : 'Contact for pricing',
+      beds: p.beds,
+      baths: p.baths,
+      sqft: p.sqft,
+      status: p.status,
+      community: p.locations?.name || null,
+      listing_url: p.listing_url,
+    }));
+
+    return { 
+      success: true, 
+      result: { 
+        properties,
+        count: properties.length,
+        message: `Found ${properties.length} ${args.status === 'all' ? '' : 'available '}properties.`
+      } 
+    };
+  } catch (error) {
+    console.error('searchProperties error:', error);
+    return { success: false, error: error.message || 'Search failed' };
+  }
+}
+
+async function lookupProperty(
+  supabase: any,
+  agentId: string,
+  conversationId: string,
+  args: {
+    address?: string;
+    property_id?: string;
+    lot_number?: string;
+  }
+): Promise<{ success: boolean; result?: any; error?: string }> {
+  try {
+    let query = supabase
+      .from('properties')
+      .select(`
+        id, address, lot_number, city, state, zip,
+        price, price_type, beds, baths, sqft, year_built,
+        status, description, features, listing_url, images,
+        location_id, locations(id, name, timezone, phone, email)
+      `)
+      .eq('agent_id', agentId);
+
+    if (args.property_id) {
+      query = query.eq('id', args.property_id);
+    } else if (args.address) {
+      query = query.ilike('address', `%${args.address}%`);
+    } else if (args.lot_number) {
+      query = query.ilike('lot_number', `%${args.lot_number}%`);
+    } else {
+      return { success: false, error: 'Please provide an address, property ID, or lot number' };
+    }
+
+    const { data, error } = await query.limit(1).single();
+
+    if (error || !data) {
+      return { 
+        success: true, 
+        result: { 
+          found: false, 
+          message: 'Property not found. Please check the address or lot number and try again.'
+        } 
+      };
+    }
+
+    // Update conversation with location context if property has a location
+    if (data.location_id && conversationId) {
+      const { data: conv } = await supabase
+        .from('conversations')
+        .select('metadata')
+        .eq('id', conversationId)
+        .single();
+      
+      if (conv) {
+        await supabase
+          .from('conversations')
+          .update({
+            location_id: data.location_id,
+            metadata: {
+              ...conv.metadata,
+              detected_location_id: data.location_id,
+              detected_location_name: data.locations?.name,
+              property_context: data.address || `Lot ${data.lot_number}`,
+            },
+          })
+          .eq('id', conversationId);
+      }
+    }
+
+    const property = {
+      id: data.id,
+      address: data.address || `Lot ${data.lot_number}`,
+      full_address: [data.address, data.city, data.state, data.zip].filter(Boolean).join(', '),
+      price: data.price,
+      price_formatted: data.price ? `$${data.price.toLocaleString()}${data.price_type === 'rent_monthly' ? '/mo' : ''}` : 'Contact for pricing',
+      beds: data.beds,
+      baths: data.baths,
+      sqft: data.sqft,
+      year_built: data.year_built,
+      status: data.status,
+      status_message: data.status === 'available' 
+        ? 'This home is currently available!' 
+        : data.status === 'pending' 
+          ? 'This home is pending - an offer has been accepted but not yet closed.'
+          : 'This home is no longer available.',
+      description: data.description,
+      features: data.features || [],
+      listing_url: data.listing_url,
+      community: data.locations ? {
+        id: data.locations.id,
+        name: data.locations.name,
+        phone: data.locations.phone,
+        email: data.locations.email,
+      } : null,
+    };
+
+    return { success: true, result: { found: true, property } };
+  } catch (error) {
+    console.error('lookupProperty error:', error);
+    return { success: false, error: error.message || 'Lookup failed' };
+  }
+}
+
+async function getLocations(
+  supabase: any,
+  agentId: string
+): Promise<{ success: boolean; result?: any; error?: string }> {
+  try {
+    const { data, error } = await supabase
+      .from('locations')
+      .select('id, name, city, state, phone, email, timezone')
+      .eq('agent_id', agentId)
+      .eq('is_active', true)
+      .order('name');
+
+    if (error) {
+      console.error('Get locations error:', error);
+      return { success: false, error: 'Failed to get locations' };
+    }
+
+    if (!data || data.length === 0) {
+      return { 
+        success: true, 
+        result: { 
+          locations: [], 
+          message: 'No locations configured for this agent.'
+        } 
+      };
+    }
+
+    const locations = data.map((l: any) => ({
+      id: l.id,
+      name: l.name,
+      city: l.city,
+      state: l.state,
+      full_location: [l.city, l.state].filter(Boolean).join(', '),
+      phone: l.phone,
+      email: l.email,
+    }));
+
+    return { 
+      success: true, 
+      result: { 
+        locations,
+        count: locations.length,
+        message: `We have ${locations.length} communities. Which one are you interested in?`
+      } 
+    };
+  } catch (error) {
+    console.error('getLocations error:', error);
+    return { success: false, error: error.message || 'Failed to get locations' };
+  }
+}
+
+async function checkCalendarAvailability(
+  supabaseUrl: string,
+  args: {
+    location_id: string;
+    date_from?: string;
+    date_to?: string;
+    duration_minutes?: number;
+  }
+): Promise<{ success: boolean; result?: any; error?: string }> {
+  try {
+    const response = await fetch(`${supabaseUrl}/functions/v1/check-calendar-availability`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+      },
+      body: JSON.stringify(args),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      return { 
+        success: false, 
+        error: errorData.message || errorData.error || 'Failed to check availability' 
+      };
+    }
+
+    const data = await response.json();
+    
+    if (data.available_slots && data.available_slots.length > 0) {
+      return { 
+        success: true, 
+        result: {
+          location: data.location,
+          available_slots: data.available_slots,
+          message: `I found ${data.available_slots.length} available times at ${data.location.name}. Here are some options:`
+        }
+      };
+    } else {
+      return { 
+        success: true, 
+        result: {
+          location: data.location,
+          available_slots: [],
+          message: data.message || 'No available times found for the selected dates. Would you like to check different dates?'
+        }
+      };
+    }
+  } catch (error) {
+    console.error('checkCalendarAvailability error:', error);
+    return { success: false, error: error.message || 'Failed to check availability' };
+  }
+}
+
+async function bookAppointment(
+  supabaseUrl: string,
+  conversationId: string,
+  conversationMetadata: any,
+  args: {
+    location_id: string;
+    start_time: string;
+    end_time?: string;
+    duration_minutes?: number;
+    visitor_name: string;
+    visitor_email?: string;
+    visitor_phone?: string;
+    property_address?: string;
+    notes?: string;
+  }
+): Promise<{ success: boolean; result?: any; error?: string }> {
+  try {
+    // Try to fill in visitor info from conversation metadata if not provided
+    const visitorName = args.visitor_name || conversationMetadata?.lead_name || 'Guest';
+    const visitorEmail = args.visitor_email || conversationMetadata?.lead_email;
+    
+    const response = await fetch(`${supabaseUrl}/functions/v1/book-appointment`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+      },
+      body: JSON.stringify({
+        ...args,
+        visitor_name: visitorName,
+        visitor_email: visitorEmail,
+        conversation_id: conversationId,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      
+      if (errorData.slot_taken) {
+        return { 
+          success: false, 
+          error: 'This time slot is no longer available. Please choose another time.',
+          result: { slot_taken: true }
+        };
+      }
+      
+      if (errorData.fallback) {
+        return { 
+          success: false, 
+          error: errorData.error,
+          result: { no_calendar: true }
+        };
+      }
+      
+      return { 
+        success: false, 
+        error: errorData.error || 'Failed to book appointment' 
+      };
+    }
+
+    const data = await response.json();
+    
+    return { 
+      success: true, 
+      result: {
+        booking: data.booking,
+        message: data.booking.confirmation_message
+      }
+    };
+  } catch (error) {
+    console.error('bookAppointment error:', error);
+    return { success: false, error: error.message || 'Failed to book appointment' };
+  }
+}
+
 // Model capability definitions - which parameters each model supports
 interface ModelCapability {
   supported: boolean;
@@ -737,15 +1215,31 @@ serve(async (req) => {
     const enabledTools = (agentTools || []).filter(tool => tool.endpoint_url);
     console.log(`Found ${enabledTools.length} enabled tools with endpoints for agent ${agentId}`);
 
+    // Check if agent has locations (enables booking tools)
+    const { data: agentLocations } = await supabase
+      .from('locations')
+      .select('id')
+      .eq('agent_id', agentId)
+      .eq('is_active', true)
+      .limit(1);
+    
+    const hasLocations = agentLocations && agentLocations.length > 0;
+    console.log(`Agent has locations: ${hasLocations}`);
+
     // Format tools for OpenAI/Lovable AI API
-    const formattedTools = enabledTools.length > 0 ? enabledTools.map(tool => ({
+    // Include booking tools if agent has locations configured
+    const userDefinedTools = enabledTools.length > 0 ? enabledTools.map(tool => ({
       type: 'function' as const,
       function: {
         name: tool.name,
         description: tool.description,
         parameters: tool.parameters || { type: 'object', properties: {} },
       }
-    })) : undefined;
+    })) : [];
+    
+    const formattedTools = hasLocations 
+      ? [...userDefinedTools, ...BOOKING_TOOLS]
+      : userDefinedTools.length > 0 ? userDefinedTools : undefined;
 
     // Capture request metadata
     const ipAddress = req.headers.get('cf-connecting-ip') || 
@@ -1570,6 +2064,62 @@ NEVER mark complete when:
           continue;
         }
         
+        // Handle built-in booking tools
+        if (toolName === 'search_properties') {
+          const result = await searchProperties(supabase, agentId, toolArgs);
+          toolsUsed.push({ name: toolName, success: result.success });
+          toolResults.push({
+            role: 'tool',
+            tool_call_id: toolCall.id,
+            content: JSON.stringify(result.result || { error: result.error }),
+          });
+          continue;
+        }
+        
+        if (toolName === 'lookup_property') {
+          const result = await lookupProperty(supabase, agentId, activeConversationId, toolArgs);
+          toolsUsed.push({ name: toolName, success: result.success });
+          toolResults.push({
+            role: 'tool',
+            tool_call_id: toolCall.id,
+            content: JSON.stringify(result.result || { error: result.error }),
+          });
+          continue;
+        }
+        
+        if (toolName === 'get_locations') {
+          const result = await getLocations(supabase, agentId);
+          toolsUsed.push({ name: toolName, success: result.success });
+          toolResults.push({
+            role: 'tool',
+            tool_call_id: toolCall.id,
+            content: JSON.stringify(result.result || { error: result.error }),
+          });
+          continue;
+        }
+        
+        if (toolName === 'check_calendar_availability') {
+          const result = await checkCalendarAvailability(supabaseUrl, toolArgs);
+          toolsUsed.push({ name: toolName, success: result.success });
+          toolResults.push({
+            role: 'tool',
+            tool_call_id: toolCall.id,
+            content: JSON.stringify(result.result || { error: result.error }),
+          });
+          continue;
+        }
+        
+        if (toolName === 'book_appointment') {
+          const result = await bookAppointment(supabaseUrl, activeConversationId, conversationMetadata, toolArgs);
+          toolsUsed.push({ name: toolName, success: result.success });
+          toolResults.push({
+            role: 'tool',
+            tool_call_id: toolCall.id,
+            content: JSON.stringify(result.result || { error: result.error }),
+          });
+          continue;
+        }
+
         // Find the user-defined tool configuration
         const tool = enabledTools.find(t => t.name === toolName);
         

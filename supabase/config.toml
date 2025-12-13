@@ -103,3 +103,9 @@ verify_jwt = true
 
 [functions.sync-wordpress-homes]
 verify_jwt = true
+
+[functions.check-calendar-availability]
+verify_jwt = false
+
+[functions.book-appointment]
+verify_jwt = false
