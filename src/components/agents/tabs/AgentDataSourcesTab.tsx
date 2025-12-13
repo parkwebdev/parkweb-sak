@@ -14,11 +14,13 @@ import { Database01, Globe01, MarkerPin01, Building07, Plus, ChevronDown, Chevro
 import { useKnowledgeSources } from '@/hooks/useKnowledgeSources';
 import { useProperties } from '@/hooks/useProperties';
 import { useLocations } from '@/hooks/useLocations';
+import { useAgents } from '@/hooks/useAgents';
 import { KnowledgeSourceCard } from '@/components/agents/KnowledgeSourceCard';
 import { AddKnowledgeDialog } from '@/components/agents/AddKnowledgeDialog';
 import { HelpArticlesManager } from '@/components/agents/HelpArticlesManager';
 import { LocationDetails } from '@/components/agents/locations/LocationDetails';
 import { CreateLocationDialog } from '@/components/agents/locations/CreateLocationDialog';
+import { WordPressConnectionCard } from '@/components/agents/locations/WordPressConnectionCard';
 import { AgentSettingsLayout } from '@/components/agents/AgentSettingsLayout';
 import { LoadingState } from '@/components/ui/loading-state';
 import { ZapSolidIcon } from '@/components/ui/zap-solid-icon';
@@ -55,7 +57,10 @@ export const AgentDataSourcesTab = ({ agentId, userId }: AgentDataSourcesTabProp
   } = useKnowledgeSources(agentId);
   
   const { properties, getPropertyCount } = useProperties(agentId);
-  const { locations, loading: locationsLoading, createLocation, updateLocation, deleteLocation } = useLocations(agentId);
+  const { locations, loading: locationsLoading, createLocation, updateLocation, deleteLocation, refetch: refetchLocations } = useLocations(agentId);
+  const { agents } = useAgents();
+  
+  const agent = agents.find(a => a.id === agentId) || null;
   
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [createLocationDialogOpen, setCreateLocationDialogOpen] = useState(false);
@@ -272,22 +277,26 @@ export const AgentDataSourcesTab = ({ agentId, userId }: AgentDataSourcesTabProp
       )}
 
       {activeTab === 'locations' && (
-        <div className="flex gap-6 h-full min-h-0">
-          {/* Left Panel - Location List */}
-          <div className="w-80 flex-shrink-0 flex flex-col min-h-0">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-medium text-muted-foreground">
-                {locations.length} Location{locations.length !== 1 ? 's' : ''}
-              </h3>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => setCreateLocationDialogOpen(true)}
-              >
-                <Plus size={14} className="mr-1.5" />
-                Add
-              </Button>
-            </div>
+        <div className="space-y-4">
+          {/* WordPress Connection Card */}
+          <WordPressConnectionCard agent={agent} onSyncComplete={refetchLocations} />
+          
+          <div className="flex gap-6 h-full min-h-0">
+            {/* Left Panel - Location List */}
+            <div className="w-80 flex-shrink-0 flex flex-col min-h-0">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-medium text-muted-foreground">
+                  {locations.length} Location{locations.length !== 1 ? 's' : ''}
+                </h3>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setCreateLocationDialogOpen(true)}
+                >
+                  <Plus size={14} className="mr-1.5" />
+                  Add
+                </Button>
+              </div>
             
             {locations.length === 0 ? (
               <EmptyState
@@ -383,6 +392,7 @@ export const AgentDataSourcesTab = ({ agentId, userId }: AgentDataSourcesTabProp
             title="Delete Location"
             description="This will permanently delete this location and unlink any associated properties. This action cannot be undone."
           />
+          </div>
         </div>
       )}
 
