@@ -11,7 +11,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Home01, RefreshCw01, Check, AlertCircle, Zap } from '@untitledui/icons';
+import { InfoCircleIcon, InfoCircleIconFilled } from '@/components/ui/info-circle-icon';
 import { useWordPressHomes } from '@/hooks/useWordPressHomes';
 import { formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -103,6 +105,19 @@ export function WordPressHomesCard({ agent, onSyncComplete }: WordPressHomesCard
                   Use AI extraction
                 </span>
               </Label>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button type="button" className="group inline-flex text-muted-foreground hover:text-foreground transition-colors">
+                      <InfoCircleIcon className="h-4 w-4" />
+                      <InfoCircleIconFilled className="h-4 w-4" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="max-w-xs text-xs">
+                    <p>Enable this if your WordPress site doesn't use ACF (Advanced Custom Fields). AI will parse property details from your page HTML instead. Only use if standard sync returns incomplete data.</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
 
             {/* Test result feedback */}
