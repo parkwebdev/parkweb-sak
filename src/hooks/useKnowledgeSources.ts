@@ -610,6 +610,9 @@ export const useKnowledgeSources = (agentId?: string) => {
     // Sitemap parents don't have embeddings themselves, so they can't be "outdated"
     if (metadata.is_sitemap === true) return false;
     
+    // WordPress home sources are container records, not embedding sources
+    if (metadata.wordpress_homes === true) return false;
+    
     return metadata.embedding_model !== 'text-embedding-3-small';
   };
 

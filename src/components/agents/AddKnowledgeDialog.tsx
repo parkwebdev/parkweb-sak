@@ -404,7 +404,10 @@ export const AddKnowledgeDialog: React.FC<AddKnowledgeDialogProps> = ({
                   required
                 />
                 <p className="text-xs text-muted-foreground mt-2">
-                  We'll extract property listings from this page and sync them automatically
+                  For non-WordPress sites. We'll use AI to extract property listings from this page.
+                </p>
+                <p className="text-xs text-muted-foreground/70 mt-1">
+                  Tip: If you have a WordPress site with ACF, use the WordPress sync in the Locations tab instead for structured data.
                 </p>
               </div>
 
