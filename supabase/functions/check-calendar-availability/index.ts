@@ -329,7 +329,7 @@ serve(async (req) => {
     // Get location details
     const { data: location, error: locationError } = await supabase
       .from('locations')
-      .select('id, name, timezone, business_hours')
+      .select('id, name, timezone, business_hours, phone')
       .eq('id', location_id)
       .single();
 
@@ -359,7 +359,11 @@ serve(async (req) => {
             timezone: location.timezone || 'America/New_York',
           },
           available_slots: [],
-          message: 'No calendar connected to this location. Please contact us to schedule an appointment.',
+          has_calendar: false,
+          message: "This community doesn't have online scheduling set up yet.",
+          fallback_action: 'contact_directly',
+          fallback_message: 'Please call us directly to schedule your tour.',
+          contact_phone: location.phone || null,
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );

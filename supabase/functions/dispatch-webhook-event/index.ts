@@ -34,7 +34,7 @@ Deno.serve(async (req) => {
     let eventData = payload.record;
     let agentId: string | null = null;
 
-    if (payload.table === 'leads') {
+  if (payload.table === 'leads') {
       if (payload.type === 'insert') {
         eventType = 'lead.created';
       } else if (payload.type === 'update') {
@@ -46,6 +46,61 @@ Deno.serve(async (req) => {
         eventType = 'conversation.created';
       } else if (payload.type === 'update' && payload.old_record?.status !== payload.record?.status) {
         eventType = 'conversation.status_changed';
+        eventData = {
+          ...payload.record,
+          old_status: payload.old_record?.status,
+          new_status: payload.record?.status,
+        };
+      }
+    } else if (payload.table === 'calendar_events') {
+      // Booking events - get agent_id from connected_account -> location -> agent
+      if (payload.type === 'insert') {
+        eventType = 'booking.created';
+        // Get agent_id from location
+        if (payload.record?.location_id) {
+          const { data: location } = await supabase
+            .from('locations')
+            .select('agent_id')
+            .eq('id', payload.record.location_id)
+            .single();
+          agentId = location?.agent_id || null;
+        }
+        eventData = {
+          ...payload.record,
+          event_type: 'booking.created',
+        };
+      } else if (payload.type === 'update' && payload.old_record?.status !== payload.record?.status) {
+        if (payload.record?.status === 'cancelled') {
+          eventType = 'booking.cancelled';
+        } else if (payload.record?.status === 'completed') {
+          eventType = 'booking.completed';
+        } else {
+          eventType = 'booking.updated';
+        }
+        if (payload.record?.location_id) {
+          const { data: location } = await supabase
+            .from('locations')
+            .select('agent_id')
+            .eq('id', payload.record.location_id)
+            .single();
+          agentId = location?.agent_id || null;
+        }
+        eventData = {
+          ...payload.record,
+          old_status: payload.old_record?.status,
+          new_status: payload.record?.status,
+        };
+      }
+    } else if (payload.table === 'properties') {
+      agentId = payload.record?.agent_id;
+      if (payload.type === 'insert') {
+        eventType = 'property.new_listing';
+        eventData = {
+          ...payload.record,
+          event_type: 'property.new_listing',
+        };
+      } else if (payload.type === 'update' && payload.old_record?.status !== payload.record?.status) {
+        eventType = 'property.status_changed';
         eventData = {
           ...payload.record,
           old_status: payload.old_record?.status,

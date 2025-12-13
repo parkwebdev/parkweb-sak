@@ -339,6 +339,7 @@ async function lookupProperty(
         id, address, lot_number, city, state, zip,
         price, price_type, beds, baths, sqft, year_built,
         status, description, features, listing_url, images,
+        updated_at,
         location_id, locations(id, name, timezone, phone, email)
       `)
       .eq('agent_id', agentId);
@@ -389,6 +390,45 @@ async function lookupProperty(
       }
     }
 
+    // Calculate recency for status display (e.g., "just went pending")
+    const updatedAt = data.updated_at ? new Date(data.updated_at) : null;
+    const daysSinceUpdate = updatedAt 
+      ? Math.floor((Date.now() - updatedAt.getTime()) / (1000 * 60 * 60 * 24)) 
+      : null;
+
+    // Build status message with recency context
+    let statusMessage: string;
+    let suggestAlternatives = false;
+    
+    if (data.status === 'available') {
+      statusMessage = 'This home is currently available!';
+    } else if (data.status === 'pending') {
+      suggestAlternatives = true;
+      if (daysSinceUpdate !== null && daysSinceUpdate <= 3) {
+        statusMessage = daysSinceUpdate === 0
+          ? 'This home just went under contract today.'
+          : daysSinceUpdate === 1
+            ? 'This home just went under contract yesterday.'
+            : `This home went under contract ${daysSinceUpdate} days ago.`;
+      } else {
+        statusMessage = 'This home is pending - an offer has been accepted but not yet closed.';
+      }
+    } else if (data.status === 'sold') {
+      suggestAlternatives = true;
+      if (daysSinceUpdate !== null && daysSinceUpdate <= 7) {
+        statusMessage = daysSinceUpdate === 0
+          ? 'This home just sold today.'
+          : daysSinceUpdate === 1
+            ? 'This home just sold yesterday.'
+            : `This home sold ${daysSinceUpdate} days ago.`;
+      } else {
+        statusMessage = 'This home has been sold.';
+      }
+    } else {
+      suggestAlternatives = true;
+      statusMessage = 'This home is no longer available.';
+    }
+
     const property = {
       id: data.id,
       address: data.address || `Lot ${data.lot_number}`,
@@ -400,11 +440,8 @@ async function lookupProperty(
       sqft: data.sqft,
       year_built: data.year_built,
       status: data.status,
-      status_message: data.status === 'available' 
-        ? 'This home is currently available!' 
-        : data.status === 'pending' 
-          ? 'This home is pending - an offer has been accepted but not yet closed.'
-          : 'This home is no longer available.',
+      status_message: statusMessage,
+      suggest_alternatives: suggestAlternatives,
       description: data.description,
       features: data.features || [],
       listing_url: data.listing_url,
