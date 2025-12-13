@@ -73,10 +73,10 @@ export interface LocationFormData {
  * US Timezones for dropdown
  */
 export const US_TIMEZONES = [
-  { value: 'America/New_York', label: 'Eastern Time (ET)' },
-  { value: 'America/Chicago', label: 'Central Time (CT)' },
-  { value: 'America/Denver', label: 'Mountain Time (MT)' },
-  { value: 'America/Los_Angeles', label: 'Pacific Time (PT)' },
+  { value: 'America/New_York', label: 'Eastern (ET)' },
+  { value: 'America/Chicago', label: 'Central (CT)' },
+  { value: 'America/Denver', label: 'Mountain (MT)' },
+  { value: 'America/Los_Angeles', label: 'Pacific (PT)' },
   { value: 'America/Phoenix', label: 'Arizona (MST)' },
   { value: 'America/Anchorage', label: 'Alaska (AKT)' },
   { value: 'Pacific/Honolulu', label: 'Hawaii (HST)' },
