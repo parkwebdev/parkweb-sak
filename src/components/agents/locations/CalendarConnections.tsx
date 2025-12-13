@@ -15,7 +15,7 @@ import { SimpleDeleteDialog } from '@/components/ui/simple-delete-dialog';
 import { useConnectedAccounts } from '@/hooks/useConnectedAccounts';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/lib/toast';
-import { Svgl } from '@ridemountainpig/svgl-react';
+import { GoogleCalendarLogo, MicrosoftOutlookLogo } from '@/components/icons/CalendarLogos';
 
 interface CalendarConnectionsProps {
   locationId: string;
@@ -112,9 +112,9 @@ export const CalendarConnections: React.FC<CalendarConnectionsProps> = ({
             >
               <div className="flex items-center gap-3">
                 {account.provider === 'google_calendar' ? (
-                  <Svgl name="google-calendar" className="w-5 h-5" />
+                  <GoogleCalendarLogo className="w-5 h-5" />
                 ) : (
-                  <Svgl name="microsoft-outlook" className="w-5 h-5" />
+                  <MicrosoftOutlookLogo className="w-5 h-5" />
                 )}
                 <div>
                   <p className="text-sm font-medium">{account.account_email}</p>
@@ -160,7 +160,7 @@ export const CalendarConnections: React.FC<CalendarConnectionsProps> = ({
           onClick={() => initiateOAuth('google')}
           disabled={!!connecting}
         >
-          <Svgl name="google-calendar" className="w-4 h-4 mr-2" />
+          <GoogleCalendarLogo className="w-4 h-4 mr-2" />
           {connecting === 'google' ? 'Connecting...' : 'Connect Google Calendar'}
         </Button>
         <Button
@@ -169,7 +169,7 @@ export const CalendarConnections: React.FC<CalendarConnectionsProps> = ({
           onClick={() => initiateOAuth('outlook')}
           disabled={!!connecting}
         >
-          <Svgl name="microsoft-outlook" className="w-4 h-4 mr-2" />
+          <MicrosoftOutlookLogo className="w-4 h-4 mr-2" />
           {connecting === 'outlook' ? 'Connecting...' : 'Connect Outlook Calendar'}
         </Button>
       </div>
