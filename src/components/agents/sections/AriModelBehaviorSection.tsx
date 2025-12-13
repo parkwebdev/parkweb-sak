@@ -84,9 +84,12 @@ const getModelCapabilities = (model: string): ModelCapabilities => {
 
 const getModelIcon = (provider: string, size: number = 18) => {
   const iconMap: Record<string, string> = {
+    google: GeminiIcon,
     gemini: GeminiIcon,
     openai: OpenAIIcon,
+    anthropic: ClaudeIcon,
     claude: ClaudeIcon,
+    meta: MetaIcon,
     llama: MetaIcon,
     deepseek: DeepSeekIcon,
     qwen: QwenIcon,
@@ -98,17 +101,47 @@ const getModelIcon = (provider: string, size: number = 18) => {
   return <img src={src} alt="" className={`shrink-0 ${darkModeClass}`} style={{ width: size, height: size }} />;
 };
 
-const MODELS = [
-  { value: 'google/gemini-2.5-flash', label: 'Gemini 2.5 Flash', provider: 'gemini', recommended: true },
-  { value: 'google/gemini-2.5-pro', label: 'Gemini 2.5 Pro', provider: 'gemini' },
-  { value: 'openai/gpt-4o', label: 'GPT-4o', provider: 'openai' },
-  { value: 'anthropic/claude-sonnet-4', label: 'Claude Sonnet 4', provider: 'claude', recommended: true },
-  { value: 'anthropic/claude-3.5-haiku', label: 'Claude 3.5 Haiku', provider: 'claude' },
-  { value: 'qwen/qwen-2.5-72b-instruct', label: 'Qwen 2.5 72B', provider: 'qwen' },
-  { value: 'mistralai/mistral-medium-3.1', label: 'Mistral Medium 3.1', provider: 'mistral' },
-  { value: 'meta-llama/llama-3.3-70b-instruct', label: 'Llama 3.3 70B', provider: 'llama' },
-  { value: 'deepseek/deepseek-chat', label: 'DeepSeek V3', provider: 'deepseek' },
+// Grouped models by provider
+const MODEL_GROUPS = [
+  {
+    provider: 'google',
+    label: 'Google',
+    models: [
+      { value: 'google/gemini-2.5-flash', label: 'Gemini 2.5 Flash', recommended: true },
+      { value: 'google/gemini-2.5-pro', label: 'Gemini 2.5 Pro' },
+    ],
+  },
+  {
+    provider: 'openai',
+    label: 'OpenAI',
+    models: [
+      { value: 'openai/gpt-4o', label: 'GPT-4o' },
+    ],
+  },
+  {
+    provider: 'anthropic',
+    label: 'Anthropic',
+    models: [
+      { value: 'anthropic/claude-sonnet-4', label: 'Claude Sonnet 4', recommended: true },
+      { value: 'anthropic/claude-3.5-haiku', label: 'Claude 3.5 Haiku' },
+    ],
+  },
+  {
+    provider: 'other',
+    label: 'Other',
+    models: [
+      { value: 'qwen/qwen-2.5-72b-instruct', label: 'Qwen 2.5 72B', iconProvider: 'qwen' },
+      { value: 'mistralai/mistral-medium-3.1', label: 'Mistral Medium 3.1', iconProvider: 'mistral' },
+      { value: 'meta-llama/llama-3.3-70b-instruct', label: 'Llama 3.3 70B', iconProvider: 'meta' },
+      { value: 'deepseek/deepseek-chat', label: 'DeepSeek V3', iconProvider: 'deepseek' },
+    ],
+  },
 ];
+
+// Flat list for value lookups
+const ALL_MODELS = MODEL_GROUPS.flatMap(g => 
+  g.models.map(m => ({ ...m, provider: (m as any).iconProvider || g.provider }))
+);
 
 const RESPONSE_LENGTH_PRESETS = [
   { value: 'concise', label: 'Concise', tokens: 500 },
@@ -187,16 +220,31 @@ export const AriModelBehaviorSection: React.FC<AriModelBehaviorSectionProps> = (
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {MODELS.map((model) => (
-                <SelectItem key={model.value} value={model.value}>
-                  <div className="flex items-center gap-2">
-                    {getModelIcon(model.provider, 16)}
-                    <span>{model.label}</span>
-                    {model.recommended && (
-                      <Badge variant="secondary" className="text-[10px] ml-1">Popular</Badge>
-                    )}
-                  </div>
-                </SelectItem>
+              {MODEL_GROUPS.map((group) => (
+                <SelectGroup key={group.provider}>
+                  <SelectLabel className="flex items-center gap-2 py-2 px-2">
+                    {getModelIcon(group.provider, 16)}
+                    <span className="font-semibold text-foreground">{group.label}</span>
+                  </SelectLabel>
+                  {group.models.map((model) => {
+                    const iconProvider = (model as any).iconProvider || group.provider;
+                    return (
+                      <SelectItem 
+                        key={model.value} 
+                        value={model.value}
+                        className="data-[state=checked]:bg-accent"
+                      >
+                        <div className="flex items-center gap-2">
+                          {getModelIcon(iconProvider, 16)}
+                          <span>{model.label}</span>
+                          {model.recommended && (
+                            <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Popular</Badge>
+                          )}
+                        </div>
+                      </SelectItem>
+                    );
+                  })}
+                </SelectGroup>
               ))}
             </SelectContent>
           </Select>
