@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ChevronDown, ChevronRight } from '@untitledui/icons';
+import { AnimatedItem } from '@/components/ui/animated-item';
 import { BusinessHoursEditor } from './BusinessHoursEditor';
 import { CalendarConnections } from './CalendarConnections';
 import { US_TIMEZONES, type BusinessHours, type LocationFormData } from '@/types/locations';
@@ -95,148 +96,160 @@ export const LocationDetails: React.FC<LocationDetailsProps> = ({
   return (
     <div className="space-y-8 py-2">
       {/* Name - Most prominent */}
-      <div>
-        <Label htmlFor="name" className="text-xs text-muted-foreground mb-1.5 block">Location Name</Label>
-        <Input
-          id="name"
-          value={formData.name}
-          onChange={(e) => handleChange('name', e.target.value)}
-          placeholder="e.g., Downtown Community"
-          className="text-lg font-medium border-0 border-b rounded-none px-0 focus-visible:ring-0 focus-visible:border-primary"
-        />
-      </div>
+      <AnimatedItem>
+        <div>
+          <Label htmlFor="name" className="text-xs text-muted-foreground mb-1.5 block">Location Name</Label>
+          <Input
+            id="name"
+            value={formData.name}
+            onChange={(e) => handleChange('name', e.target.value)}
+            placeholder="e.g., Downtown Community"
+            className="text-lg font-medium border-0 border-b rounded-none px-0 focus-visible:ring-0 focus-visible:border-primary"
+          />
+        </div>
+      </AnimatedItem>
 
       {/* Address Fields */}
-      <div className="space-y-4">
-        <span className="text-xs text-muted-foreground uppercase tracking-wide">Address</span>
-        
-        <div>
-          <Input
-            id="address"
-            value={formData.address}
-            onChange={(e) => handleChange('address', e.target.value)}
-            placeholder="Street Address"
-            className="h-9"
-          />
-        </div>
-        
-        <div className="grid grid-cols-3 gap-3">
-          <Input
-            id="city"
-            value={formData.city}
-            onChange={(e) => handleChange('city', e.target.value)}
-            placeholder="City"
-            className="h-9"
-          />
-          <Input
-            id="state"
-            value={formData.state}
-            onChange={(e) => handleChange('state', e.target.value)}
-            placeholder="State"
-            className="h-9"
-          />
-          <Input
-            id="zip"
-            value={formData.zip}
-            onChange={(e) => handleChange('zip', e.target.value)}
-            placeholder="ZIP"
-            className="h-9"
-          />
-        </div>
+      <AnimatedItem>
+        <div className="space-y-4">
+          <span className="text-xs text-muted-foreground uppercase tracking-wide">Address</span>
+          
+          <div>
+            <Input
+              id="address"
+              size="sm"
+              value={formData.address}
+              onChange={(e) => handleChange('address', e.target.value)}
+              placeholder="Street Address"
+            />
+          </div>
+          
+          <div className="grid grid-cols-3 gap-3">
+            <Input
+              id="city"
+              size="sm"
+              value={formData.city}
+              onChange={(e) => handleChange('city', e.target.value)}
+              placeholder="City"
+            />
+            <Input
+              id="state"
+              size="sm"
+              value={formData.state}
+              onChange={(e) => handleChange('state', e.target.value)}
+              placeholder="State"
+            />
+            <Input
+              id="zip"
+              size="sm"
+              value={formData.zip}
+              onChange={(e) => handleChange('zip', e.target.value)}
+              placeholder="ZIP"
+            />
+          </div>
 
-        <Select
-          value={formData.timezone}
-          onValueChange={(value) => handleChange('timezone', value)}
-        >
-          <SelectTrigger className="h-9">
-            <SelectValue placeholder="Timezone" />
-          </SelectTrigger>
-          <SelectContent>
-            {US_TIMEZONES.map((tz) => (
-              <SelectItem key={tz.value} value={tz.value}>
-                {tz.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+          <Select
+            value={formData.timezone}
+            onValueChange={(value) => handleChange('timezone', value)}
+          >
+            <SelectTrigger className="h-8">
+              <SelectValue placeholder="Timezone" />
+            </SelectTrigger>
+            <SelectContent>
+              {US_TIMEZONES.map((tz) => (
+                <SelectItem key={tz.value} value={tz.value}>
+                  {tz.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </AnimatedItem>
 
       {/* Contact Fields */}
-      <div className="space-y-4">
-        <span className="text-xs text-muted-foreground uppercase tracking-wide">Contact</span>
-        
-        <div className="grid grid-cols-2 gap-3">
-          <Input
-            id="phone"
-            type="tel"
-            value={formData.phone}
-            onChange={(e) => handleChange('phone', e.target.value)}
-            placeholder="Phone"
-            className="h-9"
-          />
-          <Input
-            id="email"
-            type="email"
-            value={formData.email}
-            onChange={(e) => handleChange('email', e.target.value)}
-            placeholder="Email"
-            className="h-9"
-          />
+      <AnimatedItem>
+        <div className="space-y-4">
+          <span className="text-xs text-muted-foreground uppercase tracking-wide">Contact</span>
+          
+          <div className="grid grid-cols-2 gap-3">
+            <Input
+              id="phone"
+              type="tel"
+              size="sm"
+              value={formData.phone}
+              onChange={(e) => handleChange('phone', e.target.value)}
+              placeholder="Phone"
+            />
+            <Input
+              id="email"
+              type="email"
+              size="sm"
+              value={formData.email}
+              onChange={(e) => handleChange('email', e.target.value)}
+              placeholder="Email"
+            />
+          </div>
         </div>
-      </div>
+      </AnimatedItem>
 
       {/* WordPress - only show if has data */}
       {(location.wordpress_slug || location.wordpress_community_id) && (
-        <div className="space-y-3">
-          <span className="text-xs text-muted-foreground uppercase tracking-wide">WordPress</span>
-          <Input
-            id="wordpress_slug"
-            value={formData.wordpress_slug || ''}
-            onChange={(e) => handleChange('wordpress_slug', e.target.value)}
-            placeholder="Community slug"
-            className="h-9"
-          />
-          {location.wordpress_community_id && (
-            <p className="text-xs text-muted-foreground">ID: {location.wordpress_community_id}</p>
-          )}
-        </div>
+        <AnimatedItem>
+          <div className="space-y-3">
+            <span className="text-xs text-muted-foreground uppercase tracking-wide">WordPress</span>
+            <Input
+              id="wordpress_slug"
+              size="sm"
+              value={formData.wordpress_slug || ''}
+              onChange={(e) => handleChange('wordpress_slug', e.target.value)}
+              placeholder="Community slug"
+            />
+            {location.wordpress_community_id && (
+              <p className="text-xs text-muted-foreground">ID: {location.wordpress_community_id}</p>
+            )}
+          </div>
+        </AnimatedItem>
       )}
 
       {/* Business Hours - Collapsible */}
-      <Collapsible open={hoursOpen} onOpenChange={setHoursOpen} lazy>
-        <CollapsibleTrigger className="flex items-center gap-2 w-full text-left py-2">
-          {hoursOpen ? (
-            <ChevronDown className="h-4 w-4 text-muted-foreground" />
-          ) : (
-            <ChevronRight className="h-4 w-4 text-muted-foreground" />
-          )}
-          <span className="text-xs text-muted-foreground uppercase tracking-wide">Business Hours</span>
-        </CollapsibleTrigger>
-        <CollapsibleContent className="pt-3">
-          <BusinessHoursEditor
-            value={formData.business_hours || {}}
-            onChange={(hours) => handleChange('business_hours', hours)}
-          />
-        </CollapsibleContent>
-      </Collapsible>
+      <AnimatedItem>
+        <Collapsible open={hoursOpen} onOpenChange={setHoursOpen} lazy>
+          <CollapsibleTrigger className="flex items-center gap-2 w-full text-left py-2">
+            {hoursOpen ? (
+              <ChevronDown className="h-4 w-4 text-muted-foreground" />
+            ) : (
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            )}
+            <span className="text-xs text-muted-foreground uppercase tracking-wide">Business Hours</span>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="pt-3">
+            <BusinessHoursEditor
+              value={formData.business_hours || {}}
+              onChange={(hours) => handleChange('business_hours', hours)}
+            />
+          </CollapsibleContent>
+        </Collapsible>
+      </AnimatedItem>
 
       {/* Calendars - Collapsible with lazy loading */}
-      <Collapsible open={calendarsOpen} onOpenChange={setCalendarsOpen} lazy>
-        <CollapsibleTrigger className="flex items-center gap-2 w-full text-left py-2">
-          {calendarsOpen ? (
-            <ChevronDown className="h-4 w-4 text-muted-foreground" />
-          ) : (
-            <ChevronRight className="h-4 w-4 text-muted-foreground" />
-          )}
-          <span className="text-xs text-muted-foreground uppercase tracking-wide">Connected Calendars</span>
-        </CollapsibleTrigger>
-        <CollapsibleContent className="pt-3">
-          <CalendarConnections
-            locationId={location.id}
-            agentId={agentId}
-          />
-        </CollapsibleContent>
-      </Collapsible>
+      <AnimatedItem>
+        <Collapsible open={calendarsOpen} onOpenChange={setCalendarsOpen} lazy>
+          <CollapsibleTrigger className="flex items-center gap-2 w-full text-left py-2">
+            {calendarsOpen ? (
+              <ChevronDown className="h-4 w-4 text-muted-foreground" />
+            ) : (
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            )}
+            <span className="text-xs text-muted-foreground uppercase tracking-wide">Connected Calendars</span>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="pt-3">
+            <CalendarConnections
+              locationId={location.id}
+              agentId={agentId}
+            />
+          </CollapsibleContent>
+        </Collapsible>
+      </AnimatedItem>
     </div>
   );
 };

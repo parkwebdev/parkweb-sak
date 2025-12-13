@@ -1,7 +1,8 @@
 /**
  * BusinessHoursEditor Component
  * 
- * Per-day business hours configuration with toggles and time pickers.
+ * Per-day business hours configuration with label-left/switch-right pattern.
+ * Matches the ToggleSettingRow design system used throughout the app.
  * 
  * @module components/agents/locations/BusinessHoursEditor
  */
@@ -10,6 +11,7 @@ import React from 'react';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import { AnimatedItem } from '@/components/ui/animated-item';
 import type { BusinessHours, DayHours } from '@/types/locations';
 
 const DAYS = [
@@ -31,6 +33,12 @@ const TIME_OPTIONS = Array.from({ length: 48 }, (_, i) => {
   const time12 = `${hour12}:${minute} ${period}`;
   return { value: time24, label: time12 };
 });
+
+// Format time for display under label
+const formatTimeDisplay = (time: string) => {
+  const option = TIME_OPTIONS.find(opt => opt.value === time);
+  return option?.label || time;
+};
 
 interface BusinessHoursEditorProps {
   value: BusinessHours;
@@ -71,61 +79,69 @@ export const BusinessHoursEditor: React.FC<BusinessHoursEditorProps> = ({
   };
 
   return (
-    <div className="space-y-3">
-      {DAYS.map(({ key, label }) => {
+    <div className="space-y-1">
+      {DAYS.map(({ key, label }, index) => {
         const day = getDay(key);
         return (
-          <div
-            key={key}
-            className="flex items-center gap-4 py-2 border-b border-border last:border-0"
-          >
-            <div className="w-28 flex items-center gap-2">
-              <Switch
-                checked={day.isOpen}
-                onCheckedChange={(checked) => toggleDay(key, checked)}
-                aria-label={`Toggle ${label}`}
-              />
-              <Label className="text-sm font-normal">{label}</Label>
-            </div>
-
-            {day.isOpen ? (
-              <div className="flex items-center gap-2 text-sm">
-                <Select
-                  value={day.open || '09:00'}
-                  onValueChange={(time) => updateTime(key, 'open', time)}
-                >
-                  <SelectTrigger className="w-28 h-8">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {TIME_OPTIONS.map((opt) => (
-                      <SelectItem key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <span className="text-muted-foreground">to</span>
-                <Select
-                  value={day.close || '17:00'}
-                  onValueChange={(time) => updateTime(key, 'close', time)}
-                >
-                  <SelectTrigger className="w-28 h-8">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {TIME_OPTIONS.map((opt) => (
-                      <SelectItem key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+          <AnimatedItem key={key} motionProps={{ transition: { delay: index * 0.03 } }}>
+            <div className="flex items-center justify-between py-3 border-b border-border last:border-0">
+              {/* Left side: Label and hours summary */}
+              <div className="flex flex-col gap-0.5">
+                <Label className="text-sm font-medium">{label}</Label>
+                {day.isOpen ? (
+                  <span className="text-xs text-muted-foreground">
+                    {formatTimeDisplay(day.open || '09:00')} – {formatTimeDisplay(day.close || '17:00')}
+                  </span>
+                ) : (
+                  <span className="text-xs text-muted-foreground">Closed</span>
+                )}
               </div>
-            ) : (
-              <span className="text-sm text-muted-foreground">Closed</span>
-            )}
-          </div>
+
+              {/* Right side: Time selects (when open) + Switch */}
+              <div className="flex items-center gap-3">
+                {day.isOpen && (
+                  <div className="flex items-center gap-2">
+                    <Select
+                      value={day.open || '09:00'}
+                      onValueChange={(time) => updateTime(key, 'open', time)}
+                    >
+                      <SelectTrigger className="w-[100px] h-8">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {TIME_OPTIONS.map((opt) => (
+                          <SelectItem key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <span className="text-muted-foreground text-sm">to</span>
+                    <Select
+                      value={day.close || '17:00'}
+                      onValueChange={(time) => updateTime(key, 'close', time)}
+                    >
+                      <SelectTrigger className="w-[100px] h-8">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {TIME_OPTIONS.map((opt) => (
+                          <SelectItem key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+                <Switch
+                  checked={day.isOpen}
+                  onCheckedChange={(checked) => toggleDay(key, checked)}
+                  aria-label={`Toggle ${label}`}
+                />
+              </div>
+            </div>
+          </AnimatedItem>
         );
       })}
     </div>
