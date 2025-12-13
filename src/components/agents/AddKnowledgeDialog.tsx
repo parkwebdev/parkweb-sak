@@ -2,8 +2,8 @@
  * AddKnowledgeDialog Component
  * 
  * Dialog for adding knowledge sources to an agent.
- * Supports file uploads (PDF, CSV, JSON, XML), URLs, sitemaps, and text input.
- * Includes plan limit checking and sitemap advanced options.
+ * Supports file uploads (PDF, CSV, JSON, XML), URLs, sitemaps, property listings, and text input.
+ * Includes plan limit checking, refresh strategy configuration, and location assignment.
  * @module components/agents/AddKnowledgeDialog
  */
 
@@ -20,12 +20,21 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useKnowledgeSources } from '@/hooks/useKnowledgeSources';
+import { useLocations } from '@/hooks/useLocations';
 import { usePlanLimits } from '@/hooks/usePlanLimits';
-import { Upload01, Link03, File01, AlertCircle, Globe01, ChevronDown, ChevronUp } from '@untitledui/icons';
+import { Upload01, Link03, File01, AlertCircle, Globe01, ChevronDown, ChevronUp, Building07 } from '@untitledui/icons';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import type { KnowledgeType } from '@/types/metadata';
+import type { KnowledgeType, KnowledgeSourceType, RefreshStrategy } from '@/types/metadata';
+import { REFRESH_STRATEGY_LABELS, SOURCE_TYPE_LABELS } from '@/types/metadata';
 
 interface AddKnowledgeDialogProps {
   open: boolean;
@@ -40,7 +49,8 @@ export const AddKnowledgeDialog: React.FC<AddKnowledgeDialogProps> = ({
   agentId,
   userId,
 }) => {
-  const { uploadDocument, addUrlSource, addTextSource, addSitemapSource } = useKnowledgeSources(agentId);
+  const { uploadDocument, addUrlSource, addTextSource, addSitemapSource, addPropertyListingSource } = useKnowledgeSources(agentId);
+  const { locations } = useLocations(agentId);
   const { canAddKnowledgeSource, showLimitWarning } = usePlanLimits();
   const limitCheck = canAddKnowledgeSource();
   
@@ -49,6 +59,14 @@ export const AddKnowledgeDialog: React.FC<AddKnowledgeDialogProps> = ({
   const [sitemapUrl, setSitemapUrl] = useState('');
   const [textContent, setTextContent] = useState('');
   const [textName, setTextName] = useState('');
+  
+  // Property listings state
+  const [propertyUrl, setPropertyUrl] = useState('');
+  const [propertyRefreshStrategy, setPropertyRefreshStrategy] = useState<RefreshStrategy>('daily');
+  const [propertyLocationId, setPropertyLocationId] = useState<string>('');
+  
+  // URL with refresh state
+  const [urlRefreshStrategy, setUrlRefreshStrategy] = useState<RefreshStrategy>('manual');
   
   // Sitemap advanced options
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
@@ -85,8 +103,9 @@ export const AddKnowledgeDialog: React.FC<AddKnowledgeDialogProps> = ({
 
     setUploading(true);
     try {
-      await addUrlSource(url, agentId, userId);
+      await addUrlSource(url, agentId, userId, { refreshStrategy: urlRefreshStrategy });
       setUrl('');
+      setUrlRefreshStrategy('manual');
       onOpenChange(false);
     } finally {
       setUploading(false);
@@ -132,6 +151,32 @@ export const AddKnowledgeDialog: React.FC<AddKnowledgeDialogProps> = ({
     }
   };
 
+  const handlePropertyListingSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!limitCheck.allowed) {
+      showLimitWarning('knowledge sources', limitCheck, 'add');
+      return;
+    }
+    if (!propertyUrl) return;
+
+    setUploading(true);
+    try {
+      await addPropertyListingSource(propertyUrl, agentId, userId, {
+        refreshStrategy: propertyRefreshStrategy,
+        locationId: propertyLocationId || undefined,
+      });
+      
+      // Reset form
+      setPropertyUrl('');
+      setPropertyRefreshStrategy('daily');
+      setPropertyLocationId('');
+      onOpenChange(false);
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const handleTextSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!textContent) return;
@@ -160,7 +205,7 @@ export const AddKnowledgeDialog: React.FC<AddKnowledgeDialogProps> = ({
         <DialogHeader>
           <DialogTitle>Add Knowledge Source</DialogTitle>
           <DialogDescription>
-            Upload documents, add URLs, crawl sitemaps, or paste content to train your agent
+            Upload documents, add URLs, crawl sitemaps, import property listings, or paste content to train your agent
           </DialogDescription>
         </DialogHeader>
 
@@ -183,7 +228,7 @@ export const AddKnowledgeDialog: React.FC<AddKnowledgeDialogProps> = ({
         )}
 
         <Tabs defaultValue="upload" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="upload">
               <Upload01 className="h-4 w-4 mr-2" />
               Upload
@@ -195,6 +240,10 @@ export const AddKnowledgeDialog: React.FC<AddKnowledgeDialogProps> = ({
             <TabsTrigger value="sitemap">
               <Globe01 className="h-4 w-4 mr-2" />
               Sitemap
+            </TabsTrigger>
+            <TabsTrigger value="properties">
+              <Building07 className="h-4 w-4 mr-2" />
+              Properties
             </TabsTrigger>
             <TabsTrigger value="text">
               <File01 className="h-4 w-4 mr-2" />
@@ -239,6 +288,26 @@ export const AddKnowledgeDialog: React.FC<AddKnowledgeDialogProps> = ({
                   We'll fetch and process the content from this URL
                 </p>
               </div>
+              
+              <div>
+                <Label htmlFor="url-refresh">Auto-Refresh</Label>
+                <Select value={urlRefreshStrategy} onValueChange={(v) => setUrlRefreshStrategy(v as RefreshStrategy)}>
+                  <SelectTrigger id="url-refresh">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(REFRESH_STRATEGY_LABELS).map(([value, label]) => (
+                      <SelectItem key={value} value={value}>
+                        {label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground mt-1">
+                  How often should we check for content updates?
+                </p>
+              </div>
+
               <Button type="submit" disabled={!url} loading={uploading}>
                 Add URL
               </Button>
@@ -318,6 +387,70 @@ export const AddKnowledgeDialog: React.FC<AddKnowledgeDialogProps> = ({
 
               <Button type="submit" disabled={!sitemapUrl} loading={uploading}>
                 Crawl Sitemap
+              </Button>
+            </form>
+          </TabsContent>
+
+          <TabsContent value="properties" className="space-y-4">
+            <form onSubmit={handlePropertyListingSubmit} className="space-y-4">
+              <div>
+                <Label htmlFor="property-url">Property Listings URL</Label>
+                <Input
+                  id="property-url"
+                  type="url"
+                  placeholder="https://example.com/available-homes"
+                  value={propertyUrl}
+                  onChange={(e) => setPropertyUrl(e.target.value)}
+                  required
+                />
+                <p className="text-xs text-muted-foreground mt-2">
+                  We'll extract property listings from this page and sync them automatically
+                </p>
+              </div>
+
+              <div>
+                <Label htmlFor="property-refresh">Refresh Frequency</Label>
+                <Select value={propertyRefreshStrategy} onValueChange={(v) => setPropertyRefreshStrategy(v as RefreshStrategy)}>
+                  <SelectTrigger id="property-refresh">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(REFRESH_STRATEGY_LABELS).filter(([v]) => v !== 'manual').map(([value, label]) => (
+                      <SelectItem key={value} value={value}>
+                        {label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground mt-1">
+                  How often should we check for new/updated listings?
+                </p>
+              </div>
+
+              {locations.length > 0 && (
+                <div>
+                  <Label htmlFor="property-location">Assign to Location (optional)</Label>
+                  <Select value={propertyLocationId} onValueChange={setPropertyLocationId}>
+                    <SelectTrigger id="property-location">
+                      <SelectValue placeholder="Select a location" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">No location</SelectItem>
+                      {locations.map((loc) => (
+                        <SelectItem key={loc.id} value={loc.id}>
+                          {loc.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Link these properties to a specific community/location
+                  </p>
+                </div>
+              )}
+
+              <Button type="submit" disabled={!propertyUrl} loading={uploading}>
+                Import Property Listings
               </Button>
             </form>
           </TabsContent>

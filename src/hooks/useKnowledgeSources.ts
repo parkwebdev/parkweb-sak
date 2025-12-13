@@ -203,34 +203,37 @@ export const useKnowledgeSources = (agentId?: string) => {
   const addUrlSource = async (
     url: string,
     agentId: string,
-    userId: string
+    userId: string,
+    options?: { refreshStrategy?: string }
   ): Promise<string | null> => {
     try {
+      const insertData: Record<string, unknown> = {
+        agent_id: agentId,
+        user_id: userId,
+        type: 'url' as KnowledgeType,
+        source: url,
+        status: 'processing',
+        source_type: 'url',
+        refresh_strategy: options?.refreshStrategy || 'manual',
+        metadata: {
+          added_at: new Date().toISOString(),
+        },
+      };
+
       const { data, error } = await supabase
         .from('knowledge_sources')
-        .insert({
-          agent_id: agentId,
-          user_id: userId,
-          type: 'url' as KnowledgeType,
-          source: url,
-          status: 'processing',
-          metadata: {
-            added_at: new Date().toISOString(),
-          },
-        })
+        .insert(insertData as never)
         .select()
         .single();
 
       if (error) throw error;
 
-      // Optimistic update - add to local state immediately
       setSources((prev) => [data, ...prev]);
 
       toast.success('URL added', {
         description: 'Processing content...',
       });
 
-      // Trigger processing in background (don't await)
       supabase.functions.invoke('process-knowledge-source', {
         body: { sourceId: data.id, agentId },
       }).then(({ error: invokeError }) => {
@@ -244,6 +247,60 @@ export const useKnowledgeSources = (agentId?: string) => {
     } catch (error: unknown) {
       logger.error('Error adding URL source', error);
       toast.error('Failed to add URL', {
+        description: getErrorMessage(error),
+      });
+      return null;
+    }
+  };
+
+  const addPropertyListingSource = async (
+    url: string,
+    agentId: string,
+    userId: string,
+    options?: { refreshStrategy?: string; locationId?: string }
+  ): Promise<string | null> => {
+    try {
+      const insertData: Record<string, unknown> = {
+        agent_id: agentId,
+        user_id: userId,
+        type: 'url' as KnowledgeType,
+        source: url,
+        status: 'processing',
+        source_type: 'property_listings',
+        refresh_strategy: options?.refreshStrategy || 'daily',
+        default_location_id: options?.locationId || null,
+        metadata: {
+          added_at: new Date().toISOString(),
+        },
+      };
+
+      const { data, error } = await supabase
+        .from('knowledge_sources')
+        .insert(insertData as never)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setSources((prev) => [data, ...prev]);
+
+      toast.success('Property listing source added', {
+        description: 'Extracting properties...',
+      });
+
+      supabase.functions.invoke('process-knowledge-source', {
+        body: { sourceId: data.id, agentId },
+      }).then(({ error: invokeError }) => {
+        if (invokeError) {
+          logger.error('Edge function invocation failed', invokeError);
+          markSourceAsError(data.id, `Processing failed: ${invokeError.message}`);
+        }
+      });
+
+      return data.id;
+    } catch (error: unknown) {
+      logger.error('Error adding property listing source', error);
+      toast.error('Failed to add property listings', {
         description: getErrorMessage(error),
       });
       return null;
@@ -637,6 +694,7 @@ export const useKnowledgeSources = (agentId?: string) => {
     addUrlSource,
     addSitemapSource,
     addTextSource,
+    addPropertyListingSource,
     deleteSource,
     deleteChildSource,
     reprocessSource,

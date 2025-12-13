@@ -87,3 +87,7 @@ schedule = "0 4 * * *"
 
 [functions.submit-rating]
 verify_jwt = false
+
+[functions.refresh-knowledge-sources]
+verify_jwt = false
+schedule = "0 * * * *"
