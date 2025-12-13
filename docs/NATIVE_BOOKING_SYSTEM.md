@@ -1286,7 +1286,7 @@ async function handler(req: Request) {
 ### Overview
 Sync home/property listings from WordPress to the properties table with location linking.
 
-### Status: 🔜 Planned
+### Status: ✅ Complete
 
 ---
 
@@ -1294,58 +1294,17 @@ Sync home/property listings from WordPress to the properties table with location
 
 **File:** `supabase/functions/sync-wordpress-homes/index.ts`
 
-```typescript
-// Pseudocode
-async function handler(req: Request) {
-  const { agentId } = await req.json();
-  
-  // 1. Get WordPress config
-  const agent = await getAgent(agentId);
-  const wpConfig = agent.deployment_config?.wordpress;
-  
-  // 2. Fetch all locations with wordpress_community_id
-  const locations = await supabase
-    .from('locations')
-    .select('id, wordpress_community_id')
-    .eq('agent_id', agentId)
-    .not('wordpress_community_id', 'is', null);
-  
-  const locationMap = new Map(locations.map(l => [l.wordpress_community_id, l.id]));
-  
-  // 3. Fetch homes from WP REST API
-  const homes = await fetch(
-    `${wpConfig.site_url}/wp-json/wp/v2/home?per_page=100&_embed`
-  ).then(r => r.json());
-  
-  // 4. For each home, create/update Property
-  for (const home of homes) {
-    const communityId = home.home_community?.[0];
-    const locationId = communityId ? locationMap.get(communityId) : null;
-    
-    await supabase.from('properties').upsert({
-      agent_id: agentId,
-      knowledge_source_id: getOrCreateWordPressSource(agentId),
-      location_id: locationId,
-      external_id: `wp_home_${home.id}`,
-      address: home.acf?.home_address,
-      price: home.acf?.price * 100, // Convert to cents
-      beds: home.acf?.bedrooms,
-      baths: home.acf?.bathrooms,
-      sqft: home.acf?.square_feet,
-      status: mapStatus(home.acf?.home_status),
-      listing_url: home.link,
-      images: extractImages(home),
-    }, {
-      onConflict: 'knowledge_source_id,external_id'
-    });
-  }
-  
-  // 5. Update last sync timestamp
-  await updateAgentWordPressConfig(agentId, {
-    last_home_sync: new Date().toISOString()
-  });
-}
-```
+**Implemented Features:**
+- Test endpoint to verify WordPress has homes/properties REST API
+- Full sync with pagination (fetches all homes)
+- Auto-detection of multiple endpoint types (home, homes, property, properties)
+- ACF field mapping for structured data (price, beds, baths, sqft, etc.)
+- AI extraction fallback for non-ACF WordPress sites (using OpenRouter)
+- Location linking via `home_community` taxonomy → `location_id`
+- Auto-creation of WordPress knowledge source per agent
+- Image extraction from featured media and ACF gallery fields
+- Status mapping (available, pending, sold, rented, coming_soon)
+- Price parsing with cents conversion
 
 ### 4.2 Database Updates
 
@@ -1353,25 +1312,37 @@ async function handler(req: Request) {
 -- Add wordpress_home to knowledge_source_type enum
 ALTER TYPE knowledge_source_type ADD VALUE IF NOT EXISTS 'wordpress_home';
 
--- Create knowledge source for WordPress homes (one per agent)
--- This links all WP-synced homes to a single knowledge source
+-- Unique constraint for upserts
+CREATE UNIQUE INDEX properties_source_external_unique 
+ON properties (knowledge_source_id, external_id) 
+WHERE external_id IS NOT NULL;
 ```
 
-**Checklist:**
-- [ ] Create sync-wordpress-homes edge function
-- [ ] Implement home_community → location_id mapping
-- [ ] Handle ACF field extraction
-- [ ] Create WordPress knowledge source automatically
-- [ ] Generate embeddings for property descriptions
-- [ ] Add to config.toml
+### 4.3 React Components
+
+**WordPressHomesCard** (`src/components/agents/locations/WordPressHomesCard.tsx`):
+- Displays home sync status and count
+- Test endpoint button
+- Sync homes button with progress
+- AI extraction toggle (uses OpenRouter for non-ACF sites)
+- Only visible when WordPress is connected
+
+**useWordPressHomes Hook** (`src/hooks/useWordPressHomes.ts`):
+- `testHomesEndpoint()` - Test if WordPress has homes API
+- `syncHomes()` - Trigger full sync
+- State management for testing/syncing status
 
 ### Phase 4 Completion Checklist
 
-- [ ] sync-wordpress-homes edge function deployed
-- [ ] Homes linked to correct Locations via taxonomy
-- [ ] Properties populated with price, beds, baths, images
-- [ ] Last sync timestamps updated
-- [ ] Scheduled sync support (reuse existing refresh strategies)
+- [x] sync-wordpress-homes edge function deployed
+- [x] Homes linked to correct Locations via taxonomy
+- [x] Properties populated with price, beds, baths, images
+- [x] Last sync timestamps updated
+- [x] AI extraction fallback for non-ACF WordPress sites
+- [x] WordPressHomesCard UI component
+- [x] useWordPressHomes hook
+- [x] Database unique constraint for upserts
+- [ ] Scheduled sync support (future enhancement)
 
 ---
 

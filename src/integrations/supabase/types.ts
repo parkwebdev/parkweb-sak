@@ -2034,6 +2034,7 @@ export type Database = {
         | "sitemap"
         | "property_listings"
         | "property_feed"
+        | "wordpress_home"
       knowledge_type: "pdf" | "url" | "api" | "json" | "xml" | "csv"
       lead_status: "new" | "contacted" | "qualified" | "converted"
       org_role: "owner" | "admin" | "member"
@@ -2202,6 +2203,7 @@ export const Constants = {
         "sitemap",
         "property_listings",
         "property_feed",
+        "wordpress_home",
       ],
       knowledge_type: ["pdf", "url", "api", "json", "xml", "csv"],
       lead_status: ["new", "contacted", "qualified", "converted"],
