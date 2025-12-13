@@ -34,18 +34,20 @@ export const LocationDetailsSheet: React.FC<LocationDetailsSheetProps> = ({
 }) => {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-xl overflow-y-auto">
-        <SheetHeader className="mb-6">
-          <SheetTitle>{location?.name || 'Location Details'}</SheetTitle>
-        </SheetHeader>
-        {location && (
-          <LocationDetails
-            location={location}
-            agentId={agentId}
-            onUpdate={onUpdate}
-          />
-        )}
-      </SheetContent>
+      {open && (
+        <SheetContent className="w-full sm:max-w-xl overflow-y-auto">
+          <SheetHeader className="mb-6">
+            <SheetTitle>{location?.name || 'Location Details'}</SheetTitle>
+          </SheetHeader>
+          {location && (
+            <LocationDetails
+              location={location}
+              agentId={agentId}
+              onUpdate={onUpdate}
+            />
+          )}
+        </SheetContent>
+      )}
     </Sheet>
   );
 };
