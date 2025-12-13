@@ -3,6 +3,8 @@ import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Database01, Globe01 } from '@untitledui/icons';
 import { useKnowledgeSources } from '@/hooks/useKnowledgeSources';
+import { useProperties } from '@/hooks/useProperties';
+import { useLocations } from '@/hooks/useLocations';
 import { KnowledgeSourceCard } from '@/components/agents/KnowledgeSourceCard';
 import { AddKnowledgeDialog } from '@/components/agents/AddKnowledgeDialog';
 import { HelpArticlesManager } from '@/components/agents/HelpArticlesManager';
@@ -21,7 +23,9 @@ interface AgentKnowledgeTabProps {
 type KnowledgeTab = 'knowledge-sources' | 'help-articles';
 
 export const AgentKnowledgeTab = ({ agentId, userId }: AgentKnowledgeTabProps) => {
-  const { sources, loading, deleteSource, deleteChildSource, reprocessSource, resumeProcessing, retryChildSource, retrainAllSources, isSourceOutdated, getChildSources, getParentSources } = useKnowledgeSources(agentId);
+  const { sources, loading, deleteSource, deleteChildSource, reprocessSource, resumeProcessing, retryChildSource, retrainAllSources, triggerManualRefresh, isSourceOutdated, getChildSources, getParentSources } = useKnowledgeSources(agentId);
+  const { getPropertyCount } = useProperties(agentId);
+  const { locations } = useLocations(agentId);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<KnowledgeTab>('knowledge-sources');
   const [isRetraining, setIsRetraining] = useState(false);
@@ -170,19 +174,28 @@ export const AgentKnowledgeTab = ({ agentId, userId }: AgentKnowledgeTabProps) =
             />
           ) : (
             <div className="grid gap-3">
-              {parentSources.map((source) => (
-                <KnowledgeSourceCard
-                  key={source.id}
-                  source={source}
-                  onDelete={deleteSource}
-                  onReprocess={reprocessSource}
-                  onResume={resumeProcessing}
-                  onRetryChild={retryChildSource}
-                  onDeleteChild={deleteChildSource}
-                  isOutdated={isSourceOutdated(source)}
-                  childSources={getChildSources(source.id)}
-                />
-              ))}
+              {parentSources.map((source) => {
+                const locationId = (source as any).default_location_id;
+                const location = locationId ? locations.find(l => l.id === locationId) : null;
+                const sourceType = (source as any).source_type;
+                
+                return (
+                  <KnowledgeSourceCard
+                    key={source.id}
+                    source={source}
+                    onDelete={deleteSource}
+                    onReprocess={reprocessSource}
+                    onResume={resumeProcessing}
+                    onRetryChild={retryChildSource}
+                    onDeleteChild={deleteChildSource}
+                    onRefreshNow={triggerManualRefresh}
+                    isOutdated={isSourceOutdated(source)}
+                    childSources={getChildSources(source.id)}
+                    propertyCount={sourceType === 'property_listings' ? getPropertyCount(source.id) : undefined}
+                    locationName={location?.name}
+                  />
+                );
+              })}
             </div>
           )}
 
