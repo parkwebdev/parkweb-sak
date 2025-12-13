@@ -58,7 +58,10 @@ Geist is loaded via Google Fonts in `index.html`:
 | H3 | `text-sm font-medium` | 14px | 1.4 | -0.022em |
 | H4 | `text-xs font-medium` | 12px | 1.4 | -0.022em |
 | Caption | `text-xs` | 12px | 1.5 | -0.011em |
+| Micro | `text-2xs` | 10px | 0.875rem | -0.01em |
 | Code | `text-xs font-mono` | 12px | 1.6 | -0.01em |
+
+> **Note**: `text-2xs` (10px) is a custom design token for intentional micro-text use cases like debug consoles, avatar fallbacks, notification badges, and calendar mini indicators. Avoid using arbitrary values like `text-[10px]`.
 
 ### Font Weights
 

@@ -395,7 +395,7 @@ const NewsDialog = ({
                     <div className="flex items-center gap-2">
                       <Avatar className="h-5 w-5">
                         <AvatarImage src={currentAuthorMember.avatar_url || undefined} />
-                        <AvatarFallback className="text-[10px]">
+                        <AvatarFallback className="text-2xs">
                           {currentAuthorMember.display_name?.[0] || '?'}
                         </AvatarFallback>
                       </Avatar>
@@ -412,7 +412,7 @@ const NewsDialog = ({
                     <div className="flex items-center gap-2">
                       <Avatar className="h-5 w-5">
                         <AvatarImage src={member.avatar_url || undefined} />
-                        <AvatarFallback className="text-[10px]">
+                        <AvatarFallback className="text-2xs">
                           {member.display_name?.[0] || '?'}
                         </AvatarFallback>
                       </Avatar>

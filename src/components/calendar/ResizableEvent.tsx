@@ -210,7 +210,7 @@ export const ResizableEvent: React.FC<ResizableEventProps> = ({
             <Repeat02 className="h-3 w-3 flex-shrink-0 opacity-70" />
           )}
         </div>
-        <div className={cn("opacity-75", variant === 'week' ? 'text-[10px]' : 'text-xs')}>
+        <div className={cn("opacity-75", variant === 'week' ? 'text-2xs' : 'text-xs')}>
           {format(eventStart, 'h:mm a')}
           {variant === 'day' && ` - ${format(eventEnd, 'h:mm a')}`}
         </div>

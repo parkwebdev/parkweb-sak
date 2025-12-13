@@ -633,7 +633,7 @@ export const FullCalendar: React.FC<FullCalendarProps> = ({
           <div className="flex items-center gap-4">
             {/* Mini date indicator */}
             <div className="flex flex-col items-center justify-center bg-muted rounded-lg px-3 py-1.5 min-w-[52px]">
-              <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
+              <span className="text-2xs font-medium text-muted-foreground uppercase tracking-wide">
                 {format(today, 'MMM')}
               </span>
               <span className="text-xl font-semibold text-foreground leading-tight">

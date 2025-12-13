@@ -161,7 +161,7 @@ export const ActiveVisitorsCard: React.FC<ActiveVisitorsCardProps> = ({ agentIds
                 
                 <div className="text-right shrink-0">
                   {visitor.agentName && (
-                    <Badge variant="outline" className="text-[10px] mb-1">
+                    <Badge variant="outline" size="sm" className="mb-1">
                       {visitor.agentName}
                     </Badge>
                   )}

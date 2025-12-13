@@ -29,7 +29,7 @@ export const TakeoverBanner = ({ agentName, agentAvatar }: TakeoverBannerProps) 
       {agentAvatar ? (
         <Avatar className="w-5 h-5">
           <AvatarImage src={agentAvatar} alt={agentName} />
-          <AvatarFallback className="text-[10px] bg-muted text-muted-foreground">
+          <AvatarFallback className="text-2xs bg-muted text-muted-foreground">
             {(agentName || 'T')[0].toUpperCase()}
           </AvatarFallback>
         </Avatar>

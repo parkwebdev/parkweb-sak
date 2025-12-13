@@ -79,7 +79,8 @@ export const KeyboardShortcutsDropdown: React.FC = () => {
                         <Badge 
                           key={keyIndex}
                           variant="secondary" 
-                          className="px-1.5 py-0.5 text-[10px] font-mono h-auto"
+                          size="sm"
+                          className="px-1.5 py-0.5 font-mono h-auto"
                         >
                           {key}
                         </Badge>

@@ -203,7 +203,7 @@ export const AriIntegrationsSection: React.FC<AriIntegrationsSectionProps> = ({ 
           <div className="flex items-center gap-2 mb-1">
             <h3 className="text-sm font-medium">{integration.name}</h3>
             {integration.connected && (
-              <Badge variant="default" className="text-[10px] px-1.5 py-0 bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
+              <Badge variant="default" size="sm" className="px-1.5 py-0 bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
                 <CheckCircle className="h-3 w-3 mr-1" />
                 Connected
               </Badge>

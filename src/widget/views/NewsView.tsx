@@ -220,7 +220,7 @@ export const NewsView = ({ config, newsItems }: NewsViewProps) => {
                       {item.author_avatar && (
                         <Avatar className="h-5 w-5">
                           <AvatarImage src={item.author_avatar} />
-                          <AvatarFallback className="text-[10px]">
+                          <AvatarFallback className="text-2xs">
                             {item.author_name?.[0] || 'A'}
                           </AvatarFallback>
                         </Avatar>
