@@ -15,16 +15,18 @@ This document provides the complete implementation blueprint for ChatPad's nativ
 1. [Executive Summary](#executive-summary)
 2. [Problem Statement](#problem-statement)
 3. [Solution Architecture](#solution-architecture)
-4. [WordPress REST API Integration](#wordpress-rest-api-integration)
-5. [Phase 1: Living Data Sources Foundation](#phase-1-living-data-sources-foundation) ✅ Complete
-6. [Phase 2: Locations & Calendar Integration](#phase-2-locations--calendar-integration) 🔄 In Progress
-7. [Phase 3: WordPress Site Connector](#phase-3-wordpress-site-connector)
-8. [Phase 4: Home/Property Sync](#phase-4-homeproperty-sync)
-9. [Phase 5: Smart Widget Detection](#phase-5-smart-widget-detection)
-10. [Phase 6: AI Booking Tools](#phase-6-ai-booking-tools)
-11. [Cost Analysis](#cost-analysis)
-12. [Risk Mitigation](#risk-mitigation)
-13. [Success Metrics](#success-metrics)
+4. [Unified Data Sources Architecture](#unified-data-sources-architecture)
+5. [WordPress REST API Integration](#wordpress-rest-api-integration)
+6. [Phase 1: Living Data Sources Foundation](#phase-1-living-data-sources-foundation) ✅ Complete
+7. [Phase 2: Unified Data Sources Tab](#phase-2-unified-data-sources-tab) 🔄 In Progress
+8. [Phase 3: WordPress Site Connector](#phase-3-wordpress-site-connector)
+9. [Phase 4: Home/Property Sync](#phase-4-homeproperty-sync)
+10. [Phase 5: Smart Widget Detection](#phase-5-smart-widget-detection)
+11. [Phase 6: AI Booking Tools](#phase-6-ai-booking-tools)
+12. [Phase 7: Calendar Integration & Native Planner](#phase-7-calendar-integration--native-planner)
+13. [Cost Analysis](#cost-analysis)
+14. [Risk Mitigation](#risk-mitigation)
+15. [Success Metrics](#success-metrics)
 
 ---
 
@@ -201,6 +203,94 @@ Enable mobile home park operators (and similar multi-location businesses) to dep
                                                             │   Confirm   │
                                                             └─────────────┘
 ```
+
+---
+
+## Unified Data Sources Architecture
+
+### Overview
+
+The **Data Sources** tab is the single entry point for all agent data ingestion. It replaces the previous separate "Knowledge" and "Locations" tabs by unifying them under one intelligent system with auto-detection capabilities.
+
+### Core Concept: One Input → Multiple Outputs
+
+When a user adds any data source, the system automatically analyzes the content and routes it appropriately:
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         ADD DATA SOURCE                                      │
+│                                                                             │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │  User Input Options:                                                 │   │
+│  │                                                                      │   │
+│  │  [Connect WordPress]  [REST API / JSON]  [URL]  [Sitemap]  [Text]   │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│                                    │                                        │
+│                                    ▼                                        │
+│  ┌─────────────────────────────────────────────────────────────────────┐   │
+│  │                    AUTO-DETECTION ENGINE                             │   │
+│  │                                                                      │   │
+│  │   Analyzes JSON structure for:                                       │   │
+│  │   • LOCATION_SIGNALS: address, city, state, zip, timezone, hours    │   │
+│  │   • PROPERTY_SIGNALS: beds, baths, price, sqft, status, features    │   │
+│  │   • RELATIONSHIP_SIGNALS: community_id, location_id, parent refs    │   │
+│  │                                                                      │   │
+│  └─────────────────────────────────────────────────────────────────────┘   │
+│                                    │                                        │
+│                  ┌─────────────────┼─────────────────┐                     │
+│                  ▼                 ▼                 ▼                     │
+│  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐        │
+│  │   LOCATIONS      │  │   PROPERTIES     │  │   RAG CHUNKS     │        │
+│  │   Table          │  │   Table          │  │   Table          │        │
+│  │                  │  │                  │  │                  │        │
+│  │ • Auto-created   │  │ • Auto-linked    │  │ • Embeddings     │        │
+│  │ • Calendar-ready │  │   to location    │  │ • Semantic search│        │
+│  │ • Business hours │  │ • AI-extracted   │  │ • Context for AI │        │
+│  └──────────────────┘  └──────────────────┘  └──────────────────┘        │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Tab Structure
+
+The unified Data Sources tab contains four sections:
+
+| Section | Description | Primary Use |
+|---------|-------------|-------------|
+| **Connected Sources** | WordPress sites, REST APIs, JSON feeds with sync status | Live data connections |
+| **Locations** | Communities/properties with calendar connections inline | Booking & routing |
+| **Properties** | Individual listings grouped by location | Availability queries |
+| **Knowledge Sources** | URLs, sitemaps, documents (RAG-only) | AI context |
+
+### Auto-Detection Signals
+
+```typescript
+const LOCATION_SIGNALS = [
+  'address', 'street', 'city', 'state', 'zip', 'postal',
+  'timezone', 'business_hours', 'hours', 'phone', 'email',
+  'community', 'location', 'site', 'property_name'
+];
+
+const PROPERTY_SIGNALS = [
+  'beds', 'bedrooms', 'baths', 'bathrooms', 'price', 'rent',
+  'sqft', 'square_feet', 'lot', 'unit', 'status', 'available',
+  'features', 'amenities', 'images', 'photos', 'year_built'
+];
+
+const RELATIONSHIP_SIGNALS = [
+  'community_id', 'location_id', 'parent_id', 'site_id',
+  'home_community', 'property_location'
+];
+```
+
+### Benefits of Unified Architecture
+
+1. **Simpler UX**: One tab instead of two, no mental model fragmentation
+2. **Automatic Organization**: System routes data to correct tables
+3. **Relationship Preservation**: Properties auto-link to locations
+4. **Calendar-Ready**: Locations created with calendar connection slots
+5. **RAG Integration**: All content feeds into AI knowledge base
+6. **Single Sync Point**: One "Refresh" button updates everything
 
 ---
 
