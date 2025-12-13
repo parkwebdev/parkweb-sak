@@ -5,7 +5,7 @@
  * Uses light visual hierarchy and generous whitespace.
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -42,7 +42,7 @@ export const LocationDetails: React.FC<LocationDetailsProps> = ({
     business_hours: (location.business_hours as BusinessHours) || {},
     wordpress_slug: location.wordpress_slug || '',
   });
-  const [saveTimeout, setSaveTimeout] = useState<NodeJS.Timeout | null>(null);
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [hoursOpen, setHoursOpen] = useState(false);
   const [calendarsOpen, setCalendarsOpen] = useState(false);
 
@@ -63,18 +63,23 @@ export const LocationDetails: React.FC<LocationDetailsProps> = ({
     });
   }, [location.id]);
 
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    };
+  }, []);
+
   // Auto-save with debounce
   const debouncedSave = useCallback(
     (data: Partial<LocationFormData>) => {
-      if (saveTimeout) clearTimeout(saveTimeout);
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
       
-      const timeout = setTimeout(async () => {
+      saveTimeoutRef.current = setTimeout(async () => {
         await onUpdate(location.id, data);
       }, 1000);
-      
-      setSaveTimeout(timeout);
     },
-    [location.id, onUpdate, saveTimeout]
+    [location.id, onUpdate]
   );
 
   const handleChange = (field: keyof LocationFormData, value: string | BusinessHours | string[]) => {
