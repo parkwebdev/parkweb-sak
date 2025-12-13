@@ -2,12 +2,12 @@
  * LocationDetailsSheet Component
  * 
  * Sheet for viewing and editing location details.
- * Uses standard Sheet component with built-in CSS animations.
+ * Uses deferred content mounting to prevent freeze on open.
  * 
  * @module components/agents/locations/LocationDetailsSheet
  */
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Sheet,
   SheetContent,
@@ -35,6 +35,19 @@ export const LocationDetailsSheet: React.FC<LocationDetailsSheetProps> = ({
   agentId,
   onUpdate,
 }) => {
+  // Defer content mounting until after sheet animation starts
+  const [contentReady, setContentReady] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      // Small delay to let sheet animation start before mounting heavy form
+      const timer = setTimeout(() => setContentReady(true), 50);
+      return () => clearTimeout(timer);
+    } else {
+      setContentReady(false);
+    }
+  }, [open]);
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="sm:max-w-xl overflow-y-auto">
@@ -42,7 +55,7 @@ export const LocationDetailsSheet: React.FC<LocationDetailsSheetProps> = ({
           <SheetTitle>{location?.name || 'Location Details'}</SheetTitle>
         </SheetHeader>
         
-        {open && location && (
+        {contentReady && location && (
           <LocationDetails
             location={location}
             agentId={agentId}
