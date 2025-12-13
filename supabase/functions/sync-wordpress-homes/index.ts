@@ -33,33 +33,146 @@ interface WordPressHome {
   _embedded?: {
     'wp:featuredmedia'?: Array<{ source_url: string; alt_text?: string }>;
   };
-  acf?: {
-    home_address?: string;
-    address?: string;
-    lot_number?: string;
-    home_lot?: string;
-    price?: number | string;
-    home_price?: number | string;
-    monthly_rent?: number | string;
-    bedrooms?: number | string;
-    beds?: number | string;
-    bathrooms?: number | string;
-    baths?: number | string;
-    square_feet?: number | string;
-    sqft?: number | string;
-    year_built?: number | string;
-    home_status?: string;
-    status?: string;
-    home_description?: string;
-    description?: string;
-    features?: string[];
-    amenities?: string[];
-    city?: string;
-    state?: string;
-    zip?: string;
-    images?: Array<{ url: string; alt?: string }>;
-    gallery?: Array<{ url: string; alt?: string }>;
-  };
+  acf?: Record<string, unknown>;
+}
+
+/**
+ * Intelligently extract a field from ACF data by searching for keywords
+ * Handles prefixed fields like "home_address" when looking for "address"
+ */
+function extractAcfField(acf: Record<string, unknown> | undefined, ...keywords: string[]): string | null {
+  if (!acf) return null;
+  
+  const keys = Object.keys(acf);
+  
+  for (const keyword of keywords) {
+    const lowerKeyword = keyword.toLowerCase();
+    
+    // Priority 1: Exact match
+    const exactMatch = keys.find(k => k.toLowerCase() === lowerKeyword);
+    if (exactMatch && acf[exactMatch] != null && acf[exactMatch] !== '') {
+      return String(acf[exactMatch]);
+    }
+    
+    // Priority 2: Ends with keyword (e.g., "home_address" ends with "address")
+    const suffixMatch = keys.find(k => k.toLowerCase().endsWith(`_${lowerKeyword}`) || k.toLowerCase().endsWith(lowerKeyword));
+    if (suffixMatch && acf[suffixMatch] != null && acf[suffixMatch] !== '') {
+      return String(acf[suffixMatch]);
+    }
+    
+    // Priority 3: Contains keyword (e.g., "square_feet" contains "sqft" via alt keywords)
+    const containsMatch = keys.find(k => k.toLowerCase().includes(lowerKeyword));
+    if (containsMatch && acf[containsMatch] != null && acf[containsMatch] !== '') {
+      return String(acf[containsMatch]);
+    }
+  }
+  
+  return null;
+}
+
+/**
+ * Extract numeric field from ACF data
+ */
+function extractAcfNumber(acf: Record<string, unknown> | undefined, ...keywords: string[]): number | null {
+  const value = extractAcfField(acf, ...keywords);
+  if (!value) return null;
+  const num = parseFloat(value.replace(/[^0-9.-]/g, ''));
+  return isNaN(num) ? null : num;
+}
+
+/**
+ * Extract array field from ACF data
+ */
+function extractAcfArray(acf: Record<string, unknown> | undefined, ...keywords: string[]): string[] {
+  if (!acf) return [];
+  
+  const keys = Object.keys(acf);
+  
+  for (const keyword of keywords) {
+    const lowerKeyword = keyword.toLowerCase();
+    
+    // Try to find matching array field
+    const match = keys.find(k => {
+      const lowerK = k.toLowerCase();
+      return lowerK === lowerKeyword || 
+             lowerK.endsWith(`_${lowerKeyword}`) || 
+             lowerK.includes(lowerKeyword);
+    });
+    
+    if (match && Array.isArray(acf[match])) {
+      return acf[match] as string[];
+    }
+  }
+  
+  return [];
+}
+
+/**
+ * Infer timezone from state - supports abbreviations and full names
+ * Uses latitude/longitude if available for more accuracy
+ */
+function inferTimezone(
+  state: string | null, 
+  latitude?: number | null, 
+  longitude?: number | null
+): string {
+  // If we have coordinates, use longitude-based detection (more accurate)
+  if (longitude != null) {
+    // Rough US timezone boundaries by longitude
+    if (longitude >= -67 && longitude < -71) return 'America/New_York';
+    if (longitude >= -71 && longitude < -85) return 'America/New_York';
+    if (longitude >= -85 && longitude < -100) return 'America/Chicago';
+    if (longitude >= -100 && longitude < -115) return 'America/Denver';
+    if (longitude >= -115 && longitude < -125) return 'America/Los_Angeles';
+    if (longitude >= -125 && longitude < -140) return 'America/Anchorage';
+    if (longitude >= -155 && longitude < -162) return 'Pacific/Honolulu';
+  }
+  
+  if (!state) return 'America/New_York';
+  
+  const normalized = state.toLowerCase().trim();
+  
+  // Eastern Time
+  const eastern = ['ct', 'connecticut', 'de', 'delaware', 'fl', 'florida', 'ga', 'georgia', 
+    'me', 'maine', 'md', 'maryland', 'ma', 'massachusetts', 'mi', 'michigan', 
+    'nh', 'new hampshire', 'nj', 'new jersey', 'ny', 'new york', 'nc', 'north carolina',
+    'oh', 'ohio', 'pa', 'pennsylvania', 'ri', 'rhode island', 'sc', 'south carolina',
+    'vt', 'vermont', 'va', 'virginia', 'wv', 'west virginia', 'dc', 'district of columbia'];
+  
+  // Central Time
+  const central = ['al', 'alabama', 'ar', 'arkansas', 'il', 'illinois', 'ia', 'iowa',
+    'ks', 'kansas', 'ky', 'kentucky', 'la', 'louisiana', 'mn', 'minnesota', 
+    'ms', 'mississippi', 'mo', 'missouri', 'ne', 'nebraska', 'nd', 'north dakota',
+    'ok', 'oklahoma', 'sd', 'south dakota', 'tn', 'tennessee', 'tx', 'texas', 'wi', 'wisconsin'];
+  
+  // Mountain Time
+  const mountain = ['co', 'colorado', 'id', 'idaho', 'mt', 'montana', 'nm', 'new mexico',
+    'ut', 'utah', 'wy', 'wyoming'];
+  
+  // Pacific Time
+  const pacific = ['ca', 'california', 'nv', 'nevada', 'or', 'oregon', 'wa', 'washington'];
+  
+  // Special cases
+  if (normalized === 'az' || normalized === 'arizona') return 'America/Phoenix';
+  if (normalized === 'hi' || normalized === 'hawaii') return 'Pacific/Honolulu';
+  if (normalized === 'ak' || normalized === 'alaska') return 'America/Anchorage';
+  if (normalized === 'in' || normalized === 'indiana') return 'America/Indiana/Indianapolis';
+  
+  if (eastern.includes(normalized)) return 'America/New_York';
+  if (central.includes(normalized)) return 'America/Chicago';
+  if (mountain.includes(normalized)) return 'America/Denver';
+  if (pacific.includes(normalized)) return 'America/Los_Angeles';
+  
+  return 'America/New_York';
+}
+
+/**
+ * Extract ZIP code from full address if not provided separately
+ */
+function extractZipFromAddress(address: string | null): string | null {
+  if (!address) return null;
+  const match = address.match(/\b(\d{5})(-\d{4})?\b/);
+  return match ? match[1] : null;
 }
 
 interface SyncResult {
@@ -590,27 +703,41 @@ async function syncHomesToProperties(
       const communityId = home.home_community?.[0];
       const locationId = communityId ? locationMap.get(communityId) : null;
 
-      const acf = home.acf || {};
+      const acf = home.acf;
+      
+      // Intelligently extract fields from ACF data
+      const address = extractAcfField(acf, 'address', 'full_address', 'street') || decodeHtmlEntities(home.title.rendered);
+      const city = extractAcfField(acf, 'city');
+      const state = extractAcfField(acf, 'state');
+      const zip = extractAcfField(acf, 'zip', 'zipcode', 'postal', 'postal_code') || extractZipFromAddress(address);
+      const latitude = extractAcfNumber(acf, 'latitude', 'lat');
+      const longitude = extractAcfNumber(acf, 'longitude', 'lng', 'long');
+      
+      // Determine price type based on field names
+      const rentPrice = extractAcfNumber(acf, 'rent', 'monthly_rent', 'rental');
+      const salePrice = extractAcfNumber(acf, 'price', 'sale_price', 'asking_price');
+      const price = rentPrice || salePrice;
+      const priceType = rentPrice ? 'rent_monthly' : 'sale';
       
       const propertyData = {
         agent_id: agentId,
         knowledge_source_id: knowledgeSourceId,
         location_id: locationId,
         external_id: externalId,
-        address: acf.home_address || acf.address || decodeHtmlEntities(home.title.rendered),
-        lot_number: acf.lot_number || acf.home_lot || null,
-        city: acf.city || null,
-        state: acf.state || null,
-        zip: acf.zip || null,
-        status: mapStatus(acf.home_status || acf.status),
-        price: parsePrice(acf.price || acf.home_price || acf.monthly_rent),
-        price_type: acf.monthly_rent ? 'rent_monthly' : 'sale',
-        beds: parseNumber(acf.bedrooms || acf.beds) as number | null,
-        baths: parseNumber(acf.bathrooms || acf.baths) as number | null,
-        sqft: parseNumber(acf.square_feet || acf.sqft) as number | null,
-        year_built: parseNumber(acf.year_built) as number | null,
-        description: acf.home_description || acf.description || stripHtml(home.content?.rendered || home.excerpt?.rendered || ''),
-        features: acf.features || acf.amenities || [],
+        address,
+        lot_number: extractAcfField(acf, 'lot', 'lot_number'),
+        city,
+        state,
+        zip,
+        status: mapStatus(extractAcfField(acf, 'status')),
+        price: price ? Math.round(price * 100) : null, // Convert to cents
+        price_type: priceType,
+        beds: extractAcfNumber(acf, 'beds', 'bedrooms', 'bedroom'),
+        baths: extractAcfNumber(acf, 'baths', 'bathrooms', 'bathroom'),
+        sqft: extractAcfNumber(acf, 'sqft', 'square_feet', 'sq_ft', 'size'),
+        year_built: extractAcfNumber(acf, 'year_built', 'year', 'built'),
+        description: extractAcfField(acf, 'description') || stripHtml(home.content?.rendered || home.excerpt?.rendered || ''),
+        features: extractAcfArray(acf, 'features', 'amenities'),
         images: extractImages(home),
         listing_url: home.link,
         last_seen_at: new Date().toISOString(),
