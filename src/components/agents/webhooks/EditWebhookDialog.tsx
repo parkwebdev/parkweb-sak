@@ -52,6 +52,11 @@ const AVAILABLE_EVENTS = [
   { value: 'conversation.started', label: 'Conversation Started' },
   { value: 'conversation.closed', label: 'Conversation Closed' },
   { value: 'message.received', label: 'Message Received' },
+  { value: 'booking.created', label: 'Booking Created' },
+  { value: 'booking.cancelled', label: 'Booking Cancelled' },
+  { value: 'booking.completed', label: 'Booking Completed' },
+  { value: 'property.new_listing', label: 'New Property Listed' },
+  { value: 'property.status_changed', label: 'Property Status Changed' },
 ];
 
 const HTTP_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'];

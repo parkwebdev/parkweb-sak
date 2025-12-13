@@ -334,7 +334,7 @@ serve(async (req) => {
     // Get location details
     const { data: location, error: locationError } = await supabase
       .from('locations')
-      .select('id, name, timezone, agent_id')
+      .select('id, name, timezone, agent_id, phone')
       .eq('id', booking.location_id)
       .single();
 
@@ -358,7 +358,10 @@ serve(async (req) => {
       console.error('No connected calendar for location:', booking.location_id);
       return new Response(
         JSON.stringify({ 
-          error: 'No calendar connected to this location. Please contact us directly to schedule.',
+          error: 'no_calendar',
+          message: "This community doesn't have online scheduling set up yet.",
+          suggestion: 'Please call us directly to schedule your tour.',
+          contact_phone: location.phone || null,
           fallback: true,
         }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -380,7 +383,9 @@ serve(async (req) => {
       console.log('Time slot no longer available');
       return new Response(
         JSON.stringify({ 
-          error: 'Sorry, this time slot is no longer available. Please choose another time.',
+          error: 'slot_taken',
+          message: "That time slot was just booked by someone else.",
+          suggestion: 'Would you like me to show you other available times?',
           slot_taken: true,
         }),
         { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
