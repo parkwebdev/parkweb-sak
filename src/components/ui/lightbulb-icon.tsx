@@ -22,7 +22,7 @@ export const LightbulbIcon = React.forwardRef<SVGSVGElement, LightbulbIconProps>
         height={24}
         viewBox="0 0 24 24"
         fill="none"
-        className={cn("group-hover:hidden", className)}
+        className={cn(className)}
         {...props}
       >
         <path
@@ -55,7 +55,7 @@ export const LightbulbIconFilled = React.forwardRef<SVGSVGElement, LightbulbIcon
         height={24}
         viewBox="0 0 24 24"
         fill="none"
-        className={cn("hidden group-hover:block", className)}
+        className={cn(className)}
         {...props}
       >
         <path

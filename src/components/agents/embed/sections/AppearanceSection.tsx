@@ -3,6 +3,8 @@ import { ToggleSettingRow } from '@/components/ui/toggle-setting-row';
 import { ColorPicker } from '@/components/ui/color-picker';
 import type { EmbeddedChatConfig } from '@/hooks/useEmbeddedChatConfig';
 
+// Note: primaryColor is hardcoded to #000000 and not configurable by users
+
 interface AppearanceSectionProps {
   config: EmbeddedChatConfig;
   onConfigChange: (updates: Partial<EmbeddedChatConfig>) => void;
@@ -11,16 +13,6 @@ interface AppearanceSectionProps {
 export const AppearanceSection = ({ config, onConfigChange }: AppearanceSectionProps) => {
   return (
     <div className="space-y-6">
-      <div className="space-y-2">
-        <Label htmlFor="primary-color" className="text-sm">Text/Button Color</Label>
-        <ColorPicker
-          id="primary-color"
-          value={config.primaryColor}
-          onChange={(color) => onConfigChange({ primaryColor: color })}
-          showAlpha={false}
-        />
-      </div>
-
       <ToggleSettingRow
         id="gradient"
         label="Gradient Header"
