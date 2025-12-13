@@ -1,18 +1,21 @@
 /**
  * AriModelBehaviorSection
  * 
- * Model selection and behavior parameters.
+ * Model selection and behavior parameters with full feature parity from AgentConfigureTab.
  */
 
 import { useState, useRef, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { InfoCircleIcon } from '@/components/ui/info-circle-icon';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { InfoCircleIcon, InfoCircleIconFilled } from '@/components/ui/info-circle-icon';
 import { AriSectionHeader } from './AriSectionHeader';
+import { usePlanLimits } from '@/hooks/usePlanLimits';
 import type { Tables } from '@/integrations/supabase/types';
 import type { AgentDeploymentConfig } from '@/types/metadata';
 
@@ -33,12 +36,19 @@ interface AriModelBehaviorSectionProps {
 }
 
 // Model capability definitions
+interface ParameterCapability {
+  supported: boolean;
+  min?: number;
+  max?: number;
+  default?: number;
+}
+
 interface ModelCapabilities {
-  temperature: { supported: boolean; min?: number; max?: number; default?: number };
-  topP: { supported: boolean; min?: number; max?: number; default?: number };
-  presencePenalty: { supported: boolean; min?: number; max?: number; default?: number };
-  frequencyPenalty: { supported: boolean; min?: number; max?: number; default?: number };
-  topK: { supported: boolean; min?: number; max?: number; default?: number };
+  temperature: ParameterCapability;
+  topP: ParameterCapability;
+  presencePenalty: ParameterCapability;
+  frequencyPenalty: ParameterCapability;
+  topK: ParameterCapability;
 }
 
 const MODEL_CAPABILITIES: Record<string, ModelCapabilities> = {
@@ -56,6 +66,27 @@ const MODEL_CAPABILITIES: Record<string, ModelCapabilities> = {
     frequencyPenalty: { supported: false },
     topK: { supported: true, min: 1, max: 64, default: 40 },
   },
+  'anthropic/claude-sonnet-4': {
+    temperature: { supported: true, min: 0, max: 1, default: 1.0 },
+    topP: { supported: true, min: 0, max: 1, default: 1.0 },
+    presencePenalty: { supported: false },
+    frequencyPenalty: { supported: false },
+    topK: { supported: true, min: 1, max: 500, default: 0 },
+  },
+  'anthropic/claude-3.5-haiku': {
+    temperature: { supported: true, min: 0, max: 1, default: 1.0 },
+    topP: { supported: true, min: 0, max: 1, default: 1.0 },
+    presencePenalty: { supported: false },
+    frequencyPenalty: { supported: false },
+    topK: { supported: true, min: 1, max: 500, default: 0 },
+  },
+  'anthropic/claude-opus-4.1': {
+    temperature: { supported: true, min: 0, max: 1, default: 1.0 },
+    topP: { supported: true, min: 0, max: 1, default: 1.0 },
+    presencePenalty: { supported: false },
+    frequencyPenalty: { supported: false },
+    topK: { supported: true, min: 1, max: 500, default: 0 },
+  },
   'openai/gpt-4o': {
     temperature: { supported: true, min: 0, max: 2, default: 1.0 },
     topP: { supported: true, min: 0, max: 1, default: 1.0 },
@@ -63,12 +94,47 @@ const MODEL_CAPABILITIES: Record<string, ModelCapabilities> = {
     frequencyPenalty: { supported: true, min: -2, max: 2, default: 0 },
     topK: { supported: false },
   },
-  'anthropic/claude-sonnet-4': {
-    temperature: { supported: true, min: 0, max: 1, default: 1.0 },
+  'openai/gpt-4o-mini': {
+    temperature: { supported: true, min: 0, max: 2, default: 1.0 },
+    topP: { supported: true, min: 0, max: 1, default: 1.0 },
+    presencePenalty: { supported: true, min: -2, max: 2, default: 0 },
+    frequencyPenalty: { supported: true, min: -2, max: 2, default: 0 },
+    topK: { supported: false },
+  },
+  'openai/gpt-5.1': {
+    temperature: { supported: true, min: 0, max: 2, default: 1.0 },
+    topP: { supported: true, min: 0, max: 1, default: 1.0 },
+    presencePenalty: { supported: true, min: -2, max: 2, default: 0 },
+    frequencyPenalty: { supported: true, min: -2, max: 2, default: 0 },
+    topK: { supported: false },
+  },
+  'meta-llama/llama-3.3-70b-instruct': {
+    temperature: { supported: true, min: 0, max: 2, default: 0.7 },
+    topP: { supported: true, min: 0, max: 1, default: 1.0 },
+    presencePenalty: { supported: true, min: -2, max: 2, default: 0 },
+    frequencyPenalty: { supported: true, min: -2, max: 2, default: 0 },
+    topK: { supported: true, min: 1, max: 128, default: 0 },
+  },
+  'deepseek/deepseek-chat': {
+    temperature: { supported: true, min: 0, max: 2, default: 1.0 },
+    topP: { supported: true, min: 0, max: 1, default: 1.0 },
+    presencePenalty: { supported: true, min: -2, max: 2, default: 0 },
+    frequencyPenalty: { supported: true, min: -2, max: 2, default: 0 },
+    topK: { supported: false },
+  },
+  'qwen/qwen-2.5-72b-instruct': {
+    temperature: { supported: true, min: 0, max: 2, default: 0.7 },
+    topP: { supported: true, min: 0, max: 1, default: 1.0 },
+    presencePenalty: { supported: true, min: -2, max: 2, default: 0 },
+    frequencyPenalty: { supported: true, min: -2, max: 2, default: 0 },
+    topK: { supported: true, min: 1, max: 100, default: 50 },
+  },
+  'mistralai/mistral-medium-3.1': {
+    temperature: { supported: true, min: 0, max: 1.5, default: 0.7 },
     topP: { supported: true, min: 0, max: 1, default: 1.0 },
     presencePenalty: { supported: false },
     frequencyPenalty: { supported: false },
-    topK: { supported: true, min: 1, max: 500, default: 0 },
+    topK: { supported: false },
   },
 };
 
@@ -101,58 +167,217 @@ const getModelIcon = (provider: string, size: number = 18) => {
   return <img src={src} alt="" className={`shrink-0 ${darkModeClass}`} style={{ width: size, height: size }} />;
 };
 
-// Grouped models by provider
-const MODEL_GROUPS = [
-  {
-    provider: 'google',
-    label: 'Google',
-    models: [
-      { value: 'google/gemini-2.5-flash', label: 'Gemini 2.5 Flash', recommended: true },
-      { value: 'google/gemini-2.5-pro', label: 'Gemini 2.5 Pro' },
-    ],
+// Full models array with descriptions and costs
+const MODELS = [
+  { 
+    value: 'google/gemini-2.5-flash', 
+    label: 'Gemini 2.5 Flash',
+    provider: 'gemini',
+    description: 'Balanced speed and quality. Best for most use cases.',
+    inputCostPer1M: 0.075,
+    outputCostPer1M: 0.30,
+    recommended: true
   },
-  {
+  { 
+    value: 'google/gemini-2.5-pro', 
+    label: 'Gemini 2.5 Pro',
+    provider: 'gemini',
+    description: 'Strongest reasoning and multimodal capabilities.',
+    inputCostPer1M: 1.25,
+    outputCostPer1M: 5.00
+  },
+  { 
+    value: 'openai/gpt-5.1', 
+    label: 'ChatGPT-5.1',
     provider: 'openai',
-    label: 'OpenAI',
-    models: [
-      { value: 'openai/gpt-4o', label: 'GPT-4o' },
-    ],
+    description: 'Latest frontier reasoning with improved instruction following.',
+    inputCostPer1M: 1.25,
+    outputCostPer1M: 10.00,
+    recommended: true
   },
-  {
-    provider: 'anthropic',
-    label: 'Anthropic',
-    models: [
-      { value: 'anthropic/claude-sonnet-4', label: 'Claude Sonnet 4', recommended: true },
-      { value: 'anthropic/claude-3.5-haiku', label: 'Claude 3.5 Haiku' },
-    ],
+  { 
+    value: 'openai/gpt-4o', 
+    label: 'GPT-4o',
+    provider: 'openai',
+    description: 'Powerful multimodal with excellent reasoning.',
+    inputCostPer1M: 2.50,
+    outputCostPer1M: 10.00
   },
-  {
-    provider: 'other',
-    label: 'Other',
-    models: [
-      { value: 'qwen/qwen-2.5-72b-instruct', label: 'Qwen 2.5 72B', iconProvider: 'qwen' },
-      { value: 'mistralai/mistral-medium-3.1', label: 'Mistral Medium 3.1', iconProvider: 'mistral' },
-      { value: 'meta-llama/llama-3.3-70b-instruct', label: 'Llama 3.3 70B', iconProvider: 'meta' },
-      { value: 'deepseek/deepseek-chat', label: 'DeepSeek V3', iconProvider: 'deepseek' },
-    ],
+  { 
+    value: 'openai/gpt-4o-mini', 
+    label: 'GPT-4o Mini',
+    provider: 'openai',
+    description: 'Fast and cost-effective alternative.',
+    inputCostPer1M: 0.15,
+    outputCostPer1M: 0.60
+  },
+  { 
+    value: 'anthropic/claude-opus-4.1', 
+    label: 'Claude Opus 4.1',
+    provider: 'claude',
+    description: 'Top coding model with enhanced agentic capabilities.',
+    inputCostPer1M: 15.00,
+    outputCostPer1M: 75.00
+  },
+  { 
+    value: 'anthropic/claude-sonnet-4', 
+    label: 'Claude Sonnet 4',
+    provider: 'claude',
+    description: 'Most intelligent model with superior reasoning.',
+    inputCostPer1M: 3.00,
+    outputCostPer1M: 15.00,
+    recommended: true
+  },
+  { 
+    value: 'anthropic/claude-3.5-haiku', 
+    label: 'Claude 3.5 Haiku',
+    provider: 'claude',
+    description: 'Fast and efficient for quick responses.',
+    inputCostPer1M: 0.80,
+    outputCostPer1M: 4.00
+  },
+  { 
+    value: 'qwen/qwen-2.5-72b-instruct', 
+    label: 'Qwen 2.5 72B',
+    provider: 'qwen',
+    description: 'Powerful open-source model with excellent multilingual support.',
+    inputCostPer1M: 0.07,
+    outputCostPer1M: 0.26
+  },
+  { 
+    value: 'mistralai/mistral-medium-3.1', 
+    label: 'Mistral Medium 3.1',
+    provider: 'mistral',
+    description: 'Enterprise-grade with frontier capabilities at lower cost.',
+    inputCostPer1M: 0.40,
+    outputCostPer1M: 2.00
+  },
+  { 
+    value: 'meta-llama/llama-3.3-70b-instruct', 
+    label: 'Llama 3.3 70B',
+    provider: 'llama',
+    description: 'Open-source powerhouse with great performance.',
+    inputCostPer1M: 0.40,
+    outputCostPer1M: 0.40
+  },
+  { 
+    value: 'deepseek/deepseek-chat', 
+    label: 'DeepSeek V3',
+    provider: 'deepseek',
+    description: 'Excellent reasoning at very low cost.',
+    inputCostPer1M: 0.14,
+    outputCostPer1M: 0.28
   },
 ];
-
-// Flat list for value lookups
-const ALL_MODELS = MODEL_GROUPS.flatMap(g => 
-  g.models.map(m => ({ ...m, provider: (m as any).iconProvider || g.provider }))
-);
 
 const RESPONSE_LENGTH_PRESETS = [
-  { value: 'concise', label: 'Concise', tokens: 500 },
-  { value: 'balanced', label: 'Balanced', tokens: 2000 },
-  { value: 'detailed', label: 'Detailed', tokens: 4000 },
+  { value: 'concise', label: 'Concise', tokens: 500, description: 'Short, direct answers' },
+  { value: 'balanced', label: 'Balanced', tokens: 2000, description: 'Standard responses' },
+  { value: 'detailed', label: 'Detailed', tokens: 4000, description: 'In-depth explanations' },
+  { value: 'custom', label: 'Custom', tokens: 0, description: 'Manual control' },
 ];
+
+// Slider capability key mapping
+type SliderCapabilityKey = 'temperature' | 'presencePenalty' | 'frequencyPenalty' | 'topP' | 'topK';
+
+const BEHAVIOR_SLIDERS: Array<{
+  id: 'temperature' | 'presence_penalty' | 'frequency_penalty' | 'top_p' | 'top_k';
+  capabilityKey: SliderCapabilityKey;
+  label: string;
+  min: number;
+  max: number;
+  contextTitle: string;
+  contextDescription: string;
+  lowLabel: string;
+  highLabel: string;
+}> = [
+  {
+    id: 'temperature',
+    capabilityKey: 'temperature',
+    label: 'Temperature',
+    min: 0,
+    max: 2,
+    contextTitle: 'Creativity vs Consistency',
+    contextDescription: 'Temperature controls the randomness of your agent\'s responses. At 0, responses are highly focused and deterministic—great for factual Q&A or support. At 1+, responses become more creative and varied—ideal for brainstorming or creative writing. Most agents work well between 0.5-0.8.',
+    lowLabel: 'Focused & Predictable',
+    highLabel: 'Creative & Varied',
+  },
+  {
+    id: 'top_k',
+    capabilityKey: 'topK',
+    label: 'Top K',
+    min: 1,
+    max: 64,
+    contextTitle: 'Token Selection Scope',
+    contextDescription: 'Top K limits the model to only consider the top K most likely tokens at each step. Lower values (1-10) make responses more focused and deterministic. Higher values allow more variety. This is Gemini\'s alternative to presence/frequency penalties for controlling response diversity.',
+    lowLabel: 'Very Focused',
+    highLabel: 'More Options',
+  },
+  {
+    id: 'presence_penalty',
+    capabilityKey: 'presencePenalty',
+    label: 'Presence Penalty',
+    min: 0,
+    max: 2,
+    contextTitle: 'Topic Diversity',
+    contextDescription: 'Presence penalty encourages your agent to explore new topics rather than dwelling on subjects already mentioned. At 0, the agent may repeatedly reference the same topics. Higher values push the agent to introduce fresh subjects. Useful for agents that need to cover broad ground or avoid redundancy.',
+    lowLabel: 'May Repeat Topics',
+    highLabel: 'Explores New Topics',
+  },
+  {
+    id: 'frequency_penalty',
+    capabilityKey: 'frequencyPenalty',
+    label: 'Frequency Penalty',
+    min: 0,
+    max: 2,
+    contextTitle: 'Response Variation',
+    contextDescription: 'Frequency penalty reduces word and phrase repetition within responses. At 0, the agent may use the same words or phrases multiple times. Higher values encourage more varied vocabulary. Helpful for agents that generate longer content or need to sound more natural.',
+    lowLabel: 'May Repeat Phrases',
+    highLabel: 'Varied Vocabulary',
+  },
+  {
+    id: 'top_p',
+    capabilityKey: 'topP',
+    label: 'Top P',
+    min: 0,
+    max: 1,
+    contextTitle: 'Response Diversity (Advanced)',
+    contextDescription: 'Top P (nucleus sampling) controls the pool of words the model considers for each token. At 1.0, all words are considered. Lower values restrict to only the most likely words, making output more focused. Most users should keep this at 1.0 and use Temperature instead for control.',
+    lowLabel: 'Highly Focused',
+    highLabel: 'Full Diversity',
+  },
+];
+
+const calculateEstimatedCost = (model: string, maxTokens: number) => {
+  const modelData = MODELS.find(m => m.value === model);
+  if (!modelData) return null;
+  
+  const avgInputTokens = 500;
+  const inputCost = (avgInputTokens / 1_000_000) * modelData.inputCostPer1M;
+  const outputCost = (maxTokens / 1_000_000) * modelData.outputCostPer1M;
+  
+  return {
+    perRequest: inputCost + outputCost,
+    per1000Requests: (inputCost + outputCost) * 1000,
+    tier: (inputCost + outputCost) < 0.001 ? 'Budget' : (inputCost + outputCost) < 0.005 ? 'Standard' : 'Premium'
+  };
+};
 
 export const AriModelBehaviorSection: React.FC<AriModelBehaviorSectionProps> = ({ agent, onUpdate }) => {
   const [showSaved, setShowSaved] = useState(false);
+  const [activeSlider, setActiveSlider] = useState<string | null>(null);
   const saveTimerRef = useRef<NodeJS.Timeout>();
   const deploymentConfig = (agent.deployment_config || {}) as AgentDeploymentConfig;
+  const { planName } = usePlanLimits();
+  const isEnterprise = planName?.toLowerCase() === 'enterprise';
+
+  const getInitialPreset = () => {
+    const tokens = agent.max_tokens || 2000;
+    if (tokens === 500) return 'concise';
+    if (tokens === 2000) return 'balanced';
+    if (tokens === 4000) return 'detailed';
+    return 'custom';
+  };
 
   const [formData, setFormData] = useState({
     model: agent.model,
@@ -160,6 +385,9 @@ export const AriModelBehaviorSection: React.FC<AriModelBehaviorSectionProps> = (
     max_tokens: agent.max_tokens || 2000,
     top_p: deploymentConfig.top_p || 1.0,
     top_k: deploymentConfig.top_k || 40,
+    presence_penalty: deploymentConfig.presence_penalty || 0,
+    frequency_penalty: deploymentConfig.frequency_penalty || 0,
+    response_length_preset: getInitialPreset(),
   });
 
   useEffect(() => {
@@ -170,6 +398,9 @@ export const AriModelBehaviorSection: React.FC<AriModelBehaviorSectionProps> = (
       max_tokens: agent.max_tokens || 2000,
       top_p: config.top_p || 1.0,
       top_k: config.top_k || 40,
+      presence_penalty: config.presence_penalty || 0,
+      frequency_penalty: config.frequency_penalty || 0,
+      response_length_preset: getInitialPreset(),
     });
   }, [agent.id]);
 
@@ -180,13 +411,15 @@ export const AriModelBehaviorSection: React.FC<AriModelBehaviorSectionProps> = (
   }, []);
 
   const saveToDatabase = async (data: typeof formData) => {
-    const { top_p, top_k, ...coreFields } = data;
+    const { top_p, top_k, presence_penalty, frequency_penalty, response_length_preset, ...coreFields } = data;
     await onUpdate(agent.id, {
       ...coreFields,
       deployment_config: {
         ...deploymentConfig,
         top_p,
         top_k,
+        presence_penalty,
+        frequency_penalty,
       },
     });
     setShowSaved(true);
@@ -194,7 +427,26 @@ export const AriModelBehaviorSection: React.FC<AriModelBehaviorSectionProps> = (
   };
 
   const handleUpdate = (updates: Partial<typeof formData>) => {
-    const newFormData = { ...formData, ...updates };
+    let newFormData = { ...formData, ...updates };
+    
+    // Handle preset selection
+    if (updates.response_length_preset && updates.response_length_preset !== 'custom') {
+      const preset = RESPONSE_LENGTH_PRESETS.find(p => p.value === updates.response_length_preset);
+      if (preset) {
+        newFormData.max_tokens = preset.tokens;
+      }
+    }
+    
+    // Auto-sync preset when max_tokens changes
+    if (updates.max_tokens !== undefined && updates.response_length_preset === undefined) {
+      const matchingPreset = RESPONSE_LENGTH_PRESETS.find(p => p.tokens === updates.max_tokens);
+      if (!matchingPreset || matchingPreset.value === 'custom') {
+        newFormData.response_length_preset = 'custom';
+      } else {
+        newFormData.response_length_preset = matchingPreset.value;
+      }
+    }
+    
     setFormData(newFormData);
 
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
@@ -202,6 +454,31 @@ export const AriModelBehaviorSection: React.FC<AriModelBehaviorSectionProps> = (
   };
 
   const capabilities = getModelCapabilities(formData.model);
+  const selectedModel = MODELS.find(m => m.value === formData.model);
+  const costEstimate = calculateEstimatedCost(formData.model, formData.max_tokens);
+  
+  // Filter sliders based on model capabilities
+  const supportedSliders = BEHAVIOR_SLIDERS.filter(slider => {
+    const cap = capabilities[slider.capabilityKey];
+    return cap?.supported !== false;
+  });
+  
+  const currentSliderInfo = supportedSliders.find(s => s.id === activeSlider);
+  
+  // Get slider range from model capabilities
+  const getSliderRange = (slider: typeof BEHAVIOR_SLIDERS[0]) => {
+    const cap = capabilities[slider.capabilityKey];
+    if (cap?.supported) {
+      return { min: cap.min ?? slider.min, max: cap.max ?? slider.max };
+    }
+    return { min: slider.min, max: slider.max };
+  };
+  
+  // Get default value from model capabilities
+  const getDefaultValue = (slider: typeof BEHAVIOR_SLIDERS[0]) => {
+    const cap = capabilities[slider.capabilityKey];
+    return cap?.default ?? (slider.id === 'temperature' ? 0.7 : slider.id === 'top_p' ? 1.0 : 0);
+  };
 
   return (
     <div>
@@ -211,122 +488,296 @@ export const AriModelBehaviorSection: React.FC<AriModelBehaviorSectionProps> = (
         showSaved={showSaved}
       />
 
-      <div className="space-y-6">
-        {/* Model Selection */}
-        <div className="space-y-2">
-          <Label className="text-sm font-medium">AI Model</Label>
-          <Select value={formData.model} onValueChange={(value) => handleUpdate({ model: value })}>
-            <SelectTrigger className="h-10">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {MODEL_GROUPS.map((group) => (
-                <SelectGroup key={group.provider}>
-                  <SelectLabel className="flex items-center gap-2 py-2 px-2">
-                    {getModelIcon(group.provider, 16)}
-                    <span className="font-semibold text-foreground">{group.label}</span>
-                  </SelectLabel>
-                  {group.models.map((model) => {
-                    const iconProvider = (model as any).iconProvider || group.provider;
-                    return (
-                      <SelectItem 
-                        key={model.value} 
-                        value={model.value}
-                        className="data-[state=checked]:bg-accent"
-                      >
-                        <div className="flex items-center gap-2">
-                          {getModelIcon(iconProvider, 16)}
-                          <span>{model.label}</span>
-                          {model.recommended && (
-                            <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Popular</Badge>
-                          )}
+      <div className="flex gap-8">
+        {/* Main content column */}
+        <div className="flex-1 space-y-8">
+          {/* Model Selection Section */}
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">AI Model</Label>
+              <Select value={formData.model} onValueChange={(value) => handleUpdate({ model: value })}>
+                <SelectTrigger className="h-10">
+                  <SelectValue>
+                    <div className="flex items-center gap-2">
+                      {getModelIcon(MODELS.find(m => m.value === formData.model)?.provider || '')}
+                      <span>{MODELS.find(m => m.value === formData.model)?.label || formData.model}</span>
+                    </div>
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {/* Google Models */}
+                  <SelectGroup>
+                    <SelectLabel className="flex items-center gap-2 pl-2">
+                      {getModelIcon('gemini', 14)}
+                      <span>Google</span>
+                    </SelectLabel>
+                    {MODELS.filter(m => m.provider === 'gemini').map((model) => (
+                      <SelectItem key={model.value} value={model.value}>
+                        <div className="flex items-start gap-2.5">
+                          <div className="flex flex-col gap-0.5">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">{model.label}</span>
+                              {model.recommended && (
+                                <Badge className="text-[10px] px-1.5 py-0 h-4 font-medium bg-foreground text-background">
+                                  Popular
+                                </Badge>
+                              )}
+                            </div>
+                            <span className="text-xs text-muted-foreground">{model.description}</span>
+                          </div>
                         </div>
                       </SelectItem>
-                    );
-                  })}
-                </SelectGroup>
-              ))}
-            </SelectContent>
-          </Select>
+                    ))}
+                  </SelectGroup>
+
+                  {/* OpenAI Models */}
+                  <SelectGroup className="mt-2 pt-2 border-t border-border">
+                    <SelectLabel className="flex items-center gap-2 pl-2">
+                      {getModelIcon('openai', 14)}
+                      <span>OpenAI</span>
+                    </SelectLabel>
+                    {MODELS.filter(m => m.provider === 'openai').map((model) => (
+                      <SelectItem key={model.value} value={model.value}>
+                        <div className="flex items-start gap-2.5">
+                          <div className="flex flex-col gap-0.5">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">{model.label}</span>
+                              {model.recommended && (
+                                <Badge className="text-[10px] px-1.5 py-0 h-4 font-medium bg-foreground text-background">
+                                  Popular
+                                </Badge>
+                              )}
+                            </div>
+                            <span className="text-xs text-muted-foreground">{model.description}</span>
+                          </div>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+
+                  {/* Anthropic Models */}
+                  <SelectGroup className="mt-2 pt-2 border-t border-border">
+                    <SelectLabel className="flex items-center gap-2 pl-2">
+                      {getModelIcon('claude', 14)}
+                      <span>Anthropic</span>
+                    </SelectLabel>
+                    {MODELS.filter(m => m.provider === 'claude').map((model) => (
+                      <SelectItem key={model.value} value={model.value}>
+                        <div className="flex items-start gap-2.5">
+                          <div className="flex flex-col gap-0.5">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">{model.label}</span>
+                              {model.recommended && (
+                                <Badge className="text-[10px] px-1.5 py-0 h-4 font-medium bg-foreground text-background">
+                                  Popular
+                                </Badge>
+                              )}
+                            </div>
+                            <span className="text-xs text-muted-foreground">{model.description}</span>
+                          </div>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+
+                  {/* Other Models */}
+                  <SelectGroup className="mt-2 pt-2 border-t border-border">
+                    <SelectLabel className="pl-2">Other Providers</SelectLabel>
+                    {MODELS.filter(m => ['qwen', 'mistral', 'llama', 'deepseek'].includes(m.provider)).map((model) => (
+                      <SelectItem key={model.value} value={model.value}>
+                        <div className="flex items-start gap-2.5">
+                          <div className="flex-shrink-0 mt-0.5">
+                            {getModelIcon(model.provider)}
+                          </div>
+                          <div className="flex flex-col gap-0.5">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">{model.label}</span>
+                              {model.recommended && (
+                                <Badge className="text-[10px] px-1.5 py-0 h-4 font-medium bg-foreground text-background">
+                                  Popular
+                                </Badge>
+                              )}
+                            </div>
+                            <span className="text-xs text-muted-foreground">{model.description}</span>
+                          </div>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Response Length */}
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Response Length</Label>
+              <Select
+                value={formData.response_length_preset}
+                onValueChange={(value) => handleUpdate({ response_length_preset: value })}
+              >
+                <SelectTrigger className="h-10">
+                  <SelectValue>
+                    {RESPONSE_LENGTH_PRESETS.find(p => p.value === formData.response_length_preset)?.label}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {RESPONSE_LENGTH_PRESETS.map((preset) => (
+                    <SelectItem key={preset.value} value={preset.value}>
+                      <div className="flex flex-col gap-0.5">
+                        <span className="font-medium">{preset.label}</span>
+                        <span className="text-xs text-muted-foreground">{preset.description}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Custom Max Tokens Input */}
+            {formData.response_length_preset === 'custom' && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-1">
+                  <Label className="text-sm font-medium">Max Tokens (Advanced)</Label>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="inline-flex group cursor-help">
+                        <InfoCircleIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                        <InfoCircleIconFilled className="h-3.5 w-3.5 text-muted-foreground" />
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Maximum response length in tokens. ~4 characters per token.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+                <Input
+                  type="number"
+                  min={100}
+                  max={32000}
+                  step={100}
+                  value={formData.max_tokens ?? 2000}
+                  onChange={(e) => handleUpdate({ max_tokens: parseInt(e.target.value) })}
+                  className="h-10"
+                />
+              </div>
+            )}
+
+            {/* Enterprise Cost Estimation */}
+            {isEnterprise && costEstimate && (
+              <Card className="p-4 bg-accent/50 border-border">
+                <div className="flex items-start justify-between mb-2">
+                  <h4 className="text-sm font-semibold text-foreground">Estimated Cost</h4>
+                  <Badge variant={costEstimate.tier === 'Budget' ? 'secondary' : costEstimate.tier === 'Standard' ? 'default' : 'destructive'}>
+                    {costEstimate.tier}
+                  </Badge>
+                </div>
+                <div className="space-y-1.5 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Per request:</span>
+                    <span className="font-medium text-foreground">${costEstimate.perRequest.toFixed(6)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Per 1,000 requests:</span>
+                    <span className="font-medium text-foreground">${costEstimate.per1000Requests.toFixed(2)}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground pt-2 border-t border-border/50">
+                    Based on ~500 input tokens per request
+                  </p>
+                </div>
+              </Card>
+            )}
+          </div>
+
+          {/* Divider */}
+          <div className="border-t border-border" />
+
+          {/* Behavior Controls Section */}
+          <div className="space-y-6">
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="text-xs font-normal">
+                {selectedModel?.label || formData.model}
+              </Badge>
+              <span className="text-xs text-muted-foreground">
+                {supportedSliders.length} behavior controls available
+              </span>
+            </div>
+
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={formData.model}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
+                className="space-y-6"
+              >
+                {supportedSliders.map((slider) => {
+                  const range = getSliderRange(slider);
+                  const defaultValue = getDefaultValue(slider);
+                  const currentValue = formData[slider.id] ?? defaultValue;
+                  
+                  return (
+                    <div 
+                      key={slider.id} 
+                      className="space-y-3"
+                      onMouseEnter={() => setActiveSlider(slider.id)}
+                      onMouseLeave={() => setActiveSlider(null)}
+                    >
+                      <div className="flex justify-between items-center">
+                        <Label className="text-sm">{slider.label}</Label>
+                        <span className="text-sm font-medium tabular-nums text-muted-foreground">
+                          {typeof currentValue === 'number' ? currentValue.toFixed(2) : currentValue}
+                        </span>
+                      </div>
+                      <Slider
+                        value={[typeof currentValue === 'number' ? currentValue : 0]}
+                        onValueChange={([value]) => handleUpdate({ [slider.id]: value })}
+                        min={range.min}
+                        max={range.max}
+                        step={0.01}
+                        className="w-full"
+                      />
+                      <div className="flex justify-between text-xs text-muted-foreground">
+                        <span>{slider.lowLabel}</span>
+                        <span>{slider.highLabel}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </motion.div>
+            </AnimatePresence>
+          </div>
         </div>
-
-        {/* Response Length */}
-        <div className="space-y-2">
-          <Label className="text-sm font-medium">Response Length</Label>
-          <Select 
-            value={RESPONSE_LENGTH_PRESETS.find(p => p.tokens === formData.max_tokens)?.value || 'balanced'}
-            onValueChange={(value) => {
-              const preset = RESPONSE_LENGTH_PRESETS.find(p => p.value === value);
-              if (preset) handleUpdate({ max_tokens: preset.tokens });
-            }}
-          >
-            <SelectTrigger className="h-10">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {RESPONSE_LENGTH_PRESETS.map((preset) => (
-                <SelectItem key={preset.value} value={preset.value}>
-                  {preset.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        
+        {/* Right column: Contextual info panel */}
+        <div className="w-72 flex-shrink-0 hidden lg:block">
+          <div className="sticky top-8 p-4 rounded-lg bg-accent/30 border border-border/50">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeSlider || 'default'}
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -5 }}
+                transition={{ duration: 0.15 }}
+              >
+                {currentSliderInfo ? (
+                  <>
+                    <h4 className="text-sm font-semibold text-foreground mb-2">
+                      {currentSliderInfo.contextTitle}
+                    </h4>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      {currentSliderInfo.contextDescription}
+                    </p>
+                  </>
+                ) : (
+                  <p className="text-sm text-muted-foreground italic">
+                    Hover over a slider to see detailed information about how it affects your agent's behavior.
+                  </p>
+                )}
+              </motion.div>
+            </AnimatePresence>
+          </div>
         </div>
-
-        {/* Temperature */}
-        {capabilities.temperature.supported && (
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <Label className="text-sm font-medium">Temperature</Label>
-              <span className="text-sm text-muted-foreground">{formData.temperature.toFixed(1)}</span>
-            </div>
-            <Slider
-              value={[formData.temperature]}
-              onValueChange={([value]) => handleUpdate({ temperature: value })}
-              min={capabilities.temperature.min}
-              max={capabilities.temperature.max}
-              step={0.1}
-            />
-            <div className="flex justify-between text-xs text-muted-foreground">
-              <span>Focused</span>
-              <span>Creative</span>
-            </div>
-          </div>
-        )}
-
-        {/* Top P */}
-        {capabilities.topP.supported && (
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <Label className="text-sm font-medium">Top P</Label>
-              <span className="text-sm text-muted-foreground">{formData.top_p.toFixed(2)}</span>
-            </div>
-            <Slider
-              value={[formData.top_p]}
-              onValueChange={([value]) => handleUpdate({ top_p: value })}
-              min={capabilities.topP.min}
-              max={capabilities.topP.max}
-              step={0.05}
-            />
-          </div>
-        )}
-
-        {/* Top K (Gemini) */}
-        {capabilities.topK.supported && (
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <Label className="text-sm font-medium">Top K</Label>
-              <span className="text-sm text-muted-foreground">{formData.top_k}</span>
-            </div>
-            <Slider
-              value={[formData.top_k]}
-              onValueChange={([value]) => handleUpdate({ top_k: value })}
-              min={capabilities.topK.min}
-              max={capabilities.topK.max}
-              step={1}
-            />
-          </div>
-        )}
       </div>
     </div>
   );
