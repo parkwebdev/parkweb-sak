@@ -136,6 +136,19 @@ export interface WidgetConfig {
     author_avatar?: string;
     published_at?: string;
   }>;
+  
+  // Phase 5: Location detection
+  locations: Array<{
+    id: string;
+    name: string;
+    slug?: string;
+    city?: string;
+    state?: string;
+  }>;
+  wordpressSiteUrl?: string;
+  defaultLocationSlug?: string;
+  enableAutoLocationDetection: boolean;
+  
   // Features
   enableVoiceMessages: boolean;
   enableFileAttachments: boolean;
@@ -391,7 +404,8 @@ export async function sendChatMessage(
   leadId?: string,
   pageVisits?: Array<{ url: string; entered_at: string; duration_ms: number }>,
   referrerJourney?: ReferrerJourney,
-  visitorId?: string
+  visitorId?: string,
+  locationId?: string // Phase 5: Location context
 ): Promise<ChatResponse> {
   const response = await fetch(`${SUPABASE_URL}/functions/v1/widget-chat`, {
     method: 'POST',
@@ -407,6 +421,7 @@ export async function sendChatMessage(
       pageVisits,
       referrerJourney,
       visitorId,
+      locationId, // Phase 5: Include location context
     }),
   });
 

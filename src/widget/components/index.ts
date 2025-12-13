@@ -36,3 +36,6 @@ export { QuickReplies } from './QuickReplies';
 
 /** Satisfaction rating prompt (1-5 stars with optional feedback) */
 export { SatisfactionRating } from './SatisfactionRating';
+
+/** Location picker for multi-location businesses */
+export { LocationPicker } from './LocationPicker';
