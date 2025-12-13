@@ -1,26 +1,29 @@
 /**
  * AriLocationsSection
  * 
- * Locations management.
+ * Locations management with TanStack Table.
  */
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { useReactTable, getCoreRowModel, getSortedRowModel, getFilteredRowModel, getPaginationRowModel, type SortingState } from '@tanstack/react-table';
 import { Button } from '@/components/ui/button';
-import { EmptyState } from '@/components/ui/empty-state';
-import { MarkerPin01, Plus, Trash01 } from '@untitledui/icons';
+import { Plus } from '@untitledui/icons';
 import { useLocations } from '@/hooks/useLocations';
 import { useAgents } from '@/hooks/useAgents';
-import { useProperties } from '@/hooks/useProperties';
-import { LocationDetails } from '@/components/agents/locations/LocationDetails';
+import { useConnectedAccounts } from '@/hooks/useConnectedAccounts';
 import { CreateLocationDialog } from '@/components/agents/locations/CreateLocationDialog';
+import { LocationDetailsSheet } from '@/components/agents/locations/LocationDetailsSheet';
 import { WordPressConnectionCard } from '@/components/agents/locations/WordPressConnectionCard';
 import { WordPressHomesCard } from '@/components/agents/locations/WordPressHomesCard';
 import { AriSectionHeader } from './AriSectionHeader';
 import { LoadingState } from '@/components/ui/loading-state';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
 import { SimpleDeleteDialog } from '@/components/ui/simple-delete-dialog';
-import { cn } from '@/lib/utils';
+import { DataTable } from '@/components/data-table/DataTable';
+import { DataTableToolbar } from '@/components/data-table/DataTableToolbar';
+import { DataTablePagination } from '@/components/data-table/DataTablePagination';
+import { createLocationsColumns, type LocationWithCounts } from '@/components/data-table/columns';
+import { EmptyState } from '@/components/ui/empty-state';
+import { MarkerPin01 } from '@untitledui/icons';
 
 interface AriLocationsSectionProps {
   agentId: string;
@@ -30,32 +33,72 @@ interface AriLocationsSectionProps {
 export const AriLocationsSection: React.FC<AriLocationsSectionProps> = ({ agentId, userId }) => {
   const { locations, loading, createLocation, updateLocation, deleteLocation, refetch } = useLocations(agentId);
   const { agents } = useAgents();
-  const { properties } = useProperties(agentId);
+  const { accounts } = useConnectedAccounts(undefined, agentId);
   
   const agent = agents.find(a => a.id === agentId) || null;
   
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [selectedLocationId, setSelectedLocationId] = useState<string | null>(null);
-  const [deleteLocationId, setDeleteLocationId] = useState<string | null>(null);
+  const [selectedLocation, setSelectedLocation] = useState<LocationWithCounts | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [deleteLocation_, setDeleteLocation] = useState<LocationWithCounts | null>(null);
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [globalFilter, setGlobalFilter] = useState('');
 
-  const selectedLocation = locations.find(l => l.id === selectedLocationId);
+  // Enrich locations with calendar counts
+  const locationsWithCounts: LocationWithCounts[] = useMemo(() => {
+    return locations.map(location => ({
+      ...location,
+      calendarCount: accounts.filter(a => a.location_id === location.id).length,
+    }));
+  }, [locations, accounts]);
 
   const handleCreate = async (data: Parameters<typeof createLocation>[0]) => {
     const id = await createLocation(data, userId);
     if (id) {
-      setSelectedLocationId(id);
       setCreateDialogOpen(false);
+      // Open the new location in the sheet
+      const newLocation = locationsWithCounts.find(l => l.id === id);
+      if (newLocation) {
+        setSelectedLocation(newLocation);
+        setSheetOpen(true);
+      }
     }
   };
 
-  const handleDelete = async () => {
-    if (!deleteLocationId) return;
-    const success = await deleteLocation(deleteLocationId);
-    if (success && selectedLocationId === deleteLocationId) {
-      setSelectedLocationId(null);
-    }
-    setDeleteLocationId(null);
+  const handleView = (location: LocationWithCounts) => {
+    setSelectedLocation(location);
+    setSheetOpen(true);
   };
+
+  const handleDelete = async () => {
+    if (!deleteLocation_) return;
+    await deleteLocation(deleteLocation_.id);
+    setDeleteLocation(null);
+    if (selectedLocation?.id === deleteLocation_.id) {
+      setSheetOpen(false);
+      setSelectedLocation(null);
+    }
+  };
+
+  const columns = useMemo(() => createLocationsColumns({
+    onView: handleView,
+    onDelete: setDeleteLocation,
+  }), []);
+
+  const table = useReactTable({
+    data: locationsWithCounts,
+    columns,
+    state: {
+      sorting,
+      globalFilter,
+    },
+    onSortingChange: setSorting,
+    onGlobalFilterChange: setGlobalFilter,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+  });
 
   if (loading) {
     return <LoadingState text="Loading locations..." />;
@@ -79,90 +122,34 @@ export const AriLocationsSection: React.FC<AriLocationsSectionProps> = ({ agentI
         <WordPressConnectionCard agent={agent} onSyncComplete={refetch} />
         <WordPressHomesCard agent={agent} onSyncComplete={refetch} />
 
-        <div className="flex gap-6 min-h-[400px]">
-          {/* Left Panel - Location List */}
-          <div className="w-72 flex-shrink-0 flex flex-col">
-            {locations.length === 0 ? (
-              <EmptyState
-                icon={<MarkerPin01 className="h-5 w-5 text-muted-foreground/50" />}
-                title="No locations yet"
-                description="Add locations to organize your business"
-                action={
-                  <Button onClick={() => setCreateDialogOpen(true)} size="sm">
-                    <Plus size={14} className="mr-1.5" />
-                    Add Location
-                  </Button>
-                }
-              />
-            ) : (
-              <ScrollArea className="flex-1">
-                <div className="space-y-1 pr-4">
-                  {locations.map((location) => {
-                    const propertyCount = properties.filter(p => p.location_id === location.id).length;
-                    const isSelected = selectedLocationId === location.id;
-                    
-                    return (
-                      <div
-                        key={location.id}
-                        onClick={() => setSelectedLocationId(location.id)}
-                        className={cn(
-                          "group w-full text-left p-3 rounded-lg border transition-colors cursor-pointer",
-                          isSelected 
-                            ? "border-primary bg-primary/5" 
-                            : "border-transparent hover:bg-muted/50"
-                        )}
-                      >
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex-1 min-w-0">
-                            <div className="font-medium text-sm truncate">{location.name}</div>
-                            {location.city && location.state && (
-                              <div className="text-xs text-muted-foreground truncate">
-                                {location.city}, {location.state}
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-1.5 shrink-0">
-                            {propertyCount > 0 && (
-                              <Badge variant="secondary" className="text-xs">
-                                {propertyCount}
-                              </Badge>
-                            )}
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-6 w-6 opacity-0 group-hover:opacity-100"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setDeleteLocationId(location.id);
-                              }}
-                            >
-                              <Trash01 size={14} className="text-muted-foreground hover:text-destructive" />
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </ScrollArea>
-            )}
+        {/* Locations Table */}
+        {locationsWithCounts.length === 0 ? (
+          <EmptyState
+            icon={<MarkerPin01 className="h-5 w-5 text-muted-foreground/50" />}
+            title="No locations yet"
+            description="Add locations to organize your business"
+            action={
+              <Button onClick={() => setCreateDialogOpen(true)} size="sm">
+                <Plus size={14} className="mr-1.5" />
+                Add Location
+              </Button>
+            }
+          />
+        ) : (
+          <div className="space-y-4">
+            <DataTableToolbar
+              table={table}
+              searchPlaceholder="Search locations..."
+              globalFilter
+            />
+            <DataTable
+              table={table}
+              columns={columns}
+              onRowClick={(row) => handleView(row)}
+            />
+            <DataTablePagination table={table} />
           </div>
-
-          {/* Right Panel - Details */}
-          <div className="flex-1 min-h-0">
-            {selectedLocation ? (
-              <LocationDetails
-                location={selectedLocation}
-                agentId={agentId}
-                onUpdate={updateLocation}
-              />
-            ) : locations.length > 0 ? (
-              <div className="flex items-center justify-center h-full text-muted-foreground">
-                Select a location to view details
-              </div>
-            ) : null}
-          </div>
-        </div>
+        )}
 
         <CreateLocationDialog
           open={createDialogOpen}
@@ -170,9 +157,17 @@ export const AriLocationsSection: React.FC<AriLocationsSectionProps> = ({ agentI
           onCreate={handleCreate}
         />
 
+        <LocationDetailsSheet
+          location={selectedLocation}
+          open={sheetOpen}
+          onOpenChange={setSheetOpen}
+          agentId={agentId}
+          onUpdate={updateLocation}
+        />
+
         <SimpleDeleteDialog
-          open={!!deleteLocationId}
-          onOpenChange={(open) => !open && setDeleteLocationId(null)}
+          open={!!deleteLocation_}
+          onOpenChange={(open) => !open && setDeleteLocation(null)}
           onConfirm={handleDelete}
           title="Delete Location"
           description="This will permanently delete this location."
