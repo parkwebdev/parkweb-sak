@@ -1,39 +1,125 @@
 /**
  * AriWebhooksSection
  * 
- * Webhooks management - simplified version.
+ * Webhooks management with full CRUD, test, and debug capabilities.
  */
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { Link03, Trash01, Eye } from '@untitledui/icons';
+import { Badge } from '@/components/ui/badge';
+import { Link03, Trash01, Eye, Edit03, PlayCircle, Plus, Code01 } from '@untitledui/icons';
 import { EmptyState } from '@/components/ui/empty-state';
 import { useWebhooks } from '@/hooks/useWebhooks';
 import { WebhookLogsDialog } from '@/components/agents/webhooks/WebhookLogsDialog';
+import { CreateWebhookDialog } from '@/components/agents/webhooks/CreateWebhookDialog';
+import { EditWebhookDialog } from '@/components/agents/webhooks/EditWebhookDialog';
 import { SimpleDeleteDialog } from '@/components/ui/simple-delete-dialog';
+import { DebugConsole } from '@/components/agents/DebugConsole';
 import { AriSectionHeader } from './AriSectionHeader';
 import { LoadingState } from '@/components/ui/loading-state';
-import { Badge } from '@/components/ui/badge';
+import { SavedIndicator } from '@/components/settings/SavedIndicator';
+import { toast } from '@/lib/toast';
+
+interface DebugLog {
+  id: string;
+  timestamp: Date;
+  level: 'info' | 'success' | 'error' | 'warning';
+  message: string;
+  details?: any;
+}
 
 interface AriWebhooksSectionProps {
   agentId: string;
 }
 
 export const AriWebhooksSection: React.FC<AriWebhooksSectionProps> = ({ agentId }) => {
-  const { webhooks, loading, updateWebhook, deleteWebhook, fetchLogs } = useWebhooks(agentId);
+  const { webhooks, loading, createWebhook, updateWebhook, deleteWebhook, testWebhook, fetchLogs } = useWebhooks(agentId);
+  
+  // Dialog states
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [editingWebhook, setEditingWebhook] = useState<typeof webhooks[0] | null>(null);
   const [deleteWebhookId, setDeleteWebhookId] = useState<string | null>(null);
   const [showLogsDialog, setShowLogsDialog] = useState(false);
   const [selectedWebhookForLogs, setSelectedWebhookForLogs] = useState<string | null>(null);
+  
+  // Test states
+  const [testingWebhookId, setTestingWebhookId] = useState<string | null>(null);
+  
+  // Saved indicator per webhook
+  const [savedWebhookId, setSavedWebhookId] = useState<string | null>(null);
+  
+  // Debug mode
+  const [debugMode, setDebugMode] = useState(false);
+  const [debugLogs, setDebugLogs] = useState<DebugLog[]>([]);
+
+  const addDebugLog = (level: DebugLog['level'], message: string, details?: any) => {
+    if (!debugMode) return;
+    setDebugLogs(prev => [...prev, {
+      id: crypto.randomUUID(),
+      timestamp: new Date(),
+      level,
+      message,
+      details
+    }]);
+  };
+
+  const handleCreate = async (data: any) => {
+    addDebugLog('info', 'Creating webhook...', data);
+    try {
+      await createWebhook(data);
+      addDebugLog('success', 'Webhook created successfully');
+      setShowCreateDialog(false);
+    } catch (error) {
+      addDebugLog('error', 'Failed to create webhook', error);
+    }
+  };
+
+  const handleUpdate = async (id: string, data: any) => {
+    addDebugLog('info', 'Updating webhook...', { id, data });
+    try {
+      await updateWebhook(id, data);
+      addDebugLog('success', 'Webhook updated successfully');
+      setEditingWebhook(null);
+    } catch (error) {
+      addDebugLog('error', 'Failed to update webhook', error);
+    }
+  };
 
   const handleToggle = async (id: string, active: boolean) => {
+    addDebugLog('info', `${active ? 'Enabling' : 'Disabling'} webhook...`);
     await updateWebhook(id, { active });
+    setSavedWebhookId(id);
+    setTimeout(() => setSavedWebhookId(null), 2000);
   };
 
   const handleDelete = async () => {
     if (!deleteWebhookId) return;
+    addDebugLog('info', 'Deleting webhook...', { id: deleteWebhookId });
     await deleteWebhook(deleteWebhookId);
+    addDebugLog('success', 'Webhook deleted');
     setDeleteWebhookId(null);
+  };
+
+  const handleTest = async (id: string) => {
+    setTestingWebhookId(id);
+    addDebugLog('info', 'Testing webhook...', { id });
+    
+    try {
+      const result = await testWebhook(id);
+      if (result?.success) {
+        addDebugLog('success', 'Webhook test passed', result);
+        toast.success('Webhook test successful');
+      } else {
+        addDebugLog('error', 'Webhook test failed', result);
+        toast.error('Webhook test failed');
+      }
+    } catch (error) {
+      addDebugLog('error', 'Webhook test error', error);
+      toast.error('Webhook test error');
+    } finally {
+      setTestingWebhookId(null);
+    }
   };
 
   const handleViewLogs = (id: string) => {
@@ -54,6 +140,24 @@ export const AriWebhooksSection: React.FC<AriWebhooksSectionProps> = ({ agentId 
       />
 
       <div className="space-y-4">
+        {/* Action Buttons */}
+        <div className="flex items-center gap-2">
+          <Button onClick={() => setShowCreateDialog(true)} size="sm">
+            <Plus size={14} className="mr-1.5" />
+            Add Webhook
+          </Button>
+          <div className="flex-1" />
+          <Button
+            variant={debugMode ? 'secondary' : 'ghost'}
+            size="sm"
+            onClick={() => setDebugMode(!debugMode)}
+          >
+            <Code01 size={14} className="mr-1.5" />
+            Debug Mode
+          </Button>
+        </div>
+
+        {/* Webhooks List */}
         {webhooks.length === 0 ? (
           <EmptyState
             icon={<Link03 className="h-5 w-5 text-muted-foreground/50" />}
@@ -71,18 +175,42 @@ export const AriWebhooksSection: React.FC<AriWebhooksSectionProps> = ({ agentId 
                       <Badge variant="outline" className="text-[10px]">
                         {webhook.method}
                       </Badge>
+                      {!webhook.active && (
+                        <Badge variant="secondary" className="text-[10px]">Disabled</Badge>
+                      )}
                     </div>
                     <p className="text-xs font-mono text-muted-foreground truncate">
                       {webhook.url}
                     </p>
+                    {webhook.events && webhook.events.length > 0 && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Triggers on: <span className="font-medium">{webhook.events.join(', ')}</span>
+                      </p>
+                    )}
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Switch
-                      checked={webhook.active ?? true}
-                      onCheckedChange={(checked) => handleToggle(webhook.id, checked)}
-                    />
+                  <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-2 mr-2">
+                      <Switch
+                        checked={webhook.active ?? true}
+                        onCheckedChange={(checked) => handleToggle(webhook.id, checked)}
+                      />
+                      {savedWebhookId === webhook.id && (
+                        <SavedIndicator show={true} />
+                      )}
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => handleTest(webhook.id)}
+                      disabled={testingWebhookId === webhook.id}
+                    >
+                      <PlayCircle size={14} className={testingWebhookId === webhook.id ? 'animate-spin' : ''} />
+                    </Button>
                     <Button variant="ghost" size="sm" onClick={() => handleViewLogs(webhook.id)}>
                       <Eye size={14} />
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => setEditingWebhook(webhook)}>
+                      <Edit03 size={14} />
                     </Button>
                     <Button variant="ghost" size="sm" onClick={() => setDeleteWebhookId(webhook.id)}>
                       <Trash01 size={14} className="text-destructive" />
@@ -93,7 +221,32 @@ export const AriWebhooksSection: React.FC<AriWebhooksSectionProps> = ({ agentId 
             ))}
           </div>
         )}
+
+        {/* Debug Console */}
+        {debugMode && (
+          <DebugConsole 
+            logs={debugLogs} 
+            onClear={() => setDebugLogs([])} 
+          />
+        )}
       </div>
+
+      {/* Dialogs */}
+      <CreateWebhookDialog
+        open={showCreateDialog}
+        onOpenChange={(open) => {
+          setShowCreateDialog(open);
+          // CreateWebhookDialog handles its own submission internally
+        }}
+        agentId={agentId}
+      />
+
+      <EditWebhookDialog
+        open={!!editingWebhook}
+        onOpenChange={(open) => !open && setEditingWebhook(null)}
+        webhook={editingWebhook}
+        onSave={(data) => editingWebhook && handleUpdate(editingWebhook.id, data)}
+      />
 
       <WebhookLogsDialog
         open={showLogsDialog}
