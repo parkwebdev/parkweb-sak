@@ -89,6 +89,42 @@ interface ExtractedProperty {
   listing_url?: string;
 }
 
+/**
+ * Normalize WordPress site URL by stripping API paths if user entered full endpoint
+ */
+function normalizeSiteUrl(url: string): string {
+  let normalized = url.trim();
+  
+  // Add https if missing
+  if (!normalized.startsWith('http://') && !normalized.startsWith('https://')) {
+    normalized = `https://${normalized}`;
+  }
+  
+  // Remove trailing slash
+  normalized = normalized.replace(/\/$/, '');
+  
+  // Strip common WordPress REST API paths if user entered full endpoint
+  const pathsToStrip = [
+    '/wp-json/wp/v2/home',
+    '/wp-json/wp/v2/homes',
+    '/wp-json/wp/v2/property',
+    '/wp-json/wp/v2/properties',
+    '/wp-json/wp/v2/listing',
+    '/wp-json/wp/v2/listings',
+    '/wp-json/wp/v2',
+    '/wp-json'
+  ];
+  
+  for (const path of pathsToStrip) {
+    if (normalized.endsWith(path)) {
+      normalized = normalized.slice(0, -path.length);
+      break;
+    }
+  }
+  
+  return normalized;
+}
+
 Deno.serve(async (req: Request) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -168,7 +204,8 @@ Deno.serve(async (req: Request) => {
         );
       }
 
-      const testResult = await testWordPressHomesEndpoint(siteUrl);
+      const normalizedUrl = normalizeSiteUrl(siteUrl);
+      const testResult = await testWordPressHomesEndpoint(normalizedUrl);
       return new Response(
         JSON.stringify(testResult),
         { status: testResult.success ? 200 : 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -180,7 +217,7 @@ Deno.serve(async (req: Request) => {
       const deploymentConfig = agent.deployment_config as Record<string, unknown> | null;
       const wpConfig = deploymentConfig?.wordpress as WordPressConfig | undefined;
       
-      const urlToSync = siteUrl || wpConfig?.site_url;
+      const urlToSync = normalizeSiteUrl(siteUrl || wpConfig?.site_url || '');
       
       if (!urlToSync) {
         return new Response(
