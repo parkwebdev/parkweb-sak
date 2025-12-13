@@ -1,27 +1,27 @@
 /**
  * AriLocationsSection
  * 
- * Locations management with TanStack Table.
+ * Locations management with TanStack Table, infinite scroll,
+ * enhanced filters with chips, and collapsible WordPress integration.
  */
 
-import { useState, useMemo } from 'react';
-import { useReactTable, getCoreRowModel, getSortedRowModel, getFilteredRowModel, getPaginationRowModel, type SortingState, type RowSelectionState } from '@tanstack/react-table';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import { useReactTable, getCoreRowModel, getSortedRowModel, getFilteredRowModel, type SortingState, type RowSelectionState } from '@tanstack/react-table';
 import { Button } from '@/components/ui/button';
-import { Plus, Trash01, XClose } from '@untitledui/icons';
+import { Badge } from '@/components/ui/badge';
+import { Plus, Trash01, XClose, X } from '@untitledui/icons';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useLocations } from '@/hooks/useLocations';
 import { useAgents } from '@/hooks/useAgents';
 import { useConnectedAccounts } from '@/hooks/useConnectedAccounts';
 import { CreateLocationDialog } from '@/components/agents/locations/CreateLocationDialog';
 import { LocationDetailsSheet } from '@/components/agents/locations/LocationDetailsSheet';
-import { WordPressConnectionCard } from '@/components/agents/locations/WordPressConnectionCard';
-import { WordPressHomesCard } from '@/components/agents/locations/WordPressHomesCard';
+import { WordPressIntegrationSection } from '@/components/agents/locations/WordPressIntegrationSection';
 import { AriSectionHeader } from './AriSectionHeader';
 import { LoadingState } from '@/components/ui/loading-state';
 import { SimpleDeleteDialog } from '@/components/ui/simple-delete-dialog';
 import { DataTable } from '@/components/data-table/DataTable';
 import { DataTableToolbar } from '@/components/data-table/DataTableToolbar';
-import { DataTablePagination } from '@/components/data-table/DataTablePagination';
 import { createLocationsColumns, type LocationWithCounts } from '@/components/data-table/columns';
 import { EmptyState } from '@/components/ui/empty-state';
 import { MarkerPin01 } from '@untitledui/icons';
@@ -30,6 +30,12 @@ import { toast } from 'sonner';
 interface AriLocationsSectionProps {
   agentId: string;
   userId: string;
+}
+
+interface ActiveFilter {
+  type: 'calendar' | 'wordpress' | 'state';
+  value: string;
+  label: string;
 }
 
 export const AriLocationsSection: React.FC<AriLocationsSectionProps> = ({ agentId, userId }) => {
@@ -50,6 +56,11 @@ export const AriLocationsSection: React.FC<AriLocationsSectionProps> = ({ agentI
   // Filter states
   const [calendarFilter, setCalendarFilter] = useState<string>('all');
   const [wordpressFilter, setWordpressFilter] = useState<string>('all');
+  const [stateFilter, setStateFilter] = useState<string>('all');
+
+  // Infinite scroll state
+  const [displayCount, setDisplayCount] = useState(20);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
 
   // Enrich locations with calendar counts
   const locationsWithCounts: LocationWithCounts[] = useMemo(() => {
@@ -58,6 +69,15 @@ export const AriLocationsSection: React.FC<AriLocationsSectionProps> = ({ agentI
       calendarCount: accounts.filter(a => a.location_id === location.id).length,
     }));
   }, [locations, accounts]);
+
+  // Get unique states for filter
+  const uniqueStates = useMemo(() => {
+    const states = new Set<string>();
+    locationsWithCounts.forEach(loc => {
+      if (loc.state) states.add(loc.state);
+    });
+    return Array.from(states).sort();
+  }, [locationsWithCounts]);
 
   // Apply filters
   const filteredLocations = useMemo(() => {
@@ -71,9 +91,76 @@ export const AriLocationsSection: React.FC<AriLocationsSectionProps> = ({ agentI
       if (wordpressFilter === 'connected' && !hasWordPress) return false;
       if (wordpressFilter === 'none' && hasWordPress) return false;
       
+      // State filter
+      if (stateFilter !== 'all' && location.state !== stateFilter) return false;
+      
       return true;
     });
-  }, [locationsWithCounts, calendarFilter, wordpressFilter]);
+  }, [locationsWithCounts, calendarFilter, wordpressFilter, stateFilter]);
+
+  // Active filters for chips
+  const activeFilters: ActiveFilter[] = useMemo(() => {
+    const filters: ActiveFilter[] = [];
+    if (calendarFilter !== 'all') {
+      filters.push({
+        type: 'calendar',
+        value: calendarFilter,
+        label: calendarFilter === 'connected' ? 'Has Calendar' : 'No Calendar',
+      });
+    }
+    if (wordpressFilter !== 'all') {
+      filters.push({
+        type: 'wordpress',
+        value: wordpressFilter,
+        label: wordpressFilter === 'connected' ? 'WordPress Connected' : 'No WordPress',
+      });
+    }
+    if (stateFilter !== 'all') {
+      filters.push({
+        type: 'state',
+        value: stateFilter,
+        label: stateFilter,
+      });
+    }
+    return filters;
+  }, [calendarFilter, wordpressFilter, stateFilter]);
+
+  const clearFilter = (type: 'calendar' | 'wordpress' | 'state') => {
+    if (type === 'calendar') setCalendarFilter('all');
+    if (type === 'wordpress') setWordpressFilter('all');
+    if (type === 'state') setStateFilter('all');
+  };
+
+  const clearAllFilters = () => {
+    setCalendarFilter('all');
+    setWordpressFilter('all');
+    setStateFilter('all');
+  };
+
+  // Infinite scroll observer
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && displayCount < filteredLocations.length) {
+          setDisplayCount(prev => Math.min(prev + 20, filteredLocations.length));
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (loadMoreRef.current) {
+      observer.observe(loadMoreRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [filteredLocations.length, displayCount]);
+
+  // Reset display count when filters change
+  useEffect(() => {
+    setDisplayCount(20);
+  }, [calendarFilter, wordpressFilter, stateFilter, globalFilter]);
+
+  const displayedLocations = filteredLocations.slice(0, displayCount);
 
   const handleCreate = async (data: Parameters<typeof createLocation>[0]) => {
     const id = await createLocation(data, userId);
@@ -125,7 +212,7 @@ export const AriLocationsSection: React.FC<AriLocationsSectionProps> = ({ agentI
   }), []);
 
   const table = useReactTable({
-    data: filteredLocations,
+    data: displayedLocations,
     columns,
     state: {
       sorting,
@@ -138,7 +225,6 @@ export const AriLocationsSection: React.FC<AriLocationsSectionProps> = ({ agentI
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
     enableRowSelection: true,
   });
 
@@ -162,9 +248,8 @@ export const AriLocationsSection: React.FC<AriLocationsSectionProps> = ({ agentI
       />
 
       <div className="space-y-4">
-        {/* WordPress Cards */}
-        <WordPressConnectionCard agent={agent} onSyncComplete={refetch} />
-        <WordPressHomesCard agent={agent} onSyncComplete={refetch} />
+        {/* WordPress Integration - Collapsible */}
+        <WordPressIntegrationSection agent={agent} onSyncComplete={refetch} />
 
         {/* Bulk Actions Bar */}
         {selectedCount > 0 && (
@@ -199,14 +284,26 @@ export const AriLocationsSection: React.FC<AriLocationsSectionProps> = ({ agentI
             }
           />
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             <DataTableToolbar
               table={table}
               searchPlaceholder="Search locations..."
               globalFilter
             >
+              <Select value={stateFilter} onValueChange={setStateFilter}>
+                <SelectTrigger className="w-[120px] h-8">
+                  <SelectValue placeholder="State" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All States</SelectItem>
+                  {uniqueStates.map(state => (
+                    <SelectItem key={state} value={state}>{state}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
               <Select value={calendarFilter} onValueChange={setCalendarFilter}>
-                <SelectTrigger className="w-[140px] h-8">
+                <SelectTrigger className="w-[130px] h-8">
                   <SelectValue placeholder="Calendars" />
                 </SelectTrigger>
                 <SelectContent>
@@ -217,7 +314,7 @@ export const AriLocationsSection: React.FC<AriLocationsSectionProps> = ({ agentI
               </Select>
               
               <Select value={wordpressFilter} onValueChange={setWordpressFilter}>
-                <SelectTrigger className="w-[140px] h-8">
+                <SelectTrigger className="w-[130px] h-8">
                   <SelectValue placeholder="WordPress" />
                 </SelectTrigger>
                 <SelectContent>
@@ -227,12 +324,53 @@ export const AriLocationsSection: React.FC<AriLocationsSectionProps> = ({ agentI
                 </SelectContent>
               </Select>
             </DataTableToolbar>
+
+            {/* Active Filter Chips */}
+            {activeFilters.length > 0 && (
+              <div className="flex items-center gap-2 flex-wrap">
+                {activeFilters.map(filter => (
+                  <Badge
+                    key={`${filter.type}-${filter.value}`}
+                    variant="secondary"
+                    className="pl-2 pr-1 py-1 gap-1 cursor-pointer hover:bg-secondary/80"
+                    onClick={() => clearFilter(filter.type)}
+                  >
+                    {filter.label}
+                    <X className="h-3 w-3" />
+                  </Badge>
+                ))}
+                {activeFilters.length > 1 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 px-2 text-xs text-muted-foreground"
+                    onClick={clearAllFilters}
+                  >
+                    Clear all
+                  </Button>
+                )}
+              </div>
+            )}
+
             <DataTable
               table={table}
               columns={columns}
               onRowClick={(row) => handleView(row)}
             />
-            <DataTablePagination table={table} />
+
+            {/* Infinite scroll trigger */}
+            {displayCount < filteredLocations.length && (
+              <div ref={loadMoreRef} className="h-10 flex items-center justify-center">
+                <span className="text-sm text-muted-foreground">
+                  Loading more...
+                </span>
+              </div>
+            )}
+
+            {/* Results count */}
+            <p className="text-xs text-muted-foreground text-center">
+              Showing {displayedLocations.length} of {filteredLocations.length} locations
+            </p>
           </div>
         )}
 
