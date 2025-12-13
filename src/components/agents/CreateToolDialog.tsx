@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { FormHint } from '@/components/ui/form-hint';
 import {
   Dialog,
   DialogContent,
@@ -91,8 +92,9 @@ export const CreateToolDialog = ({ open, onOpenChange, onCreateTool }: CreateToo
               value={tool.name}
               onChange={(e) => setTool({ ...tool, name: e.target.value })}
               placeholder="weather_lookup"
+              aria-describedby="tool-name-hint"
             />
-            <p className="text-[10px] text-muted-foreground">Use snake_case, e.g. check_inventory</p>
+            <FormHint id="tool-name-hint">Use snake_case, e.g. check_inventory</FormHint>
           </div>
 
           <div className="space-y-2">
@@ -102,8 +104,9 @@ export const CreateToolDialog = ({ open, onOpenChange, onCreateTool }: CreateToo
               value={tool.endpoint_url}
               onChange={(e) => setTool({ ...tool, endpoint_url: e.target.value })}
               placeholder="https://api.example.com/weather"
+              aria-describedby="tool-endpoint-hint"
             />
-            <p className="text-[10px] text-muted-foreground">Receives POST with tool arguments as JSON body</p>
+            <FormHint id="tool-endpoint-hint">Receives POST with tool arguments as JSON body</FormHint>
           </div>
 
           <div className="space-y-2">
@@ -114,8 +117,9 @@ export const CreateToolDialog = ({ open, onOpenChange, onCreateTool }: CreateToo
               onChange={(e) => setTool({ ...tool, description: e.target.value })}
               placeholder="Fetches current weather data for a given location. Returns temperature, conditions, and humidity."
               rows={2}
+              aria-describedby="tool-description-hint"
             />
-            <p className="text-[10px] text-muted-foreground">Help the AI understand when to use this tool</p>
+            <FormHint id="tool-description-hint">Help the AI understand when to use this tool</FormHint>
           </div>
 
           <div className="space-y-2">
@@ -127,8 +131,9 @@ export const CreateToolDialog = ({ open, onOpenChange, onCreateTool }: CreateToo
               placeholder='{"type": "object", "properties": {...}}'
               rows={5}
               className="font-mono text-xs"
+              aria-describedby="tool-parameters-hint"
             />
-            <p className="text-[10px] text-muted-foreground">Define the arguments using JSON Schema format</p>
+            <FormHint id="tool-parameters-hint">Define the arguments using JSON Schema format</FormHint>
           </div>
 
           <Collapsible>
@@ -148,8 +153,9 @@ export const CreateToolDialog = ({ open, onOpenChange, onCreateTool }: CreateToo
                   placeholder='{"Authorization": "Bearer your_api_key"}'
                   rows={2}
                   className="font-mono text-xs"
+                  aria-describedby="tool-headers-hint"
                 />
-                <p className="text-[10px] text-muted-foreground">Optional custom headers for authentication</p>
+                <FormHint id="tool-headers-hint">Optional custom headers for authentication</FormHint>
               </div>
 
               <div className="space-y-2">
@@ -161,8 +167,9 @@ export const CreateToolDialog = ({ open, onOpenChange, onCreateTool }: CreateToo
                   onChange={(e) => setTool({ ...tool, timeout_ms: parseInt(e.target.value) || 10000 })}
                   min={1000}
                   max={30000}
+                  aria-describedby="tool-timeout-hint"
                 />
-                <p className="text-[10px] text-muted-foreground">Request timeout (1-30 seconds)</p>
+                <FormHint id="tool-timeout-hint">Request timeout (1-30 seconds)</FormHint>
               </div>
             </CollapsibleContent>
           </Collapsible>

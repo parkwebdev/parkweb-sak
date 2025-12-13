@@ -51,6 +51,12 @@
     --info: 221 83% 53%;
     --info-foreground: 210 40% 98%;
     
+    /* Brand Colors (external platforms) */
+    --wordpress: 201 100% 37%;
+    --facebook: 221 44% 41%;
+    --instagram: 340 75% 54%;
+    --twitter: 203 89% 53%;
+    
     /* Chart colors */
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
@@ -94,6 +100,12 @@
     --warning-foreground: 48 96% 5%;
     --info: 217 91% 60%;
     --info-foreground: 222 84% 5%;
+    
+    /* Brand Colors (external platforms) */
+    --wordpress: 201 100% 37%;
+    --facebook: 221 44% 41%;
+    --instagram: 340 75% 54%;
+    --twitter: 203 89% 53%;
     
     /* Chart colors */
     --chart-1: 220 70% 50%;

@@ -88,6 +88,10 @@ const config: Config = {
           DEFAULT: "hsl(var(--info))",
           foreground: "hsl(var(--info-foreground))",
         },
+        wordpress: "hsl(var(--wordpress))",
+        facebook: "hsl(var(--facebook))",
+        instagram: "hsl(var(--instagram))",
+        twitter: "hsl(var(--twitter))",
       },
       borderRadius: {
         lg: "var(--radius)",

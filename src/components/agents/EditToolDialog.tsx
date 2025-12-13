@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { FormHint } from '@/components/ui/form-hint';
 import {
   Dialog,
   DialogContent,
@@ -94,8 +95,9 @@ export const EditToolDialog = ({ open, onOpenChange, tool, onSave }: EditToolDia
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               placeholder="weather_lookup"
+              aria-describedby="edit-tool-name-hint"
             />
-            <p className="text-[10px] text-muted-foreground">Use snake_case, e.g. check_inventory</p>
+            <FormHint id="edit-tool-name-hint">Use snake_case, e.g. check_inventory</FormHint>
           </div>
 
           <div className="space-y-2">
@@ -105,8 +107,9 @@ export const EditToolDialog = ({ open, onOpenChange, tool, onSave }: EditToolDia
               value={formData.endpoint_url}
               onChange={(e) => setFormData({ ...formData, endpoint_url: e.target.value })}
               placeholder="https://api.example.com/weather"
+              aria-describedby="edit-tool-endpoint-hint"
             />
-            <p className="text-[10px] text-muted-foreground">Receives POST with tool arguments as JSON body</p>
+            <FormHint id="edit-tool-endpoint-hint">Receives POST with tool arguments as JSON body</FormHint>
           </div>
 
           <div className="space-y-2">
@@ -117,8 +120,9 @@ export const EditToolDialog = ({ open, onOpenChange, tool, onSave }: EditToolDia
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               placeholder="Fetches current weather data for a given location."
               rows={2}
+              aria-describedby="edit-tool-description-hint"
             />
-            <p className="text-[10px] text-muted-foreground">Help the AI understand when to use this tool</p>
+            <FormHint id="edit-tool-description-hint">Help the AI understand when to use this tool</FormHint>
           </div>
 
           <div className="space-y-2">
@@ -130,8 +134,9 @@ export const EditToolDialog = ({ open, onOpenChange, tool, onSave }: EditToolDia
               placeholder='{"type": "object", "properties": {...}}'
               rows={5}
               className="font-mono text-xs"
+              aria-describedby="edit-tool-parameters-hint"
             />
-            <p className="text-[10px] text-muted-foreground">Define the arguments using JSON Schema format</p>
+            <FormHint id="edit-tool-parameters-hint">Define the arguments using JSON Schema format</FormHint>
           </div>
 
           <Collapsible>
@@ -151,8 +156,9 @@ export const EditToolDialog = ({ open, onOpenChange, tool, onSave }: EditToolDia
                   placeholder='{"Authorization": "Bearer your_api_key"}'
                   rows={2}
                   className="font-mono text-xs"
+                  aria-describedby="edit-tool-headers-hint"
                 />
-                <p className="text-[10px] text-muted-foreground">Optional custom headers for authentication</p>
+                <FormHint id="edit-tool-headers-hint">Optional custom headers for authentication</FormHint>
               </div>
 
               <div className="space-y-2">
@@ -164,8 +170,9 @@ export const EditToolDialog = ({ open, onOpenChange, tool, onSave }: EditToolDia
                   onChange={(e) => setFormData({ ...formData, timeout_ms: parseInt(e.target.value) || 10000 })}
                   min={1000}
                   max={30000}
+                  aria-describedby="edit-tool-timeout-hint"
                 />
-                <p className="text-[10px] text-muted-foreground">Request timeout (1-30 seconds)</p>
+                <FormHint id="edit-tool-timeout-hint">Request timeout (1-30 seconds)</FormHint>
               </div>
             </CollapsibleContent>
           </Collapsible>
