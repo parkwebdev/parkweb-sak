@@ -42,6 +42,7 @@ export type AriSection =
   | 'news'
   | 'custom-tools'
   | 'webhooks'
+  | 'integrations'
   | 'api-access'
   | 'installation';
 
@@ -74,6 +75,7 @@ const SECTIONS: SectionItem[] = [
   // Tools & API
   { id: 'custom-tools', label: 'Custom Tools', icon: Tool02, group: 'Tools' },
   { id: 'webhooks', label: 'Webhooks', icon: Link03, group: 'Tools' },
+  { id: 'integrations', label: 'Integrations', icon: Link03, group: 'Tools' },
   { id: 'api-access', label: 'API Access', icon: Key01, group: 'Tools' },
   
   // Installation
