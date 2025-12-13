@@ -1,7 +1,7 @@
 /**
  * Checkbox Component
  * 
- * An animated checkbox with smooth check mark animation.
+ * An animated checkbox with smooth check mark animation and tactile feedback.
  * Built on Radix UI Checkbox primitive with Framer Motion.
  * 
  * @module components/ui/checkbox
@@ -14,7 +14,7 @@ import { motion } from "motion/react"
 
 import { cn } from "@/lib/utils"
 import { useReducedMotion } from "@/hooks/useReducedMotion"
-import { springs } from "@/lib/motion-variants"
+import { springs, tapPress } from "@/lib/motion-variants"
 
 export const Checkbox = React.forwardRef<
   React.ElementRef<typeof CheckboxPrimitive.Root>,
@@ -23,42 +23,48 @@ export const Checkbox = React.forwardRef<
   const prefersReducedMotion = useReducedMotion();
   
   return (
-    <CheckboxPrimitive.Root
-      ref={ref}
-      checked={checked}
-      className={cn(
-        "peer size-4 shrink-0 rounded-[4px] border border-input bg-background transition-colors duration-150",
-        "hover:border-primary/50 hover:shadow-sm",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-        "disabled:cursor-not-allowed disabled:opacity-50",
-        "data-[state=checked]:bg-primary data-[state=checked]:border-primary data-[state=checked]:text-primary-foreground",
-        className
-      )}
-      {...props}
+    <motion.div
+      className="inline-flex"
+      whileTap={prefersReducedMotion ? undefined : tapPress}
+      transition={springs.micro}
     >
-      <CheckboxPrimitive.Indicator className="flex items-center justify-center text-current">
-        <motion.svg
-          className="size-3"
-          viewBox="0 0 12 12"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          initial={prefersReducedMotion ? false : { scale: 0.5, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={prefersReducedMotion ? { duration: 0 } : springs.micro}
-        >
-          <motion.path
-            d="M2.5 6L4.5 8L9.5 3"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            initial={prefersReducedMotion ? false : { pathLength: 0 }}
-            animate={{ pathLength: 1 }}
-            transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.2, ease: "easeOut" }}
-          />
-        </motion.svg>
-      </CheckboxPrimitive.Indicator>
-    </CheckboxPrimitive.Root>
+      <CheckboxPrimitive.Root
+        ref={ref}
+        checked={checked}
+        className={cn(
+          "peer size-4 shrink-0 rounded-[4px] border border-input bg-background transition-colors duration-150",
+          "hover:border-primary/50 hover:shadow-sm",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+          "disabled:cursor-not-allowed disabled:opacity-50",
+          "data-[state=checked]:bg-primary data-[state=checked]:border-primary data-[state=checked]:text-primary-foreground",
+          className
+        )}
+        {...props}
+      >
+        <CheckboxPrimitive.Indicator className="flex items-center justify-center text-current">
+          <motion.svg
+            className="size-3"
+            viewBox="0 0 12 12"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            initial={prefersReducedMotion ? false : { scale: 0.5, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={prefersReducedMotion ? { duration: 0 } : springs.micro}
+          >
+            <motion.path
+              d="M2.5 6L4.5 8L9.5 3"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              initial={prefersReducedMotion ? false : { pathLength: 0 }}
+              animate={{ pathLength: 1 }}
+              transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.2, ease: "easeOut" }}
+            />
+          </motion.svg>
+        </CheckboxPrimitive.Indicator>
+      </CheckboxPrimitive.Root>
+    </motion.div>
   );
 })
 Checkbox.displayName = CheckboxPrimitive.Root.displayName
