@@ -86,10 +86,10 @@ export const ComparisonPeriodSelector = ({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="previous">Previous period</SelectItem>
-            <SelectItem value="last-month">Same period last month</SelectItem>
-            <SelectItem value="last-year">Same period last year</SelectItem>
-            <SelectItem value="custom">Custom range</SelectItem>
+            <SelectItem value="previous" className="py-1 text-xs">Previous period</SelectItem>
+            <SelectItem value="last-month" className="py-1 text-xs">Same period last month</SelectItem>
+            <SelectItem value="last-year" className="py-1 text-xs">Same period last year</SelectItem>
+            <SelectItem value="custom" className="py-1 text-xs">Custom range</SelectItem>
           </SelectContent>
         </Select>
       </div>
