@@ -172,13 +172,6 @@ export function InboxNavSidebar({ activeFilter, onFilterChange, counts, searchQu
             isActive={isActive('yours')}
             onClick={() => onFilterChange({ type: 'yours', label: 'Your Inbox' })}
           />
-          <NavItem
-            icon={<CheckCircle size={16} />}
-            label="Resolved"
-            count={counts.resolved}
-            isActive={isActive('status', 'closed')}
-            onClick={() => onFilterChange({ type: 'status', value: 'closed', label: 'Resolved' })}
-          />
         </div>
       </div>
 
@@ -195,6 +188,13 @@ export function InboxNavSidebar({ activeFilter, onFilterChange, counts, searchQu
             onClick={() => {}}
             disabled
             comingSoon
+          />
+          <NavItem
+            icon={<CheckCircle size={16} />}
+            label="Resolved"
+            count={counts.resolved}
+            isActive={isActive('status', 'closed')}
+            onClick={() => onFilterChange({ type: 'status', value: 'closed', label: 'Resolved' })}
           />
         </div>
       </div>
