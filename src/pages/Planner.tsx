@@ -221,7 +221,7 @@ const Planner: React.FC = () => {
         title="Planner"
         description="Manage your property showings and bookings"
       >
-      <DropdownMenu modal={false}>
+      <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" data-no-dnd="true">
               Connect Calendar

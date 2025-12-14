@@ -1,5 +1,6 @@
 import type { PointerEvent } from 'react';
-import { PointerSensor, PointerSensorOptions } from '@dnd-kit/core';
+import { PointerSensor } from '@dnd-kit/core';
+import type { PointerSensorOptions } from '@dnd-kit/core';
 
 function shouldHandleEvent(element: HTMLElement | null): boolean {
   let cur = element;
@@ -19,7 +20,7 @@ export class SmartPointerSensor extends PointerSensor {
       handler: (
         { nativeEvent: event }: PointerEvent,
         { onActivation }: PointerSensorOptions
-      ) => {
+      ): boolean => {
         if (
           !event.isPrimary ||
           event.button !== 0 ||
