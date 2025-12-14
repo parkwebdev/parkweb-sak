@@ -109,7 +109,6 @@ const AriConfigurator = () => {
 
   const widgetConfig: WidgetConfig | null = agent ? {
     agentId: embedConfig.agentId || agent.id,
-    agentName: embedConfig.agentName || agent.name,
     userId: embedConfig.userId || agent.user_id,
     position: embedConfig.position,
     primaryColor: embedConfig.primaryColor,

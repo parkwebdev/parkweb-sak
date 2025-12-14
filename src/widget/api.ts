@@ -42,7 +42,6 @@ export const widgetSupabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
 export interface WidgetConfig {
   // Agent info
   agentId: string;
-  agentName: string;
   userId: string;
   
   // Display settings

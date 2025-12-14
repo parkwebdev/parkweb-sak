@@ -51,7 +51,6 @@ export interface EmbeddedChatConfig {
   position: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
   showBranding: boolean;
   avatarUrl?: string;
-  agentName: string;
   animation: 'none' | 'pulse' | 'bounce' | 'fade' | 'ring';
   
   // Home Screen Options
@@ -106,7 +105,6 @@ export const useEmbeddedChatConfig = (agentId: string) => {
     primaryColor: '#000000',
     position: 'bottom-right',
     showBranding: true,
-    agentName: 'AI Assistant',
     animation: 'ring',
     
     // Home Screen
@@ -199,7 +197,6 @@ export const useEmbeddedChatConfig = (agentId: string) => {
           ...(deploymentConfig.embedded_chat as Partial<EmbeddedChatConfig>),
           agentId,
           userId: agent.user_id,
-          agentName: agent.name,
         });
       } else if (deploymentConfig?.widget) {
         // Backward compatibility with old "widget" naming
@@ -208,14 +205,12 @@ export const useEmbeddedChatConfig = (agentId: string) => {
           ...(deploymentConfig.widget as Partial<EmbeddedChatConfig>),
           agentId,
           userId: agent.user_id,
-          agentName: agent.name,
         });
       } else {
         setConfig({
           ...defaultConfig,
           agentId,
           userId: agent.user_id,
-          agentName: agent.name,
         });
       }
     } catch (error: unknown) {

@@ -13,7 +13,6 @@ const useWidgetSearchParams = () => {
 const getDefaultConfig = (agentId: string): WidgetConfig => ({
   agentId,
   userId: '',
-  agentName: 'Assistant',
   primaryColor: '#000000',
   position: 'bottom-right',
   welcomeTitle: 'Hi there!',
@@ -98,7 +97,6 @@ const WidgetPage = () => {
           userId: data.userId || '',
           primaryColor: data.primaryColor || '#000000',
           position: (searchParams.get('position') as 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left') || 'bottom-right',
-          agentName: data.agentName,
           showBranding: data.showBranding,
           animation: data.animation,
           buttonAnimation: data.buttonAnimation || data.animation,

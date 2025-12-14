@@ -26,7 +26,6 @@ export const EmbedPreviewPanel = ({ config }: EmbedPreviewPanelProps) => {
   // Convert config to WidgetConfig format
   const widgetConfig: WidgetConfig = {
     agentId: config.agentId,
-    agentName: config.agentName,
     userId: config.userId || '',
     position: config.position,
     primaryColor: config.primaryColor,
