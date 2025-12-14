@@ -7,7 +7,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import AriAgentsIcon from '@/components/icons/AriAgentsIcon';
-import { CheckCircle, Globe01, Inbox01, SearchMd, XClose } from '@untitledui/icons';
+import { CheckCircle, Globe01, Inbox01, SearchMd, XClose, Ticket01 } from '@untitledui/icons';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 
@@ -178,6 +178,23 @@ export function InboxNavSidebar({ activeFilter, onFilterChange, counts, searchQu
             count={counts.resolved}
             isActive={isActive('status', 'closed')}
             onClick={() => onFilterChange({ type: 'status', value: 'closed', label: 'Resolved' })}
+          />
+        </div>
+      </div>
+
+      {/* Tickets Section */}
+      <div className="p-3 pt-0">
+        <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 px-3">
+          Tickets
+        </h3>
+        <div className="space-y-0.5">
+          <NavItem
+            icon={<Ticket01 size={16} />}
+            label="All Tickets"
+            isActive={false}
+            onClick={() => {}}
+            disabled
+            comingSoon
           />
         </div>
       </div>
