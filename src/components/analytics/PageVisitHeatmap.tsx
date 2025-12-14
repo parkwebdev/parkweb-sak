@@ -9,14 +9,12 @@
 import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
 interface PageVisitData {
   url: string;
   totalVisits: number;
   totalDuration: number;
-  agentName?: string;
 }
 
 interface PageVisitHeatmapProps {
@@ -123,11 +121,6 @@ export const PageVisitHeatmap: React.FC<PageVisitHeatmapProps> = ({ data, loadin
                         {formatUrl(page.url)}
                       </span>
                       <div className="flex items-center gap-2 z-10">
-                        {page.agentName && (
-                          <Badge variant="secondary" size="sm" className="px-1.5 py-0">
-                            {page.agentName}
-                          </Badge>
-                        )}
                         <span className="text-xs font-medium">{page.totalVisits}</span>
                       </div>
                     </div>

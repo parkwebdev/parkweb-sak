@@ -8,7 +8,6 @@ import { cn } from '@/lib/utils';
 
 export interface ConversationRow {
   id: string;
-  agentName: string;
   leadName?: string;
   messageCount: number;
   duration: string;
@@ -54,17 +53,14 @@ export const createConversationsColumns = (
     enableHiding: false,
   },
   {
-    accessorKey: 'agentName',
+    accessorKey: 'leadName',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Agent / Lead" />
+      <DataTableColumnHeader column={column} title="Lead" />
     ),
     cell: ({ row }) => (
-      <div className="flex flex-col">
-        <span className="font-medium text-foreground">{row.original.agentName}</span>
-        {row.original.leadName && (
-          <span className="text-sm text-muted-foreground">{row.original.leadName}</span>
-        )}
-      </div>
+      <span className="font-medium text-foreground">
+        {row.original.leadName || 'Anonymous'}
+      </span>
     ),
   },
   {

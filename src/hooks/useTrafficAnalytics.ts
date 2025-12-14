@@ -27,14 +27,12 @@ interface LandingPageData {
   visits: number;
   avgDuration: number;
   conversions: number;
-  agentName?: string;
 }
 
 interface PageVisitData {
   url: string;
   totalVisits: number;
   totalDuration: number;
-  agentName?: string;
 }
 
 interface TrafficStats {
@@ -75,7 +73,6 @@ export const useTrafficAnalytics = (
     pageVisits: [],
   });
   const [agentId, setAgentId] = useState<string | null>(null);
-  const [agentName, setAgentName] = useState<string>('Ari');
   const { user } = useAuth();
 
   const fetchData = async () => {
@@ -86,13 +83,12 @@ export const useTrafficAnalytics = (
       // Fetch the single agent
       const { data: agentData } = await supabase
         .from('agents')
-        .select('id, name')
+        .select('id')
         .eq('user_id', user.id)
         .maybeSingle();
       
       if (agentData) {
         setAgentId(agentData.id);
-        setAgentName(agentData.name);
       }
 
       // Fetch conversations with metadata
@@ -229,7 +225,6 @@ export const useTrafficAnalytics = (
     ...stats,
     loading,
     agentId,
-    agentName,
     refetch: fetchData,
   };
 };
