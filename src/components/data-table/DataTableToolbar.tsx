@@ -5,7 +5,7 @@
 
 import React from 'react';
 import { Table } from '@tanstack/react-table';
-import { SearchMd, XClose } from '@untitledui/icons';
+import { SearchSm, XClose } from '@untitledui/icons';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -58,7 +58,7 @@ export function DataTableToolbar<TData>({
   return (
     <div className={cn('flex items-center justify-between gap-2', className)}>
       <div className="relative w-full max-w-sm">
-        <SearchMd className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <SearchSm className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           placeholder={searchPlaceholder}
           value={searchValue}
