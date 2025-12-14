@@ -669,7 +669,6 @@ export const FullCalendar: React.FC<FullCalendarProps> = ({
               value={searchQuery}
               onChange={(e) => onSearchChange?.(e.target.value)}
               className="pl-9"
-              size="sm"
             />
           </div>
         </div>
