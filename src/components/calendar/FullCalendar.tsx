@@ -27,8 +27,7 @@ import {
   isSameMonth, isSameDay, isToday, getWeek, getHours, setHours, setMinutes,
   differenceInMinutes, addMinutes
 } from 'date-fns';
-import { DndContext, DragEndEvent, DragStartEvent, DragOverlay, useSensor, useSensors } from '@dnd-kit/core';
-import { SmartPointerSensor } from '@/lib/smart-pointer-sensor';
+import { DndContext, DragEndEvent, DragStartEvent, DragOverlay, MouseSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { expandRecurringEvents } from '@/lib/recurrence';
 import { ResizableEvent } from './ResizableEvent';
 import { DroppableTimeSlot } from './DroppableTimeSlot';
@@ -130,10 +129,13 @@ export const FullCalendar: React.FC<FullCalendarProps> = ({
     return conflicts;
   }, [expandedEvents]);
 
-  // Use distance-only constraints - resize conflict handled by isResizeIntent flag
+  // Use MouseSensor + TouchSensor instead of PointerSensor to avoid dropdown interference
   const sensors = useSensors(
-    useSensor(SmartPointerSensor, {
+    useSensor(MouseSensor, {
       activationConstraint: { distance: view === 'month' ? 5 : 8 },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 200, tolerance: 5 },
     })
   );
 
@@ -714,7 +716,7 @@ export const FullCalendar: React.FC<FullCalendarProps> = ({
             {/* View Selector */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="w-[130px] justify-between" data-no-dnd="true">
+                <Button variant="outline" className="w-[130px] justify-between">
                   {view === 'month' ? 'Month view' : view === 'week' ? 'Week view' : 'Day view'}
                   <ChevronDown className="ml-2 h-4 w-4" />
                 </Button>
