@@ -6,12 +6,23 @@
  */
 
 import { lazy, Suspense } from 'react';
-import { LoadingState } from '@/components/ui/loading-state';
+import { MultiStepLoader } from '@/components/ui/multi-step-loader';
 
 const AriConfigurator = lazy(() => import('./AriConfigurator'));
 
+const loadingStates = [
+  { text: "Loading Ari..." },
+];
+
 const AriConfiguratorWrapper = () => (
-  <Suspense fallback={<LoadingState text="Loading Ari..." />}>
+  <Suspense fallback={
+    <MultiStepLoader 
+      loadingStates={loadingStates} 
+      loading={true} 
+      duration={500} 
+      loop={true} 
+    />
+  }>
     <AriConfigurator />
   </Suspense>
 );
