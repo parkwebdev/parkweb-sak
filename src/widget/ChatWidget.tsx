@@ -797,7 +797,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
           {/* Non-home views header */}
           {currentView !== 'home' && (
             <WidgetHeader
-              title={currentView === 'messages' ? config.agentName : currentView === 'news' ? 'News Center' : 'Help Center'}
+              title={currentView === 'messages' ? 'Ari' : currentView === 'news' ? 'News Center' : 'Help Center'}
               primaryColor={config.primaryColor}
               onClose={handleClose}
               soundEnabled={soundEnabled}

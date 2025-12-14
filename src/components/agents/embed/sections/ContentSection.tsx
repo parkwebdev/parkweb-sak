@@ -2,6 +2,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { ToggleSettingRow } from '@/components/ui/toggle-setting-row';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { InfoCircleIcon, InfoCircleIconFilled } from '@/components/ui/info-circle-icon';
 import type { EmbeddedChatConfig } from '@/hooks/useEmbeddedChatConfig';
 
 interface ContentSectionProps {
@@ -12,32 +14,23 @@ interface ContentSectionProps {
 export const ContentSection = ({ config, onConfigChange }: ContentSectionProps) => {
   return (
     <div className="space-y-6">
-      <div className="space-y-2">
-        <Label htmlFor="agent-name" className="text-sm">Agent Name</Label>
-        <Input
-          id="agent-name"
-          value={config.agentName}
-          onChange={(e) => onConfigChange({ agentName: e.target.value })}
-          placeholder="AI Assistant"
-          className="text-sm"
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="welcome-emoji" className="text-sm">Emoji</Label>
-        <Input
-          id="welcome-emoji"
-          value={config.welcomeEmoji}
-          onChange={(e) => onConfigChange({ welcomeEmoji: e.target.value })}
-          placeholder="👋"
-          maxLength={2}
-          className="text-sm w-20"
-        />
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
+      {/* Welcome Title + Emoji on same row */}
+      <div className="grid grid-cols-[1fr_80px] gap-4">
         <div className="space-y-2">
-          <Label htmlFor="welcome-title" className="text-sm">Welcome Title</Label>
+          <div className="flex items-center gap-1.5">
+            <Label htmlFor="welcome-title" className="text-sm">Welcome Title</Label>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="cursor-help group">
+                  <InfoCircleIcon className="h-3.5 w-3.5 text-muted-foreground group-hover:hidden" />
+                  <InfoCircleIconFilled className="h-3.5 w-3.5 text-muted-foreground hidden group-hover:block" />
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="max-w-[200px]">
+                The main greeting displayed at the top of the widget home screen
+              </TooltipContent>
+            </Tooltip>
+          </div>
           <Input
             id="welcome-title"
             value={config.welcomeTitle}
@@ -47,15 +40,54 @@ export const ContentSection = ({ config, onConfigChange }: ContentSectionProps) 
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="welcome-subtitle" className="text-sm">Welcome Subtitle</Label>
+          <div className="flex items-center gap-1.5">
+            <Label htmlFor="welcome-emoji" className="text-sm">Emoji</Label>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="cursor-help group">
+                  <InfoCircleIcon className="h-3.5 w-3.5 text-muted-foreground group-hover:hidden" />
+                  <InfoCircleIconFilled className="h-3.5 w-3.5 text-muted-foreground hidden group-hover:block" />
+                </span>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="max-w-[200px]">
+                Appears immediately after the Welcome Title
+              </TooltipContent>
+            </Tooltip>
+          </div>
           <Input
-            id="welcome-subtitle"
-            value={config.welcomeSubtitle}
-            onChange={(e) => onConfigChange({ welcomeSubtitle: e.target.value })}
-            placeholder="How can we help you today?"
+            id="welcome-emoji"
+            value={config.welcomeEmoji}
+            onChange={(e) => onConfigChange({ welcomeEmoji: e.target.value })}
+            placeholder="👋"
+            maxLength={2}
             className="text-sm"
           />
         </div>
+      </div>
+
+      {/* Welcome Subtitle below */}
+      <div className="space-y-2">
+        <div className="flex items-center gap-1.5">
+          <Label htmlFor="welcome-subtitle" className="text-sm">Welcome Subtitle</Label>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="cursor-help group">
+                <InfoCircleIcon className="h-3.5 w-3.5 text-muted-foreground group-hover:hidden" />
+                <InfoCircleIconFilled className="h-3.5 w-3.5 text-muted-foreground hidden group-hover:block" />
+              </span>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="max-w-[200px]">
+              Displayed on the line below the title and emoji
+            </TooltipContent>
+          </Tooltip>
+        </div>
+        <Input
+          id="welcome-subtitle"
+          value={config.welcomeSubtitle}
+          onChange={(e) => onConfigChange({ welcomeSubtitle: e.target.value })}
+          placeholder="How can we help you today?"
+          className="text-sm"
+        />
       </div>
 
       <ToggleSettingRow

@@ -119,17 +119,6 @@ export const EmbedSettingsPanel = ({ config, onConfigChange, embedCode }: EmbedS
           <AccordionTrigger className="text-sm font-medium">Messages & Content</AccordionTrigger>
           <AccordionContent className="space-y-4 pt-4">
             <div className="space-y-2">
-              <Label htmlFor="agent-name" className="text-sm">Agent Name</Label>
-              <Input
-                id="agent-name"
-                value={config.agentName}
-                onChange={(e) => onConfigChange({ agentName: e.target.value })}
-                placeholder="AI Assistant"
-                className="text-sm"
-              />
-            </div>
-
-            <div className="space-y-2">
               <Label htmlFor="welcome-emoji" className="text-sm">Welcome Emoji</Label>
               <Input
                 id="welcome-emoji"
