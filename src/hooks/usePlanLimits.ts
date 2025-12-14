@@ -18,7 +18,6 @@ import type { PlanLimits as PlanLimitsType, PlanFeatures as PlanFeaturesType } f
  */
 
 export interface PlanLimits {
-  max_agents: number;
   max_conversations_per_month: number;
   max_api_calls_per_month: number;
   max_knowledge_sources: number;
@@ -27,7 +26,6 @@ export interface PlanLimits {
 }
 
 export interface CurrentUsage {
-  agents: number;
   conversations_this_month: number;
   api_calls_this_month: number;
   knowledge_sources: number;
@@ -73,7 +71,6 @@ export const usePlanLimits = () => {
 
       // Unlimited plan (owner account - no restrictions)
       let planLimits: PlanLimits = {
-        max_agents: 999999,
         max_conversations_per_month: 999999,
         max_api_calls_per_month: 999999,
         max_knowledge_sources: 999999,
@@ -89,7 +86,6 @@ export const usePlanLimits = () => {
         const storedLimits = plan.limits;
         if (storedLimits) {
           planLimits = {
-            max_agents: storedLimits.max_agents || 1,
             max_conversations_per_month: storedLimits.max_conversations_per_month || 100,
             max_api_calls_per_month: storedLimits.max_api_calls_per_month || 1000,
             max_knowledge_sources: storedLimits.max_knowledge_sources || 10,
@@ -105,12 +101,6 @@ export const usePlanLimits = () => {
       // Get current usage
       const now = new Date();
       const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-
-      // Count agents
-      const { count: agentsCount } = await supabase
-        .from('agents')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id);
 
       // Count conversations this month
       const { count: conversationsCount } = await supabase
@@ -142,7 +132,6 @@ export const usePlanLimits = () => {
         .maybeSingle();
 
       setUsage({
-        agents: agentsCount || 0,
         conversations_this_month: conversationsCount || 0,
         api_calls_this_month: usageMetrics?.api_calls_count || 0,
         knowledge_sources: knowledgeCount || 0,
@@ -172,7 +161,6 @@ export const usePlanLimits = () => {
     }
 
     const limitMap: Record<keyof CurrentUsage, number> = {
-      agents: limits.max_agents,
       conversations_this_month: limits.max_conversations_per_month,
       api_calls_this_month: limits.max_api_calls_per_month,
       knowledge_sources: limits.max_knowledge_sources,
@@ -192,10 +180,6 @@ export const usePlanLimits = () => {
       isNearLimit: percentage >= 80,
       isAtLimit: percentage >= 100,
     };
-  };
-
-  const canCreateAgent = (): LimitCheck => {
-    return checkLimit('agents', 1);
   };
 
   const canAddKnowledgeSource = (): LimitCheck => {
@@ -235,7 +219,6 @@ export const usePlanLimits = () => {
     loading,
     planName,
     checkLimit,
-    canCreateAgent,
     canAddKnowledgeSource,
     canAddTeamMember,
     showLimitWarning,

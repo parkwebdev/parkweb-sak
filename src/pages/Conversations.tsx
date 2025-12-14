@@ -25,7 +25,7 @@ import { FileTypeIcon } from '@/components/chat/FileTypeIcons';
 import { formatFileSize, validateFiles } from '@/lib/file-validation';
 import { EmptyState } from '@/components/ui/empty-state';
 import { useConversations } from '@/hooks/useConversations';
-import { useAgents } from '@/hooks/useAgents';
+import { useAgent } from '@/hooks/useAgent';
 import { ConversationMetadataPanel } from '@/components/conversations/ConversationMetadataPanel';
 import type { Tables } from '@/integrations/supabase/types';
 import type { ConversationMetadata, MessageMetadata, MessageReaction } from '@/types/metadata';
@@ -84,12 +84,9 @@ const Conversations: React.FC = () => {
     reopenConversation,
   } = useConversations();
 
-  const { agents } = useAgents();
-  const agentNames = React.useMemo(() => {
-    const map: Record<string, string> = {};
-    agents.forEach(a => { map[a.id] = a.name; });
-    return map;
-  }, [agents]);
+  const { agent } = useAgent();
+  const agentId = agent?.id;
+  const agentName = agent?.name || 'Ari';
 
   // Fetch current user's profile for optimistic message updates
   const { data: userProfile } = useQuery({
@@ -149,51 +146,34 @@ const Conversations: React.FC = () => {
     }
   };
 
-  // Subscribe to presence for all agents to track active visitors
+  // Subscribe to presence for the single agent to track active visitors
   useEffect(() => {
-    if (agents.length === 0) return;
+    if (!agentId) return;
 
-    const channels: RealtimeChannel[] = [];
-
-    agents.forEach(agent => {
-      const channel = supabase
-        .channel(`visitor-presence-${agent.id}`)
-        .on('presence', { event: 'sync' }, () => {
-          const state = channel.presenceState();
-          const visitors: Record<string, { currentPage: string; visitorId: string }> = {};
-          
-          Object.values(state).flat().forEach((rawPresence) => {
-            const presence = rawPresence as unknown as VisitorPresenceState;
-            if (presence.isWidgetOpen && presence.visitorId) {
-              visitors[presence.visitorId] = {
-                visitorId: presence.visitorId,
-                currentPage: presence.currentPage || 'Unknown',
-              };
-            }
-          });
-          
-          setActiveVisitors(prev => {
-            const newState = { ...prev };
-            // Remove visitors from this agent that are no longer present
-            Object.keys(newState).forEach(vid => {
-              const wasFromThisAgent = Object.values(state).flat().some((p) => (p as unknown as VisitorPresenceState).visitorId === vid);
-              if (!wasFromThisAgent) return;
-              if (!visitors[vid]) delete newState[vid];
-            });
-            // Add/update visitors
-            Object.assign(newState, visitors);
-            return newState;
-          });
-        })
-        .subscribe();
-
-      channels.push(channel);
-    });
+    const channel = supabase
+      .channel(`visitor-presence-${agentId}`)
+      .on('presence', { event: 'sync' }, () => {
+        const state = channel.presenceState();
+        const visitors: Record<string, { currentPage: string; visitorId: string }> = {};
+        
+        Object.values(state).flat().forEach((rawPresence) => {
+          const presence = rawPresence as unknown as VisitorPresenceState;
+          if (presence.isWidgetOpen && presence.visitorId) {
+            visitors[presence.visitorId] = {
+              visitorId: presence.visitorId,
+              currentPage: presence.currentPage || 'Unknown',
+            };
+          }
+        });
+        
+        setActiveVisitors(visitors);
+      })
+      .subscribe();
 
     return () => {
-      channels.forEach(channel => supabase.removeChannel(channel));
+      supabase.removeChannel(channel);
     };
-  }, [agents.map(a => a.id).join(',')]);
+  }, [agentId]);
 
   // Check if a conversation's visitor is currently active
   const getVisitorPresence = (conversation: Conversation) => {

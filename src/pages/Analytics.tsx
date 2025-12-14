@@ -20,6 +20,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { useTrafficAnalytics } from '@/hooks/useTrafficAnalytics';
 import { useAuth } from '@/hooks/useAuth';
+import { useAgent } from '@/hooks/useAgent';
 import { ComparisonView } from '@/components/analytics/ComparisonView';
 import { ConversationChart } from '@/components/analytics/ConversationChart';
 import { LeadConversionChart } from '@/components/analytics/LeadConversionChart';
@@ -77,6 +78,7 @@ const generateChartData = (dailyCounts: number[]): { value: number }[] => {
 
 const Analytics: React.FC = () => {
   const { user } = useAuth();
+  const { agentId } = useAgent();
   const [activeTab, setActiveTab] = useState('dashboard');
 
   // Date state
@@ -125,8 +127,6 @@ const Analytics: React.FC = () => {
     trafficSources,
     landingPages,
     pageVisits,
-    agents,
-    agentNames,
     loading: trafficLoading,
   } = useTrafficAnalytics(startDate, endDate);
 
@@ -374,10 +374,7 @@ const Analytics: React.FC = () => {
         {/* Traffic Tab */}
         <TabsContent value="traffic" className="space-y-6 mt-6">
           {/* Active Visitors */}
-          <ActiveVisitorsCard 
-            agentIds={agents.map(a => a.id)} 
-            agentNames={agentNames}
-          />
+          <ActiveVisitorsCard agentId={agentId} />
           
           {/* Traffic Charts */}
           <AnimatedList className="grid grid-cols-1 lg:grid-cols-2 gap-6" staggerDelay={0.1}>

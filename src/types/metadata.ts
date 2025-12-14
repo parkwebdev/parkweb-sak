@@ -307,12 +307,11 @@ export interface LeadData {
 /**
  * Plan limits stored in plans.limits JSONB field.
  * Defines usage quotas for subscription plans.
+ * Single-agent model means no max_agents limit.
  * 
  * @see Database table: plans
  */
 export interface PlanLimits {
-  /** Maximum number of agents */
-  max_agents?: number;
   /** Maximum conversations per billing period */
   max_conversations_per_month?: number;
   /** Maximum API calls per billing period */

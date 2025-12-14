@@ -1,7 +1,7 @@
 /**
  * ActiveVisitorsCard Component
  * 
- * Real-time display of active visitors across all agents.
+ * Real-time display of active visitors for the single Ari agent.
  * Uses Supabase presence channel for live updates.
  * @module components/analytics/ActiveVisitorsCard
  */
@@ -18,8 +18,6 @@ import type { VisitorPresenceState } from '@/types/report';
 
 interface ActiveVisitor {
   visitorId: string;
-  agentId: string;
-  agentName?: string;
   currentPage: string;
   leadName?: string;
   leadEmail?: string;
@@ -27,8 +25,7 @@ interface ActiveVisitor {
 }
 
 interface ActiveVisitorsCardProps {
-  agentIds: string[];
-  agentNames?: Record<string, string>;
+  agentId?: string | null;
 }
 
 const formatUrl = (url: string): string => {
@@ -54,56 +51,42 @@ const formatTimeActive = (startedAt: string): string => {
   return `${hours}h ${diffMins % 60}m`;
 };
 
-export const ActiveVisitorsCard: React.FC<ActiveVisitorsCardProps> = ({ agentIds, agentNames = {} }) => {
+export const ActiveVisitorsCard: React.FC<ActiveVisitorsCardProps> = ({ agentId }) => {
   const [activeVisitors, setActiveVisitors] = useState<ActiveVisitor[]>([]);
-  const [channels, setChannels] = useState<RealtimeChannel[]>([]);
+  const [channel, setChannel] = useState<RealtimeChannel | null>(null);
 
   useEffect(() => {
-    if (agentIds.length === 0) return;
+    if (!agentId) return;
 
-    const newChannels: RealtimeChannel[] = [];
+    const newChannel = supabase
+      .channel(`visitor-presence-${agentId}`)
+      .on('presence', { event: 'sync' }, () => {
+        const state = newChannel.presenceState();
+        const visitors: ActiveVisitor[] = [];
+        
+        Object.values(state).flat().forEach((rawPresence) => {
+          const presence = rawPresence as unknown as VisitorPresenceState;
+          if (presence.isWidgetOpen) {
+            visitors.push({
+              visitorId: presence.visitorId,
+              currentPage: presence.currentPage || 'Unknown',
+              leadName: presence.leadName,
+              leadEmail: presence.leadEmail,
+              startedAt: presence.startedAt || new Date().toISOString(),
+            });
+          }
+        });
+        
+        setActiveVisitors(visitors);
+      })
+      .subscribe();
 
-    agentIds.forEach(agentId => {
-      const channel = supabase
-        .channel(`visitor-presence-${agentId}`)
-        .on('presence', { event: 'sync' }, () => {
-          const state = channel.presenceState();
-          const visitors: ActiveVisitor[] = [];
-          
-          Object.values(state).flat().forEach((rawPresence) => {
-            const presence = rawPresence as unknown as VisitorPresenceState;
-            if (presence.isWidgetOpen) {
-              visitors.push({
-                visitorId: presence.visitorId,
-                agentId: agentId,
-                agentName: agentNames[agentId],
-                currentPage: presence.currentPage || 'Unknown',
-                leadName: presence.leadName,
-                leadEmail: presence.leadEmail,
-                startedAt: presence.startedAt || new Date().toISOString(),
-              });
-            }
-          });
-          
-          setActiveVisitors(prev => {
-            // Remove old visitors from this agent, add new ones
-            const otherAgentVisitors = prev.filter(v => v.agentId !== agentId);
-            return [...otherAgentVisitors, ...visitors];
-          });
-        })
-        .subscribe();
-
-      newChannels.push(channel);
-    });
-
-    setChannels(newChannels);
+    setChannel(newChannel);
 
     return () => {
-      newChannels.forEach(channel => {
-        supabase.removeChannel(channel);
-      });
+      supabase.removeChannel(newChannel);
     };
-  }, [agentIds.join(','), JSON.stringify(agentNames)]);
+  }, [agentId]);
 
   return (
     <Card>
@@ -160,11 +143,6 @@ export const ActiveVisitorsCard: React.FC<ActiveVisitorsCardProps> = ({ agentIds
                 </div>
                 
                 <div className="text-right shrink-0">
-                  {visitor.agentName && (
-                    <Badge variant="outline" size="sm" className="mb-1">
-                      {visitor.agentName}
-                    </Badge>
-                  )}
                   <p className="text-xs text-muted-foreground">
                     {formatTimeActive(visitor.startedAt)}
                   </p>

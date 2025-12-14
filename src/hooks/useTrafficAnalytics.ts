@@ -74,7 +74,8 @@ export const useTrafficAnalytics = (
     landingPages: [],
     pageVisits: [],
   });
-  const [agents, setAgents] = useState<Array<{ id: string; name: string }>>([]);
+  const [agentId, setAgentId] = useState<string | null>(null);
+  const [agentName, setAgentName] = useState<string>('Ari');
   const { user } = useAuth();
 
   const fetchData = async () => {
@@ -82,15 +83,17 @@ export const useTrafficAnalytics = (
     
     setLoading(true);
     try {
-      // Fetch agents first
-      const { data: agentsData } = await supabase
+      // Fetch the single agent
+      const { data: agentData } = await supabase
         .from('agents')
         .select('id, name')
-        .eq('user_id', user.id);
+        .eq('user_id', user.id)
+        .maybeSingle();
       
-      setAgents(agentsData || []);
-      const agentMap: Record<string, string> = {};
-      (agentsData || []).forEach(a => { agentMap[a.id] = a.name; });
+      if (agentData) {
+        setAgentId(agentData.id);
+        setAgentName(agentData.name);
+      }
 
       // Fetch conversations with metadata
       let query = supabase
@@ -155,7 +158,6 @@ export const useTrafficAnalytics = (
               visits: 0, 
               totalDuration: 0, 
               conversions: 0,
-              agentId: conv.agent_id,
             };
           }
           landingPageMap[landingPage].visits++;
@@ -172,7 +174,6 @@ export const useTrafficAnalytics = (
               pageVisitMap[visit.url] = { 
                 totalVisits: 0, 
                 totalDuration: 0,
-                agentId: conv.agent_id,
               };
             }
             pageVisitMap[visit.url].totalVisits++;
@@ -197,7 +198,6 @@ export const useTrafficAnalytics = (
           visits: data.visits,
           avgDuration: data.visits > 0 ? Math.round(data.totalDuration / data.visits) : 0,
           conversions: data.conversions,
-          agentName: data.agentId ? agentMap[data.agentId] : undefined,
         }))
         .sort((a, b) => b.visits - a.visits);
 
@@ -206,7 +206,6 @@ export const useTrafficAnalytics = (
           url,
           totalVisits: data.totalVisits,
           totalDuration: data.totalDuration,
-          agentName: data.agentId ? agentMap[data.agentId] : undefined,
         }))
         .sort((a, b) => b.totalVisits - a.totalVisits);
 
@@ -226,17 +225,11 @@ export const useTrafficAnalytics = (
     fetchData();
   }, [user?.id, startDate.toISOString(), endDate.toISOString()]);
 
-  const agentNames = useMemo(() => {
-    const map: Record<string, string> = {};
-    agents.forEach(a => { map[a.id] = a.name; });
-    return map;
-  }, [agents]);
-
   return {
     ...stats,
     loading,
-    agents,
-    agentNames,
+    agentId,
+    agentName,
     refetch: fetchData,
   };
 };
