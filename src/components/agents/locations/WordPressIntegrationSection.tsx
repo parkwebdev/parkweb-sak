@@ -81,7 +81,8 @@ export function WordPressIntegrationSection({ agent, onSyncComplete }: WordPress
   };
 
   const handleImportCommunities = async () => {
-    const url = isEditing ? inputUrl.trim() : undefined;
+    // Always pass inputUrl if available, fall back to saved siteUrl via undefined
+    const url = inputUrl.trim() || undefined;
     await importCommunities(url);
     setIsEditing(false);
   };
