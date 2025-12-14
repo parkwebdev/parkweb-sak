@@ -78,7 +78,7 @@ export function MetricCardWithChart({
             <p className="text-3xl font-semibold tracking-tight text-foreground">{title}</p>
             {change !== undefined && (
               <motion.div 
-                className="flex items-center gap-2"
+                className="flex flex-col gap-0.5"
                 initial={prefersReducedMotion ? false : { opacity: 0, x: -8 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: animationDelay + 0.2, ...springs.smooth }}
@@ -94,7 +94,7 @@ export function MetricCardWithChart({
                   )}
                   <span className="text-sm font-medium">{Math.abs(change).toFixed(1)}%</span>
                 </div>
-                <span className="text-sm font-medium text-muted-foreground">{changeLabel}</span>
+                <span className="text-xs text-muted-foreground">{changeLabel}</span>
               </motion.div>
             )}
           </div>
