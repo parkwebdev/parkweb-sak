@@ -28,6 +28,7 @@ import { formatFileSize, validateFiles } from '@/lib/file-validation';
 import { useConversations } from '@/hooks/useConversations';
 import { useAgent } from '@/hooks/useAgent';
 import { ConversationMetadataPanel } from '@/components/conversations/ConversationMetadataPanel';
+import { InboxNavSidebar, type InboxFilter } from '@/components/conversations/InboxNavSidebar';
 import type { Tables } from '@/integrations/supabase/types';
 import type { ConversationMetadata, MessageMetadata, MessageReaction } from '@/types/metadata';
 import type { VisitorPresenceState } from '@/types/report';
@@ -121,6 +122,7 @@ const Conversations: React.FC = () => {
     const saved = localStorage.getItem('inbox_conversations_collapsed');
     return saved === 'true';
   });
+  const [activeFilter, setActiveFilter] = useState<InboxFilter>({ type: 'all', label: 'All Conversations' });
 
   // Persist collapsed states
   useEffect(() => {
@@ -312,17 +314,39 @@ const Conversations: React.FC = () => {
     }
   };
 
-  // Filter conversations
-  const filteredConversations = conversations.filter((conv) => {
-    const metadata = (conv.metadata || {}) as ConversationMetadata;
-    const matchesSearch = searchQuery === '' || 
-      conv.agents?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      metadata?.lead_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      metadata?.lead_email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (metadata?.tags || []).some((tag: string) => tag.toLowerCase().includes(searchQuery.toLowerCase()));
-    
-    return matchesSearch;
-  });
+  // Filter conversations by active filter + search
+  const filteredConversations = useMemo(() => {
+    return conversations.filter((conv) => {
+      const metadata = (conv.metadata || {}) as ConversationMetadata;
+      
+      // Apply nav filter
+      let matchesFilter = true;
+      if (activeFilter.type === 'status' && activeFilter.value) {
+        matchesFilter = conv.status === activeFilter.value;
+      } else if (activeFilter.type === 'channel' && activeFilter.value) {
+        matchesFilter = conv.channel === activeFilter.value;
+      }
+      
+      // Apply search
+      const matchesSearch = searchQuery === '' || 
+        conv.agents?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        metadata?.lead_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        metadata?.lead_email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (metadata?.tags || []).some((tag: string) => tag.toLowerCase().includes(searchQuery.toLowerCase()));
+      
+      return matchesFilter && matchesSearch;
+    });
+  }, [conversations, activeFilter, searchQuery]);
+
+  // Calculate counts for nav sidebar
+  const filterCounts = useMemo(() => ({
+    all: conversations.length,
+    resolved: conversations.filter(c => c.status === 'closed').length,
+    widget: conversations.filter(c => c.channel === 'widget' || !c.channel).length,
+    facebook: conversations.filter(c => c.channel === 'facebook').length,
+    instagram: conversations.filter(c => c.channel === 'instagram').length,
+    x: conversations.filter(c => c.channel === 'x').length,
+  }), [conversations]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -559,6 +583,13 @@ const Conversations: React.FC = () => {
 
   return (
     <div className="h-full flex min-h-0">
+      {/* Inbox Navigation Sidebar */}
+      <InboxNavSidebar
+        activeFilter={activeFilter}
+        onFilterChange={setActiveFilter}
+        counts={filterCounts}
+      />
+      
       {/* Conversations List Sidebar */}
       <div 
         className={`hidden lg:flex border-r flex-col bg-background min-h-0 transition-all duration-200 ease-in-out overflow-x-hidden ${
