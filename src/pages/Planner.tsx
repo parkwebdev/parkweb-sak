@@ -223,7 +223,7 @@ const Planner: React.FC = () => {
       >
       <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" data-no-dnd="true">
+            <Button variant="outline">
               Connect Calendar
               <ChevronDown size={16} className="ml-2" />
             </Button>
