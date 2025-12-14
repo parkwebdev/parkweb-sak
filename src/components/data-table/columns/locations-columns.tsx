@@ -113,19 +113,6 @@ export const createLocationsColumns = ({
     },
   },
   {
-    id: 'wordpress',
-    header: () => <span>WordPress</span>,
-    cell: ({ row }) => {
-      const hasWordPress = row.original.wordpress_community_id || row.original.wordpress_slug;
-      if (!hasWordPress) {
-        return <span className="text-muted-foreground text-sm">-</span>;
-      }
-      return (
-        <WordPressIcon className="h-4 w-4 text-wordpress" />
-      );
-    },
-  },
-  {
     id: 'actions',
     header: () => <span>Actions</span>,
     cell: ({ row }) => (
