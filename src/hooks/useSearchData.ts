@@ -47,9 +47,8 @@ export const useSearchData = () => {
 
     setLoading(true);
     try {
-      // Fetch all data in parallel
+      // Fetch all data in parallel (no agents fetch - single agent model)
       const [
-        agentsRes,
         conversationsRes,
         leadsRes,
         helpArticlesRes,
@@ -59,10 +58,6 @@ export const useSearchData = () => {
         knowledgeSourcesRes,
         teamMembersRes,
       ] = await Promise.all([
-        supabase
-          .from('agents')
-          .select('*')
-          .order('name'),
         supabase
           .from('conversations')
           .select('*, agents(name)')

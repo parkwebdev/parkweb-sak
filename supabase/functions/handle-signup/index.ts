@@ -130,12 +130,31 @@ const handler = async (req: Request): Promise<Response> => {
       });
     }
 
+    // Auto-create Ari agent for new account owners (not team members)
+    if (!invitation) {
+      const { error: agentError } = await supabase
+        .from('agents')
+        .insert({
+          user_id: user_id,
+          name: 'Ari',
+          system_prompt: 'You are Ari, a friendly and helpful AI assistant. Be conversational, concise, and helpful.',
+          model: 'google/gemini-2.5-flash',
+          status: 'draft',
+        });
+
+      if (agentError) {
+        console.error('Error creating Ari agent:', agentError);
+      } else {
+        console.log(`Created Ari agent for user ${user_id}`);
+      }
+    }
+
     // Create welcome notification for new user
     await supabase.from('notifications').insert({
       user_id: user_id,
       type: 'system',
       title: 'Welcome to ChatPad! 🎉',
-      message: 'Get started by creating your first AI agent',
+      message: 'Configure Ari to get started with your AI assistant',
       data: { first_login: true },
       read: false
     });

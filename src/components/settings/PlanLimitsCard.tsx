@@ -28,11 +28,6 @@ export const PlanLimitsCard = () => {
 
   const limitItems = [
     {
-      label: 'Agents',
-      current: usage.agents,
-      limit: limits.max_agents,
-    },
-    {
       label: 'Conversations (this month)',
       current: usage.conversations_this_month,
       limit: limits.max_conversations_per_month,

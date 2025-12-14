@@ -1,17 +1,15 @@
 /**
  * ReportFilters Component
  * 
- * Filter controls for analytics reports including agent and date selection.
- * Provides consistent filtering interface across analytics views.
+ * Filter controls for analytics reports.
+ * Single-agent model means no agent filter is needed.
  * @module components/analytics/ReportFilters
  */
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
-import { useAgents } from '@/hooks/useAgents';
 
 export interface ReportFilters {
-  agentId: string;
   leadStatus: string;
   conversationStatus: string;
 }
@@ -22,8 +20,6 @@ interface ReportFiltersProps {
 }
 
 export const ReportFiltersPanel = ({ filters, onFiltersChange }: ReportFiltersProps) => {
-  const { agents } = useAgents();
-
   const updateFilter = (key: keyof ReportFilters, value: string) => {
     onFiltersChange({ ...filters, [key]: value });
   };
@@ -32,23 +28,6 @@ export const ReportFiltersPanel = ({ filters, onFiltersChange }: ReportFiltersPr
     <Card>
       <CardContent className="pt-6">
         <div className="flex flex-wrap gap-4">
-          <div className="flex-1 min-w-[200px]">
-            <label className="text-sm font-medium mb-2 block">Agent</label>
-            <Select value={filters.agentId} onValueChange={(v) => updateFilter('agentId', v)}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Agents</SelectItem>
-                {agents.map((agent) => (
-                  <SelectItem key={agent.id} value={agent.id}>
-                    {agent.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
           <div className="flex-1 min-w-[200px]">
             <label className="text-sm font-medium mb-2 block">Lead Status</label>
             <Select value={filters.leadStatus} onValueChange={(v) => updateFilter('leadStatus', v)}>

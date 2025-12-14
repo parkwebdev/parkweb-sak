@@ -10,13 +10,17 @@ type Agent = Tables<'agents'>;
 type AgentUpdate = TablesUpdate<'agents'>;
 
 /**
- * @deprecated Use useAgent (singular) instead. This hook is kept for backward compatibility
- * but will return the single Ari agent wrapped in an array.
+ * Hook for managing the single Ari agent.
+ * Each user has exactly one agent (Ari) - this hook provides access to it.
  * 
- * The single-agent architecture means each user has exactly one agent (Ari).
- * This hook exists only to prevent breaking existing code during migration.
+ * @returns {Object} Agent management methods and state
+ * @returns {Agent|null} agent - The user's Ari agent
+ * @returns {boolean} loading - Loading state (only true on initial load)
+ * @returns {Function} updateAgent - Update the agent
+ * @returns {Function} updateDeploymentConfig - Update agent deployment settings
+ * @returns {Function} refetch - Manually refresh agent (silent, no loading state)
  */
-export const useAgents = () => {
+export const useAgent = () => {
   const { user } = useAuth();
   const [agent, setAgent] = useState<Agent | null>(null);
   const [loading, setLoading] = useState(true);
@@ -25,6 +29,7 @@ export const useAgents = () => {
   const fetchAgent = async (isRefetch = false) => {
     if (!user?.id) return;
     
+    // Only show loading state on initial load, not refetches
     if (!isRefetch && !initialLoadDone.current) {
       setLoading(true);
     }
@@ -51,19 +56,21 @@ export const useAgents = () => {
     fetchAgent(false);
   }, [user?.id]);
 
-  const updateAgent = async (id: string, updates: AgentUpdate) => {
-    if (!agent || agent.id !== id) return null;
+  const updateAgent = async (updates: AgentUpdate) => {
+    if (!agent?.id) return null;
 
     try {
       const { data, error } = await supabase
         .from('agents')
         .update(updates)
-        .eq('id', id)
+        .eq('id', agent.id)
         .select()
         .single();
 
       if (error) throw error;
+      
       setAgent(data);
+      // Success - no toast needed (SavedIndicator shows feedback in tabs)
       return data;
     } catch (error) {
       logger.error('Error updating agent:', error);
@@ -72,13 +79,13 @@ export const useAgents = () => {
     }
   };
 
-  const updateDeploymentConfig = async (id: string, config: AgentDeploymentConfig) => {
-    return updateAgent(id, { deployment_config: config as unknown as Json });
+  const updateDeploymentConfig = async (config: AgentDeploymentConfig) => {
+    return updateAgent({ deployment_config: config as unknown as Json });
   };
 
-  // Return agent wrapped in array for backward compatibility
   return {
-    agents: agent ? [agent] : [],
+    agent,
+    agentId: agent?.id || null,
     loading,
     updateAgent,
     updateDeploymentConfig,
