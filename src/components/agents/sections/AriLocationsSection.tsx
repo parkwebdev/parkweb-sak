@@ -309,7 +309,7 @@ export const AriLocationsSection: React.FC<AriLocationsSectionProps> = ({ agentI
             >
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-8 gap-1.5">
+                  <Button variant="outline" className="gap-1.5">
                     <FilterLines size={16} />
                     Filters
                     {activeFilters.length > 0 && (
