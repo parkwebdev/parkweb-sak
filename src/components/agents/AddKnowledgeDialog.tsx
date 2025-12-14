@@ -64,7 +64,7 @@ export const AddKnowledgeDialog: React.FC<AddKnowledgeDialogProps> = ({
   // Property listings state
   const [propertyUrl, setPropertyUrl] = useState('');
   const [propertyRefreshStrategy, setPropertyRefreshStrategy] = useState<RefreshStrategy>('daily');
-  const [propertyLocationId, setPropertyLocationId] = useState<string>('');
+  const [propertyLocationId, setPropertyLocationId] = useState<string>('none');
   
   // URL with refresh state
   const [urlRefreshStrategy, setUrlRefreshStrategy] = useState<RefreshStrategy>('manual');
@@ -165,13 +165,13 @@ export const AddKnowledgeDialog: React.FC<AddKnowledgeDialogProps> = ({
     try {
       await addPropertyListingSource(propertyUrl, agentId, userId, {
         refreshStrategy: propertyRefreshStrategy,
-        locationId: propertyLocationId || undefined,
+        locationId: propertyLocationId === 'none' ? undefined : propertyLocationId,
       });
       
       // Reset form
       setPropertyUrl('');
       setPropertyRefreshStrategy('daily');
-      setPropertyLocationId('');
+      setPropertyLocationId('none');
       onOpenChange(false);
     } finally {
       setUploading(false);
@@ -429,7 +429,7 @@ export const AddKnowledgeDialog: React.FC<AddKnowledgeDialogProps> = ({
                       <SelectValue placeholder="Select a location" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">No location</SelectItem>
+                      <SelectItem value="none">No location</SelectItem>
                       {locations.map((loc) => (
                         <SelectItem key={loc.id} value={loc.id}>
                           {loc.name}
