@@ -559,7 +559,6 @@ export const AriNewsSection: React.FC<AriNewsSectionProps> = ({ agentId, userId 
         description="Blog-style updates and articles for your users"
         extra={
           <Button onClick={() => setIsCreateOpen(true)} size="sm">
-            <Plus className="h-4 w-4 mr-2" />
             Add News Item
           </Button>
         }
