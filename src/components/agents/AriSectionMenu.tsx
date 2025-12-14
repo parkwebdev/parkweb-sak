@@ -13,8 +13,8 @@ import { cn } from '@/lib/utils';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { springs } from '@/lib/motion-variants';
 import {
-  Settings01,
-  MessageTextSquare01,
+  Atom01,
+  File02,
   Palette,
   MessageSmileCircle,
   User01,
@@ -28,6 +28,7 @@ import {
   Key01,
   Code01,
 } from '@untitledui/icons';
+import { FileFilled, PaletteFilled } from '@/components/icons/AriMenuIcons';
 
 export type AriSection = 
   | 'model-behavior'
@@ -50,16 +51,17 @@ interface SectionItem {
   id: AriSection;
   label: string;
   icon: React.ComponentType<{ size?: number; className?: string }>;
+  activeIcon?: React.ComponentType<{ size?: number; className?: string }>;
   group?: string;
 }
 
 const SECTIONS: SectionItem[] = [
   // AI Configuration
-  { id: 'model-behavior', label: 'Model & Behavior', icon: Settings01, group: 'AI' },
-  { id: 'system-prompt', label: 'System Prompt', icon: MessageTextSquare01, group: 'AI' },
+  { id: 'model-behavior', label: 'Model & Behavior', icon: Atom01, group: 'AI' },
+  { id: 'system-prompt', label: 'System Prompt', icon: File02, activeIcon: FileFilled, group: 'AI' },
   
   // Widget Appearance
-  { id: 'appearance', label: 'Appearance', icon: Palette, group: 'Widget' },
+  { id: 'appearance', label: 'Appearance', icon: Palette, activeIcon: PaletteFilled, group: 'Widget' },
   { id: 'welcome-messages', label: 'Welcome & Messages', icon: MessageSmileCircle, group: 'Widget' },
   { id: 'lead-capture', label: 'Lead Capture', icon: User01, group: 'Widget' },
   
@@ -126,7 +128,11 @@ export const AriSectionMenu: React.FC<AriSectionMenuProps> = ({
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: (groupIndex * 4 + index) * 0.02, ...springs.smooth }}
                 >
-                  <item.icon size={15} className="flex-shrink-0" />
+                  {isActive && item.activeIcon ? (
+                    <item.activeIcon size={15} className="flex-shrink-0" />
+                  ) : (
+                    <item.icon size={15} className="flex-shrink-0" />
+                  )}
                   <span className="truncate">{item.label}</span>
                 </motion.button>
               );
