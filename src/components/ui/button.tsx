@@ -84,16 +84,18 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     }
     
     return (
-      <motion.button
-        className={cn(buttonVariants({ variant, size, className }))}
+      <button
+        className={cn(
+          buttonVariants({ variant, size, className }),
+          !prefersReducedMotion && !disabled && !loading && "active:scale-[0.98] transition-transform duration-75"
+        )}
         ref={ref}
         disabled={disabled || loading}
         onClick={onClick}
-        whileTap={prefersReducedMotion || disabled || loading ? undefined : tapScale}
-        transition={{ duration: 0.1 }}
+        {...props}
       >
         {loading ? <Spinner size="sm" /> : children}
-      </motion.button>
+      </button>
     )
   }
 )

@@ -709,13 +709,9 @@ export const FullCalendar: React.FC<FullCalendarProps> = ({
           </div>
           
           {/* View Selector */}
-          <DropdownMenu onOpenChange={(open) => console.log('[FullCalendar] View dropdown onOpenChange:', open)}>
+          <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button 
-                variant="outline" 
-                className="w-[130px] justify-between"
-                onClick={(e) => console.log('[FullCalendar] View button clicked', e.target, e.currentTarget)}
-              >
+              <Button variant="outline" className="w-[130px] justify-between">
                 {view === 'month' ? 'Month view' : view === 'week' ? 'Week view' : 'Day view'}
                 <ChevronDown className="ml-2 h-4 w-4" />
               </Button>
