@@ -7,8 +7,9 @@
  */
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from '@/components/ui/chart';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { ChartLegendContent, ChartTooltipContent } from '@/components/charts/charts-base';
+import { useBreakpoint } from '@/hooks/use-breakpoint';
 
 interface LeadConversionChartProps {
   data: Array<{
@@ -21,26 +22,9 @@ interface LeadConversionChartProps {
   }>;
 }
 
-const chartConfig = {
-  new: {
-    label: "New",
-    color: "hsl(var(--chart-1))",
-  },
-  contacted: {
-    label: "Contacted",
-    color: "hsl(var(--chart-2))",
-  },
-  qualified: {
-    label: "Qualified",
-    color: "hsl(var(--chart-3))",
-  },
-  converted: {
-    label: "Converted",
-    color: "hsl(var(--chart-4))",
-  },
-} satisfies ChartConfig;
-
 export const LeadConversionChart = ({ data }: LeadConversionChartProps) => {
+  const isDesktop = useBreakpoint('lg');
+
   return (
     <Card>
       <CardHeader>
@@ -48,73 +32,147 @@ export const LeadConversionChart = ({ data }: LeadConversionChartProps) => {
         <CardDescription>Track leads through the conversion pipeline</CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={chartConfig} className="h-[300px] w-full">
-          <AreaChart data={data}>
-            <defs>
-              <linearGradient id="fillNew" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="var(--color-new)" stopOpacity={0.8}/>
-                <stop offset="95%" stopColor="var(--color-new)" stopOpacity={0.1}/>
-              </linearGradient>
-              <linearGradient id="fillContacted" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="var(--color-contacted)" stopOpacity={0.8}/>
-                <stop offset="95%" stopColor="var(--color-contacted)" stopOpacity={0.1}/>
-              </linearGradient>
-              <linearGradient id="fillQualified" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="var(--color-qualified)" stopOpacity={0.8}/>
-                <stop offset="95%" stopColor="var(--color-qualified)" stopOpacity={0.1}/>
-              </linearGradient>
-              <linearGradient id="fillConverted" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="var(--color-converted)" stopOpacity={0.8}/>
-                <stop offset="95%" stopColor="var(--color-converted)" stopOpacity={0.1}/>
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-            <XAxis 
-              dataKey="date" 
-              className="text-xs"
-              tick={{ fill: 'hsl(var(--muted-foreground))' }}
-              tickLine={{ stroke: 'hsl(var(--muted-foreground))' }}
-            />
-            <YAxis 
-              className="text-xs"
-              tick={{ fill: 'hsl(var(--muted-foreground))' }}
-              tickLine={{ stroke: 'hsl(var(--muted-foreground))' }}
-            />
-            <ChartTooltip content={<ChartTooltipContent />} />
-            <Area 
-              type="monotone" 
-              dataKey="new" 
-              stackId="1"
-              stroke="var(--color-new)"
-              fill="url(#fillNew)"
-              strokeWidth={2}
-            />
-            <Area 
-              type="monotone" 
-              dataKey="contacted" 
-              stackId="1"
-              stroke="var(--color-contacted)"
-              fill="url(#fillContacted)"
-              strokeWidth={2}
-            />
-            <Area 
-              type="monotone" 
-              dataKey="qualified" 
-              stackId="1"
-              stroke="var(--color-qualified)"
-              fill="url(#fillQualified)"
-              strokeWidth={2}
-            />
-            <Area 
-              type="monotone" 
-              dataKey="converted" 
-              stackId="1"
-              stroke="var(--color-converted)"
-              fill="url(#fillConverted)"
-              strokeWidth={2}
-            />
-          </AreaChart>
-        </ChartContainer>
+        <div className="h-[300px] w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart
+              data={data}
+              className="text-muted-foreground [&_.recharts-text]:text-xs"
+              margin={{
+                top: isDesktop ? 12 : 6,
+                bottom: isDesktop ? 16 : 0,
+                left: 0,
+                right: 0,
+              }}
+            >
+              <defs>
+                <linearGradient id="fillNew" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="hsl(var(--chart-1))" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="hsl(var(--chart-1))" stopOpacity={0} />
+                </linearGradient>
+                <linearGradient id="fillContacted" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="hsl(var(--chart-2))" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="hsl(var(--chart-2))" stopOpacity={0} />
+                </linearGradient>
+                <linearGradient id="fillQualified" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="hsl(var(--chart-3))" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="hsl(var(--chart-3))" stopOpacity={0} />
+                </linearGradient>
+                <linearGradient id="fillConverted" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="hsl(var(--chart-4))" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="hsl(var(--chart-4))" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+
+              <CartesianGrid 
+                vertical={false} 
+                stroke="hsl(var(--border))" 
+                strokeOpacity={0.5}
+              />
+
+              <Legend
+                align="right"
+                verticalAlign="top"
+                layout={isDesktop ? "vertical" : "horizontal"}
+                content={<ChartLegendContent className="-translate-y-2" reversed />}
+              />
+
+              <XAxis
+                dataKey="date"
+                axisLine={false}
+                tickLine={false}
+                interval="preserveStartEnd"
+                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                padding={{ left: 10, right: 10 }}
+              />
+
+              <YAxis
+                axisLine={false}
+                tickLine={false}
+                interval="preserveStartEnd"
+                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                tickFormatter={(value) => Number(value).toLocaleString()}
+              />
+
+              <Tooltip
+                content={<ChartTooltipContent />}
+                formatter={(value) => Number(value).toLocaleString()}
+                cursor={{
+                  stroke: 'hsl(var(--primary))',
+                  strokeWidth: 2,
+                  strokeDasharray: '4 4',
+                }}
+              />
+
+              <Area
+                isAnimationActive={false}
+                dataKey="new"
+                name="New"
+                stackId="1"
+                type="monotone"
+                stroke="hsl(var(--chart-1))"
+                strokeWidth={2}
+                fill="url(#fillNew)"
+                activeDot={{
+                  r: 6,
+                  fill: 'hsl(var(--background))',
+                  stroke: 'hsl(var(--chart-1))',
+                  strokeWidth: 2,
+                }}
+              />
+
+              <Area
+                isAnimationActive={false}
+                dataKey="contacted"
+                name="Contacted"
+                stackId="1"
+                type="monotone"
+                stroke="hsl(var(--chart-2))"
+                strokeWidth={2}
+                fill="url(#fillContacted)"
+                activeDot={{
+                  r: 6,
+                  fill: 'hsl(var(--background))',
+                  stroke: 'hsl(var(--chart-2))',
+                  strokeWidth: 2,
+                }}
+              />
+
+              <Area
+                isAnimationActive={false}
+                dataKey="qualified"
+                name="Qualified"
+                stackId="1"
+                type="monotone"
+                stroke="hsl(var(--chart-3))"
+                strokeWidth={2}
+                fill="url(#fillQualified)"
+                activeDot={{
+                  r: 6,
+                  fill: 'hsl(var(--background))',
+                  stroke: 'hsl(var(--chart-3))',
+                  strokeWidth: 2,
+                }}
+              />
+
+              <Area
+                isAnimationActive={false}
+                dataKey="converted"
+                name="Converted"
+                stackId="1"
+                type="monotone"
+                stroke="hsl(var(--chart-4))"
+                strokeWidth={2}
+                fill="url(#fillConverted)"
+                activeDot={{
+                  r: 6,
+                  fill: 'hsl(var(--background))',
+                  stroke: 'hsl(var(--chart-4))',
+                  strokeWidth: 2,
+                }}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
       </CardContent>
     </Card>
   );
