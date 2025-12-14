@@ -5,9 +5,11 @@
  * Fixed width, not collapsible.
  */
 
+import { useState, useRef, useEffect } from 'react';
 import AriAgentsIcon from '@/components/icons/AriAgentsIcon';
-import { CheckCircle, Globe01, Inbox01 } from '@untitledui/icons';
+import { CheckCircle, Globe01, Inbox01, SearchMd, XClose } from '@untitledui/icons';
 import { cn } from '@/lib/utils';
+import { Input } from '@/components/ui/input';
 
 // Social channel logos (matching AriIntegrationsSection)
 const FacebookLogo = () => (
@@ -46,6 +48,8 @@ interface InboxNavSidebarProps {
     instagram: number;
     x: number;
   };
+  searchQuery: string;
+  onSearchChange: (query: string) => void;
 }
 
 interface NavItemProps {
@@ -81,12 +85,73 @@ function NavItem({ icon, label, count, isActive, onClick, disabled, comingSoon }
   );
 }
 
-export function InboxNavSidebar({ activeFilter, onFilterChange, counts }: InboxNavSidebarProps) {
+export function InboxNavSidebar({ activeFilter, onFilterChange, counts, searchQuery, onSearchChange }: InboxNavSidebarProps) {
+  const [searchExpanded, setSearchExpanded] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  
   const isActive = (type: string, value?: string) => 
     activeFilter.type === type && activeFilter.value === value;
 
+  // Focus input when search expands
+  useEffect(() => {
+    if (searchExpanded && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [searchExpanded]);
+
+  // Close search when clicking outside or pressing Escape
+  const handleSearchBlur = () => {
+    if (!searchQuery) {
+      setSearchExpanded(false);
+    }
+  };
+
   return (
     <div className="w-48 border-r bg-background flex flex-col">
+      {/* Header with Inbox title and search */}
+      <div className="p-3 border-b">
+        <div className="flex items-center justify-between px-3">
+          {searchExpanded ? (
+            <div className="flex-1 flex items-center gap-2">
+              <Input
+                ref={searchInputRef}
+                placeholder="Search..."
+                value={searchQuery}
+                onChange={(e) => onSearchChange(e.target.value)}
+                onBlur={handleSearchBlur}
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') {
+                    onSearchChange('');
+                    setSearchExpanded(false);
+                  }
+                }}
+                className="h-7 text-sm bg-muted/50 border-0"
+              />
+              <button
+                onClick={() => {
+                  onSearchChange('');
+                  setSearchExpanded(false);
+                }}
+                className="p-1 hover:bg-accent rounded"
+              >
+                <XClose size={14} className="text-muted-foreground" />
+              </button>
+            </div>
+          ) : (
+            <>
+              <h2 className="text-sm font-semibold text-foreground">Inbox</h2>
+              <button
+                onClick={() => setSearchExpanded(true)}
+                className="p-1 hover:bg-accent rounded text-muted-foreground hover:text-foreground transition-colors"
+                aria-label="Search conversations"
+              >
+                <SearchMd size={16} />
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+
       {/* Ari Section */}
       <div className="p-3">
         <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 px-3">

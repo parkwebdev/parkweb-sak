@@ -18,8 +18,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { SearchMd, MessageChatSquare, User01, Send01, FaceSmile, Globe01, Check, CheckCircle, XCircle, Download01, Attachment01, XClose, ChevronLeft, ChevronRight } from '@untitledui/icons';
+import { SearchMd, MessageChatSquare, User01, Send01, FaceSmile, Globe01, Check, CheckCircle, XCircle, Download01, Attachment01, XClose, ChevronLeft, ChevronRight, SwitchVertical01, ChevronDown } from '@untitledui/icons';
 import AriAgentsIcon from '@/components/icons/AriAgentsIcon';
 import { LinkPreviews } from '@/components/chat/LinkPreviews';
 import { FileTypeIcon } from '@/components/chat/FileTypeIcons';
@@ -123,6 +124,7 @@ const Conversations: React.FC = () => {
     return saved === 'true';
   });
   const [activeFilter, setActiveFilter] = useState<InboxFilter>({ type: 'all', label: 'All Conversations' });
+  const [sortBy, setSortBy] = useState<'last_activity' | 'newest' | 'oldest'>('last_activity');
 
   // Persist collapsed states
   useEffect(() => {
@@ -329,9 +331,9 @@ const Conversations: React.FC = () => {
     enabled: !!user?.id,
   });
 
-  // Filter conversations by active filter + search
+  // Filter and sort conversations by active filter + search + sort
   const filteredConversations = useMemo(() => {
-    return conversations.filter((conv) => {
+    const filtered = conversations.filter((conv) => {
       const metadata = (conv.metadata || {}) as ConversationMetadata;
       
       // Apply nav filter
@@ -353,7 +355,23 @@ const Conversations: React.FC = () => {
       
       return matchesFilter && matchesSearch;
     });
-  }, [conversations, activeFilter, searchQuery, userTakeovers]);
+
+    // Sort conversations
+    return filtered.sort((a, b) => {
+      const metaA = (a.metadata || {}) as ConversationMetadata;
+      const metaB = (b.metadata || {}) as ConversationMetadata;
+      
+      if (sortBy === 'last_activity') {
+        const timeA = metaA.last_message_at ? new Date(metaA.last_message_at).getTime() : new Date(a.updated_at).getTime();
+        const timeB = metaB.last_message_at ? new Date(metaB.last_message_at).getTime() : new Date(b.updated_at).getTime();
+        return timeB - timeA; // Most recent first
+      } else if (sortBy === 'newest') {
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      } else { // oldest
+        return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      }
+    });
+  }, [conversations, activeFilter, searchQuery, userTakeovers, sortBy]);
 
   // Calculate counts for nav sidebar
   const filterCounts = useMemo(() => ({
@@ -606,6 +624,8 @@ const Conversations: React.FC = () => {
         activeFilter={activeFilter}
         onFilterChange={setActiveFilter}
         counts={filterCounts}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
       />
       
       {/* Conversations List Sidebar */}
@@ -615,23 +635,70 @@ const Conversations: React.FC = () => {
         }`}
       >
         {/* Header */}
-        <div className={`border-b shrink-0 flex items-center justify-between ${conversationsCollapsed ? 'p-2' : 'p-4'}`}>
-          {!conversationsCollapsed && (
-            <h2 className="text-lg font-semibold text-foreground">Conversations</h2>
-          )}
-          <Button
-            variant="ghost"
-            size="sm"
-            className={`h-7 w-7 p-0 hover:w-9 transition-all ${conversationsCollapsed ? 'mx-auto' : ''}`}
-            onClick={() => setConversationsCollapsed(!conversationsCollapsed)}
-            aria-label={conversationsCollapsed ? 'Expand conversations' : 'Collapse conversations'}
-          >
-            {conversationsCollapsed ? (
-              <ChevronRight className="h-4 w-4" />
-            ) : (
-              <ChevronLeft className="h-4 w-4" />
+        <div className={`border-b shrink-0 ${conversationsCollapsed ? 'p-2' : 'p-4 pb-3'}`}>
+          <div className="flex items-center justify-between">
+            {!conversationsCollapsed && (
+              <h2 className="text-lg font-semibold text-foreground">{activeFilter.label}</h2>
             )}
-          </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className={`h-7 w-7 p-0 hover:w-9 transition-all ${conversationsCollapsed ? 'mx-auto' : ''}`}
+              onClick={() => setConversationsCollapsed(!conversationsCollapsed)}
+              aria-label={conversationsCollapsed ? 'Expand conversations' : 'Collapse conversations'}
+            >
+              {conversationsCollapsed ? (
+                <ChevronRight className="h-4 w-4" />
+              ) : (
+                <ChevronLeft className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
+          
+          {/* Filter badges row */}
+          {!conversationsCollapsed && (
+            <div className="flex items-center gap-2 mt-3">
+              {/* Open count badge */}
+              <Badge variant="secondary" className="text-xs font-medium">
+                {conversations.filter(c => c.status === 'active' || c.status === 'human_takeover').length} Open
+              </Badge>
+              
+              {/* Sort dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded hover:bg-accent">
+                    <span>{sortBy === 'last_activity' ? 'Last activity' : sortBy === 'newest' ? 'Newest first' : 'Oldest first'}</span>
+                    <ChevronDown size={12} />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start">
+                  <DropdownMenuItem onClick={() => setSortBy('last_activity')}>
+                    Last activity
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSortBy('newest')}>
+                    Newest first
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSortBy('oldest')}>
+                    Oldest first
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              
+              {/* Sort toggle icon */}
+              <button 
+                onClick={() => {
+                  // Cycle through sort options
+                  if (sortBy === 'last_activity') setSortBy('newest');
+                  else if (sortBy === 'newest') setSortBy('oldest');
+                  else setSortBy('last_activity');
+                }}
+                className="p-1 text-muted-foreground hover:text-foreground hover:bg-accent rounded transition-colors"
+                aria-label="Toggle sort order"
+              >
+                <SwitchVertical01 size={14} />
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Content - hidden when collapsed via opacity */}
@@ -640,18 +707,6 @@ const Conversations: React.FC = () => {
             conversationsCollapsed ? 'opacity-0 invisible' : 'opacity-100 visible'
           }`}
         >
-          {/* Search */}
-          <div className="p-4 shrink-0">
-            <div className="relative">
-              <SearchMd className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search conversations..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 bg-muted/50 border-0"
-              />
-            </div>
-          </div>
 
           {/* Conversation List */}
           <div className="flex-1 min-h-0 overflow-y-auto">
