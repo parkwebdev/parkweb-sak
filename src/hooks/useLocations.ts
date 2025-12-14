@@ -21,17 +21,22 @@ type Location = Tables<'locations'>;
  * Hook for managing locations for an agent.
  * 
  * @param agentId - Agent ID to scope locations
- * @returns Location management methods and state
+ * @returns Location management methods and state (loading only true on initial load)
  */
 export const useLocations = (agentId?: string) => {
   const [locations, setLocations] = useState<Location[]>([]);
   const [loading, setLoading] = useState(true);
+  const initialLoadDone = useRef(false);
 
-  const fetchLocations = useCallback(async () => {
+  const fetchLocations = useCallback(async (isRefetch = false) => {
     if (!agentId) return;
 
-    try {
+    // Only show loading state on initial load, not refetches
+    if (!isRefetch && !initialLoadDone.current) {
       setLoading(true);
+    }
+
+    try {
       const { data, error } = await supabase
         .from('locations')
         .select('*')
@@ -41,6 +46,7 @@ export const useLocations = (agentId?: string) => {
 
       if (error) throw error;
       setLocations(data || []);
+      initialLoadDone.current = true;
     } catch (error) {
       logger.error('Error fetching locations', error);
       toast.error('Error loading locations', {
@@ -59,7 +65,7 @@ export const useLocations = (agentId?: string) => {
   useEffect(() => {
     if (!agentId) return;
 
-    fetchLocationsRef.current();
+    fetchLocationsRef.current(false);
 
     // Subscribe to real-time updates
     const channel = supabase
@@ -227,6 +233,6 @@ export const useLocations = (agentId?: string) => {
     updateLocation,
     deleteLocation,
     getBusinessHours,
-    refetch: fetchLocations,
+    refetch: () => fetchLocations(true),
   };
 };
