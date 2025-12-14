@@ -711,14 +711,14 @@ export const FullCalendar: React.FC<FullCalendarProps> = ({
             </div>
             
             {/* View Selector */}
-            <DropdownMenu>
+            <DropdownMenu modal={false}>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="w-[130px] justify-between">
                   {view === 'month' ? 'Month view' : view === 'week' ? 'Week view' : 'Day view'}
                   <ChevronDown className="ml-2 h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
+              <DropdownMenuContent align="end" className="z-50">
                 <DropdownMenuItem onClick={() => setView('month')} className="justify-between">
                   <span>Month view</span>
                   <span className="rounded border border-border bg-muted px-1.5 py-0.5 text-xs text-muted-foreground font-medium">M</span>

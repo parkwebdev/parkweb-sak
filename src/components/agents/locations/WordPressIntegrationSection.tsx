@@ -6,14 +6,15 @@
  */
 
 import { useState, useEffect } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Globe01, RefreshCw01, Check, AlertCircle, ArrowRight, ChevronDown, ChevronRight, Zap, Home01 } from '@untitledui/icons';
+import { Globe01, RefreshCw01, Check, AlertCircle, ArrowRight, ChevronRight, Zap, Home01 } from '@untitledui/icons';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { InfoCircleIcon, InfoCircleIconFilled } from '@/components/ui/info-circle-icon';
 import { useWordPressConnection } from '@/hooks/useWordPressConnection';
 import { useWordPressHomes } from '@/hooks/useWordPressHomes';
@@ -27,6 +28,7 @@ interface WordPressIntegrationSectionProps {
 }
 
 export function WordPressIntegrationSection({ agent, onSyncComplete }: WordPressIntegrationSectionProps) {
+  const prefersReducedMotion = useReducedMotion();
   const [isOpen, setIsOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [inputUrl, setInputUrl] = useState('');
@@ -107,33 +109,42 @@ export function WordPressIntegrationSection({ agent, onSyncComplete }: WordPress
   };
 
   return (
-    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-      <CollapsibleTrigger asChild>
-        <button
-          type="button"
-          className="w-full flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors text-left"
+    <div>
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors text-left"
+      >
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary/10">
+          <Globe01 className="h-4 w-4 text-primary" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="font-medium text-sm">WordPress Integration</span>
+            {isConnected && (
+              <Badge variant="secondary" className="text-xs">Connected</Badge>
+            )}
+          </div>
+          <p className="text-xs text-muted-foreground">{getSummary()}</p>
+        </div>
+        <motion.div
+          animate={{ rotate: isOpen ? 90 : 0 }}
+          transition={{ duration: 0.2 }}
         >
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary/10">
-            <Globe01 className="h-4 w-4 text-primary" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <span className="font-medium text-sm">WordPress Integration</span>
-              {isConnected && (
-                <Badge variant="secondary" className="text-xs">Connected</Badge>
-              )}
-            </div>
-            <p className="text-xs text-muted-foreground">{getSummary()}</p>
-          </div>
-          {isOpen ? (
-            <ChevronDown className="h-4 w-4 text-muted-foreground" />
-          ) : (
-            <ChevronRight className="h-4 w-4 text-muted-foreground" />
-          )}
-        </button>
-      </CollapsibleTrigger>
+          <ChevronRight className="h-4 w-4 text-muted-foreground" />
+        </motion.div>
+      </button>
 
-      <CollapsibleContent className="mt-3 space-y-4 pl-11">
+      <AnimatePresence initial={false}>
+        {isOpen && (
+          <motion.div
+            initial={prefersReducedMotion ? false : { height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={prefersReducedMotion ? undefined : { height: 0, opacity: 0 }}
+            transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+            className="overflow-hidden"
+          >
+            <div className="mt-3 space-y-4 pl-11">
         {/* Site Connection */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
@@ -352,7 +363,10 @@ export function WordPressIntegrationSection({ agent, onSyncComplete }: WordPress
             )}
           </div>
         )}
-      </CollapsibleContent>
-    </Collapsible>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }
