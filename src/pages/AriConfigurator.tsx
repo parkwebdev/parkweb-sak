@@ -11,7 +11,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { useAgents } from '@/hooks/useAgents';
+import { useAgent } from '@/hooks/useAgent';
 import { useAuth } from '@/contexts/AuthContext';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useEmbeddedChatConfig } from '@/hooks/useEmbeddedChatConfig';
@@ -56,7 +56,7 @@ const MIN_DISPLAY_TIME = loadingStates.length * STEP_DURATION;
 const AriConfigurator = () => {
   const prefersReducedMotion = useReducedMotion();
   const { hasSeenAriLoader, setHasSeenAriLoader } = useAuth();
-  const { agents, updateAgent, loading: agentsLoading } = useAgents();
+  const { agent, agentId, updateAgent, loading: agentLoading } = useAgent();
   const [activeSection, setActiveSection] = useState<AriSection>('model-behavior');
   
   // Only show loader if user hasn't seen it this session
@@ -68,7 +68,7 @@ const AriConfigurator = () => {
     // Skip if already seen this session
     if (hasSeenAriLoader) return;
     
-    if (!agentsLoading && showLoader) {
+    if (!agentLoading && showLoader) {
       const elapsed = Date.now() - loadStartTime.current;
       const remainingTime = Math.max(0, MIN_DISPLAY_TIME - elapsed);
       
@@ -79,20 +79,16 @@ const AriConfigurator = () => {
       
       return () => clearTimeout(timer);
     }
-  }, [agentsLoading, showLoader, hasSeenAriLoader, setHasSeenAriLoader]);
-  
-  // Auto-select first agent (single-agent model)
-  const agent = agents[0] || null;
-  const agentId = agent?.id || '';
+  }, [agentLoading, showLoader, hasSeenAriLoader, setHasSeenAriLoader]);
 
   // Widget preview hooks
   const { config: embedConfig } = useEmbeddedChatConfig(agentId);
   const { articles: helpArticles, categories: helpCategories } = useHelpArticles(agentId);
   const { announcements: allAnnouncements } = useAnnouncements(agentId);
 
-  const handleUpdate = async (id: string, updates: Partial<Agent>): Promise<Agent | null> => {
+  const handleUpdate = async (_id: string, updates: Partial<Agent>): Promise<Agent | null> => {
     if (!agent) return null;
-    return await updateAgent(id, updates);
+    return await updateAgent(updates);
   };
 
   // Build widget config for preview
@@ -192,7 +188,7 @@ const AriConfigurator = () => {
   }
 
   // Show spinner while agent data loads (after MultiStepLoader completes)
-  if (!agent || agentsLoading) {
+  if (!agent || agentLoading) {
     return (
       <div className="flex-1 h-full min-h-screen bg-muted/30 flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
