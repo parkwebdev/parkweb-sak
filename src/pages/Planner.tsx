@@ -221,12 +221,9 @@ const Planner: React.FC = () => {
         title="Planner"
         description="Manage your property showings and bookings"
       >
-      <DropdownMenu onOpenChange={(open) => console.log('[Planner] Connect Calendar dropdown onOpenChange:', open)}>
+      <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button 
-              variant="outline"
-              onClick={(e) => console.log('[Planner] Connect Calendar button clicked', e.target, e.currentTarget)}
-            >
+            <Button variant="outline">
               Connect Calendar
               <ChevronDown size={16} className="ml-2" />
             </Button>
