@@ -196,12 +196,12 @@ const AriConfigurator = () => {
   // Show spinner while agent data loads (after MultiStepLoader completes)
   if (!agent || agentsLoading) {
     return (
-      <main className="flex-1 bg-muted/30 flex items-center justify-center">
+      <div className="flex-1 h-full min-h-screen bg-muted/30 flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
           <p className="text-sm text-muted-foreground">Loading Ari...</p>
         </div>
-      </main>
+      </div>
     );
   }
 
