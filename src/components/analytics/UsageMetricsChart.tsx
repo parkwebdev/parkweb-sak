@@ -1,14 +1,15 @@
 /**
  * UsageMetricsChart Component
  * 
- * Line chart displaying usage metrics over time.
- * Shows API calls, messages, and token usage trends.
+ * Area chart displaying usage metrics over time.
+ * Shows conversations, messages, and API calls trends.
  * @module components/analytics/UsageMetricsChart
  */
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from '@/components/ui/chart';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { ChartLegendContent, ChartTooltipContent } from '@/components/charts/charts-base';
+import { useBreakpoint } from '@/hooks/use-breakpoint';
 
 interface UsageMetricsChartProps {
   data: Array<{
@@ -19,22 +20,9 @@ interface UsageMetricsChartProps {
   }>;
 }
 
-const chartConfig = {
-  conversations: {
-    label: "Conversations",
-    color: "hsl(var(--chart-1))",
-  },
-  messages: {
-    label: "Messages",
-    color: "hsl(var(--chart-2))",
-  },
-  api_calls: {
-    label: "API Calls",
-    color: "hsl(var(--chart-3))",
-  },
-} satisfies ChartConfig;
-
 export const UsageMetricsChart = ({ data }: UsageMetricsChartProps) => {
+  const isDesktop = useBreakpoint('lg');
+
   return (
     <Card>
       <CardHeader>
@@ -42,47 +30,115 @@ export const UsageMetricsChart = ({ data }: UsageMetricsChartProps) => {
         <CardDescription>Monitor platform usage over time</CardDescription>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={chartConfig} className="h-[300px] w-full">
-          <LineChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-            <XAxis 
-              dataKey="date" 
-              className="text-xs"
-              tick={{ fill: 'hsl(var(--muted-foreground))' }}
-              tickLine={{ stroke: 'hsl(var(--muted-foreground))' }}
-            />
-            <YAxis 
-              className="text-xs"
-              tick={{ fill: 'hsl(var(--muted-foreground))' }}
-              tickLine={{ stroke: 'hsl(var(--muted-foreground))' }}
-            />
-            <ChartTooltip content={<ChartTooltipContent />} />
-            <Line 
-              type="monotone" 
-              dataKey="conversations" 
-              stroke="var(--color-conversations)"
-              strokeWidth={2.5}
-              dot={{ fill: "var(--color-conversations)", r: 4 }}
-              activeDot={{ r: 6 }}
-            />
-            <Line 
-              type="monotone" 
-              dataKey="messages" 
-              stroke="var(--color-messages)"
-              strokeWidth={2.5}
-              dot={{ fill: "var(--color-messages)", r: 4 }}
-              activeDot={{ r: 6 }}
-            />
-            <Line 
-              type="monotone" 
-              dataKey="api_calls" 
-              stroke="var(--color-api_calls)"
-              strokeWidth={2.5}
-              dot={{ fill: "var(--color-api_calls)", r: 4 }}
-              activeDot={{ r: 6 }}
-            />
-          </LineChart>
-        </ChartContainer>
+        <div className="h-[300px] w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart
+              data={data}
+              className="text-muted-foreground [&_.recharts-text]:text-xs"
+              margin={{
+                top: isDesktop ? 12 : 6,
+                bottom: isDesktop ? 16 : 0,
+                left: 0,
+                right: 0,
+              }}
+            >
+              <defs>
+                <linearGradient id="gradientConversations" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+
+              <CartesianGrid 
+                vertical={false} 
+                stroke="hsl(var(--border))" 
+                strokeOpacity={0.5}
+              />
+
+              <Legend
+                align="right"
+                verticalAlign="top"
+                layout={isDesktop ? "vertical" : "horizontal"}
+                content={<ChartLegendContent className="-translate-y-2" />}
+              />
+
+              <XAxis
+                dataKey="date"
+                axisLine={false}
+                tickLine={false}
+                interval="preserveStartEnd"
+                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                padding={{ left: 10, right: 10 }}
+              />
+
+              <YAxis
+                axisLine={false}
+                tickLine={false}
+                interval="preserveStartEnd"
+                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                tickFormatter={(value) => Number(value).toLocaleString()}
+              />
+
+              <Tooltip
+                content={<ChartTooltipContent />}
+                formatter={(value) => Number(value).toLocaleString()}
+                cursor={{
+                  stroke: 'hsl(var(--primary))',
+                  strokeWidth: 2,
+                  strokeDasharray: '4 4',
+                }}
+              />
+
+              <Area
+                isAnimationActive={false}
+                dataKey="conversations"
+                name="Conversations"
+                type="monotone"
+                stroke="hsl(var(--primary))"
+                strokeWidth={2}
+                fill="url(#gradientConversations)"
+                activeDot={{
+                  r: 6,
+                  fill: 'hsl(var(--background))',
+                  stroke: 'hsl(var(--primary))',
+                  strokeWidth: 2,
+                }}
+              />
+
+              <Area
+                isAnimationActive={false}
+                dataKey="messages"
+                name="Messages"
+                type="monotone"
+                stroke="hsl(var(--chart-2))"
+                strokeWidth={2}
+                fill="none"
+                activeDot={{
+                  r: 6,
+                  fill: 'hsl(var(--background))',
+                  stroke: 'hsl(var(--chart-2))',
+                  strokeWidth: 2,
+                }}
+              />
+
+              <Area
+                isAnimationActive={false}
+                dataKey="api_calls"
+                name="API Calls"
+                type="monotone"
+                stroke="hsl(var(--chart-3))"
+                strokeWidth={2}
+                fill="none"
+                activeDot={{
+                  r: 6,
+                  fill: 'hsl(var(--background))',
+                  stroke: 'hsl(var(--chart-3))',
+                  strokeWidth: 2,
+                }}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
       </CardContent>
     </Card>
   );
