@@ -498,6 +498,36 @@ Icons inherit text color by default:
 | Conversations | `MessageSquare01` |
 | Leads | `UserPlus01` |
 | Agents | `Bot` or custom `AriAgentsIcon` |
+| Calendar | `Calendar` |
+| Planner | `Calendar` |
+| Help | `HelpCircle` |
+| Knowledge | `BookOpen01` |
+| Tools | `Tool01` |
+| Webhooks | `Link04` |
+| API | `Code01` |
+| Locations | `MarkerPin01` |
+| WordPress | Custom SVG (`text-wordpress` color) |
+| Facebook | Custom SVG (`text-facebook` color) |
+| Instagram | Custom SVG (`text-instagram` color) |
+
+### Brand Color Tokens
+
+Semantic tokens for external platform brand colors:
+
+| Token | Tailwind Class | Usage |
+|-------|---------------|-------|
+| WordPress | `text-wordpress` | WordPress icons and badges |
+| Facebook | `text-facebook` | Facebook channel icons |
+| Instagram | `text-instagram` | Instagram channel icons |
+| Twitter/X | `text-twitter` | Twitter/X channel icons |
+
+```tsx
+// ✅ Correct - use semantic brand tokens
+<WordPressIcon className="text-wordpress" />
+
+// ❌ Wrong - direct hex colors
+<WordPressIcon className="text-[#21759b]" />
+```
 
 ---
 

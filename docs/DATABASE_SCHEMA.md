@@ -76,6 +76,42 @@ Legacy organization role (deprecated - use `app_role`).
 'owner' | 'admin' | 'member'
 ```
 
+### `calendar_provider`
+Supported calendar integration providers.
+```sql
+'google_calendar' | 'outlook_calendar'
+```
+
+### `calendar_event_status`
+Status of calendar events.
+```sql
+'confirmed' | 'cancelled' | 'completed' | 'no_show'
+```
+
+### `property_status`
+Status of property listings.
+```sql
+'available' | 'pending' | 'sold' | 'rented' | 'coming_soon'
+```
+
+### `property_price_type`
+Pricing type for properties.
+```sql
+'sale' | 'rent_monthly' | 'rent_weekly'
+```
+
+### `knowledge_source_type`
+Specific type of knowledge source.
+```sql
+'url' | 'sitemap' | 'property_listings' | 'property_feed' | 'wordpress_home'
+```
+
+### `refresh_strategy`
+Auto-refresh interval for knowledge sources.
+```sql
+'manual' | 'hourly_1' | 'hourly_2' | 'hourly_3' | 'hourly_4' | 'hourly_6' | 'hourly_12' | 'daily'
+```
+
 ---
 
 ## Tables
@@ -116,11 +152,157 @@ Custom tools/functions available to agents.
 | `name` | text | No | - | Tool name |
 | `description` | text | No | - | Tool description |
 | `parameters` | jsonb | No | - | Tool parameter schema |
+| `endpoint_url` | text | Yes | - | HTTP endpoint URL |
+| `headers` | jsonb | Yes | `'{}'` | Custom HTTP headers |
+| `timeout_ms` | integer | Yes | `30000` | Request timeout |
 | `enabled` | boolean | Yes | `true` | Whether tool is active |
 | `created_at` | timestamptz | No | `now()` | Creation timestamp |
 
 **RLS Policies:**
 - Access controlled via parent agent ownership
+
+---
+
+### Location System
+
+#### `locations`
+Business locations for multi-location deployments.
+
+| Column | Type | Nullable | Default | Description |
+|--------|------|----------|---------|-------------|
+| `id` | uuid | No | `gen_random_uuid()` | Primary key |
+| `agent_id` | uuid | No | - | FK to agents |
+| `user_id` | uuid | No | - | Owner's user ID |
+| `name` | text | No | - | Location name |
+| `address` | text | Yes | - | Street address |
+| `city` | text | Yes | - | City |
+| `state` | text | Yes | - | State/Province |
+| `zip` | text | Yes | - | ZIP/Postal code |
+| `country` | text | Yes | - | Country |
+| `phone` | text | Yes | - | Phone number |
+| `email` | text | Yes | - | Email address |
+| `timezone` | text | Yes | `'America/New_York'` | IANA timezone |
+| `business_hours` | jsonb | Yes | `'{}'` | Business hours config |
+| `url_patterns` | text[] | Yes | `'{}'` | URL matching patterns |
+| `wordpress_community_id` | integer | Yes | - | WordPress community ID |
+| `wordpress_slug` | text | Yes | - | WordPress URL slug |
+| `is_active` | boolean | Yes | `true` | Active status |
+| `metadata` | jsonb | Yes | `'{}'` | Additional metadata |
+| `created_at` | timestamptz | No | `now()` | Creation timestamp |
+| `updated_at` | timestamptz | No | `now()` | Last update timestamp |
+
+**Business Hours Structure:**
+```typescript
+{
+  monday: { open: "09:00", close: "17:00", closed: false },
+  tuesday: { open: "09:00", close: "17:00", closed: false },
+  // ... other days
+}
+```
+
+**RLS Policies:**
+- Users can create for accessible agents
+- Users can view/update/delete accessible locations
+
+---
+
+### Calendar System
+
+#### `connected_accounts`
+OAuth connected calendar accounts.
+
+| Column | Type | Nullable | Default | Description |
+|--------|------|----------|---------|-------------|
+| `id` | uuid | No | `gen_random_uuid()` | Primary key |
+| `agent_id` | uuid | No | - | FK to agents |
+| `user_id` | uuid | No | - | Owner's user ID |
+| `location_id` | uuid | Yes | - | FK to locations |
+| `provider` | calendar_provider | No | - | `'google_calendar'` \| `'outlook_calendar'` |
+| `account_email` | text | No | - | Connected account email |
+| `access_token` | text | No | - | OAuth access token |
+| `refresh_token` | text | Yes | - | OAuth refresh token |
+| `token_expires_at` | timestamptz | Yes | - | Token expiration |
+| `calendar_id` | text | Yes | - | Selected calendar ID |
+| `calendar_name` | text | Yes | - | Calendar display name |
+| `is_active` | boolean | Yes | `true` | Connection active |
+| `last_synced_at` | timestamptz | Yes | - | Last sync timestamp |
+| `sync_error` | text | Yes | - | Last sync error |
+| `metadata` | jsonb | Yes | `'{}'` | Additional data |
+| `created_at` | timestamptz | No | `now()` | Creation timestamp |
+| `updated_at` | timestamptz | No | `now()` | Last update timestamp |
+
+**RLS Policies:**
+- Users can manage accounts for accessible agents
+
+---
+
+#### `calendar_events`
+Scheduled events and appointments.
+
+| Column | Type | Nullable | Default | Description |
+|--------|------|----------|---------|-------------|
+| `id` | uuid | No | `gen_random_uuid()` | Primary key |
+| `connected_account_id` | uuid | No | - | FK to connected_accounts |
+| `location_id` | uuid | Yes | - | FK to locations |
+| `conversation_id` | uuid | Yes | - | FK to conversations |
+| `lead_id` | uuid | Yes | - | FK to leads |
+| `external_event_id` | text | Yes | - | External calendar event ID |
+| `title` | text | No | - | Event title |
+| `description` | text | Yes | - | Event description |
+| `start_time` | timestamptz | No | - | Start time |
+| `end_time` | timestamptz | No | - | End time |
+| `all_day` | boolean | Yes | `false` | All-day event |
+| `timezone` | text | Yes | - | Event timezone |
+| `event_type` | text | Yes | - | e.g., 'showing', 'tour' |
+| `status` | calendar_event_status | Yes | `'confirmed'` | Event status |
+| `visitor_name` | text | Yes | - | Visitor name |
+| `visitor_email` | text | Yes | - | Visitor email |
+| `visitor_phone` | text | Yes | - | Visitor phone |
+| `notes` | text | Yes | - | Internal notes |
+| `metadata` | jsonb | Yes | `'{}'` | Additional data |
+| `created_at` | timestamptz | No | `now()` | Creation timestamp |
+| `updated_at` | timestamptz | No | `now()` | Last update timestamp |
+
+**RLS Policies:**
+- Users can manage events for accessible accounts
+
+---
+
+### Property System
+
+#### `properties`
+Property listings from knowledge sources.
+
+| Column | Type | Nullable | Default | Description |
+|--------|------|----------|---------|-------------|
+| `id` | uuid | No | `gen_random_uuid()` | Primary key |
+| `agent_id` | uuid | No | - | FK to agents |
+| `knowledge_source_id` | uuid | No | - | FK to knowledge_sources |
+| `location_id` | uuid | Yes | - | FK to locations |
+| `external_id` | text | Yes | - | External listing ID |
+| `lot_number` | text | Yes | - | Lot/unit number |
+| `address` | text | Yes | - | Street address |
+| `city` | text | Yes | - | City |
+| `state` | text | Yes | - | State |
+| `zip` | text | Yes | - | ZIP code |
+| `price` | numeric | Yes | - | Listing price |
+| `price_type` | property_price_type | Yes | - | `'sale'` \| `'rent_monthly'` \| `'rent_weekly'` |
+| `beds` | integer | Yes | - | Bedrooms |
+| `baths` | numeric | Yes | - | Bathrooms |
+| `sqft` | integer | Yes | - | Square footage |
+| `year_built` | integer | Yes | - | Year built |
+| `description` | text | Yes | - | Listing description |
+| `features` | text[] | Yes | `'{}'` | Feature list |
+| `images` | jsonb | Yes | `'[]'` | Image URLs |
+| `listing_url` | text | Yes | - | External listing URL |
+| `status` | property_status | Yes | `'available'` | Listing status |
+| `first_seen_at` | timestamptz | No | `now()` | First import date |
+| `last_seen_at` | timestamptz | No | `now()` | Last import date |
+| `created_at` | timestamptz | No | `now()` | Creation timestamp |
+| `updated_at` | timestamptz | No | `now()` | Last update timestamp |
+
+**RLS Policies:**
+- Users can view properties for accessible agents
 
 ---
 
@@ -999,13 +1181,19 @@ USING (is_admin(auth.uid()));
 
 ### `article-images`
 - **Public:** Yes
-- **Purpose:** Help article images and featured images
+- **Purpose:** Help article images, news featured images, announcement banners
 - **Optimization:** 
   - Inline images: 800x600px max
   - Featured images: 1200x600px max
   - WebP format, 60% quality
 
----
+### `conversation-files`
+- **Public:** Yes
+- **Purpose:** File attachments in chat conversations
+- **Details:**
+  - Uploaded via widget message input
+  - Supports images, documents, audio recordings
+  - Voice messages stored as WebM/MP4 audio
 
 ## React Hooks Reference
 
@@ -1029,6 +1217,13 @@ All hooks are documented with JSDoc comments. Key data hooks:
 | `usePlanLimits` | Subscription plan limit checking |
 | `useRoleAuthorization` | Role-based permission checking |
 | `useAuth` | Authentication with input validation |
+| `useLocations` | Location CRUD operations |
+| `useCalendarEvents` | Calendar event management |
+| `useConnectedAccounts` | OAuth calendar connections |
+| `useWordPressConnection` | WordPress API integration |
+| `useWordPressHomes` | WordPress home listings sync |
+| `useProperties` | Property listing data |
+| `useEmbeddedChatConfig` | Widget embed configuration |
 
 See individual hook files in `src/hooks/` for detailed JSDoc documentation.
 

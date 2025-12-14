@@ -314,6 +314,12 @@ chatpad/
 | `AriLocationsSection` | Location management |
 | `AriHelpArticlesSection` | Help center content |
 | `AriNewsSection` | News/announcements content |
+| `AriAnnouncementsSection` | Widget announcement banners |
+| `AriWelcomeMessagesSection` | Greeting and quick replies |
+| `AriLeadCaptureSection` | Contact form configuration |
+| `AriWebhooksSection` | Webhook configuration |
+| `AriApiAccessSection` | API key management |
+| `AriIntegrationsSection` | Calendar and social integrations |
 
 ### Widget Components
 
