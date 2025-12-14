@@ -43,7 +43,7 @@ import { AriInstallationSection } from '@/components/agents/sections/AriInstalla
 type Agent = Tables<'agents'>;
 
 // Loading step timing
-const STEP_DURATION = 400;
+const STEP_DURATION = 800;
 const loadingStates = [
   { text: "Loading Ari configuration..." },
   { text: "Fetching agent settings..." },
