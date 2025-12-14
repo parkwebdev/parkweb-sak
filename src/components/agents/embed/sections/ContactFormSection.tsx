@@ -93,7 +93,7 @@ export const ContactFormSection = ({ config, onConfigChange }: ContactFormSectio
 
             {/* Existing Custom Fields */}
             {config.customFields.map((field) => (
-              <div key={field.id} className="p-3 border rounded-lg space-y-2">
+              <div key={field.id} className="p-3 border rounded-lg space-y-2 bg-muted/50">
                 <div className="flex items-center justify-between">
                   <Input
                     value={field.label}
