@@ -21,7 +21,7 @@ export const ContentSection = ({ config, onConfigChange }: ContentSectionProps) 
             <Label htmlFor="welcome-title" className="text-sm">Welcome Title</Label>
             <Tooltip>
               <TooltipTrigger asChild>
-                <span className="cursor-help group">
+                <span className="group">
                   <InfoCircleIcon className="h-3.5 w-3.5 text-muted-foreground group-hover:hidden" />
                   <InfoCircleIconFilled className="h-3.5 w-3.5 text-muted-foreground hidden group-hover:block" />
                 </span>
@@ -44,7 +44,7 @@ export const ContentSection = ({ config, onConfigChange }: ContentSectionProps) 
             <Label htmlFor="welcome-emoji" className="text-sm">Emoji</Label>
             <Tooltip>
               <TooltipTrigger asChild>
-                <span className="cursor-help group">
+                <span className="group">
                   <InfoCircleIcon className="h-3.5 w-3.5 text-muted-foreground group-hover:hidden" />
                   <InfoCircleIconFilled className="h-3.5 w-3.5 text-muted-foreground hidden group-hover:block" />
                 </span>
@@ -71,7 +71,7 @@ export const ContentSection = ({ config, onConfigChange }: ContentSectionProps) 
           <Label htmlFor="welcome-subtitle" className="text-sm">Welcome Subtitle</Label>
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className="cursor-help group">
+              <span className="group">
                 <InfoCircleIcon className="h-3.5 w-3.5 text-muted-foreground group-hover:hidden" />
                 <InfoCircleIconFilled className="h-3.5 w-3.5 text-muted-foreground hidden group-hover:block" />
               </span>
