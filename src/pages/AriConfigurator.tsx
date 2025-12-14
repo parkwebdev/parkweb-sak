@@ -193,13 +193,13 @@ const AriConfigurator = () => {
     );
   }
 
-  // No agent found
-  if (!agent) {
+  // Show spinner while agent data loads (after MultiStepLoader completes)
+  if (!agent || agentsLoading) {
     return (
       <main className="flex-1 bg-muted/30 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-lg font-semibold">No agent configured</h2>
-          <p className="text-sm text-muted-foreground mt-1">Please contact support.</p>
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          <p className="text-sm text-muted-foreground">Loading Ari...</p>
         </div>
       </main>
     );
