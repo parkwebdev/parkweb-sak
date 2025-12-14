@@ -45,8 +45,6 @@
     "@tiptap/extension-underline": "^3.12.0",
     "@tiptap/react": "^3.12.0",
     "@tiptap/starter-kit": "^3.12.0",
-    "@tsparticles/react": "^3.0.0",
-    "@tsparticles/slim": "^3.9.1",
     "@types/color": "^4.2.0",
     "@untitledui/icons": "^0.0.19",
     "class-variance-authority": "^0.7.1",

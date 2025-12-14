@@ -11,7 +11,6 @@
 import { cn } from "@/lib/utils";
 import { AnimatePresence, motion } from "motion/react";
 import { useState, useEffect } from "react";
-import { SparklesCore } from "./sparkles";
 
 const CheckIcon = ({ className }: { className?: string }) => {
   return (
@@ -148,34 +147,10 @@ export const MultiStepLoader = ({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="w-full h-full fixed inset-0 z-[100] flex items-center justify-center bg-background"
+          className="w-full h-full fixed inset-0 z-[100] flex items-center justify-center"
         >
-          <div className="relative flex flex-col items-center">
-            <div className="h-96 relative">
-              <LoaderCore value={currentState} loadingStates={loadingStates} />
-            </div>
-
-            {/* Sparkles effect below the loader */}
-            <div className="w-[40rem] h-40 relative -mt-32">
-              {/* Gradient lines */}
-              <div className="absolute inset-x-20 top-0 bg-gradient-to-r from-transparent via-indigo-500 to-transparent h-[2px] w-3/4 blur-sm" />
-              <div className="absolute inset-x-20 top-0 bg-gradient-to-r from-transparent via-indigo-500 to-transparent h-px w-3/4" />
-              <div className="absolute inset-x-60 top-0 bg-gradient-to-r from-transparent via-sky-500 to-transparent h-[5px] w-1/4 blur-sm" />
-              <div className="absolute inset-x-60 top-0 bg-gradient-to-r from-transparent via-sky-500 to-transparent h-px w-1/4" />
-
-              {/* Sparkle particles */}
-              <SparklesCore
-                background="transparent"
-                minSize={0.4}
-                maxSize={1}
-                particleDensity={1200}
-                className="w-full h-full"
-                particleColor="#FFFFFF"
-              />
-
-              {/* Radial gradient mask for soft edges */}
-              <div className="absolute inset-0 w-full h-full bg-background [mask-image:radial-gradient(350px_200px_at_top,transparent_20%,white)]" />
-            </div>
+          <div className="h-96 relative">
+            <LoaderCore value={currentState} loadingStates={loadingStates} />
           </div>
 
           <div className="bg-gradient-to-t inset-x-0 z-20 bottom-0 bg-background h-full absolute [mask-image:radial-gradient(900px_at_center,transparent_30%,white)]" />
