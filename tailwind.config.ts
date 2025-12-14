@@ -91,6 +91,28 @@ const config: Config = {
           DEFAULT: "hsl(var(--info))",
           foreground: "hsl(var(--info-foreground))",
         },
+        status: {
+          active: {
+            DEFAULT: "hsl(var(--status-active))",
+            foreground: "hsl(var(--status-active-foreground))",
+          },
+          inactive: {
+            DEFAULT: "hsl(var(--status-inactive))",
+            foreground: "hsl(var(--status-inactive-foreground))",
+          },
+          published: {
+            DEFAULT: "hsl(var(--status-published))",
+            foreground: "hsl(var(--status-published-foreground))",
+          },
+          draft: {
+            DEFAULT: "hsl(var(--status-draft))",
+            foreground: "hsl(var(--status-draft-foreground))",
+          },
+          paused: {
+            DEFAULT: "hsl(var(--status-paused))",
+            foreground: "hsl(var(--status-paused-foreground))",
+          },
+        },
         wordpress: "hsl(var(--wordpress))",
         facebook: "hsl(var(--facebook))",
         instagram: "hsl(var(--instagram))",

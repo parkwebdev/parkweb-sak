@@ -157,6 +157,32 @@ All colors are defined as HSL values in CSS custom properties for theme flexibil
 | `--info` | Light: `221 83% 53%` / Dark: `217 91% 60%` | Informational |
 | `--info-foreground` | Light: `210 40% 98%` / Dark: `222 84% 5%` | Text on info |
 
+### Status Badge Colors
+
+Semantic tokens for status badges with light/dark mode support:
+
+| Token | Usage | Example |
+|-------|-------|---------|
+| `--status-active` | Active items, online status | `bg-status-active/10 text-status-active-foreground` |
+| `--status-inactive` | Inactive items, offline status | `bg-status-inactive/10 text-status-inactive-foreground` |
+| `--status-published` | Published content | `bg-status-published/10 text-status-published-foreground` |
+| `--status-draft` | Draft content | `bg-status-draft/10 text-status-draft-foreground` |
+| `--status-paused` | Paused states | `bg-status-paused/10 text-status-paused-foreground` |
+
+**Usage Pattern:**
+```tsx
+// ✅ Correct - semantic status badge
+<span className={item.isActive 
+  ? 'bg-status-active/10 text-status-active-foreground dark:bg-status-active/20 dark:text-status-active' 
+  : 'bg-status-inactive/10 text-status-inactive-foreground dark:bg-status-inactive/20 dark:text-status-inactive'
+}>
+  {item.isActive ? 'Active' : 'Inactive'}
+</span>
+
+// ❌ Wrong - raw Tailwind colors
+<span className="bg-green-100 text-green-700">Active</span>
+```
+
 ### Border & Input Colors
 
 | Token | Light Mode | Dark Mode | Usage |
@@ -267,6 +293,20 @@ body.compact-mode {
   --spacing-xl: 1rem;      /* 24px → 16px */
 }
 ```
+
+### Intentional Arbitrary Heights
+
+The following arbitrary height values (`h-[*px]`) are **intentionally used** and should not be converted to spacing tokens:
+
+| Pattern | Usage | Rationale |
+|---------|-------|-----------|
+| `h-[300px]`, `h-[400px]`, `h-[500px]` | Modal/dialog content areas | Fixed viewport-relative heights for scrollable content |
+| `max-h-[80vh]`, `max-h-[90vh]` | Sheet/modal containers | Viewport-relative max heights |
+| `h-[200px]`, `h-[250px]` | Chart containers | Fixed heights for Recharts visualizations |
+| `h-[calc(...)]` | Layout calculations | Complex responsive calculations |
+| `min-h-[*px]` | Minimum content heights | Ensuring minimum interactive areas |
+
+These heights are layout-specific and cannot be meaningfully tokenized without losing semantic meaning. They should remain as arbitrary values.
 
 ---
 

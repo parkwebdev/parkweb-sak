@@ -91,8 +91,8 @@ const SortableAnnouncementCard = ({ announcement, onEdit, onDelete }: {
                   <div className="flex items-center gap-3 mt-2">
                     <span className={`text-xs px-2 py-0.5 rounded-full ${
                       announcement.is_active 
-                        ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' 
-                        : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400'
+                        ? 'bg-status-active/10 text-status-active-foreground dark:bg-status-active/20 dark:text-status-active' 
+                        : 'bg-status-inactive/10 text-status-inactive-foreground dark:bg-status-inactive/20 dark:text-status-inactive'
                     }`}>
                       {announcement.is_active ? 'Active' : 'Inactive'}
                     </span>

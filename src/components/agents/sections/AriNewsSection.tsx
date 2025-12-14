@@ -113,7 +113,7 @@ const SortableNewsCard = ({ newsItem, onEdit, onDelete }: {
                       <div className="flex items-center gap-1.5">
                         <Avatar className="h-4 w-4">
                           <AvatarImage src={newsItem.author_avatar || undefined} />
-                          <AvatarFallback className="text-[8px]">
+                          <AvatarFallback className="text-2xs">
                             {newsItem.author_name[0]}
                           </AvatarFallback>
                         </Avatar>
@@ -124,8 +124,8 @@ const SortableNewsCard = ({ newsItem, onEdit, onDelete }: {
                     )}
                     <span className={`text-xs px-2 py-0.5 rounded-full ${
                       newsItem.is_published 
-                        ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' 
-                        : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400'
+                        ? 'bg-status-published/10 text-status-published-foreground dark:bg-status-published/20 dark:text-status-published' 
+                        : 'bg-status-draft/10 text-status-draft-foreground dark:bg-status-draft/20 dark:text-status-draft'
                     }`}>
                       {newsItem.is_published ? 'Published' : 'Draft'}
                     </span>

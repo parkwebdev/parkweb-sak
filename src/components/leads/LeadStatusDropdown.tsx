@@ -20,10 +20,10 @@ interface LeadStatusDropdownProps {
 }
 
 const statusOptions = [
-  { value: 'new', label: 'New', color: 'bg-blue-500/10 text-blue-500 border-blue-500/20' },
-  { value: 'contacted', label: 'Contacted', color: 'bg-purple-500/10 text-purple-500 border-purple-500/20' },
-  { value: 'qualified', label: 'Qualified', color: 'bg-green-500/10 text-green-500 border-green-500/20' },
-  { value: 'converted', label: 'Converted', color: 'bg-success/10 text-success border-success/20' },
+  { value: 'new', label: 'New', color: 'bg-info/10 text-info border-info/20' },
+  { value: 'contacted', label: 'Contacted', color: 'bg-chart-4/10 text-chart-4 border-chart-4/20' },
+  { value: 'qualified', label: 'Qualified', color: 'bg-success/10 text-success border-success/20' },
+  { value: 'converted', label: 'Converted', color: 'bg-status-active/10 text-status-active border-status-active/20' },
   { value: 'lost', label: 'Lost', color: 'bg-muted text-muted-foreground border-border' },
 ];
 

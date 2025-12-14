@@ -55,7 +55,7 @@ export const SavedIndicator = ({
   return (
     <div 
       className={cn(
-        "flex items-center gap-1.5 text-xs text-green-600 dark:text-green-500 transition-all duration-300",
+        "flex items-center gap-1.5 text-xs text-success transition-all duration-300",
         isExiting ? "animate-fade-out opacity-0" : "animate-fade-in opacity-100",
         className
       )}
