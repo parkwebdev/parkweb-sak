@@ -225,6 +225,9 @@ export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressCo
       });
 
       if (error) throw error;
+      
+      // Refresh agent data to show updated interval
+      onSyncComplete?.();
       return true;
     } catch (error) {
       toast.error('Failed to update sync settings', {
