@@ -18,7 +18,6 @@ import {
   Palette,
   User01,
   Database01,
-  MarkerPin01,
   BookOpen01,
   Announcement01,
   File06,
@@ -27,7 +26,7 @@ import {
   Key01,
   Code01,
 } from '@untitledui/icons';
-import { FileFilled, PaletteFilled, MessageSquare, MessageSquareFilled } from '@/components/icons/AriMenuIcons';
+import { FileFilled, PaletteFilled, MessageSquare, MessageSquareFilled, UserFilled, DatabaseFilled, MarkerPin, MarkerPinFilled, BookOpenFilled } from '@/components/icons/AriMenuIcons';
 
 export type AriSection = 
   | 'model-behavior'
@@ -62,12 +61,12 @@ const SECTIONS: SectionItem[] = [
   // Widget Appearance
   { id: 'appearance', label: 'Appearance', icon: Palette, activeIcon: PaletteFilled, group: 'Widget' },
   { id: 'welcome-messages', label: 'Welcome & Messages', icon: MessageSquare, activeIcon: MessageSquareFilled, group: 'Widget' },
-  { id: 'lead-capture', label: 'Lead Capture', icon: User01, group: 'Widget' },
+  { id: 'lead-capture', label: 'Lead Capture', icon: User01, activeIcon: UserFilled, group: 'Widget' },
   
   // Knowledge
-  { id: 'knowledge', label: 'Knowledge', icon: Database01, group: 'Knowledge' },
-  { id: 'locations', label: 'Locations', icon: MarkerPin01, group: 'Knowledge' },
-  { id: 'help-articles', label: 'Help Articles', icon: BookOpen01, group: 'Knowledge' },
+  { id: 'knowledge', label: 'Knowledge', icon: Database01, activeIcon: DatabaseFilled, group: 'Knowledge' },
+  { id: 'locations', label: 'Locations', icon: MarkerPin, activeIcon: MarkerPinFilled, group: 'Knowledge' },
+  { id: 'help-articles', label: 'Help Articles', icon: BookOpen01, activeIcon: BookOpenFilled, group: 'Knowledge' },
   
   // Content
   { id: 'announcements', label: 'Announcements', icon: Announcement01, group: 'Content' },
