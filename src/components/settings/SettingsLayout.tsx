@@ -3,9 +3,12 @@
  * Provides responsive tabs for mobile and sidebar for desktop.
  */
 
-import React, { useState } from 'react';
+import React from 'react';
+import { motion } from 'motion/react';
 import { Menu01 as Menu } from '@untitledui/icons';
 import { cn } from '@/lib/utils';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { springs } from '@/lib/motion-variants';
 
 interface SettingsLayoutProps {
   children: React.ReactNode;
@@ -18,6 +21,7 @@ interface SettingsMenuItemProps {
   label: string;
   active: boolean;
   onClick: (id: SettingsTab) => void;
+  index: number;
 }
 
 const SettingsMenuItem: React.FC<SettingsMenuItemProps> = ({
@@ -25,9 +29,12 @@ const SettingsMenuItem: React.FC<SettingsMenuItemProps> = ({
   label,
   active,
   onClick,
+  index,
 }) => {
+  const prefersReducedMotion = useReducedMotion();
+  
   return (
-    <button
+    <motion.button
       onClick={() => onClick(id)}
       className={cn(
         "flex items-center gap-3 w-full px-3 py-2.5 text-sm font-medium rounded-lg transition-colors text-left",
@@ -35,9 +42,12 @@ const SettingsMenuItem: React.FC<SettingsMenuItemProps> = ({
           ? "bg-accent text-accent-foreground"
           : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
       )}
+      initial={prefersReducedMotion ? false : { opacity: 0, x: -8 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay: index * 0.03, ...springs.smooth }}
     >
       {label}
-    </button>
+    </motion.button>
   );
 };
 
@@ -111,13 +121,14 @@ export const SettingsLayout: React.FC<SettingsLayoutContentProps> = ({
             </p>
           </div>
           <nav className="space-y-1">
-            {menuItems.map((item) => (
+            {menuItems.map((item, index) => (
               <SettingsMenuItem
                 key={item.id}
                 id={item.id}
                 label={item.label}
                 active={activeTab === item.id}
                 onClick={onTabChange}
+                index={index}
               />
             ))}
           </nav>
