@@ -4,7 +4,7 @@ import { toast } from '@/lib/toast';
 import { logger } from '@/utils/logger';
 
 interface CreateNotificationParams {
-  type: 'conversation' | 'lead' | 'agent' | 'team' | 'report' | 'system';
+  type: 'conversation' | 'lead' | 'team' | 'report' | 'system';
   title: string;
   message: string;
   data?: any;
@@ -19,7 +19,6 @@ interface CreateNotificationParams {
  * @returns {Function} createNotification - Generic notification creator
  * @returns {Function} createConversationNotification - Conversation-related notification
  * @returns {Function} createLeadNotification - Lead-related notification
- * @returns {Function} createAgentNotification - Agent-related notification
  * @returns {Function} createReportNotification - Report-related notification
  * @returns {Function} createSystemNotification - System-related notification
  * @returns {Function} createTeamNotification - Team-related notification
@@ -98,21 +97,6 @@ export const useNotifications = () => {
     });
   };
 
-  const createAgentNotification = async (
-    title: string,
-    message: string,
-    agentData?: any,
-    userId?: string
-  ) => {
-    return createNotification({
-      type: 'agent',
-      title,
-      message,
-      data: agentData,
-      userId
-    });
-  };
-
   const createReportNotification = async (
     title: string,
     message: string,
@@ -182,7 +166,6 @@ export const useNotifications = () => {
     createNotification,
     createConversationNotification,
     createLeadNotification,
-    createAgentNotification,
     createReportNotification,
     createSystemNotification,
     createTeamNotification,
