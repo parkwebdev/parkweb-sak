@@ -137,9 +137,9 @@ export const MultiStepLoader = ({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="w-full h-full fixed inset-0 z-[100] flex items-center justify-center bg-black"
+          className="w-full h-full fixed inset-0 z-[100] flex items-center justify-center"
         >
-          {/* WebGL LightPillar Background */}
+          {/* WebGL LightPillar - just the glow effect */}
           <LightPillar
             topColor="#5227FF"
             bottomColor="#FF9FFC"
@@ -151,7 +151,7 @@ export const MultiStepLoader = ({
             noiseIntensity={0.5}
             pillarRotation={0}
             interactive={false}
-            mixBlendMode="normal"
+            mixBlendMode="screen"
           />
           
           {/* Content overlay */}
