@@ -419,25 +419,53 @@ Shows "Saved" text with checkmark for auto-save feedback.
 #### FormHint (`src/components/ui/form-hint.tsx`)
 Standalone helper text for form fields (use outside React Hook Form).
 ```tsx
-<Input aria-describedby="email-hint" />
+import { FormHint } from '@/components/ui/form-hint';
+
+<Input id="email" aria-describedby="email-hint" />
 <FormHint id="email-hint">We'll never share your email.</FormHint>
 ```
-- Use `id` prop for `aria-describedby` accessibility linking
-- Use `text-xs` size (12px) - NEVER use `text-[10px]` one-offs
+
+**Props:**
+- `id: string` - Required for `aria-describedby` linking
+- `className?: string` - Additional classes
+- `children: ReactNode` - Hint text content
+
+**Accessibility:**
+- Always provide an `id` prop
+- Link to input via `aria-describedby={id}`
+- Uses `text-xs text-muted-foreground` for visual styling
+
+**Usage Guidelines:**
+- Use `FormHint` outside React Hook Form contexts
 - For React Hook Form, use `FormDescription` instead
+- Never use arbitrary `text-[10px]` - FormHint uses design system tokens
 
 #### IconButton (`src/components/ui/icon-button.tsx`)
-Accessible icon-only button with required `label` prop.
+Accessible icon-only button with **required** `label` prop.
+
 ```tsx
+import { IconButton } from '@/components/ui/icon-button';
 import { Trash01 } from "@untitledui/icons";
 
 <IconButton label="Delete item" variant="ghost" size="sm">
-  <Trash01 className="h-4 w-4" />
+  <Trash01 className="h-4 w-4" aria-hidden="true" />
 </IconButton>
 ```
-- **Forces accessibility** - `label` is required, maps to `aria-label`
-- Inherits all Button variants and motion animations
-- Default size is `"icon"` (32x32px square)
+
+**Props:**
+- `label: string` - **Required** - Maps to `aria-label`
+- All standard Button props (variant, size, disabled, etc.)
+
+**Accessibility:**
+- Enforces accessibility by requiring a label
+- Automatically applies `aria-label` from label prop
+- Icons inside should have `aria-hidden="true"`
+- Default size is `"icon"` (32×32px square) meeting WCAG 2.5.8 target size
+
+**Usage Guidelines:**
+- **Always use IconButton for icon-only buttons** - enforces accessibility
+- For buttons with visible text, use regular Button component
+- Never use `<Button size="icon">` without an `aria-label`
 
 ### Textarea Sizing Standards
 

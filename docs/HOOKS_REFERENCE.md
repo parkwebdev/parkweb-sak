@@ -517,6 +517,123 @@ const searchableItems = useSearchData();
 
 ---
 
+### useLocations
+
+Manages location CRUD operations.
+
+```tsx
+import { useLocations } from '@/hooks/useLocations';
+
+const {
+  locations,        // Location[] - All locations
+  isLoading,       // boolean
+  createLocation,  // (data) => Promise
+  updateLocation,  // (id, data) => Promise
+  deleteLocation,  // (id) => Promise
+} = useLocations(agentId: string);
+```
+
+**File**: `src/hooks/useLocations.ts`
+
+---
+
+### useCalendarEvents
+
+Manages calendar event operations.
+
+```tsx
+import { useCalendarEvents } from '@/hooks/useCalendarEvents';
+
+const {
+  events,           // CalendarEvent[] - All events
+  isLoading,       // boolean
+  createEvent,     // (data) => Promise
+  updateEvent,     // (id, data) => Promise
+  deleteEvent,     // (id) => Promise
+  refetch,         // () => void
+} = useCalendarEvents(agentId?: string);
+```
+
+**File**: `src/hooks/useCalendarEvents.ts`
+
+---
+
+### useConnectedAccounts
+
+Manages OAuth connected accounts (calendars).
+
+```tsx
+import { useConnectedAccounts } from '@/hooks/useConnectedAccounts';
+
+const {
+  accounts,         // ConnectedAccount[] - All connected accounts
+  isLoading,       // boolean
+  disconnectAccount, // (id) => Promise
+  refetch,         // () => void
+} = useConnectedAccounts(agentId: string);
+```
+
+**File**: `src/hooks/useConnectedAccounts.ts`
+
+---
+
+### useWordPressConnection
+
+Manages WordPress API connection.
+
+```tsx
+import { useWordPressConnection } from '@/hooks/useWordPressConnection';
+
+const {
+  connection,       // WordPressConnection | null
+  isLoading,       // boolean
+  connect,         // (apiUrl, apiKey) => Promise
+  disconnect,      // () => Promise
+  testConnection,  // () => Promise<boolean>
+} = useWordPressConnection(agentId: string);
+```
+
+**File**: `src/hooks/useWordPressConnection.ts`
+
+---
+
+### useWordPressHomes
+
+Fetches WordPress home listings.
+
+```tsx
+import { useWordPressHomes } from '@/hooks/useWordPressHomes';
+
+const {
+  homes,           // WordPressHome[] - All homes
+  isLoading,      // boolean
+  syncHomes,      // () => Promise - Trigger sync
+  refetch,        // () => void
+} = useWordPressHomes(agentId: string, locationId?: string);
+```
+
+**File**: `src/hooks/useWordPressHomes.ts`
+
+---
+
+### useProperties
+
+Manages property listings from knowledge sources.
+
+```tsx
+import { useProperties } from '@/hooks/useProperties';
+
+const {
+  properties,      // Property[] - All properties
+  isLoading,      // boolean
+  refetch,        // () => void
+} = useProperties(agentId: string, filters?: PropertyFilters);
+```
+
+**File**: `src/hooks/useProperties.ts`
+
+---
+
 ### useEmbeddedChatConfig
 
 Manages widget embed configuration state.

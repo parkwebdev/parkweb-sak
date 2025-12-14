@@ -270,6 +270,70 @@ if (req.method === 'OPTIONS') {
 
 ---
 
+### `mark-messages-read`
+
+**Purpose:** Marks messages as read for a conversation.
+
+**Auth:** Authenticated (admin) or Public (widget user)
+
+**Method:** `POST`
+
+**Request Body:**
+```typescript
+{
+  conversationId: string;
+  readerId?: string;      // For widget users
+  readerType: 'admin' | 'user';
+}
+```
+
+**Response:**
+```typescript
+{
+  success: true;
+}
+```
+
+**Details:**
+- Admin readers: Updates `admin_last_read_at` in conversation metadata
+- Widget users: Validates conversation ownership
+- Used for unread badge clearing
+
+---
+
+### `fetch-link-preview`
+
+**Purpose:** Fetches Open Graph metadata for URL previews.
+
+**Auth:** Public
+
+**Method:** `POST`
+
+**Request Body:**
+```typescript
+{
+  url: string;
+}
+```
+
+**Response:**
+```typescript
+{
+  title: string | null;
+  description: string | null;
+  image: string | null;
+  siteName: string | null;
+}
+```
+
+**Details:**
+- Fetches HTML from URL
+- Parses Open Graph and Twitter Card meta tags
+- Caches results for performance
+- Used for rich link previews in chat messages
+
+---
+
 ## Lead Functions
 
 ### `create-widget-lead`
@@ -435,6 +499,168 @@ if (req.method === 'OPTIONS') {
 - Makes HTTP request to webhook URL
 - Logs result in `webhook_logs`
 - Retries on failure (up to 3 times with exponential backoff)
+
+---
+
+## Calendar Functions
+
+### `book-appointment`
+
+**Purpose:** Books an appointment via widget or API.
+
+**Auth:** Public (widget) or API key
+
+**Method:** `POST`
+
+**Request Body:**
+```typescript
+{
+  agentId: string;
+  locationId?: string;
+  visitorName: string;
+  visitorEmail: string;
+  visitorPhone?: string;
+  startTime: string;      // ISO timestamp
+  endTime: string;        // ISO timestamp
+  eventType?: string;     // e.g., 'showing', 'tour', 'consultation'
+  notes?: string;
+  conversationId?: string;
+}
+```
+
+**Response:**
+```typescript
+{
+  success: true;
+  eventId: string;
+  calendarEventId?: string;
+}
+```
+
+**Details:**
+- Validates time slot availability
+- Creates calendar event in connected calendar
+- Links to conversation if provided
+- Sends confirmation notification
+
+---
+
+### `check-calendar-availability`
+
+**Purpose:** Checks available time slots for booking.
+
+**Auth:** Public (widget)
+
+**Method:** `POST`
+
+**Request Body:**
+```typescript
+{
+  agentId: string;
+  locationId?: string;
+  dateRange: {
+    start: string;  // ISO date
+    end: string;    // ISO date
+  };
+  duration?: number;  // Minutes, default 30
+}
+```
+
+**Response:**
+```typescript
+{
+  availableSlots: Array<{
+    start: string;
+    end: string;
+  }>;
+}
+```
+
+**Details:**
+- Queries connected calendar for busy times
+- Respects business hours from location settings
+- Returns available slots within date range
+
+---
+
+### `google-calendar-auth`
+
+**Purpose:** Handles Google Calendar OAuth flow.
+
+**Auth:** Authenticated
+
+**Method:** `GET` (initiate) / `POST` (callback)
+
+**Details:**
+- Initiates OAuth2 flow with Google Calendar scopes
+- Handles callback with authorization code
+- Stores access and refresh tokens in `connected_accounts`
+- Fetches primary calendar ID
+
+---
+
+### `outlook-calendar-auth`
+
+**Purpose:** Handles Outlook/Microsoft Calendar OAuth flow.
+
+**Auth:** Authenticated
+
+**Method:** `GET` (initiate) / `POST` (callback)
+
+**Details:**
+- Initiates OAuth2 flow with Microsoft Graph scopes
+- Handles callback with authorization code
+- Stores access and refresh tokens in `connected_accounts`
+- Fetches default calendar
+
+---
+
+## WordPress Integration Functions
+
+### `sync-wordpress-communities`
+
+**Purpose:** Syncs WordPress communities/locations.
+
+**Auth:** Service Role
+
+**Method:** `POST`
+
+**Request Body:**
+```typescript
+{
+  agentId: string;
+  apiUrl: string;
+}
+```
+
+**Details:**
+- Fetches communities from WordPress REST API
+- Creates/updates location records
+- Sets `wordpress_community_id` and `wordpress_slug`
+
+---
+
+### `sync-wordpress-homes`
+
+**Purpose:** Syncs home listings from WordPress.
+
+**Auth:** Service Role
+
+**Method:** `POST`
+
+**Request Body:**
+```typescript
+{
+  agentId: string;
+  locationId?: string;
+}
+```
+
+**Details:**
+- Fetches home listings from WordPress REST API
+- Creates/updates property records
+- Extracts images, pricing, features
+- Links to knowledge source for RAG
 
 ---
 
@@ -758,9 +984,86 @@ if (data?.[0]?.rate_limited) {
   - URL: Scrape page content
   - CSV/JSON/XML: Parse and convert
 - Chunks content for embedding
-- Generates vector embeddings via OpenAI
-- Stores embeddings in knowledge source
+- Generates vector embeddings via Qwen3 (OpenRouter)
+- Stores embeddings in knowledge_chunks
 - Updates status to 'ready'
+
+---
+
+### `refresh-knowledge-sources`
+
+**Purpose:** Refreshes knowledge sources based on their refresh strategy.
+
+**Auth:** Service Role (cron)
+
+**Method:** `POST`
+
+**Details:**
+- Finds sources where `next_refresh_at < now()`
+- Re-fetches and re-processes each source
+- Updates `last_fetched_at` and `next_refresh_at`
+- Handles sitemap child pages
+
+---
+
+### `embed-help-article`
+
+**Purpose:** Generates embeddings for help articles.
+
+**Auth:** Service Role
+
+**Method:** `POST`
+
+**Request Body:**
+```typescript
+{
+  articleId: string;
+}
+```
+
+**Details:**
+- Called after article creation/update
+- Generates vector embedding for article content
+- Stores embedding in `help_articles.embedding` column
+- Enables semantic search in widget help center
+
+---
+
+### `test-tool-endpoint`
+
+**Purpose:** Tests a custom tool endpoint configuration.
+
+**Auth:** Authenticated
+
+**Method:** `POST`
+
+**Request Body:**
+```typescript
+{
+  agentId: string;
+  endpointUrl: string;
+  headers?: Record<string, string>;
+  parameters?: Record<string, any>;
+  timeoutMs?: number;
+}
+```
+
+**Response:**
+```typescript
+{
+  success: boolean;
+  statusCode: number;
+  responseBody: any;
+  responseTime: number;
+  error?: string;
+}
+```
+
+**Details:**
+- Validates agent ownership
+- SSRF protection (blocks localhost, private IPs, cloud metadata)
+- Makes test request to endpoint
+- Returns response for debugging
 
 ---
 
