@@ -2,7 +2,7 @@
  * WordPressIntegrationSection Component
  * 
  * Consolidated collapsible WordPress integration section combining
- * site connection and property/homes sync functionality.
+ * site connection, community sync, and property/homes sync functionality.
  */
 
 import { useState, useEffect } from 'react';
@@ -12,8 +12,26 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Globe01, RefreshCw01, Check, AlertCircle, ArrowRight, ChevronRight, Zap, Home01 } from '@untitledui/icons';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Globe01, RefreshCw01, Check, AlertCircle, ArrowRight, ChevronRight, Zap, Home01, Trash01, LinkExternal01, Building01 } from '@untitledui/icons';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { InfoCircleIcon, InfoCircleIconFilled } from '@/components/ui/info-circle-icon';
 import { useWordPressConnection } from '@/hooks/useWordPressConnection';
@@ -27,23 +45,40 @@ interface WordPressIntegrationSectionProps {
   onSyncComplete?: () => void;
 }
 
+const SYNC_INTERVAL_OPTIONS = [
+  { value: 'manual', label: 'Manual only' },
+  { value: 'hourly_1', label: 'Every hour' },
+  { value: 'hourly_2', label: 'Every 2 hours' },
+  { value: 'hourly_4', label: 'Every 4 hours' },
+  { value: 'hourly_6', label: 'Every 6 hours' },
+  { value: 'hourly_12', label: 'Every 12 hours' },
+  { value: 'daily', label: 'Daily' },
+];
+
 export function WordPressIntegrationSection({ agent, onSyncComplete }: WordPressIntegrationSectionProps) {
   const prefersReducedMotion = useReducedMotion();
   const [isOpen, setIsOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [inputUrl, setInputUrl] = useState('');
   const [useAiExtraction, setUseAiExtraction] = useState(false);
+  const [showDisconnectDialog, setShowDisconnectDialog] = useState(false);
+  const [deleteOnDisconnect, setDeleteOnDisconnect] = useState(false);
 
   const {
     siteUrl,
     lastSync: connectionLastSync,
     communityCount,
+    communitySyncInterval,
+    homeSyncInterval,
     isTesting: connectionTesting,
     isSyncing: connectionSyncing,
+    isSaving,
     testResult: connectionTestResult,
     isConnected,
     testConnection,
     importCommunities,
+    updateSyncInterval,
+    disconnect,
     clearTestResult: clearConnectionTestResult,
   } = useWordPressConnection({ agent, onSyncComplete });
 
@@ -81,7 +116,6 @@ export function WordPressIntegrationSection({ agent, onSyncComplete }: WordPress
   };
 
   const handleImportCommunities = async () => {
-    // Always pass inputUrl if available, fall back to saved siteUrl via undefined
     const url = inputUrl.trim() || undefined;
     await importCommunities(url);
     setIsEditing(false);
@@ -94,6 +128,20 @@ export function WordPressIntegrationSection({ agent, onSyncComplete }: WordPress
 
   const handleSyncHomes = async () => {
     await syncHomes(undefined, useAiExtraction);
+  };
+
+  const handleDisconnect = async () => {
+    await disconnect(deleteOnDisconnect);
+    setShowDisconnectDialog(false);
+    setDeleteOnDisconnect(false);
+  };
+
+  const handleCommunitySyncIntervalChange = async (value: string) => {
+    await updateSyncInterval('community', value);
+  };
+
+  const handleHomeSyncIntervalChange = async (value: string) => {
+    await updateSyncInterval('home', value);
   };
 
   // Summary for collapsed state
@@ -146,228 +194,343 @@ export function WordPressIntegrationSection({ agent, onSyncComplete }: WordPress
             className="overflow-hidden"
           >
             <div className="mt-3 space-y-4 pl-11">
-        {/* Site Connection */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Site URL</Label>
-            {isConnected && !isEditing && (
-              <Button variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={() => setIsEditing(true)}>
-                Edit
-              </Button>
-            )}
-          </div>
-          
-          {isConnected && !isEditing ? (
-            <div className="flex items-center justify-between">
-              <span className="text-sm truncate">{siteUrl}</span>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={handleImportCommunities}
-                disabled={connectionSyncing}
-                className="h-7"
-              >
-                {connectionSyncing ? (
-                  <RefreshCw01 className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <>
-                    <RefreshCw01 className="h-3.5 w-3.5 mr-1.5" />
-                    Sync
-                  </>
-                )}
-              </Button>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              <Input
-                value={inputUrl}
-                onChange={(e) => {
-                  setInputUrl(e.target.value);
-                  clearConnectionTestResult();
-                }}
-                placeholder="https://yoursite.com"
-                className="h-8"
-              />
-              
-              {connectionTestResult && (
-                <div
-                  className={cn(
-                    'flex items-start gap-2 text-xs p-2 rounded',
-                    connectionTestResult.success
-                      ? 'bg-success/10 text-success'
-                      : 'bg-destructive/10 text-destructive'
-                  )}
-                >
-                  {connectionTestResult.success ? (
-                    <Check className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-                  ) : (
-                    <AlertCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-                  )}
-                  <span>{connectionTestResult.message}</span>
+              {/* Connection Status Card - shown when connected */}
+              {isConnected && !isEditing && (
+                <div className="p-3 rounded-lg bg-muted/50 border space-y-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Connected Site</Label>
+                      <div className="flex items-center gap-2 mt-1">
+                        <a 
+                          href={siteUrl} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-sm text-primary hover:underline flex items-center gap-1 truncate"
+                        >
+                          {siteUrl.replace(/^https?:\/\//, '')}
+                          <LinkExternal01 className="h-3 w-3 shrink-0" />
+                        </a>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 px-2"
+                        onClick={() => setIsEditing(true)}
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 px-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+                        onClick={() => setShowDisconnectDialog(true)}
+                      >
+                        <Trash01 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </div>
                 </div>
               )}
 
-              <div className="flex items-center gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={handleTestConnection}
-                  disabled={!inputUrl.trim() || connectionTesting}
-                  className="h-7"
-                >
-                  {connectionTesting ? 'Testing...' : 'Test'}
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={handleImportCommunities}
-                  disabled={!inputUrl.trim() || connectionSyncing || (connectionTestResult !== null && !connectionTestResult.success)}
-                  className="h-7"
-                >
-                  {connectionSyncing ? (
-                    <>
-                      <RefreshCw01 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
-                      Importing...
-                    </>
-                  ) : (
-                    <>
-                      Import
-                      <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
-                    </>
-                  )}
-                </Button>
-                {isConnected && isEditing && (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-7"
-                    onClick={() => {
-                      setInputUrl(siteUrl);
-                      setIsEditing(false);
+              {/* Site URL Input - shown when not connected or editing */}
+              {(!isConnected || isEditing) && (
+                <div className="space-y-3">
+                  <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Site URL</Label>
+                  <Input
+                    value={inputUrl}
+                    onChange={(e) => {
+                      setInputUrl(e.target.value);
                       clearConnectionTestResult();
                     }}
-                  >
-                    Cancel
-                  </Button>
-                )}
-              </div>
-            </div>
-          )}
-
-          {formatLastSync(connectionLastSync) && (
-            <p className="text-xs text-muted-foreground">
-              Communities synced {formatLastSync(connectionLastSync)}
-            </p>
-          )}
-        </div>
-
-        {/* Property Listings - only show if connected */}
-        {isConnected && (
-          <div className="space-y-3 pt-3 border-t">
-            <div className="flex items-center gap-2">
-              <Home01 className="h-4 w-4 text-muted-foreground" />
-              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Property Listings</Label>
-              {homeCount !== undefined && homeCount > 0 && (
-                <Badge variant="secondary" className="text-xs">{homeCount} homes</Badge>
-              )}
-            </div>
-            
-            <p className="text-xs text-muted-foreground">
-              Sync home/property listings to enable AI-powered property search.
-            </p>
-
-            {/* AI Extraction toggle */}
-            <div className="flex items-center gap-2">
-              <Switch
-                id="ai-extraction"
-                checked={useAiExtraction}
-                onCheckedChange={setUseAiExtraction}
-                disabled={homesSyncing}
-              />
-              <Label htmlFor="ai-extraction" className="text-xs text-muted-foreground cursor-pointer">
-                <span className="flex items-center gap-1">
-                  <Zap className="h-3 w-3 text-orange-500" />
-                  Use AI extraction
-                </span>
-              </Label>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button type="button" className="group inline-flex text-muted-foreground hover:text-foreground transition-colors">
-                      <InfoCircleIcon className="h-4 w-4 group-hover:hidden" />
-                      <InfoCircleIconFilled className="h-4 w-4 hidden group-hover:block" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent side="top" className="max-w-xs text-xs">
-                    <p>Enable if your WordPress site doesn't use ACF. AI will parse property details from page HTML.</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
-
-            {homesTestResult && (
-              <div
-                className={cn(
-                  'flex items-start gap-2 text-xs p-2 rounded',
-                  homesTestResult.success
-                    ? 'bg-success/10 text-success'
-                    : 'bg-destructive/10 text-destructive'
-                )}
-              >
-                {homesTestResult.success ? (
-                  <Check className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-                ) : (
-                  <AlertCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-                )}
-                <span>
-                  {homesTestResult.message}
-                  {homesTestResult.homeCount !== undefined && homesTestResult.homeCount > 0 && (
-                    <span className="font-medium"> ({homesTestResult.homeCount} homes found)</span>
+                    placeholder="https://yoursite.com"
+                    className="h-8"
+                  />
+                  
+                  {connectionTestResult && (
+                    <div
+                      className={cn(
+                        'flex items-start gap-2 text-xs p-2 rounded',
+                        connectionTestResult.success
+                          ? 'bg-success/10 text-success'
+                          : 'bg-destructive/10 text-destructive'
+                      )}
+                    >
+                      {connectionTestResult.success ? (
+                        <Check className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                      ) : (
+                        <AlertCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                      )}
+                      <span>{connectionTestResult.message}</span>
+                    </div>
                   )}
-                </span>
-              </div>
-            )}
 
-            <div className="flex items-center gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={handleTestHomes}
-                disabled={homesTesting || homesSyncing}
-                className="h-7"
-              >
-                {homesTesting ? 'Testing...' : 'Test'}
-              </Button>
-              <Button
-                size="sm"
-                onClick={handleSyncHomes}
-                disabled={homesSyncing}
-                className="h-7"
-              >
-                {homesSyncing ? (
-                  <>
-                    <RefreshCw01 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
-                    Syncing...
-                  </>
-                ) : (
-                  <>
-                    <RefreshCw01 className="h-3.5 w-3.5 mr-1.5" />
-                    Sync Homes
-                  </>
-                )}
-              </Button>
-            </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleTestConnection}
+                      disabled={!inputUrl.trim() || connectionTesting}
+                      className="h-7"
+                    >
+                      {connectionTesting ? 'Testing...' : 'Test'}
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={handleImportCommunities}
+                      disabled={!inputUrl.trim() || connectionSyncing || (connectionTestResult !== null && !connectionTestResult.success)}
+                      className="h-7"
+                    >
+                      {connectionSyncing ? (
+                        <>
+                          <RefreshCw01 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                          Importing...
+                        </>
+                      ) : (
+                        <>
+                          Import
+                          <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
+                        </>
+                      )}
+                    </Button>
+                    {isConnected && isEditing && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-7"
+                        onClick={() => {
+                          setInputUrl(siteUrl);
+                          setIsEditing(false);
+                          clearConnectionTestResult();
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              )}
 
-            {formatLastSync(homesLastSync) && (
-              <p className="text-xs text-muted-foreground">
-                Homes synced {formatLastSync(homesLastSync)}
-              </p>
-            )}
-          </div>
-        )}
+              {/* Communities Section - shown when connected */}
+              {isConnected && !isEditing && (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Building01 className="h-4 w-4 text-muted-foreground" />
+                    <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Communities</Label>
+                    {communityCount !== undefined && communityCount > 0 && (
+                      <Badge variant="secondary" className="text-xs">{communityCount} synced</Badge>
+                    )}
+                  </div>
+
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-2">
+                      <Label className="text-xs text-muted-foreground">Auto-sync:</Label>
+                      <Select
+                        value={communitySyncInterval}
+                        onValueChange={handleCommunitySyncIntervalChange}
+                      >
+                        <SelectTrigger className="h-7 w-[140px] text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {SYNC_INTERVAL_OPTIONS.map((option) => (
+                            <SelectItem key={option.value} value={option.value} className="text-xs">
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleImportCommunities}
+                      disabled={connectionSyncing}
+                      className="h-7"
+                    >
+                      {connectionSyncing ? (
+                        <RefreshCw01 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <>
+                          <RefreshCw01 className="h-3.5 w-3.5 mr-1.5" />
+                          Sync Now
+                        </>
+                      )}
+                    </Button>
+                  </div>
+
+                  {formatLastSync(connectionLastSync) && (
+                    <p className="text-xs text-muted-foreground">
+                      Last synced {formatLastSync(connectionLastSync)}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Property Listings Section - shown when connected */}
+              {isConnected && !isEditing && (
+                <>
+                  <Separator />
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Home01 className="h-4 w-4 text-muted-foreground" />
+                      <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Property Listings</Label>
+                      {homeCount !== undefined && homeCount > 0 && (
+                        <Badge variant="secondary" className="text-xs">{homeCount} homes</Badge>
+                      )}
+                    </div>
+                    
+                    <p className="text-xs text-muted-foreground">
+                      Sync home/property listings to enable AI-powered property search.
+                    </p>
+
+                    {/* AI Extraction toggle */}
+                    <div className="flex items-center gap-2">
+                      <Switch
+                        id="ai-extraction"
+                        checked={useAiExtraction}
+                        onCheckedChange={setUseAiExtraction}
+                        disabled={homesSyncing}
+                      />
+                      <Label htmlFor="ai-extraction" className="text-xs text-muted-foreground cursor-pointer">
+                        <span className="flex items-center gap-1">
+                          <Zap className="h-3 w-3 text-orange-500" />
+                          Use AI extraction
+                        </span>
+                      </Label>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button type="button" className="group inline-flex text-muted-foreground hover:text-foreground transition-colors">
+                              <InfoCircleIcon className="h-4 w-4 group-hover:hidden" />
+                              <InfoCircleIconFilled className="h-4 w-4 hidden group-hover:block" />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="max-w-xs text-xs">
+                            <p>Enable if your WordPress site doesn't use ACF. AI will parse property details from page HTML.</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-2">
+                        <Label className="text-xs text-muted-foreground">Auto-sync:</Label>
+                        <Select
+                          value={homeSyncInterval}
+                          onValueChange={handleHomeSyncIntervalChange}
+                        >
+                          <SelectTrigger className="h-7 w-[140px] text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {SYNC_INTERVAL_OPTIONS.map((option) => (
+                              <SelectItem key={option.value} value={option.value} className="text-xs">
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={handleTestHomes}
+                          disabled={homesTesting || homesSyncing}
+                          className="h-7"
+                        >
+                          {homesTesting ? 'Testing...' : 'Test'}
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={handleSyncHomes}
+                          disabled={homesSyncing}
+                          className="h-7"
+                        >
+                          {homesSyncing ? (
+                            <>
+                              <RefreshCw01 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                              Syncing...
+                            </>
+                          ) : (
+                            <>
+                              <RefreshCw01 className="h-3.5 w-3.5 mr-1.5" />
+                              Sync Homes
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+
+                    {homesTestResult && (
+                      <div
+                        className={cn(
+                          'flex items-start gap-2 text-xs p-2 rounded',
+                          homesTestResult.success
+                            ? 'bg-success/10 text-success'
+                            : 'bg-destructive/10 text-destructive'
+                        )}
+                      >
+                        {homesTestResult.success ? (
+                          <Check className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                        ) : (
+                          <AlertCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                        )}
+                        <span>
+                          {homesTestResult.message}
+                          {homesTestResult.homeCount !== undefined && homesTestResult.homeCount > 0 && (
+                            <span className="font-medium"> ({homesTestResult.homeCount} homes found)</span>
+                          )}
+                        </span>
+                      </div>
+                    )}
+
+                    {formatLastSync(homesLastSync) && (
+                      <p className="text-xs text-muted-foreground">
+                        Last synced {formatLastSync(homesLastSync)}
+                      </p>
+                    )}
+                  </div>
+                </>
+              )}
             </div>
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Disconnect Confirmation Dialog */}
+      <AlertDialog open={showDisconnectDialog} onOpenChange={setShowDisconnectDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Disconnect WordPress?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will remove the WordPress connection from this agent.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="flex items-center gap-2 py-2">
+            <Switch
+              id="delete-locations"
+              checked={deleteOnDisconnect}
+              onCheckedChange={setDeleteOnDisconnect}
+            />
+            <Label htmlFor="delete-locations" className="text-sm cursor-pointer">
+              Also delete all synced locations ({communityCount || 0} communities)
+            </Label>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDisconnect}
+              disabled={isSaving}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isSaving ? 'Disconnecting...' : 'Disconnect'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
