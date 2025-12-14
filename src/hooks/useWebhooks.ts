@@ -36,7 +36,7 @@ type WebhookLog = {
  * @returns {Function} fetchLogs - Fetch delivery logs
  * @returns {Function} refetch - Manually refresh webhooks list
  */
-export const useWebhooks = (agentId?: string) => {
+export const useWebhooks = (agentId: string) => {
   const [webhooks, setWebhooks] = useState<Webhook[]>([]);
   const [logs, setLogs] = useState<WebhookLog[]>([]);
   const [loading, setLoading] = useState(true);
@@ -52,12 +52,7 @@ export const useWebhooks = (agentId?: string) => {
         .select('*')
         .order('created_at', { ascending: false });
 
-      // Filter by agent_id if provided, otherwise by user_id (for backwards compatibility)
-      if (agentId) {
-        query = query.eq('agent_id', agentId);
-      } else {
-        query = query.eq('user_id', user.id).is('agent_id', null);
-      }
+      query = query.eq('agent_id', agentId);
 
       const { data, error } = await query;
 
@@ -193,12 +188,10 @@ export const useWebhooks = (agentId?: string) => {
     fetchWebhooks();
 
     // Subscribe to real-time updates
-    const filter = agentId 
-      ? `agent_id=eq.${agentId}` 
-      : `user_id=eq.${user?.id}`;
+    const filter = `agent_id=eq.${agentId}`;
     
     const channel = supabase
-      .channel(`webhooks-changes-${agentId || user?.id}`)
+      .channel(`webhooks-changes-${agentId}`)
       .on(
         'postgres_changes',
         {

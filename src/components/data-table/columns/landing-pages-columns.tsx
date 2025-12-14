@@ -1,5 +1,4 @@
 import { ColumnDef } from '@tanstack/react-table';
-import { Badge } from '@/components/ui/badge';
 import { DataTableColumnHeader } from '../DataTableColumnHeader';
 
 export interface LandingPageData {
@@ -7,7 +6,6 @@ export interface LandingPageData {
   visits: number;
   avgDuration: number;
   conversions: number;
-  agentName?: string;
 }
 
 const formatDuration = (ms: number): string => {
@@ -45,9 +43,8 @@ export const landingPagesColumns: ColumnDef<LandingPageData>[] = [
     ),
     filterFn: (row, id, value) => {
       const url = row.original.url.toLowerCase();
-      const agentName = row.original.agentName?.toLowerCase() || '';
       const searchValue = value.toLowerCase();
-      return url.includes(searchValue) || agentName.includes(searchValue);
+      return url.includes(searchValue);
     },
   },
   {
@@ -78,16 +75,5 @@ export const landingPagesColumns: ColumnDef<LandingPageData>[] = [
     cell: ({ row }) => (
       <span className="text-right block">{row.original.conversions}</span>
     ),
-  },
-  {
-    accessorKey: 'agentName',
-    header: 'Agent',
-    cell: ({ row }) =>
-      row.original.agentName ? (
-        <Badge variant="secondary" className="text-xs">
-          {row.original.agentName}
-        </Badge>
-      ) : null,
-    enableSorting: false,
   },
 ];

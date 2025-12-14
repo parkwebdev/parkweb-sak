@@ -157,9 +157,7 @@ export function ConversationsDataTable({
     if (debouncedSearch.trim()) {
       const searchLower = debouncedSearch.toLowerCase();
       filtered = filtered.filter(
-        (row) =>
-          row.agentName.toLowerCase().includes(searchLower) ||
-          (row.leadName?.toLowerCase().includes(searchLower) ?? false)
+        (row) => row.leadName?.toLowerCase().includes(searchLower) ?? false
       );
     }
 
@@ -419,5 +417,3 @@ export function ConversationsDataTable({
   );
 }
 
-// Re-export the type for backward compatibility
-export type { ConversationRow };
