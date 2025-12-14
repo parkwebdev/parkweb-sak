@@ -23,49 +23,51 @@ export const ContentSection = ({ config, onConfigChange }: ContentSectionProps) 
         />
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="placeholder" className="text-sm">Input Placeholder</Label>
-        <Input
-          id="placeholder"
-          value={config.placeholder}
-          onChange={(e) => onConfigChange({ placeholder: e.target.value })}
-          placeholder="Type your message..."
-          className="text-sm"
-        />
+      <div className="grid grid-cols-[1fr_80px] gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="placeholder" className="text-sm">Input Placeholder</Label>
+          <Input
+            id="placeholder"
+            value={config.placeholder}
+            onChange={(e) => onConfigChange({ placeholder: e.target.value })}
+            placeholder="Type your message..."
+            className="text-sm"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="welcome-emoji" className="text-sm">Emoji</Label>
+          <Input
+            id="welcome-emoji"
+            value={config.welcomeEmoji}
+            onChange={(e) => onConfigChange({ welcomeEmoji: e.target.value })}
+            placeholder="👋"
+            maxLength={2}
+            className="text-sm"
+          />
+        </div>
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="welcome-emoji" className="text-sm">Welcome Emoji</Label>
-        <Input
-          id="welcome-emoji"
-          value={config.welcomeEmoji}
-          onChange={(e) => onConfigChange({ welcomeEmoji: e.target.value })}
-          placeholder="👋"
-          maxLength={2}
-          className="text-sm w-20"
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="welcome-title" className="text-sm">Welcome Title</Label>
-        <Input
-          id="welcome-title"
-          value={config.welcomeTitle}
-          onChange={(e) => onConfigChange({ welcomeTitle: e.target.value })}
-          placeholder="Hi"
-          className="text-sm"
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="welcome-subtitle" className="text-sm">Welcome Subtitle</Label>
-        <Input
-          id="welcome-subtitle"
-          value={config.welcomeSubtitle}
-          onChange={(e) => onConfigChange({ welcomeSubtitle: e.target.value })}
-          placeholder="How can we help you today?"
-          className="text-sm"
-        />
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="welcome-title" className="text-sm">Welcome Title</Label>
+          <Input
+            id="welcome-title"
+            value={config.welcomeTitle}
+            onChange={(e) => onConfigChange({ welcomeTitle: e.target.value })}
+            placeholder="Hi"
+            className="text-sm"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="welcome-subtitle" className="text-sm">Welcome Subtitle</Label>
+          <Input
+            id="welcome-subtitle"
+            value={config.welcomeSubtitle}
+            onChange={(e) => onConfigChange({ welcomeSubtitle: e.target.value })}
+            placeholder="How can we help you today?"
+            className="text-sm"
+          />
+        </div>
       </div>
 
       <ToggleSettingRow
