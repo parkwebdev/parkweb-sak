@@ -32,10 +32,11 @@ interface KeyboardShortcut {
 const shortcuts: KeyboardShortcut[] = [
   { key: 'k', ctrlKey: true, description: 'Global Search' },
   { key: 'd', altKey: true, description: 'Go to Dashboard' },
-  { key: 'a', altKey: true, description: 'Go to Agents' },
-  { key: 'c', altKey: true, description: 'Go to Conversations' },
+  { key: 'a', altKey: true, description: 'Go to Ari' },
+  { key: 'c', altKey: true, description: 'Go to Inbox' },
   { key: 'l', altKey: true, description: 'Go to Leads' },
   { key: 'y', altKey: true, description: 'Go to Analytics' },
+  { key: 'p', altKey: true, description: 'Go to Planner' },
   { key: 's', altKey: true, description: 'Go to Settings' },
 ];
 

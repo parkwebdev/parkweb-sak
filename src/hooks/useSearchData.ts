@@ -116,19 +116,19 @@ export const useSearchData = () => {
           description: 'View overview and statistics',
           category: 'Navigation',
           iconName: 'LayoutGrid01',
-          action: () => navigate('/dashboard'),
+          action: () => navigate('/'),
         },
         {
-          id: 'nav-agents',
-          title: 'Agents',
-          description: 'Manage AI agents',
+          id: 'nav-ari',
+          title: 'Ari',
+          description: 'Configure your AI agent',
           category: 'Navigation',
           iconName: 'Cube01',
-          action: () => navigate('/agents'),
+          action: () => navigate('/ari'),
         },
         {
-          id: 'nav-conversations',
-          title: 'Conversations',
+          id: 'nav-inbox',
+          title: 'Inbox',
           description: 'View all conversations',
           category: 'Navigation',
           iconName: 'MessageChatSquare',
@@ -151,6 +151,14 @@ export const useSearchData = () => {
           action: () => navigate('/analytics'),
         },
         {
+          id: 'nav-planner',
+          title: 'Planner',
+          description: 'Manage calendar and events',
+          category: 'Navigation',
+          iconName: 'Calendar',
+          action: () => navigate('/planner'),
+        },
+        {
           id: 'nav-settings',
           title: 'Settings',
           description: 'Manage organization settings',
@@ -161,19 +169,6 @@ export const useSearchData = () => {
       ];
 
       results.push(...navItems);
-
-      // Agents
-      if (agentsRes.data) {
-        const agentResults: SearchResult[] = agentsRes.data.map((agent: Agent) => ({
-          id: `agent-${agent.id}`,
-          title: agent.name,
-          description: agent.description || `${agent.status} • ${agent.model}`,
-          category: 'Agents',
-          iconName: 'Cube01',
-          action: () => navigate(`/agents/${agent.id}`),
-        }));
-        results.push(...agentResults);
-      }
 
       // Conversations
       if (conversationsRes.data) {
@@ -209,10 +204,10 @@ export const useSearchData = () => {
         const articleResults: SearchResult[] = helpArticlesRes.data.map((article: HelpArticle & { help_categories?: { name: string }, agents?: { name: string } }) => ({
           id: `article-${article.id}`,
           title: article.title,
-          description: `${article.help_categories?.name || 'Uncategorized'} • ${article.agents?.name || 'Unknown Agent'}`,
+          description: `${article.help_categories?.name || 'Uncategorized'}`,
           category: 'Help Articles',
           iconName: 'BookOpen01',
-          action: () => navigate(`/agents/${article.agent_id}?tab=content`),
+          action: () => navigate('/ari/help-articles'),
         }));
         results.push(...articleResults);
       }
@@ -222,10 +217,10 @@ export const useSearchData = () => {
         const newsResults: SearchResult[] = newsItemsRes.data.map((news: NewsItem & { agents?: { name: string } }) => ({
           id: `news-${news.id}`,
           title: news.title,
-          description: `${news.is_published ? 'Published' : 'Draft'} • ${news.agents?.name || 'Unknown Agent'}`,
+          description: news.is_published ? 'Published' : 'Draft',
           category: 'News',
           iconName: 'Announcement01',
-          action: () => navigate(`/agents/${news.agent_id}?tab=content`),
+          action: () => navigate('/ari/news'),
         }));
         results.push(...newsResults);
       }
@@ -235,10 +230,10 @@ export const useSearchData = () => {
         const webhookResults: SearchResult[] = webhooksRes.data.map((webhook: Webhook & { agents?: { name: string } }) => ({
           id: `webhook-${webhook.id}`,
           title: webhook.name,
-          description: `${webhook.active ? 'Active' : 'Inactive'} • ${webhook.agents?.name || 'Global'}`,
+          description: webhook.active ? 'Active' : 'Inactive',
           category: 'Webhooks',
           iconName: 'Link01',
-          action: () => webhook.agent_id ? navigate(`/agents/${webhook.agent_id}?tab=tools`) : navigate('/settings?tab=webhooks'),
+          action: () => navigate('/ari/webhooks'),
         }));
         results.push(...webhookResults);
       }
@@ -248,10 +243,10 @@ export const useSearchData = () => {
         const toolResults: SearchResult[] = toolsRes.data.map((tool: AgentTool & { agents?: { name: string } }) => ({
           id: `tool-${tool.id}`,
           title: tool.name,
-          description: `${tool.enabled ? 'Enabled' : 'Disabled'} • ${tool.agents?.name || 'Unknown Agent'}`,
+          description: tool.enabled ? 'Enabled' : 'Disabled',
           category: 'Tools',
           iconName: 'Tool02',
-          action: () => navigate(`/agents/${tool.agent_id}?tab=tools`),
+          action: () => navigate('/ari/custom-tools'),
         }));
         results.push(...toolResults);
       }
@@ -261,10 +256,10 @@ export const useSearchData = () => {
         const knowledgeResults: SearchResult[] = knowledgeSourcesRes.data.map((source: KnowledgeSource & { agents?: { name: string } }) => ({
           id: `knowledge-${source.id}`,
           title: source.source,
-          description: `${source.type.toUpperCase()} • ${source.status} • ${source.agents?.name || 'Unknown Agent'}`,
+          description: `${source.type.toUpperCase()} • ${source.status}`,
           category: 'Knowledge',
           iconName: 'Database01',
-          action: () => navigate(`/agents/${source.agent_id}?tab=knowledge`),
+          action: () => navigate('/ari/knowledge'),
         }));
         results.push(...knowledgeResults);
       }
