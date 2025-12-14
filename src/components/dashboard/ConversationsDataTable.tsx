@@ -20,7 +20,6 @@ import {
   Calendar,
   Check,
   User01,
-  Cube01,
   Trash01,
 } from '@untitledui/icons';
 import {
@@ -109,17 +108,10 @@ export function ConversationsDataTable({
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [dateFilter, setDateFilter] = useState<DateFilter>('all');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
-  const [agentFilter, setAgentFilter] = useState<string>('all');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-
-  // Derive unique agent names from data
-  const uniqueAgents = useMemo(() => {
-    const agents = new Set(data.map((row) => row.agentName));
-    return Array.from(agents).sort();
-  }, [data]);
 
   const dateFilterOptions = [
     { id: 'all' as DateFilter, label: 'All time' },
@@ -161,11 +153,6 @@ export function ConversationsDataTable({
       filtered = filtered.filter((row) => row.status === statusFilter);
     }
 
-    // Apply agent filter
-    if (agentFilter !== 'all') {
-      filtered = filtered.filter((row) => row.agentName === agentFilter);
-    }
-
     // Apply search filter
     if (debouncedSearch.trim()) {
       const searchLower = debouncedSearch.toLowerCase();
@@ -177,7 +164,7 @@ export function ConversationsDataTable({
     }
 
     return filtered;
-  }, [data, debouncedSearch, dateFilter, statusFilter, agentFilter]);
+  }, [data, debouncedSearch, dateFilter, statusFilter]);
 
   const handleDeleteClick = useCallback((id: string) => {
     setDeleteTarget(id);
@@ -225,7 +212,6 @@ export function ConversationsDataTable({
   const activeFilterCount = [
     dateFilter !== 'all',
     statusFilter !== 'all',
-    agentFilter !== 'all',
   ].filter(Boolean).length;
 
   const columns = useMemo(
@@ -346,28 +332,6 @@ export function ConversationsDataTable({
                 >
                   {option.label}
                   {statusFilter === option.id && <Check className="h-4 w-4" />}
-                </DropdownMenuItem>
-              ))}
-              <DropdownMenuSeparator />
-              <DropdownMenuLabel className="flex items-center gap-2">
-                <Cube01 className="h-4 w-4" />
-                Agent
-              </DropdownMenuLabel>
-              <DropdownMenuItem
-                onClick={() => setAgentFilter('all')}
-                className="flex items-center justify-between"
-              >
-                All agents
-                {agentFilter === 'all' && <Check className="h-4 w-4" />}
-              </DropdownMenuItem>
-              {uniqueAgents.map((agent) => (
-                <DropdownMenuItem
-                  key={agent}
-                  onClick={() => setAgentFilter(agent)}
-                  className="flex items-center justify-between"
-                >
-                  <span className="truncate">{agent}</span>
-                  {agentFilter === agent && <Check className="h-4 w-4" />}
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>

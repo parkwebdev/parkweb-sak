@@ -16,7 +16,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { useLocations } from '@/hooks/useLocations';
-import { useAgents } from '@/hooks/useAgents';
+import { useAgent } from '@/hooks/useAgent';
 import { useConnectedAccounts } from '@/hooks/useConnectedAccounts';
 import { CreateLocationDialog } from '@/components/agents/locations/CreateLocationDialog';
 import { LocationDetailsSheet } from '@/components/agents/locations/LocationDetailsSheet';
@@ -44,16 +44,14 @@ interface ActiveFilter {
 
 export const AriLocationsSection: React.FC<AriLocationsSectionProps> = ({ agentId, userId }) => {
   const { locations, loading, createLocation, updateLocation, deleteLocation, refetch } = useLocations(agentId);
-  const { agents, refetch: refetchAgents } = useAgents();
+  const { agent, refetch: refetchAgent } = useAgent();
   const { accounts } = useConnectedAccounts(undefined, agentId);
-  
-  const agent = agents.find(a => a.id === agentId) || null;
 
   // Combined refetch for WordPress sync operations - refreshes both locations and agent config
   const handleWordPressSyncComplete = useCallback(() => {
     refetch();
-    refetchAgents();
-  }, [refetch, refetchAgents]);
+    refetchAgent();
+  }, [refetch, refetchAgent]);
   
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<LocationWithCounts | null>(null);
