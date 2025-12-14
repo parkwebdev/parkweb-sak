@@ -12,6 +12,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useAgents } from '@/hooks/useAgents';
+import { useAuth } from '@/contexts/AuthContext';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useEmbeddedChatConfig } from '@/hooks/useEmbeddedChatConfig';
 import { useHelpArticles } from '@/hooks/useHelpArticles';
@@ -54,24 +55,31 @@ const MIN_DISPLAY_TIME = loadingStates.length * STEP_DURATION;
 
 const AriConfigurator = () => {
   const prefersReducedMotion = useReducedMotion();
+  const { hasSeenAriLoader, setHasSeenAriLoader } = useAuth();
   const { agents, updateAgent, loading: agentsLoading } = useAgents();
   const [activeSection, setActiveSection] = useState<AriSection>('model-behavior');
-  const [showLoader, setShowLoader] = useState(true);
+  
+  // Only show loader if user hasn't seen it this session
+  const [showLoader, setShowLoader] = useState(!hasSeenAriLoader);
   const loadStartTime = useRef(Date.now());
   
   // Handle minimum display time for loader
   useEffect(() => {
+    // Skip if already seen this session
+    if (hasSeenAriLoader) return;
+    
     if (!agentsLoading && showLoader) {
       const elapsed = Date.now() - loadStartTime.current;
       const remainingTime = Math.max(0, MIN_DISPLAY_TIME - elapsed);
       
       const timer = setTimeout(() => {
         setShowLoader(false);
+        setHasSeenAriLoader(true);
       }, remainingTime);
       
       return () => clearTimeout(timer);
     }
-  }, [agentsLoading, showLoader]);
+  }, [agentsLoading, showLoader, hasSeenAriLoader, setHasSeenAriLoader]);
   
   // Auto-select first agent (single-agent model)
   const agent = agents[0] || null;

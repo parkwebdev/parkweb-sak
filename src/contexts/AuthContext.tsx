@@ -26,6 +26,10 @@ interface AuthContextType {
   justSignedIn: boolean;
   /** Clear the justSignedIn flag after loading animation */
   clearJustSignedIn: () => void;
+  /** Flag indicating user has seen the Ari loader this session */
+  hasSeenAriLoader: boolean;
+  /** Set the Ari loader seen flag */
+  setHasSeenAriLoader: (value: boolean) => void;
   /** Sign out the current user */
   signOut: () => Promise<void>;
 }
@@ -70,6 +74,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [hasSeenAriLoader, setHasSeenAriLoader] = useState(false);
   const [justSignedIn, setJustSignedIn] = useState(false);
   
   // Use refs to avoid re-creating subscription and track state without triggering re-renders
@@ -197,6 +202,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     loading,
     justSignedIn,
     clearJustSignedIn,
+    hasSeenAriLoader,
+    setHasSeenAriLoader,
     signOut,
   };
 
