@@ -28,18 +28,18 @@ export const useKeyboardShortcuts = (shortcuts: KeyboardShortcut[] = []) => {
       key: 'd',
       altKey: true,
       description: 'Go to Dashboard',
-      action: () => navigate('/dashboard')
+      action: () => navigate('/')
     },
     {
       key: 'a',
       altKey: true,
-      description: 'Go to Agents',
-      action: () => navigate('/agents')
+      description: 'Go to Ari',
+      action: () => navigate('/ari')
     },
     {
       key: 'c',
       altKey: true,
-      description: 'Go to Conversations',
+      description: 'Go to Inbox',
       action: () => navigate('/conversations')
     },
     {
@@ -53,6 +53,12 @@ export const useKeyboardShortcuts = (shortcuts: KeyboardShortcut[] = []) => {
       altKey: true,
       description: 'Go to Analytics',
       action: () => navigate('/analytics')
+    },
+    {
+      key: 'p',
+      altKey: true,
+      description: 'Go to Planner',
+      action: () => navigate('/planner')
     },
     {
       key: 's',
