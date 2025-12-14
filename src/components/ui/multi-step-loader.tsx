@@ -3,7 +3,6 @@
  * 
  * Animated multi-step loading indicator with checklist visualization.
  * Shows progress through a list of loading states with animated transitions.
- * Features a WebGL LightPillar background effect.
  * @module components/ui/multi-step-loader
  */
 
@@ -12,7 +11,6 @@
 import { cn } from "@/lib/utils";
 import { AnimatePresence, motion } from "motion/react";
 import { useState, useEffect } from "react";
-import { LightPillar } from "./light-pillar";
 
 const CheckIcon = ({ className }: { className?: string }) => {
   return (
@@ -73,21 +71,21 @@ const LoaderCore = ({
           >
             <div>
               {index > value && (
-                <CheckIcon className="text-white/60" />
+                <CheckIcon className="text-muted-foreground" />
               )}
               {index <= value && (
                 <CheckFilled
                   className={cn(
-                    "text-white/60",
-                    value === index && "text-white opacity-100"
+                    "text-muted-foreground",
+                    value === index && "text-primary opacity-100"
                   )}
                 />
               )}
             </div>
             <span
               className={cn(
-                "text-white/60",
-                value === index && "text-white opacity-100"
+                "text-muted-foreground",
+                value === index && "text-foreground opacity-100"
               )}
             >
               {loadingState.text}
@@ -139,25 +137,11 @@ export const MultiStepLoader = ({
           exit={{ opacity: 0 }}
           className="w-full h-full fixed inset-0 z-[100] flex items-center justify-center"
         >
-          {/* WebGL LightPillar - just the glow effect */}
-          <LightPillar
-            topColor="#5227FF"
-            bottomColor="#FF9FFC"
-            intensity={1.0}
-            rotationSpeed={0.3}
-            glowAmount={0.005}
-            pillarWidth={3.0}
-            pillarHeight={0.4}
-            noiseIntensity={0.5}
-            pillarRotation={0}
-            interactive={false}
-            mixBlendMode="screen"
-          />
-          
-          {/* Content overlay */}
-          <div className="h-96 relative z-10">
+          <div className="h-96 relative">
             <LoaderCore value={currentState} loadingStates={loadingStates} />
           </div>
+
+          <div className="bg-gradient-to-t inset-x-0 z-20 bottom-0 bg-background h-full absolute [mask-image:radial-gradient(900px_at_center,transparent_30%,white)]" />
         </motion.div>
       )}
     </AnimatePresence>
