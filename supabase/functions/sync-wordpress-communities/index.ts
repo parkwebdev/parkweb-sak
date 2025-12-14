@@ -322,24 +322,21 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // Handle save config action (just saves URL without syncing)
+    // Handle save config action (saves URL and sync settings without syncing)
     if (action === 'save') {
-      if (!siteUrl) {
-        return new Response(
-          JSON.stringify({ error: 'Site URL is required' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-
+      const { communitySyncInterval, homeSyncInterval } = await req.json().catch(() => ({}));
+      
       const deploymentConfig = agent.deployment_config as Record<string, unknown> | null;
       const wpConfig = deploymentConfig?.wordpress as WordPressConfig | undefined;
       
-      const normalizedUrl = normalizeSiteUrl(siteUrl);
+      const normalizedUrl = siteUrl ? normalizeSiteUrl(siteUrl) : wpConfig?.site_url;
       const updatedConfig = {
         ...deploymentConfig,
         wordpress: {
           ...wpConfig,
-          site_url: normalizedUrl,
+          ...(normalizedUrl && { site_url: normalizedUrl }),
+          ...(communitySyncInterval !== undefined && { community_sync_interval: communitySyncInterval }),
+          ...(homeSyncInterval !== undefined && { home_sync_interval: homeSyncInterval }),
         },
       };
 
@@ -354,8 +351,36 @@ Deno.serve(async (req: Request) => {
       );
     }
 
+    // Handle disconnect action (clears WordPress config)
+    if (action === 'disconnect') {
+      const { deleteLocations } = await req.json().catch(() => ({}));
+      
+      // Optionally delete synced locations
+      if (deleteLocations) {
+        await supabase
+          .from('locations')
+          .delete()
+          .eq('agent_id', agentId)
+          .not('wordpress_community_id', 'is', null);
+      }
+
+      // Clear WordPress config from agent
+      const deploymentConfig = agent.deployment_config as Record<string, unknown> | null;
+      const { wordpress: _, ...restConfig } = deploymentConfig || {};
+      
+      await supabase
+        .from('agents')
+        .update({ deployment_config: restConfig })
+        .eq('id', agentId);
+
+      return new Response(
+        JSON.stringify({ success: true }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     return new Response(
-      JSON.stringify({ error: 'Invalid action. Use "test", "sync", or "save"' }),
+      JSON.stringify({ error: 'Invalid action. Use "test", "sync", "save", or "disconnect"' }),
       { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
@@ -504,19 +529,26 @@ async function syncCommunitiesToLocations(
         updated_at: new Date().toISOString(),
       };
 
-      // Check if location already exists
+      // Check if location already exists (including soft-deleted ones)
       const { data: existing } = await supabase
         .from('locations')
-        .select('id')
+        .select('id, is_active')
         .eq('agent_id', agentId)
         .eq('wordpress_community_id', community.id)
-        .single();
+        .maybeSingle();
+
+      // Skip if location was soft-deleted by user - respect their deletion
+      if (existing && !existing.is_active) {
+        result.skipped++;
+        continue;
+      }
 
       if (existing) {
-        // Update existing location
+        // Update existing active location (don't set is_active to avoid resurrection)
+        const { is_active: _, ...updateData } = locationData;
         const { error: updateError } = await supabase
           .from('locations')
-          .update(locationData)
+          .update(updateData)
           .eq('id', existing.id);
 
         if (updateError) {
