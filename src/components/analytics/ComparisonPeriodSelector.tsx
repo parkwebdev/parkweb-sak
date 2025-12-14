@@ -82,7 +82,7 @@ export const ComparisonPeriodSelector = ({
           value={comparisonType}
           onValueChange={(value) => handleComparisonTypeChange(value as ComparisonType)}
         >
-          <SelectTrigger className="w-[200px]">
+          <SelectTrigger size="sm" className="w-[200px]">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
