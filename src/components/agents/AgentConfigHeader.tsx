@@ -20,8 +20,8 @@ interface AgentConfigHeaderProps {
 
 const statusColors = {
   draft: 'bg-muted text-muted-foreground',
-  active: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-  paused: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
+  active: 'bg-status-active/10 text-status-active-foreground dark:bg-status-active/20 dark:text-status-active',
+  paused: 'bg-status-paused/10 text-status-paused-foreground dark:bg-status-paused/20 dark:text-status-paused',
 };
 
 export const AgentConfigHeader = ({ agent }: AgentConfigHeaderProps) => {

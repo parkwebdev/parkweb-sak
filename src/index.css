@@ -51,6 +51,18 @@
     --info: 221 83% 53%;
     --info-foreground: 210 40% 98%;
     
+    /* Status Badge Colors (semantic) */
+    --status-active: 142 76% 36%;
+    --status-active-foreground: 142 76% 26%;
+    --status-inactive: 0 0% 45%;
+    --status-inactive-foreground: 0 0% 35%;
+    --status-published: 142 76% 36%;
+    --status-published-foreground: 142 76% 26%;
+    --status-draft: 0 0% 45%;
+    --status-draft-foreground: 0 0% 35%;
+    --status-paused: 38 92% 50%;
+    --status-paused-foreground: 38 92% 40%;
+    
     /* Brand Colors (external platforms) */
     --wordpress: 201 100% 37%;
     --facebook: 221 44% 41%;
@@ -100,6 +112,18 @@
     --warning-foreground: 48 96% 5%;
     --info: 217 91% 60%;
     --info-foreground: 222 84% 5%;
+    
+    /* Status Badge Colors (semantic) */
+    --status-active: 142 76% 46%;
+    --status-active-foreground: 142 76% 76%;
+    --status-inactive: 0 0% 55%;
+    --status-inactive-foreground: 0 0% 70%;
+    --status-published: 142 76% 46%;
+    --status-published-foreground: 142 76% 76%;
+    --status-draft: 0 0% 55%;
+    --status-draft-foreground: 0 0% 70%;
+    --status-paused: 38 92% 50%;
+    --status-paused-foreground: 38 92% 75%;
     
     /* Brand Colors (external platforms) */
     --wordpress: 201 100% 37%;
