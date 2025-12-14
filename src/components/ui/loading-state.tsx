@@ -34,11 +34,11 @@ interface LoadingStateProps {
   className?: string;
 }
 
-const paddingBySize = {
-  sm: "py-4",
-  md: "py-8",
-  lg: "py-12",
-  xl: "py-16"
+const sizeStyles = {
+  sm: "min-h-[200px]",
+  md: "min-h-[300px]",
+  lg: "min-h-[400px]",
+  xl: "min-h-[500px]"
 };
 
 export function LoadingState({ 
@@ -53,7 +53,7 @@ export function LoadingState({
     <motion.div 
       className={cn(
         "flex items-center justify-center",
-        fullPage ? "min-h-screen" : paddingBySize[size],
+        fullPage ? "min-h-screen" : sizeStyles[size],
         text && "flex-col gap-2",
         className
       )}
