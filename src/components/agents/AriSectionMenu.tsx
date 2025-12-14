@@ -99,7 +99,7 @@ export const AriSectionMenu: React.FC<AriSectionMenuProps> = ({
   }, {} as Record<string, SectionItem[]>);
 
   return (
-    <nav className="w-[200px] flex-shrink-0 border-r h-full overflow-y-auto py-4 px-3">
+    <nav className="w-[240px] flex-shrink-0 border-r h-full overflow-y-auto py-4 px-3">
       {Object.entries(groupedSections).map(([group, items], groupIndex) => (
         <div key={group} className={cn(groupIndex > 0 && 'mt-4 pt-4 border-t')}>
           <h3 className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground/60 px-2 mb-2">
