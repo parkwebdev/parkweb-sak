@@ -10,7 +10,7 @@
 import React from 'react';
 import { X, Settings04 as Settings, Grid01 as Grid, User03, PieChart01, Calendar } from '@untitledui/icons';
 import AriAgentsIcon from './icons/AriAgentsIcon';
-import { DashboardFilled, InboxOutline, InboxFilled, PlannerFilled, LeadsFilled, AnalyticsFilled } from './icons/SidebarIcons';
+import { DashboardFilled, InboxOutline, InboxFilled, PlannerFilled, LeadsFilled, AnalyticsFilled, SettingsFilled } from './icons/SidebarIcons';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { UserAccountCard } from './UserAccountCard';
@@ -52,7 +52,7 @@ const navigationItems: NavigationItem[] = [
 
 /** Bottom navigation items (settings, etc.) */
 const bottomItems: NavigationItem[] = [
-  { id: 'settings', label: 'Settings', icon: Settings, path: '/settings' }
+  { id: 'settings', label: 'Settings', icon: Settings, activeIcon: SettingsFilled, path: '/settings' }
 ];
 
 /**
@@ -219,7 +219,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
                     >
                       <div className="items-center flex gap-2 my-auto w-full overflow-hidden">
                         <div className="items-center flex my-auto w-[18px] flex-shrink-0">
-                          <item.icon size={14} className="self-stretch my-auto" />
+                          {isActive && item.activeIcon ? (
+                            <item.activeIcon size={14} className="self-stretch my-auto" />
+                          ) : (
+                            <item.icon size={14} className="self-stretch my-auto" />
+                          )}
                         </div>
                         <motion.div
                           className={`text-sm font-normal leading-4 my-auto whitespace-nowrap ${
