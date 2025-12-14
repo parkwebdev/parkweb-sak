@@ -15,12 +15,11 @@
  * @page
  */
 
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { useState, useMemo } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { useTrafficAnalytics } from '@/hooks/useTrafficAnalytics';
 import { useAuth } from '@/hooks/useAuth';
-import { AnalyticsKPIs } from '@/components/analytics/AnalyticsKPIs';
 import { ComparisonView } from '@/components/analytics/ComparisonView';
 import { ConversationChart } from '@/components/analytics/ConversationChart';
 import { LeadConversionChart } from '@/components/analytics/LeadConversionChart';
@@ -33,15 +32,13 @@ import { ActiveVisitorsCard } from '@/components/analytics/ActiveVisitorsCard';
 import { ReportBuilder, ReportConfig } from '@/components/analytics/ReportBuilder';
 import { ScheduledReportsManager } from '@/components/analytics/ScheduledReportsManager';
 import { AnalyticsToolbar } from '@/components/analytics/AnalyticsToolbar';
-import { ConversationsDataTable, ConversationRow } from '@/components/dashboard/ConversationsDataTable';
 import { MetricCardWithChart } from '@/components/dashboard/MetricCardWithChart';
 import { generateCSVReport, generatePDFReport } from '@/lib/report-export';
 import { toast } from '@/lib/toast';
-import { subDays, formatDistanceToNow } from 'date-fns';
+import { subDays } from 'date-fns';
 import { AnimatedList } from '@/components/ui/animated-list';
 import { AnimatedItem } from '@/components/ui/animated-item';
 import { logger } from '@/utils/logger';
-import { supabase } from '@/integrations/supabase/client';
 
 // Add visual variance to sparse data for interesting sparkline curves
 const ensureVisualVariance = (trend: number[]): number[] => {
@@ -77,34 +74,6 @@ const generateChartData = (dailyCounts: number[]): { value: number }[] => {
   return visualTrend.map((count) => ({ value: count }));
 };
 
-interface ConversationWithAgent {
-  id: string;
-  status: 'active' | 'human_takeover' | 'closed';
-  created_at: string;
-  updated_at: string;
-  agent_id: string;
-  agents: { name: string } | null;
-  leads: { name: string | null } | null;
-  messages: { id: string }[];
-}
-
-interface TabConfig {
-  id: string;
-  label: string;
-  count?: number;
-}
-
-const baseTabs: TabConfig[] = [
-  { id: 'all', label: 'All' },
-  { id: 'active', label: 'Active' },
-  { id: 'human_takeover', label: 'Human' },
-  { id: 'closed', label: 'Closed' },
-];
-
-// Format duration from created_at
-const formatDuration = (createdAt: string): string => {
-  return formatDistanceToNow(new Date(createdAt), { addSuffix: false });
-};
 
 const Analytics: React.FC = () => {
   const { user } = useAuth();
@@ -126,10 +95,6 @@ const Analytics: React.FC = () => {
     conversationStatus: 'all',
   });
 
-  // Conversations table state
-  const [selectedConversationTab, setSelectedConversationTab] = useState('all');
-  const [conversations, setConversations] = useState<ConversationWithAgent[]>([]);
-  const [conversationsLoading, setConversationsLoading] = useState(true);
 
   // Report config
   const [reportConfig, setReportConfig] = useState<ReportConfig>({
@@ -173,151 +138,6 @@ const Analytics: React.FC = () => {
     filters
   );
 
-  // Fetch conversations for table
-  const fetchConversations = useCallback(async (showLoading = true) => {
-    if (!user) return;
-
-    if (showLoading) setConversationsLoading(true);
-    try {
-      const { data: conversationsData, error: convError } = await supabase
-        .from('conversations')
-        .select(`
-          id,
-          status,
-          created_at,
-          updated_at,
-          agent_id,
-          agents!inner(name),
-          messages(id)
-        `)
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (convError) throw convError;
-
-      // Fetch leads separately to get names
-      const { data: leadsData } = await supabase
-        .from('leads')
-        .select('id, name, status, conversation_id, created_at')
-        .eq('user_id', user.id);
-
-      // Map leads to conversations
-      const leadsMap = new Map(
-        (leadsData || []).map((lead) => [lead.conversation_id, lead])
-      );
-
-      const conversationsWithLeads = (conversationsData || []).map((conv) => ({
-        ...conv,
-        leads: leadsMap.get(conv.id) || null,
-      })) as ConversationWithAgent[];
-
-      setConversations(conversationsWithLeads);
-    } catch (error) {
-      logger.error('Error fetching conversations:', error);
-    } finally {
-      if (showLoading) setConversationsLoading(false);
-    }
-  }, [user]);
-
-  // Initial conversations fetch
-  useEffect(() => {
-    if (user) {
-      fetchConversations();
-    }
-  }, [user, fetchConversations]);
-
-  // Debounced refetch for conversations
-  const debouncedFetchRef = useRef<NodeJS.Timeout>();
-  
-  const debouncedFetchConversations = useCallback(() => {
-    if (debouncedFetchRef.current) {
-      clearTimeout(debouncedFetchRef.current);
-    }
-    debouncedFetchRef.current = setTimeout(() => {
-      fetchConversations(false);
-    }, 300);
-  }, [fetchConversations]);
-
-  // Cleanup debounce timer
-  useEffect(() => {
-    return () => {
-      if (debouncedFetchRef.current) {
-        clearTimeout(debouncedFetchRef.current);
-      }
-    };
-  }, []);
-
-  // Real-time subscription for conversations table
-  useEffect(() => {
-    if (!user) return;
-
-    const channel = supabase
-      .channel('analytics-conversations')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'conversations',
-        },
-        debouncedFetchConversations
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'messages',
-        },
-        debouncedFetchConversations
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'leads',
-        },
-        debouncedFetchConversations
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user, debouncedFetchConversations]);
-
-  // Filter conversations based on selected tab
-  const filteredConversations = useMemo(() => {
-    if (selectedConversationTab === 'all') return conversations;
-    return conversations.filter((c) => c.status === selectedConversationTab);
-  }, [conversations, selectedConversationTab]);
-
-  // Transform to table rows
-  const tableData: ConversationRow[] = useMemo(() => {
-    const total = filteredConversations.length;
-    return filteredConversations.map((conv) => ({
-      id: conv.id,
-      agentName: conv.agents?.name || 'Unknown Agent',
-      leadName: conv.leads?.name || undefined,
-      messageCount: conv.messages?.length || 0,
-      duration: formatDuration(conv.created_at),
-      percentageOfTotal: total > 0 ? ((conv.messages?.length || 0) / Math.max(1, conversations.reduce((s, c) => s + (c.messages?.length || 0), 0))) * 100 : 0,
-      status: conv.status,
-      createdAt: conv.created_at,
-    }));
-  }, [filteredConversations, conversations]);
-
-  // Update tab counts
-  const tabsWithCounts: TabConfig[] = useMemo(() => {
-    return baseTabs.map((tab) => ({
-      ...tab,
-      count:
-        tab.id === 'all'
-          ? conversations.length
-          : conversations.filter((c) => c.status === tab.id).length,
-    }));
-  }, [conversations]);
 
   // Calculate KPIs
   const totalConversations = conversationStats.reduce((sum, stat) => sum + stat.total, 0);
@@ -446,13 +266,6 @@ const Analytics: React.FC = () => {
     }
   };
 
-  const handleDeleteConversations = async (ids: string[]) => {
-    const { error } = await supabase
-      .from('conversations')
-      .delete()
-      .in('id', ids);
-    if (error) throw error;
-  };
 
   return (
     <main className="flex-1 bg-muted/30 h-screen overflow-auto">
@@ -557,15 +370,6 @@ const Analytics: React.FC = () => {
             </AnimatedList>
           )}
 
-          {/* Conversations Data Table */}
-          <ConversationsDataTable
-            data={tableData}
-            tabs={tabsWithCounts}
-            selectedTab={selectedConversationTab}
-            onTabChange={setSelectedConversationTab}
-            onDelete={handleDeleteConversations}
-            title="Conversations"
-          />
         </TabsContent>
 
         {/* Traffic Tab */}
