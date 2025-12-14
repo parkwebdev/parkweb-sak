@@ -28,6 +28,7 @@ import { SavedIndicator } from '@/components/settings/SavedIndicator';
 import { uploadAnnouncementImage, deleteAnnouncementImage } from '@/lib/announcement-image-upload';
 import { toast } from '@/lib/toast';
 import { Spinner } from '@/components/ui/spinner';
+import { LoadingState } from '@/components/ui/loading-state';
 import { logger } from '@/utils/logger';
 
 interface AriAnnouncementsSectionProps {
@@ -487,7 +488,7 @@ export const AriAnnouncementsSection: React.FC<AriAnnouncementsSectionProps> = (
         <SavedIndicator show={showSaved} message="Order saved" />
 
         {loading ? (
-          <div className="text-center py-8 text-muted-foreground">Loading announcements...</div>
+          <LoadingState text="Loading announcements..." />
         ) : announcements.length === 0 ? (
           <EmptyState
             icon={<Image03 className="h-5 w-5 text-muted-foreground/50" />}
