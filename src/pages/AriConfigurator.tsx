@@ -10,7 +10,9 @@
  */
 
 import { useState, useEffect } from 'react';
+import { AnimatePresence, motion } from 'motion/react';
 import { useAgents } from '@/hooks/useAgents';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useEmbeddedChatConfig } from '@/hooks/useEmbeddedChatConfig';
 import { useHelpArticles } from '@/hooks/useHelpArticles';
 import { useAnnouncements } from '@/hooks/useAnnouncements';
@@ -41,6 +43,7 @@ import { AriInstallationSection } from '@/components/agents/sections/AriInstalla
 type Agent = Tables<'agents'>;
 
 const AriConfigurator = () => {
+  const prefersReducedMotion = useReducedMotion();
   const { agents, updateAgent, loading: agentsLoading } = useAgents();
   const [activeSection, setActiveSection] = useState<AriSection>('model-behavior');
   
@@ -215,7 +218,17 @@ const AriConfigurator = () => {
       {/* Center: Content Area */}
       <main className="flex-1 overflow-y-auto p-6">
         <div className="max-w-3xl">
-          {renderSectionContent()}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeSection}
+              initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={prefersReducedMotion ? undefined : { opacity: 0, y: -8 }}
+              transition={{ duration: 0.2, ease: 'easeOut' }}
+            >
+              {renderSectionContent()}
+            </motion.div>
+          </AnimatePresence>
         </div>
       </main>
 

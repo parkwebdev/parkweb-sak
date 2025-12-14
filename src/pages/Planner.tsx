@@ -221,14 +221,14 @@ const Planner: React.FC = () => {
         title="Planner"
         description="Manage your property showings and bookings"
       >
-        <DropdownMenu>
+      <DropdownMenu modal={false}>
           <DropdownMenuTrigger asChild>
             <Button variant="outline">
               Connect Calendar
               <ChevronDown size={16} className="ml-2" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
+          <DropdownMenuContent align="end" className="z-50">
             <DropdownMenuItem className="gap-2">
               <GoogleCalendarLogo className="w-4 h-4" />
               Google Calendar

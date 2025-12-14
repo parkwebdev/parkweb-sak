@@ -55,11 +55,13 @@ export const createLocationsColumns = ({
       />
     ),
     cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label={`Select ${row.original.name}`}
-      />
+      <div onClick={(e) => e.stopPropagation()}>
+        <Checkbox
+          checked={row.getIsSelected()}
+          onCheckedChange={(value) => row.toggleSelected(!!value)}
+          aria-label={`Select ${row.original.name}`}
+        />
+      </div>
     ),
     enableSorting: false,
     enableHiding: false,
