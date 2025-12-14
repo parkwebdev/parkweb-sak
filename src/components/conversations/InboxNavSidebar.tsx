@@ -6,7 +6,7 @@
  */
 
 import AriAgentsIcon from '@/components/icons/AriAgentsIcon';
-import { CheckCircle, Globe01 } from '@untitledui/icons';
+import { CheckCircle, Globe01, Inbox01 } from '@untitledui/icons';
 import { cn } from '@/lib/utils';
 
 // Social channel logos (matching AriIntegrationsSection)
@@ -29,7 +29,7 @@ const XLogo = () => (
 );
 
 export type InboxFilter = {
-  type: 'all' | 'status' | 'channel';
+  type: 'all' | 'status' | 'channel' | 'yours';
   value?: string;
   label: string;
 };
@@ -39,6 +39,7 @@ interface InboxNavSidebarProps {
   onFilterChange: (filter: InboxFilter) => void;
   counts: {
     all: number;
+    yours: number;
     resolved: number;
     widget: number;
     facebook: number;
@@ -98,6 +99,13 @@ export function InboxNavSidebar({ activeFilter, onFilterChange, counts }: InboxN
             count={counts.all}
             isActive={isActive('all')}
             onClick={() => onFilterChange({ type: 'all', label: 'All Conversations' })}
+          />
+          <NavItem
+            icon={<Inbox01 size={16} />}
+            label="Your Inbox"
+            count={counts.yours}
+            isActive={isActive('yours')}
+            onClick={() => onFilterChange({ type: 'yours', label: 'Your Inbox' })}
           />
           <NavItem
             icon={<CheckCircle size={16} />}
