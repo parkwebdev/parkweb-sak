@@ -250,7 +250,6 @@ export const AriLocationsSection: React.FC<AriLocationsSectionProps> = ({ agentI
         description="Manage communities, connect calendars, and configure business hours"
         extra={
           <Button size="sm" onClick={() => setCreateDialogOpen(true)}>
-            <Plus size={14} className="mr-1.5" />
             Add Location
           </Button>
         }
@@ -287,7 +286,6 @@ export const AriLocationsSection: React.FC<AriLocationsSectionProps> = ({ agentI
             description="Add locations to organize your business"
             action={
               <Button onClick={() => setCreateDialogOpen(true)} size="sm">
-                <Plus size={14} className="mr-1.5" />
                 Add Location
               </Button>
             }

@@ -274,7 +274,6 @@ export const AriCustomToolsSection: React.FC<AriCustomToolsSectionProps> = ({ ag
         {/* Action Buttons */}
         <div className="flex items-center gap-2">
           <Button onClick={() => setShowCreateDialog(true)} size="sm">
-            <Plus size={14} className="mr-1.5" />
             Add Tool
           </Button>
           <Button variant="outline" size="sm" onClick={() => setShowUseCasesModal(true)}>

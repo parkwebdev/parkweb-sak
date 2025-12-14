@@ -478,7 +478,6 @@ export const AriAnnouncementsSection: React.FC<AriAnnouncementsSectionProps> = (
         description="Promotional banners displayed at the top of your chat widget"
         extra={
           <Button onClick={() => setIsCreateOpen(true)} size="sm">
-            <Plus className="h-4 w-4 mr-2" />
             Add Announcement
           </Button>
         }
