@@ -19,11 +19,12 @@ import { Badge } from '@/components/ui/badge';
 
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { SearchMd, MessageChatSquare, User01, Send01, FaceSmile, Globe01, Check, CheckCircle, XCircle, Download01, Attachment01, XClose } from '@untitledui/icons';
+import { SearchMd, MessageChatSquare, User01, Send01, FaceSmile, Globe01, Check, CheckCircle, XCircle, Download01, Attachment01, XClose, ChevronLeft, ChevronRight } from '@untitledui/icons';
+import AriAgentsIcon from '@/components/icons/AriAgentsIcon';
 import { LinkPreviews } from '@/components/chat/LinkPreviews';
 import { FileTypeIcon } from '@/components/chat/FileTypeIcons';
 import { formatFileSize, validateFiles } from '@/lib/file-validation';
-import { EmptyState } from '@/components/ui/empty-state';
+
 import { useConversations } from '@/hooks/useConversations';
 import { useAgent } from '@/hooks/useAgent';
 import { ConversationMetadataPanel } from '@/components/conversations/ConversationMetadataPanel';
@@ -116,11 +117,18 @@ const Conversations: React.FC = () => {
     const saved = localStorage.getItem('conversations_metadata_collapsed');
     return saved === 'true';
   });
+  const [conversationsCollapsed, setConversationsCollapsed] = useState(() => {
+    const saved = localStorage.getItem('inbox_conversations_collapsed');
+    return saved === 'true';
+  });
 
-  // Persist metadata panel collapsed state
+  // Persist collapsed states
   useEffect(() => {
     localStorage.setItem('conversations_metadata_collapsed', String(metadataPanelCollapsed));
   }, [metadataPanelCollapsed]);
+  useEffect(() => {
+    localStorage.setItem('inbox_conversations_collapsed', String(conversationsCollapsed));
+  }, [conversationsCollapsed]);
   const messagesScrollRef = useRef<HTMLDivElement>(null);
   const messageTextareaRef = useRef<HTMLTextAreaElement>(null);
   const isInitialLoadRef = useRef(true);
@@ -552,93 +560,124 @@ const Conversations: React.FC = () => {
   return (
     <div className="h-full flex min-h-0">
       {/* Conversations List Sidebar */}
-      <div className="hidden lg:flex lg:w-80 xl:w-96 border-r flex-col bg-background min-h-0">
+      <div 
+        className={`hidden lg:flex border-r flex-col bg-background min-h-0 transition-all duration-200 ease-in-out overflow-x-hidden ${
+          conversationsCollapsed ? 'w-12' : 'lg:w-80 xl:w-96'
+        }`}
+      >
         {/* Header */}
-        <div className="p-4 border-b shrink-0">
-          <h2 className="text-lg font-semibold text-foreground mb-3">Conversations</h2>
-          <div className="relative">
-            <SearchMd className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search conversations..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 bg-muted/50 border-0"
-            />
-          </div>
+        <div className={`border-b shrink-0 flex items-center justify-between ${conversationsCollapsed ? 'p-2' : 'p-4'}`}>
+          {!conversationsCollapsed && (
+            <h2 className="text-lg font-semibold text-foreground">Conversations</h2>
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            className={`h-7 w-7 p-0 hover:w-9 transition-all ${conversationsCollapsed ? 'mx-auto' : ''}`}
+            onClick={() => setConversationsCollapsed(!conversationsCollapsed)}
+            aria-label={conversationsCollapsed ? 'Expand conversations' : 'Collapse conversations'}
+          >
+            {conversationsCollapsed ? (
+              <ChevronRight className="h-4 w-4" />
+            ) : (
+              <ChevronLeft className="h-4 w-4" />
+            )}
+          </Button>
         </div>
 
-        {/* Conversation List */}
-        <div className="flex-1 min-h-0 overflow-y-auto">
-            {loading ? (
-              <div className="p-4 text-center text-sm text-muted-foreground">
-                Loading...
-              </div>
-            ) : filteredConversations.length === 0 ? (
-              <EmptyState
-                icon={<MessageChatSquare className="h-5 w-5 text-muted-foreground/50" />}
-                title="No conversations yet"
-                className="m-4"
+        {/* Content - hidden when collapsed via opacity */}
+        <div 
+          className={`flex-1 min-h-0 flex flex-col transition-opacity duration-200 ${
+            conversationsCollapsed ? 'opacity-0 invisible' : 'opacity-100 visible'
+          }`}
+        >
+          {/* Search */}
+          <div className="p-4 shrink-0">
+            <div className="relative">
+              <SearchMd className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search conversations..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 bg-muted/50 border-0"
               />
-            ) : (
-              <div>
-                    {filteredConversations.map((conv) => {
-                      const isSelected = selectedConversation?.id === conv.id;
-                      const metadata = (conv.metadata || {}) as ConversationMetadata;
-                  const priority = metadata.priority;
-                  
-                  return (
-                    <button
-                      key={conv.id}
-                      onClick={() => setSelectedConversation(conv)}
-                      className={`w-full text-left p-4 hover:bg-accent/30 transition-colors border-b ${
-                        isSelected ? 'bg-accent/50' : ''
-                      }`}
-                    >
-                      <div className="flex items-start gap-3">
-                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 relative">
-                          <User01 size={16} className="text-primary" />
-                          {/* Unread messages indicator */}
-                          {getUnreadCount(conv) > 0 && !getVisitorPresence(conv) && (
-                            <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-destructive rounded-full border-2 border-background" />
-                          )}
-                          {/* Active visitor indicator */}
-                          {getVisitorPresence(conv) && (
-                            <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-success rounded-full border-2 border-background" />
-                          )}
-                          {getPriorityIndicator(priority) && !getVisitorPresence(conv) && !getUnreadCount(conv) && (
-                            <div className="absolute -top-0.5 -right-0.5">
-                              {getPriorityIndicator(priority)}
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-sm truncate text-foreground mb-0.5">
-                            {metadata.lead_name || metadata.lead_email || 'Anonymous'}
-                          </p>
-                          <p className="text-xs text-muted-foreground truncate mb-1">
-                            via {conv.agents?.name || 'Unknown'}
-                          </p>
-                          {metadata.last_message_preview && (
-                            <p className="text-xs text-muted-foreground/70 truncate mb-1.5">
-                              {metadata.last_message_preview}
-                              {metadata.last_message_preview.length >= 60 && '...'}
+            </div>
+          </div>
+
+          {/* Conversation List */}
+          <div className="flex-1 min-h-0 overflow-y-auto">
+              {loading ? (
+                <div className="p-4 text-center text-sm text-muted-foreground">
+                  Loading...
+                </div>
+              ) : filteredConversations.length === 0 ? (
+                <div className="flex-1 flex items-center justify-center p-8">
+                  <div className="text-center">
+                    <AriAgentsIcon className="h-12 w-12 mx-auto text-muted-foreground/40 mb-3" />
+                    <p className="text-sm font-medium text-muted-foreground">No conversations yet</p>
+                  </div>
+                </div>
+              ) : (
+                <div>
+                      {filteredConversations.map((conv) => {
+                        const isSelected = selectedConversation?.id === conv.id;
+                        const metadata = (conv.metadata || {}) as ConversationMetadata;
+                    const priority = metadata.priority;
+                    
+                    return (
+                      <button
+                        key={conv.id}
+                        onClick={() => setSelectedConversation(conv)}
+                        className={`w-full text-left p-4 hover:bg-accent/30 transition-colors border-b ${
+                          isSelected ? 'bg-accent/50' : ''
+                        }`}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 relative">
+                            <User01 size={16} className="text-primary" />
+                            {/* Unread messages indicator */}
+                            {getUnreadCount(conv) > 0 && !getVisitorPresence(conv) && (
+                              <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-destructive rounded-full border-2 border-background" />
+                            )}
+                            {/* Active visitor indicator */}
+                            {getVisitorPresence(conv) && (
+                              <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-success rounded-full border-2 border-background" />
+                            )}
+                            {getPriorityIndicator(priority) && !getVisitorPresence(conv) && !getUnreadCount(conv) && (
+                              <div className="absolute -top-0.5 -right-0.5">
+                                {getPriorityIndicator(priority)}
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm truncate text-foreground mb-0.5">
+                              {metadata.lead_name || metadata.lead_email || 'Anonymous'}
                             </p>
-                          )}
-                          <div className="flex items-center gap-1.5">
-                            <Badge variant="outline" size="sm" className={`${getStatusColor(conv.status)} px-2 py-0.5`}>
-                              {conv.status === 'human_takeover' ? 'Human' : conv.status === 'active' ? 'AI' : conv.status}
-                            </Badge>
-                            <span className="text-2xs text-muted-foreground">
-                              • {formatDistanceToNow(new Date(conv.updated_at), { addSuffix: true })}
-                            </span>
+                            <p className="text-xs text-muted-foreground truncate mb-1">
+                              via {conv.agents?.name || 'Ari'}
+                            </p>
+                            {metadata.last_message_preview && (
+                              <p className="text-xs text-muted-foreground/70 truncate mb-1.5">
+                                {metadata.last_message_preview}
+                                {metadata.last_message_preview.length >= 60 && '...'}
+                              </p>
+                            )}
+                            <div className="flex items-center gap-1.5">
+                              <Badge variant="outline" size="sm" className={`${getStatusColor(conv.status)} px-2 py-0.5`}>
+                                {conv.status === 'human_takeover' ? 'Human' : conv.status === 'active' ? 'AI' : conv.status}
+                              </Badge>
+                              <span className="text-2xs text-muted-foreground">
+                                • {formatDistanceToNow(new Date(conv.updated_at), { addSuffix: true })}
+                              </span>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+          </div>
         </div>
       </div>
 
@@ -699,10 +738,12 @@ const Conversations: React.FC = () => {
                       Loading messages...
                     </div>
                   ) : messages.length === 0 ? (
-                    <EmptyState
-                      icon={<MessageChatSquare className="h-5 w-5 text-muted-foreground/50" />}
-                      title="No messages yet"
-                    />
+                    <div className="flex-1 flex items-center justify-center py-12">
+                      <div className="text-center">
+                        <AriAgentsIcon className="h-12 w-12 mx-auto text-muted-foreground/40 mb-3" />
+                        <p className="text-sm font-medium text-muted-foreground">No messages yet</p>
+                      </div>
+                    </div>
                   ) : (
                   <div className="space-y-3 max-w-4xl mx-auto">
                     {messages.map((message, msgIndex) => {
@@ -1122,8 +1163,11 @@ const Conversations: React.FC = () => {
         ) : (
           <div className="flex-1 flex items-center justify-center bg-muted/20 min-h-0">
             <div className="text-center">
-              <MessageChatSquare className="h-20 w-20 mx-auto text-muted-foreground/50 mb-4" />
-              <p className="text-sm text-muted-foreground">
+              <AriAgentsIcon className="h-12 w-12 mx-auto text-muted-foreground/40 mb-4" />
+              <p className="text-sm font-medium text-muted-foreground">
+                No conversation selected
+              </p>
+              <p className="text-xs text-muted-foreground/70 mt-1">
                 Select a conversation to view messages
               </p>
             </div>
