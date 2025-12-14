@@ -10,7 +10,7 @@
 import React from 'react';
 import { X, Settings04 as Settings, Grid01 as Grid, User03, PieChart01, Calendar } from '@untitledui/icons';
 import AriAgentsIcon from './icons/AriAgentsIcon';
-import { DashboardFilled, InboxOutline, InboxFilled } from './icons/SidebarIcons';
+import { DashboardFilled, InboxOutline, InboxFilled, PlannerFilled, LeadsFilled, AnalyticsFilled } from './icons/SidebarIcons';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { UserAccountCard } from './UserAccountCard';
@@ -45,9 +45,9 @@ const navigationItems: NavigationItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: Grid, activeIcon: DashboardFilled, path: '/' },
   { id: 'ari', label: 'Ari', icon: AriAgentsIcon, path: '/ari' },
   { id: 'conversations', label: 'Inbox', icon: InboxOutline, activeIcon: InboxFilled, path: '/conversations' },
-  { id: 'planner', label: 'Planner', icon: Calendar, path: '/planner' },
-  { id: 'leads', label: 'Leads', icon: User03, path: '/leads' },
-  { id: 'analytics', label: 'Analytics', icon: PieChart01, path: '/analytics' }
+  { id: 'planner', label: 'Planner', icon: Calendar, activeIcon: PlannerFilled, path: '/planner' },
+  { id: 'leads', label: 'Leads', icon: User03, activeIcon: LeadsFilled, path: '/leads' },
+  { id: 'analytics', label: 'Analytics', icon: PieChart01, activeIcon: AnalyticsFilled, path: '/analytics' }
 ];
 
 /** Bottom navigation items (settings, etc.) */
