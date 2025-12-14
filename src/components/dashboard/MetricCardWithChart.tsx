@@ -57,7 +57,7 @@ export function MetricCardWithChart({
   return (
     <motion.div 
       className={cn(
-        "flex flex-col overflow-hidden rounded-xl bg-muted/50 shadow-sm border border-border",
+        "flex flex-col justify-between overflow-hidden rounded-xl bg-muted/50 shadow-sm border border-border",
         className
       )}
       variants={prefersReducedMotion ? reducedVariants : cardVariants}
@@ -66,7 +66,7 @@ export function MetricCardWithChart({
       whileHover={prefersReducedMotion ? undefined : { y: -2, transition: springs.micro }}
     >
       {/* Subtitle in outer wrapper */}
-      <div className="mb-0.5 px-4 pt-3 pb-2 md:px-5">
+      <div className="px-4 pt-3 pb-2 md:px-5">
         <h3 className="text-sm font-semibold text-foreground">{subtitle}</h3>
       </div>
 
