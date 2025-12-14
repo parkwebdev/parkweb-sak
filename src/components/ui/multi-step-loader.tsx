@@ -58,16 +58,28 @@ const LoaderCore = ({
   return (
     <div className="flex relative justify-start max-w-xl mx-auto flex-col mt-40">
       {loadingStates.map((loadingState, index) => {
-        const distance = Math.abs(index - value);
-        const opacity = Math.max(1 - distance * 0.2, 0);
+        const isCompleted = index < value;
+        const isCurrent = index === value;
+        
+        // Current step is fully visible, completed steps fade + blur, future steps hidden
+        const targetOpacity = isCurrent ? 1 : isCompleted ? 0 : 0;
+        const targetBlur = isCompleted ? 'blur(8px)' : 'blur(0px)';
 
         return (
           <motion.div
             key={index}
             className={cn("text-left flex gap-2 mb-4")}
-            initial={{ opacity: 0, y: -(value * 40) }}
-            animate={{ opacity: opacity, y: -(value * 40) }}
-            transition={{ duration: 0.5 }}
+            initial={{ opacity: 0, y: -(value * 40), filter: 'blur(0px)' }}
+            animate={{ 
+              opacity: targetOpacity, 
+              y: -(value * 40),
+              filter: targetBlur
+            }}
+            transition={{ 
+              duration: 0.5,
+              filter: { duration: 0.3 },
+              opacity: { duration: 0.5, delay: isCompleted ? 0.1 : 0 }
+            }}
           >
             <div>
               {index > value && (
