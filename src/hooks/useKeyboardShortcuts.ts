@@ -79,8 +79,11 @@ export const useKeyboardShortcuts = (shortcuts: KeyboardShortcut[] = []) => {
 
     if (isInputField) return;
 
+    // Use event.code for physical key detection (fixes Mac Option key producing special chars)
+    const pressedKey = event.code.replace('Key', '').toLowerCase();
+    
     const shortcut = allShortcuts.find(s => 
-      s.key === event.key.toLowerCase() &&
+      s.key === pressedKey &&
       !!s.ctrlKey === event.ctrlKey &&
       !!s.altKey === event.altKey &&
       !!s.shiftKey === event.shiftKey
