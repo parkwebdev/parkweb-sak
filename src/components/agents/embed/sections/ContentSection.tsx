@@ -23,28 +23,16 @@ export const ContentSection = ({ config, onConfigChange }: ContentSectionProps) 
         />
       </div>
 
-      <div className="grid grid-cols-[1fr_80px] gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="placeholder" className="text-sm">Input Placeholder</Label>
-          <Input
-            id="placeholder"
-            value={config.placeholder}
-            onChange={(e) => onConfigChange({ placeholder: e.target.value })}
-            placeholder="Type your message..."
-            className="text-sm"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="welcome-emoji" className="text-sm">Emoji</Label>
-          <Input
-            id="welcome-emoji"
-            value={config.welcomeEmoji}
-            onChange={(e) => onConfigChange({ welcomeEmoji: e.target.value })}
-            placeholder="👋"
-            maxLength={2}
-            className="text-sm"
-          />
-        </div>
+      <div className="space-y-2">
+        <Label htmlFor="welcome-emoji" className="text-sm">Emoji</Label>
+        <Input
+          id="welcome-emoji"
+          value={config.welcomeEmoji}
+          onChange={(e) => onConfigChange({ welcomeEmoji: e.target.value })}
+          placeholder="👋"
+          maxLength={2}
+          className="text-sm w-20"
+        />
       </div>
 
       <div className="grid grid-cols-2 gap-4">

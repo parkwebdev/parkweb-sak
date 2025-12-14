@@ -30,8 +30,6 @@ interface MessageInputProps {
   onMessageChange: (value: string) => void;
   /** Send button click handler */
   onSend: () => void;
-  /** Input placeholder text */
-  placeholder: string;
   /** Whether input is disabled */
   disabled: boolean;
   /** Primary brand color for send button */
@@ -69,7 +67,6 @@ export const MessageInput = ({
   messageInput,
   onMessageChange,
   onSend,
-  placeholder,
   disabled,
   primaryColor,
   enableFileAttachments,
@@ -180,7 +177,7 @@ export const MessageInput = ({
                 value={messageInput}
                 onChange={(e) => onMessageChange(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder={placeholder}
+                placeholder="Start typing..."
                 disabled={disabled}
                 rows={1}
                 className={`min-h-[36px] max-h-[120px] py-2 pr-10 text-sm placeholder:text-xs resize-none ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}

@@ -59,9 +59,6 @@ export interface WidgetConfig {
   showTeamAvatars: boolean;
   teamAvatarUrls: string[];
   
-  // Messages
-  placeholder: string;
-  
   // Widget button
   animation: 'none' | 'pulse' | 'bounce' | 'fade' | 'ring';
   buttonAnimation?: 'none' | 'pulse' | 'bounce' | 'fade' | 'ring';

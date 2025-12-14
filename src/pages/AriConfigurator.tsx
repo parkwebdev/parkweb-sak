@@ -121,7 +121,6 @@ const AriConfigurator = () => {
     welcomeEmoji: embedConfig.welcomeEmoji,
     showTeamAvatars: false,
     teamAvatarUrls: [],
-    placeholder: embedConfig.placeholder,
     animation: embedConfig.animation,
     buttonAnimation: embedConfig.animation,
     enableHomeTab: true,
