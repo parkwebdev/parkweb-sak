@@ -85,7 +85,7 @@ export const ComparisonPeriodSelector = ({
           <SelectTrigger size="sm" className="w-[200px]">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent className="space-y-0.5">
+          <SelectContent>
             <SelectItem value="previous">Previous period</SelectItem>
             <SelectItem value="last-month">Same period last month</SelectItem>
             <SelectItem value="last-year">Same period last year</SelectItem>
