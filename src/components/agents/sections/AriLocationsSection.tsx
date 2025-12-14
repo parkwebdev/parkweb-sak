@@ -40,10 +40,16 @@ interface ActiveFilter {
 
 export const AriLocationsSection: React.FC<AriLocationsSectionProps> = ({ agentId, userId }) => {
   const { locations, loading, createLocation, updateLocation, deleteLocation, refetch } = useLocations(agentId);
-  const { agents } = useAgents();
+  const { agents, refetch: refetchAgents } = useAgents();
   const { accounts } = useConnectedAccounts(undefined, agentId);
   
   const agent = agents.find(a => a.id === agentId) || null;
+
+  // Combined refetch for WordPress sync operations - refreshes both locations and agent config
+  const handleWordPressSyncComplete = useCallback(() => {
+    refetch();
+    refetchAgents();
+  }, [refetch, refetchAgents]);
   
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<LocationWithCounts | null>(null);
@@ -257,7 +263,7 @@ export const AriLocationsSection: React.FC<AriLocationsSectionProps> = ({ agentI
 
       <div className="space-y-4">
         {/* WordPress Integration - Collapsible */}
-        <WordPressIntegrationSection agent={agent} onSyncComplete={refetch} />
+        <WordPressIntegrationSection agent={agent} onSyncComplete={handleWordPressSyncComplete} />
 
         {/* Bulk Actions Bar */}
         {selectedCount > 0 && (
