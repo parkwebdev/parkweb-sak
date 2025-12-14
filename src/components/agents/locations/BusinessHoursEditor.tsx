@@ -11,7 +11,9 @@ import React from 'react';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
 import { AnimatedItem } from '@/components/ui/animated-item';
+import { Copy07 } from '@untitledui/icons';
 import type { BusinessHours, DayHours } from '@/types/locations';
 
 const DAYS = [
@@ -78,13 +80,46 @@ export const BusinessHoursEditor: React.FC<BusinessHoursEditorProps> = ({
     });
   };
 
+  const copyToWeekdays = () => {
+    const monday = getDay('monday');
+    if (!monday.isOpen) return;
+    
+    const weekdays = ['tuesday', 'wednesday', 'thursday', 'friday'];
+    const updated = { ...value };
+    weekdays.forEach(day => {
+      updated[day as keyof BusinessHours] = {
+        isOpen: monday.isOpen,
+        open: monday.open,
+        close: monday.close,
+      };
+    });
+    onChange(updated);
+  };
+
+  const mondayHours = getDay('monday');
+  const canCopyToWeekdays = mondayHours.isOpen;
+
   return (
     <div className="space-y-1">
+      {canCopyToWeekdays && (
+        <div className="pb-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={copyToWeekdays}
+            className="text-xs"
+          >
+            <Copy07 size={14} className="mr-1.5" />
+            Copy Monday to weekdays
+          </Button>
+        </div>
+      )}
       {DAYS.map(({ key, label }, index) => {
         const day = getDay(key);
         return (
           <AnimatedItem key={key} motionProps={{ transition: { delay: index * 0.03 } }}>
-            <div className="flex items-center justify-between py-3 border-b border-border last:border-0">
+            <div className="flex items-center justify-between py-2 border-b border-border last:border-0">
               {/* Left side: Label and hours summary */}
               <div className="flex flex-col gap-0.5">
                 <Label className="text-sm font-medium">{label}</Label>
