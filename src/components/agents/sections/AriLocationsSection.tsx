@@ -9,8 +9,12 @@ import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useReactTable, getCoreRowModel, getSortedRowModel, getFilteredRowModel, type SortingState, type RowSelectionState } from '@tanstack/react-table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Trash01, XClose, X } from '@untitledui/icons';
+import { Trash01, XClose, X, FilterLines } from '@untitledui/icons';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
 import { useLocations } from '@/hooks/useLocations';
 import { useAgents } from '@/hooks/useAgents';
 import { useConnectedAccounts } from '@/hooks/useConnectedAccounts';
@@ -303,39 +307,94 @@ export const AriLocationsSection: React.FC<AriLocationsSectionProps> = ({ agentI
               searchPlaceholder="Search locations..."
               globalFilter
             >
-              <Select value={stateFilter} onValueChange={setStateFilter}>
-                <SelectTrigger className="w-[120px] h-8">
-                  <SelectValue placeholder="State" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All States</SelectItem>
-                  {uniqueStates.map(state => (
-                    <SelectItem key={state} value={state}>{state}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-8 gap-1.5">
+                    <FilterLines size={16} />
+                    Filters
+                    {activeFilters.length > 0 && (
+                      <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
+                        {activeFilters.length}
+                      </Badge>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-72 p-4" align="end">
+                  <div className="space-y-4">
+                    {/* State Filter */}
+                    <div className="space-y-2">
+                      <Label className="text-xs font-medium text-muted-foreground uppercase">State</Label>
+                      <Select value={stateFilter} onValueChange={setStateFilter}>
+                        <SelectTrigger className="w-full h-9">
+                          <SelectValue placeholder="All States" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All States</SelectItem>
+                          {uniqueStates.map(state => (
+                            <SelectItem key={state} value={state}>{state}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-              <Select value={calendarFilter} onValueChange={setCalendarFilter}>
-                <SelectTrigger className="w-[130px] h-8">
-                  <SelectValue placeholder="Calendars" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Calendars</SelectItem>
-                  <SelectItem value="connected">Connected</SelectItem>
-                  <SelectItem value="none">No Calendars</SelectItem>
-                </SelectContent>
-              </Select>
-              
-              <Select value={wordpressFilter} onValueChange={setWordpressFilter}>
-                <SelectTrigger className="w-[130px] h-8">
-                  <SelectValue placeholder="WordPress" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All WordPress</SelectItem>
-                  <SelectItem value="connected">Connected</SelectItem>
-                  <SelectItem value="none">Not Connected</SelectItem>
-                </SelectContent>
-              </Select>
+                    <Separator />
+
+                    {/* Calendar Filter */}
+                    <div className="space-y-2">
+                      <Label className="text-xs font-medium text-muted-foreground uppercase">Calendar</Label>
+                      <RadioGroup value={calendarFilter} onValueChange={setCalendarFilter} className="gap-2">
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="all" id="cal-all" />
+                          <Label htmlFor="cal-all" className="text-sm font-normal cursor-pointer">All</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="connected" id="cal-connected" />
+                          <Label htmlFor="cal-connected" className="text-sm font-normal cursor-pointer">Connected</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="none" id="cal-none" />
+                          <Label htmlFor="cal-none" className="text-sm font-normal cursor-pointer">No Calendar</Label>
+                        </div>
+                      </RadioGroup>
+                    </div>
+
+                    <Separator />
+
+                    {/* WordPress Filter */}
+                    <div className="space-y-2">
+                      <Label className="text-xs font-medium text-muted-foreground uppercase">WordPress</Label>
+                      <RadioGroup value={wordpressFilter} onValueChange={setWordpressFilter} className="gap-2">
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="all" id="wp-all" />
+                          <Label htmlFor="wp-all" className="text-sm font-normal cursor-pointer">All</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="connected" id="wp-connected" />
+                          <Label htmlFor="wp-connected" className="text-sm font-normal cursor-pointer">Connected</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="none" id="wp-none" />
+                          <Label htmlFor="wp-none" className="text-sm font-normal cursor-pointer">Not Connected</Label>
+                        </div>
+                      </RadioGroup>
+                    </div>
+
+                    {activeFilters.length > 0 && (
+                      <>
+                        <Separator />
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="w-full text-muted-foreground" 
+                          onClick={clearAllFilters}
+                        >
+                          Clear all filters
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </PopoverContent>
+              </Popover>
             </DataTableToolbar>
 
             {/* Active Filter Chips */}
