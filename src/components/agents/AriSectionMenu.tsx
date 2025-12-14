@@ -21,12 +21,11 @@ import {
   BookOpen01,
   Announcement01,
   File06,
-  Tool02,
   Link03,
   Key01,
   Code01,
 } from '@untitledui/icons';
-import { FileFilled, PaletteFilled, MessageSquare, MessageSquareFilled, UserFilled, DatabaseFilled, MarkerPin, MarkerPinFilled, BookOpenFilled } from '@/components/icons/AriMenuIcons';
+import { FileFilled, PaletteFilled, MessageSquare, MessageSquareFilled, UserFilled, DatabaseFilled, MarkerPin, MarkerPinFilled, BookOpenFilled, AnnouncementFilled, NewsFilled, CodeBrowser, CodeBrowserFilled } from '@/components/icons/AriMenuIcons';
 
 export type AriSection = 
   | 'model-behavior'
@@ -69,11 +68,11 @@ const SECTIONS: SectionItem[] = [
   { id: 'help-articles', label: 'Help Articles', icon: BookOpen01, activeIcon: BookOpenFilled, group: 'Knowledge' },
   
   // Content
-  { id: 'announcements', label: 'Announcements', icon: Announcement01, group: 'Content' },
-  { id: 'news', label: 'News', icon: File06, group: 'Content' },
+  { id: 'announcements', label: 'Announcements', icon: Announcement01, activeIcon: AnnouncementFilled, group: 'Content' },
+  { id: 'news', label: 'News', icon: File06, activeIcon: NewsFilled, group: 'Content' },
   
   // Tools & API
-  { id: 'custom-tools', label: 'Custom Tools', icon: Tool02, group: 'Tools' },
+  { id: 'custom-tools', label: 'Custom Tools', icon: CodeBrowser, activeIcon: CodeBrowserFilled, group: 'Tools' },
   { id: 'webhooks', label: 'Webhooks', icon: Link03, group: 'Tools' },
   { id: 'integrations', label: 'Integrations', icon: Link03, group: 'Tools' },
   { id: 'api-access', label: 'API Access', icon: Key01, group: 'Tools' },
