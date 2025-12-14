@@ -35,10 +35,10 @@ interface LoadingStateProps {
 }
 
 const sizeStyles = {
-  sm: "min-h-[200px]",
-  md: "min-h-[300px]",
-  lg: "min-h-[400px]",
-  xl: "min-h-[500px]"
+  sm: "h-full",
+  md: "h-full",
+  lg: "h-full",
+  xl: "h-full"
 };
 
 export function LoadingState({ 
