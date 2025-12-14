@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/lib/toast';
@@ -16,22 +16,27 @@ type AgentUpdate = TablesUpdate<'agents'>;
  * 
  * @returns {Object} Agent management methods and state
  * @returns {Agent[]} agents - List of user's agents
- * @returns {boolean} loading - Loading state
+ * @returns {boolean} loading - Loading state (only true on initial load)
  * @returns {Function} createAgent - Create a new agent
  * @returns {Function} updateAgent - Update an existing agent
  * @returns {Function} deleteAgent - Delete an agent
  * @returns {Function} updateDeploymentConfig - Update agent deployment settings
- * @returns {Function} refetch - Manually refresh agents list
+ * @returns {Function} refetch - Manually refresh agents list (silent, no loading state)
  */
 export const useAgents = () => {
   const { user } = useAuth();
   const [agents, setAgents] = useState<Agent[]>([]);
   const [loading, setLoading] = useState(true);
+  const initialLoadDone = useRef(false);
 
-  const fetchAgents = async () => {
+  const fetchAgents = async (isRefetch = false) => {
     if (!user?.id) return;
     
-    setLoading(true);
+    // Only show loading state on initial load, not refetches
+    if (!isRefetch && !initialLoadDone.current) {
+      setLoading(true);
+    }
+    
     try {
       const { data, error } = await supabase
         .from('agents')
@@ -41,6 +46,7 @@ export const useAgents = () => {
 
       if (error) throw error;
       setAgents(data || []);
+      initialLoadDone.current = true;
     } catch (error) {
       logger.error('Error fetching agents:', error);
       toast.error('Failed to load agents');
@@ -50,7 +56,7 @@ export const useAgents = () => {
   };
 
   useEffect(() => {
-    fetchAgents();
+    fetchAgents(false);
   }, [user?.id]);
 
   const createAgent = async (agentData: Omit<AgentInsert, 'user_id'>) => {
@@ -126,6 +132,6 @@ export const useAgents = () => {
     updateAgent,
     deleteAgent,
     updateDeploymentConfig,
-    refetch: fetchAgents,
+    refetch: () => fetchAgents(true),
   };
 };
