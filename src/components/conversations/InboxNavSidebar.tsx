@@ -6,10 +6,13 @@
  */
 
 import { useState, useRef, useEffect } from 'react';
+import { motion } from 'motion/react';
 import AriAgentsIcon from '@/components/icons/AriAgentsIcon';
 import { CheckCircle, Globe01, Inbox01, SearchMd, XClose, Ticket01 } from '@untitledui/icons';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { springs } from '@/lib/motion-variants';
 
 // Social channel logos (matching AriIntegrationsSection)
 const FacebookLogo = () => (
@@ -60,11 +63,13 @@ interface NavItemProps {
   onClick: () => void;
   disabled?: boolean;
   comingSoon?: boolean;
+  animationIndex: number;
+  prefersReducedMotion: boolean;
 }
 
-function NavItem({ icon, label, count, isActive, onClick, disabled, comingSoon }: NavItemProps) {
+function NavItem({ icon, label, count, isActive, onClick, disabled, comingSoon, animationIndex, prefersReducedMotion }: NavItemProps) {
   return (
-    <button
+    <motion.button
       onClick={onClick}
       disabled={disabled}
       className={cn(
@@ -73,6 +78,9 @@ function NavItem({ icon, label, count, isActive, onClick, disabled, comingSoon }
         isActive && 'bg-accent text-accent-foreground font-medium',
         disabled && 'opacity-50 cursor-not-allowed hover:bg-transparent'
       )}
+      initial={prefersReducedMotion ? false : { opacity: 0, x: -8 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay: animationIndex * 0.02, ...springs.smooth }}
     >
       <span className="flex-shrink-0 text-muted-foreground">{icon}</span>
       <span className="flex-1 text-left truncate">{label}</span>
@@ -81,13 +89,14 @@ function NavItem({ icon, label, count, isActive, onClick, disabled, comingSoon }
       ) : count !== undefined && count > 0 ? (
         <span className="text-xs text-muted-foreground tabular-nums">{count}</span>
       ) : null}
-    </button>
+    </motion.button>
   );
 }
 
 export function InboxNavSidebar({ activeFilter, onFilterChange, counts, searchQuery, onSearchChange }: InboxNavSidebarProps) {
   const [searchExpanded, setSearchExpanded] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const prefersReducedMotion = useReducedMotion();
   
   const isActive = (type: string, value?: string) => 
     activeFilter.type === type && activeFilter.value === value;
@@ -105,6 +114,9 @@ export function InboxNavSidebar({ activeFilter, onFilterChange, counts, searchQu
       setSearchExpanded(false);
     }
   };
+
+  // Track animation index across all sections
+  let animationIndex = 0;
 
   return (
     <div className="w-48 border-r bg-background flex flex-col">
@@ -164,6 +176,8 @@ export function InboxNavSidebar({ activeFilter, onFilterChange, counts, searchQu
             count={counts.all}
             isActive={isActive('all')}
             onClick={() => onFilterChange({ type: 'all', label: 'All Conversations' })}
+            animationIndex={animationIndex++}
+            prefersReducedMotion={prefersReducedMotion}
           />
           <NavItem
             icon={<Inbox01 size={16} />}
@@ -171,6 +185,8 @@ export function InboxNavSidebar({ activeFilter, onFilterChange, counts, searchQu
             count={counts.yours}
             isActive={isActive('yours')}
             onClick={() => onFilterChange({ type: 'yours', label: 'Your Inbox' })}
+            animationIndex={animationIndex++}
+            prefersReducedMotion={prefersReducedMotion}
           />
         </div>
       </div>
@@ -188,6 +204,8 @@ export function InboxNavSidebar({ activeFilter, onFilterChange, counts, searchQu
             onClick={() => {}}
             disabled
             comingSoon
+            animationIndex={animationIndex++}
+            prefersReducedMotion={prefersReducedMotion}
           />
           <NavItem
             icon={<CheckCircle size={16} />}
@@ -195,6 +213,8 @@ export function InboxNavSidebar({ activeFilter, onFilterChange, counts, searchQu
             count={counts.resolved}
             isActive={isActive('status', 'closed')}
             onClick={() => onFilterChange({ type: 'status', value: 'closed', label: 'Resolved' })}
+            animationIndex={animationIndex++}
+            prefersReducedMotion={prefersReducedMotion}
           />
         </div>
       </div>
@@ -211,6 +231,8 @@ export function InboxNavSidebar({ activeFilter, onFilterChange, counts, searchQu
             count={counts.widget}
             isActive={isActive('channel', 'widget')}
             onClick={() => onFilterChange({ type: 'channel', value: 'widget', label: 'Widget' })}
+            animationIndex={animationIndex++}
+            prefersReducedMotion={prefersReducedMotion}
           />
           <NavItem
             icon={<FacebookLogo />}
@@ -220,6 +242,8 @@ export function InboxNavSidebar({ activeFilter, onFilterChange, counts, searchQu
             onClick={() => onFilterChange({ type: 'channel', value: 'facebook', label: 'Facebook' })}
             disabled
             comingSoon
+            animationIndex={animationIndex++}
+            prefersReducedMotion={prefersReducedMotion}
           />
           <NavItem
             icon={<InstagramLogo />}
@@ -229,6 +253,8 @@ export function InboxNavSidebar({ activeFilter, onFilterChange, counts, searchQu
             onClick={() => onFilterChange({ type: 'channel', value: 'instagram', label: 'Instagram' })}
             disabled
             comingSoon
+            animationIndex={animationIndex++}
+            prefersReducedMotion={prefersReducedMotion}
           />
           <NavItem
             icon={<XLogo />}
@@ -238,6 +264,8 @@ export function InboxNavSidebar({ activeFilter, onFilterChange, counts, searchQu
             onClick={() => onFilterChange({ type: 'channel', value: 'x', label: 'X (Twitter)' })}
             disabled
             comingSoon
+            animationIndex={animationIndex++}
+            prefersReducedMotion={prefersReducedMotion}
           />
         </div>
       </div>
