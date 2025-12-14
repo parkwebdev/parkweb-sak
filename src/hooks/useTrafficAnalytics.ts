@@ -66,8 +66,7 @@ interface ConversationMetadata {
 
 export const useTrafficAnalytics = (
   startDate: Date,
-  endDate: Date,
-  agentFilter: string
+  endDate: Date
 ) => {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<TrafficStats>({
@@ -100,10 +99,6 @@ export const useTrafficAnalytics = (
         .eq('user_id', user.id)
         .gte('created_at', startDate.toISOString())
         .lte('created_at', endDate.toISOString());
-
-      if (agentFilter !== 'all') {
-        query = query.eq('agent_id', agentFilter);
-      }
 
       const { data: conversations, error } = await query;
 
@@ -229,7 +224,7 @@ export const useTrafficAnalytics = (
 
   useEffect(() => {
     fetchData();
-  }, [user?.id, startDate.toISOString(), endDate.toISOString(), agentFilter]);
+  }, [user?.id, startDate.toISOString(), endDate.toISOString()]);
 
   const agentNames = useMemo(() => {
     const map: Record<string, string> = {};

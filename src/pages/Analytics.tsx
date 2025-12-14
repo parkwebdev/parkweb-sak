@@ -90,7 +90,6 @@ const Analytics: React.FC = () => {
 
   // Filters state
   const [filters, setFilters] = useState({
-    agentId: 'all',
     leadStatus: 'all',
     conversationStatus: 'all',
   });
@@ -129,7 +128,7 @@ const Analytics: React.FC = () => {
     agents,
     agentNames,
     loading: trafficLoading,
-  } = useTrafficAnalytics(startDate, endDate, filters.agentId);
+  } = useTrafficAnalytics(startDate, endDate);
 
   // Comparison data
   const comparisonData = useAnalytics(

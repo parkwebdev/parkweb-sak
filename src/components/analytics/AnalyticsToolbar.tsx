@@ -17,12 +17,10 @@ import { DateRangePicker } from './DateRangePicker';
 import { ComparisonPeriodSelector } from './ComparisonPeriodSelector';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { PdfIcon, CsvIcon } from './ExportIcons';
-import { useAgents } from '@/hooks/useAgents';
 import { format } from 'date-fns';
 
 /** Analytics filter configuration */
 export interface AnalyticsFilters {
-  agentId: string;
   leadStatus: string;
   conversationStatus: string;
 }
@@ -58,10 +56,7 @@ export const AnalyticsToolbar = ({
   onExportCSV,
   onExportPDF,
 }: AnalyticsToolbarProps) => {
-  const { agents } = useAgents();
-
   const activeFilterCount = [
-    filters.agentId !== 'all',
     filters.leadStatus !== 'all',
     filters.conversationStatus !== 'all',
   ].filter(Boolean).length;
@@ -112,26 +107,6 @@ export const AnalyticsToolbar = ({
 
               <div className="space-y-3">
                 <div className="space-y-2">
-                  <Label className="text-xs text-muted-foreground">Agent</Label>
-                  <Select
-                    value={filters.agentId}
-                    onValueChange={(value) => onFiltersChange({ ...filters, agentId: value })}
-                  >
-                    <SelectTrigger size="sm">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Agents</SelectItem>
-                      {agents.map((agent) => (
-                        <SelectItem key={agent.id} value={agent.id}>
-                          {agent.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
                   <Label className="text-xs text-muted-foreground">Lead Status</Label>
                   <Select
                     value={filters.leadStatus}
@@ -173,7 +148,7 @@ export const AnalyticsToolbar = ({
                     variant="ghost"
                     size="sm"
                     className="w-full h-8"
-                    onClick={() => onFiltersChange({ agentId: 'all', leadStatus: 'all', conversationStatus: 'all' })}
+                    onClick={() => onFiltersChange({ leadStatus: 'all', conversationStatus: 'all' })}
                   >
                     Clear All Filters
                   </Button>
