@@ -624,132 +624,133 @@ export const FullCalendar: React.FC<FullCalendarProps> = ({
   };
 
   return (
-    <DndContext 
-      sensors={sensors}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-    >
-      <div className={cn("bg-card border border-border rounded-xl overflow-hidden", className)}>
-        {/* Enhanced Calendar Header */}
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between px-6 py-4 border-b border-border">
-          {/* Left: Mini date + Title info */}
-          <div className="flex items-center gap-4">
-            {/* Mini date indicator */}
-            <div className="flex flex-col items-center justify-center bg-muted rounded-lg px-3 py-1.5 min-w-[52px]">
-              <span className="text-2xs font-medium text-muted-foreground uppercase tracking-wide">
-                {format(today, 'MMM')}
-              </span>
-              <span className="text-xl font-semibold text-foreground leading-tight">
-                {format(today, 'd')}
-              </span>
-            </div>
-            
-            {/* Dynamic title + week badge */}
-            <div className="flex flex-col">
-              <div className="flex items-center gap-2">
-                <h2 className="text-lg font-semibold text-foreground">
-                  {getHeaderTitle()}
-                </h2>
-                <Badge variant="secondary" className="text-xs">
-                  Week {getWeek(currentDate)}
-                </Badge>
-              </div>
-              <span className="text-sm text-muted-foreground">
-                {view === 'month' 
-                  ? `${format(monthStart, 'MMM d, yyyy')} – ${format(monthEnd, 'MMM d, yyyy')}`
-                  : view === 'week'
-                  ? `${format(startOfWeek(currentDate), 'MMM d')} – ${format(endOfWeek(currentDate), 'MMM d, yyyy')}`
-                  : format(currentDate, 'MMMM yyyy')
-                }
-              </span>
-            </div>
+    <div className={cn("bg-card border border-border rounded-xl overflow-hidden", className)}>
+      {/* Enhanced Calendar Header - OUTSIDE DndContext to prevent dropdown interference */}
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between px-6 py-4 border-b border-border">
+        {/* Left: Mini date + Title info */}
+        <div className="flex items-center gap-4">
+          {/* Mini date indicator */}
+          <div className="flex flex-col items-center justify-center bg-muted rounded-lg px-3 py-1.5 min-w-[52px]">
+            <span className="text-2xs font-medium text-muted-foreground uppercase tracking-wide">
+              {format(today, 'MMM')}
+            </span>
+            <span className="text-xl font-semibold text-foreground leading-tight">
+              {format(today, 'd')}
+            </span>
           </div>
           
-          {/* Center: Search input */}
-          <div className="hidden lg:flex flex-1 max-w-sm mx-6">
-            <div className="relative w-full">
-              <SearchLg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search bookings..."
-                value={searchQuery}
-                onChange={(e) => onSearchChange?.(e.target.value)}
-                className="pl-9"
-              />
+          {/* Dynamic title + week badge */}
+          <div className="flex flex-col">
+            <div className="flex items-center gap-2">
+              <h2 className="text-lg font-semibold text-foreground">
+                {getHeaderTitle()}
+              </h2>
+              <Badge variant="secondary" className="text-xs">
+                Week {getWeek(currentDate)}
+              </Badge>
             </div>
-          </div>
-          
-          {/* Right: Navigation + View + Connect + Add Event */}
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="ghost" size="sm" onClick={goToPrevious}>
-                    ‹
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Previous <span className="rounded border border-border bg-muted px-1 py-0.5 text-xs font-medium ml-1">←</span></p>
-                </TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="outline" size="sm" onClick={goToToday}>
-                    Today
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Go to today <span className="rounded border border-border bg-muted px-1 py-0.5 text-xs font-medium ml-1">T</span></p>
-                </TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="ghost" size="sm" onClick={goToNext}>
-                    ›
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Next <span className="rounded border border-border bg-muted px-1 py-0.5 text-xs font-medium ml-1">→</span></p>
-                </TooltipContent>
-              </Tooltip>
-            </div>
-            
-            {/* View Selector */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="w-[130px] justify-between">
-                  {view === 'month' ? 'Month view' : view === 'week' ? 'Week view' : 'Day view'}
-                  <ChevronDown className="ml-2 h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="z-50">
-                <DropdownMenuItem onClick={() => setView('month')} className="justify-between">
-                  <span>Month view</span>
-                  <span className="rounded border border-border bg-muted px-1.5 py-0.5 text-xs text-muted-foreground font-medium">M</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setView('week')} className="justify-between">
-                  <span>Week view</span>
-                  <span className="rounded border border-border bg-muted px-1.5 py-0.5 text-xs text-muted-foreground font-medium">W</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setView('day')} className="justify-between">
-                  <span>Day view</span>
-                  <span className="rounded border border-border bg-muted px-1.5 py-0.5 text-xs text-muted-foreground font-medium">D</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            
+            <span className="text-sm text-muted-foreground">
+              {view === 'month' 
+                ? `${format(monthStart, 'MMM d, yyyy')} – ${format(monthEnd, 'MMM d, yyyy')}`
+                : view === 'week'
+                ? `${format(startOfWeek(currentDate), 'MMM d')} – ${format(endOfWeek(currentDate), 'MMM d, yyyy')}`
+                : format(currentDate, 'MMMM yyyy')
+              }
+            </span>
           </div>
         </div>
+        
+        {/* Center: Search input */}
+        <div className="hidden lg:flex flex-1 max-w-sm mx-6">
+          <div className="relative w-full">
+            <SearchLg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search bookings..."
+              value={searchQuery}
+              onChange={(e) => onSearchChange?.(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+        </div>
+        
+        {/* Right: Navigation + View + Connect + Add Event */}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="sm" onClick={goToPrevious}>
+                  ‹
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Previous <span className="rounded border border-border bg-muted px-1 py-0.5 text-xs font-medium ml-1">←</span></p>
+              </TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="outline" size="sm" onClick={goToToday}>
+                  Today
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Go to today <span className="rounded border border-border bg-muted px-1 py-0.5 text-xs font-medium ml-1">T</span></p>
+              </TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="sm" onClick={goToNext}>
+                  ›
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Next <span className="rounded border border-border bg-muted px-1 py-0.5 text-xs font-medium ml-1">→</span></p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+          
+          {/* View Selector */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="w-[130px] justify-between">
+                {view === 'month' ? 'Month view' : view === 'week' ? 'Week view' : 'Day view'}
+                <ChevronDown className="ml-2 h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="z-50">
+              <DropdownMenuItem onClick={() => setView('month')} className="justify-between">
+                <span>Month view</span>
+                <span className="rounded border border-border bg-muted px-1.5 py-0.5 text-xs text-muted-foreground font-medium">M</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setView('week')} className="justify-between">
+                <span>Week view</span>
+                <span className="rounded border border-border bg-muted px-1.5 py-0.5 text-xs text-muted-foreground font-medium">W</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setView('day')} className="justify-between">
+                <span>Day view</span>
+                <span className="rounded border border-border bg-muted px-1.5 py-0.5 text-xs text-muted-foreground font-medium">D</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          
+        </div>
+      </div>
 
+      {/* Calendar Grid - INSIDE DndContext for drag-and-drop */}
+      <DndContext 
+        sensors={sensors}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+      >
         {/* Render based on selected view */}
         {view === 'month' && renderMonthView()}
         {view === 'week' && renderWeekView()}
         {view === 'day' && renderDayView()}
-      </div>
 
-      {/* Drag overlay */}
-      <DragOverlay>
-        {activeDragEvent && <DraggedEventPreview event={activeDragEvent} />}
-      </DragOverlay>
-    </DndContext>
+        {/* Drag overlay */}
+        <DragOverlay>
+          {activeDragEvent && <DraggedEventPreview event={activeDragEvent} />}
+        </DragOverlay>
+      </DndContext>
+    </div>
   );
 };
