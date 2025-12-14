@@ -182,29 +182,29 @@ export const useCalendarEvents = (options: UseCalendarEventsOptions = {}) => {
     fetchEvents();
   }, [fetchEvents]);
 
-  // Real-time subscription
-  useEffect(() => {
-    if (!user) return;
-
-    const channel = supabase
-      .channel('calendar-events-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'calendar_events',
-        },
-        () => {
-          fetchEvents();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user, fetchEvents]);
+  // Real-time subscription - TEMPORARILY DISABLED FOR DEBUGGING
+  // useEffect(() => {
+  //   if (!user) return;
+  //
+  //   const channel = supabase
+  //     .channel('calendar-events-changes')
+  //     .on(
+  //       'postgres_changes',
+  //       {
+  //         event: '*',
+  //         schema: 'public',
+  //         table: 'calendar_events',
+  //       },
+  //       () => {
+  //         fetchEvents();
+  //       }
+  //     )
+  //     .subscribe();
+  //
+  //   return () => {
+  //     supabase.removeChannel(channel);
+  //   };
+  // }, [user, fetchEvents]);
 
   return {
     events,

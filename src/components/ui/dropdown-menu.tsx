@@ -25,7 +25,18 @@ import { Check, ChevronRight, Dotpoints01 as Circle } from "@untitledui/icons"
 
 import { cn } from "@/lib/utils"
 
-const DropdownMenu = DropdownMenuPrimitive.Root
+const DropdownMenu = React.forwardRef<
+  React.ElementRef<typeof DropdownMenuPrimitive.Root>,
+  React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Root>
+>(({ onOpenChange, ...props }, ref) => {
+  const handleOpenChange = React.useCallback((open: boolean) => {
+    console.log('[DropdownMenu] onOpenChange called:', open, new Error().stack);
+    onOpenChange?.(open);
+  }, [onOpenChange]);
+  
+  return <DropdownMenuPrimitive.Root onOpenChange={handleOpenChange} {...props} />;
+});
+DropdownMenu.displayName = "DropdownMenu"
 
 const DropdownMenuTrigger = DropdownMenuPrimitive.Trigger
 
