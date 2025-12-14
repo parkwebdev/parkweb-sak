@@ -50,13 +50,12 @@ Welcome to the ChatPad documentation. This index provides quick access to all te
 | Guide | Description |
 |-------|-------------|
 | [Widget Architecture](./WIDGET_ARCHITECTURE.md) | Embedded chat widget technical docs |
-| [Widget Enhancements](./WIDGET_ENHANCEMENTS.md) | Feature roadmap and implementation |
 
-### Feature Planning
+### Booking & Scheduling
 
 | Guide | Description |
 |-------|-------------|
-| [Multi-Account Integrations](./MULTI_ACCOUNT_INTEGRATIONS.md) | Multi-location integration architecture |
+| [Native Booking System](./NATIVE_BOOKING_SYSTEM.md) | Calendar and booking system architecture |
 
 ---
 
@@ -121,18 +120,15 @@ docs/
 ├── EDGE_FUNCTIONS.md              # Edge functions reference
 ├── SECURITY.md                    # Security documentation
 │
-├── # Widget
+├── # Widget & Features
 ├── WIDGET_ARCHITECTURE.md         # Widget technical docs
-├── WIDGET_ENHANCEMENTS.md         # Widget feature roadmap
+├── NATIVE_BOOKING_SYSTEM.md       # Calendar and booking
 │
 ├── # Guides
 ├── SUPABASE_INTEGRATION_GUIDE.md  # Full-stack development
 ├── STRIPE_PAYMENT_GUIDE.md        # Payment integration
 ├── SHADCN_COMPONENT_GUIDE.md      # Component patterns
-├── DATA_TABLE_DASHBOARD_GUIDE.md  # Data visualization
-│
-└── # Planning
-    └── MULTI_ACCOUNT_INTEGRATIONS.md  # Multi-account architecture
+└── DATA_TABLE_DASHBOARD_GUIDE.md  # Data visualization
 ```
 
 ---

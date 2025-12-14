@@ -87,16 +87,17 @@ ChatPad is a multi-tenant AI agent platform for building, deploying, and managin
 
 Overview of key metrics: conversations, agents, leads, usage with sparkline trends.
 
-### 2. AI Agents
-**Location:** `src/pages/Agents.tsx`, `src/pages/AgentConfig.tsx`
+### 2. Ari (AI Agent)
+**Location:** `src/pages/AriConfigurator.tsx`
 
-Create and configure agents with:
+Single-agent architecture with comprehensive configuration:
 - System prompts and model selection
 - Behavior parameters (temperature, top P, etc.)
 - Knowledge sources (PDFs, URLs, sitemaps)
-- Help center content
+- Help center content and news
 - Custom tools and webhooks
 - Widget embed settings
+- Locations and integrations
 
 ### 3. Inbox (Conversations)
 **Location:** `src/pages/Conversations.tsx`
@@ -295,20 +296,24 @@ chatpad/
 |-----------|---------|
 | `AppLayout` | Main application shell with sidebar and header |
 | `AppHeader` | Top navigation bar |
-| `Sidebar` | Collapsible navigation sidebar |
-| `AgentConfigLayout` | Agent config page with sticky tabs |
+| `Sidebar` | Collapsible hover-expand navigation sidebar |
 
-### Agent Components
+### Ari Configurator Components
 
 | Component | Purpose |
 |-----------|---------|
-| `AgentCard` | Agent list item with status |
-| `CreateAgentDialog` | New agent modal |
-| `AgentSettingsLayout` | Settings tab navigation |
-| `AgentConfigureTab` | Model and behavior settings |
-| `AgentKnowledgeTab` | Knowledge source management |
-| `AgentToolsTab` | Custom tool configuration |
-| `AgentEmbedTab` | Widget customization |
+| `AriConfigurator` | Main 3-column configurator layout |
+| `AriSectionMenu` | Left sidebar section navigation |
+| `AriPreviewColumn` | Right widget preview column |
+| `AriSystemPromptSection` | System prompt configuration |
+| `AriModelBehaviorSection` | Model and behavior settings |
+| `AriKnowledgeSection` | Knowledge source management |
+| `AriCustomToolsSection` | Custom tool configuration |
+| `AriAppearanceSection` | Widget appearance settings |
+| `AriInstallationSection` | Embed code and installation |
+| `AriLocationsSection` | Location management |
+| `AriHelpArticlesSection` | Help center content |
+| `AriNewsSection` | News/announcements content |
 
 ### Widget Components
 
