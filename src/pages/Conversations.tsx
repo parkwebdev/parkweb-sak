@@ -1267,7 +1267,7 @@ const Conversations: React.FC = () => {
         ) : (
           <div className="flex-1 flex items-center justify-center bg-muted/20 min-h-0">
             <div className="text-center">
-              <AriAgentsIcon className="h-3 w-3 mx-auto mb-4" />
+              <AriAgentsIcon className="h-6 w-6 mx-auto mb-4" />
               <p className="text-sm font-medium text-muted-foreground">
                 No conversations handled by Ari yet
               </p>
