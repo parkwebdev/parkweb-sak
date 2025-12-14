@@ -18,7 +18,7 @@ import { useHelpArticles } from '@/hooks/useHelpArticles';
 import { useAnnouncements } from '@/hooks/useAnnouncements';
 import { AriSectionMenu, type AriSection } from '@/components/agents/AriSectionMenu';
 import { AriPreviewColumn } from '@/components/agents/AriPreviewColumn';
-import { LoadingState } from '@/components/ui/loading-state';
+import { MultiStepLoader } from '@/components/ui/multi-step-loader';
 import { ChatWidget } from '@/widget/ChatWidget';
 import type { Tables } from '@/integrations/supabase/types';
 import type { WidgetConfig } from '@/widget/api';
@@ -147,12 +147,23 @@ const AriConfigurator = () => {
     enableAutoLocationDetection: embedConfig.enableAutoLocationDetection ?? true,
   } : null;
 
+  // Loading states for multi-step loader
+  const loadingStates = [
+    { text: "Loading Ari configuration..." },
+    { text: "Fetching agent settings..." },
+    { text: "Preparing widget preview..." },
+    { text: "Almost ready..." },
+  ];
+
   // Loading state
   if (agentsLoading) {
     return (
-      <main className="flex-1 bg-muted/30">
-        <LoadingState text="Loading Ari..." />
-      </main>
+      <MultiStepLoader
+        loadingStates={loadingStates}
+        loading={true}
+        duration={400}
+        loop={false}
+      />
     );
   }
 
