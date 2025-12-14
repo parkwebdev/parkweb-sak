@@ -65,6 +65,7 @@ export function DataTableToolbar<TData>({
             value={searchValue}
             onChange={(e) => handleSearchChange(e.target.value)}
             className="pl-9 pr-9"
+            size="sm"
           />
           {isFiltered && (
             <Button

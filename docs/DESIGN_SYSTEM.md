@@ -348,6 +348,34 @@ These heights are layout-specific and cannot be meaningfully tokenized without l
 | Default | `h-5 w-5` | Navigation, cards |
 | Large | `h-6 w-6` | Headers, heroes |
 
+### Toolbar Uniformity Rule
+
+When interactive elements (buttons, filters, dropdowns, selects) are placed adjacent to a search input in a toolbar, **all elements MUST share the same height**.
+
+| Toolbar Context | Input Size | Button Size | Height |
+|----------------|------------|-------------|--------|
+| Compact (tables, filters) | `size="sm"` | `size="sm"` | 32px |
+| Standard (page headers) | default | default | 40px |
+
+**Examples:**
+- DataTable toolbars: All elements use `size="sm"` (32px)
+- Page-level search: All elements use default (40px)
+
+```tsx
+// ✅ Correct - uniform 32px height
+<div className="flex items-center gap-2">
+  <Input size="sm" placeholder="Search..." />
+  <Button size="sm" variant="outline">Filter</Button>
+  <Button size="sm">Add</Button>
+</div>
+
+// ❌ Wrong - mixed heights
+<div className="flex items-center gap-2">
+  <Input placeholder="Search..." />  {/* 40px */}
+  <Button size="sm">Filter</Button>  {/* 32px */}
+</div>
+```
+
 ---
 
 ## Shadows & Effects
