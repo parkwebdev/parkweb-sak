@@ -16,7 +16,6 @@ import {
   Atom01,
   File02,
   Palette,
-  MessageSmileCircle,
   User01,
   Database01,
   MarkerPin01,
@@ -28,7 +27,7 @@ import {
   Key01,
   Code01,
 } from '@untitledui/icons';
-import { FileFilled, PaletteFilled } from '@/components/icons/AriMenuIcons';
+import { FileFilled, PaletteFilled, MessageSquare, MessageSquareFilled } from '@/components/icons/AriMenuIcons';
 
 export type AriSection = 
   | 'model-behavior'
@@ -62,7 +61,7 @@ const SECTIONS: SectionItem[] = [
   
   // Widget Appearance
   { id: 'appearance', label: 'Appearance', icon: Palette, activeIcon: PaletteFilled, group: 'Widget' },
-  { id: 'welcome-messages', label: 'Welcome & Messages', icon: MessageSmileCircle, group: 'Widget' },
+  { id: 'welcome-messages', label: 'Welcome & Messages', icon: MessageSquare, activeIcon: MessageSquareFilled, group: 'Widget' },
   { id: 'lead-capture', label: 'Lead Capture', icon: User01, group: 'Widget' },
   
   // Knowledge
