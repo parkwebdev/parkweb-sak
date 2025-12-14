@@ -9,7 +9,7 @@
  * @module pages/AriConfigurator
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useAgents } from '@/hooks/useAgents';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
@@ -42,10 +42,36 @@ import { AriInstallationSection } from '@/components/agents/sections/AriInstalla
 
 type Agent = Tables<'agents'>;
 
+// Loading step timing
+const STEP_DURATION = 400;
+const loadingStates = [
+  { text: "Loading Ari configuration..." },
+  { text: "Fetching agent settings..." },
+  { text: "Preparing widget preview..." },
+  { text: "Almost ready..." },
+];
+const MIN_DISPLAY_TIME = loadingStates.length * STEP_DURATION;
+
 const AriConfigurator = () => {
   const prefersReducedMotion = useReducedMotion();
   const { agents, updateAgent, loading: agentsLoading } = useAgents();
   const [activeSection, setActiveSection] = useState<AriSection>('model-behavior');
+  const [showLoader, setShowLoader] = useState(true);
+  const loadStartTime = useRef(Date.now());
+  
+  // Handle minimum display time for loader
+  useEffect(() => {
+    if (!agentsLoading && showLoader) {
+      const elapsed = Date.now() - loadStartTime.current;
+      const remainingTime = Math.max(0, MIN_DISPLAY_TIME - elapsed);
+      
+      const timer = setTimeout(() => {
+        setShowLoader(false);
+      }, remainingTime);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [agentsLoading, showLoader]);
   
   // Auto-select first agent (single-agent model)
   const agent = agents[0] || null;
@@ -147,21 +173,13 @@ const AriConfigurator = () => {
     enableAutoLocationDetection: embedConfig.enableAutoLocationDetection ?? true,
   } : null;
 
-  // Loading states for multi-step loader
-  const loadingStates = [
-    { text: "Loading Ari configuration..." },
-    { text: "Fetching agent settings..." },
-    { text: "Preparing widget preview..." },
-    { text: "Almost ready..." },
-  ];
-
-  // Loading state
-  if (agentsLoading) {
+  // Show loader until minimum display time elapsed
+  if (showLoader) {
     return (
       <MultiStepLoader
         loadingStates={loadingStates}
         loading={true}
-        duration={400}
+        duration={STEP_DURATION}
         loop={false}
       />
     );
