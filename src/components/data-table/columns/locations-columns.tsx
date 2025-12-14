@@ -116,14 +116,7 @@ export const createLocationsColumns = ({
     id: 'actions',
     header: () => <span>Actions</span>,
     cell: ({ row }) => (
-      <div className="flex items-center justify-end gap-1">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => onView(row.original)}
-        >
-          <Eye className="h-4 w-4" />
-        </Button>
+      <div className="flex items-center justify-end">
         <Button
           variant="ghost"
           size="sm"
