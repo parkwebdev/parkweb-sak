@@ -657,12 +657,13 @@ const Conversations: React.FC = () => {
           
           {/* Filter badges row */}
           {!conversationsCollapsed && (
-            <div className="flex items-center gap-2 mt-3">
+            <div className="flex items-center justify-between mt-3">
               {/* Open count badge */}
               <Badge variant="secondary" className="text-xs font-medium">
                 {conversations.filter(c => c.status === 'active' || c.status === 'human_takeover').length} Open
               </Badge>
               
+              <div className="flex items-center gap-1">
               {/* Sort dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -697,6 +698,7 @@ const Conversations: React.FC = () => {
               >
                 <SwitchVertical01 size={14} />
               </button>
+              </div>
             </div>
           )}
         </div>
