@@ -8,8 +8,9 @@
  */
 
 import React from 'react';
-import { X, Settings04 as Settings, Grid01 as Grid, MessageSquare01, User03, PieChart01, Calendar } from '@untitledui/icons';
+import { X, Settings04 as Settings, Grid01 as Grid, User03, PieChart01, Calendar } from '@untitledui/icons';
 import AriAgentsIcon from './icons/AriAgentsIcon';
+import { DashboardFilled, InboxOutline, InboxFilled } from './icons/SidebarIcons';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { UserAccountCard } from './UserAccountCard';
@@ -29,8 +30,10 @@ interface NavigationItem {
   id: string;
   /** Display label */
   label: string;
-  /** Icon component */
+  /** Icon component (default state) */
   icon: React.ComponentType<{ size?: number; className?: string }>;
+  /** Icon component for active state (optional) */
+  activeIcon?: React.ComponentType<{ size?: number; className?: string }>;
   /** Route path */
   path: string;
   /** Optional badge text */
@@ -39,9 +42,9 @@ interface NavigationItem {
 
 /** Main navigation items */
 const navigationItems: NavigationItem[] = [
-  { id: 'dashboard', label: 'Dashboard', icon: Grid, path: '/' },
+  { id: 'dashboard', label: 'Dashboard', icon: Grid, activeIcon: DashboardFilled, path: '/' },
   { id: 'ari', label: 'Ari', icon: AriAgentsIcon, path: '/ari' },
-  { id: 'conversations', label: 'Inbox', icon: MessageSquare01, path: '/conversations' },
+  { id: 'conversations', label: 'Inbox', icon: InboxOutline, activeIcon: InboxFilled, path: '/conversations' },
   { id: 'planner', label: 'Planner', icon: Calendar, path: '/planner' },
   { id: 'leads', label: 'Leads', icon: User03, path: '/leads' },
   { id: 'analytics', label: 'Analytics', icon: PieChart01, path: '/analytics' }
@@ -145,7 +148,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
                   >
                     <div className="items-center flex gap-2 my-auto w-full">
                       <div className="items-center flex my-auto w-[18px] flex-shrink-0 relative">
-                        <item.icon size={14} className="self-stretch my-auto" />
+                        {isActive && item.activeIcon ? (
+                          <item.activeIcon size={14} className="self-stretch my-auto" />
+                        ) : (
+                          <item.icon size={14} className="self-stretch my-auto" />
+                        )}
                         {/* Collapsed state unread indicator */}
                         {isCollapsed && item.id === 'conversations' && unreadConversationsCount > 0 && (
                           <motion.span 
