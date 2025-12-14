@@ -248,7 +248,6 @@ export const ChatView = ({
         messageInput={messageInput}
         onMessageChange={setMessageInput}
         onSend={onSendMessage}
-        placeholder={config.placeholder || 'Type a message...'}
         disabled={disabled}
         primaryColor={config.primaryColor}
         enableFileAttachments={config.enableFileAttachments}

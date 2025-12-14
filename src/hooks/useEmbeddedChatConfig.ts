@@ -49,7 +49,6 @@ export interface EmbeddedChatConfig {
   userId: string;
   primaryColor: string;
   position: 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left';
-  placeholder: string;
   showBranding: boolean;
   avatarUrl?: string;
   agentName: string;
@@ -106,7 +105,6 @@ export const useEmbeddedChatConfig = (agentId: string) => {
     userId: '',
     primaryColor: '#000000',
     position: 'bottom-right',
-    placeholder: 'Type your message...',
     showBranding: true,
     agentName: 'AI Assistant',
     animation: 'ring',
