@@ -613,7 +613,7 @@ export const useKnowledgeSources = (agentId?: string) => {
     // WordPress home sources are container records, not embedding sources
     if (metadata.wordpress_homes === true) return false;
     
-    return metadata.embedding_model !== 'text-embedding-3-small';
+    return metadata.embedding_model !== 'qwen/qwen3-embedding-8b';
   };
 
   // Get child sources for a sitemap parent
