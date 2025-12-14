@@ -45,7 +45,8 @@ export const AriKnowledgeSection: React.FC<AriKnowledgeSectionProps> = ({ agentI
   const [isRetraining, setIsRetraining] = useState(false);
   const [retrainProgress, setRetrainProgress] = useState({ completed: 0, total: 0 });
 
-  const parentSources = getParentSources();
+  // Filter out auto-created WordPress sources - they're managed in Locations tab
+  const parentSources = getParentSources().filter(source => source.source_type !== 'wordpress_home');
   const outdatedCount = parentSources.filter(isSourceOutdated).length;
 
   // Sitemap progress
