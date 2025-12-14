@@ -38,7 +38,6 @@ interface UsageMetrics {
 }
 
 interface AnalyticsFilters {
-  agentId: string;
   leadStatus: string;
   conversationStatus: string;
 }
@@ -86,9 +85,6 @@ export const useAnalytics = (
         .gte('created_at', startDate.toISOString())
         .lte('created_at', endDate.toISOString());
 
-      if (filters.agentId !== 'all') {
-        query = query.eq('agent_id', filters.agentId);
-      }
       if (filters.conversationStatus !== 'all') {
         query = query.eq('status', filters.conversationStatus as 'active' | 'closed' | 'human_takeover');
       }
@@ -187,9 +183,6 @@ export const useAnalytics = (
       const performance: AgentPerformance[] = [];
 
       for (const agent of agents || []) {
-        if (filters.agentId !== 'all' && filters.agentId !== agent.id) {
-          continue;
-        }
 
         // Get conversation count
         const { count } = await supabase
