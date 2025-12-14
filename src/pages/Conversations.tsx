@@ -314,6 +314,21 @@ const Conversations: React.FC = () => {
     }
   };
 
+  // Fetch user's active takeovers for "Your Inbox" filter
+  const { data: userTakeovers } = useQuery({
+    queryKey: ['user-takeovers', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      const { data } = await supabase
+        .from('conversation_takeovers')
+        .select('conversation_id')
+        .eq('taken_over_by', user.id)
+        .is('returned_to_ai_at', null);
+      return data?.map(t => t.conversation_id) || [];
+    },
+    enabled: !!user?.id,
+  });
+
   // Filter conversations by active filter + search
   const filteredConversations = useMemo(() => {
     return conversations.filter((conv) => {
@@ -325,6 +340,8 @@ const Conversations: React.FC = () => {
         matchesFilter = conv.status === activeFilter.value;
       } else if (activeFilter.type === 'channel' && activeFilter.value) {
         matchesFilter = conv.channel === activeFilter.value;
+      } else if (activeFilter.type === 'yours') {
+        matchesFilter = userTakeovers?.includes(conv.id) || false;
       }
       
       // Apply search
@@ -336,17 +353,18 @@ const Conversations: React.FC = () => {
       
       return matchesFilter && matchesSearch;
     });
-  }, [conversations, activeFilter, searchQuery]);
+  }, [conversations, activeFilter, searchQuery, userTakeovers]);
 
   // Calculate counts for nav sidebar
   const filterCounts = useMemo(() => ({
     all: conversations.length,
+    yours: userTakeovers?.length || 0,
     resolved: conversations.filter(c => c.status === 'closed').length,
     widget: conversations.filter(c => c.channel === 'widget' || !c.channel).length,
     facebook: conversations.filter(c => c.channel === 'facebook').length,
     instagram: conversations.filter(c => c.channel === 'instagram').length,
     x: conversations.filter(c => c.channel === 'x').length,
-  }), [conversations]);
+  }), [conversations, userTakeovers]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -644,7 +662,7 @@ const Conversations: React.FC = () => {
               ) : filteredConversations.length === 0 ? (
                 <div className="flex-1 flex items-center justify-center p-8">
                   <div className="text-center">
-                    <AriAgentsIcon className="h-12 w-12 mx-auto text-muted-foreground/40 mb-3" />
+                    <MessageChatSquare size={48} className="mx-auto text-muted-foreground/40 mb-3" />
                     <p className="text-sm font-medium text-muted-foreground">No conversations yet</p>
                   </div>
                 </div>
@@ -1194,12 +1212,12 @@ const Conversations: React.FC = () => {
         ) : (
           <div className="flex-1 flex items-center justify-center bg-muted/20 min-h-0">
             <div className="text-center">
-              <AriAgentsIcon className="h-12 w-12 mx-auto text-muted-foreground/40 mb-4" />
+              <AriAgentsIcon className="h-3 w-3 mx-auto mb-4" />
               <p className="text-sm font-medium text-muted-foreground">
-                No conversation selected
+                No conversations handled by Ari yet
               </p>
               <p className="text-xs text-muted-foreground/70 mt-1">
-                Select a conversation to view messages
+                You'll see all conversations that Ari was a part of, whether completed, resolved or abandoned.
               </p>
             </div>
           </div>
