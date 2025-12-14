@@ -19,12 +19,12 @@ import { useReducedMotion } from "@/hooks/useReducedMotion"
  * @internal
  */
 const inputVariants = cva(
-  "flex w-full rounded-md border border-input bg-background px-3 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50 transition-shadow duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+  "flex w-full rounded-md border border-input bg-background px-3 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground disabled:cursor-not-allowed disabled:opacity-50 transition-shadow duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
   {
     variants: {
       size: {
-        default: "h-10 py-2 text-base md:text-sm",
-        sm: "h-8 py-1 text-sm",
+        default: "h-10 py-2 text-base md:text-sm placeholder:text-sm",
+        sm: "h-8 py-1 text-xs placeholder:text-xs",
       },
     },
     defaultVariants: {
