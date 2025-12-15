@@ -19,7 +19,7 @@ import { formatFileSize } from '@/lib/file-validation';
 import { downloadFile } from '@/lib/file-download';
 import { AudioPlayer, MessageReactions } from '../constants';
 import { FileTypeIcon } from '@/components/chat/FileTypeIcons';
-import { stripUrlsFromContent } from '../utils/url-stripper';
+import { stripUrlsFromContent, stripPhoneNumbersFromContent } from '../utils/url-stripper';
 import type { Message } from '../types';
 
 /** Props for the MessageBubble component */
@@ -207,9 +207,12 @@ export const MessageBubble = ({
           {(message.type === 'text' || !message.type) && (
             <p className="text-sm whitespace-pre-wrap break-words">
               {message.role === 'assistant' 
-                ? stripUrlsFromContent(
-                    message.content.replace(/\*\*(.*?)\*\*/g, '$1'),
-                    !!(message.linkPreviews && message.linkPreviews.length > 0)
+                ? stripPhoneNumbersFromContent(
+                    stripUrlsFromContent(
+                      message.content.replace(/\*\*(.*?)\*\*/g, '$1'),
+                      !!(message.linkPreviews && message.linkPreviews.length > 0)
+                    ),
+                    !!(message.callActions && message.callActions.length > 0)
                   )
                 : message.content}
             </p>
