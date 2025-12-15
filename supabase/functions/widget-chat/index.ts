@@ -1325,6 +1325,233 @@ async function getRecentToolCalls(
   return messages || [];
 }
 
+// ============================================
+// PHASE 4: SEMANTIC MEMORY STORE
+// ============================================
+
+interface SemanticMemory {
+  memory_id: string;
+  memory_type: string;
+  content: string;
+  confidence: number;
+  similarity: number;
+}
+
+/**
+ * Search for relevant memories based on the current query.
+ * Retrieves memories for this agent (and optionally lead) that are semantically similar.
+ */
+async function searchSemanticMemories(
+  supabase: any,
+  agentId: string,
+  leadId: string | null,
+  queryEmbedding: number[],
+  matchThreshold: number = 0.6,
+  matchCount: number = 5
+): Promise<SemanticMemory[]> {
+  const embeddingVector = `[${queryEmbedding.join(',')}]`;
+  
+  const { data, error } = await supabase.rpc('search_conversation_memories', {
+    p_agent_id: agentId,
+    p_lead_id: leadId,
+    p_query_embedding: embeddingVector,
+    p_match_threshold: matchThreshold,
+    p_match_count: matchCount,
+  });
+  
+  if (error) {
+    console.error('Error searching semantic memories:', error);
+    return [];
+  }
+  
+  // Update access stats for retrieved memories
+  if (data && data.length > 0) {
+    const memoryIds = data.map((m: SemanticMemory) => m.memory_id);
+    supabase
+      .from('conversation_memories')
+      .update({ 
+        last_accessed_at: new Date().toISOString(),
+        access_count: supabase.rpc('increment', { x: 1 })
+      })
+      .in('id', memoryIds)
+      .then(() => {})
+      .catch(() => {});
+  }
+  
+  return data || [];
+}
+
+/**
+ * Extract memories from a conversation exchange using the AI model.
+ * Called after generating a response to persist important information.
+ */
+async function extractAndStoreMemories(
+  supabase: any,
+  agentId: string,
+  leadId: string | null,
+  conversationId: string,
+  userMessage: string,
+  assistantResponse: string,
+  apiKey: string
+): Promise<void> {
+  try {
+    // Use a fast model for extraction
+    const extractionPrompt = `Analyze this conversation exchange and extract any important facts, preferences, or information that should be remembered for future conversations.
+
+USER MESSAGE: "${userMessage}"
+
+ASSISTANT RESPONSE: "${assistantResponse}"
+
+Extract ONLY if there's genuinely memorable information. Output JSON array of memories:
+[
+  {
+    "type": "fact" | "preference" | "entity" | "context" | "goal",
+    "content": "concise statement of the memory",
+    "confidence": 0.0-1.0
+  }
+]
+
+Types:
+- fact: Specific information stated by user (e.g., "User has 3 children", "User lives in Florida")
+- preference: User preferences or likes/dislikes (e.g., "User prefers 2-bedroom homes", "User wants a quiet neighborhood")
+- entity: Named entities important to user (e.g., "User's dog is named Max", "User works at ABC Corp")
+- context: Situational context (e.g., "User is relocating for work", "User is a first-time buyer")
+- goal: User's objectives or intentions (e.g., "User wants to schedule a tour this week", "User is comparing 3 communities")
+
+Rules:
+- Only extract genuinely useful, specific information
+- Skip greetings, pleasantries, generic questions
+- Skip information already implied by the conversation flow
+- Confidence: 1.0 = explicitly stated, 0.7 = strongly implied, 0.5 = somewhat inferred
+- Return empty array [] if nothing memorable
+
+Output ONLY valid JSON array, no other text.`;
+
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': 'https://chatpad.ai',
+        'X-Title': 'ChatPad',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash-lite',
+        messages: [{ role: 'user', content: extractionPrompt }],
+        temperature: 0.1,
+        max_tokens: 500,
+      }),
+    });
+
+    if (!response.ok) {
+      console.error('Memory extraction API error:', response.status);
+      return;
+    }
+
+    const aiResponse = await response.json();
+    const content = aiResponse.choices?.[0]?.message?.content || '[]';
+    
+    // Parse the JSON response
+    let memories: Array<{ type: string; content: string; confidence: number }> = [];
+    try {
+      // Handle potential markdown code blocks
+      const jsonStr = content.replace(/```json\n?|\n?```/g, '').trim();
+      memories = JSON.parse(jsonStr);
+    } catch (e) {
+      console.log('No memories to extract or invalid JSON');
+      return;
+    }
+
+    if (!Array.isArray(memories) || memories.length === 0) {
+      return;
+    }
+
+    console.log(`PHASE 4: Extracted ${memories.length} memories from conversation`);
+
+    // Generate embeddings and store memories
+    for (const memory of memories) {
+      if (!memory.content || !memory.type) continue;
+      
+      try {
+        // Generate embedding for the memory
+        const embedding = await generateEmbedding(memory.content);
+        const embeddingVector = `[${embedding.join(',')}]`;
+        
+        // Check for duplicate memories (same content)
+        const { data: existing } = await supabase
+          .from('conversation_memories')
+          .select('id')
+          .eq('agent_id', agentId)
+          .eq('content', memory.content)
+          .maybeSingle();
+        
+        if (existing) {
+          console.log(`PHASE 4: Skipping duplicate memory: "${memory.content.substring(0, 50)}..."`);
+          continue;
+        }
+        
+        // Store the memory
+        const { error: insertError } = await supabase
+          .from('conversation_memories')
+          .insert({
+            agent_id: agentId,
+            lead_id: leadId,
+            conversation_id: conversationId,
+            memory_type: memory.type,
+            content: memory.content,
+            embedding: embeddingVector,
+            confidence: memory.confidence || 0.8,
+          });
+        
+        if (insertError) {
+          console.error('Error storing memory:', insertError);
+        } else {
+          console.log(`PHASE 4: Stored ${memory.type} memory: "${memory.content.substring(0, 50)}..."`);
+        }
+      } catch (embedError) {
+        console.error('Error generating memory embedding:', embedError);
+      }
+    }
+  } catch (error) {
+    console.error('Memory extraction error:', error);
+  }
+}
+
+/**
+ * Format memories for injection into system prompt.
+ */
+function formatMemoriesForPrompt(memories: SemanticMemory[]): string {
+  if (!memories || memories.length === 0) return '';
+  
+  const grouped: Record<string, string[]> = {};
+  for (const mem of memories) {
+    if (!grouped[mem.memory_type]) {
+      grouped[mem.memory_type] = [];
+    }
+    grouped[mem.memory_type].push(mem.content);
+  }
+  
+  const sections: string[] = [];
+  
+  if (grouped.fact?.length) {
+    sections.push(`Known Facts: ${grouped.fact.join('; ')}`);
+  }
+  if (grouped.preference?.length) {
+    sections.push(`Preferences: ${grouped.preference.join('; ')}`);
+  }
+  if (grouped.entity?.length) {
+    sections.push(`Important Entities: ${grouped.entity.join('; ')}`);
+  }
+  if (grouped.goal?.length) {
+    sections.push(`Goals: ${grouped.goal.join('; ')}`);
+  }
+  if (grouped.context?.length) {
+    sections.push(`Context: ${grouped.context.join('; ')}`);
+  }
+  
+  return sections.join('\n');
+}
+
 // Normalize query for cache lookup (lowercase, trim, remove extra whitespace)
 function normalizeQuery(query: string): string {
   return query.toLowerCase().trim().replace(/\s+/g, ' ').replace(/[^\w\s]/g, '');
@@ -2122,6 +2349,9 @@ serve(async (req) => {
     let sources: any[] = [];
     let queryHash: string | null = null;
     let maxSimilarity = 0;
+    // PHASE 4: Track semantic memories for prompt injection
+    let retrievedMemories: SemanticMemory[] = [];
+    let queryEmbeddingForMemory: number[] | null = null;
 
     // RAG: Search knowledge base if there are user messages (skip for greeting requests)
     if (messages && messages.length > 0 && !isGreetingRequest) {
@@ -2202,6 +2432,25 @@ serve(async (req) => {
           );
 
           console.log(`Found ${knowledgeResults.length} relevant knowledge sources`);
+          
+          // PHASE 4: Search for semantic memories related to this query
+          const leadId = conversationMetadata?.lead_id as string | undefined;
+          const semanticMemories = await searchSemanticMemories(
+            supabase,
+            agentId,
+            leadId || null,
+            queryEmbedding,
+            0.6, // Memory match threshold
+            5    // Max memories to retrieve
+          );
+          
+          if (semanticMemories.length > 0) {
+            console.log(`PHASE 4: Found ${semanticMemories.length} relevant semantic memories`);
+            retrievedMemories = semanticMemories;
+          }
+          
+          // Store embedding for potential memory extraction later
+          queryEmbeddingForMemory = queryEmbedding;
 
           // If relevant knowledge found, inject into system prompt
           if (knowledgeResults && knowledgeResults.length > 0) {
@@ -2331,6 +2580,20 @@ This is what the user wanted to discuss when they started the chat. Treat this a
     // Append user context to system prompt
     if (userContextSection) {
       systemPrompt = systemPrompt + userContextSection;
+    }
+    
+    // PHASE 4: Inject semantic memories into system prompt
+    if (retrievedMemories.length > 0) {
+      const memoriesContext = formatMemoriesForPrompt(retrievedMemories);
+      if (memoriesContext) {
+        systemPrompt = systemPrompt + `
+
+REMEMBERED CONTEXT (from previous conversations):
+${memoriesContext}
+
+Use this remembered information naturally when relevant. Don't explicitly say "I remember you said..." unless it's conversationally appropriate.`;
+        console.log(`PHASE 4: Injected ${retrievedMemories.length} memories into system prompt`);
+      }
     }
     
     // PHASE 8: Append formatting rules for digestible responses
@@ -3157,6 +3420,24 @@ NEVER mark complete when:
       })
       .then(() => console.log('API usage tracked'))
       .catch(err => console.error('Failed to track usage:', err));
+
+    // PHASE 4: Extract and store semantic memories (fire and forget - don't block response)
+    // Only extract from substantive conversations, not greetings
+    if (!isGreetingRequest && messages && messages.length > 0) {
+      const lastUserMsg = messages.filter((m: any) => m.role === 'user').pop();
+      if (lastUserMsg?.content && assistantContent) {
+        const leadId = conversationMetadata?.lead_id as string | undefined;
+        extractAndStoreMemories(
+          supabase,
+          agentId,
+          leadId || null,
+          activeConversationId,
+          lastUserMsg.content,
+          assistantContent,
+          OPENROUTER_API_KEY
+        ).catch(err => console.error('Memory extraction error:', err));
+      }
+    }
 
     // Return the response with chunked messages for staggered display
     return new Response(

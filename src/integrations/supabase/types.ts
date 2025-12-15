@@ -445,6 +445,93 @@ export type Database = {
           },
         ]
       }
+      conversation_memories: {
+        Row: {
+          access_count: number | null
+          agent_id: string
+          confidence: number | null
+          content: string
+          conversation_id: string | null
+          created_at: string
+          embedding: string | null
+          extracted_at: string
+          id: string
+          last_accessed_at: string | null
+          lead_id: string | null
+          memory_type: string
+          source_message_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          access_count?: number | null
+          agent_id: string
+          confidence?: number | null
+          content: string
+          conversation_id?: string | null
+          created_at?: string
+          embedding?: string | null
+          extracted_at?: string
+          id?: string
+          last_accessed_at?: string | null
+          lead_id?: string | null
+          memory_type: string
+          source_message_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          access_count?: number | null
+          agent_id?: string
+          confidence?: number | null
+          content?: string
+          conversation_id?: string | null
+          created_at?: string
+          embedding?: string | null
+          extracted_at?: string
+          id?: string
+          last_accessed_at?: string | null
+          lead_id?: string | null
+          memory_type?: string
+          source_message_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_memories_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversation_memories_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversation_memories_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "widget_conversations_secure"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversation_memories_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversation_memories_source_message_id_fkey"
+            columns: ["source_message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conversation_ratings: {
         Row: {
           conversation_id: string
@@ -1967,6 +2054,22 @@ export type Database = {
       mark_token_used: {
         Args: { p_email: string; p_token: string }
         Returns: undefined
+      }
+      search_conversation_memories: {
+        Args: {
+          p_agent_id: string
+          p_lead_id: string
+          p_match_count?: number
+          p_match_threshold?: number
+          p_query_embedding: string
+        }
+        Returns: {
+          confidence: number
+          content: string
+          memory_id: string
+          memory_type: string
+          similarity: number
+        }[]
       }
       search_help_articles: {
         Args: {
