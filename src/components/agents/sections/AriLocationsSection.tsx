@@ -497,7 +497,7 @@ export const AriLocationsSection: React.FC<AriLocationsSectionProps> = ({ agentI
                   <SelectContent>
                     <SelectItem value="all">All Communities</SelectItem>
                     {uniqueLocations.map(loc => (
-                      <SelectItem key={loc.id} value={loc.id}>{loc.name}</SelectItem>
+                      <SelectItem key={loc.id} value={loc.id}>{loc.display_name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
