@@ -417,6 +417,141 @@ export const AriLocationsSection: React.FC<AriLocationsSectionProps> = ({ agentI
     </div>
   );
 
+  // Shared filter popover content based on view mode
+  const FilterPopover = (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button variant="outline" className="gap-1.5">
+          <FilterLines size={16} />
+          Filters
+          {activeFilters.length > 0 && (
+            <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
+              {activeFilters.length}
+            </Badge>
+          )}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-72 p-4" align="end">
+        <div className="space-y-4">
+          {viewMode === 'communities' ? (
+            <>
+              <div className="space-y-2">
+                <Label className="text-xs font-medium text-muted-foreground uppercase">State</Label>
+                <Select value={stateFilter} onValueChange={setStateFilter}>
+                  <SelectTrigger className="w-full h-9">
+                    <SelectValue placeholder="All States" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All States</SelectItem>
+                    {uniqueStates.map(state => (
+                      <SelectItem key={state} value={state}>{state}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Separator />
+              <div className="space-y-2">
+                <Label className="text-xs font-medium text-muted-foreground uppercase">Calendar</Label>
+                <RadioGroup value={calendarFilter} onValueChange={setCalendarFilter} className="gap-2">
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="all" id="cal-all" />
+                    <Label htmlFor="cal-all" className="text-sm font-normal cursor-pointer">All</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="connected" id="cal-connected" />
+                    <Label htmlFor="cal-connected" className="text-sm font-normal cursor-pointer">Connected</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="none" id="cal-none" />
+                    <Label htmlFor="cal-none" className="text-sm font-normal cursor-pointer">No Calendar</Label>
+                  </div>
+                </RadioGroup>
+              </div>
+              <Separator />
+              <div className="space-y-2">
+                <Label className="text-xs font-medium text-muted-foreground uppercase">WordPress</Label>
+                <RadioGroup value={wordpressFilter} onValueChange={setWordpressFilter} className="gap-2">
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="all" id="wp-all" />
+                    <Label htmlFor="wp-all" className="text-sm font-normal cursor-pointer">All</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="connected" id="wp-connected" />
+                    <Label htmlFor="wp-connected" className="text-sm font-normal cursor-pointer">Connected</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="none" id="wp-none" />
+                    <Label htmlFor="wp-none" className="text-sm font-normal cursor-pointer">Not Connected</Label>
+                  </div>
+                </RadioGroup>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="space-y-2">
+                <Label className="text-xs font-medium text-muted-foreground uppercase">Community</Label>
+                <Select value={communityFilter} onValueChange={setCommunityFilter}>
+                  <SelectTrigger className="w-full h-9">
+                    <SelectValue placeholder="All Communities" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Communities</SelectItem>
+                    {uniqueLocations.map(loc => (
+                      <SelectItem key={loc.id} value={loc.id}>{loc.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Separator />
+              <div className="space-y-2">
+                <Label className="text-xs font-medium text-muted-foreground uppercase">Status</Label>
+                <Select value={propertyStatusFilter} onValueChange={setPropertyStatusFilter}>
+                  <SelectTrigger className="w-full h-9">
+                    <SelectValue placeholder="All Statuses" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Statuses</SelectItem>
+                    <SelectItem value="available">Available</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="sold">Sold</SelectItem>
+                    <SelectItem value="rented">Rented</SelectItem>
+                    <SelectItem value="coming_soon">Coming Soon</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <Separator />
+              <div className="space-y-2">
+                <Label className="text-xs font-medium text-muted-foreground uppercase">Validation</Label>
+                <RadioGroup value={validationFilter} onValueChange={setValidationFilter} className="gap-2">
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="all" id="val-all" />
+                    <Label htmlFor="val-all" className="text-sm font-normal cursor-pointer">All</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="missing_lot" id="val-missing-lot" />
+                    <Label htmlFor="val-missing-lot" className="text-sm font-normal cursor-pointer">Missing Lot #</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="unmatched" id="val-unmatched" />
+                    <Label htmlFor="val-unmatched" className="text-sm font-normal cursor-pointer">Unmatched Community</Label>
+                  </div>
+                </RadioGroup>
+              </div>
+            </>
+          )}
+          {activeFilters.length > 0 && (
+            <>
+              <Separator />
+              <Button variant="ghost" size="sm" className="w-full text-muted-foreground" onClick={clearAllFilters}>
+                Clear all filters
+              </Button>
+            </>
+          )}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+
   return (
     <div>
       <AriSectionHeader
@@ -500,81 +635,7 @@ export const AriLocationsSection: React.FC<AriLocationsSectionProps> = ({ agentI
                   searchClassName="max-w-[200px]"
                 >
                   {ViewToggle}
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" className="gap-1.5">
-                        <FilterLines size={16} />
-                        Filters
-                        {activeFilters.length > 0 && (
-                          <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
-                            {activeFilters.length}
-                          </Badge>
-                        )}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-72 p-4" align="end">
-                      <div className="space-y-4">
-                        <div className="space-y-2">
-                          <Label className="text-xs font-medium text-muted-foreground uppercase">State</Label>
-                          <Select value={stateFilter} onValueChange={setStateFilter}>
-                            <SelectTrigger className="w-full h-9">
-                              <SelectValue placeholder="All States" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="all">All States</SelectItem>
-                              {uniqueStates.map(state => (
-                                <SelectItem key={state} value={state}>{state}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <Separator />
-                        <div className="space-y-2">
-                          <Label className="text-xs font-medium text-muted-foreground uppercase">Calendar</Label>
-                          <RadioGroup value={calendarFilter} onValueChange={setCalendarFilter} className="gap-2">
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="all" id="cal-all" />
-                              <Label htmlFor="cal-all" className="text-sm font-normal cursor-pointer">All</Label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="connected" id="cal-connected" />
-                              <Label htmlFor="cal-connected" className="text-sm font-normal cursor-pointer">Connected</Label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="none" id="cal-none" />
-                              <Label htmlFor="cal-none" className="text-sm font-normal cursor-pointer">No Calendar</Label>
-                            </div>
-                          </RadioGroup>
-                        </div>
-                        <Separator />
-                        <div className="space-y-2">
-                          <Label className="text-xs font-medium text-muted-foreground uppercase">WordPress</Label>
-                          <RadioGroup value={wordpressFilter} onValueChange={setWordpressFilter} className="gap-2">
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="all" id="wp-all" />
-                              <Label htmlFor="wp-all" className="text-sm font-normal cursor-pointer">All</Label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="connected" id="wp-connected" />
-                              <Label htmlFor="wp-connected" className="text-sm font-normal cursor-pointer">Connected</Label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="none" id="wp-none" />
-                              <Label htmlFor="wp-none" className="text-sm font-normal cursor-pointer">Not Connected</Label>
-                            </div>
-                          </RadioGroup>
-                        </div>
-                        {activeFilters.length > 0 && (
-                          <>
-                            <Separator />
-                            <Button variant="ghost" size="sm" className="w-full text-muted-foreground" onClick={clearAllFilters}>
-                              Clear all filters
-                            </Button>
-                          </>
-                        )}
-                      </div>
-                    </PopoverContent>
-                  </Popover>
+                  {FilterPopover}
                 </DataTableToolbar>
 
                 {activeFilters.length > 0 && (
@@ -636,80 +697,7 @@ export const AriLocationsSection: React.FC<AriLocationsSectionProps> = ({ agentI
                   searchClassName="max-w-[200px]"
                 >
                   {ViewToggle}
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" className="gap-1.5">
-                        <FilterLines size={16} />
-                        Filters
-                        {activeFilters.length > 0 && (
-                          <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
-                            {activeFilters.length}
-                          </Badge>
-                        )}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-72 p-4" align="end">
-                      <div className="space-y-4">
-                        <div className="space-y-2">
-                          <Label className="text-xs font-medium text-muted-foreground uppercase">Community</Label>
-                          <Select value={communityFilter} onValueChange={setCommunityFilter}>
-                            <SelectTrigger className="w-full h-9">
-                              <SelectValue placeholder="All Communities" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="all">All Communities</SelectItem>
-                              {uniqueLocations.map(loc => (
-                                <SelectItem key={loc.id} value={loc.id}>{loc.name}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <Separator />
-                        <div className="space-y-2">
-                          <Label className="text-xs font-medium text-muted-foreground uppercase">Status</Label>
-                          <Select value={propertyStatusFilter} onValueChange={setPropertyStatusFilter}>
-                            <SelectTrigger className="w-full h-9">
-                              <SelectValue placeholder="All Statuses" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="all">All Statuses</SelectItem>
-                              <SelectItem value="available">Available</SelectItem>
-                              <SelectItem value="pending">Pending</SelectItem>
-                              <SelectItem value="sold">Sold</SelectItem>
-                              <SelectItem value="rented">Rented</SelectItem>
-                              <SelectItem value="coming_soon">Coming Soon</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <Separator />
-                        <div className="space-y-2">
-                          <Label className="text-xs font-medium text-muted-foreground uppercase">Validation</Label>
-                          <RadioGroup value={validationFilter} onValueChange={setValidationFilter} className="gap-2">
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="all" id="val-all" />
-                              <Label htmlFor="val-all" className="text-sm font-normal cursor-pointer">All</Label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="missing_lot" id="val-missing-lot" />
-                              <Label htmlFor="val-missing-lot" className="text-sm font-normal cursor-pointer">Missing Lot #</Label>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem value="unmatched" id="val-unmatched" />
-                              <Label htmlFor="val-unmatched" className="text-sm font-normal cursor-pointer">Unmatched Community</Label>
-                            </div>
-                          </RadioGroup>
-                        </div>
-                        {activeFilters.length > 0 && (
-                          <>
-                            <Separator />
-                            <Button variant="ghost" size="sm" className="w-full text-muted-foreground" onClick={clearAllFilters}>
-                              Clear all filters
-                            </Button>
-                          </>
-                        )}
-                      </div>
-                    </PopoverContent>
-                  </Popover>
+                  {FilterPopover}
                 </DataTableToolbar>
 
                 {activeFilters.length > 0 && (
