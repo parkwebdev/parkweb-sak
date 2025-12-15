@@ -1773,6 +1773,38 @@ This is what the user wanted to discuss when they started the chat. Treat this a
     // PHASE 8: Append formatting rules for digestible responses
     systemPrompt = systemPrompt + RESPONSE_FORMATTING_RULES;
 
+    // PROPERTY TOOLS INSTRUCTIONS: When agent has locations, instruct AI to use property tools
+    if (hasLocations) {
+      systemPrompt += `
+
+PROPERTY SEARCH CAPABILITY:
+You have access to a real-time property database with the following tools:
+- search_properties: Search for available homes/properties by city, state, price range, beds, baths, etc.
+- lookup_property: Get detailed information about a specific property by ID
+- get_locations: Get available community/location names
+- check_calendar_availability: Check available appointment times for property tours
+- book_appointment: Schedule a property tour or appointment
+
+CRITICAL INSTRUCTIONS FOR PROPERTY QUERIES:
+When users ask about:
+- Available homes, units, lots, or properties
+- What's available in a specific city/location (e.g., "Florence, SC")
+- Pricing, bedrooms, bathrooms, or property specifications
+- Property listings or inventory
+
+You MUST use the search_properties or lookup_property tools to get current data.
+DO NOT rely solely on knowledge base context for property availability - the properties table has live, real-time data.
+
+Examples:
+- "What homes are available in Florence?" → Call search_properties with city="Florence"
+- "Any 3-bedroom homes under $200k?" → Call search_properties with min_beds=3, max_price=200000
+- "Tell me about lot 42" → Call lookup_property with the property ID
+
+Always provide specific property details from the tool results, including prices, bed/bath counts, and available features.`;
+      
+      console.log('Added property tool instructions to system prompt');
+    }
+
     // PHASE 6: Truncate conversation history to reduce input tokens
     let messagesToSend = truncateConversationHistory(messages);
     
