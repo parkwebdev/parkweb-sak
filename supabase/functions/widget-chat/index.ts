@@ -61,6 +61,9 @@ function extractPhoneNumbers(content: string, locationContext?: { name?: string;
   const matches: CallAction[] = [];
   const seenNumbers = new Set<string>();
   
+  // Reset regex lastIndex to avoid stale state from previous invocations
+  PHONE_REGEX.lastIndex = 0;
+  
   let match;
   while ((match = PHONE_REGEX.exec(content)) !== null) {
     const rawNumber = match[0].replace(/[^0-9+]/g, ''); // Strip to digits
@@ -2550,7 +2553,13 @@ NEVER mark complete when:
         toolsUsed: toolsUsed.length > 0 ? toolsUsed : undefined,
         linkPreviews: linkPreviews.length > 0 ? linkPreviews : undefined,
         quickReplies: quickReplies.length > 0 ? quickReplies : undefined,
-        callActions: extractPhoneNumbers(assistantContent), // Auto-detect phone numbers for call buttons
+        callActions: (() => {
+          const callActionsResult = extractPhoneNumbers(assistantContent);
+          if (callActionsResult.length > 0) {
+            console.log(`Detected ${callActionsResult.length} phone number(s):`, callActionsResult.map(a => a.displayNumber));
+          }
+          return callActionsResult.length > 0 ? callActionsResult : undefined;
+        })(),
         aiMarkedComplete, // Signal to widget to show rating prompt
       }),
       {
