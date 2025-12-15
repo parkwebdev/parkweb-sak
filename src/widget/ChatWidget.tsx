@@ -26,9 +26,8 @@
  * <ChatWidget config={fullConfig} previewMode containedPreview />
  * ```
  */
-import { useState, useEffect, useRef } from 'react';
-import { createLead, sendChatMessage, submitConversationRating, type WidgetConfig, type ReferrerJourney } from './api';
-import { supabase } from '@/integrations/supabase/client';
+import { useState, useEffect, useRef, Suspense, lazy } from 'react';
+import { createLead, sendChatMessage, submitConversationRating, widgetSupabase, type WidgetConfig, type ReferrerJourney } from './api';
 
 // Types and constants extracted for maintainability
 import type { ViewType, ChatUser, Message, ChatWidgetProps } from './types';
@@ -47,11 +46,13 @@ import {
   useConversations,
 } from './hooks';
 
-// View Components
+// View Components - HomeView and ChatView are always needed, lazy-load the rest
 import { HomeView } from './views/HomeView';
 import { ChatView } from './views/ChatView';
-import { HelpView } from './views/HelpView';
-import { NewsView } from './views/NewsView';
+
+// Lazy-loaded views (~15KB savings from initial load)
+const HelpView = lazy(() => import('./views/HelpView').then(m => ({ default: m.HelpView })));
+const NewsView = lazy(() => import('./views/NewsView').then(m => ({ default: m.NewsView })));
 
 // UI Components
 import { FloatingButton, WidgetHeader, WidgetNav, SatisfactionRating } from './components';
@@ -388,13 +389,13 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
         uploadedFiles = await Promise.all(
           pendingFiles.map(async (pf) => {
             const fileName = `widget/${activeConversationId || 'temp'}/${Date.now()}-${pf.file.name}`;
-            const { data, error } = await supabase.storage
+            const { data, error } = await widgetSupabase.storage
               .from('conversation-files')
               .upload(fileName, pf.file, { upsert: false });
             
             if (error) throw error;
             
-            const { data: urlData } = supabase.storage
+            const { data: urlData } = widgetSupabase.storage
               .from('conversation-files')
               .getPublicUrl(data.path);
             
@@ -874,18 +875,22 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
               )}
 
               {currentView === 'help' && (
-                <HelpView
-                  config={config}
-                  helpCategories={config.helpCategories}
-                  helpArticles={config.helpArticles}
-                />
+                <Suspense fallback={<div className="flex-1 flex items-center justify-center"><div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>}>
+                  <HelpView
+                    config={config}
+                    helpCategories={config.helpCategories}
+                    helpArticles={config.helpArticles}
+                  />
+                </Suspense>
               )}
 
               {currentView === 'news' && (
-                <NewsView
-                  config={config}
-                  newsItems={config.newsItems || []}
-                />
+                <Suspense fallback={<div className="flex-1 flex items-center justify-center"><div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>}>
+                  <NewsView
+                    config={config}
+                    newsItems={config.newsItems || []}
+                  />
+                </Suspense>
               )}
             </div>
           )}

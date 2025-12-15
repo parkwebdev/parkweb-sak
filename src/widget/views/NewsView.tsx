@@ -3,17 +3,30 @@
  * 
  * News/announcements view with article cards and detail view.
  * Supports featured images, author info, and CTA buttons.
+ * DOMPurify is lazy-loaded to reduce initial bundle size.
  * 
  * @module widget/views/NewsView
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from '@untitledui/icons';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { CSSAnimatedList } from '../CSSAnimatedList';
 import { CSSAnimatedItem } from '../CSSAnimatedItem';
 import type { WidgetConfig } from '../api';
-import DOMPurify from 'isomorphic-dompurify';
+
+// Lazy-load DOMPurify (~8KB savings from initial load)
+let DOMPurify: typeof import('isomorphic-dompurify').default | null = null;
+const loadDOMPurify = async () => {
+  if (!DOMPurify) {
+    const module = await import('isomorphic-dompurify');
+    DOMPurify = module.default;
+  }
+  return DOMPurify;
+};
+
+const ALLOWED_TAGS = ['p', 'br', 'strong', 'em', 'b', 'i', 'u', 'a', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'code', 'pre', 'span', 'div', 'img'];
+const ALLOWED_ATTR = ['href', 'target', 'rel', 'class', 'src', 'alt', 'width', 'height', 'style'];
 
 interface NewsItem {
   id: string;
@@ -36,6 +49,26 @@ interface NewsViewProps {
 
 export const NewsView = ({ config, newsItems }: NewsViewProps) => {
   const [selectedArticle, setSelectedArticle] = useState<NewsItem | null>(null);
+  const [sanitizedContent, setSanitizedContent] = useState<string>('');
+  const [isLoadingContent, setIsLoadingContent] = useState(false);
+
+  // Lazy-load and sanitize article content
+  useEffect(() => {
+    if (!selectedArticle) {
+      setSanitizedContent('');
+      return;
+    }
+    
+    setIsLoadingContent(true);
+    loadDOMPurify().then(purify => {
+      const clean = purify.sanitize(selectedArticle.body, {
+        ALLOWED_TAGS,
+        ALLOWED_ATTR,
+      });
+      setSanitizedContent(clean);
+      setIsLoadingContent(false);
+    });
+  }, [selectedArticle]);
 
   const formatDate = (dateStr?: string) => {
     if (!dateStr) return '';
@@ -50,14 +83,6 @@ export const NewsView = ({ config, newsItems }: NewsViewProps) => {
   const stripHtml = (html: string) => {
     const doc = new DOMParser().parseFromString(html, 'text/html');
     return doc.body.textContent || '';
-  };
-
-  // Sanitize HTML for safe rendering
-  const sanitizeHtml = (html: string) => {
-    return DOMPurify.sanitize(html, {
-      ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'b', 'i', 'u', 'a', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'code', 'pre', 'span', 'div', 'img'],
-      ALLOWED_ATTR: ['href', 'target', 'rel', 'class', 'src', 'alt', 'width', 'height', 'style'],
-    });
   };
 
   // Calculate previous/next articles
@@ -120,10 +145,18 @@ export const NewsView = ({ config, newsItems }: NewsViewProps) => {
             )}
 
             {/* Article body */}
-            <div 
-              className="article-content max-w-none"
-              dangerouslySetInnerHTML={{ __html: sanitizeHtml(selectedArticle.body) }}
-            />
+            {isLoadingContent ? (
+              <div className="space-y-2 animate-pulse">
+                <div className="h-4 bg-muted rounded w-full" />
+                <div className="h-4 bg-muted rounded w-3/4" />
+                <div className="h-4 bg-muted rounded w-5/6" />
+              </div>
+            ) : (
+              <div 
+                className="article-content max-w-none"
+                dangerouslySetInnerHTML={{ __html: sanitizedContent }}
+              />
+            )}
 
             {/* CTA Buttons */}
             {((selectedArticle.cta_primary_label && selectedArticle.cta_primary_url) || 

@@ -12,7 +12,7 @@ import { Suspense } from 'react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Check, CheckCircle, XCircle, Download01 } from '@untitledui/icons';
 import { ChatBubbleIcon } from '@/components/agents/ChatBubbleIcon';
-import { LinkPreviews } from '@/components/chat/LinkPreviews';
+import { LinkPreviewsWidget } from './LinkPreviewsWidget';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { formatShortTime } from '@/lib/time-formatting';
 import { formatFileSize } from '@/lib/file-validation';
@@ -234,7 +234,7 @@ export const MessageBubble = ({
             {/* Link previews for assistant messages */}
             {message.role === 'assistant' && message.linkPreviews && message.linkPreviews.length > 0 && (
               <div className="mt-2">
-                <LinkPreviews content={message.content} cachedPreviews={message.linkPreviews} />
+                <LinkPreviewsWidget content={message.content} cachedPreviews={message.linkPreviews} />
               </div>
             )}
           </div>
