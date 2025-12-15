@@ -26,6 +26,7 @@ interface ConversationMetadata {
   lead_email?: string;
   custom_fields?: Record<string, string | number | boolean>;
   country?: string;
+  city?: string;
   device_type?: string;
   browser?: string;
   os?: string;
@@ -42,6 +43,9 @@ interface ConversationMetadata {
   // Property context memory for multi-property scenarios
   shown_properties?: ShownProperty[];
   last_property_search_at?: string;
+  // PHASE 2: Conversation summarization for context continuity
+  conversation_summary?: string;
+  summary_generated_at?: string;
 }
 
 // URL regex for extracting links from content
@@ -160,6 +164,7 @@ const EMBEDDING_DIMENSIONS = 1024;
 // PHASE 6: Context Window Optimization Constants
 const MAX_CONVERSATION_HISTORY = 10; // Limit to last 10 messages to reduce input tokens
 const MAX_RAG_CHUNKS = 3; // Limit RAG context to top 3 most relevant chunks
+const SUMMARIZATION_THRESHOLD = 15; // Only summarize if over this many messages (worth the extra API call)
 
 // PHASE 8: Response Formatting Rules for Digestible AI Responses (with chunking)
 const RESPONSE_FORMATTING_RULES = `
@@ -869,7 +874,7 @@ function selectModelTier(
   return { model: MODEL_TIERS.standard, tier: 'standard' };
 }
 
-// PHASE 6: Truncate conversation history to reduce input tokens
+// PHASE 6: Truncate conversation history to reduce input tokens (deprecated - use summarizeConversationHistory)
 function truncateConversationHistory(messages: any[]): any[] {
   if (!messages || messages.length <= MAX_CONVERSATION_HISTORY) {
     return messages;
@@ -883,6 +888,151 @@ function truncateConversationHistory(messages: any[]): any[] {
   console.log(`Truncated conversation history: removed ${removedCount} older messages, keeping last ${MAX_CONVERSATION_HISTORY}`);
   
   return truncated;
+}
+
+// ============================================
+// PHASE 2: INTELLIGENT CONVERSATION SUMMARIZATION
+// ============================================
+
+interface SummarizationResult {
+  summary: string;
+  keptMessages: any[];
+  wasNeeded: boolean;
+}
+
+/**
+ * Summarize older messages instead of hard truncation.
+ * Uses a cheap LLM to create a context summary before truncating.
+ * Only triggers when message count exceeds SUMMARIZATION_THRESHOLD.
+ */
+async function summarizeConversationHistory(
+  messages: any[],
+  keepCount: number,
+  openrouterKey: string,
+  existingSummary?: string
+): Promise<SummarizationResult> {
+  // If under threshold, no summarization needed
+  if (!messages || messages.length <= keepCount + 5) {
+    return { 
+      summary: existingSummary || '', 
+      keptMessages: messages || [],
+      wasNeeded: false 
+    };
+  }
+  
+  // Don't re-summarize if we already have a recent summary and messages aren't too long
+  if (existingSummary && messages.length < SUMMARIZATION_THRESHOLD) {
+    return {
+      summary: existingSummary,
+      keptMessages: messages.slice(-keepCount),
+      wasNeeded: false
+    };
+  }
+  
+  const olderMessages = messages.slice(0, -keepCount);
+  const recentMessages = messages.slice(-keepCount);
+  
+  // Format older messages for summarization (exclude tool messages for cleaner summary)
+  const messagesToSummarize = olderMessages
+    .filter(m => m.role !== 'tool' && !m.tool_calls)
+    .map(m => `${m.role === 'user' ? 'User' : 'Assistant'}: ${typeof m.content === 'string' ? m.content.substring(0, 500) : '[non-text content]'}`)
+    .join('\n');
+  
+  // Skip if nothing meaningful to summarize
+  if (!messagesToSummarize || messagesToSummarize.length < 100) {
+    return {
+      summary: existingSummary || '',
+      keptMessages: recentMessages,
+      wasNeeded: false
+    };
+  }
+  
+  console.log(`Summarizing ${olderMessages.length} older messages (keeping ${recentMessages.length})`);
+  
+  try {
+    const summaryPrompt = `Summarize this conversation history in 3-5 concise bullet points. Focus on:
+• What the user is looking for (properties, locations, features, price range)
+• Properties/options shown (include addresses or lot numbers if mentioned)
+• Any stated preferences (beds, baths, location, budget)
+• Actions taken (bookings, inquiries, decisions made)
+• Current status of their inquiry
+
+Conversation:
+${messagesToSummarize}
+
+Return ONLY the bullet points, no introduction or conclusion.`;
+
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openrouterKey}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': 'https://chatpad.ai',
+        'X-Title': 'ChatPad Conversation Summary',
+      },
+      body: JSON.stringify({
+        model: MODEL_TIERS.lite, // Use cheapest model for summaries
+        messages: [{ role: 'user', content: summaryPrompt }],
+        max_tokens: 300,
+        temperature: 0.3, // Low temperature for consistent summaries
+      }),
+    });
+
+    if (!response.ok) {
+      console.error(`Summarization API error: ${response.status}`);
+      // Fall back to hard truncation on error
+      return {
+        summary: existingSummary || '',
+        keptMessages: recentMessages,
+        wasNeeded: false
+      };
+    }
+
+    const data = await response.json();
+    const summary = data.choices?.[0]?.message?.content?.trim() || '';
+    
+    if (summary) {
+      console.log(`Generated conversation summary (${summary.length} chars)`);
+      return {
+        summary,
+        keptMessages: recentMessages,
+        wasNeeded: true
+      };
+    }
+  } catch (error) {
+    console.error('Summarization error:', error);
+  }
+  
+  // Fall back to hard truncation on any error
+  return {
+    summary: existingSummary || '',
+    keptMessages: recentMessages,
+    wasNeeded: false
+  };
+}
+
+/**
+ * Store conversation summary in metadata for future reference
+ */
+async function storeConversationSummary(
+  supabase: any,
+  conversationId: string,
+  summary: string,
+  currentMetadata: any
+): Promise<void> {
+  try {
+    await supabase.from('conversations').update({
+      metadata: {
+        ...currentMetadata,
+        conversation_summary: summary,
+        summary_generated_at: new Date().toISOString(),
+      }
+    }).eq('id', conversationId);
+    
+    console.log('Stored conversation summary in metadata');
+  } catch (error) {
+    console.error('Error storing conversation summary:', error);
+  }
 }
 
 // ============================================
@@ -2123,10 +2273,44 @@ Always provide specific property details from the tool results, including prices
     }
 
     // PHASE 1: Use database conversation history (source of truth) instead of client messages
-    // PHASE 6: Truncate to reduce input tokens
-    let messagesToSend = truncateConversationHistory(
-      dbConversationHistory.length > 0 ? dbConversationHistory : messages
-    );
+    // PHASE 2: Intelligent summarization instead of hard truncation
+    const rawHistory = dbConversationHistory.length > 0 ? dbConversationHistory : messages;
+    
+    // Get existing summary from conversation metadata if available
+    const existingSummary = conversationMetadata?.conversation_summary as string | undefined;
+    
+    // Summarize if conversation is long (preserves context that would otherwise be lost)
+    const { summary: conversationSummary, keptMessages, wasNeeded: summaryGenerated } = 
+      await summarizeConversationHistory(
+        rawHistory,
+        MAX_CONVERSATION_HISTORY,
+        OPENROUTER_API_KEY,
+        existingSummary
+      );
+    
+    let messagesToSend = keptMessages;
+    
+    // Store summary in conversation metadata for future use
+    if (summaryGenerated && conversationSummary && activeConversationId) {
+      await storeConversationSummary(
+        supabase,
+        activeConversationId,
+        conversationSummary,
+        conversationMetadata
+      );
+    }
+    
+    // Inject conversation summary into system prompt for context continuity
+    if (conversationSummary) {
+      systemPrompt = systemPrompt + `
+
+EARLIER CONVERSATION SUMMARY:
+The following summarizes earlier parts of this conversation that are no longer in the immediate message history:
+${conversationSummary}
+
+Use this context to maintain continuity - the user may reference things from earlier in the conversation.`;
+      console.log(`Injected conversation summary (${conversationSummary.length} chars) into system prompt`);
+    }
     
     // For greeting requests, add a special instruction and use empty messages
     if (isGreetingRequest) {
