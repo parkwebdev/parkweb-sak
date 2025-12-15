@@ -125,8 +125,9 @@ export interface BookingConfirmationData {
   phoneNumber?: string; // Contact phone number
   date: string; // Formatted date display
   time: string; // Formatted time display
+  startDateTime?: string; // ISO datetime for calendar URLs
+  endDateTime?: string; // ISO datetime for calendar URLs
   confirmationId?: string;
-  calendarUrl?: string; // Legacy - prefer .ics download
 }
 
 /**

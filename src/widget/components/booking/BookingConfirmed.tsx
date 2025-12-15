@@ -3,6 +3,7 @@
  * 
  * Step 3 of the multi-step booking flow.
  * Displays confirmation details after successful booking.
+ * Uses smart platform detection for optimal calendar integration.
  */
 
 import { cn } from '@/lib/utils';
@@ -14,26 +15,108 @@ interface BookingConfirmedProps {
   primaryColor?: string;
 }
 
+type CalendarPlatform = 'google' | 'outlook' | 'apple' | 'other';
+
+/**
+ * Detect user's calendar platform based on browser/device
+ */
+function detectCalendarPlatform(): CalendarPlatform {
+  const ua = navigator.userAgent.toLowerCase();
+  const platform = navigator.platform?.toLowerCase() || '';
+  
+  // Apple devices (iOS, macOS) → .ics works best with native Calendar
+  if (/iphone|ipad|ipod|mac/.test(platform) || (/safari/.test(ua) && !/chrome/.test(ua))) {
+    return 'apple';
+  }
+  
+  // Microsoft Edge users likely have Outlook
+  if (/edg/.test(ua)) {
+    return 'outlook';
+  }
+  
+  // Chrome/Android users → Google Calendar URL
+  if (/chrome/.test(ua) || /android/.test(ua)) {
+    return 'google';
+  }
+  
+  return 'other'; // Fallback to .ics
+}
+
+/**
+ * Format date for Google Calendar URL (YYYYMMDDTHHmmssZ)
+ */
+function formatGoogleDate(date: Date): string {
+  return date.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+}
+
+/**
+ * Generate Google Calendar URL
+ */
+function generateGoogleCalendarUrl(data: BookingConfirmationData): string | null {
+  if (!data.startDateTime || !data.endDateTime) return null;
+  
+  const startDate = new Date(data.startDateTime);
+  const endDate = new Date(data.endDateTime);
+  
+  const params = new URLSearchParams({
+    action: 'TEMPLATE',
+    text: `Tour at ${data.locationName}`,
+    dates: `${formatGoogleDate(startDate)}/${formatGoogleDate(endDate)}`,
+    details: [
+      data.confirmationId ? `Confirmation: ${data.confirmationId}` : '',
+      data.phoneNumber ? `Contact: ${data.phoneNumber}` : '',
+    ].filter(Boolean).join('\n'),
+    location: data.address || data.locationName,
+  });
+  
+  return `https://calendar.google.com/calendar/render?${params}`;
+}
+
+/**
+ * Generate Outlook Web Calendar URL
+ */
+function generateOutlookCalendarUrl(data: BookingConfirmationData): string | null {
+  if (!data.startDateTime || !data.endDateTime) return null;
+  
+  const params = new URLSearchParams({
+    path: '/calendar/action/compose',
+    rru: 'addevent',
+    subject: `Tour at ${data.locationName}`,
+    startdt: data.startDateTime,
+    enddt: data.endDateTime,
+    body: [
+      data.confirmationId ? `Confirmation: ${data.confirmationId}` : '',
+      data.phoneNumber ? `Contact: ${data.phoneNumber}` : '',
+    ].filter(Boolean).join('\n'),
+    location: data.address || data.locationName,
+  });
+  
+  return `https://outlook.live.com/calendar/0/deeplink/compose?${params}`;
+}
+
+/**
+ * Format date for .ics file (YYYYMMDDTHHmmssZ)
+ */
+function formatIcsDate(date: Date): string {
+  return date.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+}
+
 /**
  * Generate an .ics file content for universal calendar support
  */
 function generateIcsContent(data: BookingConfirmationData): string {
-  // Parse the date and time to create proper datetime
   const eventTitle = `Tour at ${data.locationName}`;
   const eventLocation = data.address || data.locationName;
-  
-  // Create a simple UID for the event
   const uid = `${data.confirmationId || Date.now()}@chatpad`;
-  
-  // Format current timestamp for DTSTAMP
   const now = new Date();
-  const dtstamp = now.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+  const dtstamp = formatIcsDate(now);
   
-  // For simplicity, use a placeholder datetime (the actual implementation
-  // would parse data.date and data.time into proper ISO format)
-  // Using DTSTART with VALUE=DATE for all-day-ish event as fallback
+  // Use ISO datetimes if available, otherwise fall back to current time placeholder
+  const startDt = data.startDateTime ? formatIcsDate(new Date(data.startDateTime)) : dtstamp;
+  const endDt = data.endDateTime ? formatIcsDate(new Date(data.endDateTime)) : dtstamp;
+  
   const description = [
-    `Confirmation: ${data.confirmationId || 'Pending'}`,
+    data.confirmationId ? `Confirmation: ${data.confirmationId}` : '',
     data.phoneNumber ? `Contact: ${data.phoneNumber}` : '',
     data.address ? `Address: ${data.address}` : '',
   ].filter(Boolean).join('\\n');
@@ -47,9 +130,12 @@ function generateIcsContent(data: BookingConfirmationData): string {
     'BEGIN:VEVENT',
     `UID:${uid}`,
     `DTSTAMP:${dtstamp}`,
+    `DTSTART:${startDt}`,
+    `DTEND:${endDt}`,
     `SUMMARY:${eventTitle}`,
     `LOCATION:${eventLocation}`,
     `DESCRIPTION:${description}`,
+    'STATUS:CONFIRMED',
     'END:VEVENT',
     'END:VCALENDAR',
   ].join('\r\n');
@@ -74,7 +160,32 @@ function downloadIcsFile(data: BookingConfirmationData) {
 
 export function BookingConfirmed({ data, primaryColor }: BookingConfirmedProps) {
   const handleAddToCalendar = () => {
-    downloadIcsFile(data);
+    const platform = detectCalendarPlatform();
+    
+    switch (platform) {
+      case 'google': {
+        const url = generateGoogleCalendarUrl(data);
+        if (url) {
+          window.open(url, '_blank', 'noopener,noreferrer');
+        } else {
+          downloadIcsFile(data);
+        }
+        break;
+      }
+      case 'outlook': {
+        const url = generateOutlookCalendarUrl(data);
+        if (url) {
+          window.open(url, '_blank', 'noopener,noreferrer');
+        } else {
+          downloadIcsFile(data);
+        }
+        break;
+      }
+      case 'apple':
+      default:
+        downloadIcsFile(data);
+        break;
+    }
   };
 
   return (
@@ -121,7 +232,7 @@ export function BookingConfirmed({ data, primaryColor }: BookingConfirmedProps) 
         </a>
       )}
 
-      {/* Add to Calendar button - universal .ics download */}
+      {/* Add to Calendar button - smart platform detection */}
       <button
         onClick={handleAddToCalendar}
         aria-label="Add appointment to calendar"
