@@ -5,7 +5,7 @@
  * Route: /booking-test
  */
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { DayPicker, TimePicker, BookingConfirmed } from '@/widget/components/booking';
 import type { DayPickerData, TimePickerData, BookingConfirmationData, BookingDay, BookingTime } from '@/widget/types';
 import { Button } from '@/components/ui/button';
@@ -49,17 +49,6 @@ const mockTimePickerData: TimePickerData = {
   ],
 };
 
-const mockConfirmationData: BookingConfirmationData = {
-  locationName: 'Clearview Estates',
-  address: '1234 Main Street, Springfield, IL 62701',
-  phoneNumber: '(555) 123-4567',
-  date: 'Wednesday, December 18, 2024',
-  time: '10:00 AM',
-  startDateTime: '2024-12-18T10:00:00-06:00',
-  endDateTime: '2024-12-18T10:30:00-06:00',
-  confirmationId: 'BK-2024-1218-001',
-};
-
 // Empty state mock data
 const emptyDayPickerData: DayPickerData = {
   locationName: 'Clearview Estates',
@@ -82,6 +71,10 @@ export default function BookingComponentsTest() {
   const [activeStep, setActiveStep] = useState<1 | 2 | 3>(1);
   const [showEmptyState, setShowEmptyState] = useState(false);
   const [logs, setLogs] = useState<string[]>([]);
+  
+  // Track user selections
+  const [selectedDay, setSelectedDay] = useState<BookingDay | null>(null);
+  const [selectedTime, setSelectedTime] = useState<BookingTime | null>(null);
 
   const addLog = (message: string) => {
     setLogs(prev => [...prev, `${new Date().toLocaleTimeString()}: ${message}`]);
@@ -89,12 +82,14 @@ export default function BookingComponentsTest() {
   };
 
   const handleDaySelect = (day: BookingDay) => {
+    setSelectedDay(day);
     addLog(`Selected day: ${day.dayName} ${day.dayNumber} (${day.date})`);
     // Simulate loading delay then advance
     setTimeout(() => setActiveStep(2), 500);
   };
 
   const handleTimeSelect = (time: BookingTime) => {
+    setSelectedTime(time);
     addLog(`Selected time: ${time.time} (${time.datetime})`);
     // Simulate loading delay then advance
     setTimeout(() => setActiveStep(3), 500);
@@ -102,11 +97,74 @@ export default function BookingComponentsTest() {
 
   const handleGoBack = () => {
     addLog('User clicked "Pick a different day"');
+    setSelectedTime(null);
     setActiveStep(1);
   };
 
+  // Build dynamic time picker data based on selected day
+  const dynamicTimePickerData: TimePickerData = useMemo(() => {
+    if (!selectedDay) return showEmptyState ? emptyTimePickerData : mockTimePickerData;
+    
+    const date = new Date(selectedDay.date);
+    const formattedDay = date.toLocaleDateString('en-US', { 
+      weekday: 'long', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+    
+    // Update times to use the selected date
+    const updatedTimes = mockTimePickerData.times.map(t => ({
+      ...t,
+      datetime: t.datetime.replace(/\d{4}-\d{2}-\d{2}/, selectedDay.date),
+    }));
+    
+    return {
+      ...mockTimePickerData,
+      selectedDate: selectedDay.date,
+      selectedDayDisplay: formattedDay,
+      times: showEmptyState ? [] : updatedTimes,
+    };
+  }, [selectedDay, showEmptyState]);
+
+  // Build dynamic confirmation data based on selections
+  const dynamicConfirmationData: BookingConfirmationData = useMemo(() => {
+    if (!selectedDay || !selectedTime) {
+      return {
+        locationName: mockDayPickerData.locationName,
+        address: '1234 Main Street, Springfield, IL 62701',
+        phoneNumber: mockDayPickerData.phoneNumber,
+        date: 'Select a day first',
+        time: 'Select a time first',
+        startDateTime: '',
+        endDateTime: '',
+      };
+    }
+    
+    const date = new Date(selectedDay.date);
+    const formattedDate = date.toLocaleDateString('en-US', { 
+      weekday: 'long', 
+      month: 'long', 
+      day: 'numeric', 
+      year: 'numeric' 
+    });
+    
+    // Calculate end time (30 min after start)
+    const startDateTime = selectedTime.datetime.replace(/\d{4}-\d{2}-\d{2}/, selectedDay.date);
+    const endDate = new Date(startDateTime);
+    endDate.setMinutes(endDate.getMinutes() + 30);
+    
+    return {
+      locationName: mockDayPickerData.locationName,
+      address: '1234 Main Street, Springfield, IL 62701',
+      phoneNumber: mockDayPickerData.phoneNumber,
+      date: formattedDate,
+      time: selectedTime.time,
+      startDateTime,
+      endDateTime: endDate.toISOString(),
+    };
+  }, [selectedDay, selectedTime]);
+
   const dayData = showEmptyState ? emptyDayPickerData : mockDayPickerData;
-  const timeData = showEmptyState ? emptyTimePickerData : mockTimePickerData;
 
   return (
     <div className="min-h-screen bg-background p-6">
@@ -164,10 +222,24 @@ export default function BookingComponentsTest() {
             </Button>
           </div>
 
-          <Button variant="ghost" size="sm" onClick={() => setLogs([])}>
-            Clear Log
+          <Button variant="ghost" size="sm" onClick={() => {
+            setLogs([]);
+            setSelectedDay(null);
+            setSelectedTime(null);
+            setActiveStep(1);
+          }}>
+            Reset
           </Button>
         </div>
+
+        {/* Selection Status */}
+        {(selectedDay || selectedTime) && (
+          <div className="p-3 bg-muted rounded-lg text-sm">
+            <span className="font-medium">Current selections:</span>
+            {selectedDay && <span className="ml-2">Day: {selectedDay.dayName} {selectedDay.dayNumber}</span>}
+            {selectedTime && <span className="ml-2">• Time: {selectedTime.time}</span>}
+          </div>
+        )}
 
         {/* Main Preview */}
         <div className="grid md:grid-cols-2 gap-6">
@@ -182,7 +254,7 @@ export default function BookingComponentsTest() {
               <div className="bg-muted rounded-lg p-3 mb-2">
                 <p className="text-sm text-foreground">
                   {activeStep === 1 && "Great! I'd love to help you schedule a tour. Which day works best for you?"}
-                  {activeStep === 2 && "Perfect! What time works best for you on Wednesday?"}
+                  {activeStep === 2 && `Perfect! What time works best for you on ${dynamicTimePickerData.selectedDayDisplay}?`}
                   {activeStep === 3 && "Your tour is all set! Here are the details:"}
                 </p>
               </div>
@@ -197,7 +269,7 @@ export default function BookingComponentsTest() {
               )}
               {activeStep === 2 && (
                 <TimePicker
-                  data={timeData}
+                  data={dynamicTimePickerData}
                   onSelect={handleTimeSelect}
                   onGoBack={handleGoBack}
                   primaryColor={primaryColor}
@@ -205,7 +277,7 @@ export default function BookingComponentsTest() {
               )}
               {activeStep === 3 && (
                 <BookingConfirmed
-                  data={mockConfirmationData}
+                  data={dynamicConfirmationData}
                   primaryColor={primaryColor}
                 />
               )}
@@ -244,7 +316,7 @@ export default function BookingComponentsTest() {
             <div className="bg-card border border-border rounded-xl p-4">
               <p className="text-xs font-medium text-muted-foreground mb-2">TimePicker</p>
               <TimePicker
-                data={timeData}
+                data={dynamicTimePickerData}
                 onSelect={handleTimeSelect}
                 onGoBack={handleGoBack}
                 primaryColor={primaryColor}
@@ -253,7 +325,7 @@ export default function BookingComponentsTest() {
             <div className="bg-card border border-border rounded-xl p-4">
               <p className="text-xs font-medium text-muted-foreground mb-2">BookingConfirmed</p>
               <BookingConfirmed
-                data={mockConfirmationData}
+                data={dynamicConfirmationData}
                 primaryColor={primaryColor}
               />
             </div>

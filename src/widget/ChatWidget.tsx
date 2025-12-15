@@ -372,13 +372,14 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     setShowConversationList(false);
   };
 
-  const handleSendMessage = async () => {
-    if (!messageInput.trim() && pendingFiles.length === 0) return;
+  const handleSendMessage = async (overrideMessage?: string) => {
+    const messageToSend = overrideMessage ?? messageInput;
+    if (!messageToSend.trim() && pendingFiles.length === 0) return;
 
     // Mark as actively sending to prevent DB fetch from overwriting local messages
     isActivelySendingRef.current = true;
 
-    const userContent = pendingFiles.length > 0 ? (messageInput || 'Sent files') : messageInput;
+    const userContent = pendingFiles.length > 0 ? (messageToSend || 'Sent files') : messageToSend;
     
     // Upload files to Supabase storage and get real URLs
     let uploadedFiles: Array<{ name: string; url: string; type: string; size: number }> | undefined;

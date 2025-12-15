@@ -2,16 +2,16 @@
  * ChatView Component
  * 
  * Main chat interface with message list, typing indicators, file attachments,
- * contact form, and message input. Handles message reactions and auto-scrolling.
+ * contact form, booking components, and message input. Handles message reactions and auto-scrolling.
  * 
  * @module widget/views/ChatView
  */
 
-import { Suspense, RefObject, useRef, useEffect } from 'react';
+import { Suspense, RefObject } from 'react';
 import { updateMessageReaction } from '../api';
 import { MessageBubble, ContactForm, MessageInput, TypingIndicator, QuickReplies, CallButton } from '../components';
 import { FileDropZone } from '../constants';
-import type { Message, ChatUser } from '../types';
+import type { Message, ChatUser, BookingDay, BookingTime } from '../types';
 import type { WidgetConfig } from '../api';
 
 interface PendingFile {
@@ -43,7 +43,7 @@ interface ChatViewProps {
   isLoadingMessages: boolean;
   messagesContainerRef: RefObject<HTMLDivElement>;
   messagesEndRef: RefObject<HTMLDivElement>;
-  onSendMessage: () => void;
+  onSendMessage: (overrideMessage?: string) => void;
   onQuickReplySelect: (suggestion: string) => void;
   onStartRecording: () => void;
   onStopRecording: () => void;
@@ -130,6 +130,28 @@ export const ChatView = ({
     }
   };
 
+  // Booking handlers - send user selections as messages to continue the booking flow
+  const handleBookingDaySelect = (day: BookingDay) => {
+    const date = new Date(day.date);
+    const formattedDate = date.toLocaleDateString('en-US', { 
+      weekday: 'long', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+    const selectionMessage = `I'd like to book for ${formattedDate}`;
+    onSendMessage(selectionMessage);
+  };
+
+  const handleBookingTimeSelect = (time: BookingTime) => {
+    const selectionMessage = `${time.time} works for me`;
+    onSendMessage(selectionMessage);
+  };
+
+  const handleBookingGoBack = () => {
+    const backMessage = `I'd like to pick a different day`;
+    onSendMessage(backMessage);
+  };
+
   return (
     <>
       <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-4 messages-container min-h-0">
@@ -202,6 +224,9 @@ export const ChatView = ({
                 onRemoveReaction={(emoji) => handleRemoveReaction(msg.id!, emoji)}
                 isContinuation={isContinuation}
                 isLastInGroup={isLastInGroup}
+                onBookingDaySelect={handleBookingDaySelect}
+                onBookingTimeSelect={handleBookingTimeSelect}
+                onBookingGoBack={handleBookingGoBack}
               />
               {showCallButton && (
                 <CallButton callActions={msg.callActions!} />
@@ -251,7 +276,7 @@ export const ChatView = ({
       <MessageInput
         messageInput={messageInput}
         onMessageChange={setMessageInput}
-        onSend={onSendMessage}
+        onSend={() => onSendMessage()}
         disabled={disabled}
         primaryColor={config.primaryColor}
         enableFileAttachments={config.enableFileAttachments}
