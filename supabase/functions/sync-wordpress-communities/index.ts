@@ -248,7 +248,8 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const { action, agentId, siteUrl } = await req.json();
+    // Parse request body ONCE - can only be read once
+    const { action, agentId, siteUrl, communitySyncInterval, homeSyncInterval, deleteLocations } = await req.json();
 
     // Verify user has access to this agent
     const { data: agent, error: agentError } = await supabase
@@ -366,7 +367,7 @@ Deno.serve(async (req: Request) => {
 
     // Handle save config action (saves URL and sync settings without syncing)
     if (action === 'save') {
-      const { communitySyncInterval, homeSyncInterval } = await req.json().catch(() => ({}));
+      // communitySyncInterval and homeSyncInterval already extracted from req.json() above
       
       const deploymentConfig = agent.deployment_config as Record<string, unknown> | null;
       const wpConfig = deploymentConfig?.wordpress as WordPressConfig | undefined;
@@ -395,7 +396,7 @@ Deno.serve(async (req: Request) => {
 
     // Handle disconnect action (clears WordPress config)
     if (action === 'disconnect') {
-      const { deleteLocations } = await req.json().catch(() => ({}));
+      // deleteLocations already extracted from req.json() above
       
       // Optionally delete synced locations
       if (deleteLocations) {
