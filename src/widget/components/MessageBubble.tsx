@@ -2,7 +2,7 @@
  * MessageBubble Component
  * 
  * Renders a single chat message with avatar, content, metadata, and reactions.
- * Supports text, audio, file attachments, link previews, and system notices.
+ * Supports text, audio, file attachments, link previews, booking components, and system notices.
  * Uses message grouping for cleaner UI with continuation messages.
  * 
  * @module widget/components/MessageBubble
@@ -20,7 +20,8 @@ import { downloadFile } from '@/lib/file-download';
 import { AudioPlayer, MessageReactions } from '../constants';
 import { FileTypeIcon } from '@/components/chat/FileTypeIcons';
 import { stripUrlsFromContent, stripPhoneNumbersFromContent } from '../utils/url-stripper';
-import type { Message } from '../types';
+import { DayPicker, TimePicker, BookingConfirmed } from './booking';
+import type { Message, BookingDay, BookingTime } from '../types';
 
 /** Props for the MessageBubble component */
 interface MessageBubbleProps {
@@ -38,6 +39,12 @@ interface MessageBubbleProps {
   isContinuation?: boolean;
   /** Whether this is the last message in a group */
   isLastInGroup?: boolean;
+  /** Handler for booking day selection */
+  onBookingDaySelect?: (day: BookingDay) => void;
+  /** Handler for booking time selection */
+  onBookingTimeSelect?: (time: BookingTime) => void;
+  /** Handler for booking go back action */
+  onBookingGoBack?: () => void;
 }
 
 /**
@@ -54,6 +61,9 @@ export const MessageBubble = ({
   onRemoveReaction,
   isContinuation = false,
   isLastInGroup = true,
+  onBookingDaySelect,
+  onBookingTimeSelect,
+  onBookingGoBack,
 }: MessageBubbleProps) => {
   const msgWithExtras = message as Message & { isHuman?: boolean; senderName?: string; senderAvatar?: string };
 
@@ -74,6 +84,9 @@ export const MessageBubble = ({
     : msgWithExtras.isHuman && msgWithExtras.senderName 
       ? msgWithExtras.senderName 
       : 'Ari';
+
+  // Check if this message has booking components
+  const hasBookingComponent = message.dayPicker || message.timePicker || message.bookingConfirmed;
 
   return (
     <div className={`flex items-start gap-2 ${isUser ? 'justify-end' : ''} ${isContinuation ? 'mt-1' : 'mt-1 first:mt-0'}`}>
@@ -142,92 +155,123 @@ export const MessageBubble = ({
           </div>
         )}
 
-        {/* Message bubble */}
-        <div 
-          className={`rounded-lg p-3 text-foreground ${isUser ? '' : 'bg-muted'}`}
-          style={isUser ? { backgroundColor: 'rgb(1 110 237 / 7%)' } : undefined}
-        >
-          {message.type === 'audio' && message.audioUrl && (
-            <Suspense fallback={<div className="h-8 flex items-center text-sm text-muted-foreground">Loading audio...</div>}>
-              <AudioPlayer audioUrl={message.audioUrl} primaryColor={primaryColor} />
-            </Suspense>
-          )}
-          {message.type === 'file' && message.files && (
-            <div className="space-y-2">
-              {message.files.map((file, i) => (
-                <div key={i}>
-                  {file.type?.startsWith('image/') ? (
-                    <div className="flex items-center gap-3 p-2 border rounded-lg bg-background/50">
-                      <a href={file.url} target="_blank" rel="noopener noreferrer" className="shrink-0">
-                        <img 
-                          src={file.url} 
-                          alt={file.name} 
-                          className="w-12 h-12 object-cover rounded-md" 
-                        />
-                      </a>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{file.name}</p>
-                        {file.size && (
-                          <p className="text-xs text-muted-foreground">{formatFileSize(file.size)}</p>
-                        )}
+        {/* Message bubble - only show if there's text content */}
+        {message.content && (
+          <div 
+            className={`rounded-lg p-3 text-foreground ${isUser ? '' : 'bg-muted'}`}
+            style={isUser ? { backgroundColor: 'rgb(1 110 237 / 7%)' } : undefined}
+          >
+            {message.type === 'audio' && message.audioUrl && (
+              <Suspense fallback={<div className="h-8 flex items-center text-sm text-muted-foreground">Loading audio...</div>}>
+                <AudioPlayer audioUrl={message.audioUrl} primaryColor={primaryColor} />
+              </Suspense>
+            )}
+            {message.type === 'file' && message.files && (
+              <div className="space-y-2">
+                {message.files.map((file, i) => (
+                  <div key={i}>
+                    {file.type?.startsWith('image/') ? (
+                      <div className="flex items-center gap-3 p-2 border rounded-lg bg-background/50">
+                        <a href={file.url} target="_blank" rel="noopener noreferrer" className="shrink-0">
+                          <img 
+                            src={file.url} 
+                            alt={file.name} 
+                            className="w-12 h-12 object-cover rounded-md" 
+                          />
+                        </a>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{file.name}</p>
+                          {file.size && (
+                            <p className="text-xs text-muted-foreground">{formatFileSize(file.size)}</p>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => downloadFile(file.url, file.name)}
+                          className="p-1.5 rounded-md hover:bg-accent transition-colors shrink-0"
+                          title="Download"
+                        >
+                          <Download01 size={16} className="text-muted-foreground" />
+                        </button>
                       </div>
-                      <button
-                        onClick={() => downloadFile(file.url, file.name)}
-                        className="p-1.5 rounded-md hover:bg-accent transition-colors shrink-0"
-                        title="Download"
-                      >
-                        <Download01 size={16} className="text-muted-foreground" />
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-3 p-2 border rounded-lg bg-background/50">
-                      <FileTypeIcon fileName={file.name} width={36} height={36} className="shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{file.name}</p>
-                        {file.size && (
-                          <p className="text-xs text-muted-foreground">{formatFileSize(file.size)}</p>
-                        )}
+                    ) : (
+                      <div className="flex items-center gap-3 p-2 border rounded-lg bg-background/50">
+                        <FileTypeIcon fileName={file.name} width={36} height={36} className="shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{file.name}</p>
+                          {file.size && (
+                            <p className="text-xs text-muted-foreground">{formatFileSize(file.size)}</p>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => downloadFile(file.url, file.name)}
+                          className="p-1.5 rounded-md hover:bg-accent transition-colors shrink-0"
+                          title="Download"
+                        >
+                          <Download01 size={16} className="text-muted-foreground" />
+                        </button>
                       </div>
-                      <button
-                        onClick={() => downloadFile(file.url, file.name)}
-                        className="p-1.5 rounded-md hover:bg-accent transition-colors shrink-0"
-                        title="Download"
-                      >
-                        <Download01 size={16} className="text-muted-foreground" />
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ))}
-              {message.content && message.content !== 'Sent files' && (
-                <p className="text-sm whitespace-pre-wrap break-words mt-2">{message.content}</p>
-              )}
-            </div>
-          )}
-          {(message.type === 'text' || !message.type) && (
-            <p className="text-sm whitespace-pre-wrap break-words">
-              {message.role === 'assistant' 
-                ? stripPhoneNumbersFromContent(
-                    stripUrlsFromContent(
-                      message.content.replace(/\*\*(.*?)\*\*/g, '$1'),
-                      !!(message.linkPreviews && message.linkPreviews.length > 0)
-                    ),
-                    !!(message.callActions && message.callActions.length > 0)
-                  )
-                : message.content}
-            </p>
-          )}
-          
-          {/* Link previews for assistant messages */}
-          {message.role === 'assistant' && message.linkPreviews && message.linkPreviews.length > 0 && (
-            <div className="mt-2">
-              <LinkPreviews content={message.content} cachedPreviews={message.linkPreviews} />
-            </div>
-          )}
-        </div>
+                    )}
+                  </div>
+                ))}
+                {message.content && message.content !== 'Sent files' && (
+                  <p className="text-sm whitespace-pre-wrap break-words mt-2">{message.content}</p>
+                )}
+              </div>
+            )}
+            {(message.type === 'text' || !message.type) && (
+              <p className="text-sm whitespace-pre-wrap break-words">
+                {message.role === 'assistant' 
+                  ? stripPhoneNumbersFromContent(
+                      stripUrlsFromContent(
+                        message.content.replace(/\*\*(.*?)\*\*/g, '$1'),
+                        !!(message.linkPreviews && message.linkPreviews.length > 0)
+                      ),
+                      !!(message.callActions && message.callActions.length > 0)
+                    )
+                  : message.content}
+              </p>
+            )}
+            
+            {/* Link previews for assistant messages */}
+            {message.role === 'assistant' && message.linkPreviews && message.linkPreviews.length > 0 && (
+              <div className="mt-2">
+                <LinkPreviews content={message.content} cachedPreviews={message.linkPreviews} />
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Booking components - rendered below message bubble */}
+        {message.dayPicker && onBookingDaySelect && (
+          <div className="mt-2">
+            <DayPicker
+              data={message.dayPicker}
+              onSelect={onBookingDaySelect}
+              primaryColor={primaryColor}
+            />
+          </div>
+        )}
+        {message.timePicker && onBookingTimeSelect && (
+          <div className="mt-2">
+            <TimePicker
+              data={message.timePicker}
+              onSelect={onBookingTimeSelect}
+              onGoBack={onBookingGoBack}
+              primaryColor={primaryColor}
+            />
+          </div>
+        )}
+        {message.bookingConfirmed && (
+          <div className="mt-2">
+            <BookingConfirmed
+              data={message.bookingConfirmed}
+              primaryColor={primaryColor}
+            />
+          </div>
+        )}
         
         {/* Footer: Reactions - only show on last message in group */}
-        {isLastInGroup && !isUser && (
+        {isLastInGroup && !isUser && !hasBookingComponent && (
           <div className="flex items-center gap-2 px-1">
             {/* Emoji reactions for assistant/team messages - users can add reactions */}
             {enableMessageReactions && message.id && (
