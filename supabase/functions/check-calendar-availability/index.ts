@@ -434,6 +434,7 @@ serve(async (req) => {
           id: location.id,
           name: location.name,
           timezone,
+          phone: location.phone || undefined,
         },
         available_slots: availableSlots,
       }),
