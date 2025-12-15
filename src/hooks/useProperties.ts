@@ -137,30 +137,22 @@ export const useProperties = (agentId?: string) => {
     return propertyCounts[sourceId] || 0;
   }, [propertyCounts]);
 
-  // Get unique locations for filtering with disambiguated display names
+  // Get unique locations for filtering (deduplicated by name)
   const uniqueLocations: LocationOption[] = useMemo(() => {
-    // Count occurrences of each name
-    const nameCounts = new Map<string, number>();
+    const seenNames = new Map<string, LocationOption>();
+    
     for (const loc of locationsList) {
-      nameCounts.set(loc.name, (nameCounts.get(loc.name) || 0) + 1);
+      // Only keep the first occurrence of each name
+      if (!seenNames.has(loc.name)) {
+        seenNames.set(loc.name, {
+          id: loc.id,
+          name: loc.name,
+          display_name: loc.name,
+        });
+      }
     }
     
-    // Create display names with disambiguation for duplicates
-    return locationsList.map(loc => {
-      const isDuplicate = (nameCounts.get(loc.name) || 0) > 1;
-      let displayName = loc.name;
-      
-      if (isDuplicate && (loc.city || loc.state)) {
-        const suffix = [loc.city, loc.state].filter(Boolean).join(', ');
-        displayName = `${loc.name} (${suffix})`;
-      }
-      
-      return {
-        id: loc.id,
-        name: loc.name,
-        display_name: displayName,
-      };
-    });
+    return Array.from(seenNames.values());
   }, [locationsList]);
 
   return {
