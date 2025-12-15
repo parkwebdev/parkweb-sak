@@ -874,22 +874,6 @@ function selectModelTier(
   return { model: MODEL_TIERS.standard, tier: 'standard' };
 }
 
-// PHASE 6: Truncate conversation history to reduce input tokens (deprecated - use summarizeConversationHistory)
-function truncateConversationHistory(messages: any[]): any[] {
-  if (!messages || messages.length <= MAX_CONVERSATION_HISTORY) {
-    return messages;
-  }
-  
-  // Keep the last N messages
-  const truncated = messages.slice(-MAX_CONVERSATION_HISTORY);
-  
-  // Add a summary message at the beginning to provide context
-  const removedCount = messages.length - MAX_CONVERSATION_HISTORY;
-  console.log(`Truncated conversation history: removed ${removedCount} older messages, keeping last ${MAX_CONVERSATION_HISTORY}`);
-  
-  return truncated;
-}
-
 // ============================================
 // PHASE 2: INTELLIGENT CONVERSATION SUMMARIZATION
 // ============================================
