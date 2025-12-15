@@ -32,6 +32,7 @@ import LeadsWrapper from "./pages/LeadsWrapper";
 import AnalyticsWrapper from "./pages/AnalyticsWrapper";
 import SettingsWrapper from "./pages/SettingsWrapper";
 import PlannerWrapper from "./pages/PlannerWrapper";
+import BookingComponentsTest from "./pages/BookingComponentsTest";
 
 /** React Query client instance with default configuration */
 const queryClient = new QueryClient();
@@ -76,6 +77,7 @@ const App = () => (
                   <Route path="/leads" element={<LeadsWrapper />} />
                   <Route path="/analytics" element={<AnalyticsWrapper />} />
                   <Route path="/settings" element={<SettingsWrapper />} />
+                  <Route path="/booking-test" element={<BookingComponentsTest />} />
                 </Route>
                 
                 <Route path="*" element={<NotFound />} />
