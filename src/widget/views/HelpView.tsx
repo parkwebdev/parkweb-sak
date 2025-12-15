@@ -3,11 +3,12 @@
  * 
  * Help center view with categories, articles, search, and feedback collection.
  * Supports three navigation levels: categories, article list, article detail.
+ * DOMPurify is lazy-loaded to reduce initial bundle size.
  * 
  * @module widget/views/HelpView
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -18,8 +19,17 @@ import { CSSAnimatedItem } from '../CSSAnimatedItem';
 import { CategoryIcon } from '../category-icons';
 import { submitArticleFeedback } from '../api';
 import { getSessionId } from '../utils';
-import DOMPurify from 'isomorphic-dompurify';
 import type { WidgetConfig } from '../api';
+
+// Lazy-load DOMPurify (~8KB savings from initial load)
+let DOMPurify: typeof import('isomorphic-dompurify').default | null = null;
+const loadDOMPurify = async () => {
+  if (!DOMPurify) {
+    const module = await import('isomorphic-dompurify');
+    DOMPurify = module.default;
+  }
+  return DOMPurify;
+};
 
 interface HelpArticle {
   id: string;
@@ -42,6 +52,9 @@ interface HelpViewProps {
   helpArticles: HelpArticle[];
 }
 
+const ALLOWED_TAGS = ['p', 'br', 'strong', 'em', 'b', 'i', 'u', 'a', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'code', 'pre', 'span', 'div', 'img'];
+const ALLOWED_ATTR = ['href', 'target', 'rel', 'class', 'src', 'alt', 'width', 'height', 'style'];
+
 export const HelpView = ({
   config,
   helpCategories,
@@ -54,6 +67,26 @@ export const HelpView = ({
   const [feedbackComment, setFeedbackComment] = useState('');
   const [showFeedbackComment, setShowFeedbackComment] = useState(false);
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
+  const [sanitizedContent, setSanitizedContent] = useState<string>('');
+  const [isLoadingContent, setIsLoadingContent] = useState(false);
+
+  // Lazy-load and sanitize article content
+  useEffect(() => {
+    if (!selectedArticle) {
+      setSanitizedContent('');
+      return;
+    }
+    
+    setIsLoadingContent(true);
+    loadDOMPurify().then(purify => {
+      const clean = purify.sanitize(selectedArticle.content, {
+        ALLOWED_TAGS,
+        ALLOWED_ATTR,
+      });
+      setSanitizedContent(clean);
+      setIsLoadingContent(false);
+    });
+  }, [selectedArticle]);
 
   const filteredArticles = helpArticles.filter(article => {
     const matchesSearch = !helpSearchQuery || article.title.toLowerCase().includes(helpSearchQuery.toLowerCase()) || article.content.toLowerCase().includes(helpSearchQuery.toLowerCase());
@@ -275,13 +308,18 @@ export const HelpView = ({
                 
                 {/* Article Content below hero */}
                 <div className="p-4">
-                  <div 
-                    className="article-content max-w-none" 
-                    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(selectedArticle.content, {
-                      ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'b', 'i', 'u', 'a', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'code', 'pre', 'span', 'div', 'img'],
-                      ALLOWED_ATTR: ['href', 'target', 'rel', 'class', 'src', 'alt', 'width', 'height', 'style'],
-                    }) }} 
-                  />
+                  {isLoadingContent ? (
+                    <div className="space-y-2 animate-pulse">
+                      <div className="h-4 bg-muted rounded w-full" />
+                      <div className="h-4 bg-muted rounded w-3/4" />
+                      <div className="h-4 bg-muted rounded w-5/6" />
+                    </div>
+                  ) : (
+                    <div 
+                      className="article-content max-w-none" 
+                      dangerouslySetInnerHTML={{ __html: sanitizedContent }} 
+                    />
+                  )}
                 </div>
               </>
             ) : (
@@ -301,13 +339,18 @@ export const HelpView = ({
                 </div>
                 
                 {/* Article content */}
-                <div 
-                  className="article-content max-w-none" 
-                  dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(selectedArticle.content, {
-                    ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'b', 'i', 'u', 'a', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote', 'code', 'pre', 'span', 'div', 'img'],
-                    ALLOWED_ATTR: ['href', 'target', 'rel', 'class', 'src', 'alt', 'width', 'height', 'style'],
-                  }) }} 
-                />
+                {isLoadingContent ? (
+                  <div className="space-y-2 animate-pulse">
+                    <div className="h-4 bg-muted rounded w-full" />
+                    <div className="h-4 bg-muted rounded w-3/4" />
+                    <div className="h-4 bg-muted rounded w-5/6" />
+                  </div>
+                ) : (
+                  <div 
+                    className="article-content max-w-none" 
+                    dangerouslySetInnerHTML={{ __html: sanitizedContent }} 
+                  />
+                )}
               </div>
             )}
             
