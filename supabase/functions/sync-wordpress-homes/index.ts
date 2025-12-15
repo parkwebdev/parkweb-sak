@@ -349,17 +349,29 @@ Deno.serve(async (req: Request) => {
         urlToSync
       );
 
-      // Get locations with WordPress community IDs for mapping
+      // Get ALL locations for mapping (by WordPress community ID, city/state, or name)
       const { data: locations } = await supabase
         .from('locations')
-        .select('id, wordpress_community_id')
-        .eq('agent_id', agentId)
-        .not('wordpress_community_id', 'is', null);
+        .select('id, wordpress_community_id, city, state, name')
+        .eq('agent_id', agentId);
 
-      const locationMap = new Map<number, string>();
+      // Build WordPress community ID -> location ID map
+      const communityIdMap = new Map<number, string>();
+      // Build city+state -> location ID map for fallback matching
+      const cityStateMap = new Map<string, string>();
+      // Build location name -> location ID map for community name matching
+      const nameMap = new Map<string, string>();
+      
       for (const loc of locations || []) {
         if (loc.wordpress_community_id) {
-          locationMap.set(loc.wordpress_community_id, loc.id);
+          communityIdMap.set(loc.wordpress_community_id, loc.id);
+        }
+        if (loc.city && loc.state) {
+          const key = `${loc.city.toLowerCase().trim()}|${loc.state.toLowerCase().trim()}`;
+          cityStateMap.set(key, loc.id);
+        }
+        if (loc.name) {
+          nameMap.set(loc.name.toLowerCase().trim(), loc.id);
         }
       }
 
@@ -376,7 +388,7 @@ Deno.serve(async (req: Request) => {
           supabase,
           agentId,
           knowledgeSourceId,
-          locationMap,
+          { communityIdMap, cityStateMap, nameMap },
           extractedProperties,
           homes
         );
@@ -386,7 +398,7 @@ Deno.serve(async (req: Request) => {
           supabase,
           agentId,
           knowledgeSourceId,
-          locationMap,
+          { communityIdMap, cityStateMap, nameMap },
           homes
         );
       }
@@ -683,6 +695,55 @@ function extractImages(home: WordPressHome): Array<{ url: string; alt?: string }
   return images;
 }
 
+interface LocationMaps {
+  communityIdMap: Map<number, string>;
+  cityStateMap: Map<string, string>;
+  nameMap: Map<string, string>;
+}
+
+/**
+ * Auto-match a property to a location using multiple strategies:
+ * 1. WordPress community taxonomy ID (exact match)
+ * 2. City + State (case-insensitive match)
+ * 3. Community/location name (fuzzy match)
+ */
+function autoMatchLocation(
+  locationMaps: LocationMaps,
+  communityId: number | undefined,
+  city: string | null,
+  state: string | null,
+  communityName?: string | null
+): string | null {
+  // Strategy 1: WordPress community ID (most reliable)
+  if (communityId && locationMaps.communityIdMap.has(communityId)) {
+    return locationMaps.communityIdMap.get(communityId)!;
+  }
+  
+  // Strategy 2: City + State match
+  if (city && state) {
+    const key = `${city.toLowerCase().trim()}|${state.toLowerCase().trim()}`;
+    if (locationMaps.cityStateMap.has(key)) {
+      return locationMaps.cityStateMap.get(key)!;
+    }
+  }
+  
+  // Strategy 3: Community/location name match
+  if (communityName) {
+    const normalizedName = communityName.toLowerCase().trim();
+    if (locationMaps.nameMap.has(normalizedName)) {
+      return locationMaps.nameMap.get(normalizedName)!;
+    }
+    // Try partial match (community name contains location name or vice versa)
+    for (const [locName, locId] of locationMaps.nameMap) {
+      if (normalizedName.includes(locName) || locName.includes(normalizedName)) {
+        return locId;
+      }
+    }
+  }
+  
+  return null;
+}
+
 /**
  * Sync homes to properties table using ACF field mapping
  */
@@ -690,7 +751,7 @@ async function syncHomesToProperties(
   supabase: ReturnType<typeof createClient>,
   agentId: string,
   knowledgeSourceId: string,
-  locationMap: Map<number, string>,
+  locationMaps: LocationMaps,
   homes: WordPressHome[]
 ): Promise<SyncResult> {
   const result: SyncResult = { created: 0, updated: 0, skipped: 0, errors: [] };
@@ -699,10 +760,6 @@ async function syncHomesToProperties(
     try {
       const externalId = `wp_home_${home.id}`;
       
-      // Get location ID from community taxonomy
-      const communityId = home.home_community?.[0];
-      const locationId = communityId ? locationMap.get(communityId) : null;
-
       const acf = home.acf;
       
       // Intelligently extract fields from ACF data
@@ -710,8 +767,15 @@ async function syncHomesToProperties(
       const city = extractAcfField(acf, 'city');
       const state = extractAcfField(acf, 'state');
       const zip = extractAcfField(acf, 'zip', 'zipcode', 'postal', 'postal_code') || extractZipFromAddress(address);
-      const latitude = extractAcfNumber(acf, 'latitude', 'lat');
-      const longitude = extractAcfNumber(acf, 'longitude', 'lng', 'long');
+      const communityName = extractAcfField(acf, 'community', 'community_name', 'park', 'park_name');
+      
+      // Auto-match to location using multiple strategies
+      const communityId = home.home_community?.[0];
+      const locationId = autoMatchLocation(locationMaps, communityId, city, state, communityName);
+      
+      if (locationId) {
+        console.log(`Matched property "${address}" to location ${locationId}`);
+      }
       
       // Determine price type based on field names
       const rentPrice = extractAcfNumber(acf, 'rent', 'monthly_rent', 'rental');
@@ -944,7 +1008,7 @@ async function syncPropertiesToDatabase(
   supabase: ReturnType<typeof createClient>,
   agentId: string,
   knowledgeSourceId: string,
-  locationMap: Map<number, string>,
+  locationMaps: LocationMaps,
   properties: ExtractedProperty[],
   homes: WordPressHome[]
 ): Promise<SyncResult> {
@@ -960,7 +1024,19 @@ async function syncPropertiesToDatabase(
     try {
       const home = homeMap.get(prop.external_id);
       const communityId = home?.home_community?.[0];
-      const locationId = communityId ? locationMap.get(communityId) : null;
+      
+      // Auto-match to location using multiple strategies
+      const locationId = autoMatchLocation(
+        locationMaps, 
+        communityId, 
+        prop.city || null, 
+        prop.state || null,
+        null // AI extraction doesn't have community name
+      );
+      
+      if (locationId) {
+        console.log(`Matched AI-extracted property "${prop.address}" to location ${locationId}`);
+      }
 
       const propertyData = {
         agent_id: agentId,
