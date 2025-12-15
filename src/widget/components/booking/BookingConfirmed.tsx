@@ -6,6 +6,7 @@
  */
 
 import { cn } from '@/lib/utils';
+import { CheckCircle } from '@untitledui/icons';
 import type { BookingConfirmationData } from '../../types';
 
 interface BookingConfirmedProps {
@@ -18,44 +19,28 @@ export function BookingConfirmed({ data, primaryColor }: BookingConfirmedProps) 
     <div 
       className={cn(
         "mt-2 rounded-xl p-4 space-y-3",
-        "bg-gradient-to-br from-primary/10 to-primary/5",
-        "border border-primary/20"
+        "bg-card border border-border"
       )}
-      style={primaryColor ? {
-        background: `linear-gradient(to bottom right, ${primaryColor}15, ${primaryColor}08)`,
-        borderColor: `${primaryColor}30`
-      } : undefined}
     >
       {/* Success header */}
       <div className="flex items-center gap-2">
-        <div 
-          className="w-8 h-8 rounded-full flex items-center justify-center text-lg"
-          style={{ backgroundColor: primaryColor ? `${primaryColor}20` : 'hsl(var(--primary) / 0.2)' }}
-        >
-          ✓
-        </div>
-        <div>
-          <p className="text-sm font-semibold text-foreground">Booking Confirmed!</p>
+        <CheckCircle 
+          size={20} 
+          className="text-primary flex-shrink-0"
+          style={primaryColor ? { color: primaryColor } : undefined}
+        />
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-foreground">Booking Confirmed</p>
           {data.confirmationId && (
             <p className="text-xs text-muted-foreground">#{data.confirmationId}</p>
           )}
         </div>
       </div>
 
-      {/* Details */}
-      <div className="space-y-1 text-sm">
-        <div className="flex items-center gap-2">
-          <span className="text-muted-foreground">📍</span>
-          <span className="font-medium">{data.locationName}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-muted-foreground">📅</span>
-          <span>{data.date}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-muted-foreground">🕐</span>
-          <span>{data.time}</span>
-        </div>
+      {/* Details - compact single block */}
+      <div className="text-sm text-foreground space-y-0.5">
+        <p className="font-medium">{data.locationName}</p>
+        <p className="text-muted-foreground">{data.date} at {data.time}</p>
       </div>
 
       {/* Add to Calendar button */}
@@ -65,7 +50,7 @@ export function BookingConfirmed({ data, primaryColor }: BookingConfirmedProps) 
           target="_blank"
           rel="noopener noreferrer"
           className={cn(
-            "block w-full text-center py-2 px-4 rounded-lg",
+            "block w-full text-center py-2.5 px-4 rounded-lg",
             "text-sm font-medium",
             "bg-background border border-border",
             "hover:bg-accent transition-colors"
