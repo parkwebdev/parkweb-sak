@@ -7,6 +7,19 @@ const corsHeaders = {
 };
 
 // Local type for conversation metadata (edge functions can't import from src/)
+interface ShownProperty {
+  index: number;
+  id: string;
+  address: string;
+  city: string;
+  state: string;
+  beds: number | null;
+  baths: number | null;
+  price: number | null;
+  price_formatted: string;
+  community: string | null;
+}
+
 interface ConversationMetadata {
   lead_name?: string;
   lead_email?: string;
@@ -25,6 +38,9 @@ interface ConversationMetadata {
   last_user_message_at?: string;
   admin_last_read_at?: string;
   lead_id?: string;
+  // Property context memory for multi-property scenarios
+  shown_properties?: ShownProperty[];
+  last_property_search_at?: string;
 }
 
 // URL regex for extracting links from content
@@ -319,8 +335,9 @@ async function searchProperties(
       };
     }
 
-    const properties = data.map((p: any) => ({
+    const properties = data.map((p: any, idx: number) => ({
       id: p.id,
+      index: idx + 1, // 1-indexed for user-friendly referencing
       address: p.address || `Lot ${p.lot_number}`,
       city: p.city,
       state: p.state,
@@ -334,10 +351,25 @@ async function searchProperties(
       listing_url: p.listing_url,
     }));
 
+    // Create shown_properties array for conversation context memory (limit to 5)
+    const shownProperties: ShownProperty[] = properties.slice(0, 5).map((p: any) => ({
+      index: p.index,
+      id: p.id,
+      address: p.address,
+      city: p.city,
+      state: p.state,
+      beds: p.beds,
+      baths: p.baths,
+      price: p.price,
+      price_formatted: p.price_formatted,
+      community: p.community,
+    }));
+
     return { 
       success: true, 
       result: { 
         properties,
+        shownProperties, // Include for metadata storage
         count: properties.length,
         message: `Found ${properties.length} ${args.status === 'all' ? '' : 'available '}properties.`
       } 
@@ -1801,6 +1833,33 @@ This is what the user wanted to discuss when they started the chat. Treat this a
 
     // PROPERTY TOOLS INSTRUCTIONS: When agent has locations, instruct AI to use property tools
     if (hasLocations) {
+      // Check if we have shown properties in context for reference resolution
+      const shownProperties = conversationMetadata?.shown_properties as ShownProperty[] | undefined;
+      let shownPropertiesContext = '';
+      
+      if (shownProperties && shownProperties.length > 0) {
+        shownPropertiesContext = `
+
+RECENTLY SHOWN PROPERTIES (use these for booking/reference):
+${shownProperties.map(p => 
+  `${p.index}. ${p.address}, ${p.city}, ${p.state} - ${p.beds || '?'}bed/${p.baths || '?'}bath ${p.price_formatted} (ID: ${p.id})${p.community ? ` [${p.community}]` : ''}`
+).join('\n')}
+
+PROPERTY REFERENCE RESOLUTION:
+When the user refers to a previously shown property (e.g., "the first one", "the 2-bed", "the one on Main St"):
+1. Match their reference to one of the RECENTLY SHOWN PROPERTIES above
+2. Match by: index number (1st, 2nd, first, second), address substring, beds/baths, price, or community
+3. Use the property's ID directly for booking - do NOT ask user to confirm the address you already showed them
+4. If truly unclear which property they mean, ask for clarification with the numbered list
+
+Examples:
+- "I'd like to tour the first one" → Use property #1's ID from the list above
+- "What about the 2-bedroom?" → Match to property with 2 beds from the list
+- "Schedule a tour for the one on Oak Street" → Match by address containing "Oak"
+- "How about the cheaper one?" → Match to lowest priced property in the list`;
+        console.log(`Injected ${shownProperties.length} shown properties into context`);
+      }
+      
       systemPrompt += `
 
 PROPERTY SEARCH CAPABILITY:
@@ -1826,7 +1885,7 @@ Examples:
 - "Any 3-bedroom homes under $200k?" → Call search_properties with min_beds=3, max_price=200000
 - "Tell me about lot 42" → Call lookup_property with the property ID
 
-Always provide specific property details from the tool results, including prices, bed/bath counts, and available features.`;
+Always provide specific property details from the tool results, including prices, bed/bath counts, and available features.${shownPropertiesContext}`;
       
       console.log('Added property tool instructions to system prompt');
     }
@@ -2163,10 +2222,30 @@ NEVER mark complete when:
         if (toolName === 'search_properties') {
           const result = await searchProperties(supabase, agentId, toolArgs);
           toolsUsed.push({ name: toolName, success: result.success });
+          
+          // Store shown properties in conversation metadata for context memory
+          if (result.success && result.result?.shownProperties?.length > 0) {
+            const currentMeta = conversation?.metadata || {};
+            await supabase
+              .from('conversations')
+              .update({
+                metadata: {
+                  ...currentMeta,
+                  shown_properties: result.result.shownProperties,
+                  last_property_search_at: new Date().toISOString(),
+                },
+              })
+              .eq('id', activeConversationId);
+            console.log(`Stored ${result.result.shownProperties.length} shown properties in conversation metadata`);
+          }
+          
+          // Remove shownProperties from the result sent to AI (it's for metadata only)
+          const { shownProperties, ...resultForAI } = result.result || {};
+          
           toolResults.push({
             role: 'tool',
             tool_call_id: toolCall.id,
-            content: JSON.stringify(result.result || { error: result.error }),
+            content: JSON.stringify(resultForAI || { error: result.error }),
           });
           continue;
         }
