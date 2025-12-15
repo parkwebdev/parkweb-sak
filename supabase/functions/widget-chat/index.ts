@@ -118,6 +118,30 @@ OTHER RULES:
 - Lead with the ANSWER first, then add brief context if needed
 - If you're writing more than 30 words without a break, STOP and restructure`;
 
+// US State abbreviation to full name mapping for bidirectional search
+const STATE_ABBREVIATIONS: Record<string, string> = {
+  'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas',
+  'CA': 'California', 'CO': 'Colorado', 'CT': 'Connecticut', 'DE': 'Delaware',
+  'FL': 'Florida', 'GA': 'Georgia', 'HI': 'Hawaii', 'ID': 'Idaho',
+  'IL': 'Illinois', 'IN': 'Indiana', 'IA': 'Iowa', 'KS': 'Kansas',
+  'KY': 'Kentucky', 'LA': 'Louisiana', 'ME': 'Maine', 'MD': 'Maryland',
+  'MA': 'Massachusetts', 'MI': 'Michigan', 'MN': 'Minnesota', 'MS': 'Mississippi',
+  'MO': 'Missouri', 'MT': 'Montana', 'NE': 'Nebraska', 'NV': 'Nevada',
+  'NH': 'New Hampshire', 'NJ': 'New Jersey', 'NM': 'New Mexico', 'NY': 'New York',
+  'NC': 'North Carolina', 'ND': 'North Dakota', 'OH': 'Ohio', 'OK': 'Oklahoma',
+  'OR': 'Oregon', 'PA': 'Pennsylvania', 'RI': 'Rhode Island', 'SC': 'South Carolina',
+  'SD': 'South Dakota', 'TN': 'Tennessee', 'TX': 'Texas', 'UT': 'Utah',
+  'VT': 'Vermont', 'VA': 'Virginia', 'WA': 'Washington', 'WV': 'West Virginia',
+  'WI': 'Wisconsin', 'WY': 'Wyoming', 'DC': 'District of Columbia'
+};
+
+// Helper to normalize state input (abbreviation or full name → full name)
+function normalizeState(stateInput: string): string {
+  const stateUpper = stateInput.toUpperCase().trim();
+  // If it's an abbreviation, convert to full name; otherwise use as-is
+  return STATE_ABBREVIATIONS[stateUpper] || stateInput;
+}
+
 // Model tiers for smart routing (cost optimization)
 const MODEL_TIERS = {
   lite: 'google/gemini-2.5-flash-lite',     // $0.015/M input, $0.06/M output - simple lookups
@@ -256,7 +280,9 @@ async function searchProperties(
       query = query.ilike('city', `%${args.city}%`);
     }
     if (args.state) {
-      query = query.ilike('state', `%${args.state}%`);
+      const normalizedState = normalizeState(args.state);
+      console.log('State normalization:', { input: args.state, normalized: normalizedState });
+      query = query.ilike('state', `%${normalizedState}%`);
     }
     if (args.min_price) {
       query = query.gte('price', args.min_price);
