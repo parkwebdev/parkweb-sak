@@ -393,22 +393,24 @@ export const AriLocationsSection: React.FC<AriLocationsSectionProps> = ({ agentI
   const ViewToggle = (
     <div className="flex items-center gap-1">
       <Button 
-        variant={viewMode === 'communities' ? 'default' : 'outline'}
+        variant={viewMode === 'communities' ? 'secondary' : 'ghost'}
         size="sm"
         onClick={() => setViewMode('communities')}
+        className={viewMode === 'communities' ? 'bg-muted hover:bg-muted/80' : ''}
       >
         Communities
-        <Badge variant={viewMode === 'communities' ? 'secondary' : 'outline'} className="ml-1.5 h-5 px-1.5 text-xs">
+        <Badge variant="outline" className="ml-1.5 h-5 px-1.5 text-xs">
           {locations.length}
         </Badge>
       </Button>
       <Button 
-        variant={viewMode === 'properties' ? 'default' : 'outline'}
+        variant={viewMode === 'properties' ? 'secondary' : 'ghost'}
         size="sm"
         onClick={() => setViewMode('properties')}
+        className={viewMode === 'properties' ? 'bg-muted hover:bg-muted/80' : ''}
       >
         Properties
-        <Badge variant={viewMode === 'properties' ? 'secondary' : 'outline'} className="ml-1.5 h-5 px-1.5 text-xs">
+        <Badge variant="outline" className="ml-1.5 h-5 px-1.5 text-xs">
           {propertiesWithLocation.length}
         </Badge>
       </Button>
@@ -495,8 +497,9 @@ export const AriLocationsSection: React.FC<AriLocationsSectionProps> = ({ agentI
                   table={locationsTable}
                   searchPlaceholder="Search..."
                   globalFilter
-                  prefix={ViewToggle}
+                  searchClassName="max-w-[200px]"
                 >
+                  {ViewToggle}
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button variant="outline" className="gap-1.5">
@@ -630,8 +633,9 @@ export const AriLocationsSection: React.FC<AriLocationsSectionProps> = ({ agentI
                   table={propertiesTable}
                   searchPlaceholder="Search..."
                   globalFilter
-                  prefix={ViewToggle}
+                  searchClassName="max-w-[200px]"
                 >
+                  {ViewToggle}
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button variant="outline" className="gap-1.5">
