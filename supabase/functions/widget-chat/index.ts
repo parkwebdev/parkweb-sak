@@ -496,7 +496,8 @@ async function lookupProperty(
       address: data.address || `Lot ${data.lot_number}`,
       full_address: [data.address, data.city, data.state, data.zip].filter(Boolean).join(', '),
       price: data.price,
-      price_formatted: data.price ? `$${data.price.toLocaleString()}${data.price_type === 'rent_monthly' ? '/mo' : ''}` : 'Contact for pricing',
+      // Prices are stored in cents, convert to dollars for display
+      price_formatted: data.price ? `$${(data.price / 100).toLocaleString()}${data.price_type === 'rent_monthly' ? '/mo' : ''}` : 'Contact for pricing',
       beds: data.beds,
       baths: data.baths,
       sqft: data.sqft,
@@ -2144,14 +2145,14 @@ NEVER mark complete when:
     const toolsUsed: { name: string; success: boolean }[] = [];
     let quickReplies: string[] = [];
     let aiMarkedComplete = false; // Track if AI called mark_conversation_complete with high confidence
+    // Track shown properties - declared OUTSIDE if-block so it persists to final metadata update
+    let storedShownProperties: ShownProperty[] | undefined;
 
     // Handle tool calls if AI decided to use tools
     if (assistantMessage?.tool_calls && assistantMessage.tool_calls.length > 0) {
       console.log(`AI requested ${assistantMessage.tool_calls.length} tool call(s)`);
       
       const toolResults: any[] = [];
-      // Track shown properties to preserve in final metadata update (outside loop to persist)
-      let storedShownProperties: ShownProperty[] | undefined;
       
       for (const toolCall of assistantMessage.tool_calls) {
         const toolName = toolCall.function?.name;
@@ -2455,9 +2456,12 @@ NEVER mark complete when:
           last_message_at: new Date().toISOString(),
           // Track when the visitor/user last sent a message (for unread badge logic)
           last_user_message_at: new Date().toISOString(),
-          // Preserve shown_properties from search_properties tool if set during this request
-          ...(typeof storedShownProperties !== 'undefined' && storedShownProperties.length > 0 && {
-            shown_properties: storedShownProperties,
+          // Preserve shown_properties: use new ones from this request, or keep existing
+          shown_properties: storedShownProperties?.length 
+            ? storedShownProperties 
+            : currentMetadata.shown_properties,
+          // Update timestamp only if we have new properties
+          ...(storedShownProperties?.length && {
             last_property_search_at: new Date().toISOString(),
           }),
         },
