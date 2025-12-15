@@ -18,6 +18,7 @@ interface ShownProperty {
   price: number | null;
   price_formatted: string;
   community: string | null;
+  location_id: string | null; // For direct booking without location lookup
 }
 
 interface ConversationMetadata {
@@ -349,6 +350,7 @@ async function searchProperties(
       status: p.status,
       community: p.locations?.name || null,
       listing_url: p.listing_url,
+      location_id: p.location_id || null, // Include for direct booking
     }));
 
     // Create shown_properties array for conversation context memory (limit to 5)
@@ -363,6 +365,7 @@ async function searchProperties(
       price: p.price,
       price_formatted: p.price_formatted,
       community: p.community,
+      location_id: p.location_id || null, // Include for direct booking
     }));
 
     return { 
@@ -1842,7 +1845,7 @@ This is what the user wanted to discuss when they started the chat. Treat this a
 
 RECENTLY SHOWN PROPERTIES (use these for booking/reference):
 ${shownProperties.map(p => 
-  `${p.index}. ${p.address}, ${p.city}, ${p.state} - ${p.beds || '?'}bed/${p.baths || '?'}bath ${p.price_formatted} (ID: ${p.id})${p.community ? ` [${p.community}]` : ''}`
+  `${p.index}. ${p.address}, ${p.city}, ${p.state} - ${p.beds || '?'}bed/${p.baths || '?'}bath ${p.price_formatted} (ID: ${p.id})${p.community ? ` [${p.community}]` : ''}${p.location_id ? ` (Location: ${p.location_id})` : ''}`
 ).join('\n')}
 
 PROPERTY REFERENCE RESOLUTION:
@@ -1852,10 +1855,16 @@ When the user refers to a previously shown property (e.g., "the first one", "the
 3. Use the property's ID directly for booking - do NOT ask user to confirm the address you already showed them
 4. If truly unclear which property they mean, ask for clarification with the numbered list
 
+DIRECT BOOKING WITH LOCATION_ID:
+When scheduling a tour for a shown property:
+- If the property has a Location ID in parentheses above, use it DIRECTLY with book_appointment (location_id parameter)
+- This enables instant booking without needing to call check_calendar_availability first
+- If no Location ID is shown, use check_calendar_availability with the property's city/state to find the right location
+
 Examples:
-- "I'd like to tour the first one" → Use property #1's ID from the list above
+- "I'd like to tour the first one" → Use property #1's ID and location_id from the list above
 - "What about the 2-bedroom?" → Match to property with 2 beds from the list
-- "Schedule a tour for the one on Oak Street" → Match by address containing "Oak"
+- "Schedule a tour for the one on Oak Street" → Match by address containing "Oak", use its location_id
 - "How about the cheaper one?" → Match to lowest priced property in the list`;
         console.log(`Injected ${shownProperties.length} shown properties into context`);
       }
