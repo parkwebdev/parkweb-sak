@@ -1196,6 +1196,135 @@ async function persistToolResult(
   return data?.id || null;
 }
 
+// ============================================
+// PHASE 3: REDUNDANT TOOL CALL PREVENTION
+// ============================================
+
+interface CachedToolResult {
+  toolName: string;
+  arguments: any;
+  result: any;
+  success: boolean;
+  timestamp: string;
+}
+
+/**
+ * Normalize tool arguments for comparison.
+ * Sorts object keys and handles common variations.
+ */
+function normalizeToolArgs(args: any): string {
+  if (!args || typeof args !== 'object') {
+    return JSON.stringify(args || {});
+  }
+  
+  // Sort keys and normalize values
+  const sorted: Record<string, any> = {};
+  const keys = Object.keys(args).sort();
+  
+  for (const key of keys) {
+    let value = args[key];
+    
+    // Normalize string values (lowercase, trim)
+    if (typeof value === 'string') {
+      value = value.toLowerCase().trim();
+    }
+    
+    // Skip undefined/null values
+    if (value !== undefined && value !== null && value !== '') {
+      sorted[key] = value;
+    }
+  }
+  
+  return JSON.stringify(sorted);
+}
+
+/**
+ * Check if a tool call is redundant (same tool + similar args within time window).
+ * Returns cached result if found, null otherwise.
+ */
+function findCachedToolResult(
+  dbMessages: DbMessage[],
+  toolName: string,
+  toolArgs: any,
+  maxAgeMinutes: number = 10
+): CachedToolResult | null {
+  const normalizedArgs = normalizeToolArgs(toolArgs);
+  const cutoffTime = new Date(Date.now() - maxAgeMinutes * 60 * 1000);
+  
+  // Look through messages for matching tool calls and their results
+  for (let i = dbMessages.length - 1; i >= 0; i--) {
+    const msg = dbMessages[i];
+    
+    // Skip if not a tool call
+    if (msg.role !== 'assistant' || !msg.tool_name || !msg.tool_arguments) {
+      continue;
+    }
+    
+    // Skip if older than max age
+    const msgTime = new Date(msg.created_at);
+    if (msgTime < cutoffTime) {
+      continue;
+    }
+    
+    // Skip if different tool
+    if (msg.tool_name !== toolName) {
+      continue;
+    }
+    
+    // Check if arguments match
+    const storedNormalizedArgs = normalizeToolArgs(msg.tool_arguments);
+    if (storedNormalizedArgs !== normalizedArgs) {
+      continue;
+    }
+    
+    // Found matching tool call - now find the corresponding result
+    // The result should be the next 'tool' role message with matching tool_call_id
+    const toolCallId = msg.tool_call_id;
+    
+    for (let j = i + 1; j < dbMessages.length; j++) {
+      const resultMsg = dbMessages[j];
+      if (resultMsg.role === 'tool' && resultMsg.tool_call_id === toolCallId) {
+        console.log(`PHASE 3: Found cached result for ${toolName} (${maxAgeMinutes}min window)`);
+        return {
+          toolName: msg.tool_name,
+          arguments: msg.tool_arguments,
+          result: resultMsg.tool_result,
+          success: resultMsg.metadata?.tool_success !== false,
+          timestamp: msg.created_at,
+        };
+      }
+    }
+  }
+  
+  return null;
+}
+
+/**
+ * Get all recent tool results from conversation history for cache lookup.
+ */
+async function getRecentToolCalls(
+  supabase: any,
+  conversationId: string,
+  maxAgeMinutes: number = 10
+): Promise<DbMessage[]> {
+  const cutoffTime = new Date(Date.now() - maxAgeMinutes * 60 * 1000).toISOString();
+  
+  const { data: messages, error } = await supabase
+    .from('messages')
+    .select('id, role, content, metadata, created_at, tool_call_id, tool_name, tool_arguments, tool_result')
+    .eq('conversation_id', conversationId)
+    .gte('created_at', cutoffTime)
+    .in('role', ['assistant', 'tool'])
+    .order('created_at', { ascending: true });
+  
+  if (error) {
+    console.error('Error fetching recent tool calls:', error);
+    return [];
+  }
+  
+  return messages || [];
+}
+
 // Normalize query for cache lookup (lowercase, trim, remove extra whitespace)
 function normalizeQuery(query: string): string {
   return query.toLowerCase().trim().replace(/\s+/g, ' ').replace(/[^\w\s]/g, '');
@@ -2560,6 +2689,10 @@ NEVER mark complete when:
     if (assistantMessage?.tool_calls && assistantMessage.tool_calls.length > 0) {
       console.log(`AI requested ${assistantMessage.tool_calls.length} tool call(s)`);
       
+      // PHASE 3: Fetch recent tool calls for redundancy check
+      const recentToolMessages = await getRecentToolCalls(supabase, activeConversationId, 10);
+      let redundantCallsSkipped = 0;
+      
       const toolResults: any[] = [];
       
       for (const toolCall of assistantMessage.tool_calls) {
@@ -2641,6 +2774,27 @@ NEVER mark complete when:
         
         // Handle built-in booking tools
         if (toolName === 'search_properties') {
+          // PHASE 3: Check for cached result before executing
+          const cachedResult = findCachedToolResult(recentToolMessages, toolName, toolArgs, 10);
+          if (cachedResult) {
+            console.log(`PHASE 3: Reusing cached search_properties result (${cachedResult.timestamp})`);
+            redundantCallsSkipped++;
+            toolsUsed.push({ name: toolName, success: cachedResult.success });
+            
+            // Restore shown properties from cached result if present
+            if (cachedResult.success && cachedResult.result?.shownProperties?.length > 0) {
+              storedShownProperties = cachedResult.result.shownProperties;
+            }
+            
+            const { shownProperties, ...resultForAI } = cachedResult.result || {};
+            toolResults.push({
+              role: 'tool',
+              tool_call_id: toolCall.id,
+              content: JSON.stringify(resultForAI || {}),
+            });
+            continue;
+          }
+          
           // PHASE 1: Persist tool call to database
           await persistToolCall(supabase, activeConversationId, toolCall.id, toolName, toolArgs);
           
@@ -2669,6 +2823,20 @@ NEVER mark complete when:
         }
         
         if (toolName === 'lookup_property') {
+          // PHASE 3: Check for cached result before executing
+          const cachedResult = findCachedToolResult(recentToolMessages, toolName, toolArgs, 10);
+          if (cachedResult) {
+            console.log(`PHASE 3: Reusing cached lookup_property result (${cachedResult.timestamp})`);
+            redundantCallsSkipped++;
+            toolsUsed.push({ name: toolName, success: cachedResult.success });
+            toolResults.push({
+              role: 'tool',
+              tool_call_id: toolCall.id,
+              content: JSON.stringify(cachedResult.result || {}),
+            });
+            continue;
+          }
+          
           // PHASE 1: Persist tool call to database
           await persistToolCall(supabase, activeConversationId, toolCall.id, toolName, toolArgs);
           
@@ -2688,6 +2856,20 @@ NEVER mark complete when:
         }
         
         if (toolName === 'get_locations') {
+          // PHASE 3: Check for cached result before executing
+          const cachedResult = findCachedToolResult(recentToolMessages, toolName, toolArgs, 10);
+          if (cachedResult) {
+            console.log(`PHASE 3: Reusing cached get_locations result (${cachedResult.timestamp})`);
+            redundantCallsSkipped++;
+            toolsUsed.push({ name: toolName, success: cachedResult.success });
+            toolResults.push({
+              role: 'tool',
+              tool_call_id: toolCall.id,
+              content: JSON.stringify(cachedResult.result || {}),
+            });
+            continue;
+          }
+          
           // PHASE 1: Persist tool call to database
           await persistToolCall(supabase, activeConversationId, toolCall.id, toolName, toolArgs);
           
@@ -2707,6 +2889,20 @@ NEVER mark complete when:
         }
         
         if (toolName === 'check_calendar_availability') {
+          // PHASE 3: Check for cached result (shorter window - 5 mins for time-sensitive data)
+          const cachedResult = findCachedToolResult(recentToolMessages, toolName, toolArgs, 5);
+          if (cachedResult) {
+            console.log(`PHASE 3: Reusing cached check_calendar_availability result (${cachedResult.timestamp})`);
+            redundantCallsSkipped++;
+            toolsUsed.push({ name: toolName, success: cachedResult.success });
+            toolResults.push({
+              role: 'tool',
+              tool_call_id: toolCall.id,
+              content: JSON.stringify(cachedResult.result || {}),
+            });
+            continue;
+          }
+          
           // PHASE 1: Persist tool call to database
           await persistToolCall(supabase, activeConversationId, toolCall.id, toolName, toolArgs);
           
@@ -2726,6 +2922,7 @@ NEVER mark complete when:
         }
         
         if (toolName === 'book_appointment') {
+          // NOTE: Never cache book_appointment - each booking is unique and must execute
           // PHASE 1: Persist tool call to database
           await persistToolCall(supabase, activeConversationId, toolCall.id, toolName, toolArgs);
           
@@ -2748,6 +2945,20 @@ NEVER mark complete when:
         const tool = enabledTools.find(t => t.name === toolName);
         
         if (tool && tool.endpoint_url) {
+          // PHASE 3: Check for cached result for user-defined tools
+          const cachedResult = findCachedToolResult(recentToolMessages, toolName, toolArgs, 10);
+          if (cachedResult) {
+            console.log(`PHASE 3: Reusing cached ${toolName} result (${cachedResult.timestamp})`);
+            redundantCallsSkipped++;
+            toolsUsed.push({ name: toolName, success: cachedResult.success });
+            toolResults.push({
+              role: 'tool',
+              tool_call_id: toolCall.id,
+              content: JSON.stringify(cachedResult.result || {}),
+            });
+            continue;
+          }
+          
           // PHASE 1: Persist tool call to database
           await persistToolCall(supabase, activeConversationId, toolCall.id, toolName, toolArgs);
           
@@ -2784,6 +2995,11 @@ NEVER mark complete when:
           });
           toolsUsed.push({ name: toolName, success: false });
         }
+      }
+      
+      // PHASE 3: Log redundancy stats
+      if (redundantCallsSkipped > 0) {
+        console.log(`PHASE 3: Skipped ${redundantCallsSkipped} redundant tool call(s) using cached results`);
       }
 
       // If AI only provided quick replies or marked complete without content, force a follow-up call to get actual response
