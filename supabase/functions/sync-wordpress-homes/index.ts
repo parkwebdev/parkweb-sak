@@ -349,31 +349,23 @@ Deno.serve(async (req: Request) => {
         urlToSync
       );
 
-      // Get ALL locations for mapping (by WordPress community ID, city/state, or name)
+      // Get locations with WordPress community IDs for auto-matching
       const { data: locations } = await supabase
         .from('locations')
-        .select('id, wordpress_community_id, city, state, name')
-        .eq('agent_id', agentId);
+        .select('id, wordpress_community_id')
+        .eq('agent_id', agentId)
+        .not('wordpress_community_id', 'is', null);
 
-      // Build WordPress community ID -> location ID map
+      // Build WordPress community ID -> location ID map (ONLY matching strategy)
       const communityIdMap = new Map<number, string>();
-      // Build city+state -> location ID map for fallback matching
-      const cityStateMap = new Map<string, string>();
-      // Build location name -> location ID map for community name matching
-      const nameMap = new Map<string, string>();
       
       for (const loc of locations || []) {
         if (loc.wordpress_community_id) {
           communityIdMap.set(loc.wordpress_community_id, loc.id);
         }
-        if (loc.city && loc.state) {
-          const key = `${loc.city.toLowerCase().trim()}|${loc.state.toLowerCase().trim()}`;
-          cityStateMap.set(key, loc.id);
-        }
-        if (loc.name) {
-          nameMap.set(loc.name.toLowerCase().trim(), loc.id);
-        }
       }
+      
+      console.log(`Built location map with ${communityIdMap.size} WordPress community IDs`);
 
       // Fetch homes from WordPress
       const homes = await fetchWordPressHomes(urlToSync);
@@ -388,7 +380,7 @@ Deno.serve(async (req: Request) => {
           supabase,
           agentId,
           knowledgeSourceId,
-          { communityIdMap, cityStateMap, nameMap },
+          communityIdMap,
           extractedProperties,
           homes
         );
@@ -398,7 +390,7 @@ Deno.serve(async (req: Request) => {
           supabase,
           agentId,
           knowledgeSourceId,
-          { communityIdMap, cityStateMap, nameMap },
+          communityIdMap,
           homes
         );
       }
@@ -695,52 +687,17 @@ function extractImages(home: WordPressHome): Array<{ url: string; alt?: string }
   return images;
 }
 
-interface LocationMaps {
-  communityIdMap: Map<number, string>;
-  cityStateMap: Map<string, string>;
-  nameMap: Map<string, string>;
-}
-
 /**
- * Auto-match a property to a location using multiple strategies:
- * 1. WordPress community taxonomy ID (exact match)
- * 2. City + State (case-insensitive match)
- * 3. Community/location name (fuzzy match)
+ * Auto-match a property to a location using WordPress community taxonomy ID.
+ * This is the ONLY matching strategy - WordPress community_id is the authoritative link.
  */
 function autoMatchLocation(
-  locationMaps: LocationMaps,
-  communityId: number | undefined,
-  city: string | null,
-  state: string | null,
-  communityName?: string | null
+  communityIdMap: Map<number, string>,
+  communityId: number | undefined
 ): string | null {
-  // Strategy 1: WordPress community ID (most reliable)
-  if (communityId && locationMaps.communityIdMap.has(communityId)) {
-    return locationMaps.communityIdMap.get(communityId)!;
+  if (communityId && communityIdMap.has(communityId)) {
+    return communityIdMap.get(communityId)!;
   }
-  
-  // Strategy 2: City + State match
-  if (city && state) {
-    const key = `${city.toLowerCase().trim()}|${state.toLowerCase().trim()}`;
-    if (locationMaps.cityStateMap.has(key)) {
-      return locationMaps.cityStateMap.get(key)!;
-    }
-  }
-  
-  // Strategy 3: Community/location name match
-  if (communityName) {
-    const normalizedName = communityName.toLowerCase().trim();
-    if (locationMaps.nameMap.has(normalizedName)) {
-      return locationMaps.nameMap.get(normalizedName)!;
-    }
-    // Try partial match (community name contains location name or vice versa)
-    for (const [locName, locId] of locationMaps.nameMap) {
-      if (normalizedName.includes(locName) || locName.includes(normalizedName)) {
-        return locId;
-      }
-    }
-  }
-  
   return null;
 }
 
@@ -751,7 +708,7 @@ async function syncHomesToProperties(
   supabase: ReturnType<typeof createClient>,
   agentId: string,
   knowledgeSourceId: string,
-  locationMaps: LocationMaps,
+  communityIdMap: Map<number, string>,
   homes: WordPressHome[]
 ): Promise<SyncResult> {
   const result: SyncResult = { created: 0, updated: 0, skipped: 0, errors: [] };
@@ -767,14 +724,17 @@ async function syncHomesToProperties(
       const city = extractAcfField(acf, 'city');
       const state = extractAcfField(acf, 'state');
       const zip = extractAcfField(acf, 'zip', 'zipcode', 'postal', 'postal_code') || extractZipFromAddress(address);
-      const communityName = extractAcfField(acf, 'community', 'community_name', 'park', 'park_name');
       
-      // Auto-match to location using multiple strategies
+      // Auto-match to location using WordPress community taxonomy ID ONLY
       const communityId = home.home_community?.[0];
-      const locationId = autoMatchLocation(locationMaps, communityId, city, state, communityName);
+      const locationId = autoMatchLocation(communityIdMap, communityId);
       
       if (locationId) {
-        console.log(`Matched property "${address}" to location ${locationId}`);
+        console.log(`✓ Matched "${address}" to location via community ID ${communityId}`);
+      } else if (communityId) {
+        console.warn(`⚠ Property "${address}" has community ID ${communityId} but no matching location found`);
+      } else {
+        console.warn(`⚠ Property "${address}" has no WordPress community taxonomy assigned`);
       }
       
       // Determine price type based on field names
@@ -1008,7 +968,7 @@ async function syncPropertiesToDatabase(
   supabase: ReturnType<typeof createClient>,
   agentId: string,
   knowledgeSourceId: string,
-  locationMaps: LocationMaps,
+  communityIdMap: Map<number, string>,
   properties: ExtractedProperty[],
   homes: WordPressHome[]
 ): Promise<SyncResult> {
@@ -1025,17 +985,15 @@ async function syncPropertiesToDatabase(
       const home = homeMap.get(prop.external_id);
       const communityId = home?.home_community?.[0];
       
-      // Auto-match to location using multiple strategies
-      const locationId = autoMatchLocation(
-        locationMaps, 
-        communityId, 
-        prop.city || null, 
-        prop.state || null,
-        null // AI extraction doesn't have community name
-      );
+      // Auto-match to location using WordPress community taxonomy ID ONLY
+      const locationId = autoMatchLocation(communityIdMap, communityId);
       
       if (locationId) {
-        console.log(`Matched AI-extracted property "${prop.address}" to location ${locationId}`);
+        console.log(`✓ Matched AI-extracted "${prop.address}" to location via community ID ${communityId}`);
+      } else if (communityId) {
+        console.warn(`⚠ AI-extracted "${prop.address}" has community ID ${communityId} but no matching location found`);
+      } else {
+        console.warn(`⚠ AI-extracted "${prop.address}" has no WordPress community taxonomy assigned`);
       }
 
       const propertyData = {
