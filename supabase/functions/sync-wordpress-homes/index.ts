@@ -732,6 +732,7 @@ async function syncHomesToProperties(
         'lot', 'lot_number', 'lot_num', 'lot_no',
         'site', 'site_number', 'site_num', 'site_no',
         'unit', 'unit_number', 'unit_num', 'unit_no',
+        'home_unit_number', // WordPress ACF field name discovered via logging
         'space', 'space_number', 'space_num',
         'home_site', 'homesite', 'pad', 'pad_number'
       );
