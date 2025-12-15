@@ -161,9 +161,9 @@ export function WordPressIntegrationSection({ agent, onSyncComplete }: WordPress
   const getSummary = () => {
     const parts: string[] = [];
     if (isConnected) {
-      parts.push('Connected');
       if (communityCount) parts.push(`${communityCount} communities`);
       if (homeCount) parts.push(`${homeCount} homes`);
+      if (parts.length === 0) parts.push('No data synced yet');
     } else {
       parts.push('Not connected');
     }
