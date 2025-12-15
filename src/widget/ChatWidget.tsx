@@ -438,11 +438,12 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     setIsTyping(true);
 
     try {
-      const messageHistory = [...messages, newMessage].map(m => ({
-        role: m.role,
-        content: m.content,
-        files: m.files, // Include file metadata
-      }));
+      // PHASE 5: Send only the new user message - edge function fetches history from DB
+      const newUserMessage = {
+        role: newMessage.role,
+        content: newMessage.content,
+        files: newMessage.files,
+      };
 
       let finalPageVisits = [...pageVisits];
       if (currentPageRef.current.url && currentPageRef.current.entered_at) {
@@ -463,7 +464,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
       const response = await sendChatMessage(
         config.agentId,
         activeConversationId,
-        messageHistory,
+        newUserMessage,
         chatUser?.leadId,
         finalPageVisits.length > 0 ? finalPageVisits : undefined,
         referrerJourney || undefined,
@@ -712,7 +713,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
       const response = await sendChatMessage(
         config.agentId,
         conversationId || 'new',
-        [{ role: 'user', content: '__GREETING_REQUEST__' }],
+        { role: 'user', content: '__GREETING_REQUEST__' },
         userData.leadId,
         pageVisits.length > 0 ? pageVisits : undefined,
         referrerJourney || undefined,

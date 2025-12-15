@@ -374,13 +374,17 @@ export interface ReferrerJourney {
  * Creates a new conversation if conversationId is null.
  * Includes optional analytics data for visitor tracking.
  * 
+ * PHASE 5: Now sends only the new user message instead of full history.
+ * The edge function fetches conversation history from the database (source of truth).
+ * 
  * @param agentId - The agent ID to send the message to
  * @param conversationId - Existing conversation ID or null for new conversation
- * @param messages - Array of message objects with role and content
+ * @param newUserMessage - The new message content and optional files
  * @param leadId - Optional lead ID to associate with the conversation
  * @param pageVisits - Optional page visit analytics data
  * @param referrerJourney - Optional referrer/UTM tracking data
  * @param visitorId - Optional visitor ID for analytics
+ * @param locationId - Optional location ID for context
  * @returns Promise with the chat response including AI response and metadata
  * @throws Error if the message fails to send
  * 
@@ -388,8 +392,8 @@ export interface ReferrerJourney {
  * ```ts
  * const response = await sendChatMessage(
  *   'agent-uuid',
- *   null, // New conversation
- *   [{ role: 'user', content: 'Hello!' }],
+ *   'conv-uuid',
+ *   { role: 'user', content: 'Hello!' },
  *   'lead-uuid'
  * );
  * console.log(response.response); // AI response
@@ -398,12 +402,12 @@ export interface ReferrerJourney {
 export async function sendChatMessage(
   agentId: string, 
   conversationId: string | null, 
-  messages: Array<{ role: string; content: string; files?: Array<{ name: string; url: string; type: string; size: number }> }>,
+  newUserMessage: { role: string; content: string; files?: Array<{ name: string; url: string; type: string; size: number }> },
   leadId?: string,
   pageVisits?: Array<{ url: string; entered_at: string; duration_ms: number }>,
   referrerJourney?: ReferrerJourney,
   visitorId?: string,
-  locationId?: string // Phase 5: Location context
+  locationId?: string
 ): Promise<ChatResponse> {
   const response = await fetch(`${SUPABASE_URL}/functions/v1/widget-chat`, {
     method: 'POST',
@@ -414,12 +418,13 @@ export async function sendChatMessage(
     body: JSON.stringify({
       agentId,
       conversationId,
-      messages,
+      // PHASE 5: Send single message instead of array - edge function fetches history from DB
+      messages: [newUserMessage],
       leadId,
       pageVisits,
       referrerJourney,
       visitorId,
-      locationId, // Phase 5: Include location context
+      locationId,
     }),
   });
 
