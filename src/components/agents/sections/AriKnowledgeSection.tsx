@@ -7,7 +7,7 @@
 import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
-import { Database01, Globe01 } from '@untitledui/icons';
+import { Database01 } from '@untitledui/icons';
 import { useKnowledgeSources } from '@/hooks/useKnowledgeSources';
 import { useLocations } from '@/hooks/useLocations';
 import { KnowledgeSourceCard } from '@/components/agents/KnowledgeSourceCard';
@@ -15,7 +15,6 @@ import { AddKnowledgeDialog } from '@/components/agents/AddKnowledgeDialog';
 import { AriSectionHeader } from './AriSectionHeader';
 import { LoadingState } from '@/components/ui/loading-state';
 import { ZapSolidIcon } from '@/components/ui/zap-solid-icon';
-import { Progress } from '@/components/ui/progress';
 import { toast } from '@/lib/toast';
 import { getErrorMessage } from '@/types/errors';
 
@@ -48,35 +47,6 @@ export const AriKnowledgeSection: React.FC<AriKnowledgeSectionProps> = ({ agentI
   // Filter out auto-created WordPress sources - they're managed in Locations tab
   const parentSources = getParentSources().filter(source => source.source_type !== 'wordpress_home');
   const outdatedCount = parentSources.filter(isSourceOutdated).length;
-
-  // Sitemap progress
-  const sitemapProgress = useMemo(() => {
-    const sitemapSources = parentSources.filter(s => {
-      const metadata = s.metadata as Record<string, any> | null;
-      return metadata?.is_sitemap;
-    });
-
-    let totalPages = 0;
-    let readyPages = 0;
-    let processingCount = 0;
-    let pendingCount = 0;
-    let errorCount = 0;
-
-    for (const sitemap of sitemapSources) {
-      const children = getChildSources(sitemap.id);
-      totalPages += children.length;
-      readyPages += children.filter(c => c.status === 'ready').length;
-      processingCount += children.filter(c => c.status === 'processing').length;
-      pendingCount += children.filter(c => c.status === 'pending').length;
-      errorCount += children.filter(c => c.status === 'error').length;
-    }
-
-    const isActive = processingCount > 0 || pendingCount > 0;
-    const processedPages = readyPages + errorCount;
-    const percentage = totalPages > 0 ? Math.round((processedPages / totalPages) * 100) : 0;
-
-    return { isActive, totalPages, processedPages, processingCount, pendingCount, percentage };
-  }, [parentSources, getChildSources]);
 
   const handleRetrainAll = async () => {
     setIsRetraining(true);
@@ -139,21 +109,6 @@ export const AriKnowledgeSection: React.FC<AriKnowledgeSectionProps> = ({ agentI
       />
 
       <div className="space-y-4">
-        {/* Sitemap Progress */}
-        {sitemapProgress.isActive && (
-          <div className="flex items-center gap-3 rounded-lg border border-primary/20 bg-primary/5 p-3">
-            <Globe01 className="h-4 w-4 text-primary shrink-0" />
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between gap-4 mb-1">
-                <span className="text-sm font-medium">
-                  Processing: {sitemapProgress.processedPages}/{sitemapProgress.totalPages} pages
-                </span>
-              </div>
-              <Progress value={sitemapProgress.percentage} variant="success" animated className="h-1.5" />
-            </div>
-          </div>
-        )}
-
         {parentSources.length === 0 ? (
           <EmptyState
             icon={<Database01 className="h-5 w-5 text-muted-foreground/50" />}
