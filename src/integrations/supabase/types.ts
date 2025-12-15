@@ -938,6 +938,7 @@ export type Database = {
           url_patterns: string[] | null
           user_id: string
           wordpress_community_id: number | null
+          wordpress_community_term_id: number | null
           wordpress_slug: string | null
           zip: string | null
         }
@@ -960,6 +961,7 @@ export type Database = {
           url_patterns?: string[] | null
           user_id: string
           wordpress_community_id?: number | null
+          wordpress_community_term_id?: number | null
           wordpress_slug?: string | null
           zip?: string | null
         }
@@ -982,6 +984,7 @@ export type Database = {
           url_patterns?: string[] | null
           user_id?: string
           wordpress_community_id?: number | null
+          wordpress_community_term_id?: number | null
           wordpress_slug?: string | null
           zip?: string | null
         }
