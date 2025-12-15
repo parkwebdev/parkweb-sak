@@ -897,10 +897,6 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
       {!isIframeMode && (
         <FloatingButton
           onClick={() => setIsOpen(!isOpen)}
-          primaryColor={config.primaryColor}
-          useGradientHeader={config.useGradientHeader}
-          gradientStartColor={config.gradientStartColor}
-          gradientEndColor={config.gradientEndColor}
           isOpen={isOpen}
         />
       )}
