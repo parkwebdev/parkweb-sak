@@ -286,12 +286,17 @@ Deno.serve(async (req: Request) => {
       const communities = await fetchWordPressCommunities(urlToSync);
       console.log(`Fetched ${communities.length} communities from WordPress`);
 
+      // Fetch taxonomy terms to get term IDs (homes reference these, not post IDs)
+      const taxonomyTerms = await fetchTaxonomyTerms(urlToSync);
+      console.log(`Fetched ${taxonomyTerms.size} taxonomy terms from home_community`);
+
       // Sync communities to locations
       const result = await syncCommunitiesToLocations(
         supabase,
         agentId,
         agent.user_id,
-        communities
+        communities,
+        taxonomyTerms
       );
 
       // Update agent's deployment_config with sync info
@@ -478,11 +483,74 @@ async function fetchWordPressCommunities(siteUrl: string): Promise<WordPressComm
   return communities;
 }
 
+/**
+ * Fetch home_community taxonomy terms to build slug -> term_id map
+ * Homes reference taxonomy term IDs (not post IDs), so we need this mapping
+ */
+async function fetchTaxonomyTerms(siteUrl: string): Promise<Map<string, number>> {
+  const normalizedUrl = siteUrl.replace(/\/$/, '');
+  const slugToTermId = new Map<string, number>();
+  let page = 1;
+  const perPage = 100;
+
+  while (true) {
+    const apiUrl = `${normalizedUrl}/wp-json/wp/v2/home_community?per_page=${perPage}&page=${page}`;
+    console.log(`Fetching home_community taxonomy terms page ${page}: ${apiUrl}`);
+
+    try {
+      const response = await fetch(apiUrl, {
+        headers: {
+          'Accept': 'application/json',
+          'User-Agent': 'ChatPad/1.0',
+        },
+      });
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          console.warn('home_community taxonomy endpoint not found - homes may not have taxonomy terms');
+          break;
+        }
+        if (response.status === 400 && page > 1) {
+          break;
+        }
+        throw new Error(`WordPress taxonomy API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      if (!Array.isArray(data) || data.length === 0) {
+        break;
+      }
+
+      // Map slug to term ID
+      for (const term of data) {
+        if (term.slug && term.id) {
+          slugToTermId.set(term.slug, term.id);
+          console.log(`  Taxonomy term: ${term.slug} -> ${term.id}`);
+        }
+      }
+
+      // Check if there are more pages
+      const totalPages = parseInt(response.headers.get('X-WP-TotalPages') || '1', 10);
+      if (page >= totalPages) {
+        break;
+      }
+
+      page++;
+    } catch (error) {
+      console.error('Error fetching taxonomy terms:', error);
+      break;
+    }
+  }
+
+  return slugToTermId;
+}
+
 async function syncCommunitiesToLocations(
   supabase: ReturnType<typeof createClient>,
   agentId: string,
   userId: string,
-  communities: WordPressCommunity[]
+  communities: WordPressCommunity[],
+  taxonomyTerms: Map<string, number>
 ): Promise<SyncResult> {
   const result: SyncResult = { created: 0, updated: 0, skipped: 0, errors: [] };
 
@@ -511,11 +579,21 @@ async function syncCommunitiesToLocations(
       const communityType = extractAcfField(acf, 'type', 'community_type');
       if (communityType) metadata.community_type = communityType;
 
+      // Look up the taxonomy term ID using the community's slug
+      // Homes reference this term ID (not the post ID) in their home_community field
+      const termId = taxonomyTerms.get(community.slug);
+      if (termId) {
+        console.log(`✓ Community "${community.title.rendered}" (post ${community.id}) mapped to term ID ${termId}`);
+      } else {
+        console.warn(`⚠ Community "${community.title.rendered}" has no matching taxonomy term for slug "${community.slug}"`);
+      }
+
       const locationData = {
         agent_id: agentId,
         user_id: userId,
         name: decodeHtmlEntities(community.title.rendered),
         wordpress_community_id: community.id,
+        wordpress_community_term_id: termId || null,
         wordpress_slug: community.slug,
         address,
         city,

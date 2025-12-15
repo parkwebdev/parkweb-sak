@@ -349,23 +349,25 @@ Deno.serve(async (req: Request) => {
         urlToSync
       );
 
-      // Get locations with WordPress community IDs for auto-matching
+      // Get locations with WordPress community term IDs for auto-matching
+      // Homes reference taxonomy term IDs (not post IDs), so we match on wordpress_community_term_id
       const { data: locations } = await supabase
         .from('locations')
-        .select('id, wordpress_community_id')
+        .select('id, wordpress_community_term_id')
         .eq('agent_id', agentId)
-        .not('wordpress_community_id', 'is', null);
+        .not('wordpress_community_term_id', 'is', null);
 
-      // Build WordPress community ID -> location ID map (ONLY matching strategy)
-      const communityIdMap = new Map<number, string>();
+      // Build WordPress taxonomy term ID -> location ID map (ONLY matching strategy)
+      const termIdMap = new Map<number, string>();
       
       for (const loc of locations || []) {
-        if (loc.wordpress_community_id) {
-          communityIdMap.set(loc.wordpress_community_id, loc.id);
+        if (loc.wordpress_community_term_id) {
+          termIdMap.set(loc.wordpress_community_term_id, loc.id);
         }
       }
       
-      console.log(`Built location map with ${communityIdMap.size} WordPress community IDs`);
+      const locationMaps: LocationMaps = { termIdMap };
+      console.log(`Built location map with ${termIdMap.size} WordPress taxonomy term IDs`);
 
       // Fetch homes from WordPress
       const homes = await fetchWordPressHomes(urlToSync);
@@ -380,7 +382,7 @@ Deno.serve(async (req: Request) => {
           supabase,
           agentId,
           knowledgeSourceId,
-          communityIdMap,
+          locationMaps,
           extractedProperties,
           homes
         );
@@ -390,7 +392,7 @@ Deno.serve(async (req: Request) => {
           supabase,
           agentId,
           knowledgeSourceId,
-          communityIdMap,
+          locationMaps,
           homes
         );
       }
@@ -708,7 +710,7 @@ async function syncHomesToProperties(
   supabase: ReturnType<typeof createClient>,
   agentId: string,
   knowledgeSourceId: string,
-  communityIdMap: Map<number, string>,
+  locationMaps: LocationMaps,
   homes: WordPressHome[]
 ): Promise<SyncResult> {
   const result: SyncResult = { created: 0, updated: 0, skipped: 0, errors: [] };
@@ -725,14 +727,15 @@ async function syncHomesToProperties(
       const state = extractAcfField(acf, 'state');
       const zip = extractAcfField(acf, 'zip', 'zipcode', 'postal', 'postal_code') || extractZipFromAddress(address);
       
-      // Auto-match to location using WordPress community taxonomy ID ONLY
-      const communityId = home.home_community?.[0];
-      const locationId = autoMatchLocation(communityIdMap, communityId);
+      // Auto-match to location using WordPress taxonomy term ID ONLY
+      // home_community contains taxonomy term IDs (not post IDs)
+      const communityTermId = home.home_community?.[0];
+      const locationId = autoMatchLocation(locationMaps, communityTermId);
       
       if (locationId) {
-        console.log(`✓ Matched "${address}" to location via community ID ${communityId}`);
-      } else if (communityId) {
-        console.warn(`⚠ Property "${address}" has community ID ${communityId} but no matching location found`);
+        console.log(`✓ Matched "${address}" to location via taxonomy term ID ${communityTermId}`);
+      } else if (communityTermId) {
+        console.warn(`⚠ Property "${address}" has taxonomy term ID ${communityTermId} but no matching location found`);
       } else {
         console.warn(`⚠ Property "${address}" has no WordPress community taxonomy assigned`);
       }
@@ -968,7 +971,7 @@ async function syncPropertiesToDatabase(
   supabase: ReturnType<typeof createClient>,
   agentId: string,
   knowledgeSourceId: string,
-  communityIdMap: Map<number, string>,
+  locationMaps: LocationMaps,
   properties: ExtractedProperty[],
   homes: WordPressHome[]
 ): Promise<SyncResult> {
@@ -983,15 +986,16 @@ async function syncPropertiesToDatabase(
   for (const prop of properties) {
     try {
       const home = homeMap.get(prop.external_id);
-      const communityId = home?.home_community?.[0];
+      // home_community contains taxonomy term IDs (not post IDs)
+      const communityTermId = home?.home_community?.[0];
       
-      // Auto-match to location using WordPress community taxonomy ID ONLY
-      const locationId = autoMatchLocation(communityIdMap, communityId);
+      // Auto-match to location using WordPress taxonomy term ID ONLY
+      const locationId = autoMatchLocation(locationMaps, communityTermId);
       
       if (locationId) {
-        console.log(`✓ Matched AI-extracted "${prop.address}" to location via community ID ${communityId}`);
-      } else if (communityId) {
-        console.warn(`⚠ AI-extracted "${prop.address}" has community ID ${communityId} but no matching location found`);
+        console.log(`✓ Matched AI-extracted "${prop.address}" to location via taxonomy term ID ${communityTermId}`);
+      } else if (communityTermId) {
+        console.warn(`⚠ AI-extracted "${prop.address}" has taxonomy term ID ${communityTermId} but no matching location found`);
       } else {
         console.warn(`⚠ AI-extracted "${prop.address}" has no WordPress community taxonomy assigned`);
       }
