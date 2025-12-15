@@ -332,7 +332,29 @@ const BOOKING_TOOLS = [
     type: 'function' as const,
     function: {
       name: 'search_properties',
-      description: 'Search for available properties/homes. Use when user asks about available units, homes for sale/rent, or property listings.',
+      description: `Search for available properties/homes in the database.
+
+TRIGGERS - Use this tool when user:
+• Asks about available homes, units, properties, rentals, or listings
+• Says "what do you have", "show me homes", "looking for a place"
+• Mentions price range, bedrooms, location preferences
+• Asks "what's available in [city/community]"
+• Wants to browse or see options
+
+EXAMPLES:
+• "Do you have any 3-bedroom homes?" → search_properties(min_beds: 3)
+• "What's available under $1500?" → search_properties(max_price: 150000)
+• "Show me homes in Clearview" → search_properties(city: "Clearview") or use location_id
+
+WORKFLOW:
+• This is typically the FIRST tool in the property journey
+• AFTER: User may ask about a specific property → use lookup_property
+• AFTER: User may want to schedule a tour → use check_calendar_availability
+
+DO NOT USE when:
+• User asks about a SPECIFIC property they already mentioned (use lookup_property)
+• User asks for contact info only (use get_locations)
+• User is ready to book (use book_appointment)`,
       parameters: {
         type: 'object',
         properties: {
@@ -355,7 +377,28 @@ const BOOKING_TOOLS = [
     type: 'function' as const,
     function: {
       name: 'lookup_property',
-      description: 'Get details for a specific property by address, lot number, or ID. Use when user asks about a specific home.',
+      description: `Get detailed information about a SPECIFIC property by address, lot number, or ID.
+
+TRIGGERS - Use this tool when user:
+• References a specific property from search results ("tell me more about the first one")
+• Uses ordinal references ("the second home", "the cheapest one", "that $1200 one")
+• Asks about a specific address or lot number they know
+• Says "more details", "tell me about", "what about" a specific home
+• Wants full description, features, or photos of ONE property
+
+EXAMPLES:
+• "Tell me more about lot 42" → lookup_property(lot_number: "42")
+• "What about the first one?" → lookup_property(property_id: [id from previous search])
+• "Details on 123 Oak Street" → lookup_property(address: "123 Oak Street")
+
+WORKFLOW:
+• BEFORE: User typically did search_properties first
+• AFTER: User may want to schedule a tour → use check_calendar_availability
+
+DO NOT USE when:
+• User wants to browse multiple properties (use search_properties)
+• User hasn't specified WHICH property they mean
+• User asks about communities, not specific homes (use get_locations)`,
       parameters: {
         type: 'object',
         properties: {
@@ -370,7 +413,30 @@ const BOOKING_TOOLS = [
     type: 'function' as const,
     function: {
       name: 'get_locations',
-      description: 'Get list of communities/locations with contact info (phone numbers, emails, addresses). Use when user needs to choose a location, asks about communities, OR requests contact information for a specific location.',
+      description: `Get list of communities/locations with CONTACT INFO (phone numbers, emails, addresses, business hours).
+
+TRIGGERS - Use this tool when user:
+• Asks for phone number, email, or contact info for a community
+• Says "how do I reach", "call", "contact", "phone number for"
+• Asks about office hours or location addresses
+• Needs to choose between communities ("which locations do you have")
+• Asks "where are you located" or about community names
+
+EXAMPLES:
+• "What's the phone for Clearview Estates?" → get_locations, find Clearview, provide phone
+• "How do I contact your office?" → get_locations, provide relevant contact
+• "What communities do you have?" → get_locations, list all
+
+WORKFLOW:
+• Can be used ANYTIME - standalone for contact info
+• BEFORE search_properties: To help user pick a community to search in
+• Provides location_id needed for check_calendar_availability and book_appointment
+
+DO NOT USE when:
+• User asks about specific properties (use search_properties or lookup_property)
+• User is already discussing a specific community you know the ID for
+
+CRITICAL: You have phone numbers - NEVER tell users to "check the website" for contact info!`,
       parameters: {
         type: 'object',
         properties: {}
@@ -381,7 +447,29 @@ const BOOKING_TOOLS = [
     type: 'function' as const,
     function: {
       name: 'check_calendar_availability',
-      description: 'Check available appointment times for tours/viewings. Use when user wants to schedule a visit or tour.',
+      description: `Check available appointment times for property tours, viewings, or visits.
+
+TRIGGERS - Use this tool when user:
+• Wants to schedule, book, or arrange a tour/visit
+• Says "when can I come by", "schedule a viewing", "book a tour"
+• Asks "what times are available", "when are you open for tours"
+• Mentions specific dates they're interested in visiting
+• Says "I'd like to see it", "can I visit"
+
+EXAMPLES:
+• "Can I schedule a tour?" → check_calendar_availability(location_id, date_from: today)
+• "What's available this weekend?" → check_calendar_availability with weekend dates
+• "I'd like to visit Clearview on Friday" → get location_id first, then check availability
+
+WORKFLOW:
+• BEFORE: Get location_id from get_locations if not known
+• BEFORE: User may have searched/viewed properties first
+• AFTER: User selects a time → use book_appointment to confirm
+
+DO NOT USE when:
+• User is just browsing properties (use search_properties)
+• User already selected a time and wants to confirm (use book_appointment)
+• You don't have a location_id yet (use get_locations first)`,
       parameters: {
         type: 'object',
         properties: {
@@ -398,7 +486,30 @@ const BOOKING_TOOLS = [
     type: 'function' as const,
     function: {
       name: 'book_appointment',
-      description: 'Book a tour/appointment. Use after user confirms a time slot. Requires location_id, start_time, and visitor_name.',
+      description: `Book/confirm a tour or appointment. This is the FINAL step after user selects a time.
+
+TRIGGERS - Use this tool when user:
+• Confirms a specific time slot ("yes, book me for 2pm", "that works")
+• Says "confirm", "book it", "schedule me", "I'll take that slot"
+• Provides their name/contact info for the booking
+• Explicitly agrees to a proposed appointment time
+
+EXAMPLES:
+• User: "Yes, book me for 2pm on Friday" → book_appointment with that time
+• User: "That 10am slot works" → book_appointment with the slot they referenced
+
+WORKFLOW:
+• BEFORE: MUST have used check_calendar_availability to show available times
+• BEFORE: User MUST have selected/confirmed a specific time
+• This is the END of the booking flow
+
+DO NOT USE when:
+• User is still browsing times (use check_calendar_availability)
+• User hasn't confirmed a specific slot yet
+• You don't have visitor_name (ask for it first)
+• User is asking about availability, not confirming
+
+REQUIRED: location_id, start_time, visitor_name - collect these before booking!`,
       parameters: {
         type: 'object',
         properties: {
@@ -2774,38 +2885,19 @@ Examples:
         console.log(`Injected ${shownProperties.length} shown properties into context`);
       }
       
+      // Tools are now self-documenting with TRIGGERS, EXAMPLES, WORKFLOW, and DO NOT USE sections
+      // No need for redundant manual instructions here - the AI reads tool descriptions directly
       systemPrompt += `
 
-PROPERTY SEARCH CAPABILITY:
-You have access to a real-time property database with the following tools:
-- search_properties: Search for available homes/properties by city, state, price range, beds, baths, etc.
-- lookup_property: Get detailed information about a specific property by ID
-- get_locations: Get communities with PHONE NUMBERS, emails, and addresses
-- check_calendar_availability: Check available appointment times for property tours
-- book_appointment: Schedule a property tour or appointment
+PROPERTY & BOOKING TOOLS AVAILABLE:
+You have access to real-time tools for properties, locations, and bookings. Each tool's description contains:
+• TRIGGERS: When to use it
+• EXAMPLES: Sample queries
+• WORKFLOW: How it fits with other tools
+• DO NOT USE: When to avoid it
 
-CRITICAL INSTRUCTIONS FOR CONTACT/PHONE QUERIES:
-When users ask for phone numbers, contact info, email, or how to reach a specific community:
-- You MUST use get_locations to retrieve the phone number and provide it DIRECTLY
-- DO NOT tell users to "check the website" - you have the contact information. Use it!
-- Example: "What's the phone for Clearview Estates?" → Call get_locations, find Clearview, respond with the phone number
-
-CRITICAL INSTRUCTIONS FOR PROPERTY QUERIES:
-When users ask about:
-- Available homes, units, lots, or properties
-- What's available in a specific city/location (e.g., "Florence, SC")
-- Pricing, bedrooms, bathrooms, or property specifications
-- Property listings or inventory
-
-You MUST use the search_properties or lookup_property tools to get current data.
-DO NOT rely solely on knowledge base context for property availability - the properties table has live, real-time data.
-
-Examples:
-- "What homes are available in Florence?" → Call search_properties with city="Florence"
-- "Any 3-bedroom homes under $200k?" → Call search_properties with min_beds=3, max_price=200000
-- "Tell me about lot 42" → Call lookup_property with the property ID
-
-Always provide specific property details from the tool results, including prices, bed/bath counts, and available features.${shownPropertiesContext}`;
+Read each tool's description carefully to understand when and how to use it.
+DO NOT rely solely on knowledge base context - use the tools for live data.${shownPropertiesContext}`;
       
       console.log('Added property tool instructions to system prompt');
     }
