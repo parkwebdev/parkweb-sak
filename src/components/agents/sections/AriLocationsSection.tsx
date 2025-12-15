@@ -1,21 +1,23 @@
 /**
  * AriLocationsSection
  * 
- * Locations management with TanStack Table, infinite scroll,
+ * Locations/Properties management with TanStack Table, infinite scroll,
  * enhanced filters with chips, and collapsible WordPress integration.
+ * Toggle between Communities and Properties views.
  */
 
 import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useReactTable, getCoreRowModel, getSortedRowModel, getFilteredRowModel, type SortingState, type RowSelectionState } from '@tanstack/react-table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Trash01, XClose, X, FilterLines } from '@untitledui/icons';
+import { Trash01, XClose, X, FilterLines, Building01, Home01, AlertTriangle } from '@untitledui/icons';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { useLocations } from '@/hooks/useLocations';
+import { useProperties } from '@/hooks/useProperties';
 import { useAgent } from '@/hooks/useAgent';
 import { useConnectedAccounts } from '@/hooks/useConnectedAccounts';
 import { CreateLocationDialog } from '@/components/agents/locations/CreateLocationDialog';
@@ -26,10 +28,11 @@ import { LoadingState } from '@/components/ui/loading-state';
 import { SimpleDeleteDialog } from '@/components/ui/simple-delete-dialog';
 import { DataTable } from '@/components/data-table/DataTable';
 import { DataTableToolbar } from '@/components/data-table/DataTableToolbar';
-import { createLocationsColumns, type LocationWithCounts } from '@/components/data-table/columns';
+import { createLocationsColumns, type LocationWithCounts, createPropertiesColumns, type PropertyWithLocation } from '@/components/data-table/columns';
 import { EmptyState } from '@/components/ui/empty-state';
 import { MarkerPin01 } from '@untitledui/icons';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface AriLocationsSectionProps {
   agentId: string;
@@ -37,38 +40,61 @@ interface AriLocationsSectionProps {
 }
 
 interface ActiveFilter {
-  type: 'calendar' | 'wordpress' | 'state';
+  type: 'calendar' | 'wordpress' | 'state' | 'community' | 'status' | 'validation';
   value: string;
   label: string;
 }
 
+type ViewMode = 'communities' | 'properties';
+
 export const AriLocationsSection: React.FC<AriLocationsSectionProps> = ({ agentId, userId }) => {
-  const { locations, loading, createLocation, updateLocation, deleteLocation, refetch } = useLocations(agentId);
+  const { locations, loading: locationsLoading, createLocation, updateLocation, deleteLocation, refetch } = useLocations(agentId);
+  const { propertiesWithLocation, loading: propertiesLoading, validationStats, uniqueLocations, refetch: refetchProperties } = useProperties(agentId);
   const { agent, refetch: refetchAgent } = useAgent();
   const { accounts } = useConnectedAccounts(undefined, agentId);
 
-  // Combined refetch for WordPress sync operations - refreshes both locations and agent config
+  // View mode toggle
+  const [viewMode, setViewMode] = useState<ViewMode>('communities');
+  const loading = viewMode === 'communities' ? locationsLoading : propertiesLoading;
+
+  // Combined refetch for WordPress sync operations
   const handleWordPressSyncComplete = useCallback(() => {
     refetch();
     refetchAgent();
-  }, [refetch, refetchAgent]);
+    refetchProperties();
+  }, [refetch, refetchAgent, refetchProperties]);
   
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<LocationWithCounts | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [deleteLocation_, setDeleteLocation] = useState<LocationWithCounts | null>(null);
+  const [deleteProperty_, setDeleteProperty] = useState<PropertyWithLocation | null>(null);
+  
+  // Table states
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState('');
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   
-  // Filter states
+  // Location filters
   const [calendarFilter, setCalendarFilter] = useState<string>('all');
   const [wordpressFilter, setWordpressFilter] = useState<string>('all');
   const [stateFilter, setStateFilter] = useState<string>('all');
 
+  // Property filters
+  const [communityFilter, setCommunityFilter] = useState<string>('all');
+  const [propertyStatusFilter, setPropertyStatusFilter] = useState<string>('all');
+  const [validationFilter, setValidationFilter] = useState<string>('all');
+
   // Infinite scroll state
   const [displayCount, setDisplayCount] = useState(20);
   const loadMoreRef = useRef<HTMLDivElement>(null);
+
+  // Reset filters when switching view modes
+  useEffect(() => {
+    setGlobalFilter('');
+    setRowSelection({});
+    setDisplayCount(20);
+  }, [viewMode]);
 
   // Enrich locations with calendar counts
   const locationsWithCounts: LocationWithCounts[] = useMemo(() => {
@@ -78,7 +104,7 @@ export const AriLocationsSection: React.FC<AriLocationsSectionProps> = ({ agentI
     }));
   }, [locations, accounts]);
 
-  // Get unique states for filter
+  // Get unique states for location filter
   const uniqueStates = useMemo(() => {
     const states = new Set<string>();
     locationsWithCounts.forEach(loc => {
@@ -87,27 +113,41 @@ export const AriLocationsSection: React.FC<AriLocationsSectionProps> = ({ agentI
     return Array.from(states).sort();
   }, [locationsWithCounts]);
 
-  // Apply filters
+  // Apply location filters
   const filteredLocations = useMemo(() => {
     return locationsWithCounts.filter(location => {
-      // Calendar filter
       if (calendarFilter === 'connected' && location.calendarCount === 0) return false;
       if (calendarFilter === 'none' && location.calendarCount > 0) return false;
       
-      // WordPress filter
       const hasWordPress = location.wordpress_community_id || location.wordpress_slug;
       if (wordpressFilter === 'connected' && !hasWordPress) return false;
       if (wordpressFilter === 'none' && hasWordPress) return false;
       
-      // State filter
       if (stateFilter !== 'all' && location.state !== stateFilter) return false;
       
       return true;
     });
   }, [locationsWithCounts, calendarFilter, wordpressFilter, stateFilter]);
 
-  // Active filters for chips
-  const activeFilters: ActiveFilter[] = useMemo(() => {
+  // Apply property filters
+  const filteredProperties = useMemo(() => {
+    return propertiesWithLocation.filter(property => {
+      // Community filter
+      if (communityFilter !== 'all' && property.location_id !== communityFilter) return false;
+      
+      // Status filter
+      if (propertyStatusFilter !== 'all' && property.status !== propertyStatusFilter) return false;
+      
+      // Validation filter
+      if (validationFilter === 'missing_lot' && property.lot_number) return false;
+      if (validationFilter === 'unmatched' && property.location_id) return false;
+      
+      return true;
+    });
+  }, [propertiesWithLocation, communityFilter, propertyStatusFilter, validationFilter]);
+
+  // Active filters for chips - location view
+  const activeLocationFilters: ActiveFilter[] = useMemo(() => {
     const filters: ActiveFilter[] = [];
     if (calendarFilter !== 'all') {
       filters.push({
@@ -133,24 +173,61 @@ export const AriLocationsSection: React.FC<AriLocationsSectionProps> = ({ agentI
     return filters;
   }, [calendarFilter, wordpressFilter, stateFilter]);
 
-  const clearFilter = (type: 'calendar' | 'wordpress' | 'state') => {
+  // Active filters for chips - property view
+  const activePropertyFilters: ActiveFilter[] = useMemo(() => {
+    const filters: ActiveFilter[] = [];
+    if (communityFilter !== 'all') {
+      const community = uniqueLocations.find(l => l.id === communityFilter);
+      filters.push({
+        type: 'community',
+        value: communityFilter,
+        label: community?.name || communityFilter,
+      });
+    }
+    if (propertyStatusFilter !== 'all') {
+      filters.push({
+        type: 'status',
+        value: propertyStatusFilter,
+        label: propertyStatusFilter.charAt(0).toUpperCase() + propertyStatusFilter.slice(1).replace('_', ' '),
+      });
+    }
+    if (validationFilter !== 'all') {
+      filters.push({
+        type: 'validation',
+        value: validationFilter,
+        label: validationFilter === 'missing_lot' ? 'Missing Lot #' : 'Unmatched',
+      });
+    }
+    return filters;
+  }, [communityFilter, propertyStatusFilter, validationFilter, uniqueLocations]);
+
+  const activeFilters = viewMode === 'communities' ? activeLocationFilters : activePropertyFilters;
+
+  const clearFilter = (type: ActiveFilter['type']) => {
     if (type === 'calendar') setCalendarFilter('all');
     if (type === 'wordpress') setWordpressFilter('all');
     if (type === 'state') setStateFilter('all');
+    if (type === 'community') setCommunityFilter('all');
+    if (type === 'status') setPropertyStatusFilter('all');
+    if (type === 'validation') setValidationFilter('all');
   };
 
   const clearAllFilters = () => {
     setCalendarFilter('all');
     setWordpressFilter('all');
     setStateFilter('all');
+    setCommunityFilter('all');
+    setPropertyStatusFilter('all');
+    setValidationFilter('all');
   };
 
   // Infinite scroll observer
   useEffect(() => {
+    const currentData = viewMode === 'communities' ? filteredLocations : filteredProperties;
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && displayCount < filteredLocations.length) {
-          setDisplayCount(prev => Math.min(prev + 20, filteredLocations.length));
+        if (entries[0].isIntersecting && displayCount < currentData.length) {
+          setDisplayCount(prev => Math.min(prev + 20, currentData.length));
         }
       },
       { threshold: 0.1 }
@@ -161,24 +238,28 @@ export const AriLocationsSection: React.FC<AriLocationsSectionProps> = ({ agentI
     }
 
     return () => observer.disconnect();
-  }, [filteredLocations.length, displayCount]);
+  }, [filteredLocations.length, filteredProperties.length, displayCount, viewMode]);
 
   // Reset display count when filters change
   useEffect(() => {
     setDisplayCount(20);
-  }, [calendarFilter, wordpressFilter, stateFilter, globalFilter]);
+  }, [calendarFilter, wordpressFilter, stateFilter, communityFilter, propertyStatusFilter, validationFilter, globalFilter]);
 
-  // CRITICAL: Memoize to prevent new array reference on every render
+  // Memoized displayed data
   const displayedLocations = useMemo(
     () => filteredLocations.slice(0, displayCount),
     [filteredLocations, displayCount]
+  );
+
+  const displayedProperties = useMemo(
+    () => filteredProperties.slice(0, displayCount),
+    [filteredProperties, displayCount]
   );
 
   const handleCreate = async (data: Parameters<typeof createLocation>[0]) => {
     const id = await createLocation(data, userId);
     if (id) {
       setCreateDialogOpen(false);
-      // Open the new location in the sheet
       const newLocation = locationsWithCounts.find(l => l.id === id);
       if (newLocation) {
         setSelectedLocation(newLocation);
@@ -187,12 +268,12 @@ export const AriLocationsSection: React.FC<AriLocationsSectionProps> = ({ agentI
     }
   };
 
-  const handleView = useCallback((location: LocationWithCounts) => {
+  const handleViewLocation = useCallback((location: LocationWithCounts) => {
     setSelectedLocation(location);
     setSheetOpen(true);
   }, []);
 
-  const handleDelete = async () => {
+  const handleDeleteLocation = async () => {
     if (!deleteLocation_) return;
     await deleteLocation(deleteLocation_.id);
     setDeleteLocation(null);
@@ -202,8 +283,22 @@ export const AriLocationsSection: React.FC<AriLocationsSectionProps> = ({ agentI
     }
   };
 
-  const handleBulkDelete = async () => {
-    const selectedRows = table.getFilteredSelectedRowModel().rows;
+  const handleDeleteProperty = async () => {
+    if (!deleteProperty_) return;
+    try {
+      const { error } = await supabase.from('properties').delete().eq('id', deleteProperty_.id);
+      if (error) throw error;
+      toast.success('Property deleted');
+      refetchProperties();
+    } catch (error) {
+      toast.error('Failed to delete property');
+    } finally {
+      setDeleteProperty(null);
+    }
+  };
+
+  const handleBulkDeleteLocations = async () => {
+    const selectedRows = locationsTable.getFilteredSelectedRowModel().rows;
     if (selectedRows.length === 0) return;
     
     const count = selectedRows.length;
@@ -214,23 +309,48 @@ export const AriLocationsSection: React.FC<AriLocationsSectionProps> = ({ agentI
     toast.success(`Deleted ${count} location${count > 1 ? 's' : ''}`);
   };
 
+  const handleBulkDeleteProperties = async () => {
+    const selectedRows = propertiesTable.getFilteredSelectedRowModel().rows;
+    if (selectedRows.length === 0) return;
+    
+    const count = selectedRows.length;
+    const ids = selectedRows.map(row => row.original.id);
+    
+    const { error } = await supabase.from('properties').delete().in('id', ids);
+    if (error) {
+      toast.error('Failed to delete properties');
+      return;
+    }
+    
+    setRowSelection({});
+    toast.success(`Deleted ${count} propert${count > 1 ? 'ies' : 'y'}`);
+    refetchProperties();
+  };
+
   const clearSelection = () => {
     setRowSelection({});
   };
 
-  // Stabilize onDelete callback
   const handleSetDeleteLocation = useCallback((location: LocationWithCounts) => {
     setDeleteLocation(location);
   }, []);
 
-  const columns = useMemo(() => createLocationsColumns({
-    onView: handleView,
-    onDelete: handleSetDeleteLocation,
-  }), [handleView, handleSetDeleteLocation]);
+  const handleSetDeleteProperty = useCallback((property: PropertyWithLocation) => {
+    setDeleteProperty(property);
+  }, []);
 
-  const table = useReactTable({
+  // Location columns
+  const locationColumns = useMemo(() => createLocationsColumns({
+    onView: handleViewLocation,
+    onDelete: handleSetDeleteLocation,
+  }), [handleViewLocation, handleSetDeleteLocation]);
+
+  // Property columns
+  const propertyColumns = useMemo(() => createPropertiesColumns(), []);
+
+  const locationsTable = useReactTable({
     data: displayedLocations,
-    columns,
+    columns: locationColumns,
     state: {
       sorting,
       globalFilter,
@@ -245,21 +365,41 @@ export const AriLocationsSection: React.FC<AriLocationsSectionProps> = ({ agentI
     enableRowSelection: true,
   });
 
+  const propertiesTable = useReactTable({
+    data: displayedProperties,
+    columns: propertyColumns,
+    state: {
+      sorting,
+      globalFilter,
+      rowSelection,
+    },
+    onSortingChange: setSorting,
+    onGlobalFilterChange: setGlobalFilter,
+    onRowSelectionChange: setRowSelection,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    enableRowSelection: true,
+  });
+
+  const table = viewMode === 'communities' ? locationsTable : propertiesTable;
   const selectedCount = Object.keys(rowSelection).length;
 
   if (loading) {
-    return <LoadingState text="Loading locations..." />;
+    return <LoadingState text={viewMode === 'communities' ? 'Loading locations...' : 'Loading properties...'} />;
   }
 
   return (
     <div>
       <AriSectionHeader
         title="Locations"
-        description="Manage communities, connect calendars, and configure business hours"
+        description="Manage communities, properties, and business configuration"
         extra={
-          <Button size="sm" onClick={() => setCreateDialogOpen(true)}>
-            Add Location
-          </Button>
+          viewMode === 'communities' && (
+            <Button size="sm" onClick={() => setCreateDialogOpen(true)}>
+              Add Location
+            </Button>
+          )
         }
       />
 
@@ -267,18 +407,69 @@ export const AriLocationsSection: React.FC<AriLocationsSectionProps> = ({ agentI
         {/* WordPress Integration - Collapsible */}
         <WordPressIntegrationSection agent={agent} onSyncComplete={handleWordPressSyncComplete} />
 
+        {/* View Toggle */}
+        <div className="flex items-center gap-2">
+          <Button 
+            variant={viewMode === 'communities' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setViewMode('communities')}
+            className="gap-1.5"
+          >
+            <Building01 size={16} />
+            Communities
+            <Badge variant={viewMode === 'communities' ? 'secondary' : 'outline'} className="ml-1 h-5 px-1.5 text-xs">
+              {locations.length}
+            </Badge>
+          </Button>
+          <Button 
+            variant={viewMode === 'properties' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setViewMode('properties')}
+            className="gap-1.5"
+          >
+            <Home01 size={16} />
+            Properties
+            <Badge variant={viewMode === 'properties' ? 'secondary' : 'outline'} className="ml-1 h-5 px-1.5 text-xs">
+              {propertiesWithLocation.length}
+            </Badge>
+          </Button>
+        </div>
+
+        {/* Validation Warning Banner - Properties View */}
+        {viewMode === 'properties' && validationStats.missingLotNumber > 0 && (
+          <div className="flex items-center gap-3 p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg">
+            <AlertTriangle size={16} className="text-amber-600 dark:text-amber-500 flex-shrink-0" />
+            <span className="text-sm flex-1">
+              <strong>{validationStats.missingLotNumber}</strong> propert{validationStats.missingLotNumber > 1 ? 'ies are' : 'y is'} missing lot numbers.{' '}
+              <span className="text-muted-foreground">Update in WordPress for better identification.</span>
+            </span>
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => setValidationFilter('missing_lot')}
+              className="text-amber-700 dark:text-amber-400 hover:text-amber-800"
+            >
+              View
+            </Button>
+          </div>
+        )}
+
         {/* Bulk Actions Bar */}
         {selectedCount > 0 && (
           <div className="flex items-center justify-between p-3 bg-muted rounded-lg border">
             <span className="text-sm">
-              {selectedCount} location{selectedCount > 1 ? 's' : ''} selected
+              {selectedCount} {viewMode === 'communities' ? 'location' : 'propert'}{selectedCount > 1 ? (viewMode === 'communities' ? 's' : 'ies') : (viewMode === 'communities' ? '' : 'y')} selected
             </span>
             <div className="flex items-center gap-2">
               <Button variant="ghost" size="sm" onClick={clearSelection}>
                 <XClose size={14} className="mr-1.5" />
                 Clear
               </Button>
-              <Button variant="destructive" size="sm" onClick={handleBulkDelete}>
+              <Button 
+                variant="destructive" 
+                size="sm" 
+                onClick={viewMode === 'communities' ? handleBulkDeleteLocations : handleBulkDeleteProperties}
+              >
                 <Trash01 size={14} className="mr-1.5" />
                 Delete
               </Button>
@@ -286,162 +477,275 @@ export const AriLocationsSection: React.FC<AriLocationsSectionProps> = ({ agentI
           </div>
         )}
 
-        {/* Locations Table */}
-        {locationsWithCounts.length === 0 ? (
-          <EmptyState
-            icon={<MarkerPin01 className="h-5 w-5 text-muted-foreground/50" />}
-            title="No locations yet"
-            description="Add locations to organize your business"
-            action={
-              <Button onClick={() => setCreateDialogOpen(true)} size="sm">
-                Add Location
-              </Button>
-            }
-          />
-        ) : (
-          <div className="space-y-3">
-            <DataTableToolbar
-              table={table}
-              searchPlaceholder="Search locations..."
-              globalFilter
-            >
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className="gap-1.5">
-                    <FilterLines size={16} />
-                    Filters
-                    {activeFilters.length > 0 && (
-                      <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
-                        {activeFilters.length}
-                      </Badge>
-                    )}
+        {/* Communities View */}
+        {viewMode === 'communities' && (
+          <>
+            {locationsWithCounts.length === 0 ? (
+              <EmptyState
+                icon={<MarkerPin01 className="h-5 w-5 text-muted-foreground/50" />}
+                title="No locations yet"
+                description="Add locations to organize your business"
+                action={
+                  <Button onClick={() => setCreateDialogOpen(true)} size="sm">
+                    Add Location
                   </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-72 p-4" align="end">
-                  <div className="space-y-4">
-                    {/* State Filter */}
-                    <div className="space-y-2">
-                      <Label className="text-xs font-medium text-muted-foreground uppercase">State</Label>
-                      <Select value={stateFilter} onValueChange={setStateFilter}>
-                        <SelectTrigger className="w-full h-9">
-                          <SelectValue placeholder="All States" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">All States</SelectItem>
-                          {uniqueStates.map(state => (
-                            <SelectItem key={state} value={state}>{state}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <Separator />
-
-                    {/* Calendar Filter */}
-                    <div className="space-y-2">
-                      <Label className="text-xs font-medium text-muted-foreground uppercase">Calendar</Label>
-                      <RadioGroup value={calendarFilter} onValueChange={setCalendarFilter} className="gap-2">
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="all" id="cal-all" />
-                          <Label htmlFor="cal-all" className="text-sm font-normal cursor-pointer">All</Label>
+                }
+              />
+            ) : (
+              <div className="space-y-3">
+                <DataTableToolbar
+                  table={locationsTable}
+                  searchPlaceholder="Search locations..."
+                  globalFilter
+                >
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="gap-1.5">
+                        <FilterLines size={16} />
+                        Filters
+                        {activeFilters.length > 0 && (
+                          <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
+                            {activeFilters.length}
+                          </Badge>
+                        )}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-72 p-4" align="end">
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <Label className="text-xs font-medium text-muted-foreground uppercase">State</Label>
+                          <Select value={stateFilter} onValueChange={setStateFilter}>
+                            <SelectTrigger className="w-full h-9">
+                              <SelectValue placeholder="All States" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">All States</SelectItem>
+                              {uniqueStates.map(state => (
+                                <SelectItem key={state} value={state}>{state}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="connected" id="cal-connected" />
-                          <Label htmlFor="cal-connected" className="text-sm font-normal cursor-pointer">Connected</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="none" id="cal-none" />
-                          <Label htmlFor="cal-none" className="text-sm font-normal cursor-pointer">No Calendar</Label>
-                        </div>
-                      </RadioGroup>
-                    </div>
-
-                    <Separator />
-
-                    {/* WordPress Filter */}
-                    <div className="space-y-2">
-                      <Label className="text-xs font-medium text-muted-foreground uppercase">WordPress</Label>
-                      <RadioGroup value={wordpressFilter} onValueChange={setWordpressFilter} className="gap-2">
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="all" id="wp-all" />
-                          <Label htmlFor="wp-all" className="text-sm font-normal cursor-pointer">All</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="connected" id="wp-connected" />
-                          <Label htmlFor="wp-connected" className="text-sm font-normal cursor-pointer">Connected</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="none" id="wp-none" />
-                          <Label htmlFor="wp-none" className="text-sm font-normal cursor-pointer">Not Connected</Label>
-                        </div>
-                      </RadioGroup>
-                    </div>
-
-                    {activeFilters.length > 0 && (
-                      <>
                         <Separator />
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="w-full text-muted-foreground" 
-                          onClick={clearAllFilters}
-                        >
-                          Clear all filters
-                        </Button>
-                      </>
+                        <div className="space-y-2">
+                          <Label className="text-xs font-medium text-muted-foreground uppercase">Calendar</Label>
+                          <RadioGroup value={calendarFilter} onValueChange={setCalendarFilter} className="gap-2">
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="all" id="cal-all" />
+                              <Label htmlFor="cal-all" className="text-sm font-normal cursor-pointer">All</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="connected" id="cal-connected" />
+                              <Label htmlFor="cal-connected" className="text-sm font-normal cursor-pointer">Connected</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="none" id="cal-none" />
+                              <Label htmlFor="cal-none" className="text-sm font-normal cursor-pointer">No Calendar</Label>
+                            </div>
+                          </RadioGroup>
+                        </div>
+                        <Separator />
+                        <div className="space-y-2">
+                          <Label className="text-xs font-medium text-muted-foreground uppercase">WordPress</Label>
+                          <RadioGroup value={wordpressFilter} onValueChange={setWordpressFilter} className="gap-2">
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="all" id="wp-all" />
+                              <Label htmlFor="wp-all" className="text-sm font-normal cursor-pointer">All</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="connected" id="wp-connected" />
+                              <Label htmlFor="wp-connected" className="text-sm font-normal cursor-pointer">Connected</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="none" id="wp-none" />
+                              <Label htmlFor="wp-none" className="text-sm font-normal cursor-pointer">Not Connected</Label>
+                            </div>
+                          </RadioGroup>
+                        </div>
+                        {activeFilters.length > 0 && (
+                          <>
+                            <Separator />
+                            <Button variant="ghost" size="sm" className="w-full text-muted-foreground" onClick={clearAllFilters}>
+                              Clear all filters
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                </DataTableToolbar>
+
+                {activeFilters.length > 0 && (
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {activeFilters.map(filter => (
+                      <Badge
+                        key={`${filter.type}-${filter.value}`}
+                        variant="secondary"
+                        className="pl-2 pr-1 py-1 gap-1 cursor-pointer hover:bg-secondary/80"
+                        onClick={() => clearFilter(filter.type)}
+                      >
+                        {filter.label}
+                        <X className="h-3 w-3" />
+                      </Badge>
+                    ))}
+                    {activeFilters.length > 1 && (
+                      <Button variant="ghost" size="sm" className="h-6 px-2 text-xs text-muted-foreground" onClick={clearAllFilters}>
+                        Clear all
+                      </Button>
                     )}
                   </div>
-                </PopoverContent>
-              </Popover>
-            </DataTableToolbar>
-
-            {/* Active Filter Chips */}
-            {activeFilters.length > 0 && (
-              <div className="flex items-center gap-2 flex-wrap">
-                {activeFilters.map(filter => (
-                  <Badge
-                    key={`${filter.type}-${filter.value}`}
-                    variant="secondary"
-                    className="pl-2 pr-1 py-1 gap-1 cursor-pointer hover:bg-secondary/80"
-                    onClick={() => clearFilter(filter.type)}
-                  >
-                    {filter.label}
-                    <X className="h-3 w-3" />
-                  </Badge>
-                ))}
-                {activeFilters.length > 1 && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 px-2 text-xs text-muted-foreground"
-                    onClick={clearAllFilters}
-                  >
-                    Clear all
-                  </Button>
                 )}
+
+                <DataTable
+                  table={locationsTable}
+                  columns={locationColumns}
+                  onRowClick={(row) => handleViewLocation(row)}
+                />
+
+                {displayCount < filteredLocations.length && (
+                  <div ref={loadMoreRef} className="h-10 flex items-center justify-center">
+                    <span className="text-sm text-muted-foreground">Loading more...</span>
+                  </div>
+                )}
+
+                <p className="text-xs text-muted-foreground text-center">
+                  Showing {displayedLocations.length} of {filteredLocations.length} locations
+                </p>
               </div>
             )}
+          </>
+        )}
 
-            <DataTable
-              table={table}
-              columns={columns}
-              onRowClick={(row) => handleView(row)}
-            />
+        {/* Properties View */}
+        {viewMode === 'properties' && (
+          <>
+            {propertiesWithLocation.length === 0 ? (
+              <EmptyState
+                icon={<Home01 className="h-5 w-5 text-muted-foreground/50" />}
+                title="No properties yet"
+                description="Properties will appear here after syncing from WordPress"
+              />
+            ) : (
+              <div className="space-y-3">
+                <DataTableToolbar
+                  table={propertiesTable}
+                  searchPlaceholder="Search properties..."
+                  globalFilter
+                >
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="gap-1.5">
+                        <FilterLines size={16} />
+                        Filters
+                        {activeFilters.length > 0 && (
+                          <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
+                            {activeFilters.length}
+                          </Badge>
+                        )}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-72 p-4" align="end">
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <Label className="text-xs font-medium text-muted-foreground uppercase">Community</Label>
+                          <Select value={communityFilter} onValueChange={setCommunityFilter}>
+                            <SelectTrigger className="w-full h-9">
+                              <SelectValue placeholder="All Communities" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">All Communities</SelectItem>
+                              {uniqueLocations.map(loc => (
+                                <SelectItem key={loc.id} value={loc.id}>{loc.name}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <Separator />
+                        <div className="space-y-2">
+                          <Label className="text-xs font-medium text-muted-foreground uppercase">Status</Label>
+                          <Select value={propertyStatusFilter} onValueChange={setPropertyStatusFilter}>
+                            <SelectTrigger className="w-full h-9">
+                              <SelectValue placeholder="All Statuses" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">All Statuses</SelectItem>
+                              <SelectItem value="available">Available</SelectItem>
+                              <SelectItem value="pending">Pending</SelectItem>
+                              <SelectItem value="sold">Sold</SelectItem>
+                              <SelectItem value="rented">Rented</SelectItem>
+                              <SelectItem value="coming_soon">Coming Soon</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <Separator />
+                        <div className="space-y-2">
+                          <Label className="text-xs font-medium text-muted-foreground uppercase">Validation</Label>
+                          <RadioGroup value={validationFilter} onValueChange={setValidationFilter} className="gap-2">
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="all" id="val-all" />
+                              <Label htmlFor="val-all" className="text-sm font-normal cursor-pointer">All</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="missing_lot" id="val-missing-lot" />
+                              <Label htmlFor="val-missing-lot" className="text-sm font-normal cursor-pointer">Missing Lot #</Label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="unmatched" id="val-unmatched" />
+                              <Label htmlFor="val-unmatched" className="text-sm font-normal cursor-pointer">Unmatched Community</Label>
+                            </div>
+                          </RadioGroup>
+                        </div>
+                        {activeFilters.length > 0 && (
+                          <>
+                            <Separator />
+                            <Button variant="ghost" size="sm" className="w-full text-muted-foreground" onClick={clearAllFilters}>
+                              Clear all filters
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                </DataTableToolbar>
 
-            {/* Infinite scroll trigger */}
-            {displayCount < filteredLocations.length && (
-              <div ref={loadMoreRef} className="h-10 flex items-center justify-center">
-                <span className="text-sm text-muted-foreground">
-                  Loading more...
-                </span>
+                {activeFilters.length > 0 && (
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {activeFilters.map(filter => (
+                      <Badge
+                        key={`${filter.type}-${filter.value}`}
+                        variant="secondary"
+                        className="pl-2 pr-1 py-1 gap-1 cursor-pointer hover:bg-secondary/80"
+                        onClick={() => clearFilter(filter.type)}
+                      >
+                        {filter.label}
+                        <X className="h-3 w-3" />
+                      </Badge>
+                    ))}
+                    {activeFilters.length > 1 && (
+                      <Button variant="ghost" size="sm" className="h-6 px-2 text-xs text-muted-foreground" onClick={clearAllFilters}>
+                        Clear all
+                      </Button>
+                    )}
+                  </div>
+                )}
+
+                <DataTable
+                  table={propertiesTable}
+                  columns={propertyColumns}
+                />
+
+                {displayCount < filteredProperties.length && (
+                  <div ref={loadMoreRef} className="h-10 flex items-center justify-center">
+                    <span className="text-sm text-muted-foreground">Loading more...</span>
+                  </div>
+                )}
+
+                <p className="text-xs text-muted-foreground text-center">
+                  Showing {displayedProperties.length} of {filteredProperties.length} properties
+                </p>
               </div>
             )}
-
-            {/* Results count */}
-            <p className="text-xs text-muted-foreground text-center">
-              Showing {displayedLocations.length} of {filteredLocations.length} locations
-            </p>
-          </div>
+          </>
         )}
 
         <CreateLocationDialog
@@ -461,9 +765,17 @@ export const AriLocationsSection: React.FC<AriLocationsSectionProps> = ({ agentI
         <SimpleDeleteDialog
           open={!!deleteLocation_}
           onOpenChange={(open) => !open && setDeleteLocation(null)}
-          onConfirm={handleDelete}
+          onConfirm={handleDeleteLocation}
           title="Delete Location"
           description="This will permanently delete this location."
+        />
+
+        <SimpleDeleteDialog
+          open={!!deleteProperty_}
+          onOpenChange={(open) => !open && setDeleteProperty(null)}
+          onConfirm={handleDeleteProperty}
+          title="Delete Property"
+          description="This will permanently delete this property."
         />
       </div>
     </div>

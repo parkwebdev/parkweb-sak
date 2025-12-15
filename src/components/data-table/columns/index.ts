@@ -17,3 +17,6 @@ export { createConversationsColumns, type ConversationRow } from './conversation
 
 // Locations table columns
 export { createLocationsColumns, type Location, type LocationWithCounts } from './locations-columns';
+
+// Properties table columns
+export { createPropertiesColumns, type PropertyWithLocation } from './properties-columns';
