@@ -18,9 +18,62 @@
 
 import { createClient } from '@supabase/supabase-js';
 import type { RealtimeChannel } from '@supabase/supabase-js';
+import { logger } from '@/utils/logger';
 
 const SUPABASE_URL = 'https://mvaimvwdukpgvkifkfpa.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im12YWltdndkdWtwZ3ZraWZrZnBhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcxNzI3MTYsImV4cCI6MjA3Mjc0ODcxNn0.DmeecDZcGids_IjJQQepFVQK5wdEdV0eNXDCTRzQtQo';
+
+// ============================================
+// CLIENT-SIDE REQUEST LIMITS (match server)
+// ============================================
+export const MAX_MESSAGE_LENGTH = 10000;
+export const MAX_FILES_PER_MESSAGE = 5;
+
+// ============================================
+// ERROR HANDLING TYPES
+// ============================================
+
+/**
+ * Error codes returned by the widget-chat API.
+ * Used for programmatic error handling.
+ */
+export const ErrorCodes = {
+  MESSAGE_TOO_LONG: 'MESSAGE_TOO_LONG',
+  TOO_MANY_FILES: 'TOO_MANY_FILES',
+  INVALID_REQUEST: 'INVALID_REQUEST',
+  AGENT_NOT_FOUND: 'AGENT_NOT_FOUND',
+  RATE_LIMITED: 'RATE_LIMITED',
+  UNAUTHORIZED: 'UNAUTHORIZED',
+  AI_PROVIDER_ERROR: 'AI_PROVIDER_ERROR',
+  INTERNAL_ERROR: 'INTERNAL_ERROR',
+} as const;
+
+export type ErrorCode = typeof ErrorCodes[keyof typeof ErrorCodes];
+
+/**
+ * Structured error response from the API.
+ */
+export interface ChatError {
+  error: string;
+  code?: ErrorCode;
+  requestId?: string;
+  durationMs?: number;
+}
+
+/**
+ * Extended Error class with API error details.
+ */
+export class WidgetApiError extends Error {
+  code?: ErrorCode;
+  requestId?: string;
+  
+  constructor(message: string, code?: ErrorCode, requestId?: string) {
+    super(message);
+    this.name = 'WidgetApiError';
+    this.code = code;
+    this.requestId = requestId;
+  }
+}
 
 /**
  * Supabase client configured for widget use.
@@ -409,6 +462,21 @@ export async function sendChatMessage(
   visitorId?: string,
   locationId?: string
 ): Promise<ChatResponse> {
+  // Client-side validation before making request
+  if (newUserMessage.content && newUserMessage.content.length > MAX_MESSAGE_LENGTH) {
+    throw new WidgetApiError(
+      `Message is too long. Maximum ${MAX_MESSAGE_LENGTH.toLocaleString()} characters allowed.`,
+      ErrorCodes.MESSAGE_TOO_LONG
+    );
+  }
+
+  if (newUserMessage.files && newUserMessage.files.length > MAX_FILES_PER_MESSAGE) {
+    throw new WidgetApiError(
+      `Too many files. Maximum ${MAX_FILES_PER_MESSAGE} files allowed.`,
+      ErrorCodes.TOO_MANY_FILES
+    );
+  }
+
   const response = await fetch(`${SUPABASE_URL}/functions/v1/widget-chat`, {
     method: 'POST',
     headers: {
@@ -429,8 +497,22 @@ export async function sendChatMessage(
   });
 
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.error || 'Failed to send message');
+    const errorData: ChatError = await response.json().catch(() => ({}));
+    
+    // Log error with requestId for debugging
+    if (errorData.requestId) {
+      logger.error('Chat API error', { 
+        code: errorData.code, 
+        requestId: errorData.requestId,
+        message: errorData.error,
+      });
+    }
+    
+    throw new WidgetApiError(
+      errorData.error || 'Failed to send message',
+      errorData.code,
+      errorData.requestId
+    );
   }
 
   return response.json();
