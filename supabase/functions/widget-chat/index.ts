@@ -326,6 +326,209 @@ const MODEL_TIERS = {
 // ============================================
 // PHASE 6: BOOKING TOOLS DEFINITIONS
 // ============================================
+// BOOKING UI TRANSFORMATION TYPES & FUNCTIONS
+// ============================================
+
+// Types for booking UI components (must match src/widget/types.ts)
+interface BookingDay {
+  date: string;
+  dayName: string;
+  dayNumber: number;
+  hasAvailability: boolean;
+  isToday?: boolean;
+}
+
+interface BookingTime {
+  time: string;
+  datetime: string;
+  available: boolean;
+}
+
+interface DayPickerData {
+  locationName: string;
+  locationId: string;
+  phoneNumber?: string;
+  days: BookingDay[];
+}
+
+interface TimePickerData {
+  locationName: string;
+  locationId: string;
+  phoneNumber?: string;
+  selectedDate: string;
+  selectedDayDisplay: string;
+  times: BookingTime[];
+}
+
+interface BookingConfirmationData {
+  locationName: string;
+  address?: string;
+  phoneNumber?: string;
+  date: string;
+  time: string;
+  startDateTime?: string;
+  endDateTime?: string;
+  confirmationId?: string;
+}
+
+/**
+ * Transform check_calendar_availability result to DayPicker format
+ * Groups available slots by date and returns days with availability
+ */
+function transformToDayPickerData(toolResult: any): DayPickerData | null {
+  if (!toolResult?.available_slots?.length || !toolResult?.location) return null;
+  
+  const today = new Date().toISOString().split('T')[0];
+  const dayMap = new Map<string, BookingDay>();
+  
+  for (const slot of toolResult.available_slots) {
+    const date = new Date(slot.start);
+    const dateKey = date.toISOString().split('T')[0];
+    
+    if (!dayMap.has(dateKey)) {
+      dayMap.set(dateKey, {
+        date: dateKey,
+        dayName: date.toLocaleDateString('en-US', { weekday: 'short' }),
+        dayNumber: date.getDate(),
+        hasAvailability: true,
+        isToday: dateKey === today,
+      });
+    }
+  }
+  
+  // Sort by date and limit to 14 days
+  const days = Array.from(dayMap.values())
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .slice(0, 14);
+  
+  return {
+    locationName: toolResult.location.name || 'Office',
+    locationId: toolResult.location.id || '',
+    phoneNumber: toolResult.location.phone || undefined,
+    days,
+  };
+}
+
+/**
+ * Transform check_calendar_availability result to TimePicker format for a specific date
+ */
+function transformToTimePickerData(toolResult: any, selectedDate: string): TimePickerData | null {
+  if (!toolResult?.available_slots?.length || !toolResult?.location) return null;
+  
+  const times = toolResult.available_slots
+    .filter((slot: any) => slot.start.startsWith(selectedDate))
+    .map((slot: any) => ({
+      time: new Date(slot.start).toLocaleTimeString('en-US', { 
+        hour: 'numeric', 
+        minute: '2-digit',
+        hour12: true 
+      }),
+      datetime: slot.start,
+      available: true,
+    }));
+  
+  if (times.length === 0) return null;
+  
+  const date = new Date(selectedDate);
+  return {
+    locationName: toolResult.location.name || 'Office',
+    locationId: toolResult.location.id || '',
+    phoneNumber: toolResult.location.phone || undefined,
+    selectedDate,
+    selectedDayDisplay: date.toLocaleDateString('en-US', { 
+      weekday: 'long', 
+      month: 'long', 
+      day: 'numeric' 
+    }),
+    times,
+  };
+}
+
+/**
+ * Transform book_appointment result to BookingConfirmed format
+ */
+function transformToBookingConfirmedData(toolResult: any): BookingConfirmationData | null {
+  if (!toolResult?.booking) return null;
+  
+  const booking = toolResult.booking;
+  const startDate = new Date(booking.start_time);
+  
+  return {
+    locationName: booking.location_name || 'Office',
+    address: booking.location_address || undefined,
+    phoneNumber: booking.location_phone || undefined,
+    date: startDate.toLocaleDateString('en-US', { 
+      weekday: 'long', 
+      month: 'long', 
+      day: 'numeric', 
+      year: 'numeric' 
+    }),
+    time: startDate.toLocaleTimeString('en-US', { 
+      hour: 'numeric', 
+      minute: '2-digit',
+      hour12: true 
+    }),
+    startDateTime: booking.start_time,
+    endDateTime: booking.end_time,
+    confirmationId: booking.id,
+  };
+}
+
+/**
+ * Detect if user has selected a specific date from recent messages
+ * Looks for patterns like "Monday, December 16" or "Dec 16" in recent user messages
+ */
+function detectSelectedDateFromMessages(messages: any[]): string | null {
+  // Get last 3 user messages
+  const recentUserMessages = messages
+    .filter((m: any) => m.role === 'user')
+    .slice(-3)
+    .map((m: any) => m.content?.toLowerCase() || '');
+  
+  const fullContent = recentUserMessages.join(' ');
+  
+  // Pattern 1: "Monday, December 16" or "December 16"
+  const monthDayPattern = /(january|february|march|april|may|june|july|august|september|october|november|december)\s+(\d{1,2})/i;
+  const match = fullContent.match(monthDayPattern);
+  
+  if (match) {
+    const monthName = match[1];
+    const dayNum = parseInt(match[2], 10);
+    const monthIndex = ['january', 'february', 'march', 'april', 'may', 'june', 
+                        'july', 'august', 'september', 'october', 'november', 'december']
+      .indexOf(monthName.toLowerCase());
+    
+    if (monthIndex !== -1) {
+      const year = new Date().getFullYear();
+      const selectedDate = new Date(year, monthIndex, dayNum);
+      return selectedDate.toISOString().split('T')[0];
+    }
+  }
+  
+  // Pattern 2: Day of week (e.g., "monday" or "this monday")
+  const dayOfWeekPattern = /(monday|tuesday|wednesday|thursday|friday|saturday|sunday)/i;
+  const dayMatch = fullContent.match(dayOfWeekPattern);
+  
+  if (dayMatch) {
+    const dayName = dayMatch[1].toLowerCase();
+    const targetDay = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
+      .indexOf(dayName);
+    
+    if (targetDay !== -1) {
+      const today = new Date();
+      const currentDay = today.getDay();
+      let daysUntil = targetDay - currentDay;
+      if (daysUntil <= 0) daysUntil += 7;
+      
+      const selectedDate = new Date(today.getTime() + daysUntil * 24 * 60 * 60 * 1000);
+      return selectedDate.toISOString().split('T')[0];
+    }
+  }
+  
+  return null;
+}
+
+// ============================================
 
 const BOOKING_TOOLS = [
   {
@@ -3185,6 +3388,10 @@ NEVER mark complete when:
     let aiMarkedComplete = false; // Track if AI called mark_conversation_complete with high confidence
     // Track shown properties - declared OUTSIDE if-block so it persists to final metadata update
     let storedShownProperties: ShownProperty[] | undefined;
+    
+    // Track booking tool results for UI component transformation
+    let lastCalendarResult: any = null;
+    let lastBookingResult: any = null;
 
     // Handle tool calls if AI decided to use tools
     if (assistantMessage?.tool_calls && assistantMessage.tool_calls.length > 0) {
@@ -3411,6 +3618,11 @@ NEVER mark complete when:
           toolsUsed.push({ name: toolName, success: result.success });
           const resultData = result.result || { error: result.error };
           
+          // Store for booking UI transformation
+          if (result.success && result.result) {
+            lastCalendarResult = result.result;
+          }
+          
           // PHASE 1: Persist tool result to database
           await persistToolResult(supabase, activeConversationId, toolCall.id, toolName, resultData, result.success);
           
@@ -3430,6 +3642,11 @@ NEVER mark complete when:
           const result = await bookAppointment(supabaseUrl, activeConversationId, conversationMetadata, toolArgs);
           toolsUsed.push({ name: toolName, success: result.success });
           const resultData = result.result || { error: result.error };
+          
+          // Store for booking UI transformation
+          if (result.success && result.result) {
+            lastBookingResult = result.result;
+          }
           
           // PHASE 1: Persist tool result to database
           await persistToolResult(supabase, activeConversationId, toolCall.id, toolName, resultData, result.success);
@@ -3691,6 +3908,34 @@ NEVER mark complete when:
       hasLinkPreviews: linkPreviews.length > 0,
     });
 
+    // Build booking UI component data from tracked tool results
+    let dayPicker: DayPickerData | undefined;
+    let timePicker: TimePickerData | undefined;
+    let bookingConfirmed: BookingConfirmationData | undefined;
+
+    // Check if we have calendar availability results to transform
+    if (lastCalendarResult?.available_slots?.length > 0) {
+      // Detect if user already selected a day from message context
+      const userSelectedDate = detectSelectedDateFromMessages(messagesToSend);
+      
+      if (userSelectedDate) {
+        // User mentioned a specific date - show time picker for that date
+        timePicker = transformToTimePickerData(lastCalendarResult, userSelectedDate) || undefined;
+        // If no times for that date, fall back to day picker
+        if (!timePicker) {
+          dayPicker = transformToDayPickerData(lastCalendarResult) || undefined;
+        }
+      } else {
+        // No specific date mentioned - show day picker
+        dayPicker = transformToDayPickerData(lastCalendarResult) || undefined;
+      }
+    }
+
+    // Check if we have a booking confirmation to transform
+    if (lastBookingResult?.booking) {
+      bookingConfirmed = transformToBookingConfirmedData(lastBookingResult) || undefined;
+    }
+
     // Return the response with chunked messages for staggered display
     return new Response(
       JSON.stringify({
@@ -3720,6 +3965,10 @@ NEVER mark complete when:
           }
           return callActionsResult.length > 0 ? callActionsResult : undefined;
         })(),
+        // Booking UI components
+        dayPicker,
+        timePicker,
+        bookingConfirmed,
         aiMarkedComplete, // Signal to widget to show rating prompt
         durationMs: Math.round(totalDuration),
       }),

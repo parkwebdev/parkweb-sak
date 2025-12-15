@@ -546,6 +546,17 @@ serve(async (req) => {
 
     console.log('Booking created successfully:', bookingId);
 
+    // Get full location details for booking confirmation card
+    const { data: fullLocation } = await supabase
+      .from('locations')
+      .select('address, city, state, zip')
+      .eq('id', booking.location_id)
+      .single();
+    
+    const locationAddress = fullLocation 
+      ? [fullLocation.address, fullLocation.city, fullLocation.state, fullLocation.zip].filter(Boolean).join(', ')
+      : undefined;
+
     return new Response(
       JSON.stringify({
         success: true,
@@ -554,6 +565,8 @@ serve(async (req) => {
           start_time: startTime.toISOString(),
           end_time: endTime.toISOString(),
           location_name: location.name,
+          location_address: locationAddress,
+          location_phone: location.phone,
           confirmation_message: confirmationMessage,
         },
       }),
