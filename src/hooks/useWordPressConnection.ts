@@ -7,7 +7,7 @@
  * @module hooks/useWordPressConnection
  */
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/lib/toast';
 import { getErrorMessage } from '@/types/errors';
@@ -50,6 +50,10 @@ export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressCo
   const [isSyncing, setIsSyncing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [testResult, setTestResult] = useState<TestResult | null>(null);
+  
+  // Local state for optimistic UI updates
+  const [localCommunitySyncInterval, setLocalCommunitySyncInterval] = useState<string | null>(null);
+  const [localHomeSyncInterval, setLocalHomeSyncInterval] = useState<string | null>(null);
 
   // Extract WordPress config from agent
   const wordpressConfig = useMemo((): WordPressConfig | null => {
@@ -58,11 +62,18 @@ export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressCo
     return (config.wordpress as WordPressConfig) || null;
   }, [agent?.deployment_config]);
 
+  // Reset local state when agent config changes (refetched data takes over)
+  useEffect(() => {
+    setLocalCommunitySyncInterval(null);
+    setLocalHomeSyncInterval(null);
+  }, [wordpressConfig?.community_sync_interval, wordpressConfig?.home_sync_interval]);
+
   const siteUrl = wordpressConfig?.site_url || '';
   const lastSync = wordpressConfig?.last_community_sync;
   const communityCount = wordpressConfig?.community_count;
-  const communitySyncInterval = wordpressConfig?.community_sync_interval || 'manual';
-  const homeSyncInterval = wordpressConfig?.home_sync_interval || 'manual';
+  // Use local state for immediate feedback, fallback to config value
+  const communitySyncInterval = localCommunitySyncInterval ?? wordpressConfig?.community_sync_interval ?? 'manual';
+  const homeSyncInterval = localHomeSyncInterval ?? wordpressConfig?.home_sync_interval ?? 'manual';
 
   // Test WordPress connection
   const testConnection = useCallback(async (url: string): Promise<TestResult> => {
@@ -203,6 +214,13 @@ export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressCo
   ): Promise<boolean> => {
     if (!agent?.id) return false;
 
+    // Set local state immediately for optimistic UI
+    if (type === 'community') {
+      setLocalCommunitySyncInterval(interval);
+    } else {
+      setLocalHomeSyncInterval(interval);
+    }
+
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
@@ -226,16 +244,22 @@ export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressCo
 
       if (error) throw error;
       
-      // Refresh agent data to show updated interval
+      // Refresh agent data to sync with database
       onSyncComplete?.();
       return true;
     } catch (error) {
+      // Revert local state on error
+      if (type === 'community') {
+        setLocalCommunitySyncInterval(null);
+      } else {
+        setLocalHomeSyncInterval(null);
+      }
       toast.error('Failed to update sync settings', {
         description: getErrorMessage(error),
       });
       return false;
     }
-  }, [agent?.id]);
+  }, [agent?.id, onSyncComplete]);
 
   // Disconnect WordPress integration
   const disconnect = useCallback(async (deleteLocations: boolean = false): Promise<boolean> => {
