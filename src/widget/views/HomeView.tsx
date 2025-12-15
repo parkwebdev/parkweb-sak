@@ -9,7 +9,7 @@
 
 import { useRef } from 'react';
 import { Button } from '@/components/ui/button';
-import { X, ChevronRight, MessageChatCircle, BookOpen01, Zap } from '@untitledui/icons';
+import { X, ChevronRight, MessageChatCircle, BookOpen01, Zap } from '../icons';
 import ChatPadLogo from '@/components/ChatPadLogo';
 import { CSSAnimatedList } from '../CSSAnimatedList';
 import { CSSAnimatedItem } from '../CSSAnimatedItem';

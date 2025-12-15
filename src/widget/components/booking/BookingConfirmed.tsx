@@ -7,7 +7,7 @@
  */
 
 import { cn } from '@/lib/utils';
-import { Phone01, Calendar } from '@untitledui/icons';
+import { Phone01, Calendar } from '../../icons';
 import type { BookingConfirmationData } from '../../types';
 
 interface BookingConfirmedProps {

@@ -7,7 +7,7 @@
  * @module widget/components/CallButton
  */
 
-import { Phone01 } from '@untitledui/icons';
+import { Phone01 } from '../icons';
 
 export interface CallAction {
   phoneNumber: string;      // E.164 or raw number for tel: href

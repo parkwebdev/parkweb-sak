@@ -9,7 +9,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight } from '@untitledui/icons';
+import { ChevronLeft, ChevronRight } from '../icons';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { CSSAnimatedList } from '../CSSAnimatedList';
 import { CSSAnimatedItem } from '../CSSAnimatedItem';

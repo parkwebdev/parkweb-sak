@@ -8,7 +8,7 @@
  */
 
 import { Button } from '@/components/ui/button';
-import { X, VolumeMax, VolumeX } from '@untitledui/icons';
+import { X, VolumeMax, VolumeX } from '../icons';
 import { ChatBubbleIcon } from '@/components/agents/ChatBubbleIcon';
 
 /** Custom sliders icon for settings button */
