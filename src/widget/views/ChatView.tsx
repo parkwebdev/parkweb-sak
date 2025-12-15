@@ -9,7 +9,7 @@
 
 import { Suspense, RefObject, useRef, useEffect } from 'react';
 import { updateMessageReaction } from '../api';
-import { MessageBubble, ContactForm, MessageInput, TypingIndicator, QuickReplies } from '../components';
+import { MessageBubble, ContactForm, MessageInput, TypingIndicator, QuickReplies, CallButton } from '../components';
 import { FileDropZone } from '../constants';
 import type { Message, ChatUser } from '../types';
 import type { WidgetConfig } from '../api';
@@ -181,9 +181,10 @@ export const ChatView = ({
             nextMsg.isSystemNotice ||
             (msg.role !== 'user' && nextMsgMetadata?.isHuman !== msgMetadata?.isHuman);
           
-          // Show quick replies only on the last assistant message with suggestions
+          // Show quick replies and call buttons only on the last assistant message with suggestions
           const isLastMessage = idx === messages.length - 1;
           const showQuickReplies = isLastMessage && msg.role === 'assistant' && msg.quickReplies && msg.quickReplies.length > 0;
+          const showCallButton = isLastMessage && msg.role === 'assistant' && msg.callActions && msg.callActions.length > 0;
 
           // Determine animation class for new messages
           const shouldAnimate = msg.id && newMessageIds?.has(msg.id);
@@ -202,6 +203,9 @@ export const ChatView = ({
                 isContinuation={isContinuation}
                 isLastInGroup={isLastInGroup}
               />
+              {showCallButton && (
+                <CallButton callActions={msg.callActions!} />
+              )}
               {showQuickReplies && (
                 <QuickReplies
                   suggestions={msg.quickReplies!}

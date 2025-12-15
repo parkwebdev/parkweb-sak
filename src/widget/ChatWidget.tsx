@@ -552,9 +552,10 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
               timestamp: new Date(), 
               type: 'text', 
               reactions: [],
-              // Only attach link previews and quick replies to the last chunk
+              // Only attach link previews, quick replies, and call actions to the last chunk
               linkPreviews: isLastChunk ? response.linkPreviews : undefined,
               quickReplies: isLastChunk ? response.quickReplies : undefined,
+              callActions: isLastChunk ? response.callActions : undefined,
             }]);
           }
           
@@ -589,6 +590,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
             reactions: [],
             linkPreviews: response.linkPreviews,
             quickReplies: response.quickReplies,
+            callActions: response.callActions,
           }]);
           
           // Check if AI marked conversation complete - show rating after delay

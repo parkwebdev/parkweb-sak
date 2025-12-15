@@ -311,6 +311,8 @@ export interface ChatResponse {
     embedUrl?: string;
   }>;
   quickReplies?: string[];
+  /** Call action buttons for phone numbers detected in the response */
+  callActions?: Array<{ phoneNumber: string; displayNumber: string; locationName?: string }>;
   /** Signal that AI marked conversation complete with high confidence - triggers rating prompt */
   aiMarkedComplete?: boolean;
 }

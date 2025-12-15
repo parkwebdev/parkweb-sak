@@ -34,6 +34,10 @@ export { ContactForm } from './ContactForm';
 /** AI-generated quick reply suggestion chips */
 export { QuickReplies } from './QuickReplies';
 
+/** Clickable call button for phone numbers in AI responses */
+export { CallButton } from './CallButton';
+export type { CallAction } from './CallButton';
+
 /** Satisfaction rating prompt (1-5 stars with optional feedback) */
 export { SatisfactionRating } from './SatisfactionRating';
 
