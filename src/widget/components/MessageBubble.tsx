@@ -17,10 +17,9 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { formatShortTime } from '@/lib/time-formatting';
 import { formatFileSize } from '@/lib/file-validation';
 import { downloadFile } from '@/lib/file-download';
-import { AudioPlayer, MessageReactions } from '../constants';
+import { AudioPlayer, MessageReactions, DayPicker, TimePicker, BookingConfirmed } from '../constants';
 import { FileTypeIcon } from '@/components/chat/FileTypeIcons';
 import { stripUrlsFromContent, stripPhoneNumbersFromContent } from '../utils/url-stripper';
-import { DayPicker, TimePicker, BookingConfirmed } from './booking';
 import type { Message, BookingDay, BookingTime } from '../types';
 
 /** Props for the MessageBubble component */
@@ -241,33 +240,39 @@ export const MessageBubble = ({
           </div>
         )}
 
-        {/* Booking components - rendered below message bubble */}
+        {/* Booking components - lazy loaded, rendered below message bubble */}
         {message.dayPicker && onBookingDaySelect && (
-          <div className="mt-2">
-            <DayPicker
-              data={message.dayPicker}
-              onSelect={onBookingDaySelect}
-              primaryColor={primaryColor}
-            />
-          </div>
+          <Suspense fallback={<div className="h-32 animate-pulse bg-muted rounded-xl mt-2" />}>
+            <div className="mt-2">
+              <DayPicker
+                data={message.dayPicker}
+                onSelect={onBookingDaySelect}
+                primaryColor={primaryColor}
+              />
+            </div>
+          </Suspense>
         )}
         {message.timePicker && onBookingTimeSelect && (
-          <div className="mt-2">
-            <TimePicker
-              data={message.timePicker}
-              onSelect={onBookingTimeSelect}
-              onGoBack={onBookingGoBack}
-              primaryColor={primaryColor}
-            />
-          </div>
+          <Suspense fallback={<div className="h-32 animate-pulse bg-muted rounded-xl mt-2" />}>
+            <div className="mt-2">
+              <TimePicker
+                data={message.timePicker}
+                onSelect={onBookingTimeSelect}
+                onGoBack={onBookingGoBack}
+                primaryColor={primaryColor}
+              />
+            </div>
+          </Suspense>
         )}
         {message.bookingConfirmed && (
-          <div className="mt-2">
-            <BookingConfirmed
-              data={message.bookingConfirmed}
-              primaryColor={primaryColor}
-            />
-          </div>
+          <Suspense fallback={<div className="h-32 animate-pulse bg-muted rounded-xl mt-2" />}>
+            <div className="mt-2">
+              <BookingConfirmed
+                data={message.bookingConfirmed}
+                primaryColor={primaryColor}
+              />
+            </div>
+          </Suspense>
         )}
         
         {/* Footer: Reactions - only show on last message in group */}

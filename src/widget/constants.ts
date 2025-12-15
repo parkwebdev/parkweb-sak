@@ -73,6 +73,19 @@ export const PhoneInputField = lazy(() =>
   import('@/components/ui/phone-input').then(m => ({ default: m.PhoneInputField }))
 );
 
+// Booking components - only loaded when AI triggers booking flow
+export const DayPicker = lazy(() => 
+  import('./components/booking/DayPicker').then(m => ({ default: m.DayPicker }))
+);
+
+export const TimePicker = lazy(() => 
+  import('./components/booking/TimePicker').then(m => ({ default: m.TimePicker }))
+);
+
+export const BookingConfirmed = lazy(() => 
+  import('./components/booking/BookingConfirmed').then(m => ({ default: m.BookingConfirmed }))
+);
+
 // ============================================================================
 // Utility Functions
 // ============================================================================
