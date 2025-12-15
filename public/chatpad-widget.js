@@ -27,8 +27,7 @@
       align-items: center;
       justify-content: center;
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      background: var(--chatpad-primary-color);
-      color: white;
+      /* Colors set dynamically via JS based on system theme */
     }
     
     .chatpad-widget-button:hover {
@@ -343,6 +342,24 @@
       document.head.appendChild(preconnectGstatic);
     }
     
+    getSystemTheme() {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    
+    updateButtonTheme(theme) {
+      if (!this.button) return;
+      
+      if (theme === 'dark') {
+        // Dark mode: white button, black icon
+        this.button.style.background = '#FFFFFF';
+        this.button.style.color = '#000000';
+      } else {
+        // Light mode: black button, white icon
+        this.button.style.background = '#000000';
+        this.button.style.color = '#FFFFFF';
+      }
+    }
+    
     createButton() {
       this.button = document.createElement('button');
       this.button.className = 'chatpad-widget-button';
@@ -360,6 +377,14 @@
       `;
       
       this.badge = this.button.querySelector('.chatpad-badge');
+      
+      // Set initial button theme based on system preference
+      this.updateButtonTheme(this.getSystemTheme());
+      
+      // Listen for system theme changes
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+        this.updateButtonTheme(e.matches ? 'dark' : 'light');
+      });
       
       this.button.addEventListener('click', () => this.toggle());
       this.container.appendChild(this.button);
