@@ -210,9 +210,6 @@ export function BookingConfirmed({ data, primaryColor }: BookingConfirmedProps) 
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-foreground">Booking Confirmed</p>
-          {data.confirmationId && (
-            <p className="text-xs text-muted-foreground">#{data.confirmationId}</p>
-          )}
         </div>
       </div>
 
