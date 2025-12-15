@@ -72,6 +72,43 @@ function extractAcfNumber(acf: Record<string, unknown> | undefined, ...keywords:
 }
 
 /**
+ * Find matching taxonomy term ID with fuzzy slug matching.
+ * Handles cases where community post slug differs from taxonomy term slug.
+ * e.g., community slug "wildwind" should match taxonomy term "lake-wildwind"
+ */
+function findMatchingTermId(
+  taxonomyTerms: Map<string, number>,
+  communitySlug: string
+): number | null {
+  // 1. Exact match (current behavior)
+  if (taxonomyTerms.has(communitySlug)) {
+    return taxonomyTerms.get(communitySlug)!;
+  }
+  
+  // 2. Check if community slug is contained in any term slug or vice versa
+  // e.g., "wildwind" matches "lake-wildwind"
+  for (const [termSlug, termId] of taxonomyTerms.entries()) {
+    if (termSlug.includes(communitySlug) || communitySlug.includes(termSlug)) {
+      console.log(`🔍 Fuzzy matched: community "${communitySlug}" → term "${termSlug}" (term ID ${termId})`);
+      return termId;
+    }
+  }
+  
+  // 3. Normalize both slugs by removing common prefixes and compare
+  const commonPrefixes = /^(the-|lake-|park-|community-|village-|estates-|manor-)/;
+  const normalizedCommunity = communitySlug.replace(commonPrefixes, '');
+  for (const [termSlug, termId] of taxonomyTerms.entries()) {
+    const normalizedTerm = termSlug.replace(commonPrefixes, '');
+    if (normalizedCommunity === normalizedTerm) {
+      console.log(`🔍 Normalized match: community "${communitySlug}" → term "${termSlug}" (term ID ${termId})`);
+      return termId;
+    }
+  }
+  
+  return null;
+}
+
+/**
  * Infer timezone from state - supports abbreviations and full names
  * Uses latitude/longitude if available for more accuracy
  */
@@ -579,9 +616,9 @@ async function syncCommunitiesToLocations(
       const communityType = extractAcfField(acf, 'type', 'community_type');
       if (communityType) metadata.community_type = communityType;
 
-      // Look up the taxonomy term ID using the community's slug
+      // Look up the taxonomy term ID using fuzzy slug matching
       // Homes reference this term ID (not the post ID) in their home_community field
-      const termId = taxonomyTerms.get(community.slug);
+      const termId = findMatchingTermId(taxonomyTerms, community.slug);
       if (termId) {
         console.log(`✓ Community "${community.title.rendered}" (post ${community.id}) mapped to term ID ${termId}`);
       } else {
