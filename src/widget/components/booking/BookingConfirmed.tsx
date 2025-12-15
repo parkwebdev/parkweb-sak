@@ -195,14 +195,15 @@ export function BookingConfirmed({ data, primaryColor }: BookingConfirmedProps) 
         "bg-card border border-border"
       )}
     >
-      {/* Success header */}
-      <div className="flex items-center gap-2">
-        <CheckCircle 
-          size={20} 
-          className="text-primary flex-shrink-0"
-          style={primaryColor ? { color: primaryColor } : undefined}
-          aria-hidden="true"
-        />
+      {/* Success header - muted background with icon badge */}
+      <div className="flex items-center gap-3 bg-muted rounded-lg p-3">
+        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-black flex-shrink-0">
+          <CheckCircle 
+            size={18} 
+            className="text-status-active"
+            aria-hidden="true"
+          />
+        </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-foreground">Booking Confirmed</p>
           {data.confirmationId && (
