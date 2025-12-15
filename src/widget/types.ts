@@ -99,6 +99,7 @@ export interface BookingTime {
 export interface DayPickerData {
   locationName: string;
   locationId: string;
+  phoneNumber?: string; // For empty state fallback
   days: BookingDay[];
   selectedDate?: string;
 }
@@ -109,6 +110,7 @@ export interface DayPickerData {
 export interface TimePickerData {
   locationName: string;
   locationId: string;
+  phoneNumber?: string; // For empty state fallback
   selectedDate: string; // ISO date string
   selectedDayDisplay: string; // e.g., "Wednesday, December 18"
   times: BookingTime[];
@@ -119,10 +121,12 @@ export interface TimePickerData {
  */
 export interface BookingConfirmationData {
   locationName: string;
+  address?: string; // Physical address
+  phoneNumber?: string; // Contact phone number
   date: string; // Formatted date display
   time: string; // Formatted time display
   confirmationId?: string;
-  calendarUrl?: string; // Google Calendar or .ics URL
+  calendarUrl?: string; // Legacy - prefer .ics download
 }
 
 /**
