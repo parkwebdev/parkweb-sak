@@ -13,7 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 
-// Mock data for testing
+// Mock data - only available days/times
 const mockDayPickerData: DayPickerData = {
   locationName: 'Clearview Estates',
   locationId: 'loc_123',
@@ -21,11 +21,11 @@ const mockDayPickerData: DayPickerData = {
     { date: '2024-12-16', dayName: 'Mon', dayNumber: 16, hasAvailability: true, isToday: true },
     { date: '2024-12-17', dayName: 'Tue', dayNumber: 17, hasAvailability: true },
     { date: '2024-12-18', dayName: 'Wed', dayNumber: 18, hasAvailability: true },
-    { date: '2024-12-19', dayName: 'Thu', dayNumber: 19, hasAvailability: false },
     { date: '2024-12-20', dayName: 'Fri', dayNumber: 20, hasAvailability: true },
     { date: '2024-12-21', dayName: 'Sat', dayNumber: 21, hasAvailability: true },
-    { date: '2024-12-22', dayName: 'Sun', dayNumber: 22, hasAvailability: false },
     { date: '2024-12-23', dayName: 'Mon', dayNumber: 23, hasAvailability: true },
+    { date: '2024-12-24', dayName: 'Tue', dayNumber: 24, hasAvailability: true },
+    { date: '2024-12-26', dayName: 'Thu', dayNumber: 26, hasAvailability: true },
   ],
 };
 
@@ -37,12 +37,12 @@ const mockTimePickerData: TimePickerData = {
   times: [
     { time: '9 AM', datetime: '2024-12-18T09:00:00', available: true },
     { time: '10 AM', datetime: '2024-12-18T10:00:00', available: true },
-    { time: '11 AM', datetime: '2024-12-18T11:00:00', available: false },
     { time: '12 PM', datetime: '2024-12-18T12:00:00', available: true },
     { time: '1 PM', datetime: '2024-12-18T13:00:00', available: true },
     { time: '2 PM', datetime: '2024-12-18T14:00:00', available: true },
-    { time: '3 PM', datetime: '2024-12-18T15:00:00', available: false },
     { time: '4 PM', datetime: '2024-12-18T16:00:00', available: true },
+    { time: '5 PM', datetime: '2024-12-18T17:00:00', available: true },
+    { time: '6 PM', datetime: '2024-12-18T18:00:00', available: true },
   ],
 };
 
