@@ -62,7 +62,7 @@ export const createPropertiesColumns = (): ColumnDef<PropertyWithLocation>[] => 
       const state = row.original.state;
       
       return (
-        <div className="flex flex-col">
+        <div className="flex flex-col whitespace-nowrap">
           <span className="font-medium text-sm">{address || 'No address'}</span>
           {(city || state) && (
             <span className="text-xs text-muted-foreground">
@@ -121,7 +121,7 @@ export const createPropertiesColumns = (): ColumnDef<PropertyWithLocation>[] => 
         );
       }
       
-      return <span className="text-sm">{locationName}</span>;
+      return <span className="text-sm whitespace-nowrap">{locationName}</span>;
     },
   },
   {
@@ -134,7 +134,7 @@ export const createPropertiesColumns = (): ColumnDef<PropertyWithLocation>[] => 
       if (!beds && !baths) return <span className="text-muted-foreground text-sm">—</span>;
       
       return (
-        <span className="text-sm">
+        <span className="text-sm whitespace-nowrap">
           {beds ?? '—'} bd / {baths ?? '—'} ba
         </span>
       );
@@ -149,7 +149,7 @@ export const createPropertiesColumns = (): ColumnDef<PropertyWithLocation>[] => 
       const priceType = row.original.price_type;
       
       return (
-        <span className="font-medium text-sm">
+        <span className="font-medium text-sm whitespace-nowrap">
           {formatPrice(price, priceType ?? undefined)}
         </span>
       );
