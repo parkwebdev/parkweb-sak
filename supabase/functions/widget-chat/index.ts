@@ -2574,7 +2574,7 @@ serve(async (req) => {
           console.log(`Found ${knowledgeResults.length} relevant knowledge sources`);
           
           // PHASE 4: Search for semantic memories related to this query
-          const leadId = conversationMetadata?.lead_id as string | undefined;
+          const leadId = (conversation?.metadata as ConversationMetadata)?.lead_id;
           const semanticMemories = await searchSemanticMemories(
             supabase,
             agentId,
@@ -3586,7 +3586,7 @@ NEVER mark complete when:
     log.info('Request completed', {
       conversationId: activeConversationId,
       durationMs: Math.round(totalDuration),
-      model: routedModel,
+      model: selectedModel,
       tier: modelTier,
       chunksCount: chunks.length,
       hasToolsUsed: toolsUsed.length > 0,
