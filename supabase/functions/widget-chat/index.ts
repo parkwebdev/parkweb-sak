@@ -885,6 +885,167 @@ function truncateConversationHistory(messages: any[]): any[] {
   return truncated;
 }
 
+// ============================================
+// PHASE 1: DATABASE-FIRST MESSAGE FETCHING & TOOL PERSISTENCE
+// ============================================
+
+interface DbMessage {
+  id: string;
+  role: string;
+  content: string;
+  metadata: any;
+  created_at: string;
+  tool_call_id: string | null;
+  tool_name: string | null;
+  tool_arguments: any | null;
+  tool_result: any | null;
+}
+
+/**
+ * Fetch conversation history from database and convert to OpenAI message format.
+ * This is the source of truth - we no longer trust client-provided message history.
+ */
+async function fetchConversationHistory(
+  supabase: any,
+  conversationId: string,
+  limit: number = 50
+): Promise<any[]> {
+  const { data: dbMessages, error } = await supabase
+    .from('messages')
+    .select('id, role, content, metadata, created_at, tool_call_id, tool_name, tool_arguments, tool_result')
+    .eq('conversation_id', conversationId)
+    .order('created_at', { ascending: true })
+    .limit(limit);
+
+  if (error) {
+    console.error('Error fetching conversation history:', error);
+    return [];
+  }
+
+  if (!dbMessages || dbMessages.length === 0) {
+    return [];
+  }
+
+  // Convert database messages to OpenAI format
+  return convertDbMessagesToOpenAI(dbMessages);
+}
+
+/**
+ * Convert database messages to OpenAI API format.
+ * Handles regular messages, tool calls, and tool results.
+ */
+function convertDbMessagesToOpenAI(dbMessages: DbMessage[]): any[] {
+  const openAIMessages: any[] = [];
+
+  for (const msg of dbMessages) {
+    // Tool result message (response from tool execution)
+    if (msg.role === 'tool' && msg.tool_call_id) {
+      openAIMessages.push({
+        role: 'tool',
+        tool_call_id: msg.tool_call_id,
+        content: msg.content,
+      });
+      continue;
+    }
+
+    // Assistant message with tool calls
+    if (msg.role === 'assistant' && msg.tool_name && msg.tool_arguments) {
+      // This is a tool call message - the assistant requested a tool
+      const toolCallId = msg.tool_call_id || `call_${msg.id}`;
+      openAIMessages.push({
+        role: 'assistant',
+        content: msg.content || null,
+        tool_calls: [{
+          id: toolCallId,
+          type: 'function',
+          function: {
+            name: msg.tool_name,
+            arguments: typeof msg.tool_arguments === 'string' 
+              ? msg.tool_arguments 
+              : JSON.stringify(msg.tool_arguments),
+          }
+        }]
+      });
+      continue;
+    }
+
+    // Regular user/assistant message
+    openAIMessages.push({
+      role: msg.role,
+      content: msg.content,
+    });
+  }
+
+  return openAIMessages;
+}
+
+/**
+ * Persist a tool call to the database.
+ * Called when AI requests a tool execution.
+ */
+async function persistToolCall(
+  supabase: any,
+  conversationId: string,
+  toolCallId: string,
+  toolName: string,
+  toolArguments: any
+): Promise<string | null> {
+  const { data, error } = await supabase.from('messages').insert({
+    conversation_id: conversationId,
+    role: 'assistant',
+    content: '', // Tool call messages have empty content
+    tool_call_id: toolCallId,
+    tool_name: toolName,
+    tool_arguments: toolArguments,
+    metadata: { 
+      source: 'ai',
+      message_type: 'tool_call',
+    }
+  }).select('id').single();
+
+  if (error) {
+    console.error('Error persisting tool call:', error);
+    return null;
+  }
+
+  console.log(`Persisted tool call: ${toolName} (${toolCallId})`);
+  return data?.id || null;
+}
+
+/**
+ * Persist a tool result to the database.
+ * Called after tool execution completes.
+ */
+async function persistToolResult(
+  supabase: any,
+  conversationId: string,
+  toolCallId: string,
+  toolName: string,
+  result: any,
+  success: boolean
+): Promise<string | null> {
+  const { data, error } = await supabase.from('messages').insert({
+    conversation_id: conversationId,
+    role: 'tool',
+    content: typeof result === 'string' ? result : JSON.stringify(result),
+    tool_call_id: toolCallId,
+    tool_name: toolName,
+    tool_result: result,
+    metadata: { 
+      source: 'tool',
+      tool_success: success,
+    }
+  }).select('id').single();
+
+  if (error) {
+    console.error('Error persisting tool result:', error);
+    return null;
+  }
+
+  console.log(`Persisted tool result: ${toolName} (${toolCallId}) - success: ${success}`);
+  return data?.id || null;
+}
+
 // Normalize query for cache lookup (lowercase, trim, remove extra whitespace)
 function normalizeQuery(query: string): string {
   return query.toLowerCase().trim().replace(/\s+/g, ' ').replace(/[^\w\s]/g, '');
@@ -1610,7 +1771,16 @@ serve(async (req) => {
       }
     }
 
-    // Check plan limits - get subscription and limits
+    // ============================================
+    // PHASE 1: DATABASE-FIRST MESSAGE FETCHING
+    // Fetch conversation history from database (source of truth)
+    // instead of trusting client-provided message history
+    // ============================================
+    let dbConversationHistory: any[] = [];
+    if (activeConversationId && !isGreetingRequest) {
+      dbConversationHistory = await fetchConversationHistory(supabase, activeConversationId);
+      console.log(`Fetched ${dbConversationHistory.length} messages from database (including ${dbConversationHistory.filter((m: any) => m.role === 'tool').length} tool results)`);
+    }
     const { data: subscription } = await supabase
       .from('subscriptions')
       .select('plan_id, plans(limits)')
@@ -1952,8 +2122,11 @@ Always provide specific property details from the tool results, including prices
       console.log('Added property tool instructions to system prompt');
     }
 
-    // PHASE 6: Truncate conversation history to reduce input tokens
-    let messagesToSend = truncateConversationHistory(messages);
+    // PHASE 1: Use database conversation history (source of truth) instead of client messages
+    // PHASE 6: Truncate to reduce input tokens
+    let messagesToSend = truncateConversationHistory(
+      dbConversationHistory.length > 0 ? dbConversationHistory : messages
+    );
     
     // For greeting requests, add a special instruction and use empty messages
     if (isGreetingRequest) {
@@ -2284,6 +2457,9 @@ NEVER mark complete when:
         
         // Handle built-in booking tools
         if (toolName === 'search_properties') {
+          // PHASE 1: Persist tool call to database
+          await persistToolCall(supabase, activeConversationId, toolCall.id, toolName, toolArgs);
+          
           const result = await searchProperties(supabase, agentId, toolArgs);
           toolsUsed.push({ name: toolName, success: result.success });
           
@@ -2295,55 +2471,91 @@ NEVER mark complete when:
           
           // Remove shownProperties from the result sent to AI (it's for metadata only)
           const { shownProperties, ...resultForAI } = result.result || {};
+          const resultContent = JSON.stringify(resultForAI || { error: result.error });
+          
+          // PHASE 1: Persist tool result to database
+          await persistToolResult(supabase, activeConversationId, toolCall.id, toolName, resultForAI || { error: result.error }, result.success);
           
           toolResults.push({
             role: 'tool',
             tool_call_id: toolCall.id,
-            content: JSON.stringify(resultForAI || { error: result.error }),
+            content: resultContent,
           });
           continue;
         }
         
         if (toolName === 'lookup_property') {
+          // PHASE 1: Persist tool call to database
+          await persistToolCall(supabase, activeConversationId, toolCall.id, toolName, toolArgs);
+          
           const result = await lookupProperty(supabase, agentId, activeConversationId, toolArgs);
           toolsUsed.push({ name: toolName, success: result.success });
+          const resultData = result.result || { error: result.error };
+          
+          // PHASE 1: Persist tool result to database
+          await persistToolResult(supabase, activeConversationId, toolCall.id, toolName, resultData, result.success);
+          
           toolResults.push({
             role: 'tool',
             tool_call_id: toolCall.id,
-            content: JSON.stringify(result.result || { error: result.error }),
+            content: JSON.stringify(resultData),
           });
           continue;
         }
         
         if (toolName === 'get_locations') {
+          // PHASE 1: Persist tool call to database
+          await persistToolCall(supabase, activeConversationId, toolCall.id, toolName, toolArgs);
+          
           const result = await getLocations(supabase, agentId);
           toolsUsed.push({ name: toolName, success: result.success });
+          const resultData = result.result || { error: result.error };
+          
+          // PHASE 1: Persist tool result to database
+          await persistToolResult(supabase, activeConversationId, toolCall.id, toolName, resultData, result.success);
+          
           toolResults.push({
             role: 'tool',
             tool_call_id: toolCall.id,
-            content: JSON.stringify(result.result || { error: result.error }),
+            content: JSON.stringify(resultData),
           });
           continue;
         }
         
         if (toolName === 'check_calendar_availability') {
+          // PHASE 1: Persist tool call to database
+          await persistToolCall(supabase, activeConversationId, toolCall.id, toolName, toolArgs);
+          
           const result = await checkCalendarAvailability(supabaseUrl, toolArgs);
           toolsUsed.push({ name: toolName, success: result.success });
+          const resultData = result.result || { error: result.error };
+          
+          // PHASE 1: Persist tool result to database
+          await persistToolResult(supabase, activeConversationId, toolCall.id, toolName, resultData, result.success);
+          
           toolResults.push({
             role: 'tool',
             tool_call_id: toolCall.id,
-            content: JSON.stringify(result.result || { error: result.error }),
+            content: JSON.stringify(resultData),
           });
           continue;
         }
         
         if (toolName === 'book_appointment') {
+          // PHASE 1: Persist tool call to database
+          await persistToolCall(supabase, activeConversationId, toolCall.id, toolName, toolArgs);
+          
           const result = await bookAppointment(supabaseUrl, activeConversationId, conversationMetadata, toolArgs);
           toolsUsed.push({ name: toolName, success: result.success });
+          const resultData = result.result || { error: result.error };
+          
+          // PHASE 1: Persist tool result to database
+          await persistToolResult(supabase, activeConversationId, toolCall.id, toolName, resultData, result.success);
+          
           toolResults.push({
             role: 'tool',
             tool_call_id: toolCall.id,
-            content: JSON.stringify(result.result || { error: result.error }),
+            content: JSON.stringify(resultData),
           });
           continue;
         }
@@ -2352,6 +2564,9 @@ NEVER mark complete when:
         const tool = enabledTools.find(t => t.name === toolName);
         
         if (tool && tool.endpoint_url) {
+          // PHASE 1: Persist tool call to database
+          await persistToolCall(supabase, activeConversationId, toolCall.id, toolName, toolArgs);
+          
           const result = await callToolEndpoint({
             name: tool.name,
             endpoint_url: tool.endpoint_url,
@@ -2360,20 +2575,28 @@ NEVER mark complete when:
           }, toolArgs);
 
           toolsUsed.push({ name: toolName, success: result.success });
+          const resultData = result.success ? result.result : { error: result.error };
+          
+          // PHASE 1: Persist tool result to database
+          await persistToolResult(supabase, activeConversationId, toolCall.id, toolName, resultData, result.success);
 
           toolResults.push({
             role: 'tool',
             tool_call_id: toolCall.id,
-            content: result.success 
-              ? JSON.stringify(result.result) 
-              : JSON.stringify({ error: result.error }),
+            content: JSON.stringify(resultData),
           });
         } else {
           console.error(`Tool ${toolName} not found or has no endpoint`);
+          const errorResult = { error: `Tool ${toolName} is not configured` };
+          
+          // PHASE 1: Persist even failed tool calls for debugging
+          await persistToolCall(supabase, activeConversationId, toolCall.id, toolName, toolArgs);
+          await persistToolResult(supabase, activeConversationId, toolCall.id, toolName, errorResult, false);
+          
           toolResults.push({
             role: 'tool',
             tool_call_id: toolCall.id,
-            content: JSON.stringify({ error: `Tool ${toolName} is not configured` }),
+            content: JSON.stringify(errorResult),
           });
           toolsUsed.push({ name: toolName, success: false });
         }

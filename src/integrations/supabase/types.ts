@@ -1006,6 +1006,10 @@ export type Database = {
           id: string
           metadata: Json | null
           role: string
+          tool_arguments: Json | null
+          tool_call_id: string | null
+          tool_name: string | null
+          tool_result: Json | null
         }
         Insert: {
           content: string
@@ -1014,6 +1018,10 @@ export type Database = {
           id?: string
           metadata?: Json | null
           role: string
+          tool_arguments?: Json | null
+          tool_call_id?: string | null
+          tool_name?: string | null
+          tool_result?: Json | null
         }
         Update: {
           content?: string
@@ -1022,6 +1030,10 @@ export type Database = {
           id?: string
           metadata?: Json | null
           role?: string
+          tool_arguments?: Json | null
+          tool_call_id?: string | null
+          tool_name?: string | null
+          tool_result?: Json | null
         }
         Relationships: [
           {

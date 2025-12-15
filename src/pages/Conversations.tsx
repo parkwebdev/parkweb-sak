@@ -485,7 +485,12 @@ const Conversations: React.FC = () => {
         sender_name: senderName,
         sender_avatar: senderAvatar,
         files: fileMetadata,
-      }
+      },
+      // Tool columns - null for human messages
+      tool_call_id: null,
+      tool_name: null,
+      tool_arguments: null,
+      tool_result: null,
     };
     
     // Animate the optimistic message
