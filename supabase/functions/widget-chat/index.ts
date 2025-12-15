@@ -370,7 +370,7 @@ const BOOKING_TOOLS = [
     type: 'function' as const,
     function: {
       name: 'get_locations',
-      description: 'Get list of communities/locations. Use when user needs to choose a location or asks about communities.',
+      description: 'Get list of communities/locations with contact info (phone numbers, emails, addresses). Use when user needs to choose a location, asks about communities, OR requests contact information for a specific location.',
       parameters: {
         type: 'object',
         properties: {}
@@ -2780,9 +2780,15 @@ PROPERTY SEARCH CAPABILITY:
 You have access to a real-time property database with the following tools:
 - search_properties: Search for available homes/properties by city, state, price range, beds, baths, etc.
 - lookup_property: Get detailed information about a specific property by ID
-- get_locations: Get available community/location names
+- get_locations: Get communities with PHONE NUMBERS, emails, and addresses
 - check_calendar_availability: Check available appointment times for property tours
 - book_appointment: Schedule a property tour or appointment
+
+CRITICAL INSTRUCTIONS FOR CONTACT/PHONE QUERIES:
+When users ask for phone numbers, contact info, email, or how to reach a specific community:
+- You MUST use get_locations to retrieve the phone number and provide it DIRECTLY
+- DO NOT tell users to "check the website" - you have the contact information. Use it!
+- Example: "What's the phone for Clearview Estates?" → Call get_locations, find Clearview, respond with the phone number
 
 CRITICAL INSTRUCTIONS FOR PROPERTY QUERIES:
 When users ask about:
