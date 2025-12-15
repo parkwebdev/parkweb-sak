@@ -137,7 +137,18 @@ export const useProperties = (agentId?: string) => {
     return propertyCounts[sourceId] || 0;
   }, [propertyCounts]);
 
-  // Get unique locations for filtering (deduplicated by name)
+  // Map location names to ALL their location IDs (for multi-location filtering)
+  const locationIdsByName = useMemo(() => {
+    const map = new Map<string, string[]>();
+    for (const loc of locationsList) {
+      const ids = map.get(loc.name) || [];
+      ids.push(loc.id);
+      map.set(loc.name, ids);
+    }
+    return map;
+  }, [locationsList]);
+
+  // Get unique locations for filtering (deduplicated by name, using name as filter key)
   const uniqueLocations: LocationOption[] = useMemo(() => {
     const seenNames = new Map<string, LocationOption>();
     
@@ -145,7 +156,7 @@ export const useProperties = (agentId?: string) => {
       // Only keep the first occurrence of each name
       if (!seenNames.has(loc.name)) {
         seenNames.set(loc.name, {
-          id: loc.id,
+          id: loc.name,  // Use NAME as the filter key
           name: loc.name,
           display_name: loc.name,
         });
@@ -162,6 +173,7 @@ export const useProperties = (agentId?: string) => {
     propertyCounts,
     validationStats,
     uniqueLocations,
+    locationIdsByName,
     getPropertyCount,
     refetch: fetchProperties,
   };

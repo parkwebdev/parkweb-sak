@@ -49,7 +49,7 @@ type ViewMode = 'communities' | 'properties';
 
 export const AriLocationsSection: React.FC<AriLocationsSectionProps> = ({ agentId, userId }) => {
   const { locations, loading: locationsLoading, createLocation, updateLocation, deleteLocation, refetch } = useLocations(agentId);
-  const { propertiesWithLocation, loading: propertiesLoading, validationStats, uniqueLocations, refetch: refetchProperties } = useProperties(agentId);
+  const { propertiesWithLocation, loading: propertiesLoading, validationStats, uniqueLocations, locationIdsByName, refetch: refetchProperties } = useProperties(agentId);
   const { agent, refetch: refetchAgent } = useAgent();
   const { accounts } = useConnectedAccounts(undefined, agentId);
 
@@ -132,8 +132,13 @@ export const AriLocationsSection: React.FC<AriLocationsSectionProps> = ({ agentI
   // Apply property filters
   const filteredProperties = useMemo(() => {
     return propertiesWithLocation.filter(property => {
-      // Community filter
-      if (communityFilter !== 'all' && property.location_id !== communityFilter) return false;
+      // Community filter - check if location_id is in the group of IDs for this community name
+      if (communityFilter !== 'all') {
+        const matchingIds = locationIdsByName.get(communityFilter) || [];
+        if (!property.location_id || !matchingIds.includes(property.location_id)) {
+          return false;
+        }
+      }
       
       // Status filter
       if (propertyStatusFilter !== 'all' && property.status !== propertyStatusFilter) return false;
@@ -144,7 +149,7 @@ export const AriLocationsSection: React.FC<AriLocationsSectionProps> = ({ agentI
       
       return true;
     });
-  }, [propertiesWithLocation, communityFilter, propertyStatusFilter, validationFilter]);
+  }, [propertiesWithLocation, communityFilter, propertyStatusFilter, validationFilter, locationIdsByName]);
 
   // Active filters for chips - location view
   const activeLocationFilters: ActiveFilter[] = useMemo(() => {
