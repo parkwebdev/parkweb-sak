@@ -6,6 +6,107 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// ============================================
+// OBSERVABILITY: ERROR CODES & REQUEST LIMITS
+// ============================================
+
+const ErrorCodes = {
+  MESSAGE_TOO_LONG: 'MESSAGE_TOO_LONG',
+  TOO_MANY_FILES: 'TOO_MANY_FILES',
+  INVALID_REQUEST: 'INVALID_REQUEST',
+  AGENT_NOT_FOUND: 'AGENT_NOT_FOUND',
+  RATE_LIMITED: 'RATE_LIMITED',
+  UNAUTHORIZED: 'UNAUTHORIZED',
+  AI_PROVIDER_ERROR: 'AI_PROVIDER_ERROR',
+  EMBEDDING_ERROR: 'EMBEDDING_ERROR',
+  TOOL_EXECUTION_ERROR: 'TOOL_EXECUTION_ERROR',
+  CONVERSATION_CLOSED: 'CONVERSATION_CLOSED',
+  INTERNAL_ERROR: 'INTERNAL_ERROR',
+} as const;
+
+type ErrorCode = typeof ErrorCodes[keyof typeof ErrorCodes];
+
+// Request size limits
+const MAX_MESSAGE_LENGTH = 10000; // 10,000 characters
+const MAX_FILES_PER_MESSAGE = 5;
+
+// ============================================
+// OBSERVABILITY: STRUCTURED LOGGING
+// ============================================
+
+type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+
+interface LogEntry {
+  timestamp: string;
+  requestId: string;
+  level: LogLevel;
+  message: string;
+  data?: Record<string, unknown>;
+  durationMs?: number;
+}
+
+/**
+ * Create a structured logger bound to a specific requestId.
+ * All logs are JSON-formatted for easy parsing in log aggregators.
+ */
+function createLogger(requestId: string) {
+  const log = (level: LogLevel, message: string, data?: Record<string, unknown>) => {
+    const entry: LogEntry = {
+      timestamp: new Date().toISOString(),
+      requestId,
+      level,
+      message,
+      ...(data && { data }),
+    };
+    const logStr = JSON.stringify(entry);
+    
+    switch (level) {
+      case 'error':
+        console.error(logStr);
+        break;
+      case 'warn':
+        console.warn(logStr);
+        break;
+      case 'debug':
+        console.debug(logStr);
+        break;
+      default:
+        console.log(logStr);
+    }
+  };
+
+  return {
+    debug: (message: string, data?: Record<string, unknown>) => log('debug', message, data),
+    info: (message: string, data?: Record<string, unknown>) => log('info', message, data),
+    warn: (message: string, data?: Record<string, unknown>) => log('warn', message, data),
+    error: (message: string, data?: Record<string, unknown>) => log('error', message, data),
+  };
+}
+
+/**
+ * Create an error response with consistent structure.
+ */
+function createErrorResponse(
+  requestId: string,
+  code: ErrorCode,
+  message: string,
+  status: number,
+  durationMs?: number
+): Response {
+  return new Response(
+    JSON.stringify({ 
+      error: message,
+      code,
+      requestId,
+      ...(durationMs !== undefined && { durationMs: Math.round(durationMs) }),
+    }),
+    { 
+      status, 
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+    }
+  );
+}
+
 // Local type for conversation metadata (edge functions can't import from src/)
 interface ShownProperty {
   index: number;
@@ -1910,6 +2011,12 @@ async function callToolEndpoint(
 }
 
 serve(async (req) => {
+  // Generate unique request ID for tracing
+  const requestId = crypto.randomUUID();
+  const startTime = performance.now();
+  const log = createLogger(requestId);
+  const timings: Record<string, number> = {};
+  
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -1917,19 +2024,56 @@ serve(async (req) => {
   try {
     const { agentId, conversationId, messages, leadId, pageVisits, referrerJourney, visitorId } = await req.json();
 
-    // Log incoming data for debugging
-    console.log('Received widget-chat request:', {
+    // Log incoming request
+    log.info('Request received', {
       agentId,
       conversationId: conversationId || 'new',
       messagesCount: messages?.length || 0,
       pageVisitsCount: pageVisits?.length || 0,
       hasReferrerJourney: !!referrerJourney,
-      referrerJourney: referrerJourney || null,
       visitorId: visitorId || null,
     });
 
+    // Validate required fields
     if (!agentId) {
-      throw new Error('Agent ID is required');
+      return createErrorResponse(
+        requestId,
+        ErrorCodes.INVALID_REQUEST,
+        'Agent ID is required',
+        400,
+        performance.now() - startTime
+      );
+    }
+
+    // Validate message size limits
+    const userMessage = messages?.[0];
+    if (userMessage?.content && userMessage.content.length > MAX_MESSAGE_LENGTH) {
+      log.warn('Message too long', { 
+        length: userMessage.content.length, 
+        maxLength: MAX_MESSAGE_LENGTH 
+      });
+      return createErrorResponse(
+        requestId,
+        ErrorCodes.MESSAGE_TOO_LONG,
+        `Message too long. Maximum ${MAX_MESSAGE_LENGTH.toLocaleString()} characters allowed.`,
+        400,
+        performance.now() - startTime
+      );
+    }
+
+    // Validate file count
+    if (userMessage?.files && userMessage.files.length > MAX_FILES_PER_MESSAGE) {
+      log.warn('Too many files', { 
+        count: userMessage.files.length, 
+        maxFiles: MAX_FILES_PER_MESSAGE 
+      });
+      return createErrorResponse(
+        requestId,
+        ErrorCodes.TOO_MANY_FILES,
+        `Too many files. Maximum ${MAX_FILES_PER_MESSAGE} files allowed.`,
+        400,
+        performance.now() - startTime
+      );
     }
 
     // Initialize Supabase client
@@ -1943,7 +2087,7 @@ serve(async (req) => {
     
     // Widget requests are allowed through without API key validation
     if (isFromWidget) {
-      console.log('Request from widget origin - bypassing API key validation');
+      log.debug('Widget origin detected - bypassing API key validation');
     } else if (authHeader && authHeader.startsWith('Bearer ')) {
       // Non-widget requests with API key - validate it
       const apiKey = authHeader.substring(7);
@@ -1956,38 +2100,50 @@ serve(async (req) => {
         .rpc('validate_api_key', { p_key_hash: keyHash, p_agent_id: agentId });
       
       if (validationError) {
-        console.error('API key validation error:', validationError);
-        return new Response(
-          JSON.stringify({ error: 'API key validation failed' }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        log.error('API key validation error', { error: validationError.message });
+        return createErrorResponse(
+          requestId,
+          ErrorCodes.INTERNAL_ERROR,
+          'API key validation failed',
+          500,
+          performance.now() - startTime
         );
       }
       
       const validation = validationResult?.[0];
       
       if (!validation?.valid) {
-        console.log('Invalid API key attempt for agent:', agentId);
-        return new Response(
-          JSON.stringify({ error: validation?.error_message || 'Invalid API key' }),
-          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        log.warn('Invalid API key attempt', { agentId });
+        return createErrorResponse(
+          requestId,
+          ErrorCodes.UNAUTHORIZED,
+          validation?.error_message || 'Invalid API key',
+          401,
+          performance.now() - startTime
         );
       }
       
       if (validation.rate_limited) {
-        console.log('Rate limited API key:', validation.key_id);
-        return new Response(
-          JSON.stringify({ error: validation.error_message || 'Rate limit exceeded' }),
-          { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        log.warn('Rate limited API key', { keyId: validation.key_id });
+        return createErrorResponse(
+          requestId,
+          ErrorCodes.RATE_LIMITED,
+          validation.error_message || 'Rate limit exceeded',
+          429,
+          performance.now() - startTime
         );
       }
       
-      console.log('API key authenticated successfully:', validation.key_id);
+      log.info('API key authenticated', { keyId: validation.key_id });
     } else {
       // No API key and not from widget - reject
-      console.log('Rejected: No API key and not from widget origin');
-      return new Response(
-        JSON.stringify({ error: 'API key required. Include Authorization: Bearer <api_key> header.' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      log.warn('Rejected - no API key and not from widget origin');
+      return createErrorResponse(
+        requestId,
+        ErrorCodes.UNAUTHORIZED,
+        'API key required. Include Authorization: Bearer <api_key> header.',
+        401,
+        performance.now() - startTime
       );
     }
 
@@ -3423,10 +3579,25 @@ NEVER mark complete when:
       }
     }
 
+    // Calculate final timing
+    const totalDuration = performance.now() - startTime;
+    
+    // Log request completion with timing breakdown
+    log.info('Request completed', {
+      conversationId: activeConversationId,
+      durationMs: Math.round(totalDuration),
+      model: routedModel,
+      tier: modelTier,
+      chunksCount: chunks.length,
+      hasToolsUsed: toolsUsed.length > 0,
+      hasLinkPreviews: linkPreviews.length > 0,
+    });
+
     // Return the response with chunked messages for staggered display
     return new Response(
       JSON.stringify({
         conversationId: activeConversationId,
+        requestId, // Include for client-side correlation
         // New: array of message chunks for staggered display
         messages: chunks.map((content, i) => ({
           id: assistantMessageIds[i],
@@ -3444,18 +3615,26 @@ NEVER mark complete when:
         callActions: (() => {
           const callActionsResult = extractPhoneNumbers(assistantContent);
           if (callActionsResult.length > 0) {
-            console.log(`Detected ${callActionsResult.length} phone number(s):`, callActionsResult.map(a => a.displayNumber));
+            log.debug('Phone numbers detected', { 
+              count: callActionsResult.length,
+              numbers: callActionsResult.map(a => a.displayNumber) 
+            });
           }
           return callActionsResult.length > 0 ? callActionsResult : undefined;
         })(),
         aiMarkedComplete, // Signal to widget to show rating prompt
+        durationMs: Math.round(totalDuration),
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     );
   } catch (error) {
-    console.error('Widget chat error:', error);
+    const totalDuration = performance.now() - startTime;
+    log.error('Request failed', { 
+      error: error.message,
+      durationMs: Math.round(totalDuration),
+    });
     
     // Create agent error notification (fire and forget)
     try {
@@ -3478,22 +3657,22 @@ NEVER mark complete when:
             type: 'agent',
             title: 'Agent Error',
             message: `Agent "${agent.name}" encountered an error while responding`,
-            data: { agent_id: body.agentId, error: error.message },
+            data: { agent_id: body.agentId, error: error.message, requestId },
             read: false
           });
-          console.log('Agent error notification created');
+          log.info('Agent error notification created');
         }
       }
     } catch (notifError) {
-      console.error('Failed to create error notification:', notifError);
+      log.error('Failed to create error notification', { error: notifError.message });
     }
     
-    return new Response(
-      JSON.stringify({ error: error.message || 'An error occurred' }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
+    return createErrorResponse(
+      requestId,
+      ErrorCodes.INTERNAL_ERROR,
+      error.message || 'An error occurred',
+      500,
+      totalDuration
     );
   }
 });
