@@ -63,6 +63,7 @@ export interface Message {
   linkPreviews?: Array<any>; // Cached link previews from message metadata
   failed?: boolean; // Message failed to send
   quickReplies?: string[]; // AI-suggested follow-up actions
+  callActions?: Array<{ phoneNumber: string; displayNumber: string; locationName?: string }>; // Call buttons for phone numbers
 }
 
 /**

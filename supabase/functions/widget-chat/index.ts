@@ -47,6 +47,54 @@ interface ConversationMetadata {
 // URL regex for extracting links from content
 const URL_REGEX = /https?:\/\/[^\s<>"')\]]+/gi;
 
+// US Phone number regex (matches: (xxx) xxx-xxxx, xxx-xxx-xxxx, xxx.xxx.xxxx, +1 xxx xxx xxxx, etc.)
+const PHONE_REGEX = /\b(?:\+?1[-.\s]?)?\(?([2-9][0-9]{2})\)?[-.\s]?([2-9][0-9]{2})[-.\s]?([0-9]{4})\b/g;
+
+// Extract phone numbers from content and format for call buttons
+interface CallAction {
+  phoneNumber: string;      // For tel: href (E.164 or raw)
+  displayNumber: string;    // Human-readable format
+  locationName?: string;    // Context from location data
+}
+
+function extractPhoneNumbers(content: string, locationContext?: { name?: string; phone?: string }): CallAction[] {
+  const matches: CallAction[] = [];
+  const seenNumbers = new Set<string>();
+  
+  let match;
+  while ((match = PHONE_REGEX.exec(content)) !== null) {
+    const rawNumber = match[0].replace(/[^0-9+]/g, ''); // Strip to digits
+    const normalizedNumber = rawNumber.startsWith('+') ? rawNumber : rawNumber.replace(/^1/, '');
+    
+    // Avoid duplicates
+    if (seenNumbers.has(normalizedNumber)) continue;
+    seenNumbers.add(normalizedNumber);
+    
+    // Format display number as (xxx) xxx-xxxx
+    const areaCode = match[1];
+    const prefix = match[2];
+    const line = match[3];
+    const displayNumber = `(${areaCode}) ${prefix}-${line}`;
+    
+    // Check if this matches the location phone for context
+    let locationName: string | undefined;
+    if (locationContext?.phone) {
+      const locationNormalized = locationContext.phone.replace(/[^0-9]/g, '').replace(/^1/, '');
+      if (normalizedNumber === locationNormalized || normalizedNumber.endsWith(locationNormalized)) {
+        locationName = locationContext.name;
+      }
+    }
+    
+    matches.push({
+      phoneNumber: rawNumber.startsWith('+') ? rawNumber : `+1${normalizedNumber}`,
+      displayNumber,
+      locationName,
+    });
+  }
+  
+  return matches.slice(0, 3); // Max 3 call buttons
+}
+
 // Simple SHA-256 hash function for API key validation
 async function hashApiKey(key: string): Promise<string> {
   const encoder = new TextEncoder();
@@ -2502,6 +2550,7 @@ NEVER mark complete when:
         toolsUsed: toolsUsed.length > 0 ? toolsUsed : undefined,
         linkPreviews: linkPreviews.length > 0 ? linkPreviews : undefined,
         quickReplies: quickReplies.length > 0 ? quickReplies : undefined,
+        callActions: extractPhoneNumbers(assistantContent), // Auto-detect phone numbers for call buttons
         aiMarkedComplete, // Signal to widget to show rating prompt
       }),
       {
