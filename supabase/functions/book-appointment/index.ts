@@ -486,6 +486,34 @@ serve(async (req) => {
     const bookingId = calendarEvent?.id || externalEventId || `booking_${Date.now()}`;
     const confirmationMessage = formatConfirmation(location.name, startTime, timezone, booking.property_address);
 
+    // Send confirmation email with calendar invite (fire and forget)
+    if (booking.visitor_email) {
+      try {
+        const emailResponse = await fetch(`${supabaseUrl}/functions/v1/send-booking-confirmation`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-internal-secret': Deno.env.get('INTERNAL_WEBHOOK_SECRET') || '',
+          },
+          body: JSON.stringify({
+            to: booking.visitor_email,
+            visitor_name: booking.visitor_name,
+            location_name: location.name,
+            location_address: booking.property_address || `${location.name}`,
+            location_phone: location.phone,
+            start_time: startTime.toISOString(),
+            end_time: endTime.toISOString(),
+            timezone,
+            confirmation_id: bookingId,
+            organizer_email: 'bookings@chatpad.app',
+          }),
+        });
+        console.log('Booking confirmation email sent:', emailResponse.ok);
+      } catch (emailError) {
+        console.error('Failed to send confirmation email (non-critical):', emailError);
+      }
+    }
+
     // Trigger booking.created webhook (fire and forget)
     try {
       await fetch(`${supabaseUrl}/functions/v1/dispatch-webhook-event`, {

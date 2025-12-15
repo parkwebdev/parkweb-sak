@@ -55,6 +55,8 @@ const mockConfirmationData: BookingConfirmationData = {
   phoneNumber: '(555) 123-4567',
   date: 'Wednesday, December 18, 2024',
   time: '10:00 AM',
+  startDateTime: '2024-12-18T10:00:00-06:00',
+  endDateTime: '2024-12-18T10:30:00-06:00',
   confirmationId: 'BK-2024-1218-001',
 };
 
