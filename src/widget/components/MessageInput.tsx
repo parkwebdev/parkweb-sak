@@ -10,7 +10,7 @@
 import { Suspense, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Send01, Microphone01, Attachment01, X } from '@untitledui/icons';
+import { Send01, Microphone01, Attachment01, X } from '../icons';
 import { VoiceInput } from '../constants';
 import { FileTypeIcon } from '@/components/chat/FileTypeIcons';
 

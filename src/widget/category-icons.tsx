@@ -1,71 +1,97 @@
 /**
  * Category Icons
  * 
- * Curated set of 25 UntitledUI icons for help center categories.
- * Provides icon mapping and a reusable CategoryIcon component.
+ * Dynamic icon loading for help center categories.
+ * Icons are loaded on-demand to reduce initial bundle size.
+ * Only the icons actually used are fetched.
  * 
  * @module widget/category-icons
  */
 
-import { 
-  BookOpen01, 
-  HelpCircle, 
-  User01, 
-  CreditCard01, 
-  Settings01, 
-  Mail01, 
-  Phone01, 
-  Shield01, 
-  Rocket01, 
-  Star01,
-  Tool01,
-  Lightbulb01,
-  File06,
-  Home01,
-  ShoppingBag01,
-  Calendar,
-  Globe01,
-  DownloadCloud01,
-  Link01,
-  PlayCircle,
-  Gift01,
-  Truck01,
-  Clock,
-  MessageChatCircle,
-  Building07
-} from '@untitledui/icons';
+import { useState, useEffect, memo } from 'react';
 
-// Curated set of 25 icons that cover 99% of use cases
-export const CATEGORY_ICONS = {
-  book: BookOpen01,
-  help: HelpCircle,
-  user: User01,
-  billing: CreditCard01,
-  settings: Settings01,
-  email: Mail01,
-  phone: Phone01,
-  security: Shield01,
-  rocket: Rocket01,
-  star: Star01,
-  tools: Tool01,
-  idea: Lightbulb01,
-  docs: File06,
-  home: Home01,
-  shop: ShoppingBag01,
-  calendar: Calendar,
-  globe: Globe01,
-  download: DownloadCloud01,
-  link: Link01,
-  video: PlayCircle,
-  gift: Gift01,
-  shipping: Truck01,
-  clock: Clock,
-  chat: MessageChatCircle,
-  company: Building07,
-} as const;
+// Icon name to dynamic import mapping - only loads what's needed
+const iconImports: Record<string, () => Promise<{ default: React.ComponentType<{ className?: string; style?: React.CSSProperties }> }>> = {
+  book: () => import('@untitledui/icons/BookOpen01').then(m => ({ default: m.BookOpen01 })),
+  help: () => import('@untitledui/icons/HelpCircle').then(m => ({ default: m.HelpCircle })),
+  user: () => import('@untitledui/icons/User01').then(m => ({ default: m.User01 })),
+  billing: () => import('@untitledui/icons/CreditCard01').then(m => ({ default: m.CreditCard01 })),
+  settings: () => import('@untitledui/icons/Settings01').then(m => ({ default: m.Settings01 })),
+  email: () => import('@untitledui/icons/Mail01').then(m => ({ default: m.Mail01 })),
+  phone: () => import('@untitledui/icons/Phone01').then(m => ({ default: m.Phone01 })),
+  security: () => import('@untitledui/icons/Shield01').then(m => ({ default: m.Shield01 })),
+  rocket: () => import('@untitledui/icons/Rocket01').then(m => ({ default: m.Rocket01 })),
+  star: () => import('@untitledui/icons/Star01').then(m => ({ default: m.Star01 })),
+  tools: () => import('@untitledui/icons/Tool01').then(m => ({ default: m.Tool01 })),
+  idea: () => import('@untitledui/icons/Lightbulb01').then(m => ({ default: m.Lightbulb01 })),
+  docs: () => import('@untitledui/icons/File06').then(m => ({ default: m.File06 })),
+  home: () => import('@untitledui/icons/Home01').then(m => ({ default: m.Home01 })),
+  shop: () => import('@untitledui/icons/ShoppingBag01').then(m => ({ default: m.ShoppingBag01 })),
+  calendar: () => import('@untitledui/icons/Calendar').then(m => ({ default: m.Calendar })),
+  globe: () => import('@untitledui/icons/Globe01').then(m => ({ default: m.Globe01 })),
+  download: () => import('@untitledui/icons/DownloadCloud01').then(m => ({ default: m.DownloadCloud01 })),
+  link: () => import('@untitledui/icons/Link01').then(m => ({ default: m.Link01 })),
+  video: () => import('@untitledui/icons/PlayCircle').then(m => ({ default: m.PlayCircle })),
+  gift: () => import('@untitledui/icons/Gift01').then(m => ({ default: m.Gift01 })),
+  shipping: () => import('@untitledui/icons/Truck01').then(m => ({ default: m.Truck01 })),
+  clock: () => import('@untitledui/icons/Clock').then(m => ({ default: m.Clock })),
+  chat: () => import('@untitledui/icons/MessageChatCircle').then(m => ({ default: m.MessageChatCircle })),
+  company: () => import('@untitledui/icons/Building07').then(m => ({ default: m.Building07 })),
+};
 
-export type CategoryIconName = keyof typeof CATEGORY_ICONS;
+export type CategoryIconName = keyof typeof iconImports;
 
+// Cache for loaded icons to avoid re-fetching
+const iconCache = new Map<string, React.ComponentType<{ className?: string; style?: React.CSSProperties }>>();
+
+interface CategoryIconProps {
+  name?: string;
+  className?: string;
+  style?: React.CSSProperties;
+}
+
+/**
+ * Dynamic category icon component.
+ * Loads icons on-demand and caches them for reuse.
+ */
+export const CategoryIcon = memo(({ name = 'book', className, style }: CategoryIconProps) => {
+  const [Icon, setIcon] = useState<React.ComponentType<{ className?: string; style?: React.CSSProperties }> | null>(
+    () => iconCache.get(name) || null
+  );
+
+  useEffect(() => {
+    // If already cached, use it
+    if (iconCache.has(name)) {
+      setIcon(() => iconCache.get(name)!);
+      return;
+    }
+
+    // Load the icon dynamically
+    const loadIcon = iconImports[name as CategoryIconName] || iconImports.book;
+    loadIcon().then(mod => {
+      iconCache.set(name, mod.default);
+      setIcon(() => mod.default);
+    }).catch(() => {
+      // Fallback to book icon on error
+      if (name !== 'book') {
+        iconImports.book().then(mod => {
+          setIcon(() => mod.default);
+        });
+      }
+    });
+  }, [name]);
+
+  // Placeholder while loading - matches icon dimensions
+  if (!Icon) {
+    return <div className={className} style={{ ...style, width: 20, height: 20 }} />;
+  }
+
+  return <Icon className={className} style={style} />;
+});
+
+CategoryIcon.displayName = 'CategoryIcon';
+
+// Export icon options for admin UI (still needed for category configuration)
 export const CATEGORY_ICON_OPTIONS: Array<{ value: CategoryIconName; label: string }> = [
   { value: 'book', label: 'Getting Started' },
   { value: 'help', label: 'Help & FAQ' },
@@ -93,14 +119,3 @@ export const CATEGORY_ICON_OPTIONS: Array<{ value: CategoryIconName; label: stri
   { value: 'chat', label: 'Messaging' },
   { value: 'company', label: 'Company' },
 ];
-
-interface CategoryIconProps {
-  name?: string;
-  className?: string;
-  style?: React.CSSProperties;
-}
-
-export const CategoryIcon = ({ name = 'book', className, style }: CategoryIconProps) => {
-  const IconComponent = CATEGORY_ICONS[name as CategoryIconName] || CATEGORY_ICONS.book;
-  return <IconComponent className={className} style={style} />;
-};

@@ -7,7 +7,7 @@
  * @module widget/components/LocationPicker
  */
 
-import { MarkerPin01 } from '@untitledui/icons';
+import { MarkerPin01 } from '../icons';
 import type { DetectedLocation } from '../hooks/useLocationDetection';
 
 interface LocationPickerProps {

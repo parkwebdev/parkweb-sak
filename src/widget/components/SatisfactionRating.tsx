@@ -5,8 +5,7 @@
  * Shows when conversation is closed by team or AI marks it complete.
  */
 import { useState } from 'react';
-import { Star01 } from '@untitledui/icons/Star01';
-import { XClose } from '@untitledui/icons/XClose';
+import { Star01, XClose } from '../icons';
 
 interface SatisfactionRatingProps {
   conversationId: string;

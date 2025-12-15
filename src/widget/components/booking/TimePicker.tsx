@@ -7,7 +7,7 @@
 
 import { useState, useMemo } from 'react';
 import { cn } from '@/lib/utils';
-import { ChevronLeft, Phone01 } from '@untitledui/icons';
+import { ChevronLeft, Phone01 } from '../../icons';
 import type { TimePickerData, BookingTime } from '../../types';
 
 interface TimePickerProps {

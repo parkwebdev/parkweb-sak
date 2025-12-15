@@ -7,7 +7,7 @@
 
 import { useState, useMemo } from 'react';
 import { cn } from '@/lib/utils';
-import { Phone01 } from '@untitledui/icons';
+import { Phone01 } from '../../icons';
 import type { DayPickerData, BookingDay } from '../../types';
 
 interface DayPickerProps {

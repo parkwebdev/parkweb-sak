@@ -9,7 +9,7 @@
  */
 
 import ChatPadLogo from '@/components/ChatPadLogo';
-import { XClose } from '@untitledui/icons';
+import { XClose } from '../icons';
 import { useSystemTheme } from '../hooks/useSystemTheme';
 
 /** Props for the FloatingButton component */

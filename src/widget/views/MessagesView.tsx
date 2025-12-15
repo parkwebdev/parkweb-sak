@@ -8,7 +8,7 @@
  */
 
 import { Button } from '@/components/ui/button';
-import { MessageChatCircle, ChevronRight } from '@untitledui/icons';
+import { MessageChatCircle, ChevronRight } from '../icons';
 import { formatTimestamp } from '../utils';
 import type { Conversation } from '../types';
 
