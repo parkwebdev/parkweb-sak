@@ -690,15 +690,15 @@ function extractImages(home: WordPressHome): Array<{ url: string; alt?: string }
 }
 
 /**
- * Auto-match a property to a location using WordPress community taxonomy ID.
- * This is the ONLY matching strategy - WordPress community_id is the authoritative link.
+ * Auto-match a property to a location using WordPress community taxonomy term ID.
+ * This is the ONLY matching strategy - WordPress community term_id is the authoritative link.
  */
 function autoMatchLocation(
-  communityIdMap: Map<number, string>,
-  communityId: number | undefined
+  locationMaps: LocationMaps,
+  communityTermId: number | undefined
 ): string | null {
-  if (communityId && communityIdMap.has(communityId)) {
-    return communityIdMap.get(communityId)!;
+  if (communityTermId && locationMaps.termIdMap.has(communityTermId)) {
+    return locationMaps.termIdMap.get(communityTermId)!;
   }
   return null;
 }
