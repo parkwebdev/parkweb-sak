@@ -343,7 +343,8 @@ async function searchProperties(
       city: p.city,
       state: p.state,
       price: p.price,
-      price_formatted: p.price ? `$${p.price.toLocaleString()}${p.price_type === 'rent_monthly' ? '/mo' : ''}` : 'Contact for pricing',
+      // Prices are stored in cents, convert to dollars for display
+      price_formatted: p.price ? `$${(p.price / 100).toLocaleString()}${p.price_type === 'rent_monthly' ? '/mo' : ''}` : 'Contact for pricing',
       beds: p.beds,
       baths: p.baths,
       sqft: p.sqft,
@@ -2149,6 +2150,8 @@ NEVER mark complete when:
       console.log(`AI requested ${assistantMessage.tool_calls.length} tool call(s)`);
       
       const toolResults: any[] = [];
+      // Track shown properties to preserve in final metadata update (outside loop to persist)
+      let storedShownProperties: ShownProperty[] | undefined;
       
       for (const toolCall of assistantMessage.tool_calls) {
         const toolName = toolCall.function?.name;
@@ -2232,20 +2235,10 @@ NEVER mark complete when:
           const result = await searchProperties(supabase, agentId, toolArgs);
           toolsUsed.push({ name: toolName, success: result.success });
           
-          // Store shown properties in conversation metadata for context memory
+          // Store shown properties for later metadata update (don't update now, will be overwritten)
           if (result.success && result.result?.shownProperties?.length > 0) {
-            const currentMeta = conversation?.metadata || {};
-            await supabase
-              .from('conversations')
-              .update({
-                metadata: {
-                  ...currentMeta,
-                  shown_properties: result.result.shownProperties,
-                  last_property_search_at: new Date().toISOString(),
-                },
-              })
-              .eq('id', activeConversationId);
-            console.log(`Stored ${result.result.shownProperties.length} shown properties in conversation metadata`);
+            storedShownProperties = result.result.shownProperties;
+            console.log(`Will store ${storedShownProperties.length} shown properties in final metadata update`);
           }
           
           // Remove shownProperties from the result sent to AI (it's for metadata only)
@@ -2462,6 +2455,11 @@ NEVER mark complete when:
           last_message_at: new Date().toISOString(),
           // Track when the visitor/user last sent a message (for unread badge logic)
           last_user_message_at: new Date().toISOString(),
+          // Preserve shown_properties from search_properties tool if set during this request
+          ...(typeof storedShownProperties !== 'undefined' && storedShownProperties.length > 0 && {
+            shown_properties: storedShownProperties,
+            last_property_search_at: new Date().toISOString(),
+          }),
         },
         updated_at: new Date().toISOString(),
       })
