@@ -4,10 +4,15 @@ import { logger } from '@/utils/logger';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Property = Tables<'properties'>;
-type Location = Tables<'locations'>;
 
 export interface PropertyWithLocation extends Property {
   location_name: string | null;
+}
+
+export interface LocationOption {
+  id: string;
+  name: string;
+  display_name: string;
 }
 
 export interface ValidationStats {
@@ -24,7 +29,7 @@ export interface ValidationStats {
  */
 export const useProperties = (agentId?: string) => {
   const [properties, setProperties] = useState<Property[]>([]);
-  const [locationsList, setLocationsList] = useState<{ id: string; name: string }[]>([]);
+  const [locationsList, setLocationsList] = useState<{ id: string; name: string; city: string | null; state: string | null }[]>([]);
   const [loading, setLoading] = useState(true);
   const [propertyCounts, setPropertyCounts] = useState<Record<string, number>>({});
 
@@ -43,7 +48,7 @@ export const useProperties = (agentId?: string) => {
           .order('created_at', { ascending: false }),
         supabase
           .from('locations')
-          .select('id, name')
+          .select('id, name, city, state')
           .eq('agent_id', agentId)
       ]);
 
@@ -132,9 +137,30 @@ export const useProperties = (agentId?: string) => {
     return propertyCounts[sourceId] || 0;
   }, [propertyCounts]);
 
-  // Get unique locations for filtering
-  const uniqueLocations = useMemo(() => {
-    return locationsList.map(loc => ({ id: loc.id, name: loc.name }));
+  // Get unique locations for filtering with disambiguated display names
+  const uniqueLocations: LocationOption[] = useMemo(() => {
+    // Count occurrences of each name
+    const nameCounts = new Map<string, number>();
+    for (const loc of locationsList) {
+      nameCounts.set(loc.name, (nameCounts.get(loc.name) || 0) + 1);
+    }
+    
+    // Create display names with disambiguation for duplicates
+    return locationsList.map(loc => {
+      const isDuplicate = (nameCounts.get(loc.name) || 0) > 1;
+      let displayName = loc.name;
+      
+      if (isDuplicate && (loc.city || loc.state)) {
+        const suffix = [loc.city, loc.state].filter(Boolean).join(', ');
+        displayName = `${loc.name} (${suffix})`;
+      }
+      
+      return {
+        id: loc.id,
+        name: loc.name,
+        display_name: displayName,
+      };
+    });
   }, [locationsList]);
 
   return {
