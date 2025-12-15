@@ -10,7 +10,7 @@ import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useReactTable, getCoreRowModel, getSortedRowModel, getFilteredRowModel, type SortingState, type RowSelectionState } from '@tanstack/react-table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Trash01, XClose, X, FilterLines, Building01, Home01, AlertTriangle } from '@untitledui/icons';
+import { Trash01, XClose, X, FilterLines, AlertTriangle, Home01 } from '@untitledui/icons';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -389,6 +389,32 @@ export const AriLocationsSection: React.FC<AriLocationsSectionProps> = ({ agentI
     return <LoadingState text={viewMode === 'communities' ? 'Loading locations...' : 'Loading properties...'} />;
   }
 
+  // View toggle component - extracted to avoid TypeScript narrowing issues
+  const ViewToggle = (
+    <div className="flex items-center gap-1">
+      <Button 
+        variant={viewMode === 'communities' ? 'default' : 'outline'}
+        size="sm"
+        onClick={() => setViewMode('communities')}
+      >
+        Communities
+        <Badge variant={viewMode === 'communities' ? 'secondary' : 'outline'} className="ml-1.5 h-5 px-1.5 text-xs">
+          {locations.length}
+        </Badge>
+      </Button>
+      <Button 
+        variant={viewMode === 'properties' ? 'default' : 'outline'}
+        size="sm"
+        onClick={() => setViewMode('properties')}
+      >
+        Properties
+        <Badge variant={viewMode === 'properties' ? 'secondary' : 'outline'} className="ml-1.5 h-5 px-1.5 text-xs">
+          {propertiesWithLocation.length}
+        </Badge>
+      </Button>
+    </div>
+  );
+
   return (
     <div>
       <AriSectionHeader
@@ -406,34 +432,6 @@ export const AriLocationsSection: React.FC<AriLocationsSectionProps> = ({ agentI
       <div className="space-y-4">
         {/* WordPress Integration - Collapsible */}
         <WordPressIntegrationSection agent={agent} onSyncComplete={handleWordPressSyncComplete} />
-
-        {/* View Toggle */}
-        <div className="flex items-center gap-2">
-          <Button 
-            variant={viewMode === 'communities' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setViewMode('communities')}
-            className="gap-1.5"
-          >
-            <Building01 size={16} />
-            Communities
-            <Badge variant={viewMode === 'communities' ? 'secondary' : 'outline'} className="ml-1 h-5 px-1.5 text-xs">
-              {locations.length}
-            </Badge>
-          </Button>
-          <Button 
-            variant={viewMode === 'properties' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setViewMode('properties')}
-            className="gap-1.5"
-          >
-            <Home01 size={16} />
-            Properties
-            <Badge variant={viewMode === 'properties' ? 'secondary' : 'outline'} className="ml-1 h-5 px-1.5 text-xs">
-              {propertiesWithLocation.length}
-            </Badge>
-          </Button>
-        </div>
 
         {/* Validation Warning Banner - Properties View */}
         {viewMode === 'properties' && validationStats.missingLotNumber > 0 && (
@@ -495,8 +493,9 @@ export const AriLocationsSection: React.FC<AriLocationsSectionProps> = ({ agentI
               <div className="space-y-3">
                 <DataTableToolbar
                   table={locationsTable}
-                  searchPlaceholder="Search locations..."
+                  searchPlaceholder="Search..."
                   globalFilter
+                  prefix={ViewToggle}
                 >
                   <Popover>
                     <PopoverTrigger asChild>
@@ -629,8 +628,9 @@ export const AriLocationsSection: React.FC<AriLocationsSectionProps> = ({ agentI
               <div className="space-y-3">
                 <DataTableToolbar
                   table={propertiesTable}
-                  searchPlaceholder="Search properties..."
+                  searchPlaceholder="Search..."
                   globalFilter
+                  prefix={ViewToggle}
                 >
                   <Popover>
                     <PopoverTrigger asChild>

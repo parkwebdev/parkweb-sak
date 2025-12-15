@@ -16,7 +16,9 @@ interface DataTableToolbarProps<TData> {
   searchColumn?: string;
   globalFilter?: boolean;
   children?: React.ReactNode;
+  prefix?: React.ReactNode;
   className?: string;
+  searchClassName?: string;
 }
 
 export function DataTableToolbar<TData>({
@@ -25,7 +27,9 @@ export function DataTableToolbar<TData>({
   searchColumn,
   globalFilter = false,
   children,
+  prefix,
   className,
+  searchClassName,
 }: DataTableToolbarProps<TData>) {
   const isFiltered = globalFilter
     ? table.getState().globalFilter
@@ -57,25 +61,28 @@ export function DataTableToolbar<TData>({
 
   return (
     <div className={cn('flex items-center justify-between gap-2', className)}>
-      <div className="relative w-full max-w-sm">
-        <SearchSm className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          placeholder={searchPlaceholder}
-          value={searchValue}
-          onChange={(e) => handleSearchChange(e.target.value)}
-          className="pl-9 pr-9"
-        />
-        {isFiltered && (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="absolute right-1 top-1/2 h-6 w-6 -translate-y-1/2 p-0"
-            onClick={handleClear}
-          >
-            <XClose className="h-4 w-4" />
-            <span className="sr-only">Clear search</span>
-          </Button>
-        )}
+      <div className="flex items-center gap-2 flex-1">
+        {prefix}
+        <div className={cn('relative w-full max-w-xs', searchClassName)}>
+          <SearchSm className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder={searchPlaceholder}
+            value={searchValue}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            className="pl-9 pr-9"
+          />
+          {isFiltered && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="absolute right-1 top-1/2 h-6 w-6 -translate-y-1/2 p-0"
+              onClick={handleClear}
+            >
+              <XClose className="h-4 w-4" />
+              <span className="sr-only">Clear search</span>
+            </Button>
+          )}
+        </div>
       </div>
       {children && (
         <div className="flex items-center gap-2">
