@@ -64,6 +64,65 @@ export interface Message {
   failed?: boolean; // Message failed to send
   quickReplies?: string[]; // AI-suggested follow-up actions
   callActions?: Array<{ phoneNumber: string; displayNumber: string; locationName?: string }>; // Call buttons for phone numbers
+  dayPicker?: DayPickerData; // Step 1: Day selection for booking
+  timePicker?: TimePickerData; // Step 2: Time selection for booking
+  bookingConfirmed?: BookingConfirmationData; // Step 3: Booking confirmation
+}
+
+// ============================================================================
+// Booking Flow Types
+// ============================================================================
+
+/**
+ * A single day option in the day picker
+ */
+export interface BookingDay {
+  date: string; // ISO date string (YYYY-MM-DD)
+  dayName: string; // Abbreviated day name (e.g., "Wed")
+  dayNumber: number; // Day of month (e.g., 18)
+  hasAvailability: boolean; // Whether there are available slots
+  isToday?: boolean;
+}
+
+/**
+ * A single time slot option in the time picker
+ */
+export interface BookingTime {
+  time: string; // Display time (e.g., "9 AM")
+  datetime: string; // ISO datetime string for booking
+  available: boolean;
+}
+
+/**
+ * Data for the day picker component (Step 1)
+ */
+export interface DayPickerData {
+  locationName: string;
+  locationId: string;
+  days: BookingDay[];
+  selectedDate?: string;
+}
+
+/**
+ * Data for the time picker component (Step 2)
+ */
+export interface TimePickerData {
+  locationName: string;
+  locationId: string;
+  selectedDate: string; // ISO date string
+  selectedDayDisplay: string; // e.g., "Wednesday, December 18"
+  times: BookingTime[];
+}
+
+/**
+ * Data for the booking confirmation card (Step 3)
+ */
+export interface BookingConfirmationData {
+  locationName: string;
+  date: string; // Formatted date display
+  time: string; // Formatted time display
+  confirmationId?: string;
+  calendarUrl?: string; // Google Calendar or .ics URL
 }
 
 /**
