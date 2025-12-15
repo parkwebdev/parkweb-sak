@@ -38,7 +38,7 @@ export {
 } from './session';
 
 /**
- * URL stripping utilities for link preview display
+ * Content stripping utilities for link preview and call button display
  * @see {@link ./url-stripper}
  */
-export { stripUrlsFromContent } from './url-stripper';
+export { stripUrlsFromContent, stripPhoneNumbersFromContent } from './url-stripper';
