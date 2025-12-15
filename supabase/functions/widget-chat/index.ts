@@ -1892,7 +1892,7 @@ Generate a warm, personalized greeting using the user information provided above
 
     // Built-in tool to mark conversation as complete (triggers satisfaction rating)
     // Calculate conversation length for context (user messages only)
-    const userMessageCount = conversationHistory.filter(m => m.role === 'user').length;
+    const userMessageCount = messages.filter((m: any) => m.role === 'user').length;
     
     const markCompleteTool = {
       type: 'function',
