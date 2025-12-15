@@ -554,10 +554,13 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
               timestamp: new Date(), 
               type: 'text', 
               reactions: [],
-              // Only attach link previews, quick replies, and call actions to the last chunk
+              // Only attach link previews, quick replies, call actions, and booking components to the last chunk
               linkPreviews: isLastChunk ? response.linkPreviews : undefined,
               quickReplies: isLastChunk ? response.quickReplies : undefined,
               callActions: isLastChunk ? response.callActions : undefined,
+              dayPicker: isLastChunk ? response.dayPicker : undefined,
+              timePicker: isLastChunk ? response.timePicker : undefined,
+              bookingConfirmed: isLastChunk ? response.bookingConfirmed : undefined,
             }]);
           }
           
@@ -593,6 +596,9 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
             linkPreviews: response.linkPreviews,
             quickReplies: response.quickReplies,
             callActions: response.callActions,
+            dayPicker: response.dayPicker,
+            timePicker: response.timePicker,
+            bookingConfirmed: response.bookingConfirmed,
           }]);
           
           // Check if AI marked conversation complete - show rating after delay

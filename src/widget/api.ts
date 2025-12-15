@@ -333,6 +333,8 @@ export async function submitArticleFeedback(articleId: string, data: {
   }
 }
 
+import type { DayPickerData, TimePickerData, BookingConfirmationData } from './types';
+
 /**
  * Response object from chat message API calls.
  */
@@ -366,6 +368,12 @@ export interface ChatResponse {
   quickReplies?: string[];
   /** Call action buttons for phone numbers detected in the response */
   callActions?: Array<{ phoneNumber: string; displayNumber: string; locationName?: string }>;
+  /** Booking UI: Day picker component data */
+  dayPicker?: DayPickerData;
+  /** Booking UI: Time picker component data */
+  timePicker?: TimePickerData;
+  /** Booking UI: Booking confirmation component data */
+  bookingConfirmed?: BookingConfirmationData;
   /** Signal that AI marked conversation complete with high confidence - triggers rating prompt */
   aiMarkedComplete?: boolean;
 }
