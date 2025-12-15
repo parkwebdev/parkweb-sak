@@ -727,6 +727,20 @@ async function syncHomesToProperties(
       const state = extractAcfField(acf, 'state');
       const zip = extractAcfField(acf, 'zip', 'zipcode', 'postal', 'postal_code') || extractZipFromAddress(address);
       
+      // Extract lot number with expanded field detection for MHP/real estate
+      const lotNumber = extractAcfField(acf, 
+        'lot', 'lot_number', 'lot_num', 'lot_no',
+        'site', 'site_number', 'site_num', 'site_no',
+        'unit', 'unit_number', 'unit_num', 'unit_no',
+        'space', 'space_number', 'space_num',
+        'home_site', 'homesite', 'pad', 'pad_number'
+      );
+      
+      // Debug: Log ACF keys for homes without lot numbers to help diagnose
+      if (!lotNumber && acf) {
+        console.log(`📋 ACF fields for "${address}" (no lot found): ${Object.keys(acf).join(', ')}`);
+      }
+      
       // Auto-match to location using WordPress taxonomy term ID ONLY
       // home_community contains taxonomy term IDs (not post IDs)
       const communityTermId = home.home_community?.[0];
@@ -752,7 +766,7 @@ async function syncHomesToProperties(
         location_id: locationId,
         external_id: externalId,
         address,
-        lot_number: extractAcfField(acf, 'lot', 'lot_number'),
+        lot_number: lotNumber,
         city,
         state,
         zip,
