@@ -11,10 +11,10 @@ import { useReactTable, getCoreRowModel, getSortedRowModel, getFilteredRowModel,
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Trash01, XClose, X, FilterLines, AlertTriangle, Home01 } from '@untitledui/icons';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
 import { useLocations } from '@/hooks/useLocations';
 import { useProperties } from '@/hooks/useProperties';
@@ -78,11 +78,11 @@ export const AriLocationsSection: React.FC<AriLocationsSectionProps> = ({ agentI
   // Location filters
   const [calendarFilter, setCalendarFilter] = useState<string>('all');
   const [wordpressFilter, setWordpressFilter] = useState<string>('all');
-  const [stateFilter, setStateFilter] = useState<string>('all');
+  const [stateFilter, setStateFilter] = useState<string[]>([]);
 
   // Property filters
-  const [communityFilter, setCommunityFilter] = useState<string>('all');
-  const [propertyStatusFilter, setPropertyStatusFilter] = useState<string>('all');
+  const [communityFilter, setCommunityFilter] = useState<string[]>([]);
+  const [propertyStatusFilter, setPropertyStatusFilter] = useState<string[]>([]);
   const [validationFilter, setValidationFilter] = useState<string>('all');
 
   // Infinite scroll state
@@ -123,7 +123,8 @@ export const AriLocationsSection: React.FC<AriLocationsSectionProps> = ({ agentI
       if (wordpressFilter === 'connected' && !hasWordPress) return false;
       if (wordpressFilter === 'none' && hasWordPress) return false;
       
-      if (stateFilter !== 'all' && location.state !== stateFilter) return false;
+      // Multi-select state filter
+      if (stateFilter.length > 0 && (!location.state || !stateFilter.includes(location.state))) return false;
       
       return true;
     });
@@ -132,18 +133,18 @@ export const AriLocationsSection: React.FC<AriLocationsSectionProps> = ({ agentI
   // Apply property filters
   const filteredProperties = useMemo(() => {
     return propertiesWithLocation.filter(property => {
-      // Community filter - check if location_id is in the group of IDs for this community name
-      if (communityFilter !== 'all') {
-        const matchingIds = locationIdsByName.get(communityFilter) || [];
-        if (!property.location_id || !matchingIds.includes(property.location_id)) {
+      // Multi-select community filter - check if location_id is in ANY of the selected community groups
+      if (communityFilter.length > 0) {
+        const allMatchingIds = communityFilter.flatMap(name => locationIdsByName.get(name) || []);
+        if (!property.location_id || !allMatchingIds.includes(property.location_id)) {
           return false;
         }
       }
       
-      // Status filter
-      if (propertyStatusFilter !== 'all' && property.status !== propertyStatusFilter) return false;
+      // Multi-select status filter
+      if (propertyStatusFilter.length > 0 && (!property.status || !propertyStatusFilter.includes(property.status))) return false;
       
-      // Validation filter
+      // Validation filter (stays single-select)
       if (validationFilter === 'missing_lot' && property.lot_number) return false;
       if (validationFilter === 'unmatched' && property.location_id) return false;
       
@@ -168,34 +169,37 @@ export const AriLocationsSection: React.FC<AriLocationsSectionProps> = ({ agentI
         label: wordpressFilter === 'connected' ? 'WordPress Connected' : 'No WordPress',
       });
     }
-    if (stateFilter !== 'all') {
+    // Multi-select state chips
+    stateFilter.forEach(state => {
       filters.push({
         type: 'state',
-        value: stateFilter,
-        label: stateFilter,
+        value: state,
+        label: state,
       });
-    }
+    });
     return filters;
   }, [calendarFilter, wordpressFilter, stateFilter]);
 
   // Active filters for chips - property view
   const activePropertyFilters: ActiveFilter[] = useMemo(() => {
     const filters: ActiveFilter[] = [];
-    if (communityFilter !== 'all') {
-      const community = uniqueLocations.find(l => l.id === communityFilter);
+    // Multi-select community chips
+    communityFilter.forEach(name => {
+      const community = uniqueLocations.find(l => l.id === name);
       filters.push({
         type: 'community',
-        value: communityFilter,
-        label: community?.name || communityFilter,
+        value: name,
+        label: community?.name || name,
       });
-    }
-    if (propertyStatusFilter !== 'all') {
+    });
+    // Multi-select status chips
+    propertyStatusFilter.forEach(status => {
       filters.push({
         type: 'status',
-        value: propertyStatusFilter,
-        label: propertyStatusFilter.charAt(0).toUpperCase() + propertyStatusFilter.slice(1).replace('_', ' '),
+        value: status,
+        label: status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' '),
       });
-    }
+    });
     if (validationFilter !== 'all') {
       filters.push({
         type: 'validation',
@@ -208,21 +212,21 @@ export const AriLocationsSection: React.FC<AriLocationsSectionProps> = ({ agentI
 
   const activeFilters = viewMode === 'communities' ? activeLocationFilters : activePropertyFilters;
 
-  const clearFilter = (type: ActiveFilter['type']) => {
+  const clearFilter = (type: ActiveFilter['type'], value?: string) => {
     if (type === 'calendar') setCalendarFilter('all');
     if (type === 'wordpress') setWordpressFilter('all');
-    if (type === 'state') setStateFilter('all');
-    if (type === 'community') setCommunityFilter('all');
-    if (type === 'status') setPropertyStatusFilter('all');
+    if (type === 'state' && value) setStateFilter(prev => prev.filter(v => v !== value));
+    if (type === 'community' && value) setCommunityFilter(prev => prev.filter(v => v !== value));
+    if (type === 'status' && value) setPropertyStatusFilter(prev => prev.filter(v => v !== value));
     if (type === 'validation') setValidationFilter('all');
   };
 
   const clearAllFilters = () => {
     setCalendarFilter('all');
     setWordpressFilter('all');
-    setStateFilter('all');
-    setCommunityFilter('all');
-    setPropertyStatusFilter('all');
+    setStateFilter([]);
+    setCommunityFilter([]);
+    setPropertyStatusFilter([]);
     setValidationFilter('all');
   };
 
@@ -394,12 +398,11 @@ export const AriLocationsSection: React.FC<AriLocationsSectionProps> = ({ agentI
     return <LoadingState text={viewMode === 'communities' ? 'Loading locations...' : 'Loading properties...'} />;
   }
 
-  // View toggle component - extracted to avoid TypeScript narrowing issues
+  // View toggle component - same height as Filters button
   const ViewToggle = (
     <div className="flex items-center gap-1">
       <Button 
         variant={viewMode === 'communities' ? 'secondary' : 'ghost'}
-        size="sm"
         onClick={() => setViewMode('communities')}
         className={viewMode === 'communities' ? 'bg-muted hover:bg-muted/80' : ''}
       >
@@ -410,7 +413,6 @@ export const AriLocationsSection: React.FC<AriLocationsSectionProps> = ({ agentI
       </Button>
       <Button 
         variant={viewMode === 'properties' ? 'secondary' : 'ghost'}
-        size="sm"
         onClick={() => setViewMode('properties')}
         className={viewMode === 'properties' ? 'bg-muted hover:bg-muted/80' : ''}
       >
@@ -421,6 +423,15 @@ export const AriLocationsSection: React.FC<AriLocationsSectionProps> = ({ agentI
       </Button>
     </div>
   );
+
+  // Status options for property filter
+  const statusOptions = [
+    { value: 'available', label: 'Available' },
+    { value: 'pending', label: 'Pending' },
+    { value: 'sold', label: 'Sold' },
+    { value: 'rented', label: 'Rented' },
+    { value: 'coming_soon', label: 'Coming Soon' },
+  ];
 
   // Shared filter popover content based on view mode
   const FilterPopover = (
@@ -440,19 +451,29 @@ export const AriLocationsSection: React.FC<AriLocationsSectionProps> = ({ agentI
         <div className="space-y-4">
           {viewMode === 'communities' ? (
             <>
+              {/* State - Multi-select checkboxes */}
               <div className="space-y-2">
                 <Label className="text-xs font-medium text-muted-foreground uppercase">State</Label>
-                <Select value={stateFilter} onValueChange={setStateFilter}>
-                  <SelectTrigger className="w-full h-9">
-                    <SelectValue placeholder="All States" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All States</SelectItem>
-                    {uniqueStates.map(state => (
-                      <SelectItem key={state} value={state}>{state}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="space-y-2 max-h-48 overflow-y-auto">
+                  {uniqueStates.map(state => (
+                    <div key={state} className="flex items-center space-x-2" onClick={(e) => e.stopPropagation()}>
+                      <Checkbox
+                        id={`state-${state}`}
+                        checked={stateFilter.includes(state)}
+                        onCheckedChange={(checked) => {
+                          setStateFilter(prev => 
+                            checked 
+                              ? [...prev, state]
+                              : prev.filter(s => s !== state)
+                          );
+                        }}
+                      />
+                      <Label htmlFor={`state-${state}`} className="text-sm font-normal cursor-pointer">
+                        {state}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
               </div>
               <Separator />
               <div className="space-y-2">
@@ -493,36 +514,54 @@ export const AriLocationsSection: React.FC<AriLocationsSectionProps> = ({ agentI
             </>
           ) : (
             <>
+              {/* Community - Multi-select checkboxes */}
               <div className="space-y-2">
                 <Label className="text-xs font-medium text-muted-foreground uppercase">Community</Label>
-                <Select value={communityFilter} onValueChange={setCommunityFilter}>
-                  <SelectTrigger className="w-full h-9">
-                    <SelectValue placeholder="All Communities" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Communities</SelectItem>
-                    {uniqueLocations.map(loc => (
-                      <SelectItem key={loc.id} value={loc.id}>{loc.display_name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="space-y-2 max-h-48 overflow-y-auto">
+                  {uniqueLocations.map(loc => (
+                    <div key={loc.id} className="flex items-center space-x-2" onClick={(e) => e.stopPropagation()}>
+                      <Checkbox
+                        id={`community-${loc.id}`}
+                        checked={communityFilter.includes(loc.id)}
+                        onCheckedChange={(checked) => {
+                          setCommunityFilter(prev => 
+                            checked 
+                              ? [...prev, loc.id]
+                              : prev.filter(c => c !== loc.id)
+                          );
+                        }}
+                      />
+                      <Label htmlFor={`community-${loc.id}`} className="text-sm font-normal cursor-pointer">
+                        {loc.display_name}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
               </div>
               <Separator />
+              {/* Status - Multi-select checkboxes */}
               <div className="space-y-2">
                 <Label className="text-xs font-medium text-muted-foreground uppercase">Status</Label>
-                <Select value={propertyStatusFilter} onValueChange={setPropertyStatusFilter}>
-                  <SelectTrigger className="w-full h-9">
-                    <SelectValue placeholder="All Statuses" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Statuses</SelectItem>
-                    <SelectItem value="available">Available</SelectItem>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="sold">Sold</SelectItem>
-                    <SelectItem value="rented">Rented</SelectItem>
-                    <SelectItem value="coming_soon">Coming Soon</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="space-y-2">
+                  {statusOptions.map(option => (
+                    <div key={option.value} className="flex items-center space-x-2" onClick={(e) => e.stopPropagation()}>
+                      <Checkbox
+                        id={`status-${option.value}`}
+                        checked={propertyStatusFilter.includes(option.value)}
+                        onCheckedChange={(checked) => {
+                          setPropertyStatusFilter(prev => 
+                            checked 
+                              ? [...prev, option.value]
+                              : prev.filter(s => s !== option.value)
+                          );
+                        }}
+                      />
+                      <Label htmlFor={`status-${option.value}`} className="text-sm font-normal cursor-pointer">
+                        {option.label}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
               </div>
               <Separator />
               <div className="space-y-2">
@@ -650,7 +689,7 @@ export const AriLocationsSection: React.FC<AriLocationsSectionProps> = ({ agentI
                         key={`${filter.type}-${filter.value}`}
                         variant="secondary"
                         className="pl-2 pr-1 py-1 gap-1 cursor-pointer hover:bg-secondary/80"
-                        onClick={() => clearFilter(filter.type)}
+                        onClick={() => clearFilter(filter.type, filter.value)}
                       >
                         {filter.label}
                         <X className="h-3 w-3" />
@@ -712,7 +751,7 @@ export const AriLocationsSection: React.FC<AriLocationsSectionProps> = ({ agentI
                         key={`${filter.type}-${filter.value}`}
                         variant="secondary"
                         className="pl-2 pr-1 py-1 gap-1 cursor-pointer hover:bg-secondary/80"
-                        onClick={() => clearFilter(filter.type)}
+                        onClick={() => clearFilter(filter.type, filter.value)}
                       >
                         {filter.label}
                         <X className="h-3 w-3" />
