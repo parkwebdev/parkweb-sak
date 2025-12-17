@@ -23,4 +23,5 @@ export { AriWebhooksSection } from './AriWebhooksSection';
 export { AriIntegrationsSection } from './AriIntegrationsSection';
 export { AriApiAccessSection } from './AriApiAccessSection';
 export { AriInstallationSection } from './AriInstallationSection';
+export { AriPerformanceSection } from './AriPerformanceSection';
 export { AriSectionHeader } from './AriSectionHeader';

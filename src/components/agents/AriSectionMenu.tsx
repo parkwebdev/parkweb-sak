@@ -22,8 +22,9 @@ import {
   Announcement01,
   File06,
   Key01,
+  Speedometer01,
 } from '@untitledui/icons';
-import { FileFilled, PaletteFilled, MessageSquare, MessageSquareFilled, UserFilled, DatabaseFilled, MarkerPin, MarkerPinFilled, BookOpenFilled, AnnouncementFilled, NewsFilled, CodeBrowser, CodeBrowserFilled, Webhook, WebhookFilled, DataFlow, DataFlowFilled, KeyFilled, Terminal, TerminalFilled } from '@/components/icons/AriMenuIcons';
+import { FileFilled, PaletteFilled, MessageSquare, MessageSquareFilled, UserFilled, DatabaseFilled, MarkerPin, MarkerPinFilled, BookOpenFilled, AnnouncementFilled, NewsFilled, CodeBrowser, CodeBrowserFilled, Webhook, WebhookFilled, DataFlow, DataFlowFilled, KeyFilled, Terminal, TerminalFilled, SpeedometerFilled } from '@/components/icons/AriMenuIcons';
 
 export type AriSection = 
   | 'model-behavior'
@@ -40,7 +41,8 @@ export type AriSection =
   | 'webhooks'
   | 'integrations'
   | 'api-access'
-  | 'installation';
+  | 'installation'
+  | 'performance';
 
 interface SectionItem {
   id: AriSection;
@@ -75,8 +77,9 @@ const SECTIONS: SectionItem[] = [
   { id: 'integrations', label: 'Integrations', icon: DataFlow, activeIcon: DataFlowFilled, group: 'Tools' },
   { id: 'api-access', label: 'API Access', icon: Key01, activeIcon: KeyFilled, group: 'Tools' },
   
-  // Installation
+  // Deploy
   { id: 'installation', label: 'Installation', icon: Terminal, activeIcon: TerminalFilled, group: 'Deploy' },
+  { id: 'performance', label: 'Performance', icon: Speedometer01, activeIcon: SpeedometerFilled, group: 'Deploy' },
 ];
 
 interface AriSectionMenuProps {
