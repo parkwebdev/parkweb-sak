@@ -8,7 +8,7 @@
 
 ## Problem Summary
 
-15 widget files import heavy main app dependencies:
+13 widget files import heavy main app dependencies:
 - `motion/react` (~35KB gzipped)
 - `@radix-ui/react-tooltip` (~15KB)
 - `@radix-ui/react-avatar` (~8KB)
@@ -20,29 +20,27 @@
 
 ---
 
-## Files With Heavy Imports (15 files)
+## Files With Heavy Imports (13 files)
 
 | File | Heavy Imports | Action Required |
 |------|---------------|-----------------|
 | `src/widget/icons.tsx` | Full `@untitledui/icons` barrel | Rewrite with individual imports |
-| `src/widget/ChatWidget.tsx` | `TooltipProvider` from main app | Remove, use native title attrs |
+| `src/widget/ChatWidget.tsx` | `Card`, `TooltipProvider` from main app | Replace Card with widget UI, remove TooltipProvider |
 | `src/widget/components/ContactForm.tsx` | `Button`, `Input`, `Textarea`, `Select` | Replace with widget UI |
-| `src/widget/components/MessageBubble.tsx` | `Avatar`, `Tooltip`, direct icon imports | Replace with widget UI |
+| `src/widget/components/MessageBubble.tsx` | `Avatar`, `Tooltip`, `ChatBubbleIcon`, `FileTypeIcon`, direct icon imports | Replace with widget UI, use native title attrs |
 | `src/widget/components/MessageInput.tsx` | `Button`, `Textarea` | Replace with widget UI |
-| `src/widget/components/WidgetHeader.tsx` | `Button` | Replace with widget UI |
+| `src/widget/components/WidgetHeader.tsx` | `Button`, `ChatBubbleIcon` | Replace with widget UI |
 | `src/widget/components/TakeoverBanner.tsx` | `Avatar` | Replace with widget UI |
 | `src/widget/components/TypingIndicator.tsx` | `Avatar` | Replace with widget UI |
-| `src/widget/views/HomeView.tsx` | `Button` | Replace with widget UI |
+| `src/widget/views/HomeView.tsx` | `Button`, `ChatPadLogo`, `CSSBubbleBackground` | Replace with widget UI |
 | `src/widget/views/HelpView.tsx` | `Button`, `Input`, `Textarea`, `Badge` | Replace with widget UI |
 | `src/widget/views/MessagesView.tsx` | `Button` | Replace with widget UI |
 | `src/widget/views/NewsView.tsx` | `Avatar` | Replace with widget UI |
-| `src/widget/components/SatisfactionRating.tsx` | `Button`, `Textarea` | Replace with widget UI |
-| `src/widget/components/FloatingButton.tsx` | `ChatBubbleIcon` from main app | Replace with widget SVG |
-| `src/widget/components/QuickReplies.tsx` | `Button` | Replace with widget UI |
+| `src/widget/components/FloatingButton.tsx` | `ChatPadLogo` from main app | Replace with widget SVG |
 
 ---
 
-## Files That Are ALREADY CLEAN (28 files - DO NOT MODIFY)
+## Files That Are ALREADY CLEAN (30 files - DO NOT MODIFY)
 
 These files use only lightweight dependencies (React, Tailwind, local utils):
 
@@ -69,12 +67,14 @@ These files use only lightweight dependencies (React, Tailwind, local utils):
 - `utils/validation.ts` - Pure JS (uses libphonenumber-js - acceptable)
 - `api.ts` - Pure fetch/Supabase
 
-### Components (6 files)
+### Components (8 files)
 - `CSSAnimatedItem.tsx` - Pure CSS animations
 - `CSSAnimatedList.tsx` - Pure CSS animations
 - `CallButton.tsx` - Pure React/Tailwind
 - `LocationPicker.tsx` - Pure React/Tailwind
 - `LinkPreviewsWidget.tsx` - Pure React/Tailwind
+- `SatisfactionRating.tsx` - Pure React/Tailwind (native elements)
+- `QuickReplies.tsx` - Pure React/Tailwind (native elements)
 - `booking/` components - Pure React/Tailwind
 
 ### Other (4 files)
@@ -87,7 +87,7 @@ These files use only lightweight dependencies (React, Tailwind, local utils):
 
 ## Phase 1: Create Widget UI Components
 
-Create `src/widget/ui/` directory with 10 lightweight components.
+Create `src/widget/ui/` directory with 11 lightweight components.
 
 ### 1.1 WidgetButton.tsx
 
@@ -95,22 +95,25 @@ Create `src/widget/ui/` directory with 10 lightweight components.
 
 ```tsx
 // EXACT class requirements from original:
-// Base: "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium 
-//        transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring 
-//        disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0"
+// Base: "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-xs font-medium 
+//        leading-none transition-colors disabled:pointer-events-none disabled:opacity-50 
+//        [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 
+//        focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring 
+//        focus-visible:ring-offset-2 focus-visible:ring-offset-background"
 
 // Variants used in widget:
-// - default: "bg-primary text-primary-foreground shadow hover:bg-primary/90"
-// - ghost: "hover:bg-accent hover:text-accent-foreground"
-// - outline: "border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground"
-// - secondary: "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80"
-// - destructive: "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90"
+// - default: "bg-primary text-primary-foreground hover:bg-primary/90 border border-transparent"
+// - ghost: "hover:bg-accent hover:text-accent-foreground border border-transparent"
+// - outline: "border border-input bg-background hover:bg-accent hover:text-accent-foreground"
+// - secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-transparent"
+// - destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90 border border-transparent"
 
-// Sizes used in widget:
-// - default: "h-9 px-4 py-2"
-// - sm: "h-8 rounded-md px-3 text-xs"
-// - lg: "h-10 rounded-md px-8"
-// - icon: "h-9 w-9"
+// Sizes used in widget (EXACT from button.tsx):
+// - default: "h-10 px-4"
+// - sm: "h-8 px-2.5"
+// - lg: "h-12 px-6"
+// - icon: "h-10 w-10"
+// - icon-sm: "h-8 w-8"
 
 // Props needed: variant, size, className, disabled, onClick, type, children, asChild (optional)
 // Animation: CSS active:scale-[0.98] transition instead of motion/react
@@ -222,7 +225,7 @@ Create `src/widget/ui/` directory with 10 lightweight components.
 
 ### 1.8 WidgetChatBubbleIcon.tsx
 
-**Pure SVG** - Replaces import from main app
+**Pure SVG** - Replaces import from main app `@/components/agents/ChatBubbleIcon`
 
 ```tsx
 // Copy exact SVG from src/components/agents/ChatBubbleIcon.tsx
@@ -230,7 +233,18 @@ Create `src/widget/ui/` directory with 10 lightweight components.
 // Props: className, size (default 24)
 ```
 
-### 1.9 WidgetSpinner.tsx
+### 1.9 WidgetChatPadLogo.tsx
+
+**Pure SVG** - Replaces import from main app `@/components/ChatPadLogo`
+
+```tsx
+// Copy exact SVG from src/components/ChatPadLogo.tsx
+// No dependencies needed - just returns SVG element
+// Props: className, style (for color)
+// Used in: FloatingButton.tsx, HomeView.tsx
+```
+
+### 1.10 WidgetSpinner.tsx
 
 **Pure CSS spinner** for button loading states
 
@@ -240,7 +254,7 @@ Create `src/widget/ui/` directory with 10 lightweight components.
 // Props: className, size (default 16)
 ```
 
-### 1.10 index.ts
+### 1.11 index.ts
 
 Barrel export for all widget UI components.
 
@@ -283,6 +297,7 @@ import { Check } from '@untitledui/icons/Check';
 import { Clock } from '@untitledui/icons/Clock';
 import { AlertCircle } from '@untitledui/icons/AlertCircle';
 import { Download01 } from '@untitledui/icons/Download01';
+import { XCircle } from '@untitledui/icons/XCircle';
 
 export {
   X, XClose, ChevronRight, ChevronLeft,
@@ -290,7 +305,7 @@ export {
   Microphone01, Attachment01, VolumeMax, VolumeX,
   ThumbsUp, ThumbsDown, CheckCircle,
   Phone01, MarkerPin01, Calendar, Star01, BookOpen01, Zap,
-  Check, Clock, AlertCircle, Download01
+  Check, Clock, AlertCircle, Download01, XCircle
 };
 ```
 
@@ -298,20 +313,35 @@ export {
 Change direct imports to use widget icons.tsx:
 ```tsx
 // FROM:
-import { Check, Clock, AlertCircle } from '@untitledui/icons/react/icons';
+import { Check, CheckCircle, XCircle, Download01 } from '@untitledui/icons';
 
 // TO:
-import { Check, Clock, AlertCircle } from '../icons';
+import { Check, CheckCircle, XCircle, Download01 } from '../icons';
 ```
 
 ---
 
-## Phase 3: Update Widget Files
+## Phase 3: Update Widget Files (12 files)
 
 ### 3.1 ChatWidget.tsx
-- Remove: `import { TooltipProvider } from '@/components/ui/tooltip'`
-- Remove: `<TooltipProvider>` wrapper
-- No other changes needed (doesn't import Button/Input directly)
+```tsx
+// FROM:
+import { Card } from '@/components/ui/card';
+import { TooltipProvider } from '@/components/ui/tooltip';
+// ...
+return (
+  <TooltipProvider>
+    <Card>...</Card>
+  </TooltipProvider>
+);
+
+// TO:
+import { WidgetCard } from './ui';
+// Remove TooltipProvider entirely
+return (
+  <WidgetCard>...</WidgetCard>
+);
+```
 
 ### 3.2 ContactForm.tsx
 ```tsx
@@ -328,14 +358,17 @@ import { WidgetButton, WidgetInput, WidgetTextarea, WidgetSelect, WidgetSelectIt
 ### 3.3 MessageBubble.tsx
 ```tsx
 // FROM:
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { Check, Clock, AlertCircle } from '@untitledui/icons/react/icons';
+import { Check, CheckCircle, XCircle, Download01 } from '@untitledui/icons';
+import { ChatBubbleIcon } from '@/components/agents/ChatBubbleIcon';
+import { FileTypeIcon } from '@/components/chat/FileTypeIcons';
 
 // TO:
-import { WidgetAvatar, WidgetAvatarImage, WidgetAvatarFallback } from '../ui';
-import { Check, Clock, AlertCircle } from '../icons';
+import { WidgetAvatar, WidgetAvatarImage, WidgetAvatarFallback, WidgetChatBubbleIcon } from '../ui';
+import { Check, CheckCircle, XCircle, Download01 } from '../icons';
 // Replace <Tooltip> with native title attribute on status icons
+// NOTE: FileTypeIcon needs verification - check if it introduces bloat
 ```
 
 ### 3.4 MessageInput.tsx
@@ -352,9 +385,10 @@ import { WidgetButton, WidgetTextarea } from '../ui';
 ```tsx
 // FROM:
 import { Button } from '@/components/ui/button';
+import { ChatBubbleIcon } from '@/components/agents/ChatBubbleIcon';
 
 // TO:
-import { WidgetButton } from '../ui';
+import { WidgetButton, WidgetChatBubbleIcon } from '../ui';
 ```
 
 ### 3.6 TakeoverBanner.tsx
@@ -379,9 +413,12 @@ import { WidgetAvatar, WidgetAvatarImage, WidgetAvatarFallback } from '../ui';
 ```tsx
 // FROM:
 import { Button } from '@/components/ui/button';
+import ChatPadLogo from '@/components/ChatPadLogo';
+import { CSSBubbleBackground } from '@/components/ui/css-bubble-background';
 
 // TO:
-import { WidgetButton } from '../ui';
+import { WidgetButton, WidgetChatPadLogo } from '../ui';
+// NOTE: CSSBubbleBackground is CSS-only, verify it doesn't import heavy deps
 ```
 
 ### 3.9 HelpView.tsx
@@ -414,32 +451,13 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { WidgetAvatar, WidgetAvatarImage, WidgetAvatarFallback } from '../ui';
 ```
 
-### 3.12 SatisfactionRating.tsx
+### 3.12 FloatingButton.tsx
 ```tsx
 // FROM:
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
+import ChatPadLogo from '@/components/ChatPadLogo';
 
 // TO:
-import { WidgetButton, WidgetTextarea } from '../ui';
-```
-
-### 3.13 FloatingButton.tsx
-```tsx
-// FROM:
-import ChatBubbleIcon from '@/components/agents/ChatBubbleIcon';
-
-// TO:
-import { WidgetChatBubbleIcon } from '../ui';
-```
-
-### 3.14 QuickReplies.tsx
-```tsx
-// FROM:
-import { Button } from '@/components/ui/button';
-
-// TO:
-import { WidgetButton } from '../ui';
+import { WidgetChatPadLogo } from '../ui';
 ```
 
 ---
@@ -493,9 +511,9 @@ return (
 
 ### Files importing from main app that need verification:
 
-1. **LinkPreviewCard.tsx** - Check if it imports motion/react
-2. **FileTypeIcon** usage - Check if it imports heavy dependencies
-3. **CSSBubbleBackground** - Already CSS-only, should be fine
+1. **CSSBubbleBackground** - Check if it imports motion/react or other heavy deps
+2. **FileTypeIcon** usage in MessageBubble - Check if it imports heavy dependencies
+3. **LinkPreviewCard.tsx** - Check if it imports motion/react
 
 ### Action: Read these files and verify they don't introduce bloat
 
@@ -512,6 +530,7 @@ return (
 - [ ] Select dropdown opens and selects correctly
 - [ ] Badge styling matches
 - [ ] Chat bubble icon matches original
+- [ ] ChatPad logo matches original in FloatingButton and HomeView
 
 ### Functional Testing
 - [ ] Contact form submission works
@@ -558,9 +577,9 @@ After implementation, update `docs/WIDGET_ARCHITECTURE.md`:
 
 ## Implementation Order
 
-1. **Create src/widget/ui/ directory and all 10 components** (Phase 1)
+1. **Create src/widget/ui/ directory and all 11 components** (Phase 1)
 2. **Fix icons.tsx** (Phase 2)
-3. **Update all 14 widget files** (Phase 3)
+3. **Update all 12 widget files** (Phase 3)
 4. **Remove Tooltip usage** (Phase 4)
 5. **Verify other imports** (Phase 5)
 6. **Test everything** (Phase 6)
@@ -584,7 +603,7 @@ After implementation, update `docs/WIDGET_ARCHITECTURE.md`:
 
 ## CRITICAL REMINDERS
 
-1. **DO NOT MODIFY** the 28 clean files listed above
+1. **DO NOT MODIFY** the 30 clean files listed above
 2. **EXACT CLASS MATCH** - Copy Tailwind classes verbatim from originals
 3. **TEST AFTER EACH PHASE** - Don't batch all changes
 4. **NATIVE SELECT IS OK** - Slight visual difference acceptable for 20KB savings
