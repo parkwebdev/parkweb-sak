@@ -259,30 +259,30 @@ export { Send01, MessageChatCircle } from '@untitledui/icons';
 ### Fixed (CORRECT - ~0.5KB per icon):
 ```tsx
 // src/widget/icons.tsx
-import { X } from '@untitledui/icons/react/icons/X';
-import { XClose } from '@untitledui/icons/react/icons/XClose';
-import { ChevronRight } from '@untitledui/icons/react/icons/ChevronRight';
-import { ChevronLeft } from '@untitledui/icons/react/icons/ChevronLeft';
-import { Send01 } from '@untitledui/icons/react/icons/Send01';
-import { MessageChatCircle } from '@untitledui/icons/react/icons/MessageChatCircle';
-import { Microphone01 } from '@untitledui/icons/react/icons/Microphone01';
-import { Attachment01 } from '@untitledui/icons/react/icons/Attachment01';
-import { VolumeMax } from '@untitledui/icons/react/icons/VolumeMax';
-import { VolumeX } from '@untitledui/icons/react/icons/VolumeX';
-import { ThumbsUp } from '@untitledui/icons/react/icons/ThumbsUp';
-import { ThumbsDown } from '@untitledui/icons/react/icons/ThumbsDown';
-import { CheckCircle } from '@untitledui/icons/react/icons/CheckCircle';
-import { Phone01 } from '@untitledui/icons/react/icons/Phone01';
-import { MarkerPin01 } from '@untitledui/icons/react/icons/MarkerPin01';
-import { Calendar } from '@untitledui/icons/react/icons/Calendar';
-import { Star01 } from '@untitledui/icons/react/icons/Star01';
-import { BookOpen01 } from '@untitledui/icons/react/icons/BookOpen01';
-import { Zap } from '@untitledui/icons/react/icons/Zap';
+import { X } from '@untitledui/icons/X';
+import { XClose } from '@untitledui/icons/XClose';
+import { ChevronRight } from '@untitledui/icons/ChevronRight';
+import { ChevronLeft } from '@untitledui/icons/ChevronLeft';
+import { Send01 } from '@untitledui/icons/Send01';
+import { MessageChatCircle } from '@untitledui/icons/MessageChatCircle';
+import { Microphone01 } from '@untitledui/icons/Microphone01';
+import { Attachment01 } from '@untitledui/icons/Attachment01';
+import { VolumeMax } from '@untitledui/icons/VolumeMax';
+import { VolumeX } from '@untitledui/icons/VolumeX';
+import { ThumbsUp } from '@untitledui/icons/ThumbsUp';
+import { ThumbsDown } from '@untitledui/icons/ThumbsDown';
+import { CheckCircle } from '@untitledui/icons/CheckCircle';
+import { Phone01 } from '@untitledui/icons/Phone01';
+import { MarkerPin01 } from '@untitledui/icons/MarkerPin01';
+import { Calendar } from '@untitledui/icons/Calendar';
+import { Star01 } from '@untitledui/icons/Star01';
+import { BookOpen01 } from '@untitledui/icons/BookOpen01';
+import { Zap } from '@untitledui/icons/Zap';
 // Add missing icons used in MessageBubble:
-import { Check } from '@untitledui/icons/react/icons/Check';
-import { Clock } from '@untitledui/icons/react/icons/Clock';
-import { AlertCircle } from '@untitledui/icons/react/icons/AlertCircle';
-import { Download01 } from '@untitledui/icons/react/icons/Download01';
+import { Check } from '@untitledui/icons/Check';
+import { Clock } from '@untitledui/icons/Clock';
+import { AlertCircle } from '@untitledui/icons/AlertCircle';
+import { Download01 } from '@untitledui/icons/Download01';
 
 export {
   X, XClose, ChevronRight, ChevronLeft,
