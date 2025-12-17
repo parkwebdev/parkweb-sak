@@ -465,7 +465,7 @@ const WidgetSelectItem = React.forwardRef<HTMLDivElement, WidgetSelectItemProps>
         data-disabled={disabled ? "" : undefined}
         tabIndex={disabled ? -1 : 0}
         className={cn(
-          "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 px-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground data-[state=checked]:bg-accent data-[state=checked]:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+        "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 px-2 text-sm hover:bg-accent hover:text-accent-foreground data-[state=checked]:bg-accent data-[state=checked]:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
           className
         )}
         onClick={handleSelect}
