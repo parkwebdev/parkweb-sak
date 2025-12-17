@@ -10,19 +10,19 @@ Welcome to the ChatPad documentation. This index provides quick access to all te
 
 | Resource | Description |
 |----------|-------------|
-| [Application Overview](./APPLICATION_OVERVIEW.md) | High-level overview of ChatPad features and architecture |
+| [Architecture](./ARCHITECTURE.md) | System overview, features, and architecture |
 | [Design System](./DESIGN_SYSTEM.md) | Typography, colors, spacing, and component standards |
 | [Hooks Reference](./HOOKS_REFERENCE.md) | Complete custom hooks documentation |
 
 ---
 
-## Core Architecture
+## Core Documentation
 
 | Document | Description |
 |----------|-------------|
-| [ChatPad Architecture](./CHATPAD_ARCHITECTURE.md) | System architecture, access control, and data flow |
+| [Architecture](./ARCHITECTURE.md) | System architecture, access control, features, and data flow |
 | [AI Architecture](./AI_ARCHITECTURE.md) | RAG pipeline, model routing, and cost optimization |
-| [Database Schema](./DATABASE_SCHEMA.md) | Tables, relationships, and RLS policies |
+| [Database Schema](./DATABASE_SCHEMA.md) | Tables, relationships, RLS policies, and Supabase patterns |
 | [Edge Functions](./EDGE_FUNCTIONS.md) | Supabase Edge Functions reference |
 | [Security](./SECURITY.md) | Security practices and data protection |
 
@@ -30,32 +30,21 @@ Welcome to the ChatPad documentation. This index provides quick access to all te
 
 ## Developer Guides
 
-### Full-Stack Development
-
-| Guide | Description |
-|-------|-------------|
-| [Supabase Integration Guide](./SUPABASE_INTEGRATION_GUIDE.md) | Full-stack patterns with Supabase and React Query |
-| [Stripe Payment Guide](./STRIPE_PAYMENT_GUIDE.md) | Payment integration and subscriptions |
-
 ### UI/UX Development
 
 | Guide | Description |
 |-------|-------------|
 | [Design System](./DESIGN_SYSTEM.md) | Colors, typography, spacing, icons |
-| [shadcn Component Guide](./SHADCN_COMPONENT_GUIDE.md) | Component patterns and animation |
-| [Data Table & Dashboard Guide](./DATA_TABLE_DASHBOARD_GUIDE.md) | TanStack Table and Recharts |
+| [Component Patterns](./COMPONENT_PATTERNS.md) | shadcn components, data tables, forms, motion |
 
-### Widget Development
+### Feature Development
 
 | Guide | Description |
 |-------|-------------|
 | [Widget Architecture](./WIDGET_ARCHITECTURE.md) | Embedded chat widget technical docs |
-
-### Booking & Scheduling
-
-| Guide | Description |
-|-------|-------------|
 | [Native Booking System](./NATIVE_BOOKING_SYSTEM.md) | Calendar and booking system architecture |
+| [Social Channel Integrations](./SOCIAL_CHANNEL_INTEGRATIONS.md) | Facebook, Instagram, X integrations |
+| [Stripe Payment Guide](./STRIPE_PAYMENT_GUIDE.md) | Payment integration and subscriptions |
 
 ---
 
@@ -108,27 +97,24 @@ supabase db diff           # Generate migration
 docs/
 ├── README.md                      # This index file
 │
-├── # Quick Start
-├── APPLICATION_OVERVIEW.md        # Feature overview
-├── DESIGN_SYSTEM.md               # Design tokens and standards
-├── HOOKS_REFERENCE.md             # Custom hooks documentation
-│
-├── # Architecture
-├── CHATPAD_ARCHITECTURE.md        # System architecture
-├── AI_ARCHITECTURE.md             # AI/RAG documentation
-├── DATABASE_SCHEMA.md             # Database reference
+├── # Core
+├── ARCHITECTURE.md                # System architecture and features
+├── DATABASE_SCHEMA.md             # Database reference + Supabase patterns
 ├── EDGE_FUNCTIONS.md              # Edge functions reference
+├── AI_ARCHITECTURE.md             # AI/RAG documentation
 ├── SECURITY.md                    # Security documentation
 │
-├── # Widget & Features
+├── # UI/UX
+├── DESIGN_SYSTEM.md               # Design tokens and standards
+├── COMPONENT_PATTERNS.md          # Component and table patterns
+├── HOOKS_REFERENCE.md             # Custom hooks documentation
+│
+├── # Features
 ├── WIDGET_ARCHITECTURE.md         # Widget technical docs
 ├── NATIVE_BOOKING_SYSTEM.md       # Calendar and booking
-│
-├── # Guides
-├── SUPABASE_INTEGRATION_GUIDE.md  # Full-stack development
+├── SOCIAL_CHANNEL_INTEGRATIONS.md # Social integrations
 ├── STRIPE_PAYMENT_GUIDE.md        # Payment integration
-├── SHADCN_COMPONENT_GUIDE.md      # Component patterns
-└── DATA_TABLE_DASHBOARD_GUIDE.md  # Data visualization
+└── ONBOARDING_GET_STARTED.md      # Onboarding flow
 ```
 
 ---
