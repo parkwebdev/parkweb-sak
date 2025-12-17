@@ -19,12 +19,10 @@ interface WindowWithWebkit extends Window {
 }
 
 interface WidgetAudioPlayerProps {
-  /** Audio source URL (use either src or audioUrl) */
-  src?: string;
-  /** Audio source URL (alias for backward compatibility) */
-  audioUrl?: string;
+  /** Audio source URL */
+  audioUrl: string;
   /** Primary color for theming */
-  primaryColor?: string;
+  primaryColor: string;
   /** Error callback */
   onError?: (error: Error) => void;
   /** Additional CSS classes */
@@ -32,14 +30,11 @@ interface WidgetAudioPlayerProps {
 }
 
 export const WidgetAudioPlayer: React.FC<WidgetAudioPlayerProps> = ({
-  src,
   audioUrl,
-  primaryColor = 'hsl(var(--primary))',
+  primaryColor,
   onError,
   className,
 }) => {
-  // Support both src and audioUrl props for backward compatibility
-  const audioSrc = src || audioUrl || '';
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(0);
@@ -66,7 +61,7 @@ export const WidgetAudioPlayer: React.FC<WidgetAudioPlayerProps> = ({
 
     try {
       const tempContext = new (window.AudioContext || (window as WindowWithWebkit).webkitAudioContext!)();
-      const response = await fetch(audioSrc);
+      const response = await fetch(audioUrl);
       const arrayBuffer = await response.arrayBuffer();
       const audioBuffer = await tempContext.decodeAudioData(arrayBuffer);
 
@@ -90,7 +85,7 @@ export const WidgetAudioPlayer: React.FC<WidgetAudioPlayerProps> = ({
       console.error('Error generating waveform:', error);
       onError?.(error instanceof Error ? error : new Error('Failed to generate waveform'));
     }
-  }, [audioSrc, onError]);
+  }, [audioUrl, onError]);
 
   // Setup audio event listeners
   useEffect(() => {
@@ -143,7 +138,7 @@ export const WidgetAudioPlayer: React.FC<WidgetAudioPlayerProps> = ({
         audioContextRef.current.close();
       }
     };
-  }, [audioSrc, generateWaveform, onError]);
+  }, [audioUrl, generateWaveform, onError]);
 
   // Setup audio analyser for frequency visualization
   const setupAudioAnalyser = useCallback(() => {
@@ -269,7 +264,7 @@ export const WidgetAudioPlayer: React.FC<WidgetAudioPlayerProps> = ({
 
   return (
     <div className={cn('flex items-center gap-2 max-w-[280px]', className)}>
-      <audio ref={audioRef} src={audioSrc} preload="metadata" />
+      <audio ref={audioRef} src={audioUrl} preload="metadata" />
       
       {/* Play/Pause Button */}
       <button
