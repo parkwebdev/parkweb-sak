@@ -27,6 +27,8 @@ interface SelectContextType {
   name?: string;
   required?: boolean;
   disabled?: boolean;
+  displayText: string;
+  setDisplayText: (text: string) => void;
 }
 
 const SelectContext = React.createContext<SelectContextType | null>(null);
@@ -69,6 +71,7 @@ const WidgetSelect = React.forwardRef<HTMLDivElement, WidgetSelectProps>(
   }, ref) => {
     const [uncontrolledValue, setUncontrolledValue] = React.useState(defaultValue);
     const [uncontrolledOpen, setUncontrolledOpen] = React.useState(false);
+    const [displayText, setDisplayText] = React.useState("");
     
     const isControlled = controlledValue !== undefined;
     const isOpenControlled = controlledOpen !== undefined;
@@ -106,6 +109,8 @@ const WidgetSelect = React.forwardRef<HTMLDivElement, WidgetSelectProps>(
           name,
           required,
           disabled,
+          displayText,
+          setDisplayText,
         }}
       >
         <div ref={ref} className="relative">
@@ -131,7 +136,7 @@ WidgetSelect.displayName = "WidgetSelect";
 // ============================================================================
 
 const widgetSelectTriggerVariants = cva(
-  "flex w-full items-center justify-between rounded-md border border-input bg-background px-3 ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1",
+  "flex w-full items-center justify-between rounded-md border border-input bg-background px-3 placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
   {
     variants: {
       size: {
@@ -219,7 +224,7 @@ interface WidgetSelectValueProps {
 
 const WidgetSelectValue = React.forwardRef<HTMLSpanElement, WidgetSelectValueProps>(
   ({ placeholder, className }, ref) => {
-    const { value } = useSelectContext();
+    const { value, displayText } = useSelectContext();
     
     return (
       <span 
@@ -230,7 +235,7 @@ const WidgetSelectValue = React.forwardRef<HTMLSpanElement, WidgetSelectValuePro
           className
         )}
       >
-        {value || placeholder}
+        {displayText || value || placeholder}
       </span>
     );
   }
@@ -369,9 +374,7 @@ const WidgetSelectContent = React.forwardRef<HTMLDivElement, WidgetSelectContent
         ref={ref}
         role="listbox"
         className={cn(
-          "z-50 min-w-[8rem] overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md",
-          "animate-in fade-in-0 zoom-in-95",
-          "data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95",
+          "relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
           className
         )}
         style={{
@@ -382,7 +385,7 @@ const WidgetSelectContent = React.forwardRef<HTMLDivElement, WidgetSelectContent
         }}
         data-state={open ? "open" : "closed"}
       >
-        <div className="p-1">
+        <div className="p-1 flex flex-col gap-0.5">
           <SelectContentContext.Provider value={{ itemsRef, focusedIndex }}>
             {children}
           </SelectContentContext.Provider>
@@ -414,7 +417,7 @@ interface WidgetSelectItemProps extends React.HTMLAttributes<HTMLDivElement> {
 
 const WidgetSelectItem = React.forwardRef<HTMLDivElement, WidgetSelectItemProps>(
   ({ className, value, disabled, children, ...props }, forwardedRef) => {
-    const { value: selectedValue, onValueChange, setOpen, triggerRef } = useSelectContext();
+    const { value: selectedValue, onValueChange, setOpen, triggerRef, setDisplayText } = useSelectContext();
     const contentContext = React.useContext(SelectContentContext);
     const internalRef = React.useRef<HTMLDivElement>(null);
     const isSelected = selectedValue === value;
@@ -445,6 +448,9 @@ const WidgetSelectItem = React.forwardRef<HTMLDivElement, WidgetSelectItemProps>
     const handleSelect = () => {
       if (disabled) return;
       onValueChange(value);
+      // Set display text from children
+      const text = typeof children === 'string' ? children : value;
+      setDisplayText(text);
       setOpen(false);
       triggerRef.current?.focus();
     };
@@ -459,11 +465,7 @@ const WidgetSelectItem = React.forwardRef<HTMLDivElement, WidgetSelectItemProps>
         data-disabled={disabled ? "" : undefined}
         tabIndex={disabled ? -1 : 0}
         className={cn(
-          "relative flex w-full cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none",
-          "focus:bg-accent focus:text-accent-foreground",
-          "hover:bg-accent hover:text-accent-foreground",
-          "data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
-          "data-[state=checked]:bg-accent",
+          "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 px-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground data-[state=checked]:bg-accent data-[state=checked]:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
           className
         )}
         onClick={handleSelect}
@@ -475,24 +477,6 @@ const WidgetSelectItem = React.forwardRef<HTMLDivElement, WidgetSelectItemProps>
         }}
         {...props}
       >
-        {/* Check icon for selected item */}
-        <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
-          {isSelected && (
-            <svg
-              className="h-4 w-4"
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <polyline points="20,6 9,17 4,12" />
-            </svg>
-          )}
-        </span>
         {children}
       </div>
     );
