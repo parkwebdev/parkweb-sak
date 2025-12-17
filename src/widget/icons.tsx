@@ -36,6 +36,10 @@ import { CheckCircle } from '@untitledui/icons/CheckCircle';
 import { Check } from '@untitledui/icons/Check';
 import { XCircle } from '@untitledui/icons/XCircle';
 
+// Reactions (Phase 4)
+import { FaceSmile } from '@untitledui/icons/FaceSmile';
+import { Plus } from '@untitledui/icons/Plus';
+
 // Actions & Features
 import { Phone01 } from '@untitledui/icons/Phone01';
 import { MarkerPin01 } from '@untitledui/icons/MarkerPin01';
@@ -69,6 +73,9 @@ export {
   CheckCircle,
   Check,
   XCircle,
+  // Reactions (Phase 4)
+  FaceSmile,
+  Plus,
   // Actions & Features
   Phone01,
   MarkerPin01,
