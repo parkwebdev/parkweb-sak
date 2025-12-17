@@ -2,8 +2,8 @@
 
 ## TL;DR
 
-| Metric | Before | After | Savings |
-|--------|--------|-------|---------|
+| Metric      | Before    | After     | Savings |
+| ----------- | --------- | --------- | ------- |
 | Bundle Size | **306KB** | **~60KB** | **80%** |
 
 **WHY**: Heavy dependencies (Framer Motion, Radix UI, libphonenumber-js) bloat widget load time.
@@ -16,7 +16,7 @@
 
 ## Executive Summary
 
-This document outlines a phased approach to optimize lazy-loaded widget components by replacing heavy dependencies (motion/react, @radix-ui/*, libphonenumber-js) with lightweight CSS-based alternatives while maintaining **100% visual and functional parity**.
+This document outlines a phased approach to optimize lazy-loaded widget components by replacing heavy dependencies (motion/react, @radix-ui/\*, libphonenumber-js) with lightweight CSS-based alternatives while maintaining **100% visual and functional parity**.
 
 ---
 
@@ -38,16 +38,16 @@ This document outlines a phased approach to optimize lazy-loaded widget componen
 
 ### Current Lazy-Loaded Components (from `src/widget/constants.ts`)
 
-| Component | Source File | Heavy Dependencies | Estimated Size Impact |
-|-----------|-------------|-------------------|----------------------|
-| VoiceInput | `@/components/molecule-ui/voice-input` | motion/react | ~50KB gzipped |
-| FileDropZone | `@/components/chat/FileDropZone` | @/components/ui/button (motion), FileAttachment, toast/sonner | ~50KB gzipped |
-| MessageReactions | `@/components/chat/MessageReactions` | @radix-ui/react-popover, motion | ~65KB gzipped |
-| AudioPlayer | `@/components/chat/AudioPlayer` | @/components/ui/button (motion) | ~50KB gzipped |
-| PhoneInputField | `@/components/ui/phone-input` | libphonenumber-js/min, @/components/ui/input (motion) | ~38KB gzipped |
-| DayPicker | `@/widget/components/booking/DayPicker` | Already widget-native | 0KB |
-| TimePicker | `@/widget/components/booking/TimePicker` | Already widget-native | 0KB |
-| BookingConfirmed | `@/widget/components/booking/BookingConfirmed` | Already widget-native | 0KB |
+| Component        | Source File                                    | Heavy Dependencies                                            | Estimated Size Impact |
+| ---------------- | ---------------------------------------------- | ------------------------------------------------------------- | --------------------- |
+| VoiceInput       | `@/components/molecule-ui/voice-input`         | motion/react                                                  | ~50KB gzipped         |
+| FileDropZone     | `@/components/chat/FileDropZone`               | @/components/ui/button (motion), FileAttachment, toast/sonner | ~50KB gzipped         |
+| MessageReactions | `@/components/chat/MessageReactions`           | @radix-ui/react-popover, motion                               | ~65KB gzipped         |
+| AudioPlayer      | `@/components/chat/AudioPlayer`                | @/components/ui/button (motion)                               | ~50KB gzipped         |
+| PhoneInputField  | `@/components/ui/phone-input`                  | libphonenumber-js/min, @/components/ui/input (motion)         | ~38KB gzipped         |
+| DayPicker        | `@/widget/components/booking/DayPicker`        | Already widget-native                                         | 0KB                   |
+| TimePicker       | `@/widget/components/booking/TimePicker`       | Already widget-native                                         | 0KB                   |
+| BookingConfirmed | `@/widget/components/booking/BookingConfirmed` | Already widget-native                                         | 0KB                   |
 
 ### Dependency Chain Analysis
 
@@ -96,6 +96,7 @@ PhoneInputField
 ## Phase 1: WidgetVoiceInput
 
 ### Objective
+
 Replace `@/components/molecule-ui/voice-input` with a widget-native version using CSS animations.
 
 ### Source Component Analysis
@@ -103,6 +104,7 @@ Replace `@/components/molecule-ui/voice-input` with a widget-native version usin
 **File**: `src/components/molecule-ui/voice-input.tsx`
 
 **Current Implementation Features**:
+
 - Microphone button with pulse animation when recording
 - Recording timer display (MM:SS format)
 - Stop/Send button
@@ -114,12 +116,12 @@ Replace `@/components/molecule-ui/voice-input` with a widget-native version usin
 
 #### Recording Button States
 
-| State | Background | Border | Icon | Animation |
-|-------|-----------|--------|------|-----------|
-| Idle | transparent | border-input | Microphone01 (muted-foreground) | none |
-| Hover | accent | border-input | Microphone01 (accent-foreground) | none |
-| Recording | destructive/10 | destructive | Microphone01 (destructive) | pulse ring |
-| Disabled | transparent | border-input | Microphone01 (muted-foreground/50) | none |
+| State     | Background     | Border       | Icon                               | Animation  |
+| --------- | -------------- | ------------ | ---------------------------------- | ---------- |
+| Idle      | transparent    | border-input | Microphone01 (muted-foreground)    | none       |
+| Hover     | accent         | border-input | Microphone01 (accent-foreground)   | none       |
+| Recording | destructive/10 | destructive  | Microphone01 (destructive)         | pulse ring |
+| Disabled  | transparent    | border-input | Microphone01 (muted-foreground/50) | none       |
 
 #### Pulse Animation CSS (EXACT MATCH)
 
@@ -164,6 +166,7 @@ interface WidgetVoiceInputProps {
 ```
 
 **Dependencies ALLOWED**:
+
 - React (useState, useEffect, useRef, useCallback)
 - `cn()` from `@/lib/utils`
 - `@/lib/audio-recording` (existing, no heavy deps)
@@ -171,19 +174,20 @@ interface WidgetVoiceInputProps {
 - Icons from `@/widget/icons` (Microphone01, StopCircle, XClose)
 
 **Dependencies FORBIDDEN**:
+
 - motion/react
-- @radix-ui/*
+- @radix-ui/\*
 - @/components/ui/button
 - Any main app UI components
 
 ### Animation Replacements
 
-| Original (motion/react) | Replacement (CSS) |
-|------------------------|-------------------|
-| `animate={{ scale: 1 }}` | CSS transition: transform 150ms ease-out |
-| `initial={{ scale: 0.9 }}` | Initial state via CSS class |
-| `exit={{ scale: 0.9, opacity: 0 }}` | CSS animation: widget-fade-out 150ms |
-| Pulse ring animation | CSS keyframes (defined above) |
+| Original (motion/react)             | Replacement (CSS)                        |
+| ----------------------------------- | ---------------------------------------- |
+| `animate={{ scale: 1 }}`            | CSS transition: transform 150ms ease-out |
+| `initial={{ scale: 0.9 }}`          | Initial state via CSS class              |
+| `exit={{ scale: 0.9, opacity: 0 }}` | CSS animation: widget-fade-out 150ms     |
+| Pulse ring animation                | CSS keyframes (defined above)            |
 
 ### Acceptance Criteria
 
@@ -201,6 +205,7 @@ interface WidgetVoiceInputProps {
 ## Phase 2: WidgetFileDropZone & WidgetFileAttachment
 
 ### Objective
+
 Replace `@/components/chat/FileDropZone` AND its dependencies with widget-native versions.
 
 > **CRITICAL**: FileDropZone imports FileAttachment which ALSO uses @/components/ui/button. Both must be replaced.
@@ -209,11 +214,13 @@ Replace `@/components/chat/FileDropZone` AND its dependencies with widget-native
 
 ### Source Component Analysis
 
-**Files**: 
+**Files**:
+
 - `src/components/chat/FileDropZone.tsx`
 - `src/components/chat/FileAttachment.tsx`
 
 **FileDropZone Implementation Features**:
+
 - Drag-and-drop zone with dashed border
 - File input trigger
 - Selected files preview list (uses FileAttachment)
@@ -223,6 +230,7 @@ Replace `@/components/chat/FileDropZone` AND its dependencies with widget-native
 - Toast notifications for errors (MUST REPLACE)
 
 **FileAttachment Implementation Features**:
+
 - Image preview with thumbnail
 - Non-image file with icon display
 - Remove button (X icon, destructive variant for images, ghost for files)
@@ -233,12 +241,12 @@ Replace `@/components/chat/FileDropZone` AND its dependencies with widget-native
 
 #### Drop Zone States
 
-| State | Border | Background | Text |
-|-------|--------|-----------|------|
-| Default | border-dashed border-2 border-muted-foreground/25 | transparent | "Drag files here or click to browse" |
-| Drag Over | border-dashed border-2 border-primary | primary/5 | "Drop files here" |
-| Has Files | border-solid border border-border | card | File list |
-| Error | border-dashed border-2 border-destructive | destructive/5 | Error message inline |
+| State     | Border                                            | Background    | Text                                 |
+| --------- | ------------------------------------------------- | ------------- | ------------------------------------ |
+| Default   | border-dashed border-2 border-muted-foreground/25 | transparent   | "Drag files here or click to browse" |
+| Drag Over | border-dashed border-2 border-primary             | primary/5     | "Drop files here"                    |
+| Has Files | border-solid border border-border                 | card          | File list                            |
+| Error     | border-dashed border-2 border-destructive         | destructive/5 | Error message inline                 |
 
 #### FileAttachment - Image Preview
 
@@ -300,7 +308,8 @@ Replace `@/components/chat/FileDropZone` AND its dependencies with widget-native
 
 ### Implementation Requirements
 
-**Files to Create**: 
+**Files to Create**:
+
 1. `src/widget/components/WidgetFileDropZone.tsx`
 2. `src/widget/components/WidgetFileAttachment.tsx` (exports BOTH `WidgetFileAttachment` AND `WidgetMessageFileAttachment`)
 
@@ -334,6 +343,7 @@ interface WidgetMessageFileAttachmentProps {
 ```
 
 **Dependencies ALLOWED**:
+
 - React (useState, useEffect, useRef, useCallback)
 - `cn()` from `@/lib/utils`
 - `WidgetButton` from `@/widget/ui/WidgetButton`
@@ -343,6 +353,7 @@ interface WidgetMessageFileAttachmentProps {
 - Icons from `@/widget/icons` (X, XClose, Download01, Upload01)
 
 **Dependencies FORBIDDEN**:
+
 - motion/react
 - @/components/ui/button
 - @/components/chat/FileAttachment (the original)
@@ -399,6 +410,7 @@ const handleFiles = (files: File[]) => {
 ## Phase 3: WidgetAudioPlayer
 
 ### Objective
+
 Replace `@/components/chat/AudioPlayer` with a widget-native version.
 
 ### Source Component Analysis
@@ -406,6 +418,7 @@ Replace `@/components/chat/AudioPlayer` with a widget-native version.
 **File**: `src/components/chat/AudioPlayer.tsx`
 
 **Current Implementation Features**:
+
 - Play/Pause toggle button
 - Waveform visualization (canvas)
 - Current time / Total duration display
@@ -425,21 +438,21 @@ Replace `@/components/chat/AudioPlayer` with a widget-native version.
 
 #### Component Measurements
 
-| Element | Size | Color |
-|---------|------|-------|
-| Play button | h-8 w-8 (32px) | primary |
-| Progress bar | h-1 (4px) | primary / muted |
-| Progress handle | h-3 w-3 (12px) | primary |
-| Time text | text-xs | muted-foreground |
-| Waveform canvas | h-8 (32px) | primary/30, primary |
+| Element         | Size           | Color               |
+| --------------- | -------------- | ------------------- |
+| Play button     | h-8 w-8 (32px) | primary             |
+| Progress bar    | h-1 (4px)      | primary / muted     |
+| Progress handle | h-3 w-3 (12px) | primary             |
+| Time text       | text-xs        | muted-foreground    |
+| Waveform canvas | h-8 (32px)     | primary/30, primary |
 
 #### Play Button States
 
-| State | Icon | Background |
-|-------|------|-----------|
-| Paused | PlayCircle | primary |
-| Playing | PauseCircle | primary |
-| Loading | Spinner | primary/50 |
+| State   | Icon        | Background |
+| ------- | ----------- | ---------- |
+| Paused  | PlayCircle  | primary    |
+| Playing | PauseCircle | primary    |
+| Loading | Spinner     | primary/50 |
 
 ### Implementation Requirements
 
@@ -454,6 +467,7 @@ interface WidgetAudioPlayerProps {
 ```
 
 **Dependencies ALLOWED**:
+
 - React (useState, useEffect, useRef, useCallback)
 - `cn()` from `@/lib/utils`
 - `WidgetButton` from `@/widget/ui/WidgetButton`
@@ -464,12 +478,14 @@ interface WidgetAudioPlayerProps {
 - Icons from `@/widget/icons` (PlayCircle, PauseCircle)
 
 **Dependencies FORBIDDEN**:
+
 - motion/react
 - @/components/ui/button
 
 ### Canvas Waveform Implementation
 
 Must replicate exact waveform visualization:
+
 - Bar width: 2px
 - Bar gap: 1px
 - Bar color (inactive): hsl(var(--primary) / 0.3)
@@ -491,25 +507,30 @@ Must replicate exact waveform visualization:
 ## Phase 4: WidgetMessageReactions & WidgetEmojiPicker
 
 ### Objective
+
 Replace `@/components/chat/MessageReactions` with widget-native emoji picker using CSS-only popover, tabs, and scroll area.
 
 > **CRITICAL**: EmojiPicker uses THREE Radix components that must be replaced:
+>
 > 1. `@/components/ui/button` (motion/react)
 > 2. `@radix-ui/react-scroll-area` (~12KB)
 > 3. `@radix-ui/react-tabs` (~10KB)
 
 > **CRITICAL**: EmojiPicker.tsx exports TWO components:
+>
 > 1. `EmojiPicker` - Full picker with tabs and scroll
 > 2. `QuickEmojiPicker` - Simplified picker for quick reactions
-> Both must be created as widget-native versions.
+>    Both must be created as widget-native versions.
 
 ### Source Component Analysis
 
 **Files**:
+
 - `src/components/chat/MessageReactions.tsx`
 - `src/components/chat/EmojiPicker.tsx`
 
 **MessageReactions Features**:
+
 - Reaction button (smiley face icon)
 - Popover with emoji grid
 - Existing reactions display
@@ -517,6 +538,7 @@ Replace `@/components/chat/MessageReactions` with widget-native emoji picker usi
 - Reaction count badges
 
 **EmojiPicker Features**:
+
 - Tabbed interface with 8 categories (smileys, gestures, hearts, animals, food, activities, travel, objects)
 - Category tabs with emoji labels (😊, 👍, ❤️, 🐶, 🍕, ⚽, ✈️, 💡)
 - Scrollable emoji grid per category (8 columns)
@@ -524,6 +546,7 @@ Replace `@/components/chat/MessageReactions` with widget-native emoji picker usi
 - Hover scale effect on emojis
 
 **QuickEmojiPicker Features**:
+
 - Single row of commonly used emojis (no tabs)
 - Typically 8-10 emojis in a horizontal row
 - Simpler popover without scroll area
@@ -532,11 +555,11 @@ Replace `@/components/chat/MessageReactions` with widget-native emoji picker usi
 
 #### Reaction Button
 
-| State | Icon | Background |
-|-------|------|-----------|
-| Default | FaceSmile | transparent |
-| Hover | FaceSmile | accent |
-| Has Reactions | FaceSmile | accent/50 |
+| State         | Icon      | Background  |
+| ------------- | --------- | ----------- |
+| Default       | FaceSmile | transparent |
+| Hover         | FaceSmile | accent      |
+| Has Reactions | FaceSmile | accent/50   |
 
 #### EmojiPicker Full Component
 
@@ -567,20 +590,20 @@ Gap: gap-1
 
 #### Tab Bar Specifications
 
-| Property | Value |
-|----------|-------|
-| Container | w-full grid grid-cols-8 h-12 bg-muted/50 |
-| Tab button | text-xl, centered |
-| Active tab | bg-background, border-bottom 2px solid primaryColor |
-| Tab content area | mt-0 |
+| Property         | Value                                               |
+| ---------------- | --------------------------------------------------- |
+| Container        | w-full grid grid-cols-8 h-12 bg-muted/50            |
+| Tab button       | text-xl, centered                                   |
+| Active tab       | bg-background, border-bottom 2px solid primaryColor |
+| Tab content area | mt-0                                                |
 
 #### Scroll Area Specifications
 
-| Property | Value |
-|----------|-------|
-| Container | h-[280px] p-2 |
-| Grid | grid-cols-8 gap-1 |
-| Emoji button | h-10 w-10 p-0 text-2xl |
+| Property     | Value                          |
+| ------------ | ------------------------------ |
+| Container    | h-[280px] p-2                  |
+| Grid         | grid-cols-8 gap-1              |
+| Emoji button | h-10 w-10 p-0 text-2xl         |
 | Hover effect | scale-125 transition-transform |
 
 #### Existing Reactions Display
@@ -599,6 +622,7 @@ Gap: gap-1
 ### Implementation Requirements
 
 **Files to Create**:
+
 1. `src/widget/components/WidgetMessageReactions.tsx`
 2. `src/widget/components/WidgetEmojiPicker.tsx` (exports BOTH `WidgetEmojiPicker` AND `WidgetQuickEmojiPicker`)
 
@@ -696,7 +720,7 @@ const [activeTab, setActiveTab] = useState('smileys');
   height: 280px;
   overflow-y: auto;
   padding: 8px;
-  
+
   /* Custom scrollbar styling to match Radix */
   scrollbar-width: thin;
   scrollbar-color: hsl(var(--muted-foreground) / 0.3) transparent;
@@ -749,12 +773,14 @@ useEffect(() => {
 ```
 
 **Dependencies ALLOWED**:
+
 - React (useState, useEffect, useRef)
 - `cn()` from `@/lib/utils`
 - `WidgetButton` from `@/widget/ui/WidgetButton`
 - Icons from `@/widget/icons` (FaceSmile, Plus)
 
 **Dependencies FORBIDDEN**:
+
 - motion/react
 - @radix-ui/react-popover
 - @radix-ui/react-scroll-area
@@ -780,7 +806,7 @@ useEffect(() => {
 - [ ] User's own reactions highlighted with ring-2
 - [ ] Add/remove toggle works
 - [ ] QuickEmojiPicker renders as single row without tabs
-- [ ] No @radix-ui/* in bundle
+- [ ] No @radix-ui/\* in bundle
 - [ ] No motion/react in bundle
 
 ---
@@ -788,6 +814,7 @@ useEffect(() => {
 ## Phase 5: WidgetPhoneInput
 
 ### Objective
+
 Create lightweight phone input with basic formatting (optional - can keep libphonenumber-js if international accuracy is critical).
 
 > **CRITICAL**: PhoneInputField uses `@/components/ui/input` which has motion/react. Must use `WidgetInput` instead.
@@ -795,10 +822,12 @@ Create lightweight phone input with basic formatting (optional - can keep libpho
 ### Decision Point
 
 **Option A**: Keep `libphonenumber-js/min` (~38KB)
+
 - Pros: Perfect international formatting, accurate country detection
 - Cons: 38KB bundle size
 
 **Option B**: Create `WidgetPhoneInput` with regex (~5KB)
+
 - Pros: 33KB smaller
 - Cons: Limited to US/CA formatting, basic international support
 
@@ -827,7 +856,7 @@ interface WidgetPhoneInputProps {
 ```typescript
 const formatUSPhone = (input: string): string => {
   const digits = input.replace(/\D/g, '');
-  
+
   if (digits.length <= 3) {
     return digits;
   } else if (digits.length <= 6) {
@@ -862,11 +891,13 @@ const detectCountry = (phone: string): string | null => {
 - Format display: `(888) 222-4451` for US
 
 **Dependencies ALLOWED**:
+
 - React (useState, useCallback)
 - `cn()` from `@/lib/utils`
 - `WidgetInput` from `@/widget/ui/WidgetInput`
 
 **Dependencies FORBIDDEN**:
+
 - libphonenumber-js
 - @/components/ui/input (uses motion/react)
 - motion/react
@@ -887,6 +918,7 @@ const detectCountry = (phone: string): string | null => {
 ## Phase 6: Update Constants & Integration
 
 ### Objective
+
 Update `src/widget/constants.ts` to use new widget-native components.
 
 ### File Modifications
@@ -895,12 +927,12 @@ Update `src/widget/constants.ts` to use new widget-native components.
 
 ```typescript
 // BEFORE
-export const VoiceInput = lazy(() => 
+export const VoiceInput = lazy(() =>
   import('@/components/molecule-ui/voice-input').then(m => ({ default: m.VoiceInput }))
 );
 
 // AFTER
-export const VoiceInput = lazy(() => 
+export const VoiceInput = lazy(() =>
   import('./components/WidgetVoiceInput').then(m => ({ default: m.WidgetVoiceInput }))
 );
 ```
@@ -911,37 +943,37 @@ export const VoiceInput = lazy(() =>
 import { lazy } from 'react';
 
 // Widget-native lazy components (no heavy dependencies)
-export const VoiceInput = lazy(() => 
+export const VoiceInput = lazy(() =>
   import('./components/WidgetVoiceInput').then(m => ({ default: m.WidgetVoiceInput }))
 );
 
-export const FileDropZone = lazy(() => 
+export const FileDropZone = lazy(() =>
   import('./components/WidgetFileDropZone').then(m => ({ default: m.WidgetFileDropZone }))
 );
 
-export const MessageReactions = lazy(() => 
+export const MessageReactions = lazy(() =>
   import('./components/WidgetMessageReactions').then(m => ({ default: m.WidgetMessageReactions }))
 );
 
-export const AudioPlayer = lazy(() => 
+export const AudioPlayer = lazy(() =>
   import('./components/WidgetAudioPlayer').then(m => ({ default: m.WidgetAudioPlayer }))
 );
 
-// Option B only - otherwise keep original
-export const PhoneInputField = lazy(() => 
+// Option A only - otherwise keep original
+export const PhoneInputField = lazy(() =>
   import('./components/WidgetPhoneInput').then(m => ({ default: m.WidgetPhoneInput }))
 );
 
 // Already widget-native (no changes needed)
-export const DayPicker = lazy(() => 
+export const DayPicker = lazy(() =>
   import('./components/booking/DayPicker').then(m => ({ default: m.DayPicker }))
 );
 
-export const TimePicker = lazy(() => 
+export const TimePicker = lazy(() =>
   import('./components/booking/TimePicker').then(m => ({ default: m.TimePicker }))
 );
 
-export const BookingConfirmed = lazy(() => 
+export const BookingConfirmed = lazy(() =>
   import('./components/booking/BookingConfirmed').then(m => ({ default: m.BookingConfirmed }))
 );
 ```
@@ -951,6 +983,7 @@ export const BookingConfirmed = lazy(() =>
 **File**: `src/widget/icons.tsx`
 
 #### Current Icons (already present)
+
 ```typescript
 // Navigation & UI
 X, XClose, ChevronRight, ChevronLeft
@@ -969,6 +1002,7 @@ Phone01, MarkerPin01, Calendar, Star01, BookOpen01, Zap
 ```
 
 #### Icons to ADD
+
 ```typescript
 // Voice Recording (Phase 1)
 import { StopCircle } from '@untitledui/icons/StopCircle';
@@ -994,11 +1028,11 @@ export {
   XClose,
   ChevronRight,
   ChevronLeft,
-  
+
   // Messaging
   Send01,
   MessageChatCircle,
-  
+
   // Media & Files
   Microphone01,
   Attachment01,
@@ -1006,23 +1040,23 @@ export {
   VolumeX,
   Download01,
   Upload01,        // NEW - Phase 2
-  
+
   // Audio Player
   PlayCircle,      // NEW - Phase 3
   PauseCircle,     // NEW - Phase 3
   StopCircle,      // NEW - Phase 1
-  
+
   // Feedback
   ThumbsUp,
   ThumbsDown,
   CheckCircle,
   Check,
   XCircle,
-  
+
   // Reactions
   FaceSmile,       // NEW - Phase 4
   Plus,            // NEW - Phase 4
-  
+
   // Actions & Features
   Phone01,
   MarkerPin01,
@@ -1040,6 +1074,7 @@ export {
 ### Visual Regression Testing
 
 For each component, capture screenshots of:
+
 1. Original component in all states
 2. New widget component in all states
 3. Pixel-diff comparison
@@ -1047,6 +1082,7 @@ For each component, capture screenshots of:
 #### Test Scenarios per Component
 
 **WidgetVoiceInput**:
+
 - [ ] Idle state
 - [ ] Hover state
 - [ ] Recording state (with pulse animation)
@@ -1054,6 +1090,7 @@ For each component, capture screenshots of:
 - [ ] Disabled state
 
 **WidgetFileDropZone**:
+
 - [ ] Empty drop zone
 - [ ] Drag hover state
 - [ ] With 1 image file selected (thumbnail preview)
@@ -1063,12 +1100,14 @@ For each component, capture screenshots of:
 - [ ] Max files reached
 
 **WidgetFileAttachment** (both variants):
+
 - [ ] Image attachment (128x128 preview)
 - [ ] Image attachment hover (remove button visible)
 - [ ] Non-image attachment (file icon + details)
 - [ ] WidgetMessageFileAttachment with download button
 
 **WidgetAudioPlayer**:
+
 - [ ] Initial state (not played)
 - [ ] Playing state
 - [ ] Paused mid-playback
@@ -1077,12 +1116,14 @@ For each component, capture screenshots of:
 - [ ] Waveform rendering
 
 **WidgetMessageReactions**:
+
 - [ ] No reactions
 - [ ] With existing reactions
 - [ ] User's own reactions highlighted
 - [ ] Add reaction button
 
 **WidgetEmojiPicker**:
+
 - [ ] Picker closed state
 - [ ] Picker open with first tab
 - [ ] Each of 8 category tabs active
@@ -1091,11 +1132,13 @@ For each component, capture screenshots of:
 - [ ] Custom scrollbar visibility
 
 **WidgetQuickEmojiPicker**:
+
 - [ ] Single row renders correctly
 - [ ] Emoji hover state
 - [ ] Selection triggers callback
 
 **WidgetPhoneInput** (if Option B):
+
 - [ ] Empty state
 - [ ] Partial US number
 - [ ] Complete US number with flag
@@ -1123,6 +1166,7 @@ For each component, capture screenshots of:
 ### Bundle Size Verification
 
 After each phase, run:
+
 ```bash
 npm run build
 ls -la dist/assets/*.js | grep widget
@@ -1131,14 +1175,14 @@ gzip -c dist/assets/widget*.js | wc -c
 
 Expected results after all phases:
 
-| Phase | Component | Cumulative Savings |
-|-------|-----------|-------------------|
-| Phase 1 | WidgetVoiceInput | ~50KB |
-| Phase 2 | WidgetFileDropZone + WidgetFileAttachment + WidgetMessageFileAttachment | ~56KB (includes sonner removal) |
-| Phase 3 | WidgetAudioPlayer | ~50KB |
-| Phase 4 | WidgetMessageReactions + WidgetEmojiPicker + WidgetQuickEmojiPicker | ~65KB (includes Radix tabs/scroll) |
-| Phase 5 | WidgetPhoneInput | ~38KB (includes @/components/ui/input removal) |
-| **Total** | | **~259KB** |
+| Phase     | Component                                                               | Cumulative Savings                             |
+| --------- | ----------------------------------------------------------------------- | ---------------------------------------------- |
+| Phase 1   | WidgetVoiceInput                                                        | ~50KB                                          |
+| Phase 2   | WidgetFileDropZone + WidgetFileAttachment + WidgetMessageFileAttachment | ~56KB (includes sonner removal)                |
+| Phase 3   | WidgetAudioPlayer                                                       | ~50KB                                          |
+| Phase 4   | WidgetMessageReactions + WidgetEmojiPicker + WidgetQuickEmojiPicker     | ~65KB (includes Radix tabs/scroll)             |
+| Phase 5   | WidgetPhoneInput                                                        | ~38KB (includes @/components/ui/input removal) |
+| **Total** |                                                                         | **~259KB**                                     |
 
 ---
 
@@ -1158,17 +1202,17 @@ Each component can be rolled back independently by changing its import in `const
 
 ```typescript
 // Rollback VoiceInput only
-export const VoiceInput = lazy(() => 
+export const VoiceInput = lazy(() =>
   import('@/components/molecule-ui/voice-input').then(m => ({ default: m.VoiceInput }))
 );
 
 // Rollback FileDropZone only (note: also requires FileAttachment rollback in its imports)
-export const FileDropZone = lazy(() => 
+export const FileDropZone = lazy(() =>
   import('@/components/chat/FileDropZone').then(m => ({ default: m.FileDropZone }))
 );
 
 // Rollback MessageReactions only (note: also requires EmojiPicker rollback in its imports)
-export const MessageReactions = lazy(() => 
+export const MessageReactions = lazy(() =>
   import('@/components/chat/MessageReactions').then(m => ({ default: m.MessageReactions }))
 );
 ```
@@ -1176,6 +1220,7 @@ export const MessageReactions = lazy(() =>
 ### Full Rollback
 
 Restore `constants.ts` from git:
+
 ```bash
 git checkout HEAD~1 -- src/widget/constants.ts
 ```
@@ -1185,27 +1230,34 @@ git checkout HEAD~1 -- src/widget/constants.ts
 ## Files Created Checklist
 
 ### Phase 1
+
 - [ ] `src/widget/components/WidgetVoiceInput.tsx`
 
 ### Phase 2
+
 - [ ] `src/widget/components/WidgetFileDropZone.tsx`
 - [ ] `src/widget/components/WidgetFileAttachment.tsx` (exports `WidgetFileAttachment` AND `WidgetMessageFileAttachment`)
 
 ### Phase 3
+
 - [ ] `src/widget/components/WidgetAudioPlayer.tsx`
 
 ### Phase 4
+
 - [ ] `src/widget/components/WidgetMessageReactions.tsx`
 - [ ] `src/widget/components/WidgetEmojiPicker.tsx` (exports `WidgetEmojiPicker` AND `WidgetQuickEmojiPicker`)
 
 ### Phase 5 (Optional)
+
 - [ ] `src/widget/components/WidgetPhoneInput.tsx`
 
 ### Phase 6
+
 - [ ] Update `src/widget/constants.ts`
 - [ ] Update `src/widget/icons.tsx` (add 6 new icons)
 
 ### Phase 7
+
 - [ ] Visual regression test results documented
 - [ ] Bundle size measurements recorded
 
@@ -1215,18 +1267,18 @@ git checkout HEAD~1 -- src/widget/constants.ts
 
 These dependencies are SAFE to use across all widget-native components:
 
-| Dependency | Source | Notes |
-|------------|--------|-------|
-| React | `react` | useState, useEffect, useRef, useCallback |
-| cn() | `@/lib/utils` | Utility for class merging |
-| WidgetButton | `@/widget/ui/WidgetButton` | Widget-native button |
-| WidgetInput | `@/widget/ui/WidgetInput` | Widget-native input |
-| WidgetSpinner | `@/widget/ui/WidgetSpinner` | Widget-native spinner |
-| Icons | `@/widget/icons` | Tree-shaken re-exports |
-| formatDuration | `@/lib/audio-recording` | Lightweight utility |
-| isImageFile, formatFileSize | `@/lib/file-validation` | Lightweight utilities |
-| downloadFile | `@/lib/file-download` | Lightweight utility |
-| FileTypeIcons | `@/components/chat/FileTypeIcons` | Pure SVG components, no deps |
+| Dependency                  | Source                            | Notes                                    |
+| --------------------------- | --------------------------------- | ---------------------------------------- |
+| React                       | `react`                           | useState, useEffect, useRef, useCallback |
+| cn()                        | `@/lib/utils`                     | Utility for class merging                |
+| WidgetButton                | `@/widget/ui/WidgetButton`        | Widget-native button                     |
+| WidgetInput                 | `@/widget/ui/WidgetInput`         | Widget-native input                      |
+| WidgetSpinner               | `@/widget/ui/WidgetSpinner`       | Widget-native spinner                    |
+| Icons                       | `@/widget/icons`                  | Tree-shaken re-exports                   |
+| formatDuration              | `@/lib/audio-recording`           | Lightweight utility                      |
+| isImageFile, formatFileSize | `@/lib/file-validation`           | Lightweight utilities                    |
+| downloadFile                | `@/lib/file-download`             | Lightweight utility                      |
+| FileTypeIcons               | `@/components/chat/FileTypeIcons` | Pure SVG components, no deps             |
 
 ---
 
@@ -1234,41 +1286,41 @@ These dependencies are SAFE to use across all widget-native components:
 
 These dependencies MUST NEVER appear in widget-native components:
 
-| Dependency | Why Forbidden |
-|------------|---------------|
-| motion/react | ~50KB bundle impact |
-| @radix-ui/* | Various sizes, tree-shaking issues |
-| @/components/ui/button | Uses motion/react |
-| @/components/ui/input | Uses motion/react |
-| @/components/ui/scroll-area | Radix dependency |
-| @/components/ui/tabs | Radix dependency |
-| @/components/ui/popover | Radix dependency |
-| @/lib/toast | Imports sonner (~6KB) |
-| sonner | ~6KB bundle impact |
-| libphonenumber-js | ~38KB bundle impact |
-| @/components/chat/FileAttachment | Uses forbidden button |
-| @/components/chat/EmojiPicker | Uses multiple forbidden deps |
+| Dependency                       | Why Forbidden                      |
+| -------------------------------- | ---------------------------------- |
+| motion/react                     | ~50KB bundle impact                |
+| @radix-ui/\*                     | Various sizes, tree-shaking issues |
+| @/components/ui/button           | Uses motion/react                  |
+| @/components/ui/input            | Uses motion/react                  |
+| @/components/ui/scroll-area      | Radix dependency                   |
+| @/components/ui/tabs             | Radix dependency                   |
+| @/components/ui/popover          | Radix dependency                   |
+| @/lib/toast                      | Imports sonner (~6KB)              |
+| sonner                           | ~6KB bundle impact                 |
+| libphonenumber-js                | ~38KB bundle impact                |
+| @/components/chat/FileAttachment | Uses forbidden button              |
+| @/components/chat/EmojiPicker    | Uses multiple forbidden deps       |
 
 ---
 
 ## Approval Sign-Off
 
-| Phase | Developer | QA | Design | Date |
-|-------|-----------|-----|--------|------|
-| Phase 1 | | | | |
-| Phase 2 | | | | |
-| Phase 3 | | | | |
-| Phase 4 | | | | |
-| Phase 5 | | | | |
-| Phase 6 | | | | |
-| Phase 7 | | | | |
+| Phase   | Developer | QA  | Design | Date |
+| ------- | --------- | --- | ------ | ---- |
+| Phase 1 |           |     |        |      |
+| Phase 2 |           |     |        |      |
+| Phase 3 |           |     |        |      |
+| Phase 4 |           |     |        |      |
+| Phase 5 |           |     |        |      |
+| Phase 6 |           |     |        |      |
+| Phase 7 |           |     |        |      |
 
 ---
 
 ## Document History
 
-| Version | Date | Author | Changes |
-|---------|------|--------|---------|
-| 1.0 | 2025-12-17 | AI Assistant | Initial comprehensive plan |
-| 1.1 | 2025-12-17 | AI Assistant | Fixed 3 critical gaps: Added WidgetFileAttachment requirement, detailed EmojiPicker Radix replacements (Tabs, ScrollArea, Button), corrected icons inventory with 6 missing icons |
-| 1.2 | 2025-12-17 | AI Assistant | Fixed 7 critical issues: (1) Added toast/sonner to forbidden + onError callback pattern for FileDropZone, (2) Added @/lib/file-download to allowed deps, (3) Explicitly stated WidgetMessageFileAttachment requirement, (4) Added @/lib/audio-recording to AudioPlayer allowed deps, (5) Added WidgetQuickEmojiPicker requirement, (6) Added @/components/ui/input to Phase 5 forbidden + WidgetInput to allowed, (7) Added cn() consistently to all phases + created Allowed/Forbidden dependency summary tables |
+| Version | Date       | Author       | Changes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| ------- | ---------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1.0     | 2025-12-17 | AI Assistant | Initial comprehensive plan                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| 1.1     | 2025-12-17 | AI Assistant | Fixed 3 critical gaps: Added WidgetFileAttachment requirement, detailed EmojiPicker Radix replacements (Tabs, ScrollArea, Button), corrected icons inventory with 6 missing icons                                                                                                                                                                                                                                                                                                                                 |
+| 1.2     | 2025-12-17 | AI Assistant | Fixed 7 critical issues: (1) Added toast/sonner to forbidden + onError callback pattern for FileDropZone, (2) Added @/lib/file-download to allowed deps, (3) Explicitly stated WidgetMessageFileAttachment requirement, (4) Added @/lib/audio-recording to AudioPlayer allowed deps, (5) Added WidgetQuickEmojiPicker requirement, (6) Added @/components/ui/input to Phase 5 forbidden + WidgetInput to allowed, (7) Added cn() consistently to all phases + created Allowed/Forbidden dependency summary tables |
