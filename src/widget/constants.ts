@@ -68,9 +68,9 @@ export const AudioPlayer = lazy(() =>
   import('./components/WidgetAudioPlayer').then(m => ({ default: m.WidgetAudioPlayer }))
 );
 
-// Phone input field with country detection
+// Phone input field with country detection - WIDGET-NATIVE (no motion/react)
 export const PhoneInputField = lazy(() => 
-  import('@/components/ui/phone-input').then(m => ({ default: m.PhoneInputField }))
+  import('./components/WidgetPhoneInput').then(m => ({ default: m.WidgetPhoneInput }))
 );
 
 // Booking components - only loaded when AI triggers booking flow

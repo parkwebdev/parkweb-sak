@@ -63,3 +63,6 @@ export type { Reaction } from './WidgetMessageReactions';
 
 /** Emoji picker - CSS-only tabs and scroll (no Radix, no motion/react) */
 export { WidgetEmojiPicker, WidgetQuickEmojiPicker } from './WidgetEmojiPicker';
+
+/** Phone input with country detection - uses libphonenumber-js/min, no motion/react */
+export { WidgetPhoneInput } from './WidgetPhoneInput';
