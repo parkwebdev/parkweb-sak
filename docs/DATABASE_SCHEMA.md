@@ -2,9 +2,9 @@
 
 > **Last Updated**: December 2024  
 > **Status**: Active  
-> **Related**: [Security](./SECURITY.md), [Supabase Integration](./SUPABASE_INTEGRATION_GUIDE.md), [Edge Functions](./EDGE_FUNCTIONS.md)
+> **Related**: [Security](./SECURITY.md), [Edge Functions](./EDGE_FUNCTIONS.md), [Architecture](./ARCHITECTURE.md)
 
-Complete database schema documentation for the ChatPad platform.
+Complete database schema and Supabase integration documentation for the ChatPad platform.
 
 ---
 
