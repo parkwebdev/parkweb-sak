@@ -38,10 +38,9 @@ export default defineConfig(({ mode }) => ({
           if (id.includes('widget-entry') || id.includes('src/widget/') || id.includes('src/pages/WidgetPage')) {
             return 'widget';
           }
-          // Keep node_modules in vendor chunk for main app
-          if (id.includes('node_modules')) {
-            return 'vendor';
-          }
+          // Let Vite auto-split shared deps (react, supabase) into smaller chunks
+          // DO NOT force all node_modules into one vendor chunk - this was causing
+          // the widget to load 872KB of unused main app dependencies
         },
       },
     },
