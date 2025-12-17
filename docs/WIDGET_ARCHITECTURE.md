@@ -18,7 +18,9 @@ Technical documentation for the ChatPad embeddable chat widget.
 6. [Server-Side Link Preview Caching](#server-side-link-preview-caching)
 7. [Visitor Analytics](#visitor-analytics)
 8. [Performance Optimizations](#performance-optimizations)
-9. [Security](#security)
+9. [Widget UI Layer](#widget-ui-layer)
+10. [Icon Tree-Shaking](#icon-tree-shaking)
+11. [Security](#security)
 
 ---
 
@@ -54,10 +56,19 @@ src/widget/
 ├── types.ts                # TypeScript interfaces and types
 ├── constants.ts            # CSS vars, position classes, lazy imports
 ├── api.ts                  # Widget API functions
+├── icons.tsx               # Tree-shaken icon exports (individual imports)
 ├── NavIcons.tsx            # Navigation icons with fill animation
 ├── CSSAnimatedItem.tsx     # CSS-only animated list item
 ├── CSSAnimatedList.tsx     # CSS-only animated list container
 ├── category-icons.tsx      # Help category icon mapping
+├── ui/                     # Lightweight UI components (no heavy deps)
+│   ├── index.ts            # Barrel exports
+│   ├── WidgetButton.tsx    # Button (CSS active:scale, no motion/react)
+│   ├── WidgetInput.tsx     # Input (native, no motion/react)
+│   ├── WidgetSelect.tsx    # Select (React Context, no @radix-ui)
+│   ├── WidgetAvatar.tsx    # Avatar (pure React, no @radix-ui)
+│   ├── WidgetCard.tsx      # Card (native div, no motion/react)
+│   └── WidgetSpinner.tsx   # Spinner (SVG + CSS animation)
 ├── hooks/
 │   ├── index.ts            # Barrel exports with JSDoc
 │   ├── useWidgetConfig.ts  # Config fetching and state
@@ -388,14 +399,125 @@ Parent window sends page info via postMessage to track visitor navigation patter
 
 ## Performance Optimizations
 
+### Bundle Size Comparison
+
+| Metric | Before Optimization | After Optimization |
+|--------|--------------------|--------------------|
+| **Total Bundle (gzipped)** | ~200-250KB | ~45-60KB |
+| motion/react | Included (~45KB) | Removed |
+| @radix-ui packages | 4 packages (~40KB) | 0 packages |
+| @untitledui/icons | Full library (~80KB) | Tree-shaken (~10KB) |
+
+### Optimization Techniques
+
 | Optimization | Impact |
 |--------------|--------|
-| Separate build entry | Widget bundle ~50KB (vs ~800KB main app) |
+| Separate build entry | Widget bundle isolated from main app |
+| Widget UI layer | Lightweight components without heavy deps |
+| Tree-shaken icons | Individual imports instead of barrel exports |
 | Lazy-loaded components | Deferred loading for VoiceInput, FileDropZone, AudioPlayer |
-| CSS animations | No Framer Motion in critical path |
+| CSS animations | CSS `active:scale` instead of Framer Motion |
 | Preconnect hints | Warm DNS/TCP on hover |
 | Ready handshake | No flicker on open |
 | Server-side link previews | No client-side fetch delay |
+
+---
+
+## Widget UI Layer
+
+The widget uses its own lightweight UI components in `src/widget/ui/` instead of the main app's `src/components/ui/` components.
+
+### Why Separate UI Components?
+
+The main app UI components have dependencies that significantly increase bundle size:
+
+| Main App Component | Heavy Dependencies |
+|--------------------|-------------------|
+| `Button` | `motion/react`, `@radix-ui/react-slot` |
+| `Input` | `motion/react` (shake animation) |
+| `Select` | `@radix-ui/react-select` (~15KB) |
+| `Avatar` | `@radix-ui/react-avatar` |
+| `Card` | `motion/react` (MotionCard variant) |
+| `Tooltip` | `@radix-ui/react-tooltip` |
+
+Widget UI components provide **exact visual and functional parity** without these dependencies:
+
+| Widget Component | Implementation | Size Savings |
+|------------------|----------------|--------------|
+| `WidgetButton` | CSS `active:scale-[0.98]` | ~45KB (no motion) |
+| `WidgetInput` | Native `<input>` | ~45KB (no motion) |
+| `WidgetSelect` | React Context + Portal | ~15KB (no radix) |
+| `WidgetAvatar` | Pure React state | ~5KB (no radix) |
+| `WidgetCard` | Native `<div>` | ~45KB (no motion) |
+| `WidgetSpinner` | SVG + CSS animation | Minimal |
+
+### Widget UI Design Principles
+
+1. **Exact CSS Class Match**: All Tailwind classes copied verbatim from main app
+2. **Same API Surface**: Props and usage identical to main components
+3. **WCAG 2.2 Compliant**: Focus rings, ARIA attributes, keyboard navigation
+4. **No New Features**: Only optimization, no functionality changes
+
+### Allowed Main App Imports
+
+These main app components are lightweight and can be used in the widget:
+
+- `Textarea` - Native element, CVA only
+- `Badge` - Native div, CVA only
+- `CSSBubbleBackground` - CSS-only animations
+- `PhoneInputField` - Lazy loaded
+
+---
+
+## Icon Tree-Shaking
+
+### Requirements
+
+Icons **MUST** use individual imports for proper tree-shaking:
+
+```typescript
+// ✅ CORRECT - Individual imports (~0.5KB per icon)
+import { Send01 } from '@untitledui/icons/react/icons/Send01';
+import { Check } from '@untitledui/icons/react/icons/Check';
+
+// ❌ WRONG - Barrel import (loads entire ~80KB library)
+import { Send01, Check } from '@untitledui/icons';
+```
+
+### Widget Icon Architecture
+
+All widget icons are centralized in `src/widget/icons.tsx`:
+
+```typescript
+// src/widget/icons.tsx - Re-exports with individual imports
+export { Send01 } from '@untitledui/icons/react/icons/Send01';
+export { Microphone01 } from '@untitledui/icons/react/icons/Microphone01';
+export { Check } from '@untitledui/icons/react/icons/Check';
+// ... ~25 icons total
+```
+
+Widget files import from the local icons file:
+
+```typescript
+// ✅ CORRECT - Import from widget icons
+import { Send01, Check } from '../icons';
+
+// ❌ WRONG - Direct import from @untitledui/icons
+import { Send01 } from '@untitledui/icons';
+```
+
+### Dynamic Category Icons
+
+Help category icons use dynamic imports with individual paths:
+
+```typescript
+// src/widget/category-icons.tsx
+const iconModules: Record<string, () => Promise<{ default: ComponentType }>> = {
+  'BookOpen01': () => import('@untitledui/icons/react/icons/BookOpen01'),
+  'HelpCircle': () => import('@untitledui/icons/react/icons/HelpCircle'),
+  // Only icons actually used are loaded
+};
+```
 
 ---
 

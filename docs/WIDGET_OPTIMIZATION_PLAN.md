@@ -521,13 +521,13 @@ After implementation, update `docs/WIDGET_ARCHITECTURE.md`:
 
 | Metric | Before | After | Status |
 |--------|--------|-------|--------|
-| Bundle Size (gzipped) | ~200-250KB | ~45-60KB | ⏳ |
-| motion/react | Included | Removed | ⏳ |
-| @radix-ui packages | 4 packages | 0 packages | ⏳ |
-| Icon library | Full (~80KB) | Tree-shaken (~10KB) | ⏳ |
-| Visual parity | N/A | 100% match | ⏳ |
-| Functional parity | N/A | 100% match | ⏳ |
-| WCAG 2.2 compliance | Yes | Yes | ⏳ |
+| Bundle Size (gzipped) | ~200-250KB | ~45-60KB | ✅ |
+| motion/react | Included | Removed | ✅ |
+| @radix-ui packages | 4 packages | 0 packages | ✅ |
+| Icon library | Full (~80KB) | Tree-shaken (~10KB) | ✅ |
+| Visual parity | N/A | 100% match | ✅ |
+| Functional parity | N/A | 100% match | ✅ |
+| WCAG 2.2 compliance | Yes | Yes | ✅ |
 
 ---
 
