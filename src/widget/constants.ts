@@ -53,9 +53,9 @@ export const VoiceInput = lazy(() =>
   import('./components/WidgetVoiceInput').then(m => ({ default: m.WidgetVoiceInput }))
 );
 
-// File drop zone for attachments
+// File drop zone for attachments - WIDGET-NATIVE (no motion/react, no sonner toast)
 export const FileDropZone = lazy(() => 
-  import('@/components/chat/FileDropZone').then(m => ({ default: m.FileDropZone }))
+  import('./components/WidgetFileDropZone').then(m => ({ default: m.WidgetFileDropZone }))
 );
 
 // Message reactions (emoji reactions on messages)

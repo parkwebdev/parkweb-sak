@@ -47,3 +47,9 @@ export { LocationPicker } from './LocationPicker';
 /** Voice recording UI - CSS-only animations (no motion/react) */
 export { WidgetVoiceInput } from './WidgetVoiceInput';
 export type { WidgetVoiceInputProps } from './WidgetVoiceInput';
+
+/** File drop zone - CSS-only, no toast (uses inline errors) */
+export { WidgetFileDropZone } from './WidgetFileDropZone';
+
+/** File attachment display - for previews and message display */
+export { WidgetFileAttachment, WidgetMessageFileAttachment } from './WidgetFileAttachment';
