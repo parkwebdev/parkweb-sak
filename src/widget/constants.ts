@@ -63,9 +63,9 @@ export const MessageReactions = lazy(() =>
   import('@/components/chat/MessageReactions').then(m => ({ default: m.MessageReactions }))
 );
 
-// Audio player for voice messages
+// Audio player for voice messages - WIDGET-NATIVE (no motion/react)
 export const AudioPlayer = lazy(() => 
-  import('@/components/chat/AudioPlayer').then(m => ({ default: m.AudioPlayer }))
+  import('./components/WidgetAudioPlayer').then(m => ({ default: m.WidgetAudioPlayer }))
 );
 
 // Phone input field with country detection

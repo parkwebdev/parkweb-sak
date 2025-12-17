@@ -53,3 +53,6 @@ export { WidgetFileDropZone } from './WidgetFileDropZone';
 
 /** File attachment display - for previews and message display */
 export { WidgetFileAttachment, WidgetMessageFileAttachment } from './WidgetFileAttachment';
+
+/** Audio player for voice messages - CSS-only animations (no motion/react) */
+export { WidgetAudioPlayer } from './WidgetAudioPlayer';

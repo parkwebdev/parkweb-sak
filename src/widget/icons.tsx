@@ -26,6 +26,8 @@ import { VolumeX } from '@untitledui/icons/VolumeX';
 import { Download01 } from '@untitledui/icons/Download01';
 import { Upload01 } from '@untitledui/icons/Upload01';
 import { StopCircle } from '@untitledui/icons/StopCircle';
+import { PlayCircle } from '@untitledui/icons/PlayCircle';
+import { PauseCircle } from '@untitledui/icons/PauseCircle';
 
 // Feedback
 import { ThumbsUp } from '@untitledui/icons/ThumbsUp';
@@ -59,6 +61,8 @@ export {
   Download01,
   Upload01,
   StopCircle,
+  PlayCircle,
+  PauseCircle,
   // Feedback
   ThumbsUp,
   ThumbsDown,
