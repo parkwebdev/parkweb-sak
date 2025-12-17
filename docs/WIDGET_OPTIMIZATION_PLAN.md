@@ -94,7 +94,18 @@ These files use only lightweight dependencies (React, Tailwind, local utils):
 
 ## Phase 1: Create Widget UI Components
 
-Create `src/widget/ui/` directory with 9 lightweight components.
+Create `src/widget/ui/` directory with 6 lightweight components.
+
+**Components to create (replacing heavy main app equivalents):**
+- WidgetButton (replaces Button with motion/react)
+- WidgetInput (replaces Input with motion/react)
+- WidgetSelect (replaces Radix Select)
+- WidgetAvatar (replaces Radix Avatar)
+- WidgetCard (replaces Card with motion/react)
+- WidgetSpinner (for button loading states)
+
+**Components NOT needed (main app versions are already clean):**
+- Badge, Textarea, ChatBubbleIcon, ChatPadLogo, FileTypeIcon, CSSBubbleBackground - import directly from main app
 
 ### 1.1 WidgetButton.tsx
 
@@ -200,30 +211,7 @@ Create `src/widget/ui/` directory with 9 lightweight components.
 // Props needed: className, children for all
 ```
 
-### 1.6 WidgetChatBubbleIcon.tsx
-
-**Pure SVG** - Local copy for widget bundle isolation
-
-```tsx
-// Copy exact SVG from src/components/agents/ChatBubbleIcon.tsx
-// No dependencies needed - just returns SVG element
-// Props: className, size (default 24)
-// NOTE: Original is already clean, but local copy keeps widget self-contained
-```
-
-### 1.7 WidgetChatPadLogo.tsx
-
-**Pure SVG** - Local copy for widget bundle isolation
-
-```tsx
-// Copy exact SVG from src/components/ChatPadLogo.tsx
-// No dependencies needed - just returns SVG element
-// Props: className, style (for color)
-// Used in: FloatingButton.tsx, HomeView.tsx
-// NOTE: Original is already clean, but local copy keeps widget self-contained
-```
-
-### 1.8 WidgetSpinner.tsx
+### 1.6 WidgetSpinner.tsx
 
 **Pure CSS spinner** for button loading states
 
@@ -233,9 +221,7 @@ Create `src/widget/ui/` directory with 9 lightweight components.
 // Props: className, size (default 16)
 ```
 
-### 1.9 index.ts
-
-Barrel export for all widget UI components.
+Also create `index.ts` barrel export for all widget UI components.
 
 ---
 
@@ -522,7 +508,7 @@ After implementation, update `docs/WIDGET_ARCHITECTURE.md`:
 
 ## Implementation Order
 
-1. **Create src/widget/ui/ directory and all 9 components** (Phase 1)
+1. **Create src/widget/ui/ directory and all 6 components** (Phase 1)
 2. **Fix icons.tsx** (Phase 2)
 3. **Update all 10 widget files** (Phase 3)
 4. **Remove Tooltip usage** (Phase 4)
