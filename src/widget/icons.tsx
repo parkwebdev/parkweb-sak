@@ -24,6 +24,7 @@ import { Attachment01 } from '@untitledui/icons/Attachment01';
 import { VolumeMax } from '@untitledui/icons/VolumeMax';
 import { VolumeX } from '@untitledui/icons/VolumeX';
 import { Download01 } from '@untitledui/icons/Download01';
+import { StopCircle } from '@untitledui/icons/StopCircle';
 
 // Feedback
 import { ThumbsUp } from '@untitledui/icons/ThumbsUp';
@@ -55,6 +56,7 @@ export {
   VolumeMax,
   VolumeX,
   Download01,
+  StopCircle,
   // Feedback
   ThumbsUp,
   ThumbsDown,

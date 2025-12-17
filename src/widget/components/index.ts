@@ -43,3 +43,7 @@ export { SatisfactionRating } from './SatisfactionRating';
 
 /** Location picker for multi-location businesses */
 export { LocationPicker } from './LocationPicker';
+
+/** Voice recording UI - CSS-only animations (no motion/react) */
+export { WidgetVoiceInput } from './WidgetVoiceInput';
+export type { WidgetVoiceInputProps } from './WidgetVoiceInput';
