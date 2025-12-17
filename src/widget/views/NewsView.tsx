@@ -10,7 +10,7 @@
 
 import { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from '../icons';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { WidgetAvatar, WidgetAvatarImage, WidgetAvatarFallback } from '../ui';
 import { CSSAnimatedList } from '../CSSAnimatedList';
 import { CSSAnimatedItem } from '../CSSAnimatedItem';
 import type { WidgetConfig } from '../api';
@@ -124,12 +124,12 @@ export const NewsView = ({ config, newsItems }: NewsViewProps) => {
             {(selectedArticle.author_name || selectedArticle.published_at) && (
               <div className="flex items-center gap-3">
                 {selectedArticle.author_avatar && (
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={selectedArticle.author_avatar} />
-                    <AvatarFallback className="text-xs">
+                  <WidgetAvatar className="h-8 w-8">
+                    <WidgetAvatarImage src={selectedArticle.author_avatar} />
+                    <WidgetAvatarFallback className="text-xs">
                       {selectedArticle.author_name?.[0] || 'A'}
-                    </AvatarFallback>
-                  </Avatar>
+                    </WidgetAvatarFallback>
+                  </WidgetAvatar>
                 )}
                 <div className="flex flex-col">
                   {selectedArticle.author_name && (
@@ -251,12 +251,12 @@ export const NewsView = ({ config, newsItems }: NewsViewProps) => {
                     {/* Author and date row */}
                     <div className="flex items-center gap-2 pt-2">
                       {item.author_avatar && (
-                        <Avatar className="h-5 w-5">
-                          <AvatarImage src={item.author_avatar} />
-                          <AvatarFallback className="text-2xs">
+                        <WidgetAvatar className="h-5 w-5">
+                          <WidgetAvatarImage src={item.author_avatar} />
+                          <WidgetAvatarFallback className="text-2xs">
                             {item.author_name?.[0] || 'A'}
-                          </AvatarFallback>
-                        </Avatar>
+                          </WidgetAvatarFallback>
+                        </WidgetAvatar>
                       )}
                       <span className="text-xs text-muted-foreground">
                         {item.author_name}

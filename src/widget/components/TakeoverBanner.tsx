@@ -7,7 +7,7 @@
  * @module widget/components/TakeoverBanner
  */
 
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { WidgetAvatar, WidgetAvatarImage, WidgetAvatarFallback } from '../ui';
 
 /** Props for the TakeoverBanner component */
 interface TakeoverBannerProps {
@@ -27,12 +27,12 @@ export const TakeoverBanner = ({ agentName, agentAvatar }: TakeoverBannerProps) 
   return (
     <div className="flex items-center justify-center gap-2 py-2 px-3 bg-muted rounded-lg border border-border">
       {agentAvatar ? (
-        <Avatar className="w-5 h-5">
-          <AvatarImage src={agentAvatar} alt={agentName} />
-          <AvatarFallback className="text-2xs bg-muted text-muted-foreground">
+        <WidgetAvatar className="w-5 h-5">
+          <WidgetAvatarImage src={agentAvatar} alt={agentName} />
+          <WidgetAvatarFallback className="text-2xs bg-muted text-muted-foreground">
             {(agentName || 'T')[0].toUpperCase()}
-          </AvatarFallback>
-        </Avatar>
+          </WidgetAvatarFallback>
+        </WidgetAvatar>
       ) : null}
       <span className="text-xs text-foreground">
         You're now chatting with {agentName || 'a team member'}

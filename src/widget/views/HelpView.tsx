@@ -9,8 +9,8 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { WidgetButton } from '../ui';
+import { WidgetInput } from '../ui';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { ChevronRight, ThumbsUp, ThumbsDown, CheckCircle } from '../icons';
@@ -121,18 +121,18 @@ export const HelpView = ({
           <div className="p-4 border-b bg-muted/50">
             {helpSearchQuery ? (
               <div className="flex items-center gap-2 mb-3">
-                <Button 
+                <WidgetButton 
                   size="sm" 
                   variant="ghost" 
                   onClick={() => setHelpSearchQuery('')}
                   className="h-8"
                 >
                   <ChevronRight className="h-4 w-4 rotate-180" />
-                </Button>
+                </WidgetButton>
                 <h3 className="text-lg font-semibold">Search Results</h3>
               </div>
             ) : null}
-            <Input
+            <WidgetInput
               value={helpSearchQuery}
               onChange={(e) => setHelpSearchQuery(e.target.value)}
               placeholder="Search help articles..."
@@ -225,7 +225,7 @@ export const HelpView = ({
         <>
           <div className="p-4 border-b bg-muted/50">
             <div className="flex items-center gap-2 mb-3">
-              <Button 
+              <WidgetButton 
                 size="sm" 
                 variant="ghost" 
                 onClick={() => {
@@ -235,12 +235,12 @@ export const HelpView = ({
                 className="h-8"
               >
                 <ChevronRight className="h-4 w-4 rotate-180" />
-              </Button>
+              </WidgetButton>
               <h3 className="text-lg font-semibold">
                 {helpCategories.find(c => c.id === selectedCategory)?.name || 'Articles'}
               </h3>
             </div>
-            <Input
+            <WidgetInput
               value={helpSearchQuery}
               onChange={(e) => setHelpSearchQuery(e.target.value)}
               placeholder="Search in this category..."
@@ -290,7 +290,7 @@ export const HelpView = ({
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20" />
                   
                   {/* Back Button - Top Left */}
-                  <Button 
+                  <WidgetButton 
                     size="sm" 
                     variant="ghost" 
                     onClick={resetArticleState}
@@ -298,7 +298,7 @@ export const HelpView = ({
                   >
                     <ChevronRight className="h-4 w-4 rotate-180 mr-1" />
                     Back
-                  </Button>
+                  </WidgetButton>
                   
                   {/* Title - Bottom */}
                   <div className="absolute bottom-0 left-0 right-0 p-4">
@@ -327,14 +327,14 @@ export const HelpView = ({
               <div className="p-4">
                 {/* Back button and title */}
                 <div className="flex items-center gap-2 mb-4">
-                  <Button 
+                  <WidgetButton 
                     size="sm" 
                     variant="ghost" 
                     onClick={resetArticleState}
                     className="h-8"
                   >
                     <ChevronRight className="h-4 w-4 rotate-180" />
-                  </Button>
+                  </WidgetButton>
                   <h2 className="text-lg font-semibold">{selectedArticle.title}</h2>
                 </div>
                 
@@ -366,7 +366,7 @@ export const HelpView = ({
                 <div className="space-y-3">
                   <p className="text-sm font-medium text-center">Was this article helpful?</p>
                   <div className="flex justify-center gap-3">
-                    <Button
+                    <WidgetButton
                       size="sm"
                       variant={articleFeedback === 'helpful' ? 'default' : 'outline'}
                       onClick={() => {
@@ -378,8 +378,8 @@ export const HelpView = ({
                     >
                       <ThumbsUp className="h-4 w-4" />
                       Yes
-                    </Button>
-                    <Button
+                    </WidgetButton>
+                    <WidgetButton
                       size="sm"
                       variant={articleFeedback === 'not_helpful' ? 'default' : 'outline'}
                       onClick={() => {
@@ -391,7 +391,7 @@ export const HelpView = ({
                     >
                       <ThumbsDown className="h-4 w-4" />
                       No
-                    </Button>
+                    </WidgetButton>
                   </div>
                   
                   {showFeedbackComment && (
@@ -403,14 +403,14 @@ export const HelpView = ({
                         className="text-sm resize-none"
                         rows={3}
                       />
-                      <Button
+                      <WidgetButton
                         size="sm"
                         onClick={handleSubmitFeedback}
                         className="w-full"
                         style={{ backgroundColor: config.primaryColor }}
                       >
                         Submit Feedback
-                      </Button>
+                      </WidgetButton>
                     </div>
                   )}
                 </div>

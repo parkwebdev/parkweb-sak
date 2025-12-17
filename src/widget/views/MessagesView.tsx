@@ -7,7 +7,7 @@
  * @module widget/views/MessagesView
  */
 
-import { Button } from '@/components/ui/button';
+import { WidgetButton } from '../ui';
 import { MessageChatCircle, ChevronRight } from '../icons';
 import { formatTimestamp } from '../utils';
 import type { Conversation } from '../types';
@@ -58,13 +58,13 @@ export const MessagesView = ({
       
       {/* Start New Conversation Button - Black styling */}
       <div className="p-4 border-t">
-        <Button
+        <WidgetButton
           onClick={onStartNewConversation}
           className="w-full bg-foreground text-background hover:bg-foreground/90"
         >
           <MessageChatCircle className="h-4 w-4 mr-2" />
           Start New Conversation
-        </Button>
+        </WidgetButton>
       </div>
     </div>
   );
