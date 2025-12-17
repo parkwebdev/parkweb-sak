@@ -1,6 +1,18 @@
-# Widget Lazy Component Optimization Plan
+# Widget Bundle Reduction Plan
 
-> **CRITICAL REQUIREMENT**: All optimized components MUST be pixel-perfect visual matches to their original counterparts. NO visual changes are permitted. Only internal implementation changes to remove heavy dependencies.
+## TL;DR
+
+| Metric | Before | After | Savings |
+|--------|--------|-------|---------|
+| Bundle Size | **306KB** | **~60KB** | **80%** |
+
+**WHY**: Heavy dependencies (Framer Motion, Radix UI, libphonenumber-js) bloat widget load time.
+
+**HOW**: Replace with native CSS animations, vanilla JS components, and regex-based phone validation.
+
+---
+
+> **CRITICAL**: All components MUST be pixel-perfect visual matches. NO visual changes—only internal implementation swaps.
 
 ## Executive Summary
 
