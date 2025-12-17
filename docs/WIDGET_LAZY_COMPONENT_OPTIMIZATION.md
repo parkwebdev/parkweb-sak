@@ -29,10 +29,10 @@ This document outlines a phased approach to optimize lazy-loaded widget componen
 | Component | Source File | Heavy Dependencies | Estimated Size Impact |
 |-----------|-------------|-------------------|----------------------|
 | VoiceInput | `@/components/molecule-ui/voice-input` | motion/react | ~50KB gzipped |
-| FileDropZone | `@/components/chat/FileDropZone` | @/components/ui/button (motion), FileAttachment | ~50KB gzipped |
+| FileDropZone | `@/components/chat/FileDropZone` | @/components/ui/button (motion), FileAttachment, toast/sonner | ~50KB gzipped |
 | MessageReactions | `@/components/chat/MessageReactions` | @radix-ui/react-popover, motion | ~65KB gzipped |
 | AudioPlayer | `@/components/chat/AudioPlayer` | @/components/ui/button (motion) | ~50KB gzipped |
-| PhoneInputField | `@/components/ui/phone-input` | libphonenumber-js/min | ~38KB gzipped |
+| PhoneInputField | `@/components/ui/phone-input` | libphonenumber-js/min, @/components/ui/input (motion) | ~38KB gzipped |
 | DayPicker | `@/widget/components/booking/DayPicker` | Already widget-native | 0KB |
 | TimePicker | `@/widget/components/booking/TimePicker` | Already widget-native | 0KB |
 | BookingConfirmed | `@/widget/components/booking/BookingConfirmed` | Already widget-native | 0KB |
@@ -49,6 +49,7 @@ VoiceInput
 FileDropZone
 ├── @/components/ui/button
 │   └── motion/react (~50KB)
+├── @/lib/toast → sonner (~6KB) ⚠️ HEAVY
 └── @/components/chat/FileAttachment ⚠️ ALSO HAS HEAVY DEPS
     ├── @/components/ui/button
     │   └── motion/react
@@ -62,15 +63,18 @@ MessageReactions
     ├── @/components/ui/button (~motion/react)
     ├── @radix-ui/react-scroll-area (~12KB)
     └── @radix-ui/react-tabs (~10KB)
+└── QuickEmojiPicker component (same file)
+    └── Lightweight but shares EmojiPicker file
 
 AudioPlayer
 ├── @/components/ui/button
 │   └── motion/react (~50KB)
+├── @/lib/audio-recording (lightweight - formatDuration)
 └── Canvas API (native, 0KB)
 
 PhoneInputField
 ├── libphonenumber-js/min (~38KB)
-├── @/components/ui/input
+├── @/components/ui/input ⚠️ USES motion/react
 │   └── motion/react
 └── AsYouType formatter
 ```
@@ -149,6 +153,7 @@ interface WidgetVoiceInputProps {
 
 **Dependencies ALLOWED**:
 - React (useState, useEffect, useRef, useCallback)
+- `cn()` from `@/lib/utils`
 - `@/lib/audio-recording` (existing, no heavy deps)
 - `WidgetButton` from `@/widget/ui/WidgetButton`
 - Icons from `@/widget/icons` (Microphone01, StopCircle, XClose)
@@ -184,9 +189,11 @@ interface WidgetVoiceInputProps {
 ## Phase 2: WidgetFileDropZone & WidgetFileAttachment
 
 ### Objective
-Replace `@/components/chat/FileDropZone` AND its dependency `@/components/chat/FileAttachment` with widget-native versions.
+Replace `@/components/chat/FileDropZone` AND its dependencies with widget-native versions.
 
 > **CRITICAL**: FileDropZone imports FileAttachment which ALSO uses @/components/ui/button. Both must be replaced.
+> **CRITICAL**: FileDropZone uses `@/lib/toast` (sonner) for error handling. Must use callback pattern instead.
+> **CRITICAL**: FileAttachment exports TWO components: `FileAttachment` and `MessageFileAttachment`. Both must be created.
 
 ### Source Component Analysis
 
@@ -201,6 +208,7 @@ Replace `@/components/chat/FileDropZone` AND its dependency `@/components/chat/F
 - Remove file button per item
 - Cancel and Attach action buttons
 - Drag hover visual feedback
+- Toast notifications for errors (MUST REPLACE)
 
 **FileAttachment Implementation Features**:
 - Image preview with thumbnail
@@ -218,6 +226,7 @@ Replace `@/components/chat/FileDropZone` AND its dependency `@/components/chat/F
 | Default | border-dashed border-2 border-muted-foreground/25 | transparent | "Drag files here or click to browse" |
 | Drag Over | border-dashed border-2 border-primary | primary/5 | "Drop files here" |
 | Has Files | border-solid border border-border | card | File list |
+| Error | border-dashed border-2 border-destructive | destructive/5 | Error message inline |
 
 #### FileAttachment - Image Preview
 
@@ -254,6 +263,18 @@ Replace `@/components/chat/FileDropZone` AND its dependency `@/components/chat/F
 - Size: text-xs text-muted-foreground
 - Remove: ghost button, h-6 w-6 p-0, X icon h-3 w-3
 
+#### MessageFileAttachment - Download Variant
+
+```
+┌─────────────────────────────────────────────┐
+│  [📄]  filename.pdf            [⬇ Download] │
+│        1.2 MB                               │
+└─────────────────────────────────────────────┘
+```
+
+- Same as non-image FileAttachment but with Download01 icon instead of X
+- onClick triggers download via `downloadFile()` from `@/lib/file-download`
+
 #### Action Buttons
 
 ```
@@ -269,13 +290,14 @@ Replace `@/components/chat/FileDropZone` AND its dependency `@/components/chat/F
 
 **Files to Create**: 
 1. `src/widget/components/WidgetFileDropZone.tsx`
-2. `src/widget/components/WidgetFileAttachment.tsx`
+2. `src/widget/components/WidgetFileAttachment.tsx` (exports BOTH `WidgetFileAttachment` AND `WidgetMessageFileAttachment`)
 
 ```typescript
 // WidgetFileDropZone
 interface WidgetFileDropZoneProps {
   onFilesSelected: (files: File[], urls: string[]) => void;
   onCancel: () => void;
+  onError?: (message: string) => void; // REPLACES toast
   primaryColor?: string;
   maxFiles?: number; // default 5
   maxSizeBytes?: number; // default 10MB
@@ -300,7 +322,8 @@ interface WidgetMessageFileAttachmentProps {
 ```
 
 **Dependencies ALLOWED**:
-- React
+- React (useState, useEffect, useRef, useCallback)
+- `cn()` from `@/lib/utils`
 - `WidgetButton` from `@/widget/ui/WidgetButton`
 - `@/lib/file-validation` (existing - isImageFile, formatFileSize)
 - `@/lib/file-download` (existing - downloadFile)
@@ -311,6 +334,37 @@ interface WidgetMessageFileAttachmentProps {
 - motion/react
 - @/components/ui/button
 - @/components/chat/FileAttachment (the original)
+- @/lib/toast (sonner) - use onError callback instead
+- sonner
+
+### Error Handling Pattern (REPLACES TOAST)
+
+```typescript
+// INSTEAD OF:
+// toast.error("File too large");
+
+// USE:
+const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+const handleFiles = (files: File[]) => {
+  const oversized = files.filter(f => f.size > maxSizeBytes);
+  if (oversized.length > 0) {
+    const msg = `File too large: ${oversized[0].name}`;
+    setErrorMessage(msg);
+    onError?.(msg);
+    return;
+  }
+  setErrorMessage(null);
+  // ... proceed
+};
+
+// Render inline error:
+{errorMessage && (
+  <div className="text-xs text-destructive mt-2">
+    {errorMessage}
+  </div>
+)}
+```
 
 ### Acceptance Criteria
 
@@ -323,7 +377,10 @@ interface WidgetMessageFileAttachmentProps {
 - [ ] File type icons display correctly
 - [ ] Action button layout matches
 - [ ] File validation behavior unchanged
+- [ ] Errors display inline (NOT via toast)
+- [ ] MessageFileAttachment download button works
 - [ ] No motion/react in bundle
+- [ ] No sonner in bundle
 
 ---
 
@@ -385,9 +442,11 @@ interface WidgetAudioPlayerProps {
 ```
 
 **Dependencies ALLOWED**:
-- React
+- React (useState, useEffect, useRef, useCallback)
+- `cn()` from `@/lib/utils`
 - `WidgetButton` from `@/widget/ui/WidgetButton`
 - `WidgetSpinner` from `@/widget/ui/WidgetSpinner`
+- `@/lib/audio-recording` (existing - formatDuration utility)
 - Canvas API (native)
 - Audio API (native)
 - Icons from `@/widget/icons` (PlayCircle, PauseCircle)
@@ -427,6 +486,11 @@ Replace `@/components/chat/MessageReactions` with widget-native emoji picker usi
 > 2. `@radix-ui/react-scroll-area` (~12KB)
 > 3. `@radix-ui/react-tabs` (~10KB)
 
+> **CRITICAL**: EmojiPicker.tsx exports TWO components:
+> 1. `EmojiPicker` - Full picker with tabs and scroll
+> 2. `QuickEmojiPicker` - Simplified picker for quick reactions
+> Both must be created as widget-native versions.
+
 ### Source Component Analysis
 
 **Files**:
@@ -446,6 +510,11 @@ Replace `@/components/chat/MessageReactions` with widget-native emoji picker usi
 - Scrollable emoji grid per category (8 columns)
 - 50+ emojis per category
 - Hover scale effect on emojis
+
+**QuickEmojiPicker Features**:
+- Single row of commonly used emojis (no tabs)
+- Typically 8-10 emojis in a horizontal row
+- Simpler popover without scroll area
 
 ### Visual Specifications (MUST MATCH EXACTLY)
 
@@ -471,6 +540,17 @@ Replace `@/components/chat/MessageReactions` with widget-native emoji picker usi
 │  ...                                            │
 └─────────────────────────────────────────────────┘
 Width: 320px
+```
+
+#### QuickEmojiPicker Component
+
+```
+┌─────────────────────────────────────────────┐
+│  😊 👍 ❤️ 😂 🎉 👋 🙏 ✨                    │  ← Single row, no tabs
+└─────────────────────────────────────────────┘
+Width: auto (fits content)
+Padding: p-2
+Gap: gap-1
 ```
 
 #### Tab Bar Specifications
@@ -508,7 +588,7 @@ Width: 320px
 
 **Files to Create**:
 1. `src/widget/components/WidgetMessageReactions.tsx`
-2. `src/widget/components/WidgetEmojiPicker.tsx`
+2. `src/widget/components/WidgetEmojiPicker.tsx` (exports BOTH `WidgetEmojiPicker` AND `WidgetQuickEmojiPicker`)
 
 ```typescript
 // WidgetMessageReactions
@@ -523,10 +603,15 @@ interface WidgetMessageReactionsProps {
   disabled?: boolean;
 }
 
-// WidgetEmojiPicker
+// WidgetEmojiPicker (full version with tabs)
 interface WidgetEmojiPickerProps {
   onEmojiSelect: (emoji: string) => void;
   primaryColor: string;
+}
+
+// WidgetQuickEmojiPicker (simplified single-row version)
+interface WidgetQuickEmojiPickerProps {
+  onEmojiSelect: (emoji: string) => void;
 }
 ```
 
@@ -653,9 +738,9 @@ useEffect(() => {
 
 **Dependencies ALLOWED**:
 - React (useState, useEffect, useRef)
+- `cn()` from `@/lib/utils`
 - `WidgetButton` from `@/widget/ui/WidgetButton`
 - Icons from `@/widget/icons` (FaceSmile, Plus)
-- cn() utility from `@/lib/utils`
 
 **Dependencies FORBIDDEN**:
 - motion/react
@@ -682,6 +767,7 @@ useEffect(() => {
 - [ ] Reaction pills styling matches
 - [ ] User's own reactions highlighted with ring-2
 - [ ] Add/remove toggle works
+- [ ] QuickEmojiPicker renders as single row without tabs
 - [ ] No @radix-ui/* in bundle
 - [ ] No motion/react in bundle
 
@@ -691,6 +777,8 @@ useEffect(() => {
 
 ### Objective
 Create lightweight phone input with basic formatting (optional - can keep libphonenumber-js if international accuracy is critical).
+
+> **CRITICAL**: PhoneInputField uses `@/components/ui/input` which has motion/react. Must use `WidgetInput` instead.
 
 ### Decision Point
 
@@ -761,6 +849,16 @@ const detectCountry = (phone: string): string | null => {
 - Placeholder: "Phone number"
 - Format display: `(888) 222-4451` for US
 
+**Dependencies ALLOWED**:
+- React (useState, useCallback)
+- `cn()` from `@/lib/utils`
+- `WidgetInput` from `@/widget/ui/WidgetInput`
+
+**Dependencies FORBIDDEN**:
+- libphonenumber-js
+- @/components/ui/input (uses motion/react)
+- motion/react
+
 ### Acceptance Criteria
 
 - [ ] Input styling identical to PhoneInputField
@@ -768,7 +866,9 @@ const detectCountry = (phone: string): string | null => {
 - [ ] US numbers format as (XXX) XXX-XXXX
 - [ ] Cursor position maintained during formatting
 - [ ] Focus ring matches (ring-2 ring-ring)
+- [ ] Uses WidgetInput (not @/components/ui/input)
 - [ ] No libphonenumber-js in bundle
+- [ ] No motion/react in bundle
 
 ---
 
@@ -947,14 +1047,14 @@ For each component, capture screenshots of:
 - [ ] With 1 image file selected (thumbnail preview)
 - [ ] With 1 non-image file selected (icon preview)
 - [ ] With multiple files selected
-- [ ] File too large error
+- [ ] File too large error (INLINE, not toast)
 - [ ] Max files reached
 
 **WidgetFileAttachment** (both variants):
 - [ ] Image attachment (128x128 preview)
 - [ ] Image attachment hover (remove button visible)
 - [ ] Non-image attachment (file icon + details)
-- [ ] Message attachment with download button
+- [ ] WidgetMessageFileAttachment with download button
 
 **WidgetAudioPlayer**:
 - [ ] Initial state (not played)
@@ -978,6 +1078,11 @@ For each component, capture screenshots of:
 - [ ] Emoji hover state (scale effect)
 - [ ] Custom scrollbar visibility
 
+**WidgetQuickEmojiPicker**:
+- [ ] Single row renders correctly
+- [ ] Emoji hover state
+- [ ] Selection triggers callback
+
 **WidgetPhoneInput** (if Option B):
 - [ ] Empty state
 - [ ] Partial US number
@@ -991,12 +1096,15 @@ For each component, capture screenshots of:
 - [ ] File drag-and-drop triggers callback
 - [ ] File click-to-browse triggers callback
 - [ ] File remove button works (images and non-images)
+- [ ] File errors display inline (NOT as toast)
+- [ ] MessageFileAttachment download works
 - [ ] Audio playback controls work (play, pause, seek)
 - [ ] Audio waveform renders correctly
 - [ ] Emoji picker opens/closes
 - [ ] Tab switching works in emoji picker
 - [ ] Scroll works in emoji picker
 - [ ] Emoji selection triggers callback
+- [ ] QuickEmojiPicker selection works
 - [ ] Emoji reactions toggle correctly
 - [ ] Phone number formats correctly as typed
 
@@ -1014,11 +1122,11 @@ Expected results after all phases:
 | Phase | Component | Cumulative Savings |
 |-------|-----------|-------------------|
 | Phase 1 | WidgetVoiceInput | ~50KB |
-| Phase 2 | WidgetFileDropZone + WidgetFileAttachment | ~50KB |
+| Phase 2 | WidgetFileDropZone + WidgetFileAttachment + WidgetMessageFileAttachment | ~56KB (includes sonner removal) |
 | Phase 3 | WidgetAudioPlayer | ~50KB |
-| Phase 4 | WidgetMessageReactions + WidgetEmojiPicker | ~65KB (includes Radix tabs/scroll) |
-| Phase 5 | WidgetPhoneInput | ~33KB |
-| **Total** | | **~248KB** |
+| Phase 4 | WidgetMessageReactions + WidgetEmojiPicker + WidgetQuickEmojiPicker | ~65KB (includes Radix tabs/scroll) |
+| Phase 5 | WidgetPhoneInput | ~38KB (includes @/components/ui/input removal) |
+| **Total** | | **~259KB** |
 
 ---
 
@@ -1069,14 +1177,14 @@ git checkout HEAD~1 -- src/widget/constants.ts
 
 ### Phase 2
 - [ ] `src/widget/components/WidgetFileDropZone.tsx`
-- [ ] `src/widget/components/WidgetFileAttachment.tsx`
+- [ ] `src/widget/components/WidgetFileAttachment.tsx` (exports `WidgetFileAttachment` AND `WidgetMessageFileAttachment`)
 
 ### Phase 3
 - [ ] `src/widget/components/WidgetAudioPlayer.tsx`
 
 ### Phase 4
 - [ ] `src/widget/components/WidgetMessageReactions.tsx`
-- [ ] `src/widget/components/WidgetEmojiPicker.tsx`
+- [ ] `src/widget/components/WidgetEmojiPicker.tsx` (exports `WidgetEmojiPicker` AND `WidgetQuickEmojiPicker`)
 
 ### Phase 5 (Optional)
 - [ ] `src/widget/components/WidgetPhoneInput.tsx`
@@ -1088,6 +1196,46 @@ git checkout HEAD~1 -- src/widget/constants.ts
 ### Phase 7
 - [ ] Visual regression test results documented
 - [ ] Bundle size measurements recorded
+
+---
+
+## Allowed Dependencies Summary (ALL PHASES)
+
+These dependencies are SAFE to use across all widget-native components:
+
+| Dependency | Source | Notes |
+|------------|--------|-------|
+| React | `react` | useState, useEffect, useRef, useCallback |
+| cn() | `@/lib/utils` | Utility for class merging |
+| WidgetButton | `@/widget/ui/WidgetButton` | Widget-native button |
+| WidgetInput | `@/widget/ui/WidgetInput` | Widget-native input |
+| WidgetSpinner | `@/widget/ui/WidgetSpinner` | Widget-native spinner |
+| Icons | `@/widget/icons` | Tree-shaken re-exports |
+| formatDuration | `@/lib/audio-recording` | Lightweight utility |
+| isImageFile, formatFileSize | `@/lib/file-validation` | Lightweight utilities |
+| downloadFile | `@/lib/file-download` | Lightweight utility |
+| FileTypeIcons | `@/components/chat/FileTypeIcons` | Pure SVG components, no deps |
+
+---
+
+## Forbidden Dependencies Summary (ALL PHASES)
+
+These dependencies MUST NEVER appear in widget-native components:
+
+| Dependency | Why Forbidden |
+|------------|---------------|
+| motion/react | ~50KB bundle impact |
+| @radix-ui/* | Various sizes, tree-shaking issues |
+| @/components/ui/button | Uses motion/react |
+| @/components/ui/input | Uses motion/react |
+| @/components/ui/scroll-area | Radix dependency |
+| @/components/ui/tabs | Radix dependency |
+| @/components/ui/popover | Radix dependency |
+| @/lib/toast | Imports sonner (~6KB) |
+| sonner | ~6KB bundle impact |
+| libphonenumber-js | ~38KB bundle impact |
+| @/components/chat/FileAttachment | Uses forbidden button |
+| @/components/chat/EmojiPicker | Uses multiple forbidden deps |
 
 ---
 
@@ -1111,3 +1259,4 @@ git checkout HEAD~1 -- src/widget/constants.ts
 |---------|------|--------|---------|
 | 1.0 | 2025-12-17 | AI Assistant | Initial comprehensive plan |
 | 1.1 | 2025-12-17 | AI Assistant | Fixed 3 critical gaps: Added WidgetFileAttachment requirement, detailed EmojiPicker Radix replacements (Tabs, ScrollArea, Button), corrected icons inventory with 6 missing icons |
+| 1.2 | 2025-12-17 | AI Assistant | Fixed 7 critical issues: (1) Added toast/sonner to forbidden + onError callback pattern for FileDropZone, (2) Added @/lib/file-download to allowed deps, (3) Explicitly stated WidgetMessageFileAttachment requirement, (4) Added @/lib/audio-recording to AudioPlayer allowed deps, (5) Added WidgetQuickEmojiPicker requirement, (6) Added @/components/ui/input to Phase 5 forbidden + WidgetInput to allowed, (7) Added cn() consistently to all phases + created Allowed/Forbidden dependency summary tables |
