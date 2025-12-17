@@ -10,7 +10,7 @@
 
 import { Suspense } from 'react';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Check, CheckCircle, XCircle, Download01 } from '@untitledui/icons';
+import { Check, CheckCircle, XCircle, Download01 } from '../icons';
 import { ChatBubbleIcon } from '@/components/agents/ChatBubbleIcon';
 import { LinkPreviewsWidget } from './LinkPreviewsWidget';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
