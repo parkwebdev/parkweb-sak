@@ -393,3 +393,105 @@ input, textarea {
   @apply max-w-full h-auto my-3;
   border-radius: 0.75rem;
 }
+
+/* ============================================================================
+   Voice Recording Animations (Phase 1 - Widget Bundle Reduction)
+   ============================================================================ */
+
+/* Recording pulse ring animation - EXACT match to original */
+@keyframes widget-recording-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 hsl(var(--destructive) / 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px hsl(var(--destructive) / 0);
+  }
+}
+
+.widget-recording-pulse {
+  animation: widget-recording-pulse 1.5s ease-in-out infinite;
+}
+
+/* Recording dot pulse animation */
+@keyframes widget-recording-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.widget-recording-dot {
+  animation: widget-recording-dot 1s ease-in-out infinite;
+}
+
+/* Stop button rotation animation - matches original */
+@keyframes widget-stop-rotate {
+  0% { transform: rotate(0deg); }
+  50% { transform: rotate(180deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.widget-stop-rotate {
+  animation: widget-stop-rotate 2s ease-in-out infinite;
+}
+
+/* Frequency bar animation - each bar has staggered delay */
+@keyframes widget-freq-bar {
+  0%, 100% { height: 2px; }
+  25% { height: var(--freq-height-1, 8px); }
+  50% { height: var(--freq-height-2, 12px); }
+  75% { height: var(--freq-height-3, 6px); }
+}
+
+.widget-freq-bar {
+  animation: widget-freq-bar 1s ease-in-out infinite;
+  animation-delay: var(--freq-delay, 0s);
+}
+
+/* Voice input container entrance/exit */
+@keyframes widget-voice-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes widget-voice-exit {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+}
+
+.widget-voice-enter {
+  animation: widget-voice-enter 0.15s ease-out forwards;
+}
+
+.widget-voice-exit {
+  animation: widget-voice-exit 0.15s ease-out forwards;
+}
+
+/* Expanded content slide animation */
+@keyframes widget-expand-content {
+  from {
+    opacity: 0;
+    width: 0;
+    margin-left: 0;
+  }
+  to {
+    opacity: 1;
+    width: auto;
+    margin-left: 8px;
+  }
+}
+
+.widget-expand-content {
+  animation: widget-expand-content 0.4s ease-out forwards;
+  overflow: hidden;
+}

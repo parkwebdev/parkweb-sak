@@ -48,9 +48,9 @@ export const WIDGET_CSS_VARS = {
  * These are only loaded when actually needed.
  */
 
-// Voice input for audio recording
+// Voice input for audio recording - WIDGET-NATIVE (no motion/react)
 export const VoiceInput = lazy(() => 
-  import('@/components/molecule-ui/voice-input').then(m => ({ default: m.VoiceInput }))
+  import('./components/WidgetVoiceInput').then(m => ({ default: m.WidgetVoiceInput }))
 );
 
 // File drop zone for attachments
