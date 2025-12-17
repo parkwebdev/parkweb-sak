@@ -10,7 +10,14 @@
 
 export { WidgetButton, widgetButtonVariants, type WidgetButtonProps } from './WidgetButton';
 export { WidgetInput, widgetInputVariants } from './WidgetInput';
-export { WidgetSelect, WidgetSelectItem, widgetSelectVariants } from './WidgetSelect';
+export { 
+  WidgetSelect, 
+  WidgetSelectTrigger, 
+  WidgetSelectValue, 
+  WidgetSelectContent, 
+  WidgetSelectItem,
+  widgetSelectTriggerVariants 
+} from './WidgetSelect';
 export { WidgetAvatar, WidgetAvatarImage, WidgetAvatarFallback } from './WidgetAvatar';
 export { 
   WidgetCard, 
