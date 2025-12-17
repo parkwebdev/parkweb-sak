@@ -48,6 +48,9 @@ serve(async (req) => {
     position: currentScript.getAttribute('data-position') || 'bottom-right',
     primaryColor: currentScript.getAttribute('data-primary-color') || '#3b82f6',
     appUrl: '${appUrl}',
+    // Performance settings
+    loadingMode: currentScript.getAttribute('data-load') || 'immediate',
+    enablePreload: currentScript.getAttribute('data-preload') !== 'false',
   };
   
   // Dynamically load the full widget bundle
@@ -58,6 +61,13 @@ serve(async (req) => {
   script.setAttribute('data-position', config.position);
   script.setAttribute('data-primary-color', config.primaryColor);
   script.setAttribute('data-app-url', config.appUrl);
+  // Pass through performance settings
+  if (config.loadingMode !== 'immediate') {
+    script.setAttribute('data-load', config.loadingMode);
+  }
+  if (!config.enablePreload) {
+    script.setAttribute('data-preload', 'false');
+  }
   
   document.head.appendChild(script);
 })();

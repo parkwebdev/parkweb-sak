@@ -96,6 +96,10 @@ export interface EmbeddedChatConfig {
   wordpressSiteUrl?: string;
   defaultLocationSlug?: string;
   enableAutoLocationDetection: boolean;
+  
+  // Performance Settings
+  loadingMode: 'immediate' | 'idle' | 'interaction' | 'click';
+  enablePreload: boolean;
 }
 
 export const useEmbeddedChatConfig = (agentId: string) => {
@@ -172,6 +176,10 @@ export const useEmbeddedChatConfig = (agentId: string) => {
     wordpressSiteUrl: '',
     defaultLocationSlug: '',
     enableAutoLocationDetection: true,
+    
+    // Performance Settings
+    loadingMode: 'immediate',
+    enablePreload: true,
   });
 
   const [config, setConfig] = useState<EmbeddedChatConfig>(getDefaultConfig());
@@ -284,6 +292,16 @@ export const useEmbeddedChatConfig = (agentId: string) => {
     }
     if (config.defaultLocationSlug) {
       locationAttrs.push(`  data-location="${config.defaultLocationSlug}"`);
+    }
+    
+    // Add loading mode attribute if not immediate (the default)
+    if (config.loadingMode && config.loadingMode !== 'immediate') {
+      locationAttrs.push(`  data-load="${config.loadingMode}"`);
+    }
+    
+    // Add preload attribute if disabled (enabled by default)
+    if (config.enablePreload === false) {
+      locationAttrs.push(`  data-preload="false"`);
     }
     
     const optionalAttrs = locationAttrs.length > 0 ? '\n' + locationAttrs.join('\n') : '';

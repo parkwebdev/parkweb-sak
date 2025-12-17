@@ -211,6 +211,9 @@
         // Location detection attributes (Phase 5)
         wordpressSiteUrl: config.wordpressSiteUrl || null,
         locationSlug: config.locationSlug || null,
+        // Performance settings
+        loadingMode: config.loadingMode || 'immediate',
+        enablePreload: config.enablePreload !== false, // default true
       };
       this.isOpen = false;
       this.container = null;
@@ -228,6 +231,8 @@
       // Parent page tracking
       this.currentParentUrl = window.location.href;
       this.parentReferrer = document.referrer;
+      // Track if deferred load has been triggered
+      this.deferredLoadTriggered = false;
     }
     
     init() {
@@ -253,8 +258,67 @@
       window.addEventListener('popstate', () => this.trackParentNavigation());
       window.addEventListener('hashchange', () => this.trackParentNavigation());
       
-      // INSTANT LOADING: Start fetching config and creating iframe immediately on page load
-      this.preloadEverything();
+      // Initialize based on loading mode
+      this.initLoadingStrategy();
+    }
+    
+    /**
+     * Initialize loading strategy based on loadingMode config
+     */
+    initLoadingStrategy() {
+      const mode = this.config.loadingMode;
+      
+      switch (mode) {
+        case 'idle':
+          // Load when browser is idle
+          if ('requestIdleCallback' in window) {
+            requestIdleCallback(() => this.preloadEverything(), { timeout: 3000 });
+          } else {
+            // Fallback for Safari
+            setTimeout(() => this.preloadEverything(), 200);
+          }
+          break;
+          
+        case 'interaction':
+          // Load on first user interaction
+          this.setupInteractionListeners();
+          break;
+          
+        case 'click':
+          // Don't preload anything, load on button click
+          // Button click handler will trigger load
+          break;
+          
+        case 'immediate':
+        default:
+          // Load immediately (current behavior)
+          this.preloadEverything();
+          break;
+      }
+    }
+    
+    /**
+     * Setup listeners for first user interaction (scroll, click, touch)
+     */
+    setupInteractionListeners() {
+      const triggerLoad = () => {
+        if (this.deferredLoadTriggered) return;
+        this.deferredLoadTriggered = true;
+        
+        // Remove listeners
+        window.removeEventListener('scroll', triggerLoad);
+        window.removeEventListener('click', triggerLoad);
+        window.removeEventListener('touchstart', triggerLoad);
+        window.removeEventListener('mousemove', triggerLoad);
+        
+        // Start preloading
+        this.preloadEverything();
+      };
+      
+      window.addEventListener('scroll', triggerLoad, { passive: true, once: true });
+      window.addEventListener('click', triggerLoad, { once: true });
+      window.addEventListener('touchstart', triggerLoad, { passive: true, once: true });
+      window.addEventListener('mousemove', triggerLoad, { once: true });
     }
     
     injectStyles() {
@@ -264,12 +328,14 @@
     }
     
     /**
-     * Preload everything on page load (Intercom-style)
+     * Preload everything on page load (or when deferred load triggers)
      * This makes click-to-open instant
      */
     preloadEverything() {
-      // Add preconnect hints
-      this.addPreconnectHints();
+      // Add preconnect hints (if preload is enabled)
+      if (this.config.enablePreload) {
+        this.addPreconnectHints();
+      }
       
       // Fetch config and create iframe in parallel
       this.fetchConfig();
@@ -459,6 +525,15 @@
     
     open() {
       this.isOpen = true;
+      
+      // For 'click' loading mode, trigger load on first open
+      if (this.config.loadingMode === 'click' && !this.iframeLoaded) {
+        this.preloadEverything();
+        // Show loading state briefly while iframe loads
+        this.showContainer();
+        return;
+      }
+      
       // Widget is preloaded, just show it
       this.showContainer();
       // Clear unread badge when opening
@@ -592,6 +667,9 @@
       // Location detection attributes (Phase 5)
       wordpressSiteUrl: currentScript.getAttribute('data-wordpress-site') || null,
       locationSlug: currentScript.getAttribute('data-location') || null,
+      // Performance settings
+      loadingMode: currentScript.getAttribute('data-load') || 'immediate',
+      enablePreload: currentScript.getAttribute('data-preload') !== 'false',
     };
     
     const widget = new ChatPadWidget(config);
