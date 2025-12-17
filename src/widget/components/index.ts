@@ -56,3 +56,10 @@ export { WidgetFileAttachment, WidgetMessageFileAttachment } from './WidgetFileA
 
 /** Audio player for voice messages - CSS-only animations (no motion/react) */
 export { WidgetAudioPlayer } from './WidgetAudioPlayer';
+
+/** Message reactions - CSS-only popover (no Radix, no motion/react) */
+export { WidgetMessageReactions } from './WidgetMessageReactions';
+export type { Reaction } from './WidgetMessageReactions';
+
+/** Emoji picker - CSS-only tabs and scroll (no Radix, no motion/react) */
+export { WidgetEmojiPicker, WidgetQuickEmojiPicker } from './WidgetEmojiPicker';

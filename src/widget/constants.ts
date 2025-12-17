@@ -58,9 +58,9 @@ export const FileDropZone = lazy(() =>
   import('./components/WidgetFileDropZone').then(m => ({ default: m.WidgetFileDropZone }))
 );
 
-// Message reactions (emoji reactions on messages)
+// Message reactions (emoji reactions on messages) - WIDGET-NATIVE (no Radix, no motion/react)
 export const MessageReactions = lazy(() => 
-  import('@/components/chat/MessageReactions').then(m => ({ default: m.MessageReactions }))
+  import('./components/WidgetMessageReactions').then(m => ({ default: m.WidgetMessageReactions }))
 );
 
 // Audio player for voice messages - WIDGET-NATIVE (no motion/react)
