@@ -8,7 +8,7 @@
  */
 
 import { Suspense, useRef, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
+import { WidgetButton } from '../ui';
 import { Textarea } from '@/components/ui/textarea';
 import { Send01, Microphone01, Attachment01, X } from '../icons';
 import { VoiceInput } from '../constants';
@@ -115,7 +115,7 @@ export const MessageInput = ({
                 ) : (
                   <FileTypeIcon fileName={pf.file.name} width={32} height={32} />
                 )}
-                <Button 
+                <WidgetButton 
                   size="icon"
                   variant="destructive"
                   onClick={() => onRemoveFile(i)} 
@@ -123,7 +123,7 @@ export const MessageInput = ({
                   aria-label={`Remove ${pf.file.name}`}
                 >
                   <X className="h-3 w-3" aria-hidden="true" />
-                </Button>
+                </WidgetButton>
               </div>
             </div>
           ))}
@@ -145,7 +145,7 @@ export const MessageInput = ({
         ) : (
           <div className="flex items-end gap-2">
             {enableFileAttachments && (
-              <Button 
+              <WidgetButton 
                 type="button"
                 size="icon" 
                 variant="ghost" 
@@ -155,10 +155,10 @@ export const MessageInput = ({
                 aria-label="Attach file"
               >
                 <Attachment01 className="h-4 w-4" aria-hidden="true" />
-              </Button>
+              </WidgetButton>
             )}
             {enableVoiceMessages && (
-              <Button 
+              <WidgetButton 
                 type="button"
                 size="icon" 
                 variant="ghost" 
@@ -168,7 +168,7 @@ export const MessageInput = ({
                 aria-label="Record voice message"
               >
                 <Microphone01 className="h-4 w-4" aria-hidden="true" />
-              </Button>
+              </WidgetButton>
             )}
             
             <div className="relative flex-1">
@@ -182,7 +182,7 @@ export const MessageInput = ({
                 rows={1}
                 className={`min-h-[36px] max-h-[120px] py-2 pr-10 text-sm placeholder:text-xs resize-none ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
               />
-              <Button 
+              <WidgetButton 
                 type="button"
                 size="icon" 
                 className="absolute right-1 bottom-1 h-7 w-7 bg-foreground text-background hover:bg-foreground/90"
@@ -191,7 +191,7 @@ export const MessageInput = ({
                 aria-label="Send message"
               >
                 <Send01 className="h-3.5 w-3.5" aria-hidden="true" />
-              </Button>
+              </WidgetButton>
             </div>
           </div>
         )}

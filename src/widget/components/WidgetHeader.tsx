@@ -7,7 +7,7 @@
  * @module widget/components/WidgetHeader
  */
 
-import { Button } from '@/components/ui/button';
+import { WidgetButton } from '../ui';
 import { X, VolumeMax, VolumeX } from '../icons';
 import { ChatBubbleIcon } from '@/components/agents/ChatBubbleIcon';
 
@@ -101,7 +101,7 @@ export const WidgetHeader = ({
       </div>
       <div className="flex items-center gap-1 relative">
         <div className="relative">
-          <Button 
+          <WidgetButton 
             variant="ghost" 
             size="icon" 
             className="text-muted-foreground hover:text-foreground hover:bg-transparent h-8 w-8" 
@@ -110,7 +110,7 @@ export const WidgetHeader = ({
             aria-expanded={showSettingsDropdown}
           >
             <SlidersIcon className="h-4 w-4" aria-hidden="true" />
-          </Button>
+          </WidgetButton>
           {showSettingsDropdown && (
             <div className="absolute right-0 top-full mt-1 bg-card border rounded-lg shadow-lg p-3 z-50 min-w-[160px]">
               <div className="flex items-center justify-between gap-3">
@@ -127,9 +127,9 @@ export const WidgetHeader = ({
             </div>
           )}
         </div>
-        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground hover:bg-transparent h-8 w-8" onClick={onClose} aria-label="Close chat">
+        <WidgetButton variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground hover:bg-transparent h-8 w-8" onClick={onClose} aria-label="Close chat">
           <X className="h-4 w-4" aria-hidden="true" />
-        </Button>
+        </WidgetButton>
       </div>
     </div>
   );

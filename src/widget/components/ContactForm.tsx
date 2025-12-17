@@ -8,10 +8,9 @@
  */
 
 import { Suspense, useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { WidgetButton, WidgetInput } from '../ui';
+import { WidgetSelect, WidgetSelectTrigger, WidgetSelectValue, WidgetSelectContent, WidgetSelectItem } from '../ui';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PhoneInputField } from '../constants';
 import { createLead } from '../api';
 import type { ChatUser } from '../types';
@@ -147,30 +146,30 @@ export const ContactForm = ({
             className="absolute -left-[9999px] h-0 w-0 opacity-0 pointer-events-none"
             aria-hidden="true"
           />
-          <Input name="firstName" placeholder="First name" className="text-sm" required autoComplete="given-name" />
+          <WidgetInput name="firstName" placeholder="First name" className="text-sm" required autoComplete="given-name" />
           {formErrors.firstName && <p className="text-xs text-destructive" role="alert">{formErrors.firstName}</p>}
-          <Input name="lastName" placeholder="Last name" className="text-sm" required autoComplete="family-name" />
+          <WidgetInput name="lastName" placeholder="Last name" className="text-sm" required autoComplete="family-name" />
           {formErrors.lastName && <p className="text-xs text-destructive" role="alert">{formErrors.lastName}</p>}
-          <Input name="email" type="email" placeholder="Email" className="text-sm" required autoComplete="email" />
+          <WidgetInput name="email" type="email" placeholder="Email" className="text-sm" required autoComplete="email" />
           {formErrors.email && <p className="text-xs text-destructive" role="alert">{formErrors.email}</p>}
           
           {customFields.map(field => (
             <div key={field.id}>
               {field.fieldType === 'select' ? (
-                <Select name={field.id} required={field.required}>
-                  <SelectTrigger className="text-sm">
-                    <SelectValue placeholder={field.label} />
-                  </SelectTrigger>
-                  <SelectContent>
+                <WidgetSelect name={field.id} required={field.required}>
+                  <WidgetSelectTrigger className="text-sm">
+                    <WidgetSelectValue placeholder={field.label} />
+                  </WidgetSelectTrigger>
+                  <WidgetSelectContent>
                     {field.options?.map(opt => (
-                      <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                      <WidgetSelectItem key={opt} value={opt}>{opt}</WidgetSelectItem>
                     ))}
-                  </SelectContent>
-                </Select>
+                  </WidgetSelectContent>
+                </WidgetSelect>
               ) : field.fieldType === 'textarea' ? (
                 <Textarea name={field.id} placeholder={field.label} className="text-sm" required={field.required} />
               ) : field.fieldType === 'phone' ? (
-                <Suspense fallback={<Input placeholder={field.label} className="text-sm" disabled />}>
+                <Suspense fallback={<WidgetInput placeholder={field.label} className="text-sm" disabled />}>
                   <PhoneInputField 
                     name={field.id}
                     placeholder={field.label}
@@ -179,14 +178,14 @@ export const ContactForm = ({
                   />
                 </Suspense>
               ) : (
-                <Input name={field.id} type={field.fieldType === 'email' ? 'email' : 'text'} placeholder={field.label} className="text-sm" required={field.required} />
+                <WidgetInput name={field.id} type={field.fieldType === 'email' ? 'email' : 'text'} placeholder={field.label} className="text-sm" required={field.required} />
               )}
             </div>
           ))}
           
-          <Button type="submit" size="lg" className="w-full text-white" style={{ backgroundColor: primaryColor }}>
+          <WidgetButton type="submit" size="lg" className="w-full text-white" style={{ backgroundColor: primaryColor }}>
             Start Chat
-          </Button>
+          </WidgetButton>
         </form>
       </div>
     </div>

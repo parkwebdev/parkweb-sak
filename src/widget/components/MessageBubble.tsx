@@ -9,11 +9,10 @@
  */
 
 import { Suspense } from 'react';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { WidgetAvatar, WidgetAvatarImage, WidgetAvatarFallback } from '../ui';
 import { Check, CheckCircle, XCircle, Download01 } from '../icons';
 import { ChatBubbleIcon } from '@/components/agents/ChatBubbleIcon';
 import { LinkPreviewsWidget } from './LinkPreviewsWidget';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { formatShortTime } from '@/lib/time-formatting';
 import { formatFileSize } from '@/lib/file-validation';
 import { downloadFile } from '@/lib/file-download';
@@ -92,12 +91,12 @@ export const MessageBubble = ({
       {/* Avatar - only show for first message in group */}
       {!isUser && !isContinuation && (
         msgWithExtras.isHuman && msgWithExtras.senderAvatar ? (
-          <Avatar className="w-7 h-7 flex-shrink-0">
-            <AvatarImage src={msgWithExtras.senderAvatar} alt={msgWithExtras.senderName || 'Team member'} />
-            <AvatarFallback className="text-xs bg-muted text-muted-foreground">
+          <WidgetAvatar className="w-7 h-7 flex-shrink-0">
+            <WidgetAvatarImage src={msgWithExtras.senderAvatar} alt={msgWithExtras.senderName || 'Team member'} />
+            <WidgetAvatarFallback className="text-xs bg-muted text-muted-foreground">
               {(msgWithExtras.senderName || 'T')[0].toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
+            </WidgetAvatarFallback>
+          </WidgetAvatar>
         ) : (
           <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 bg-muted">
             <ChatBubbleIcon className="h-4 w-4 text-foreground" />
@@ -122,32 +121,17 @@ export const MessageBubble = ({
               <>
                 <span>•</span>
                 {message.failed ? (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <span className="text-destructive inline-flex items-center">
-                        <XCircle className="h-3 w-3" />
-                      </span>
-                    </TooltipTrigger>
-                    <TooltipContent side="top" className="text-xs">Failed</TooltipContent>
-                  </Tooltip>
+                  <span className="text-destructive inline-flex items-center" title="Failed">
+                    <XCircle className="h-3 w-3" />
+                  </span>
                 ) : message.read_at ? (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <span className="text-info inline-flex items-center">
-                        <CheckCircle className="h-3 w-3" />
-                      </span>
-                    </TooltipTrigger>
-                    <TooltipContent side="top" className="text-xs">Seen</TooltipContent>
-                  </Tooltip>
+                  <span className="text-info inline-flex items-center" title="Seen">
+                    <CheckCircle className="h-3 w-3" />
+                  </span>
                 ) : (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <span className="inline-flex items-center">
-                        <Check className="h-3 w-3" />
-                      </span>
-                    </TooltipTrigger>
-                    <TooltipContent side="top" className="text-xs">Sent</TooltipContent>
-                  </Tooltip>
+                  <span className="inline-flex items-center" title="Sent">
+                    <Check className="h-3 w-3" />
+                  </span>
                 )}
               </>
             )}

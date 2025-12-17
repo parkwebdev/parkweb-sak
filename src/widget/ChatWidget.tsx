@@ -56,8 +56,7 @@ const NewsView = lazy(() => import('./views/NewsView').then(m => ({ default: m.N
 
 // UI Components
 import { FloatingButton, WidgetHeader, WidgetNav, SatisfactionRating } from './components';
-import { Card } from '@/components/ui/card';
-import { TooltipProvider } from '@/components/ui/tooltip';
+import { WidgetCard } from './ui';
 
 export const ChatWidget = ({ config: configProp, previewMode = false, containedPreview = false, isLoading: isLoadingProp = false }: ChatWidgetProps) => {
   // Mobile detection for removing border radius on full-screen mobile
@@ -781,7 +780,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
   const widgetContent = (
     <div id="chatpad-widget-root" className="h-full bg-transparent flex flex-col items-end gap-4 justify-end">
       {(isOpen || isIframeMode) && (
-        <Card
+        <WidgetCard
           className={isIframeMode 
             ? `w-full h-full flex flex-col shadow-none overflow-hidden border-0 ${isMobileFullScreen ? 'rounded-none' : 'rounded-3xl'}` 
             : "w-[380px] h-[650px] flex flex-col shadow-xl overflow-hidden border-0 rounded-3xl"}
@@ -905,7 +904,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
             enableHelpTab={config.enableHelpTab}
             enableNewsTab={config.enableNewsTab}
           />
-        </Card>
+        </WidgetCard>
       )}
       
       {/* FloatingButton - only in contained preview mode, not iframe (parent handles button) */}
@@ -920,26 +919,22 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
 
   // For iframe mode, render widget content directly
   if (isIframeMode) {
-    return <TooltipProvider>{widgetContent}</TooltipProvider>;
+    return widgetContent;
   }
 
   // For contained preview mode (embed tab preview), render with absolute positioning
   if (containedPreview) {
     return (
-      <TooltipProvider>
-        <div className={`absolute ${positionClasses[position] || positionClasses['bottom-right']}`}>
-          {widgetContent}
-        </div>
-      </TooltipProvider>
+      <div className={`absolute ${positionClasses[position] || positionClasses['bottom-right']}`}>
+        {widgetContent}
+      </div>
     );
   }
 
   // Default mode: fixed positioning for standalone widget
   return (
-    <TooltipProvider>
-      <div className={`fixed z-[9999] ${positionClasses[position] || positionClasses['bottom-right']}`}>
-        {widgetContent}
-      </div>
-    </TooltipProvider>
+    <div className={`fixed z-[9999] ${positionClasses[position] || positionClasses['bottom-right']}`}>
+      {widgetContent}
+    </div>
   );
 };
