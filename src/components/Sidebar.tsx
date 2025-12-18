@@ -277,7 +277,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
                       isActive 
                         ? 'bg-accent text-accent-foreground' 
                         : isGetSetUp && !isCollapsed
-                          ? 'bg-background border border-border text-muted-foreground hover:text-foreground'
+                          ? 'bg-background dark:bg-accent/40 border border-border text-muted-foreground hover:text-foreground hover:bg-accent/60'
                           : 'bg-transparent hover:bg-accent/50 text-muted-foreground hover:text-foreground'
                     }`}
                     title={isCollapsed ? item.label : ''}
