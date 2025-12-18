@@ -127,6 +127,9 @@ export const createHelpArticlesColumns = ({
   // Checkbox column for row selection
   {
     id: 'select',
+    size: 40,
+    minSize: 40,
+    maxSize: 40,
     header: ({ table }) => (
       <Checkbox
         checked={table.getIsAllPageRowsSelected()}
@@ -151,6 +154,9 @@ export const createHelpArticlesColumns = ({
   {
     id: 'article',
     accessorKey: 'title',
+    size: 300,
+    minSize: 200,
+    maxSize: 400,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Article" />
     ),
@@ -159,7 +165,7 @@ export const createHelpArticlesColumns = ({
       const preview = getContentPreview(article.content);
       
       return (
-        <div className="flex items-center gap-3 min-w-0 py-1">
+        <div className="flex items-center gap-3 min-w-0 py-1 max-w-[400px]">
           {/* Thumbnail */}
           {article.featuredImage ? (
             <div className="w-10 h-10 rounded-md overflow-hidden shrink-0 bg-muted">
@@ -188,15 +194,18 @@ export const createHelpArticlesColumns = ({
   // Category badge with icon
   {
     id: 'category',
+    size: 150,
+    minSize: 120,
+    maxSize: 180,
     header: () => <span>Category</span>,
     cell: ({ row }) => {
       const article = row.original;
       const CategoryIcon = getCategoryIcon(article.categoryIcon);
       
       return (
-        <Badge variant="outline" className="text-xs gap-1.5 whitespace-nowrap">
+        <Badge variant="outline" className="text-xs gap-1.5">
           <CategoryIcon className="h-3 w-3" />
-          {article.categoryName}
+          <span className="truncate">{article.categoryName}</span>
         </Badge>
       );
     },
@@ -206,6 +215,9 @@ export const createHelpArticlesColumns = ({
   // Embedding status
   {
     id: 'status',
+    size: 90,
+    minSize: 90,
+    maxSize: 100,
     header: () => <span>Status</span>,
     cell: ({ row }) => {
       const hasEmbedding = row.original.hasEmbedding;
@@ -235,6 +247,9 @@ export const createHelpArticlesColumns = ({
   // Date added
   {
     accessorKey: 'createdAt',
+    size: 100,
+    minSize: 80,
+    maxSize: 120,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Added" />
     ),
@@ -242,7 +257,7 @@ export const createHelpArticlesColumns = ({
       const date = row.original.createdAt;
       if (!date) return <span className="text-muted-foreground">-</span>;
       return (
-        <span className="text-sm text-muted-foreground">
+        <span className="text-sm text-muted-foreground whitespace-nowrap">
           {formatDistanceToNow(new Date(date), { addSuffix: true })}
         </span>
       );
@@ -252,6 +267,9 @@ export const createHelpArticlesColumns = ({
   // Actions column with reorder arrows, edit, and delete
   {
     id: 'actions',
+    size: 150,
+    minSize: 150,
+    maxSize: 150,
     header: () => <span>Actions</span>,
     cell: ({ row }) => {
       const article = row.original;
