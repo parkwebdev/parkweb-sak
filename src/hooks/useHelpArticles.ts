@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { HelpArticle, HelpCategory } from './useEmbeddedChatConfig';
 import { logger } from '@/utils/logger';
@@ -27,70 +27,83 @@ export const useHelpArticles = (agentId: string) => {
   const [articles, setArticles] = useState<HelpArticle[]>([]);
   const [categories, setCategories] = useState<HelpCategory[]>([]);
   const [loading, setLoading] = useState(true);
+  const initialLoadDone = useRef(false);
 
-  // Load articles and categories from Supabase
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
+  // Fetch data function wrapped in useCallback for stability
+  const fetchData = useCallback(async (isRefetch = false) => {
+    if (!agentId) return;
 
-        // Get agent's user_id first
-        const { data: agent } = await supabase
-          .from('agents')
-          .select('user_id')
-          .eq('id', agentId)
-          .single();
+    // Only show loading state on initial load, not refetches
+    if (!isRefetch && !initialLoadDone.current) {
+      setLoading(true);
+    }
 
-        if (!agent) {
-          logger.error('Agent not found');
-          return;
-        }
+    try {
+      // Get agent's user_id first
+      const { data: agent } = await supabase
+        .from('agents')
+        .select('user_id')
+        .eq('id', agentId)
+        .single();
 
-        // Fetch categories
-        const { data: categoriesData, error: catError } = await supabase
-          .from('help_categories')
-          .select('*')
-          .eq('agent_id', agentId)
-          .order('order_index');
-
-        if (catError) throw catError;
-
-        // Fetch articles
-        const { data: articlesData, error: artError } = await supabase
-          .from('help_articles')
-          .select('*')
-          .eq('agent_id', agentId)
-          .order('order_index');
-
-        if (artError) throw artError;
-
-        const mappedCategories: HelpCategory[] = (categoriesData || []).map(cat => ({
-          id: cat.id,
-          name: cat.name,
-          description: cat.description || '',
-          icon: cat.icon || 'book',
-        }));
-
-        const mappedArticles: HelpArticle[] = (articlesData || []).map((article) => ({
-          id: article.id,
-          title: article.title,
-          content: article.content,
-          category: categoriesData?.find(c => c.id === article.category_id)?.name || '',
-          order: article.order_index,
-          featured_image: article.featured_image || undefined,
-          has_embedding: article.embedding !== null,
-        }));
-
-        setCategories(mappedCategories);
-        setArticles(mappedArticles);
-      } catch (error) {
-        logger.error('Error fetching help articles', error);
-      } finally {
-        setLoading(false);
+      if (!agent) {
+        logger.error('Agent not found');
+        return;
       }
-    };
 
-    fetchData();
+      // Fetch categories
+      const { data: categoriesData, error: catError } = await supabase
+        .from('help_categories')
+        .select('*')
+        .eq('agent_id', agentId)
+        .order('order_index');
+
+      if (catError) throw catError;
+
+      // Fetch articles
+      const { data: articlesData, error: artError } = await supabase
+        .from('help_articles')
+        .select('*')
+        .eq('agent_id', agentId)
+        .order('order_index');
+
+      if (artError) throw artError;
+
+      const mappedCategories: HelpCategory[] = (categoriesData || []).map(cat => ({
+        id: cat.id,
+        name: cat.name,
+        description: cat.description || '',
+        icon: cat.icon || 'book',
+      }));
+
+      const mappedArticles: HelpArticle[] = (articlesData || []).map((article) => ({
+        id: article.id,
+        title: article.title,
+        content: article.content,
+        category: categoriesData?.find(c => c.id === article.category_id)?.name || '',
+        order: article.order_index,
+        featured_image: article.featured_image || undefined,
+        has_embedding: article.embedding !== null,
+      }));
+
+      setCategories(mappedCategories);
+      setArticles(mappedArticles);
+      initialLoadDone.current = true;
+    } catch (error) {
+      logger.error('Error fetching help articles', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [agentId]);
+
+  // Store fetchData in ref to prevent useEffect re-runs
+  const fetchDataRef = useRef(fetchData);
+  fetchDataRef.current = fetchData;
+
+  // Initial fetch - only depends on agentId, uses ref to call current function
+  useEffect(() => {
+    if (!agentId) return;
+    fetchDataRef.current(false);
   }, [agentId]);
 
   const addArticle = async (article: Omit<HelpArticle, 'id' | 'order'>) => {
@@ -642,5 +655,6 @@ export const useHelpArticles = (agentId: string) => {
     importFromKnowledge,
     bulkImport,
     embedAllArticles,
+    refetch: () => fetchData(true),
   };
 };
