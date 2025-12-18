@@ -570,6 +570,7 @@ export const useHelpArticles = (agentId: string) => {
         content: article.content,
         category: importData[index].category,
         order: article.order_index,
+        has_embedding: false, // Will be embedded async
       }));
 
       setArticles([...articles, ...newArticles]);
@@ -585,6 +586,23 @@ export const useHelpArticles = (agentId: string) => {
 
       if (newCategoriesData.length > 0) {
         setCategories([...categories, ...newCategoriesData]);
+      }
+
+      // Trigger embedding for all imported articles in background (batch of 3)
+      const batchSize = 3;
+      for (let i = 0; i < insertedArticles.length; i += batchSize) {
+        const batch = insertedArticles.slice(i, i + batchSize);
+        Promise.all(batch.map((article, batchIndex) => 
+          supabase.functions.invoke('embed-help-article', {
+            body: { 
+              articleId: article.id, 
+              title: article.title, 
+              content: article.content 
+            }
+          })
+        )).catch((err: Error) => {
+          logger.error('Failed to trigger bulk article embedding', err);
+        });
       }
 
       return insertedArticles.length;
