@@ -21,16 +21,16 @@ export const AriPreviewColumn: React.FC<AriPreviewColumnProps> = ({
   if (!widgetConfig) return null;
 
   return (
-    <div className="w-[375px] flex-shrink-0 border-l bg-muted/20 hidden xl:flex flex-col items-center justify-center relative">
+    <div className="w-[375px] flex-shrink-0 border-l bg-muted/20 hidden xl:flex flex-col relative">
       {/* Preview label */}
-      <div className="absolute top-4 left-0 right-0 text-center">
+      <div className="absolute top-4 left-0 right-0 text-center z-10">
         <span className="text-xs font-medium text-muted-foreground/60 uppercase tracking-wider">
           Live Preview
         </span>
       </div>
       
-      {/* Widget container */}
-      <div className="relative">
+      {/* Widget container - fills full height */}
+      <div className="flex-1 relative">
         <ChatWidget 
           key={`${widgetConfig.agentId}-${widgetConfig.position}`}
           config={widgetConfig} 
