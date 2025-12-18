@@ -1,8 +1,8 @@
 # ChatPad Design System
 
-> **Last Updated**: December 2024  
+> **Last Updated**: December 2025  
 > **Status**: Active  
-> **Related**: [Application Overview](./APPLICATION_OVERVIEW.md), [shadcn Component Guide](./SHADCN_COMPONENT_GUIDE.md)
+> **Related**: [Component Patterns](./COMPONENT_PATTERNS.md), [Architecture](./ARCHITECTURE.md)
 
 Comprehensive design system documentation for consistent UI development.
 

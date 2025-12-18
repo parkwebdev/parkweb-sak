@@ -1,6 +1,6 @@
 # ChatPad AI Architecture
 
-> **Last Updated**: December 2024  
+> **Last Updated**: December 2025  
 > **Status**: Active  
 > **Related**: [Edge Functions](./EDGE_FUNCTIONS.md), [Database Schema](./DATABASE_SCHEMA.md), [Widget Architecture](./WIDGET_ARCHITECTURE.md)
 
