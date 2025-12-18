@@ -8,7 +8,7 @@
  */
 
 import React from 'react';
-import { X, Settings04 as Settings, Grid01 as Grid, User03, PieChart01, Calendar } from '@untitledui/icons';
+import { X, Settings04 as Settings, Grid01 as Grid, User03, PieChart01, Calendar, CheckCircle, Circle } from '@untitledui/icons';
 import AriAgentsIcon from './icons/AriAgentsIcon';
 import { DashboardFilled, InboxOutline, InboxFilled, PlannerFilled, LeadsFilled, AnalyticsFilled, SettingsFilled } from './icons/SidebarIcons';
 import { Link, useLocation } from 'react-router-dom';
@@ -17,6 +17,7 @@ import { UserAccountCard } from './UserAccountCard';
 import { useSidebar } from '@/hooks/use-sidebar';
 import { useConversations } from '@/hooks/useConversations';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { useOnboardingProgress } from '@/hooks/useOnboardingProgress';
 import ChatPadLogo from './ChatPadLogo';
 import { springs } from '@/lib/motion-variants';
 import type { ConversationMetadata } from '@/types/metadata';
@@ -51,6 +52,7 @@ const navigationItems: NavigationItem[] = [
 
 /** Bottom navigation items (settings, etc.) */
 const bottomItems: NavigationItem[] = [
+  { id: 'get-set-up', label: 'Get set up', icon: Circle, path: '/' },
   { id: 'settings', label: 'Settings', icon: Settings, activeIcon: SettingsFilled, path: '/settings' }
 ];
 
@@ -78,6 +80,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
   const { isCollapsed, setCollapsed } = useSidebar();
   const { conversations } = useConversations();
   const prefersReducedMotion = useReducedMotion();
+  const { allComplete } = useOnboardingProgress();
   
   // Count unread conversations for admin notification badge
   const unreadConversationsCount = conversations.filter(conv => {
@@ -198,6 +201,22 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
             <section className="w-full mt-4 pt-4 border-t border-border">
               {bottomItems.map((item, index) => {
                 const isActive = location.pathname === item.path;
+                const isGetSetUp = item.id === 'get-set-up';
+                
+                // Determine icon for "Get set up" based on completion
+                const renderIcon = () => {
+                  if (isGetSetUp) {
+                    if (allComplete) {
+                      return <CheckCircle size={14} className="text-status-active" />;
+                    }
+                    return <Circle size={14} className="self-stretch my-auto" />;
+                  }
+                  if (isActive && item.activeIcon) {
+                    return <item.activeIcon size={14} className="self-stretch my-auto" />;
+                  }
+                  return <item.icon size={14} className="self-stretch my-auto" />;
+                };
+                
                 return (
                   <motion.div 
                     key={item.id} 
@@ -218,11 +237,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
                     >
                       <div className="items-center flex gap-2 my-auto w-full overflow-hidden">
                         <div className="items-center flex my-auto w-[18px] flex-shrink-0">
-                          {isActive && item.activeIcon ? (
-                            <item.activeIcon size={14} className="self-stretch my-auto" />
-                          ) : (
-                            <item.icon size={14} className="self-stretch my-auto" />
-                          )}
+                          {renderIcon()}
                         </div>
                         <motion.div
                           className={`text-sm font-normal leading-4 my-auto whitespace-nowrap ${

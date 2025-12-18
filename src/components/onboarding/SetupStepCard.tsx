@@ -35,7 +35,7 @@ export const SetupStepCard: React.FC<SetupStepCardProps> = ({
       {/* Header row - always visible */}
       <button
         onClick={onClick}
-        className="w-full flex items-center gap-3 py-3 px-1 hover:bg-muted/50 rounded-lg transition-colors text-left"
+        className="w-full flex items-center gap-3 py-3 px-1 hover:bg-muted/30 transition-colors text-left"
       >
         {/* Step indicator */}
         <div className="flex-shrink-0">
