@@ -19,8 +19,9 @@ Technical documentation for the ChatPad embeddable chat widget.
 7. [Visitor Analytics](#visitor-analytics)
 8. [Performance Optimizations](#performance-optimizations)
 9. [Widget UI Layer](#widget-ui-layer)
-10. [Icon Tree-Shaking](#icon-tree-shaking)
-11. [Security](#security)
+10. [Native Feature Components](#native-feature-components)
+11. [Icon Tree-Shaking](#icon-tree-shaking)
+12. [Security](#security)
 
 ---
 
@@ -32,7 +33,7 @@ The ChatPad widget is a high-performance, embeddable chat interface that can be 
 
 - **AI Chat**: Conversational AI powered by RAG (Retrieval Augmented Generation)
 - **Human Takeover**: Team members can take over conversations in real-time
-- **Help Center**: Searchable help articles with categories
+- **Help Center**: Searchable help articles with categories and icons
 - **Lead Capture**: Configurable contact forms with custom fields
 - **Announcements**: Promotional banners and news items
 - **Voice Messages**: Audio recording and playback
@@ -41,6 +42,8 @@ The ChatPad widget is a high-performance, embeddable chat interface that can be 
 - **Read Receipts**: Visual confirmation of message delivery and reading
 - **Link Previews**: Server-side cached previews for instant rendering
 - **Sound Settings**: User-controllable notification sounds
+- **Property Search**: AI-powered real estate property lookup
+- **Appointment Booking**: Calendar integration with day/time selection
 
 ---
 
@@ -48,60 +51,83 @@ The ChatPad widget is a high-performance, embeddable chat interface that can be 
 
 The widget has a **separate build entry point** from the main application to minimize bundle size.
 
-### Directory Structure (Post-Refactoring)
+### Directory Structure
 
 ```
 src/widget/
-├── ChatWidget.tsx          # Orchestrator component (~530 lines)
-├── types.ts                # TypeScript interfaces and types
-├── constants.ts            # CSS vars, position classes, lazy imports
-├── api.ts                  # Widget API functions
-├── icons.tsx               # Tree-shaken icon exports (individual imports)
-├── NavIcons.tsx            # Navigation icons with fill animation
-├── CSSAnimatedItem.tsx     # CSS-only animated list item
-├── CSSAnimatedList.tsx     # CSS-only animated list container
-├── category-icons.tsx      # Help category icon mapping
-├── ui/                     # Lightweight UI components (no heavy deps)
-│   ├── index.ts            # Barrel exports
-│   ├── WidgetButton.tsx    # Button (CSS active:scale, no motion/react)
-│   ├── WidgetInput.tsx     # Input (native, no motion/react)
-│   ├── WidgetSelect.tsx    # Select (React Context, no @radix-ui)
-│   ├── WidgetAvatar.tsx    # Avatar (pure React, no @radix-ui)
-│   ├── WidgetCard.tsx      # Card (native div, no motion/react)
-│   └── WidgetSpinner.tsx   # Spinner (SVG + CSS animation)
+├── ChatWidget.tsx              # Orchestrator component
+├── types.ts                    # TypeScript interfaces and types
+├── constants.ts                # CSS vars, position classes, lazy imports
+├── api.ts                      # Widget API functions (Supabase, edge calls)
+├── icons.tsx                   # Tree-shaken icon exports (individual imports)
+├── NavIcons.tsx                # Navigation icons with fill animation
+├── CSSAnimatedItem.tsx         # CSS-only animated list item
+├── CSSAnimatedList.tsx         # CSS-only animated list container
+├── category-icons.tsx          # Help category icon mapping
+├── ui/                         # Lightweight UI components (no heavy deps)
+│   ├── index.ts                # Barrel exports
+│   ├── WidgetButton.tsx        # Button (CSS active:scale, no motion/react)
+│   ├── WidgetInput.tsx         # Input (native, no motion/react)
+│   ├── WidgetSelect.tsx        # Select (React Context, no @radix-ui)
+│   ├── WidgetAvatar.tsx        # Avatar (pure React, no @radix-ui)
+│   ├── WidgetCard.tsx          # Card (native div, no motion/react)
+│   └── WidgetSpinner.tsx       # Spinner (SVG + CSS animation)
 ├── hooks/
-│   ├── index.ts            # Barrel exports with JSDoc
-│   ├── useWidgetConfig.ts  # Config fetching and state
-│   ├── useConversations.ts # Conversation CRUD operations
+│   ├── index.ts                # Barrel exports with JSDoc
+│   ├── useWidgetConfig.ts      # Config fetching and state
+│   ├── useConversations.ts     # Conversation CRUD operations
 │   ├── useRealtimeMessages.ts  # Real-time message subscriptions
+│   ├── useRealtimeConfig.ts    # Real-time config change subscriptions
 │   ├── useTypingIndicator.ts   # Supabase presence for typing
 │   ├── useConversationStatus.ts # Status change subscriptions
 │   ├── useParentMessages.ts    # postMessage communication
 │   ├── useSoundSettings.ts     # Sound preference persistence
 │   ├── useVisitorPresence.ts   # Visitor presence tracking
-│   └── useVisitorAnalytics.ts  # Page visit analytics
+│   ├── useVisitorAnalytics.ts  # Page visit analytics
+│   ├── useKeyboardHeight.ts    # Mobile keyboard detection (Visual Viewport API)
+│   ├── useLocationDetection.ts # Auto-detect location from URL patterns
+│   └── useSystemTheme.ts       # System theme detection for widget
 ├── components/
-│   ├── index.ts            # Barrel exports with JSDoc
-│   ├── ContactForm.tsx     # User info collection form
-│   ├── MessageBubble.tsx   # Single message display
-│   ├── MessageInput.tsx    # Text input with actions
-│   ├── WidgetHeader.tsx    # Header with nav
-│   ├── WidgetNav.tsx       # Bottom navigation
-│   ├── TakeoverBanner.tsx  # Human takeover notice
-│   ├── TypingIndicator.tsx # Agent typing dots
-│   └── FloatingButton.tsx  # Chat open/close button
+│   ├── index.ts                # Barrel exports with JSDoc
+│   ├── ContactForm.tsx         # User info collection form
+│   ├── MessageBubble.tsx       # Single message display
+│   ├── MessageInput.tsx        # Text input with actions
+│   ├── WidgetHeader.tsx        # Header with nav
+│   ├── WidgetNav.tsx           # Bottom navigation
+│   ├── TakeoverBanner.tsx      # Human takeover notice
+│   ├── TypingIndicator.tsx     # Agent typing dots
+│   ├── FloatingButton.tsx      # Chat open/close button
+│   ├── CallButton.tsx          # Click-to-call phone button
+│   ├── QuickReplies.tsx        # AI-suggested quick reply buttons
+│   ├── SatisfactionRating.tsx  # Post-conversation rating UI
+│   ├── LocationPicker.tsx      # Location selection for multi-location agents
+│   ├── LinkPreviewsWidget.tsx  # Rich link preview cards
+│   ├── WidgetVoiceInput.tsx    # Voice recording (CSS animations)
+│   ├── WidgetFileDropZone.tsx  # File drag-and-drop area
+│   ├── WidgetFileAttachment.tsx # File preview/upload display
+│   ├── WidgetAudioPlayer.tsx   # Audio playback with waveform
+│   ├── WidgetMessageReactions.tsx # Emoji reaction picker
+│   ├── WidgetEmojiPicker.tsx   # Full emoji picker
+│   ├── WidgetPhoneInput.tsx    # Phone input with US/CA formatting
+│   └── booking/
+│       ├── index.ts            # Barrel exports
+│       ├── DayPicker.tsx       # Date selection grid
+│       ├── TimePicker.tsx      # Time slot selection
+│       └── BookingConfirmed.tsx # Confirmation with calendar add
 ├── views/
-│   ├── index.ts            # Barrel exports with JSDoc
-│   ├── HomeView.tsx        # Home screen with announcements
-│   ├── MessagesView.tsx    # Conversation list
-│   ├── ChatView.tsx        # Active conversation
-│   └── HelpView.tsx        # Help center with search
+│   ├── index.ts                # Barrel exports with JSDoc
+│   ├── HomeView.tsx            # Home screen with announcements
+│   ├── MessagesView.tsx        # Conversation list
+│   ├── ChatView.tsx            # Active conversation
+│   ├── HelpView.tsx            # Help center with search
+│   └── NewsView.tsx            # News/announcements feed
 └── utils/
-    ├── index.ts            # Barrel exports with JSDoc
-    ├── formatting.ts       # Time and text formatting
-    ├── validation.ts       # Form validation utilities
-    ├── session.ts          # Session/storage utilities
-    └── referrer.ts         # Referrer journey utilities
+    ├── index.ts                # Barrel exports with JSDoc
+    ├── formatting.ts           # Time and text formatting
+    ├── validation.ts           # Form validation utilities
+    ├── session.ts              # Session/storage utilities
+    ├── referrer.ts             # Referrer journey utilities
+    └── url-stripper.ts         # URL extraction from message text
 ```
 
 ### Build Configuration
@@ -145,69 +171,60 @@ The widget uses a minimal CSS file instead of the full `index.css`:
 - Only light mode variables (no dark mode)
 - Essential base styles only
 - Optimized font loading (3 weights: 400, 500, 600)
-- **Size reduction**: ~50KB → ~15KB
 
 ---
 
 ## Loading Strategy
 
-The widget uses an **Intercom-style instant loading** approach for optimal perceived performance.
+The widget uses an **async loading** approach for optimal perceived performance.
 
 ### Loading Sequence
 
 ```
 1. Page Load
-   ├── Widget loader script executes
-   ├── Config fetch begins (parallel)
-   └── Floating button renders immediately
+   └── serve-widget edge function returns loader script (~1KB)
 
-2. Button Hover/Touch (Preload Phase)
-   ├── Preconnect hints added for widget domain
-   ├── Iframe created in background (hidden)
-   └── Widget starts loading in iframe
+2. Loader Script Executes
+   ├── Reads config from script attributes
+   └── Loads chatpad-widget.js with async attribute (non-blocking)
 
-3. Button Click (Instant Open)
-   ├── Container visibility toggled
-   └── Widget appears instantly (~50ms)
+3. chatpad-widget.js Initializes
+   ├── Creates floating button immediately
+   ├── Fetches widget config in background
+   └── Creates hidden iframe
 
-4. Widget Ready
+4. Button Click
+   └── Widget container visibility toggled (instant)
+
+5. Widget Ready
    └── Full interactivity available
 ```
 
-### Loader Script (`chatpad-widget.js`)
+### Loader Script Flow
 
-The loader script is served by the `serve-widget` edge function:
+The loader is served by the `serve-widget` edge function:
 
 ```javascript
 (function() {
-  // Read configuration from script attributes
+  'use strict';
+  
   var script = document.currentScript;
-  var agentId = script.getAttribute('data-agent-id');
-  var position = script.getAttribute('data-position') || 'bottom-right';
+  var config = {
+    agentId: script.getAttribute('data-agent-id'),
+    position: script.getAttribute('data-position') || 'bottom-right',
+    primaryColor: script.getAttribute('data-primary-color') || '#3b82f6',
+    appUrl: script.getAttribute('data-app-url'),
+  };
   
-  // Create floating button immediately
-  var button = createFloatingButton();
-  
-  // Preload on hover
-  button.addEventListener('mouseenter', preloadWidget);
-  button.addEventListener('touchstart', preloadWidget);
-  
-  // Toggle on click
-  button.addEventListener('click', toggleWidget);
-  
-  function preloadWidget() {
-    if (iframe) return;
-    addPreconnectHints();
-    createIframe();
-  }
-  
-  function createIframe() {
-    iframe = document.createElement('iframe');
-    iframe.src = `${appUrl}/widget?agentId=${agentId}`;
-    // Hidden until ready signal received
-    container.style.display = 'none';
-    container.appendChild(iframe);
-  }
+  // Load the widget bundle directly (async, non-blocking)
+  var widgetScript = document.createElement('script');
+  widgetScript.src = config.appUrl + '/chatpad-widget.js';
+  widgetScript.async = true;
+  widgetScript.setAttribute('data-agent-id', config.agentId);
+  widgetScript.setAttribute('data-position', config.position);
+  widgetScript.setAttribute('data-primary-color', config.primaryColor);
+  widgetScript.setAttribute('data-app-url', config.appUrl);
+  document.head.appendChild(widgetScript);
 })();
 ```
 
@@ -275,6 +292,7 @@ interface WidgetConfig {
   enableVoiceMessages: boolean;
   enableFileAttachments: boolean;
   enableMessageReactions: boolean;
+  enableQuickReplies: boolean;
   showReadReceipts: boolean;      // Show read/delivered indicators
 }
 ```
@@ -399,26 +417,29 @@ Parent window sends page info via postMessage to track visitor navigation patter
 
 ## Performance Optimizations
 
-### Bundle Size Comparison
+### Current Bundle Status
 
-| Metric | Before Optimization | After Optimization |
-|--------|--------------------|--------------------|
-| **Total Bundle (gzipped)** | ~200-250KB | ~45-60KB |
-| motion/react | Included (~45KB) | Removed |
-| @radix-ui packages | 4 packages (~40KB) | 0 packages |
-| @untitledui/icons | Full library (~80KB) | Tree-shaken (~10KB) |
+| Metric | Status |
+|--------|--------|
+| **Total Bundle (gzipped)** | ~275KB (Lighthouse reported) |
+| motion/react | Removed from widget components ✓ |
+| @radix-ui packages | Removed from widget components ✓ |
+| @untitledui/icons | Tree-shaken (individual imports) |
+| libphonenumber-js | Replaced with regex US/CA formatting ✓ |
 
-### Optimization Techniques
+> **Note**: Native widget components are implemented. Remaining bundle size is from React core (~40KB), Supabase client (~50KB), and shared dependencies. Further reduction requires code-splitting or lazy-loading additional features.
 
-| Optimization | Impact |
-|--------------|--------|
+### Optimization Techniques Implemented
+
+| Optimization | Description |
+|--------------|-------------|
 | Separate build entry | Widget bundle isolated from main app |
-| Widget UI layer | Lightweight components without heavy deps |
-| Tree-shaken icons | Individual imports instead of barrel exports |
-| Lazy-loaded components | Deferred loading for VoiceInput, FileDropZone, AudioPlayer |
-| CSS animations | CSS `active:scale` instead of Framer Motion |
-| Preconnect hints | Warm DNS/TCP on hover |
-| Ready handshake | No flicker on open |
+| Widget UI layer | Lightweight components without motion/react or @radix-ui |
+| Native feature components | Voice, file, audio, reactions use CSS animations |
+| Tree-shaken icons | Individual imports (~0.5KB per icon) |
+| CSS animations | CSS `active:scale` and keyframes instead of Framer Motion |
+| Async script loading | Non-blocking script load with `async` attribute |
+| Ready handshake | No flicker on open via postMessage signal |
 | Server-side link previews | No client-side fetch delay |
 
 ---
@@ -442,21 +463,37 @@ The main app UI components have dependencies that significantly increase bundle 
 
 Widget UI components provide **exact visual and functional parity** without these dependencies:
 
-| Widget Component | Implementation | Size Savings |
-|------------------|----------------|--------------|
-| `WidgetButton` | CSS `active:scale-[0.98]` | ~45KB (no motion) |
-| `WidgetInput` | Native `<input>` | ~45KB (no motion) |
-| `WidgetSelect` | React Context + Portal | ~15KB (no radix) |
-| `WidgetAvatar` | Pure React state | ~5KB (no radix) |
-| `WidgetCard` | Native `<div>` | ~45KB (no motion) |
-| `WidgetSpinner` | SVG + CSS animation | Minimal |
+| Widget Component | Implementation |
+|------------------|----------------|
+| `WidgetButton` | CSS `active:scale-[0.98]` transition |
+| `WidgetInput` | Native `<input>` element |
+| `WidgetSelect` | React Context + Portal (full keyboard nav) |
+| `WidgetAvatar` | Pure React state for fallback handling |
+| `WidgetCard` | Native `<div>` with Tailwind classes |
+| `WidgetSpinner` | SVG + CSS animation |
 
 ### Widget UI Design Principles
 
 1. **Exact CSS Class Match**: All Tailwind classes copied verbatim from main app
 2. **Same API Surface**: Props and usage identical to main components
 3. **WCAG 2.2 Compliant**: Focus rings, ARIA attributes, keyboard navigation
-4. **No New Features**: Only optimization, no functionality changes
+4. **44px Touch Targets**: Minimum touch target size for mobile
+
+---
+
+## Native Feature Components
+
+All feature-rich components have been reimplemented without heavy dependencies:
+
+| Component | Replaces | Implementation |
+|-----------|----------|----------------|
+| `WidgetVoiceInput` | motion/react animations | CSS pulse keyframes |
+| `WidgetFileDropZone` | motion/react + sonner | Inline error display |
+| `WidgetFileAttachment` | motion/react | Pure React state |
+| `WidgetAudioPlayer` | motion/react | Canvas waveform + CSS |
+| `WidgetMessageReactions` | @radix-ui/react-popover | React Context popover |
+| `WidgetEmojiPicker` | @radix-ui/react-tabs | React state tabs |
+| `WidgetPhoneInput` | libphonenumber-js | Regex US/CA formatting |
 
 ### Allowed Main App Imports
 
@@ -465,7 +502,6 @@ These main app components are lightweight and can be used in the widget:
 - `Textarea` - Native element, CVA only
 - `Badge` - Native div, CVA only
 - `CSSBubbleBackground` - CSS-only animations
-- `PhoneInputField` - Lazy loaded
 
 ---
 
@@ -523,16 +559,17 @@ const iconModules: Record<string, () => Promise<{ default: ComponentType }>> = {
 
 ## Security
 
-- **XSS Protection**: DOMPurify sanitization for all rendered HTML
+- **XSS Protection**: DOMPurify sanitization for all rendered HTML (allowlisted tags)
 - **Spam Protection**: Honeypot fields + timing-based detection
 - **Rate Limiting**: Server-side limits on form submissions
 - **RLS Policies**: Public access restricted to widget-channel conversations only
+- **CSP Headers**: Content Security Policy allowing iframe embedding
 
 ---
 
 ## Related Documentation
 
-- [Application Overview](./APPLICATION_OVERVIEW.md)
 - [Database Schema](./DATABASE_SCHEMA.md)
 - [Edge Functions](./EDGE_FUNCTIONS.md)
 - [Security](./SECURITY.md)
+- [AI Architecture](./AI_ARCHITECTURE.md)
