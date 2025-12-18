@@ -13,3 +13,6 @@ export { createPropertiesColumns, type PropertyWithLocation } from './properties
 
 // Knowledge sources table columns
 export { createKnowledgeColumns, type KnowledgeSourceWithMeta, type KnowledgeColumnsProps } from './knowledge-columns';
+
+// Help articles table columns
+export { createHelpArticlesColumns, type HelpArticleWithMeta, type HelpArticlesColumnsProps } from './help-articles-columns';
