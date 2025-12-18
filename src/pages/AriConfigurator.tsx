@@ -40,7 +40,6 @@ import { AriWebhooksSection } from '@/components/agents/sections/AriWebhooksSect
 import { AriIntegrationsSection } from '@/components/agents/sections/AriIntegrationsSection';
 import { AriApiAccessSection } from '@/components/agents/sections/AriApiAccessSection';
 import { AriInstallationSection } from '@/components/agents/sections/AriInstallationSection';
-import { AriPerformanceSection } from '@/components/agents/sections/AriPerformanceSection';
 
 type Agent = Tables<'agents'>;
 
@@ -234,8 +233,6 @@ const AriConfigurator = () => {
         return <AriApiAccessSection agentId={agent.id} />;
       case 'installation':
         return <AriInstallationSection agentId={agent.id} />;
-      case 'performance':
-        return <AriPerformanceSection agentId={agent.id} />;
       default:
         return null;
     }
