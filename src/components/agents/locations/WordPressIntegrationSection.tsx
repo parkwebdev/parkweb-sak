@@ -31,7 +31,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { RefreshCw01, Check, AlertCircle, ArrowRight, ChevronRight, Zap, Home01, Trash01, LinkExternal01, Building01 } from '@untitledui/icons';
+import { RefreshCw01, Check, AlertCircle, ArrowRight, ChevronRight, Zap, Home01, Trash01, LinkExternal01, Building01, Settings01, SearchRefraction } from '@untitledui/icons';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { InfoCircleIcon, InfoCircleIconFilled } from '@/components/ui/info-circle-icon';
 import { useWordPressConnection } from '@/hooks/useWordPressConnection';
@@ -116,8 +116,17 @@ export function WordPressIntegrationSection({ agent, onSyncComplete }: WordPress
   } = useWordPressHomes({ agent, onSyncComplete });
 
   const [showAdvanced, setShowAdvanced] = useState(false);
-  const [communityEndpointInput, setCommunityEndpointInput] = useState(communityEndpoint);
-  const [homeEndpointInput, setHomeEndpointInput] = useState(homeEndpoint);
+  const [communityEndpointInput, setCommunityEndpointInput] = useState(communityEndpoint || 'community');
+  const [homeEndpointInput, setHomeEndpointInput] = useState(homeEndpoint || 'home');
+
+  // Sync endpoint inputs when stored values change
+  useEffect(() => {
+    setCommunityEndpointInput(communityEndpoint || 'community');
+  }, [communityEndpoint]);
+
+  useEffect(() => {
+    setHomeEndpointInput(homeEndpoint || 'home');
+  }, [homeEndpoint]);
 
   // Update input when siteUrl changes
   useEffect(() => {
@@ -524,6 +533,166 @@ export function WordPressIntegrationSection({ agent, onSyncComplete }: WordPress
                         Last synced {formatLastSync(homesLastSync)}
                       </p>
                     )}
+                  </div>
+                </>
+              )}
+
+              {/* Advanced Settings - shown when connected */}
+              {isConnected && !isEditing && (
+                <>
+                  <Separator />
+                  <div className="space-y-3">
+                    <button
+                      type="button"
+                      onClick={() => setShowAdvanced(!showAdvanced)}
+                      className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <Settings01 className="h-3.5 w-3.5" />
+                      <span>Advanced Settings</span>
+                      <motion.div
+                        animate={{ rotate: showAdvanced ? 90 : 0 }}
+                        transition={{ duration: 0.15 }}
+                      >
+                        <ChevronRight className="h-3 w-3" />
+                      </motion.div>
+                    </button>
+
+                    <AnimatePresence initial={false}>
+                      {showAdvanced && (
+                        <motion.div
+                          initial={prefersReducedMotion ? false : { height: 0, opacity: 0 }}
+                          animate={{ height: 'auto', opacity: 1 }}
+                          exit={prefersReducedMotion ? undefined : { height: 0, opacity: 0 }}
+                          transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+                          className="overflow-hidden"
+                        >
+                          <div className="space-y-4 pt-2">
+                            <p className="text-xs text-muted-foreground">
+                              Custom post type endpoints for non-standard WordPress configurations.
+                            </p>
+
+                            {/* Auto-detect button */}
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => discoverEndpoints(siteUrl)}
+                              disabled={isDiscovering || !siteUrl}
+                              className="h-7"
+                            >
+                              {isDiscovering ? (
+                                <>
+                                  <RefreshCw01 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                                  Detecting...
+                                </>
+                              ) : (
+                                <>
+                                  <SearchRefraction className="h-3.5 w-3.5 mr-1.5" />
+                                  Auto-detect Endpoints
+                                </>
+                              )}
+                            </Button>
+
+                            {/* Discovered endpoints */}
+                            {discoveredEndpoints && (
+                              <div className="p-2 rounded bg-muted/50 border space-y-2">
+                                <p className="text-xs font-medium">Discovered post types:</p>
+                                {discoveredEndpoints.communityEndpoints.length > 0 && (
+                                  <div className="space-y-1">
+                                    <p className="text-xs text-muted-foreground">Communities:</p>
+                                    <div className="flex flex-wrap gap-1">
+                                      {discoveredEndpoints.communityEndpoints.map((ep: { slug: string; name: string; rest_base: string }) => (
+                                        <button
+                                          key={ep.rest_base}
+                                          type="button"
+                                          onClick={() => {
+                                            setCommunityEndpointInput(ep.rest_base);
+                                            updateEndpoint('community', ep.rest_base);
+                                          }}
+                                          className={cn(
+                                            "text-xs px-2 py-0.5 rounded border transition-colors",
+                                            communityEndpointInput === ep.rest_base
+                                              ? "bg-primary text-primary-foreground border-primary"
+                                              : "bg-background hover:bg-accent border-border"
+                                          )}
+                                        >
+                                          {ep.name || ep.slug}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                                {discoveredEndpoints.homeEndpoints.length > 0 && (
+                                  <div className="space-y-1">
+                                    <p className="text-xs text-muted-foreground">Homes/Properties:</p>
+                                    <div className="flex flex-wrap gap-1">
+                                      {discoveredEndpoints.homeEndpoints.map((ep: { slug: string; name: string; rest_base: string }) => (
+                                        <button
+                                          key={ep.rest_base}
+                                          type="button"
+                                          onClick={() => {
+                                            setHomeEndpointInput(ep.rest_base);
+                                            updateEndpoint('home', ep.rest_base);
+                                          }}
+                                          className={cn(
+                                            "text-xs px-2 py-0.5 rounded border transition-colors",
+                                            homeEndpointInput === ep.rest_base
+                                              ? "bg-primary text-primary-foreground border-primary"
+                                              : "bg-background hover:bg-accent border-border"
+                                          )}
+                                        >
+                                          {ep.name || ep.slug}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                                {discoveredEndpoints.communityEndpoints.length === 0 && discoveredEndpoints.homeEndpoints.length === 0 && (
+                                  <p className="text-xs text-muted-foreground italic">No custom post types detected. Using defaults.</p>
+                                )}
+                              </div>
+                            )}
+
+                            {/* Manual endpoint inputs */}
+                            <div className="grid gap-3">
+                              <div className="space-y-1.5">
+                                <Label className="text-xs">Community endpoint</Label>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs text-muted-foreground">/wp-json/wp/v2/</span>
+                                  <Input
+                                    value={communityEndpointInput}
+                                    onChange={(e) => setCommunityEndpointInput(e.target.value)}
+                                    onBlur={() => {
+                                      if (communityEndpointInput.trim() && communityEndpointInput !== communityEndpoint) {
+                                        updateEndpoint('community', communityEndpointInput.trim());
+                                      }
+                                    }}
+                                    placeholder="community"
+                                    className="h-7 text-xs flex-1"
+                                  />
+                                </div>
+                              </div>
+                              <div className="space-y-1.5">
+                                <Label className="text-xs">Home/Property endpoint</Label>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs text-muted-foreground">/wp-json/wp/v2/</span>
+                                  <Input
+                                    value={homeEndpointInput}
+                                    onChange={(e) => setHomeEndpointInput(e.target.value)}
+                                    onBlur={() => {
+                                      if (homeEndpointInput.trim() && homeEndpointInput !== homeEndpoint) {
+                                        updateEndpoint('home', homeEndpointInput.trim());
+                                      }
+                                    }}
+                                    placeholder="home"
+                                    className="h-7 text-xs flex-1"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 </>
               )}
