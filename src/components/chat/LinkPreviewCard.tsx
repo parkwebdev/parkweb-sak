@@ -1,6 +1,40 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Globe02, LinkExternal01 } from '@untitledui/icons';
 import { VideoEmbed } from './VideoEmbed';
+
+const SUPABASE_URL = 'https://mvaimvwdukpgvkifkfpa.supabase.co';
+
+// Domains that don't need proxying (CDNs, known image hosts)
+const DIRECT_IMAGE_DOMAINS = [
+  'youtube.com', 'ytimg.com', 'yt3.ggpht.com',
+  'vimeo.com', 'vimeocdn.com',
+  'twitter.com', 'twimg.com',
+  'facebook.com', 'fbcdn.net',
+  'imgur.com', 'i.imgur.com',
+  'cloudinary.com', 'res.cloudinary.com',
+  'unsplash.com', 'images.unsplash.com',
+];
+
+function getProxiedImageUrl(imageUrl: string): string {
+  try {
+    const url = new URL(imageUrl);
+    const domain = url.hostname.replace(/^www\./, '');
+    
+    // Check if domain or parent domain is in the allow list
+    const isDirect = DIRECT_IMAGE_DOMAINS.some(d => 
+      domain === d || domain.endsWith(`.${d}`)
+    );
+    
+    if (isDirect) {
+      return imageUrl;
+    }
+    
+    // Use proxy for all other domains
+    return `${SUPABASE_URL}/functions/v1/proxy-image?url=${encodeURIComponent(imageUrl)}`;
+  } catch {
+    return imageUrl;
+  }
+}
 
 export interface LinkPreviewData {
   url: string;
@@ -26,7 +60,12 @@ export function LinkPreviewCard({ data, compact = false }: LinkPreviewCardProps)
   const [imageError, setImageError] = useState(false);
   const [faviconError, setFaviconError] = useState(false);
 
-  const hasImage = data.image && !imageError;
+  // Proxy external images to avoid CORS/hotlinking issues
+  const proxiedImageUrl = useMemo(() => 
+    data.image ? getProxiedImageUrl(data.image) : undefined,
+  [data.image]);
+
+  const hasImage = proxiedImageUrl && !imageError;
 
   // If this is a video link, render VideoEmbed instead
   if (data.videoType && data.embedUrl && !compact) {
@@ -64,7 +103,7 @@ export function LinkPreviewCard({ data, compact = false }: LinkPreviewCardProps)
       {hasImage && !compact && (
         <div className="relative w-full h-32 bg-muted overflow-hidden">
           <img
-            src={data.image}
+            src={proxiedImageUrl}
             alt={data.title || 'Link preview'}
             className="w-full h-full object-cover transition-opacity duration-300"
             onError={() => setImageError(true)}
