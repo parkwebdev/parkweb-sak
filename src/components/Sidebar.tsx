@@ -8,7 +8,7 @@
  */
 
 import React from 'react';
-import { X, Settings04 as Settings, Grid01 as Grid, User03, PieChart01, Calendar, CheckCircle, Circle } from '@untitledui/icons';
+import { X, Settings04 as Settings, Grid01 as Grid, User03, PieChart01, Calendar, CheckCircle, Circle, SearchMd } from '@untitledui/icons';
 import AriAgentsIcon from './icons/AriAgentsIcon';
 import { DashboardFilled, InboxOutline, InboxFilled, PlannerFilled, LeadsFilled, AnalyticsFilled, SettingsFilled } from './icons/SidebarIcons';
 import { Link, useLocation } from 'react-router-dom';
@@ -18,6 +18,7 @@ import { useSidebar } from '@/hooks/use-sidebar';
 import { useConversations } from '@/hooks/useConversations';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useOnboardingProgress } from '@/hooks/useOnboardingProgress';
+import { useGlobalSearch } from '@/hooks/useGlobalSearch';
 import ChatPadLogo from './ChatPadLogo';
 import { springs } from '@/lib/motion-variants';
 import type { ConversationMetadata } from '@/types/metadata';
@@ -81,6 +82,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
   const { conversations } = useConversations();
   const prefersReducedMotion = useReducedMotion();
   const { allComplete, completedCount, totalCount } = useOnboardingProgress();
+  const { setOpen: setSearchOpen } = useGlobalSearch();
   
   // Count unread conversations for admin notification badge
   const unreadConversationsCount = conversations.filter(conv => {
@@ -198,8 +200,39 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
 
         </div>
 
-        {/* Footer with settings and user account */}
+        {/* Footer with search, settings and user account */}
         <div className="pt-4 space-y-1">
+          {/* Search button */}
+          <motion.div 
+            className="items-center flex w-full py-0.5"
+            initial={prefersReducedMotion ? false : { opacity: 0, x: -12 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: navigationItems.length * 0.03, ...springs.smooth }}
+          >
+            <button
+              onClick={() => setSearchOpen(true)}
+              className="items-center flex w-full p-[11px] rounded-md transition-colors text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background bg-transparent hover:bg-accent/50 text-muted-foreground hover:text-foreground"
+              title={isCollapsed ? 'Search' : ''}
+            >
+              <div className="items-center flex gap-2 my-auto w-full overflow-hidden">
+                <div className="items-center flex my-auto w-[18px] flex-shrink-0 justify-center">
+                  <SearchMd size={14} className="self-stretch my-auto" />
+                </div>
+                <motion.div
+                  className="flex items-center justify-between flex-1 text-sm font-normal leading-4 my-auto whitespace-nowrap"
+                  initial={false}
+                  animate={{ opacity: isCollapsed ? 0 : 1 }}
+                  transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.15 }}
+                >
+                  <span>Search</span>
+                  <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border border-border bg-muted px-1.5 font-mono text-2xs font-medium text-muted-foreground">
+                    <span className="text-xs">⌘</span>K
+                  </kbd>
+                </motion.div>
+              </div>
+            </button>
+          </motion.div>
+          
           {/* Bottom navigation (get set up, settings) */}
           {bottomItems.map((item, index) => {
             const isActive = location.pathname === item.path;
@@ -266,7 +299,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
                 className="items-center flex w-full py-0.5"
                 initial={prefersReducedMotion ? false : { opacity: 0, x: -12 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: (navigationItems.length + index) * 0.03, ...springs.smooth }}
+                transition={{ delay: (navigationItems.length + 1 + index) * 0.03, ...springs.smooth }}
               >
                 <Link 
                   to={item.path}
