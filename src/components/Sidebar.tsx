@@ -322,9 +322,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
                           transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.15 }}
                         >
                           <span>Search</span>
-                          <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border border-border bg-muted px-1.5 font-mono text-2xs font-medium text-muted-foreground">
-                            <span className="text-xs">⌘</span>K
-                          </kbd>
+                          <div className="flex items-center gap-0.5">
+                            <kbd className="pointer-events-none inline-flex h-5 select-none items-center justify-center rounded border border-border bg-background px-1 font-mono text-2xs font-medium text-muted-foreground min-w-[20px]">
+                              <span className="text-xs">⌘</span>
+                            </kbd>
+                            <kbd className="pointer-events-none inline-flex h-5 select-none items-center justify-center rounded border border-border bg-background px-1 font-mono text-2xs font-medium text-muted-foreground min-w-[20px]">
+                              K
+                            </kbd>
+                          </div>
                         </motion.div>
                       </div>
                     </button>
