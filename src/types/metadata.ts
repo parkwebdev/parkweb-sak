@@ -218,7 +218,7 @@ export interface KnowledgeSourceMetadata {
 /**
  * Knowledge source type enum for new source_type column.
  */
-export type KnowledgeSourceType = 'url' | 'sitemap' | 'property_listings' | 'property_feed';
+export type KnowledgeSourceType = 'url' | 'sitemap' | 'property_listings' | 'property_feed' | 'wordpress_home';
 
 /**
  * Refresh strategy enum for automatic content refreshing.
@@ -247,6 +247,7 @@ export const SOURCE_TYPE_LABELS: Record<KnowledgeSourceType, string> = {
   sitemap: 'Sitemap',
   property_listings: 'Property Listings',
   property_feed: 'Property Feed',
+  wordpress_home: 'WordPress Data',
 };
 
 /**

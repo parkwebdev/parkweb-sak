@@ -604,14 +604,20 @@ export const useKnowledgeSources = (agentId?: string) => {
   };
 
   const isSourceOutdated = (source: KnowledgeSource): boolean => {
+    // WordPress home sources are container records, not embedding sources
+    const sourceType = (source as unknown as { source_type?: string }).source_type;
+    if (sourceType === 'wordpress_home') return false;
+    
     const metadata = source.metadata as Record<string, unknown> | null;
-    if (!metadata) return true;
     
     // Sitemap parents don't have embeddings themselves, so they can't be "outdated"
-    if (metadata.is_sitemap === true) return false;
+    if (metadata?.is_sitemap === true) return false;
     
-    // WordPress home sources are container records, not embedding sources
-    if (metadata.wordpress_homes === true) return false;
+    // Legacy check for WordPress sources without source_type
+    if (metadata?.wordpress_homes === true) return false;
+    
+    // Empty metadata on non-WordPress sources means needs reprocessing
+    if (!metadata) return true;
     
     return metadata.embedding_model !== 'qwen/qwen3-embedding-8b';
   };

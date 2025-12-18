@@ -522,7 +522,9 @@ async function getOrCreateWordPressSource(
       user_id: userId,
       source: sourceName,
       type: 'api',
+      source_type: 'wordpress_home',
       status: 'ready',
+      metadata: { wordpress_homes: true },
     })
     .select('id')
     .single();
