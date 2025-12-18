@@ -111,19 +111,30 @@ export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressCo
       // Auto-save URL on successful connection test to prevent URL loss
       if (result.success) {
         try {
-          await supabase.functions.invoke('sync-wordpress-communities', {
+          const { error: saveError } = await supabase.functions.invoke('sync-wordpress-communities', {
             body: {
               action: 'save',
               agentId: agent.id,
               siteUrl: url,
             },
           });
-          console.log('WordPress URL auto-saved after successful test');
-          // Refresh agent data to reflect saved URL
-          onSyncComplete?.();
+          
+          if (saveError) {
+            console.error('Failed to auto-save WordPress URL:', saveError);
+            toast.error('Connection successful but failed to save URL', {
+              description: 'Please try importing communities to save the configuration.',
+            });
+          } else {
+            console.log('WordPress URL auto-saved after successful test');
+            toast.success('WordPress site connected and saved');
+            // Refresh agent data to reflect saved URL
+            onSyncComplete?.();
+          }
         } catch (saveError) {
           console.error('Failed to auto-save WordPress URL:', saveError);
-          // Don't fail the test result, just log the error
+          toast.error('Connection successful but failed to save URL', {
+            description: getErrorMessage(saveError),
+          });
         }
       }
       
