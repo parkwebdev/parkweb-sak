@@ -29,13 +29,13 @@ export const AriPreviewColumn: React.FC<AriPreviewColumnProps> = ({
         </span>
       </div>
       
-      {/* Widget container - fills full height */}
-      <div className="flex-1 relative">
+      {/* Widget container - fills remaining height below label */}
+      <div className="flex-1 mt-10 p-4 pb-6">
         <ChatWidget 
           key={`${widgetConfig.agentId}-${widgetConfig.position}`}
           config={widgetConfig} 
           previewMode={true}
-          containedPreview={true}
+          embeddedPreview={true}
         />
       </div>
     </div>
