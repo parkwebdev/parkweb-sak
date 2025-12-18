@@ -65,7 +65,7 @@ const shakeAnimation = {
  * <Input type="password" placeholder="Password" />
  */
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, type, error, size, onChange, onFocus, onBlur, value, placeholder, name, id, ...props }, ref) => {
+  ({ className, type, error, size, onChange, onFocus, onBlur, onKeyDown, onKeyUp, value, placeholder, name, id, disabled, readOnly, required, autoComplete, autoFocus, maxLength, minLength, pattern, ...rest }, ref) => {
     const prefersReducedMotion = useReducedMotion();
     
     return (
@@ -84,6 +84,16 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         onChange={onChange}
         onFocus={onFocus}
         onBlur={onBlur}
+        onKeyDown={onKeyDown}
+        onKeyUp={onKeyUp}
+        disabled={disabled}
+        readOnly={readOnly}
+        required={required}
+        autoComplete={autoComplete}
+        autoFocus={autoFocus}
+        maxLength={maxLength}
+        minLength={minLength}
+        pattern={pattern}
         animate={error && !prefersReducedMotion ? shakeAnimation : undefined}
       />
     )
