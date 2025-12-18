@@ -10,11 +10,12 @@
  * - Basic input with send button
  * - Clear conversation functionality
  * - Typing indicator while AI responds
+ * - Rich content: Link previews, Quick replies, Call buttons, Booking flow
  * 
  * @module components/agents/PreviewChat
  */
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, Suspense } from 'react';
 import { DotsVertical, RefreshCw01, Send01 } from '@untitledui/icons';
 import { 
   DropdownMenu, 
@@ -27,6 +28,20 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { sendChatMessage, type ChatResponse } from '@/widget/api';
 import AriAgentsIcon from '@/components/icons/AriAgentsIcon';
+
+// Widget components for rich content
+import { LinkPreviewsWidget } from '@/widget/components/LinkPreviewsWidget';
+import { QuickReplies } from '@/widget/components/QuickReplies';
+import { CallButton, type CallAction } from '@/widget/components/CallButton';
+import { DayPicker, TimePicker, BookingConfirmed } from '@/widget/constants';
+import type { 
+  DayPickerData, 
+  TimePickerData, 
+  BookingConfirmationData, 
+  BookingDay, 
+  BookingTime 
+} from '@/widget/types';
+import type { LinkPreviewData } from '@/components/chat/LinkPreviewCard';
 
 // ============================================
 // TYPES
@@ -42,6 +57,13 @@ interface Message {
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
+  // Rich content features (from API response - using ChatResponse types directly)
+  linkPreviews?: ChatResponse['linkPreviews'];
+  quickReplies?: string[];
+  callActions?: CallAction[];
+  dayPicker?: DayPickerData;
+  timePicker?: TimePickerData;
+  bookingConfirmed?: BookingConfirmationData;
 }
 
 // ============================================
@@ -74,16 +96,15 @@ export const PreviewChat: React.FC<PreviewChatProps> = ({
     inputRef.current?.focus();
   }, []);
 
-  // Send message
-  const handleSendMessage = useCallback(async () => {
-    const trimmedInput = inputValue.trim();
-    if (!trimmedInput || isLoading) return;
+  // Send message (can be called with custom content for booking/quick replies)
+  const sendMessage = useCallback(async (content: string) => {
+    if (!content.trim() || isLoading) return;
 
     // Add user message immediately
     const userMessage: Message = {
       id: `user-${Date.now()}`,
       role: 'user',
-      content: trimmedInput,
+      content: content.trim(),
       timestamp: new Date(),
     };
     setMessages(prev => [...prev, userMessage]);
@@ -95,7 +116,7 @@ export const PreviewChat: React.FC<PreviewChatProps> = ({
       const response: ChatResponse = await sendChatMessage(
         agentId,
         null, // no conversationId - each message is independent in preview
-        { role: 'user', content: trimmedInput },
+        { role: 'user', content: content.trim() },
         undefined, // no leadId
         undefined, // no pageVisits
         undefined, // no referrerJourney
@@ -104,12 +125,18 @@ export const PreviewChat: React.FC<PreviewChatProps> = ({
         true       // previewMode - skip persistence
       );
 
-      // Add AI response
+      // Add AI response with all rich content
       const assistantMessage: Message = {
         id: `assistant-${Date.now()}`,
         role: 'assistant',
         content: response.response || 'Sorry, I could not generate a response.',
         timestamp: new Date(),
+        linkPreviews: response.linkPreviews,
+        quickReplies: response.quickReplies,
+        callActions: response.callActions,
+        dayPicker: response.dayPicker,
+        timePicker: response.timePicker,
+        bookingConfirmed: response.bookingConfirmed,
       };
       setMessages(prev => [...prev, assistantMessage]);
     } catch (error) {
@@ -125,7 +152,12 @@ export const PreviewChat: React.FC<PreviewChatProps> = ({
     } finally {
       setIsLoading(false);
     }
-  }, [agentId, inputValue, isLoading]);
+  }, [agentId, isLoading]);
+
+  // Send message from input
+  const handleSendMessage = useCallback(() => {
+    sendMessage(inputValue);
+  }, [inputValue, sendMessage]);
 
   // Handle key press
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
@@ -135,10 +167,38 @@ export const PreviewChat: React.FC<PreviewChatProps> = ({
     }
   }, [handleSendMessage]);
 
+  // Booking flow handlers
+  const handleBookingDaySelect = useCallback((day: BookingDay) => {
+    sendMessage(`I'd like to book on ${day.dayName}, ${day.date}`);
+  }, [sendMessage]);
+
+  const handleBookingTimeSelect = useCallback((time: BookingTime) => {
+    sendMessage(`${time.time} works for me`);
+  }, [sendMessage]);
+
+  const handleBookingGoBack = useCallback(() => {
+    sendMessage("I'd like to pick a different day");
+  }, [sendMessage]);
+
+  // Quick reply handler
+  const handleQuickReplySelect = useCallback((suggestion: string) => {
+    sendMessage(suggestion);
+  }, [sendMessage]);
+
   // Compute user message background color (12% opacity of primary)
   const userBubbleStyle = {
     backgroundColor: `${primaryColor}1F`, // 1F = ~12% opacity in hex
   };
+
+  // Find last assistant message index for showing quick replies/call buttons
+  // Find last assistant message index (ES5-compatible)
+  let lastAssistantIndex = -1;
+  for (let i = messages.length - 1; i >= 0; i--) {
+    if (messages[i].role === 'assistant') {
+      lastAssistantIndex = i;
+      break;
+    }
+  }
 
   return (
     <div className="flex flex-col h-full bg-card">
@@ -191,40 +251,119 @@ export const PreviewChat: React.FC<PreviewChatProps> = ({
         ) : (
           /* Messages List */
           <div className="space-y-4">
-            {messages.map((message) => (
-              <div
-                key={message.id}
-                className={cn(
-                  "flex gap-2",
-                  message.role === 'user' ? "justify-end" : "justify-start"
-                )}
-              >
-                {/* AI Avatar */}
-                {message.role === 'assistant' && (
-                  <div className="w-7 h-7 rounded-full bg-muted border border-border flex items-center justify-center flex-shrink-0">
-                    <span className="text-xs font-semibold text-muted-foreground">A</span>
+            {messages.map((message, index) => {
+              const isLastAssistant = index === lastAssistantIndex;
+              
+              return (
+                <div key={message.id} className="space-y-2">
+                  {/* Message Row */}
+                  <div
+                    className={cn(
+                      "flex gap-2",
+                      message.role === 'user' ? "justify-end" : "justify-start"
+                    )}
+                  >
+                    {/* AI Avatar */}
+                    {message.role === 'assistant' && (
+                      <div className="w-7 h-7 rounded-full bg-muted border border-border flex items-center justify-center flex-shrink-0">
+                        <span className="text-xs font-semibold text-muted-foreground">A</span>
+                      </div>
+                    )}
+
+                    {/* Message Bubble */}
+                    <div
+                      className={cn(
+                        "max-w-[80%] px-3 py-2 rounded-2xl text-sm",
+                        message.role === 'user' 
+                          ? "rounded-br-md" 
+                          : "bg-muted rounded-bl-md"
+                      )}
+                      style={message.role === 'user' ? userBubbleStyle : undefined}
+                    >
+                      {message.content}
+                      
+                      {/* Link Previews (inside bubble for assistant) */}
+                      {message.role === 'assistant' && message.linkPreviews && message.linkPreviews.length > 0 && (
+                        <div className="mt-2">
+                          <LinkPreviewsWidget 
+                            content={message.content} 
+                            cachedPreviews={message.linkPreviews as LinkPreviewData[]}
+                            compact
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* User Label */}
+                    {message.role === 'user' && (
+                      <span className="text-xs text-muted-foreground/60 self-end">You</span>
+                    )}
                   </div>
-                )}
 
-                {/* Message Bubble */}
-                <div
-                  className={cn(
-                    "max-w-[80%] px-3 py-2 rounded-2xl text-sm",
-                    message.role === 'user' 
-                      ? "rounded-br-md" 
-                      : "bg-muted rounded-bl-md"
+                  {/* Rich Content Below Message (assistant only) */}
+                  {message.role === 'assistant' && (
+                    <>
+                      {/* Day Picker */}
+                      {message.dayPicker && (
+                        <div className="ml-9">
+                          <Suspense fallback={<div className="h-32 animate-pulse bg-muted rounded-xl" />}>
+                            <DayPicker 
+                              data={message.dayPicker} 
+                              onSelect={handleBookingDaySelect} 
+                              primaryColor={primaryColor} 
+                            />
+                          </Suspense>
+                        </div>
+                      )}
+
+                      {/* Time Picker */}
+                      {message.timePicker && (
+                        <div className="ml-9">
+                          <Suspense fallback={<div className="h-32 animate-pulse bg-muted rounded-xl" />}>
+                            <TimePicker 
+                              data={message.timePicker} 
+                              onSelect={handleBookingTimeSelect} 
+                              onGoBack={handleBookingGoBack}
+                              primaryColor={primaryColor} 
+                            />
+                          </Suspense>
+                        </div>
+                      )}
+
+                      {/* Booking Confirmed */}
+                      {message.bookingConfirmed && (
+                        <div className="ml-9">
+                          <Suspense fallback={<div className="h-32 animate-pulse bg-muted rounded-xl" />}>
+                            <BookingConfirmed 
+                              data={message.bookingConfirmed} 
+                              primaryColor={primaryColor} 
+                            />
+                          </Suspense>
+                        </div>
+                      )}
+
+                      {/* Call Buttons (only on last assistant message) */}
+                      {isLastAssistant && message.callActions && message.callActions.length > 0 && (
+                        <div className="ml-9">
+                          <CallButton callActions={message.callActions} />
+                        </div>
+                      )}
+
+                      {/* Quick Replies (only on last assistant message) */}
+                      {isLastAssistant && message.quickReplies && message.quickReplies.length > 0 && (
+                        <div className="ml-9">
+                          <QuickReplies 
+                            suggestions={message.quickReplies} 
+                            onSelect={handleQuickReplySelect} 
+                            primaryColor={primaryColor} 
+                          />
+                        </div>
+                      )}
+                    </>
                   )}
-                  style={message.role === 'user' ? userBubbleStyle : undefined}
-                >
-                  {message.content}
                 </div>
-
-                {/* User Label */}
-                {message.role === 'user' && (
-                  <span className="text-xs text-muted-foreground/60 self-end">You</span>
-                )}
-              </div>
-            ))}
+              );
+            })}
 
             {/* Typing Indicator */}
             {isLoading && (
