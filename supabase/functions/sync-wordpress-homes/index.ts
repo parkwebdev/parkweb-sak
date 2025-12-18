@@ -250,24 +250,34 @@ Deno.serve(async (req: Request) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
-    // Verify JWT and get user
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      return new Response(
-        JSON.stringify({ error: 'Missing authorization header' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    // Check for scheduled sync (internal call from cron job)
+    const isScheduledSync = req.headers.get('x-scheduled-sync') === 'true';
+    
+    // For scheduled syncs, skip JWT auth (they run with service role)
+    // For user requests, verify JWT
+    let userId: string | null = null;
+    
+    if (!isScheduledSync) {
+      const authHeader = req.headers.get('Authorization');
+      if (!authHeader) {
+        return new Response(
+          JSON.stringify({ error: 'Missing authorization header' }),
+          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser(
-      authHeader.replace('Bearer ', '')
-    );
-
-    if (authError || !user) {
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      const { data: { user }, error: authError } = await supabase.auth.getUser(
+        authHeader.replace('Bearer ', '')
       );
+
+      if (authError || !user) {
+        return new Response(
+          JSON.stringify({ error: 'Unauthorized' }),
+          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
+      userId = user.id;
     }
 
     const { action, agentId, siteUrl, useAiExtraction } = await req.json();
@@ -286,26 +296,29 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // Check account access (owner or team member) - direct check since RPC uses auth.uid() which isn't set with service role
-    let hasAccess = user.id === agent.user_id;
-    
-    if (!hasAccess) {
-      // Check if user is a team member
-      const { data: teamMember } = await supabase
-        .from('team_members')
-        .select('id')
-        .eq('owner_id', agent.user_id)
-        .eq('member_id', user.id)
-        .maybeSingle();
+    // For scheduled syncs, we already have service role access
+    // For user requests, check account access
+    if (!isScheduledSync && userId) {
+      let hasAccess = userId === agent.user_id;
       
-      hasAccess = !!teamMember;
-    }
+      if (!hasAccess) {
+        // Check if user is a team member
+        const { data: teamMember } = await supabase
+          .from('team_members')
+          .select('id')
+          .eq('owner_id', agent.user_id)
+          .eq('member_id', userId)
+          .maybeSingle();
+        
+        hasAccess = !!teamMember;
+      }
 
-    if (!hasAccess) {
-      return new Response(
-        JSON.stringify({ error: 'Access denied' }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      if (!hasAccess) {
+        return new Response(
+          JSON.stringify({ error: 'Access denied' }),
+          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
     }
 
     // Handle test action
