@@ -9,7 +9,8 @@ export { createConversationsColumns, type ConversationRow } from './conversation
 export { createLocationsColumns, type Location, type LocationWithCounts } from './locations-columns';
 
 // Properties table columns
-export { createPropertiesColumns, type PropertyWithLocation } from './properties-columns';
+export { createPropertiesColumns } from './properties-columns';
+export type { PropertyWithLocation } from '@/hooks/useProperties';
 
 // Knowledge sources table columns
 export { createKnowledgeColumns, type KnowledgeSourceWithMeta, type KnowledgeColumnsProps } from './knowledge-columns';
