@@ -65,13 +65,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "agent_api_keys_agent_id_fkey"
-            columns: ["agent_id"]
-            isOneToOne: false
-            referencedRelation: "agents"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "fk_apikeys_agent"
             columns: ["agent_id"]
             isOneToOne: false
@@ -118,13 +111,6 @@ export type Database = {
           timeout_ms?: number | null
         }
         Relationships: [
-          {
-            foreignKeyName: "agent_tools_agent_id_fkey"
-            columns: ["agent_id"]
-            isOneToOne: false
-            referencedRelation: "agents"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "fk_tools_agent"
             columns: ["agent_id"]
@@ -233,13 +219,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "announcements_agent_id_fkey"
-            columns: ["agent_id"]
-            isOneToOne: false
-            referencedRelation: "agents"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "fk_announcements_agent"
             columns: ["agent_id"]
             isOneToOne: false
@@ -274,13 +253,6 @@ export type Database = {
           session_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "article_feedback_article_id_fkey"
-            columns: ["article_id"]
-            isOneToOne: false
-            referencedRelation: "help_articles"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "fk_feedback_article"
             columns: ["article_id"]
@@ -361,41 +333,6 @@ export type Database = {
           visitor_phone?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "calendar_events_connected_account_id_fkey"
-            columns: ["connected_account_id"]
-            isOneToOne: false
-            referencedRelation: "connected_accounts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "calendar_events_conversation_id_fkey"
-            columns: ["conversation_id"]
-            isOneToOne: false
-            referencedRelation: "conversations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "calendar_events_conversation_id_fkey"
-            columns: ["conversation_id"]
-            isOneToOne: false
-            referencedRelation: "widget_conversations_secure"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "calendar_events_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "leads"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "calendar_events_location_id_fkey"
-            columns: ["location_id"]
-            isOneToOne: false
-            referencedRelation: "locations"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "fk_events_account"
             columns: ["connected_account_id"]
@@ -493,20 +430,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "connected_accounts_agent_id_fkey"
-            columns: ["agent_id"]
-            isOneToOne: false
-            referencedRelation: "agents"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "connected_accounts_location_id_fkey"
-            columns: ["location_id"]
-            isOneToOne: false
-            referencedRelation: "locations"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "fk_accounts_agent"
             columns: ["agent_id"]
             isOneToOne: false
@@ -573,41 +496,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "conversation_memories_agent_id_fkey"
-            columns: ["agent_id"]
-            isOneToOne: false
-            referencedRelation: "agents"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "conversation_memories_conversation_id_fkey"
-            columns: ["conversation_id"]
-            isOneToOne: false
-            referencedRelation: "conversations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "conversation_memories_conversation_id_fkey"
-            columns: ["conversation_id"]
-            isOneToOne: false
-            referencedRelation: "widget_conversations_secure"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "conversation_memories_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "leads"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "conversation_memories_source_message_id_fkey"
-            columns: ["source_message_id"]
-            isOneToOne: false
-            referencedRelation: "messages"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "fk_memories_agent"
             columns: ["agent_id"]
             isOneToOne: false
@@ -671,20 +559,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "conversation_ratings_conversation_id_fkey"
-            columns: ["conversation_id"]
-            isOneToOne: false
-            referencedRelation: "conversations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "conversation_ratings_conversation_id_fkey"
-            columns: ["conversation_id"]
-            isOneToOne: false
-            referencedRelation: "widget_conversations_secure"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "fk_ratings_conversation"
             columns: ["conversation_id"]
             isOneToOne: false
@@ -726,20 +600,6 @@ export type Database = {
           taken_over_by?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "conversation_takeovers_conversation_id_fkey"
-            columns: ["conversation_id"]
-            isOneToOne: false
-            referencedRelation: "conversations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "conversation_takeovers_conversation_id_fkey"
-            columns: ["conversation_id"]
-            isOneToOne: false
-            referencedRelation: "widget_conversations_secure"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "fk_takeovers_conversation"
             columns: ["conversation_id"]
@@ -794,20 +654,6 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "conversations_agent_id_fkey"
-            columns: ["agent_id"]
-            isOneToOne: false
-            referencedRelation: "agents"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "conversations_location_id_fkey"
-            columns: ["location_id"]
-            isOneToOne: false
-            referencedRelation: "locations"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "fk_conversations_agent"
             columns: ["agent_id"]
@@ -915,20 +761,6 @@ export type Database = {
             referencedRelation: "help_categories"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "help_articles_agent_id_fkey"
-            columns: ["agent_id"]
-            isOneToOne: false
-            referencedRelation: "agents"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "help_articles_category_id_fkey"
-            columns: ["category_id"]
-            isOneToOne: false
-            referencedRelation: "help_categories"
-            referencedColumns: ["id"]
-          },
         ]
       }
       help_categories: {
@@ -968,13 +800,6 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "fk_categories_agent"
-            columns: ["agent_id"]
-            isOneToOne: false
-            referencedRelation: "agents"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "help_categories_agent_id_fkey"
             columns: ["agent_id"]
             isOneToOne: false
             referencedRelation: "agents"
@@ -1026,20 +851,6 @@ export type Database = {
           },
           {
             foreignKeyName: "fk_chunks_source"
-            columns: ["source_id"]
-            isOneToOne: false
-            referencedRelation: "knowledge_sources"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "knowledge_chunks_agent_id_fkey"
-            columns: ["agent_id"]
-            isOneToOne: false
-            referencedRelation: "agents"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "knowledge_chunks_source_id_fkey"
             columns: ["source_id"]
             isOneToOne: false
             referencedRelation: "knowledge_sources"
@@ -1135,20 +946,6 @@ export type Database = {
             referencedRelation: "locations"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "knowledge_sources_agent_id_fkey"
-            columns: ["agent_id"]
-            isOneToOne: false
-            referencedRelation: "agents"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "knowledge_sources_default_location_id_fkey"
-            columns: ["default_location_id"]
-            isOneToOne: false
-            referencedRelation: "locations"
-            referencedColumns: ["id"]
-          },
         ]
       }
       leads: {
@@ -1201,20 +998,6 @@ export type Database = {
           },
           {
             foreignKeyName: "fk_leads_conversation"
-            columns: ["conversation_id"]
-            isOneToOne: false
-            referencedRelation: "widget_conversations_secure"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "leads_conversation_id_fkey"
-            columns: ["conversation_id"]
-            isOneToOne: false
-            referencedRelation: "conversations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "leads_conversation_id_fkey"
             columns: ["conversation_id"]
             isOneToOne: false
             referencedRelation: "widget_conversations_secure"
@@ -1300,13 +1083,6 @@ export type Database = {
             referencedRelation: "agents"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "locations_agent_id_fkey"
-            columns: ["agent_id"]
-            isOneToOne: false
-            referencedRelation: "agents"
-            referencedColumns: ["id"]
-          },
         ]
       }
       messages: {
@@ -1356,20 +1132,6 @@ export type Database = {
           },
           {
             foreignKeyName: "fk_messages_conversation"
-            columns: ["conversation_id"]
-            isOneToOne: false
-            referencedRelation: "widget_conversations_secure"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "messages_conversation_id_fkey"
-            columns: ["conversation_id"]
-            isOneToOne: false
-            referencedRelation: "conversations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "messages_conversation_id_fkey"
             columns: ["conversation_id"]
             isOneToOne: false
             referencedRelation: "widget_conversations_secure"
@@ -1438,13 +1200,6 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "fk_news_agent"
-            columns: ["agent_id"]
-            isOneToOne: false
-            referencedRelation: "agents"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "news_items_agent_id_fkey"
             columns: ["agent_id"]
             isOneToOne: false
             referencedRelation: "agents"
@@ -1739,27 +1494,6 @@ export type Database = {
             referencedRelation: "knowledge_sources"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "properties_agent_id_fkey"
-            columns: ["agent_id"]
-            isOneToOne: false
-            referencedRelation: "agents"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "properties_knowledge_source_id_fkey"
-            columns: ["knowledge_source_id"]
-            isOneToOne: false
-            referencedRelation: "knowledge_sources"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "properties_location_id_fkey"
-            columns: ["location_id"]
-            isOneToOne: false
-            referencedRelation: "locations"
-            referencedColumns: ["id"]
-          },
         ]
       }
       query_embedding_cache: {
@@ -1804,13 +1538,6 @@ export type Database = {
             referencedRelation: "agents"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "query_embedding_cache_agent_id_fkey"
-            columns: ["agent_id"]
-            isOneToOne: false
-            referencedRelation: "agents"
-            referencedColumns: ["id"]
-          },
         ]
       }
       response_cache: {
@@ -1850,13 +1577,6 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "fk_response_cache_agent"
-            columns: ["agent_id"]
-            isOneToOne: false
-            referencedRelation: "agents"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "response_cache_agent_id_fkey"
             columns: ["agent_id"]
             isOneToOne: false
             referencedRelation: "agents"
@@ -2270,13 +1990,6 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "conversations_agent_id_fkey"
-            columns: ["agent_id"]
-            isOneToOne: false
-            referencedRelation: "agents"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "fk_conversations_agent"
             columns: ["agent_id"]
