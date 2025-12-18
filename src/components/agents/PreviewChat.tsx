@@ -245,10 +245,10 @@ export const PreviewChat: React.FC<PreviewChatProps> = ({
           <div className="flex flex-col items-center justify-center h-full text-center px-6">
             <AriAgentsIcon size={40} className="text-foreground mb-4" />
             <p className="text-sm text-muted-foreground mb-1">
-              Ask Ari a question to see how your AI will respond.
+              Ask Ari a question your customers would ask to see how it will respond.
             </p>
             <p className="text-xs text-muted-foreground/60">
-              Preview chats don't count toward your usage.
+              Preview chats do not count toward your usage.
             </p>
           </div>
         ) : (
