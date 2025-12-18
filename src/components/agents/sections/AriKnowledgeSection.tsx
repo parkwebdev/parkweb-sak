@@ -69,9 +69,14 @@ export const AriKnowledgeSection: React.FC<AriKnowledgeSectionProps> = ({ agentI
   const [globalFilter, setGlobalFilter] = useState('');
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
-  // Filter out auto-created WordPress sources - they're managed in Locations tab
-  const parentSources = getParentSources().filter(source => source.source_type !== 'wordpress_home');
-  const outdatedCount = parentSources.filter(isSourceOutdated).length;
+  // Memoize parent sources to prevent infinite re-renders
+  const parentSources = useMemo(() => {
+    return getParentSources().filter(source => source.source_type !== 'wordpress_home');
+  }, [getParentSources]);
+  
+  const outdatedCount = useMemo(() => {
+    return parentSources.filter(isSourceOutdated).length;
+  }, [parentSources, isSourceOutdated]);
 
   // Transform parent sources to KnowledgeSourceWithMeta with computed fields
   const sourcesWithMeta: KnowledgeSourceWithMeta[] = useMemo(() => {

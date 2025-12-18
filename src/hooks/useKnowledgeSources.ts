@@ -623,20 +623,20 @@ export const useKnowledgeSources = (agentId?: string) => {
   };
 
   // Get child sources for a sitemap parent
-  const getChildSources = (parentId: string): KnowledgeSource[] => {
+  const getChildSources = useCallback((parentId: string): KnowledgeSource[] => {
     return sources.filter(s => {
       const metadata = s.metadata as Record<string, unknown> | null;
       return metadata?.parent_source_id === parentId;
     });
-  };
+  }, [sources]);
 
   // Get only parent sources (not child sources from sitemaps)
-  const getParentSources = (): KnowledgeSource[] => {
+  const getParentSources = useCallback((): KnowledgeSource[] => {
     return sources.filter(s => {
       const metadata = s.metadata as Record<string, unknown> | null;
       return !metadata?.parent_source_id;
     });
-  };
+  }, [sources]);
 
   // Delete a single child source (individual page from sitemap)
   const deleteChildSource = async (sourceId: string) => {
