@@ -925,8 +925,10 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
   // For contained preview mode (embed tab preview), render with absolute positioning
   if (containedPreview) {
     return (
-      <div className={`absolute ${positionClasses[position] || positionClasses['bottom-right']}`}>
-        {widgetContent}
+      <div className="absolute inset-0 flex items-end justify-end p-4 pointer-events-none">
+        <div className="pointer-events-auto">
+          {widgetContent}
+        </div>
       </div>
     );
   }
