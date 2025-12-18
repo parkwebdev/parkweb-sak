@@ -429,10 +429,11 @@ export const PreviewChat: React.FC<PreviewChatProps> = ({
           />
           <IconButton
             variant="default"
-            size="sm"
+            size="icon"
             label="Send message"
             onClick={handleSendMessage}
             disabled={!inputValue.trim() || isLoading}
+            className="h-10 w-10"
           >
             <Send01 size={16} />
           </IconButton>
