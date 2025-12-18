@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { 
   File06, Link03, Database01, Trash01, RefreshCcw01, CheckCircle, XCircle, 
-  Clock, Globe01, Building07, AlertTriangle 
+  Clock, Globe01, Building07, AlertCircle 
 } from '@untitledui/icons';
 import { DataTableColumnHeader } from '../DataTableColumnHeader';
 import { formatDistanceToNow } from 'date-fns';
@@ -283,8 +283,8 @@ export const createKnowledgeColumns = ({
           {outdated && status === 'ready' && (
             <Tooltip>
               <TooltipTrigger>
-                <Badge variant="outline" className="text-xs gap-1 border-amber-500/50 text-amber-600 dark:text-amber-400">
-                  <AlertTriangle className="h-3 w-3" />
+                <Badge variant="outline" className="text-xs gap-1 border-warning text-warning">
+                  <AlertCircle className="h-3 w-3" />
                   Outdated
                 </Badge>
               </TooltipTrigger>
