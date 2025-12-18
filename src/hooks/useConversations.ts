@@ -64,7 +64,7 @@ export const useConversations = () => {
         .from('conversations')
         .select(`
           *,
-          agents(name)
+          agents!fk_conversations_agent(name)
         `)
         .eq('user_id', user.id)
         .order('updated_at', { ascending: false });
@@ -242,7 +242,7 @@ export const useConversations = () => {
       // Get conversation details for notification
       const { data: conversation } = await supabase
         .from('conversations')
-        .select('metadata, agents(name, user_id)')
+        .select('metadata, agents!fk_conversations_agent(name, user_id)')
         .eq('id', conversationId)
         .single();
 

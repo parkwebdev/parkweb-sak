@@ -60,7 +60,7 @@ export const useSearchData = () => {
       ] = await Promise.all([
         supabase
           .from('conversations')
-          .select('*, agents(name)')
+          .select('*, agents!fk_conversations_agent(name)')
           .order('updated_at', { ascending: false })
           .limit(50),
         supabase
@@ -70,12 +70,12 @@ export const useSearchData = () => {
           .limit(50),
         supabase
           .from('help_articles')
-          .select('*, help_categories(name), agents(name)')
+          .select('*, help_categories!fk_articles_category(name), agents!fk_articles_agent(name)')
           .order('title')
           .limit(50),
         supabase
           .from('news_items')
-          .select('*, agents(name)')
+          .select('*, agents!fk_news_agent(name)')
           .order('created_at', { ascending: false })
           .limit(50),
         supabase
@@ -85,12 +85,12 @@ export const useSearchData = () => {
           .limit(50),
         supabase
           .from('agent_tools')
-          .select('*, agents(name)')
+          .select('*, agents!fk_tools_agent(name)')
           .order('name')
           .limit(50),
         supabase
           .from('knowledge_sources')
-          .select('*, agents(name)')
+          .select('*, agents!fk_sources_agent(name)')
           .is('metadata->parent_source_id', null) // Only top-level sources
           .order('created_at', { ascending: false })
           .limit(50),

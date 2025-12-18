@@ -47,7 +47,7 @@ export const useCalendarEvents = (options: UseCalendarEventsOptions = {}) => {
           lead_id,
           conversation_id,
           connected_account_id,
-          locations(id, name)
+          locations!fk_events_location(id, name)
         `)
         .order('start_time', { ascending: true });
 
