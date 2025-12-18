@@ -223,22 +223,32 @@ export const createHelpArticlesColumns = ({
       const hasEmbedding = row.original.hasEmbedding;
       
       return (
-        <Badge 
-          variant={hasEmbedding ? 'default' : 'secondary'} 
-          className={`text-xs gap-1 ${hasEmbedding ? 'bg-status-active/10 text-status-active border-status-active/20' : ''}`}
-        >
-          {hasEmbedding ? (
-            <>
-              <CheckVerified01 className="h-3 w-3" />
-              Ready
-            </>
-          ) : (
-            <>
-              <Clock className="h-3 w-3" />
-              Pending
-            </>
-          )}
-        </Badge>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Badge 
+              variant={hasEmbedding ? 'default' : 'secondary'} 
+              className={`text-xs gap-1 cursor-default ${hasEmbedding ? 'bg-status-active/10 text-status-active border-status-active/20 hover:bg-status-active/10' : 'hover:bg-secondary'}`}
+            >
+              {hasEmbedding ? (
+                <>
+                  <CheckVerified01 className="h-3 w-3" />
+                  Ready
+                </>
+              ) : (
+                <>
+                  <Clock className="h-3 w-3" />
+                  Pending
+                </>
+              )}
+            </Badge>
+          </TooltipTrigger>
+          <TooltipContent>
+            {hasEmbedding 
+              ? "Article is embedded and ready for AI-powered search"
+              : "Article is pending embedding for AI search"
+            }
+          </TooltipContent>
+        </Tooltip>
       );
     },
     enableSorting: false,
