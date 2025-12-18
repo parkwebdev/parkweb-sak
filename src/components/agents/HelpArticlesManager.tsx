@@ -837,11 +837,16 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
                 </PopoverContent>
               </Popover>
 
-              {/* Add Article Dialog (opened from empty state) */}
+              {/* Add Article */}
               <Dialog open={dialogOpen} onOpenChange={(open) => {
                 setDialogOpen(open);
                 if (!open) resetForm();
               }}>
+                <DialogTrigger asChild>
+                  <Button size="sm">
+                    Add Article
+                  </Button>
+                </DialogTrigger>
                 <DialogContent className="max-w-3xl max-h-[85vh] overflow-hidden flex flex-col">
                   <DialogHeader>
                     <DialogTitle>Add Help Article</DialogTitle>
