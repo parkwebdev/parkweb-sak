@@ -217,7 +217,7 @@ export const LocationDetails: React.FC<LocationDetailsProps> = ({
               placeholder="Community slug"
             />
             {location.wordpress_community_id && (
-              <p className="text-xs text-muted-foreground">WordPress ID: {location.wordpress_community_id}</p>
+              <p className="text-xs text-muted-foreground">Post ID: {location.wordpress_community_id}</p>
             )}
           </div>
         </AnimatedItem>
