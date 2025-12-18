@@ -80,7 +80,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
   const { isCollapsed, setCollapsed } = useSidebar();
   const { conversations } = useConversations();
   const prefersReducedMotion = useReducedMotion();
-  const { allComplete } = useOnboardingProgress();
+  const { allComplete, completedCount, totalCount } = useOnboardingProgress();
   
   // Count unread conversations for admin notification badge
   const unreadConversationsCount = conversations.filter(conv => {
@@ -196,71 +196,112 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
             })}
           </section>
 
-          {/* Bottom navigation (settings) */}
-          {bottomItems.length > 0 && (
-            <section className="w-full mt-4 pt-4 border-t border-border">
-              {bottomItems.map((item, index) => {
-                const isActive = location.pathname === item.path;
-                const isGetSetUp = item.id === 'get-set-up';
-                
-                // Determine icon for "Get set up" based on completion
-                const renderIcon = () => {
-                  if (isGetSetUp) {
-                    if (allComplete) {
-                      return <CheckCircle size={14} className="text-status-active" />;
-                    }
-                    return <Circle size={14} className="self-stretch my-auto" />;
-                  }
-                  if (isActive && item.activeIcon) {
-                    return <item.activeIcon size={14} className="self-stretch my-auto" />;
-                  }
-                  return <item.icon size={14} className="self-stretch my-auto" />;
-                };
-                
-                return (
-                  <motion.div 
-                    key={item.id} 
-                    className="items-center flex w-full py-0.5"
-                    initial={prefersReducedMotion ? false : { opacity: 0, x: -12 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: (navigationItems.length + index) * 0.03, ...springs.smooth }}
-                  >
-                    <Link 
-                      to={item.path}
-                      aria-current={isActive ? 'page' : undefined}
-                      className={`items-center flex w-full p-[11px] rounded-md transition-colors text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
-                        isActive 
-                          ? 'bg-accent text-accent-foreground' 
-                          : 'bg-transparent hover:bg-accent/50 text-muted-foreground hover:text-foreground'
-                      }`}
-                      title={isCollapsed ? item.label : ''}
-                    >
-                      <div className="items-center flex gap-2 my-auto w-full overflow-hidden">
-                        <div className="items-center flex my-auto w-[18px] flex-shrink-0">
-                          {renderIcon()}
-                        </div>
-                        <motion.div
-                          className={`text-sm font-normal leading-4 my-auto whitespace-nowrap ${
-                            isActive ? 'font-medium' : ''
-                          }`}
-                          initial={false}
-                          animate={{ opacity: isCollapsed ? 0 : 1 }}
-                          transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.15 }}
-                        >
-                          {item.label}
-                        </motion.div>
-                      </div>
-                    </Link>
-                  </motion.div>
-                );
-              })}
-            </section>
-          )}
         </div>
 
-        {/* Footer with user account */}
-        <div className="pt-4 border-t border-border">
-          <UserAccountCard isCollapsed={isCollapsed} />
+        {/* Footer with settings and user account */}
+        <div className="pt-4 space-y-1">
+          {/* Bottom navigation (get set up, settings) */}
+          {bottomItems.map((item, index) => {
+            const isActive = location.pathname === item.path;
+            const isGetSetUp = item.id === 'get-set-up';
+            
+            // Circular progress for "Get set up"
+            const renderIcon = () => {
+              if (isGetSetUp) {
+                const progress = totalCount > 0 ? (completedCount / totalCount) : 0;
+                const circumference = 2 * Math.PI * 6; // radius = 6
+                const strokeDashoffset = circumference * (1 - progress);
+                
+                return (
+                  <svg width="14" height="14" viewBox="0 0 16 16" className="flex-shrink-0">
+                    {/* Background circle */}
+                    <circle
+                      cx="8"
+                      cy="8"
+                      r="6"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      className="text-muted-foreground/30"
+                    />
+                    {/* Progress circle */}
+                    <circle
+                      cx="8"
+                      cy="8"
+                      r="6"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      className="text-status-active"
+                      strokeDasharray={circumference}
+                      strokeDashoffset={strokeDashoffset}
+                      transform="rotate(-90 8 8)"
+                      style={{ transition: 'stroke-dashoffset 0.3s ease' }}
+                    />
+                    {/* Checkmark when complete */}
+                    {allComplete && (
+                      <path
+                        d="M5 8l2 2 4-4"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="text-status-active"
+                      />
+                    )}
+                  </svg>
+                );
+              }
+              if (isActive && item.activeIcon) {
+                return <item.activeIcon size={14} className="self-stretch my-auto" />;
+              }
+              return <item.icon size={14} className="self-stretch my-auto" />;
+            };
+            
+            return (
+              <motion.div 
+                key={item.id} 
+                className="items-center flex w-full py-0.5"
+                initial={prefersReducedMotion ? false : { opacity: 0, x: -12 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: (navigationItems.length + index) * 0.03, ...springs.smooth }}
+              >
+                <Link 
+                  to={item.path}
+                  aria-current={isActive ? 'page' : undefined}
+                  className={`items-center flex w-full p-[11px] rounded-md transition-colors text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
+                    isActive 
+                      ? 'bg-accent text-accent-foreground' 
+                      : 'bg-transparent hover:bg-accent/50 text-muted-foreground hover:text-foreground'
+                  }`}
+                  title={isCollapsed ? item.label : ''}
+                >
+                  <div className="items-center flex gap-2 my-auto w-full overflow-hidden">
+                    <div className="items-center flex my-auto w-[18px] flex-shrink-0 justify-center">
+                      {renderIcon()}
+                    </div>
+                    <motion.div
+                      className={`text-sm font-normal leading-4 my-auto whitespace-nowrap ${
+                        isActive ? 'font-medium' : ''
+                      }`}
+                      initial={false}
+                      animate={{ opacity: isCollapsed ? 0 : 1 }}
+                      transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.15 }}
+                    >
+                      {item.label}
+                    </motion.div>
+                  </div>
+                </Link>
+              </motion.div>
+            );
+          })}
+          
+          {/* User account card */}
+          <div className="pt-2">
+            <UserAccountCard isCollapsed={isCollapsed} />
+          </div>
         </div>
       </nav>
     </motion.aside>
