@@ -173,7 +173,6 @@ export interface ChatWidgetProps {
   config: WidgetConfig | { agentId: string; position?: string; primaryColor?: string };
   previewMode?: boolean;
   containedPreview?: boolean;
-  embeddedPreview?: boolean; // Full-panel embedded mode (no floating button, always visible)
   isLoading?: boolean; // When true, show skeleton placeholders for dynamic content
 }
 
