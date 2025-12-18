@@ -1,8 +1,8 @@
 # ChatPad Hooks Reference
 
-> **Last Updated**: December 2024  
+> **Last Updated**: December 2025  
 > **Status**: Active  
-> **Related**: [Application Overview](./APPLICATION_OVERVIEW.md), [Supabase Integration Guide](./SUPABASE_INTEGRATION_GUIDE.md)
+> **Related**: [Architecture](./ARCHITECTURE.md), [Database Schema](./DATABASE_SCHEMA.md)
 
 Complete reference for all custom React hooks in the ChatPad application.
 
@@ -22,24 +22,24 @@ Complete reference for all custom React hooks in the ChatPad application.
 
 Hooks for fetching and mutating data with React Query and Supabase.
 
-### useAgents
+### useAgent
 
-Manages AI agent CRUD operations.
+Manages the single Ari agent for the current user (single-agent model).
 
 ```tsx
-import { useAgents } from '@/hooks/useAgents';
+import { useAgent } from '@/hooks/useAgent';
 
 const { 
-  agents,           // Agent[] - List of agents
-  isLoading,        // boolean - Loading state
-  createAgent,      // (data) => Promise - Create new agent
-  updateAgent,      // (id, data) => Promise - Update agent
-  deleteAgent,      // (id) => Promise - Delete agent
-  refetch           // () => void - Refresh data
-} = useAgents();
+  agent,              // Agent | null - The user's Ari agent
+  agentId,            // string | null - Agent ID shortcut
+  loading,            // boolean - Loading state
+  updateAgent,        // (data) => Promise - Update agent
+  updateDeploymentConfig, // (config) => Promise - Update deployment config
+  refetch             // () => void - Refresh data
+} = useAgent();
 ```
 
-**File**: `src/hooks/useAgents.ts`
+**File**: `src/hooks/useAgent.ts`
 
 ---
 
@@ -375,6 +375,23 @@ const isMobile = useMobile(); // boolean - true if viewport < 768px
 ```
 
 **File**: `src/hooks/use-mobile.tsx`
+
+---
+
+### useBreakpoint
+
+Detects if viewport is at or above a given breakpoint.
+
+```tsx
+import { useBreakpoint } from '@/hooks/use-breakpoint';
+
+const isDesktop = useBreakpoint('lg'); // boolean - true if viewport >= 1024px
+const isTablet = useBreakpoint('md');  // boolean - true if viewport >= 768px
+```
+
+**Breakpoints**: `sm` (640px), `md` (768px), `lg` (1024px), `xl` (1280px), `2xl` (1536px)
+
+**File**: `src/hooks/use-breakpoint.ts`
 
 ---
 
@@ -876,6 +893,41 @@ useVisitorPresence(agentId: string, visitorId: string);
 ```
 
 **File**: `src/widget/hooks/useVisitorPresence.ts`
+
+---
+
+### useLocationDetection
+
+Auto-detects location context from URL patterns for multi-location agents.
+
+```tsx
+import { useLocationDetection } from '@/widget/hooks/useLocationDetection';
+
+const {
+  location,           // DetectedLocation | null - Detected location
+  detectionMethod,    // string - How location was detected
+  isDetecting,        // boolean - Detection in progress
+  availableLocations, // Location[] - All available locations
+  showLocationPicker, // boolean - Should show manual picker
+  setShowLocationPicker, // (show) => void
+  selectLocation,     // (location) => void - Manual selection
+} = useLocationDetection({
+  agentId: string,
+  wordpressSiteUrl?: string,
+  explicitLocationSlug?: string,
+  parentPageUrl?: string,
+  enableAutoDetection?: boolean,
+});
+```
+
+**Detection Priority:**
+1. Explicit `data-location` attribute on widget script
+2. URL pattern matching (e.g., `/communities/[slug]`)
+3. WordPress API lookup for community associations
+4. Previously selected location from localStorage
+5. Falls back to location picker if multiple locations exist
+
+**File**: `src/widget/hooks/useLocationDetection.ts`
 
 ---
 

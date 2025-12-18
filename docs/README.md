@@ -1,6 +1,6 @@
 # ChatPad Documentation
 
-> **Last Updated**: December 2024
+> **Last Updated**: December 2025
 
 Welcome to the ChatPad documentation. This index provides quick access to all technical guides and architecture documentation.
 

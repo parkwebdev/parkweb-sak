@@ -1,6 +1,6 @@
 # ChatPad Architecture
 
-> **Last Updated**: December 2024  
+> **Last Updated**: December 2025  
 > **Status**: Active  
 > **Related**: [AI Architecture](./AI_ARCHITECTURE.md), [Database Schema](./DATABASE_SCHEMA.md), [Security](./SECURITY.md)
 

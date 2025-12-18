@@ -1,6 +1,6 @@
 # ChatPad Database Schema
 
-> **Last Updated**: December 2024  
+> **Last Updated**: December 2025  
 > **Status**: Active  
 > **Related**: [Security](./SECURITY.md), [Edge Functions](./EDGE_FUNCTIONS.md), [Architecture](./ARCHITECTURE.md)
 
@@ -132,6 +132,7 @@ Core AI agent configuration.
 | `temperature` | double precision | Yes | `0.7` | Response creativity (0-2) |
 | `max_tokens` | integer | Yes | `2000` | Max response tokens |
 | `status` | agent_status | No | `'draft'` | Agent status |
+| `enable_news_tab` | boolean | Yes | `true` | Show news tab in widget |
 | `deployment_config` | jsonb | Yes | `{...}` | Widget/API deployment settings |
 | `created_at` | timestamptz | No | `now()` | Creation timestamp |
 | `updated_at` | timestamptz | No | `now()` | Last update timestamp |

@@ -1,6 +1,6 @@
 # Component Patterns Guide
 
-> **Last Updated**: December 2024  
+> **Last Updated**: December 2025  
 > **Status**: Active  
 > **Related**: [Design System](./DESIGN_SYSTEM.md), [Hooks Reference](./HOOKS_REFERENCE.md), [Architecture](./ARCHITECTURE.md)
 

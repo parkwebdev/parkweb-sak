@@ -1,8 +1,8 @@
 # ChatPad Edge Functions
 
-> **Last Updated**: December 2024  
+> **Last Updated**: December 2025  
 > **Status**: Active  
-> **Related**: [Supabase Integration](./SUPABASE_INTEGRATION_GUIDE.md), [Security](./SECURITY.md), [AI Architecture](./AI_ARCHITECTURE.md)
+> **Related**: [Database Schema](./DATABASE_SCHEMA.md), [Security](./SECURITY.md), [AI Architecture](./AI_ARCHITECTURE.md)
 
 Documentation for all Supabase Edge Functions in the ChatPad platform.
 
@@ -720,6 +720,67 @@ if (req.method === 'OPTIONS') {
 - Deletes associated knowledge_chunks via CASCADE
 - Prevents accumulation of stale data from failed batch processing
 - Runs daily via scheduled cron
+
+---
+
+### `send-booking-confirmation`
+
+**Purpose:** Sends booking confirmation emails with .ics calendar attachments.
+
+**Auth:** Service Role (internal only - requires `x-internal-secret` header)
+
+**Method:** `POST`
+
+**Request Body:**
+```typescript
+{
+  eventId: string;
+  visitorEmail: string;
+  visitorName: string;
+  eventDetails: {
+    title: string;
+    startTime: string;
+    endTime: string;
+    locationName?: string;
+    locationAddress?: string;
+    locationPhone?: string;
+  };
+}
+```
+
+**Response:**
+```typescript
+{
+  success: true;
+  emailId: string;
+}
+```
+
+**Details:**
+- Generates .ics calendar file attachment
+- Sends confirmation email via Resend
+- Includes location details and contact information
+- Called internally by `book-appointment` function
+
+---
+
+### `scheduled-wordpress-sync`
+
+**Purpose:** Hourly cron job for automatic WordPress community/home synchronization.
+
+**Auth:** Service Role (cron trigger)
+
+**Method:** `POST`
+
+**Request Body:** None (triggered by cron)
+
+**Details:**
+- Runs hourly via Supabase cron
+- Fetches all agents with WordPress connections configured
+- Reads endpoint configuration from each agent's `deployment_config`
+- Invokes `sync-wordpress-communities` and `sync-wordpress-homes` for each
+- Logs sync results and errors
+- Respects stored endpoint URLs (custom post type slugs)
 
 ---
 
