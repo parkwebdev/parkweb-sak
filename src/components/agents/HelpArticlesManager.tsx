@@ -706,7 +706,6 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
           description="Create help articles to display in your chat widget's help tab"
           action={
             <Button onClick={() => setDialogOpen(true)} size="sm">
-              <Plus className="h-4 w-4 mr-1" />
               Add Article
             </Button>
           }
@@ -838,134 +837,9 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
               </Popover>
 
               {/* Add Article */}
-              <Dialog open={dialogOpen} onOpenChange={(open) => {
-                setDialogOpen(open);
-                if (!open) resetForm();
-              }}>
-                <DialogTrigger asChild>
-                  <Button size="sm">
-                    Add Article
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-3xl max-h-[85vh] overflow-hidden flex flex-col">
-                  <DialogHeader>
-                    <DialogTitle>Add Help Article</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4 py-4 overflow-y-auto flex-1 pr-2">
-                    <div className="space-y-2">
-                      <Label htmlFor="title">Title *</Label>
-                      <Input
-                        id="title"
-                        value={formData.title}
-                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                        placeholder="How to get started"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label>Content *</Label>
-                      <RichTextEditor
-                        content={formData.content}
-                        onChange={(html) => setFormData({ ...formData, content: html })}
-                        placeholder="Write your help article content here..."
-                        agentId={agentId}
-                        userId={userId}
-                        minHeight="250px"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="category">Category *</Label>
-                        <Select
-                          value={formData.category}
-                          onValueChange={(value) => setFormData({ ...formData, category: value })}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select category" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {categories.map((cat) => (
-                              <SelectItem key={cat.name} value={cat.name}>
-                                <div className="flex items-center gap-2">
-                                  <CategoryIcon name={(cat.icon as CategoryIconName) || 'book'} className="h-4 w-4" />
-                                  {cat.name}
-                                </div>
-                              </SelectItem>
-                            ))}
-                            {categories.length === 0 && (
-                              <div className="p-2 text-sm text-muted-foreground">
-                                No categories yet. Add one first.
-                              </div>
-                            )}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-
-                    {/* Featured Image Upload */}
-                    <div className="space-y-2">
-                      <Label>Featured Image (Hero)</Label>
-                      <p className="text-xs text-muted-foreground">
-                        This image will appear as a hero banner at the top of the article
-                      </p>
-                      {formData.featured_image ? (
-                        <div className="relative rounded-lg overflow-hidden">
-                          <img 
-                            src={formData.featured_image} 
-                            alt="Featured" 
-                            className="w-full h-40 object-cover"
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                          <Button 
-                            size="sm" 
-                            variant="secondary" 
-                            className="absolute top-2 right-2"
-                            onClick={() => setFormData({ ...formData, featured_image: '' })}
-                          >
-                            <XClose className="h-4 w-4 mr-1" />
-                            Remove
-                          </Button>
-                        </div>
-                      ) : (
-                        <div className="border-2 border-dashed rounded-lg p-6 text-center hover:bg-muted/50 transition-colors">
-                          <input 
-                            type="file" 
-                            accept="image/*" 
-                            onChange={handleFeaturedImageUpload}
-                            className="hidden"
-                            id="featured-image-upload"
-                            disabled={featuredImageUploading}
-                          />
-                          <label htmlFor="featured-image-upload" className="cursor-pointer block">
-                            {featuredImageUploading ? (
-                              <div className="flex flex-col items-center">
-                                <div className="h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent mb-2" />
-                                <p className="text-sm text-muted-foreground">Uploading...</p>
-                              </div>
-                            ) : (
-                              <>
-                                <Image01 className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                                <p className="text-sm text-muted-foreground">Click to upload featured image</p>
-                                <p className="text-xs text-muted-foreground mt-1">Recommended: 1200×400px</p>
-                              </>
-                            )}
-                          </label>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <DialogFooter>
-                    <Button variant="outline" onClick={() => {
-                      setDialogOpen(false);
-                      resetForm();
-                    }}>
-                      Cancel
-                    </Button>
-                    <Button onClick={handleSubmit}>Add Article</Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
+              <Button size="sm" onClick={() => setDialogOpen(true)}>
+                Add Article
+              </Button>
             </div>
           </div>
 
@@ -1022,6 +896,131 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
           )}
         </>
       )}
+
+      {/* Add Article Dialog */}
+      <Dialog open={dialogOpen} onOpenChange={(open) => {
+        setDialogOpen(open);
+        if (!open) resetForm();
+      }}>
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Add Help Article</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4 overflow-y-auto flex-1 pr-2">
+            <div className="space-y-2">
+              <Label htmlFor="title">Title *</Label>
+              <Input
+                id="title"
+                value={formData.title}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                placeholder="How to get started"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Content *</Label>
+              <RichTextEditor
+                content={formData.content}
+                onChange={(html) => setFormData({ ...formData, content: html })}
+                placeholder="Write your help article content here..."
+                agentId={agentId}
+                userId={userId}
+                minHeight="250px"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="category">Category *</Label>
+                <Select
+                  value={formData.category}
+                  onValueChange={(value) => setFormData({ ...formData, category: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat.name} value={cat.name}>
+                        <div className="flex items-center gap-2">
+                          <CategoryIcon name={(cat.icon as CategoryIconName) || 'book'} className="h-4 w-4" />
+                          {cat.name}
+                        </div>
+                      </SelectItem>
+                    ))}
+                    {categories.length === 0 && (
+                      <div className="p-2 text-sm text-muted-foreground">
+                        No categories yet. Add one first.
+                      </div>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Featured Image Upload */}
+            <div className="space-y-2">
+              <Label>Featured Image (Hero)</Label>
+              <p className="text-xs text-muted-foreground">
+                This image will appear as a hero banner at the top of the article
+              </p>
+              {formData.featured_image ? (
+                <div className="relative rounded-lg overflow-hidden">
+                  <img 
+                    src={formData.featured_image} 
+                    alt="Featured" 
+                    className="w-full h-40 object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                  <Button 
+                    size="sm" 
+                    variant="secondary" 
+                    className="absolute top-2 right-2"
+                    onClick={() => setFormData({ ...formData, featured_image: '' })}
+                  >
+                    <XClose className="h-4 w-4 mr-1" />
+                    Remove
+                  </Button>
+                </div>
+              ) : (
+                <div className="border-2 border-dashed rounded-lg p-6 text-center hover:bg-muted/50 transition-colors">
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    onChange={handleFeaturedImageUpload}
+                    className="hidden"
+                    id="featured-image-upload"
+                    disabled={featuredImageUploading}
+                  />
+                  <label htmlFor="featured-image-upload" className="cursor-pointer block">
+                    {featuredImageUploading ? (
+                      <div className="flex flex-col items-center">
+                        <div className="h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent mb-2" />
+                        <p className="text-sm text-muted-foreground">Uploading...</p>
+                      </div>
+                    ) : (
+                      <>
+                        <Image01 className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                        <p className="text-sm text-muted-foreground">Click to upload featured image</p>
+                        <p className="text-xs text-muted-foreground mt-1">Recommended: 1200×400px</p>
+                      </>
+                    )}
+                  </label>
+                </div>
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              setDialogOpen(false);
+              resetForm();
+            }}>
+              Cancel
+            </Button>
+            <Button onClick={handleSubmit}>Add Article</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Add Category Dialog */}
       <Dialog open={newCategoryDialogOpen} onOpenChange={setNewCategoryDialogOpen}>
