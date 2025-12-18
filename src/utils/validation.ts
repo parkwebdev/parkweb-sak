@@ -1,7 +1,7 @@
 /**
  * Validation Utilities
  * 
- * Common validation and formatting functions for user data.
+ * Common validation functions for user data.
  * 
  * @module utils/validation
  */
@@ -19,44 +19,4 @@
 export const isValidEmail = (email: string): boolean => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
-};
-
-/**
- * Formats a date string for display as a join date.
- * 
- * @param dateString - ISO date string to format
- * @returns Formatted date string (e.g., "Jan 15, 2024")
- * 
- * @example
- * formatJoinDate('2024-01-15T00:00:00Z') // 'Jan 15, 2024'
- */
-export const formatJoinDate = (dateString: string): string => {
-  return new Date(dateString).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
-  });
-};
-
-/**
- * Returns Tailwind CSS classes for role badge styling.
- * Includes light and dark mode variants.
- * 
- * @param role - User role (super_admin, admin, manager, or member)
- * @returns Tailwind CSS class string for badge styling
- * 
- * @example
- * getRoleColor('admin') // 'bg-red-100 text-red-800 ...'
- */
-export const getRoleColor = (role: string): string => {
-  switch (role) {
-    case 'super_admin':
-      return 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800';
-    case 'admin':
-      return 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/20 dark:text-red-300 dark:border-red-800';
-    case 'manager':
-      return 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800';
-    default:
-      return 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-800/50 dark:text-gray-300 dark:border-gray-700';
-  }
 };
