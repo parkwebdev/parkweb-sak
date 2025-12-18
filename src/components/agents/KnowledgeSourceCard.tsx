@@ -81,6 +81,7 @@ export const KnowledgeSourceCard: React.FC<KnowledgeSourceCardProps> = ({
   const sourceType = (source as unknown as { source_type?: string }).source_type || 
     (isSitemap ? 'sitemap' : 'url');
   const isPropertyListing = sourceType === 'property_listings' || sourceType === 'property_feed';
+  const isWordPressHome = sourceType === 'wordpress_home';
   
   // Get refresh info from new columns
   const refreshStrategy = (source as unknown as { refresh_strategy?: RefreshStrategy }).refresh_strategy || 'manual';
@@ -88,7 +89,7 @@ export const KnowledgeSourceCard: React.FC<KnowledgeSourceCardProps> = ({
   const nextRefreshAt = (source as unknown as { next_refresh_at?: string }).next_refresh_at;
   
   // Use appropriate icon based on source type
-  const Icon = isPropertyListing 
+  const Icon = isWordPressHome || isPropertyListing 
     ? Building07 
     : isSitemap 
       ? Globe01 
@@ -125,6 +126,10 @@ export const KnowledgeSourceCard: React.FC<KnowledgeSourceCardProps> = ({
   const progress = getSitemapProgress();
 
   const getDisplayName = () => {
+    if (isWordPressHome) {
+      // WordPress source names are like "WordPress: example.com"
+      return source.source.replace('WordPress: ', 'WordPress Homes: ');
+    }
     if (isPropertyListing) {
       try {
         return `Properties: ${new URL(source.source).hostname}`;
@@ -152,6 +157,9 @@ export const KnowledgeSourceCard: React.FC<KnowledgeSourceCardProps> = ({
   };
 
   const getContentPreview = () => {
+    if (isWordPressHome && propertyCount !== undefined) {
+      return `${propertyCount} homes synced from WordPress`;
+    }
     if (isPropertyListing && propertyCount !== undefined) {
       return `${propertyCount} properties synced`;
     }
@@ -177,8 +185,8 @@ export const KnowledgeSourceCard: React.FC<KnowledgeSourceCardProps> = ({
         <CardHeader>
           <div className="flex items-start justify-between">
             <div className="flex items-start gap-3 flex-1">
-              <div className={`p-2 rounded-lg ${isPropertyListing ? 'bg-primary/10' : isSitemap ? 'bg-primary/10' : 'bg-accent'}`}>
-                <Icon className={`h-5 w-5 ${isPropertyListing || isSitemap ? 'text-primary' : 'text-accent-foreground'}`} />
+              <div className={`p-2 rounded-lg ${isWordPressHome || isPropertyListing ? 'bg-primary/10' : isSitemap ? 'bg-primary/10' : 'bg-accent'}`}>
+                <Icon className={`h-5 w-5 ${isWordPressHome || isPropertyListing || isSitemap ? 'text-primary' : 'text-accent-foreground'}`} />
               </div>
               <div className="flex-1 min-w-0">
                 <CardTitle className="text-base truncate">{getDisplayName()}</CardTitle>
