@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { 
-  Trash01, Edit05, CheckCircle, Clock, ChevronUp, ChevronDown,
+  Trash01, Edit05, CheckVerified01, Clock, ChevronUp, ChevronDown,
   BookOpen01, HelpCircle, User01, CreditCard01, Settings01,
   Mail01, Phone01, Shield01, Rocket01, Star01, Tool01,
   Lightbulb01, File06, Home01, ShoppingBag01, Calendar,
@@ -225,11 +225,11 @@ export const createHelpArticlesColumns = ({
       return (
         <Badge 
           variant={hasEmbedding ? 'default' : 'secondary'} 
-          className="text-xs gap-1"
+          className={`text-xs gap-1 ${hasEmbedding ? 'bg-status-active/10 text-status-active border-status-active/20' : ''}`}
         >
           {hasEmbedding ? (
             <>
-              <CheckCircle className="h-3 w-3" />
+              <CheckVerified01 className="h-3 w-3" />
               Ready
             </>
           ) : (
