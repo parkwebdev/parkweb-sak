@@ -75,7 +75,7 @@ export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressCo
   const communitySyncInterval = localCommunitySyncInterval ?? wordpressConfig?.community_sync_interval ?? 'manual';
   const homeSyncInterval = localHomeSyncInterval ?? wordpressConfig?.home_sync_interval ?? 'manual';
 
-  // Test WordPress connection
+  // Test WordPress connection and save URL on success
   const testConnection = useCallback(async (url: string): Promise<TestResult> => {
     if (!agent?.id) {
       return { success: false, message: 'No agent selected' };
@@ -107,6 +107,26 @@ export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressCo
       };
 
       setTestResult(result);
+      
+      // Auto-save URL on successful connection test to prevent URL loss
+      if (result.success) {
+        try {
+          await supabase.functions.invoke('sync-wordpress-communities', {
+            body: {
+              action: 'save',
+              agentId: agent.id,
+              siteUrl: url,
+            },
+          });
+          console.log('WordPress URL auto-saved after successful test');
+          // Refresh agent data to reflect saved URL
+          onSyncComplete?.();
+        } catch (saveError) {
+          console.error('Failed to auto-save WordPress URL:', saveError);
+          // Don't fail the test result, just log the error
+        }
+      }
+      
       return result;
     } catch (error) {
       const result: TestResult = {
@@ -118,7 +138,7 @@ export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressCo
     } finally {
       setIsTesting(false);
     }
-  }, [agent?.id]);
+  }, [agent?.id, onSyncComplete]);
 
   // Save WordPress config without syncing
   const saveConfig = useCallback(async (url: string): Promise<boolean> => {

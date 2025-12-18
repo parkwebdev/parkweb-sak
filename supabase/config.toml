@@ -112,3 +112,7 @@ verify_jwt = false
 
 [functions.send-booking-confirmation]
 verify_jwt = false
+
+[functions.scheduled-wordpress-sync]
+verify_jwt = false
+schedule = "0 * * * *"
