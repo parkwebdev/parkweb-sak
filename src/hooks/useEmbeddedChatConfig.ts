@@ -276,7 +276,7 @@ export const useEmbeddedChatConfig = (agentId: string) => {
   }, [agentId]);
 
   const generateEmbedCode = (): string => {
-    const scriptUrl = `https://mvaimvwdukpgvkifkfpa.supabase.co/functions/v1/serve-widget`;
+    const scriptUrl = `https://cdn.pad.chat/`;
     
     // Build optional attributes for location detection
     const locationAttrs: string[] = [];
