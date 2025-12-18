@@ -1,10 +1,10 @@
 /**
  * AriKnowledgeSection
  * 
- * Knowledge sources management.
+ * Knowledge sources management with click-to-open details sheet.
  */
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Database01 } from '@untitledui/icons';
@@ -12,11 +12,13 @@ import { useKnowledgeSources } from '@/hooks/useKnowledgeSources';
 import { useLocations } from '@/hooks/useLocations';
 import { KnowledgeSourceCard } from '@/components/agents/KnowledgeSourceCard';
 import { AddKnowledgeDialog } from '@/components/agents/AddKnowledgeDialog';
+import { KnowledgeDetailsSheet } from '@/components/agents/knowledge';
 import { AriSectionHeader } from './AriSectionHeader';
 import { LoadingState } from '@/components/ui/loading-state';
 import { ZapSolidIcon } from '@/components/ui/zap-solid-icon';
 import { toast } from '@/lib/toast';
 import { getErrorMessage } from '@/types/errors';
+import type { Tables } from '@/integrations/supabase/types';
 
 interface AriKnowledgeSectionProps {
   agentId: string;
@@ -43,6 +45,10 @@ export const AriKnowledgeSection: React.FC<AriKnowledgeSectionProps> = ({ agentI
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [isRetraining, setIsRetraining] = useState(false);
   const [retrainProgress, setRetrainProgress] = useState({ completed: 0, total: 0 });
+  
+  // Sheet state
+  const [selectedSource, setSelectedSource] = useState<Tables<'knowledge_sources'> | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   // Filter out auto-created WordPress sources - they're managed in Locations tab
   const parentSources = getParentSources().filter(source => source.source_type !== 'wordpress_home');
@@ -72,6 +78,29 @@ export const AriKnowledgeSection: React.FC<AriKnowledgeSectionProps> = ({ agentI
       setIsRetraining(false);
       setRetrainProgress({ completed: 0, total: 0 });
     }
+  };
+
+  // Handle card click to open details sheet
+  const handleSourceClick = (source: Tables<'knowledge_sources'>) => {
+    setSelectedSource(source);
+    setSheetOpen(true);
+  };
+
+  // Handle delete from sheet
+  const handleDeleteFromSheet = async (id: string) => {
+    await deleteSource(id);
+    setSheetOpen(false);
+    setSelectedSource(null);
+  };
+
+  // Handle reprocess from sheet
+  const handleReprocessFromSheet = async (id: string) => {
+    await reprocessSource(id);
+  };
+
+  // Handle refresh from sheet
+  const handleRefreshFromSheet = async (id: string) => {
+    await triggerManualRefresh(id);
   };
 
   if (loading) {
@@ -123,19 +152,24 @@ export const AriKnowledgeSection: React.FC<AriKnowledgeSectionProps> = ({ agentI
               const location = locationId ? locations.find(l => l.id === locationId) : null;
               
               return (
-                <KnowledgeSourceCard
-                  key={source.id}
-                  source={source}
-                  onDelete={deleteSource}
-                  onReprocess={reprocessSource}
-                  onResume={resumeProcessing}
-                  onRetryChild={retryChildSource}
-                  onDeleteChild={deleteChildSource}
-                  onRefreshNow={triggerManualRefresh}
-                  isOutdated={isSourceOutdated(source)}
-                  childSources={getChildSources(source.id)}
-                  locationName={location?.name}
-                />
+                <div 
+                  key={source.id} 
+                  onClick={() => handleSourceClick(source)}
+                  className="cursor-pointer"
+                >
+                  <KnowledgeSourceCard
+                    source={source}
+                    onDelete={deleteSource}
+                    onReprocess={reprocessSource}
+                    onResume={resumeProcessing}
+                    onRetryChild={retryChildSource}
+                    onDeleteChild={deleteChildSource}
+                    onRefreshNow={triggerManualRefresh}
+                    isOutdated={isSourceOutdated(source)}
+                    childSources={getChildSources(source.id)}
+                    locationName={location?.name}
+                  />
+                </div>
               );
             })}
           </div>
@@ -146,6 +180,25 @@ export const AriKnowledgeSection: React.FC<AriKnowledgeSectionProps> = ({ agentI
           onOpenChange={setAddDialogOpen}
           agentId={agentId}
           userId={userId}
+        />
+
+        {/* Knowledge Details Sheet */}
+        <KnowledgeDetailsSheet
+          source={selectedSource}
+          open={sheetOpen}
+          onOpenChange={setSheetOpen}
+          onDelete={handleDeleteFromSheet}
+          onReprocess={handleReprocessFromSheet}
+          onRefreshNow={handleRefreshFromSheet}
+          onRetryChild={retryChildSource}
+          onDeleteChild={deleteChildSource}
+          isOutdated={selectedSource ? isSourceOutdated(selectedSource) : false}
+          childSources={selectedSource ? getChildSources(selectedSource.id) : []}
+          locationName={
+            selectedSource && (selectedSource as any).default_location_id
+              ? locations.find(l => l.id === (selectedSource as any).default_location_id)?.name
+              : undefined
+          }
         />
       </div>
     </div>
