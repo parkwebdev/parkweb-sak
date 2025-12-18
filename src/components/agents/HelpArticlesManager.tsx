@@ -708,9 +708,15 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
           title="No help articles yet"
           description="Create help articles to display in your chat widget's help tab"
           action={
-            <Button onClick={() => setDialogOpen(true)} size="sm">
-              Add Article
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button onClick={() => setDialogOpen(true)} size="sm">
+                Add Article
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => setBulkImportOpen(true)}>
+                <Upload01 className="h-4 w-4 mr-1.5" />
+                Import CSV
+              </Button>
+            </div>
           }
         />
       ) : (
@@ -940,8 +946,6 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
                   onValueChange={(value) => {
                     if (value === '__create_new__') {
                       setNewCategoryDialogOpen(true);
-                    } else if (value === '__import_csv__') {
-                      setBulkImportOpen(true);
                     } else {
                       setFormData({ ...formData, category: value });
                     }
@@ -964,12 +968,6 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
                       <div className="flex items-center gap-2">
                         <Plus className="h-4 w-4" />
                         Create new category
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="__import_csv__" className="text-muted-foreground">
-                      <div className="flex items-center gap-2">
-                        <Upload01 className="h-4 w-4" />
-                        Import from CSV
                       </div>
                     </SelectItem>
                   </SelectContent>
