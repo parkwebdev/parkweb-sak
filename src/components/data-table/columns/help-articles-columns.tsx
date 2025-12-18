@@ -20,22 +20,22 @@ import {
 } from '@untitledui/icons';
 import { DataTableColumnHeader } from '../DataTableColumnHeader';
 import { formatDistanceToNow } from 'date-fns';
-import type { Tables } from '@/integrations/supabase/types';
-
-// Base types from database
-type HelpArticle = Tables<'help_articles'>;
-type HelpCategory = Tables<'help_categories'>;
-
 /**
- * Extended help article type with category information joined.
+ * Help article type with category metadata for table display.
+ * This is a standalone interface matching the transformed data shape.
  */
-export interface HelpArticleWithMeta extends HelpArticle {
-  /** Category name for display */
+export interface HelpArticleWithMeta {
+  id: string;
+  title: string;
+  content: string;
+  categoryId: string;
   categoryName: string;
-  /** Category icon key */
   categoryIcon: string | null;
-  /** Full category object for reference */
-  category?: HelpCategory;
+  orderIndex: number;
+  featuredImage: string | null;
+  hasEmbedding: boolean;
+  createdAt: string | null;
+  updatedAt: string | null;
 }
 
 /**
@@ -161,10 +161,10 @@ export const createHelpArticlesColumns = ({
       return (
         <div className="flex items-center gap-3 min-w-0 py-1">
           {/* Thumbnail */}
-          {article.featured_image ? (
+          {article.featuredImage ? (
             <div className="w-10 h-10 rounded-md overflow-hidden shrink-0 bg-muted">
               <img 
-                src={article.featured_image} 
+                src={article.featuredImage} 
                 alt="" 
                 className="w-full h-full object-cover"
               />
@@ -208,7 +208,7 @@ export const createHelpArticlesColumns = ({
     id: 'status',
     header: () => <span>Status</span>,
     cell: ({ row }) => {
-      const hasEmbedding = !!row.original.embedding;
+      const hasEmbedding = row.original.hasEmbedding;
       
       return (
         <Badge 
@@ -234,12 +234,12 @@ export const createHelpArticlesColumns = ({
   
   // Date added
   {
-    accessorKey: 'created_at',
+    accessorKey: 'createdAt',
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Added" />
     ),
     cell: ({ row }) => {
-      const date = row.original.created_at;
+      const date = row.original.createdAt;
       if (!date) return <span className="text-muted-foreground">-</span>;
       return (
         <span className="text-sm text-muted-foreground">

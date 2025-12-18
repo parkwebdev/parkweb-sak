@@ -86,8 +86,8 @@ export const ArticleDetailsSheet: React.FC<ArticleDetailsSheetProps> = ({
     if (article) {
       setTitle(article.title);
       setContent(article.content);
-      setCategoryId(article.category_id);
-      setFeaturedImage(article.featured_image);
+      setCategoryId(article.categoryId);
+      setFeaturedImage(article.featuredImage);
       setHasChanges(false);
     }
   }, [article]);
@@ -108,8 +108,8 @@ export const ArticleDetailsSheet: React.FC<ArticleDetailsSheetProps> = ({
     const changed = 
       title !== article.title ||
       content !== article.content ||
-      categoryId !== article.category_id ||
-      featuredImage !== article.featured_image;
+      categoryId !== article.categoryId ||
+      featuredImage !== article.featuredImage;
     setHasChanges(changed);
   }, [title, content, categoryId, featuredImage, article]);
 
@@ -190,7 +190,7 @@ export const ArticleDetailsSheet: React.FC<ArticleDetailsSheetProps> = ({
 
   if (!article) return null;
 
-  const hasEmbedding = !!article.embedding;
+  const hasEmbedding = article.hasEmbedding;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -352,25 +352,25 @@ export const ArticleDetailsSheet: React.FC<ArticleDetailsSheetProps> = ({
               
               <div className="space-y-2">
                 {/* Created */}
-                {article.created_at && (
+                {article.createdAt && (
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-muted-foreground w-20 shrink-0">Created</span>
                     <span className="text-sm flex items-center gap-1">
                       <Calendar className="h-3 w-3 text-muted-foreground" />
-                      {format(new Date(article.created_at), 'PPp')}
+                      {format(new Date(article.createdAt), 'PPp')}
                       <span className="text-muted-foreground ml-1">
-                        ({formatDistanceToNow(new Date(article.created_at), { addSuffix: true })})
+                        ({formatDistanceToNow(new Date(article.createdAt), { addSuffix: true })})
                       </span>
                     </span>
                   </div>
                 )}
 
                 {/* Updated */}
-                {article.updated_at && article.updated_at !== article.created_at && (
+                {article.updatedAt && article.updatedAt !== article.createdAt && (
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-muted-foreground w-20 shrink-0">Updated</span>
                     <span className="text-sm">
-                      {formatDistanceToNow(new Date(article.updated_at), { addSuffix: true })}
+                      {formatDistanceToNow(new Date(article.updatedAt), { addSuffix: true })}
                     </span>
                   </div>
                 )}

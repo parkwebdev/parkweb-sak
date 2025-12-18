@@ -124,14 +124,14 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
         id: article.id,
         title: article.title,
         content: article.content,
-        category_id: category?.id || '',
-        category_name: article.category,
-        category_icon: category?.icon || 'book',
-        order_index: article.order,
-        featured_image: article.featured_image || null,
-        embedding: article.has_embedding ? 'embedded' : null,
-        created_at: null, // Not available in current HelpArticle type
-        updated_at: null,
+        categoryId: category?.id || '',
+        categoryName: article.category,
+        categoryIcon: category?.icon || 'book',
+        orderIndex: article.order,
+        featuredImage: article.featured_image || null,
+        hasEmbedding: article.has_embedding,
+        createdAt: null, // Not available in current HelpArticle type
+        updatedAt: null,
       };
     });
   }, [articles, categories]);
@@ -140,14 +140,14 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
   const filteredArticles = useMemo(() => {
     return articlesWithMeta.filter(article => {
       // Category filter
-      if (categoryFilter !== 'all' && article.category_name !== categoryFilter) {
+      if (categoryFilter !== 'all' && article.categoryName !== categoryFilter) {
         return false;
       }
       // Status filter
-      if (statusFilter === 'embedded' && !article.embedding) {
+      if (statusFilter === 'embedded' && !article.hasEmbedding) {
         return false;
       }
-      if (statusFilter === 'pending' && article.embedding) {
+      if (statusFilter === 'pending' && article.hasEmbedding) {
         return false;
       }
       return true;
@@ -157,17 +157,14 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
   // Get articles sorted by category and order for move operations
   const getArticlesByCategoryOrder = useCallback((categoryName: string) => {
     return articlesWithMeta
-      .filter(a => a.category_name === categoryName)
-      .sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
+      .filter(a => a.categoryName === categoryName)
+      .sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
   }, [articlesWithMeta]);
 
   // Move article handlers
-  const handleMoveUp = useCallback(async (articleId: string) => {
-    const article = articlesWithMeta.find(a => a.id === articleId);
-    if (!article) return;
-
-    const categoryArticles = getArticlesByCategoryOrder(article.category_name);
-    const currentIndex = categoryArticles.findIndex(a => a.id === articleId);
+  const handleMoveUp = useCallback(async (article: HelpArticleWithMeta) => {
+    const categoryArticles = getArticlesByCategoryOrder(article.categoryName);
+    const currentIndex = categoryArticles.findIndex(a => a.id === article.id);
     
     if (currentIndex <= 0) return;
 
@@ -178,7 +175,7 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
     // Convert back to HelpArticle format and update
     const updatedArticles = articles.map(a => {
       const newIndex = newOrder.findIndex(n => n.id === a.id);
-      if (newIndex !== -1 && a.category === article.category_name) {
+      if (newIndex !== -1 && a.category === article.categoryName) {
         return { ...a, order: newIndex };
       }
       return a;
@@ -189,14 +186,11 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
     } catch (error) {
       toast.error('Failed to reorder article');
     }
-  }, [articlesWithMeta, articles, getArticlesByCategoryOrder, reorderArticles]);
+  }, [articles, getArticlesByCategoryOrder, reorderArticles]);
 
-  const handleMoveDown = useCallback(async (articleId: string) => {
-    const article = articlesWithMeta.find(a => a.id === articleId);
-    if (!article) return;
-
-    const categoryArticles = getArticlesByCategoryOrder(article.category_name);
-    const currentIndex = categoryArticles.findIndex(a => a.id === articleId);
+  const handleMoveDown = useCallback(async (article: HelpArticleWithMeta) => {
+    const categoryArticles = getArticlesByCategoryOrder(article.categoryName);
+    const currentIndex = categoryArticles.findIndex(a => a.id === article.id);
     
     if (currentIndex >= categoryArticles.length - 1) return;
 
@@ -207,7 +201,7 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
     // Convert back to HelpArticle format and update
     const updatedArticles = articles.map(a => {
       const newIndex = newOrder.findIndex(n => n.id === a.id);
-      if (newIndex !== -1 && a.category === article.category_name) {
+      if (newIndex !== -1 && a.category === article.categoryName) {
         return { ...a, order: newIndex };
       }
       return a;
@@ -218,32 +212,28 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
     } catch (error) {
       toast.error('Failed to reorder article');
     }
-  }, [articlesWithMeta, articles, getArticlesByCategoryOrder, reorderArticles]);
+  }, [articles, getArticlesByCategoryOrder, reorderArticles]);
 
   // Check if article can move
-  const canMoveUp = useCallback((articleId: string) => {
-    const article = articlesWithMeta.find(a => a.id === articleId);
-    if (!article) return false;
-    const categoryArticles = getArticlesByCategoryOrder(article.category_name);
-    const currentIndex = categoryArticles.findIndex(a => a.id === articleId);
+  const canMoveUp = useCallback((article: HelpArticleWithMeta) => {
+    const categoryArticles = getArticlesByCategoryOrder(article.categoryName);
+    const currentIndex = categoryArticles.findIndex(a => a.id === article.id);
     return currentIndex > 0;
-  }, [articlesWithMeta, getArticlesByCategoryOrder]);
+  }, [getArticlesByCategoryOrder]);
 
-  const canMoveDown = useCallback((articleId: string) => {
-    const article = articlesWithMeta.find(a => a.id === articleId);
-    if (!article) return false;
-    const categoryArticles = getArticlesByCategoryOrder(article.category_name);
-    const currentIndex = categoryArticles.findIndex(a => a.id === articleId);
+  const canMoveDown = useCallback((article: HelpArticleWithMeta) => {
+    const categoryArticles = getArticlesByCategoryOrder(article.categoryName);
+    const currentIndex = categoryArticles.findIndex(a => a.id === article.id);
     return currentIndex < categoryArticles.length - 1;
-  }, [articlesWithMeta, getArticlesByCategoryOrder]);
+  }, [getArticlesByCategoryOrder]);
 
   // Delete handler
-  const handleDelete = useCallback(async (articleId: string) => {
+  const handleDelete = useCallback(async (article: HelpArticleWithMeta) => {
     try {
-      await deleteArticle(articleId);
+      await deleteArticle(article.id);
       toast.success('Article deleted');
       // Close sheet if viewing deleted article
-      if (selectedArticle?.id === articleId) {
+      if (selectedArticle?.id === article.id) {
         setSheetOpen(false);
         setSelectedArticle(null);
       }
@@ -253,13 +243,10 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
   }, [deleteArticle, selectedArticle]);
 
   // View handler
-  const handleView = useCallback((articleId: string) => {
-    const article = articlesWithMeta.find(a => a.id === articleId);
-    if (article) {
-      setSelectedArticle(article);
-      setSheetOpen(true);
-    }
-  }, [articlesWithMeta]);
+  const handleView = useCallback((article: HelpArticleWithMeta) => {
+    setSelectedArticle(article);
+    setSheetOpen(true);
+  }, []);
 
   // Column definitions
   const columns = useMemo(() => createHelpArticlesColumns({
@@ -1004,7 +991,8 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
         onOpenChange={setSheetOpen}
         onSave={handleSaveArticle}
         onDelete={(id) => {
-          handleDelete(id);
+          const articleToDelete = articlesWithMeta.find(a => a.id === id);
+          if (articleToDelete) handleDelete(articleToDelete);
           setSheetOpen(false);
         }}
         categories={categories.map(c => ({
