@@ -89,6 +89,7 @@ export function WordPressIntegrationSection({ agent, onSyncComplete }: WordPress
     testResult: connectionTestResult,
     isConnected,
     testConnection,
+    saveUrl,
     importCommunities,
     updateSyncInterval,
     disconnect,
@@ -256,6 +257,12 @@ export function WordPressIntegrationSection({ agent, onSyncComplete }: WordPress
                     onChange={(e) => {
                       setInputUrl(e.target.value);
                       clearConnectionTestResult();
+                    }}
+                    onBlur={() => {
+                      // Save URL immediately when user clicks away
+                      if (inputUrl.trim()) {
+                        saveUrl(inputUrl.trim());
+                      }
                     }}
                     placeholder="https://yoursite.com"
                     className="h-8"
