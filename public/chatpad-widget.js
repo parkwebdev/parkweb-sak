@@ -253,13 +253,8 @@
       window.addEventListener('popstate', () => this.trackParentNavigation());
       window.addEventListener('hashchange', () => this.trackParentNavigation());
       
-      // Load when browser is idle (When Idle mode - hardcoded default)
-      if ('requestIdleCallback' in window) {
-        requestIdleCallback(() => this.preloadEverything(), { timeout: 3000 });
-      } else {
-        // Fallback for Safari - ~100ms delay
-        setTimeout(() => this.preloadEverything(), 100);
-      }
+      // Preload immediately - bundle was already deferred by loader script
+      this.preloadEverything();
     }
     
     injectStyles() {

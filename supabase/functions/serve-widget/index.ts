@@ -36,7 +36,6 @@ serve(async (req) => {
 (function() {
   'use strict';
   
-  // Get configuration from script tag
   var currentScript = document.currentScript;
   if (!currentScript || !currentScript.hasAttribute('data-agent-id')) {
     return;
@@ -49,16 +48,23 @@ serve(async (req) => {
     appUrl: '${appUrl}',
   };
   
-  // Dynamically load the full widget bundle
-  var script = document.createElement('script');
-  script.src = config.appUrl + '/chatpad-widget.js';
-  script.async = true;
-  script.setAttribute('data-agent-id', config.agentId);
-  script.setAttribute('data-position', config.position);
-  script.setAttribute('data-primary-color', config.primaryColor);
-  script.setAttribute('data-app-url', config.appUrl);
+  function loadWidgetBundle() {
+    var script = document.createElement('script');
+    script.src = config.appUrl + '/chatpad-widget.js';
+    script.async = true;
+    script.setAttribute('data-agent-id', config.agentId);
+    script.setAttribute('data-position', config.position);
+    script.setAttribute('data-primary-color', config.primaryColor);
+    script.setAttribute('data-app-url', config.appUrl);
+    document.head.appendChild(script);
+  }
   
-  document.head.appendChild(script);
+  // Defer loading the 275KB bundle until browser is idle
+  if ('requestIdleCallback' in window) {
+    requestIdleCallback(loadWidgetBundle, { timeout: 3000 });
+  } else {
+    setTimeout(loadWidgetBundle, 100);
+  }
 })();
 `;
 
