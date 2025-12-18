@@ -200,7 +200,7 @@ export const KnowledgeDetailsSheet: React.FC<KnowledgeDetailsSheetProps> = ({
   const StatusIcon = statusIcons[source.status] || Clock;
   const statusVariant = statusVariants[source.status] || 'secondary';
   const isProcessing = source.status === 'processing' || source.status === 'pending';
-  const showChildPages = isSitemap && childSources.length > 0 && onRetryChild && onDeleteChild;
+  // Child pages section renders inline with type narrowing preserved
 
   // Effective chunk count
   const effectiveChunkCount = chunkCount ?? metadata.chunks_count ?? 0;
@@ -461,22 +461,22 @@ export const KnowledgeDetailsSheet: React.FC<KnowledgeDetailsSheetProps> = ({
               </div>
             </section>
 
-            {/* Sitemap Child Pages Section */}
-            {showChildPages && (
-              <>
-                <Separator />
-                <section className="space-y-3">
-                  <h3 className="text-sm font-medium text-muted-foreground">
-                    Pages ({childSources.length})
-                  </h3>
-                  <SitemapChildPages
-                    childSources={childSources}
-                    onRetryChild={onRetryChild}
-                    onDeleteChild={onDeleteChild}
-                  />
-                </section>
-              </>
-            )}
+          {/* Sitemap Child Pages Section */}
+          {isSitemap && childSources.length > 0 && onRetryChild && onDeleteChild && (
+            <>
+              <Separator />
+              <section className="space-y-3">
+                <h3 className="text-sm font-medium text-muted-foreground">
+                  Pages ({childSources.length})
+                </h3>
+                <SitemapChildPages
+                  childSources={childSources}
+                  onRetryChild={onRetryChild}
+                  onDeleteChild={onDeleteChild}
+                />
+              </section>
+            </>
+          )}
 
             <Separator />
 
