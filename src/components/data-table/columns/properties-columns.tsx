@@ -6,13 +6,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { DataTableColumnHeader } from '../DataTableColumnHeader';
 import { AlertTriangle, LinkExternal01 } from '@untitledui/icons';
 import { formatPrice, type PropertyStatus } from '@/types/properties';
-import type { Tables } from '@/integrations/supabase/types';
-
-type Property = Tables<'properties'>;
-
-export interface PropertyWithLocation extends Property {
-  location_name: string | null;
-}
+import type { PropertyWithLocation } from '@/hooks/useProperties';
 
 const statusVariants: Record<PropertyStatus, 'default' | 'secondary' | 'outline'> = {
   available: 'default',
