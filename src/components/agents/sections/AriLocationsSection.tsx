@@ -676,7 +676,6 @@ export const AriLocationsSection: React.FC<AriLocationsSectionProps> = ({ agentI
                   table={locationsTable}
                   searchPlaceholder="Search..."
                   globalFilter
-                  searchClassName="max-w-[200px]"
                 >
                   {ViewToggle}
                   {FilterPopover}
@@ -738,7 +737,6 @@ export const AriLocationsSection: React.FC<AriLocationsSectionProps> = ({ agentI
                   table={propertiesTable}
                   searchPlaceholder="Search..."
                   globalFilter
-                  searchClassName="max-w-[200px]"
                 >
                   {ViewToggle}
                   {FilterPopover}
