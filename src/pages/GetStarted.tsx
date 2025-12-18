@@ -36,8 +36,9 @@ export const GetStarted: React.FC = () => {
     isLoading,
   } = useOnboardingProgress();
 
-  // Get user's first name for greeting
-  const firstName = user?.email?.split('@')[0] || 'there';
+  // Get user's first name for greeting (capitalize first letter)
+  const rawName = user?.email?.split('@')[0] || 'there';
+  const firstName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
 
   /**
    * Show celebration and redirect when all steps complete
@@ -93,7 +94,7 @@ export const GetStarted: React.FC = () => {
             transition={springs.smooth}
           >
             <h1 className="text-xl font-semibold text-foreground">
-              Welcome, {firstName}
+              Welcome, {firstName} 👋
             </h1>
             <p className="text-sm text-muted-foreground mt-1">
               Let's get Ari ready to help your customers.
