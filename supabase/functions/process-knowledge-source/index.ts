@@ -647,8 +647,60 @@ async function processBatchAndContinue(
 
   console.log(`Progress: ${updatedProcessedCount} processed, ${updatedErrorCount} errors, ${remaining} remaining`);
 
-  // If there are more to process, trigger next batch
-  if (remaining > 0) {
+  // Check completion status
+  if (remaining === 0) {
+    // Check if there are still sources being processed (not yet done)
+    const { count: processingCount } = await supabase
+      .from('knowledge_sources')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'processing')
+      .contains('metadata', { batch_id: batchId });
+
+    if (!processingCount || processingCount === 0) {
+      // All done! Mark parent as ready
+      console.log('All sources complete - marking parent as ready');
+      
+      // Get final accurate counts
+      const { count: finalReadyCount } = await supabase
+        .from('knowledge_sources')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'ready')
+        .contains('metadata', { parent_source_id: parentSourceId });
+
+      const { count: finalErrorCount } = await supabase
+        .from('knowledge_sources')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'error')
+        .contains('metadata', { parent_source_id: parentSourceId });
+
+      const finalChildCount = await syncUrlsFound(supabase, parentSourceId);
+
+      await supabase
+        .from('knowledge_sources')
+        .update({
+          status: 'ready',
+          content: `Sitemap processed. ${finalReadyCount || 0} pages indexed successfully${finalErrorCount ? `, ${finalErrorCount} failed` : ''}.`,
+          metadata: {
+            ...parentMetadata,
+            is_sitemap: true,
+            batch_id: batchId,
+            urls_found: finalChildCount,
+            processed_count: finalReadyCount || 0,
+            error_count: finalErrorCount || 0,
+            remaining_count: 0,
+            completed_at: new Date().toISOString(),
+          },
+        })
+        .eq('id', parentSourceId);
+
+      console.log(`Batch processing complete: ${finalReadyCount} processed, ${finalErrorCount} errors`);
+    } else {
+      // Still processing, trigger another check after delay
+      console.log(`${processingCount} sources still processing - triggering next check`);
+      await triggerNextBatch(parentSourceId, batchId, agentId);
+    }
+  } else {
+    // More pending sources to process
     await triggerNextBatch(parentSourceId, batchId, agentId);
   }
 
