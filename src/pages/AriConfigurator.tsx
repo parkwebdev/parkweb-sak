@@ -247,7 +247,7 @@ const AriConfigurator = () => {
       />
 
       {/* Center: Content Area */}
-      <main className="flex-1 overflow-y-auto p-6">
+      <main className="flex-1 min-w-0 overflow-y-auto p-6">
         <AnimatePresence mode="wait">
           <motion.div
             key={activeSection}
