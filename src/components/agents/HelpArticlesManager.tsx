@@ -30,7 +30,7 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
 import { 
-  BookOpen01, XClose, Image01, Plus, FilterLines, SearchSm, Trash01, RefreshCcw01, ChevronDown, X 
+  BookOpen01, XClose, Image01, Plus, FilterLines, SearchSm, Trash01, RefreshCcw01, ChevronDown, X, Upload01 
 } from '@untitledui/icons';
 import { useHelpArticles } from '@/hooks/useHelpArticles';
 import { toast } from '@/lib/toast';
@@ -940,6 +940,8 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
                   onValueChange={(value) => {
                     if (value === '__create_new__') {
                       setNewCategoryDialogOpen(true);
+                    } else if (value === '__import_csv__') {
+                      setBulkImportOpen(true);
                     } else {
                       setFormData({ ...formData, category: value });
                     }
@@ -957,11 +959,17 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
                         </div>
                       </SelectItem>
                     ))}
-                    {categories.length > 0 && <Separator className="my-1" />}
+                    <Separator className="my-1" />
                     <SelectItem value="__create_new__" className="text-primary">
                       <div className="flex items-center gap-2">
                         <Plus className="h-4 w-4" />
                         Create new category
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="__import_csv__" className="text-muted-foreground">
+                      <div className="flex items-center gap-2">
+                        <Upload01 className="h-4 w-4" />
+                        Import from CSV
                       </div>
                     </SelectItem>
                   </SelectContent>
