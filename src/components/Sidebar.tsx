@@ -42,7 +42,6 @@ interface NavigationItem {
 
 /** Main navigation items */
 const navigationItems: NavigationItem[] = [
-  { id: 'dashboard', label: 'Dashboard', icon: Grid, activeIcon: DashboardFilled, path: '/' },
   { id: 'ari', label: 'Ari', icon: AriAgentsIcon, path: '/ari' },
   { id: 'conversations', label: 'Inbox', icon: InboxOutline, activeIcon: InboxFilled, path: '/conversations' },
   { id: 'planner', label: 'Planner', icon: Calendar, activeIcon: PlannerFilled, path: '/planner' },

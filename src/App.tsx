@@ -25,7 +25,7 @@ import RouteErrorFallback from "@/components/RouteErrorFallback";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import WidgetPage from "./pages/WidgetPage";
-import DashboardWrapper from "./pages/DashboardWrapper";
+import GetStartedWrapper from "./pages/GetStartedWrapper";
 import AriConfiguratorWrapper from "./pages/AriConfiguratorWrapper";
 import ConversationsWrapper from "./pages/ConversationsWrapper";
 import LeadsWrapper from "./pages/LeadsWrapper";
@@ -70,7 +70,7 @@ const App = () => (
                 
                 {/* Protected routes with shared layout */}
                 <Route element={<ProtectedLayout />}>
-                  <Route path="/" element={<DashboardWrapper />} />
+                  <Route path="/" element={<GetStartedWrapper />} />
                   <Route path="/ari" element={<AriConfiguratorWrapper />} />
                   <Route path="/conversations" element={<ConversationsWrapper />} />
                   <Route path="/planner" element={<PlannerWrapper />} />
