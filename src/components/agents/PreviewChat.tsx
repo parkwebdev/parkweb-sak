@@ -270,8 +270,8 @@ export const PreviewChat: React.FC<PreviewChatProps> = ({
                   >
                     {/* AI Avatar */}
                     {message.role === 'assistant' && (
-                      <div className="w-7 h-7 rounded-full bg-muted border border-border flex items-center justify-center flex-shrink-0 overflow-hidden">
-                        <AriAgentsIcon size={20} className="text-foreground" />
+                      <div className="w-7 h-7 rounded-full bg-foreground flex items-center justify-center flex-shrink-0 overflow-hidden">
+                        <AriAgentsIcon size={20} className="text-background" />
                       </div>
                     )}
 
@@ -396,8 +396,8 @@ export const PreviewChat: React.FC<PreviewChatProps> = ({
             {/* Typing Indicator */}
             {isLoading && (
               <div className="flex gap-2 justify-start">
-                <div className="w-7 h-7 rounded-full bg-muted border border-border flex items-center justify-center flex-shrink-0 overflow-hidden">
-                  <AriAgentsIcon size={20} className="text-foreground" />
+                <div className="w-7 h-7 rounded-full bg-foreground flex items-center justify-center flex-shrink-0 overflow-hidden">
+                  <AriAgentsIcon size={20} className="text-background" />
                 </div>
                 <div className="bg-muted p-3 rounded-lg">
                   <div className="flex gap-1">
