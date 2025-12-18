@@ -35,7 +35,7 @@ export const useLeads = () => {
       setLoading(true);
       const { data, error } = await supabase
         .from('leads')
-        .select('*, conversations(id, created_at)')
+        .select('*, conversations!fk_leads_conversation(id, created_at)')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
