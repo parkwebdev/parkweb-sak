@@ -26,7 +26,7 @@ import { IconButton } from '@/components/ui/icon-button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { sendChatMessage, type ChatResponse } from '@/widget/api';
-import ChatPadLogo from '@/components/ChatPadLogo';
+import AriAgentsIcon from '@/components/icons/AriAgentsIcon';
 
 // ============================================
 // TYPES
@@ -52,11 +52,10 @@ export const PreviewChat: React.FC<PreviewChatProps> = ({
   agentId,
   primaryColor = '#8B5CF6',
 }) => {
-  // State
+  // State (no conversationId - preview mode is ephemeral)
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [conversationId, setConversationId] = useState<string | null>(null);
   
   // Refs
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -70,7 +69,6 @@ export const PreviewChat: React.FC<PreviewChatProps> = ({
   // Clear conversation
   const handleClearConversation = useCallback(() => {
     setMessages([]);
-    setConversationId(null);
     setInputValue('');
     setIsLoading(false);
     inputRef.current?.focus();
@@ -93,22 +91,18 @@ export const PreviewChat: React.FC<PreviewChatProps> = ({
     setIsLoading(true);
 
     try {
-      // Send to API
+      // Send to API in preview mode (ephemeral, no persistence)
       const response: ChatResponse = await sendChatMessage(
         agentId,
-        conversationId,
+        null, // no conversationId - each message is independent in preview
         { role: 'user', content: trimmedInput },
         undefined, // no leadId
         undefined, // no pageVisits
         undefined, // no referrerJourney
         undefined, // no visitorId
-        undefined  // no locationId
+        undefined, // no locationId
+        true       // previewMode - skip persistence
       );
-
-      // Store conversation ID for subsequent messages
-      if (response.conversationId) {
-        setConversationId(response.conversationId);
-      }
 
       // Add AI response
       const assistantMessage: Message = {
@@ -131,7 +125,7 @@ export const PreviewChat: React.FC<PreviewChatProps> = ({
     } finally {
       setIsLoading(false);
     }
-  }, [agentId, conversationId, inputValue, isLoading]);
+  }, [agentId, inputValue, isLoading]);
 
   // Handle key press
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
@@ -186,9 +180,7 @@ export const PreviewChat: React.FC<PreviewChatProps> = ({
         {messages.length === 0 ? (
           /* Empty State */
           <div className="flex flex-col items-center justify-center h-full text-center px-6">
-            <div className="w-12 h-12 rounded-full bg-muted/50 border border-border flex items-center justify-center mb-4">
-              <ChatPadLogo className="w-6 h-6 text-muted-foreground" />
-            </div>
+            <AriAgentsIcon size={40} className="text-foreground mb-4" />
             <p className="text-sm text-muted-foreground mb-1">
               Ask Ari a question to see how your AI will respond.
             </p>

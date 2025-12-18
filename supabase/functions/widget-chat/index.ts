@@ -2336,7 +2336,7 @@ serve(async (req) => {
   }
 
   try {
-    const { agentId, conversationId, messages, leadId, pageVisits, referrerJourney, visitorId } = await req.json();
+    const { agentId, conversationId, messages, leadId, pageVisits, referrerJourney, visitorId, previewMode } = await req.json();
 
     // Log incoming request
     log.info('Request received', {
@@ -2346,6 +2346,7 @@ serve(async (req) => {
       pageVisitsCount: pageVisits?.length || 0,
       hasReferrerJourney: !!referrerJourney,
       visitorId: visitorId || null,
+      previewMode: !!previewMode,
     });
 
     // Validate required fields
@@ -2525,10 +2526,14 @@ serve(async (req) => {
     // Get location from IP address via geo-IP lookup
     const { country, city, countryCode, region } = await getLocationFromIP(ipAddress);
 
-    // Create or get conversation
+    // Create or get conversation (skip for preview mode)
     let activeConversationId = conversationId;
     
-    if (!activeConversationId || activeConversationId === 'new' || activeConversationId.startsWith('conv_') || activeConversationId.startsWith('migrated_')) {
+    // Preview mode: skip all persistence, use ephemeral conversation
+    if (previewMode) {
+      log.info('Preview mode - skipping conversation persistence');
+      activeConversationId = `preview-${crypto.randomUUID()}`;
+    } else if (!activeConversationId || activeConversationId === 'new' || activeConversationId.startsWith('conv_') || activeConversationId.startsWith('migrated_')) {
       // Create a new conversation in the database
       const conversationMetadata: any = {
         ip_address: ipAddress,
@@ -2583,111 +2588,115 @@ serve(async (req) => {
       console.log(`Created new conversation: ${activeConversationId}`);
     }
 
-    // Check conversation status (for human takeover)
-    const { data: conversation } = await supabase
-      .from('conversations')
-      .select('status, metadata')
-      .eq('id', activeConversationId)
-      .single();
-
-    if (conversation?.status === 'human_takeover') {
-      // Don't call AI - just save the user message and return
-      if (messages && messages.length > 0) {
-        const lastUserMessage = messages[messages.length - 1];
-        if (lastUserMessage.role === 'user') {
-          await supabase.from('messages').insert({
-            conversation_id: activeConversationId,
-            role: 'user',
-            content: lastUserMessage.content,
-            metadata: { 
-              source: 'widget',
-              files: lastUserMessage.files || undefined,
-            }
-          });
-
-          // Update conversation metadata
-          const currentMetadata = conversation.metadata || {};
-          await supabase
-            .from('conversations')
-            .update({
-              metadata: {
-                ...currentMetadata,
-                messages_count: (currentMetadata.messages_count || 0) + 1,
-              },
-              updated_at: new Date().toISOString(),
-            })
-            .eq('id', activeConversationId);
-        }
-      }
-
-      // Fetch the team member who took over
-      let takenOverBy = null;
-      const { data: takeover } = await supabase
-        .from('conversation_takeovers')
-        .select('taken_over_by')
-        .eq('conversation_id', activeConversationId)
-        .is('returned_to_ai_at', null)
-        .order('taken_over_at', { ascending: false })
-        .limit(1)
+    // Check conversation status (for human takeover) - skip for preview mode
+    let conversation: { status: string; metadata: any } | null = null;
+    if (!previewMode) {
+      const { data: convData } = await supabase
+        .from('conversations')
+        .select('status, metadata')
+        .eq('id', activeConversationId)
         .single();
-      
-      if (takeover?.taken_over_by) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('display_name, avatar_url')
-          .eq('user_id', takeover.taken_over_by)
+      conversation = convData;
+
+      if (conversation?.status === 'human_takeover') {
+        // Don't call AI - just save the user message and return
+        if (messages && messages.length > 0) {
+          const lastUserMessage = messages[messages.length - 1];
+          if (lastUserMessage.role === 'user') {
+            await supabase.from('messages').insert({
+              conversation_id: activeConversationId,
+              role: 'user',
+              content: lastUserMessage.content,
+              metadata: { 
+                source: 'widget',
+                files: lastUserMessage.files || undefined,
+              }
+            });
+
+            // Update conversation metadata
+            const currentMetadata = conversation.metadata || {};
+            await supabase
+              .from('conversations')
+              .update({
+                metadata: {
+                  ...currentMetadata,
+                  messages_count: (currentMetadata.messages_count || 0) + 1,
+                },
+                updated_at: new Date().toISOString(),
+              })
+              .eq('id', activeConversationId);
+          }
+        }
+
+        // Fetch the team member who took over
+        let takenOverBy = null;
+        const { data: takeover } = await supabase
+          .from('conversation_takeovers')
+          .select('taken_over_by')
+          .eq('conversation_id', activeConversationId)
+          .is('returned_to_ai_at', null)
+          .order('taken_over_at', { ascending: false })
+          .limit(1)
           .single();
         
-        if (profile) {
-          takenOverBy = {
-            name: profile.display_name || 'Team Member',
-            avatar: profile.avatar_url,
-          };
+        if (takeover?.taken_over_by) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('display_name, avatar_url')
+            .eq('user_id', takeover.taken_over_by)
+            .single();
+          
+          if (profile) {
+            takenOverBy = {
+              name: profile.display_name || 'Team Member',
+              avatar: profile.avatar_url,
+            };
+          }
         }
+
+        return new Response(
+          JSON.stringify({
+            conversationId: activeConversationId,
+            status: 'human_takeover',
+            takenOverBy,
+          }),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
+        );
       }
 
-      return new Response(
-        JSON.stringify({
-          conversationId: activeConversationId,
-          status: 'human_takeover',
-          takenOverBy,
-        }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      // Check if conversation is closed - save message but return friendly notice
+      if (conversation?.status === 'closed') {
+        console.log('Conversation is closed, saving message but not calling AI');
+        
+        // Still save the user message for context
+        if (messages && messages.length > 0) {
+          const lastUserMessage = messages[messages.length - 1];
+          if (lastUserMessage.role === 'user') {
+            await supabase.from('messages').insert({
+              conversation_id: activeConversationId,
+              role: 'user',
+              content: lastUserMessage.content,
+              metadata: { 
+                source: 'widget',
+                files: lastUserMessage.files || undefined,
+              }
+            });
+          }
         }
-      );
-    }
 
-    // Check if conversation is closed - save message but return friendly notice
-    if (conversation?.status === 'closed') {
-      console.log('Conversation is closed, saving message but not calling AI');
-      
-      // Still save the user message for context
-      if (messages && messages.length > 0) {
-        const lastUserMessage = messages[messages.length - 1];
-        if (lastUserMessage.role === 'user') {
-          await supabase.from('messages').insert({
-            conversation_id: activeConversationId,
-            role: 'user',
-            content: lastUserMessage.content,
-            metadata: { 
-              source: 'widget',
-              files: lastUserMessage.files || undefined,
-            }
-          });
-        }
+        return new Response(
+          JSON.stringify({
+            conversationId: activeConversationId,
+            status: 'closed',
+            response: 'This conversation has been closed. Please start a new conversation if you need further assistance.',
+          }),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
+        );
       }
-
-      return new Response(
-        JSON.stringify({
-          conversationId: activeConversationId,
-          status: 'closed',
-          response: 'This conversation has been closed. Please start a new conversation if you need further assistance.',
-        }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      );
     }
 
     // Check if this is a greeting request (special message to trigger AI greeting)
@@ -2695,9 +2704,9 @@ serve(async (req) => {
       messages[0].role === 'user' && 
       messages[0].content === '__GREETING_REQUEST__';
     
-    // Save the user message to database (skip for greeting requests)
+    // Save the user message to database (skip for greeting requests and preview mode)
     let userMessageId: string | undefined;
-    if (messages && messages.length > 0 && !isGreetingRequest) {
+    if (messages && messages.length > 0 && !isGreetingRequest && !previewMode) {
       const lastUserMessage = messages[messages.length - 1];
       if (lastUserMessage.role === 'user') {
         const { data: userMsg, error: msgError } = await supabase.from('messages').insert({
@@ -2735,9 +2744,10 @@ serve(async (req) => {
     // PHASE 1: DATABASE-FIRST MESSAGE FETCHING
     // Fetch conversation history from database (source of truth)
     // instead of trusting client-provided message history
+    // (Skip for preview mode - ephemeral, no history)
     // ============================================
     let dbConversationHistory: any[] = [];
-    if (activeConversationId && !isGreetingRequest) {
+    if (activeConversationId && !isGreetingRequest && !previewMode) {
       dbConversationHistory = await fetchConversationHistory(supabase, activeConversationId);
       console.log(`Fetched ${dbConversationHistory.length} messages from database (including ${dbConversationHistory.filter((m: any) => m.role === 'tool').length} tool results)`);
     }
@@ -2821,12 +2831,13 @@ serve(async (req) => {
           console.log('Query normalized for cache lookup:', normalizedQuery.substring(0, 50));
           
           // COST OPTIMIZATION: Check response cache first (AGGRESSIVE - lowered from 0.92 to 0.70)
-          const cachedResponse = await getCachedResponse(supabase, queryHash, agentId);
+          // Skip cache for preview mode - always call AI
+          const cachedResponse = previewMode ? null : await getCachedResponse(supabase, queryHash, agentId);
           if (cachedResponse && cachedResponse.similarity > 0.70) {
             console.log('CACHE HIT: Returning cached response, skipping AI call entirely');
             
-            // Save user message
-            if (messages && messages.length > 0) {
+            // Save user message (skip for preview mode)
+            if (messages && messages.length > 0 && !previewMode) {
               await supabase.from('messages').insert({
                 conversation_id: activeConversationId,
                 role: 'user',
@@ -2835,17 +2846,19 @@ serve(async (req) => {
               });
             }
             
-            // Save cached response as assistant message
-            await supabase.from('messages').insert({
-              conversation_id: activeConversationId,
-              role: 'assistant',
-              content: cachedResponse.content,
-              metadata: { source: 'cache', cache_similarity: cachedResponse.similarity }
-            });
+            // Save cached response as assistant message (skip for preview mode)
+            if (!previewMode) {
+              await supabase.from('messages').insert({
+                conversation_id: activeConversationId,
+                role: 'assistant',
+                content: cachedResponse.content,
+                metadata: { source: 'cache', cache_similarity: cachedResponse.similarity }
+              });
+            }
             
             return new Response(
               JSON.stringify({
-                conversationId: activeConversationId,
+                conversationId: previewMode ? null : activeConversationId,
                 response: cachedResponse.content,
                 cached: true,
                 similarity: cachedResponse.similarity,
@@ -3677,8 +3690,10 @@ NEVER mark complete when:
             continue;
           }
           
-          // PHASE 1: Persist tool call to database
-          await persistToolCall(supabase, activeConversationId, toolCall.id, toolName, toolArgs);
+          // PHASE 1: Persist tool call to database (skip for preview mode)
+          if (!previewMode) {
+            await persistToolCall(supabase, activeConversationId, toolCall.id, toolName, toolArgs);
+          }
           
           const result = await callToolEndpoint({
             name: tool.name,
@@ -3690,8 +3705,10 @@ NEVER mark complete when:
           toolsUsed.push({ name: toolName, success: result.success });
           const resultData = result.success ? result.result : { error: result.error };
           
-          // PHASE 1: Persist tool result to database
-          await persistToolResult(supabase, activeConversationId, toolCall.id, toolName, resultData, result.success);
+          // PHASE 1: Persist tool result to database (skip for preview mode)
+          if (!previewMode) {
+            await persistToolResult(supabase, activeConversationId, toolCall.id, toolName, resultData, result.success);
+          }
 
           toolResults.push({
             role: 'tool',
@@ -3702,9 +3719,11 @@ NEVER mark complete when:
           console.error(`Tool ${toolName} not found or has no endpoint`);
           const errorResult = { error: `Tool ${toolName} is not configured` };
           
-          // PHASE 1: Persist even failed tool calls for debugging
-          await persistToolCall(supabase, activeConversationId, toolCall.id, toolName, toolArgs);
-          await persistToolResult(supabase, activeConversationId, toolCall.id, toolName, errorResult, false);
+          // PHASE 1: Persist even failed tool calls for debugging (skip for preview mode)
+          if (!previewMode) {
+            await persistToolCall(supabase, activeConversationId, toolCall.id, toolName, toolArgs);
+            await persistToolResult(supabase, activeConversationId, toolCall.id, toolName, errorResult, false);
+          }
           
           toolResults.push({
             role: 'tool',
@@ -3790,107 +3809,111 @@ NEVER mark complete when:
     const linkPreviews = await fetchLinkPreviews(assistantContent, supabaseUrl, supabaseKey);
     console.log(`Cached ${linkPreviews.length} link previews for assistant message`);
 
-    // Save each chunk as a separate message with offset timestamps
+    // Save each chunk as a separate message with offset timestamps (skip for preview mode)
     const assistantMessageIds: string[] = [];
-    for (let i = 0; i < chunks.length; i++) {
-      const chunkTimestamp = new Date(Date.now() + (i * 100)); // 100ms offset for ordering
-      const isLastChunk = i === chunks.length - 1;
-      
-      const { data: msg, error: msgError } = await supabase.from('messages').insert({
-        conversation_id: activeConversationId,
-        role: 'assistant',
-        content: chunks[i],
-        created_at: chunkTimestamp.toISOString(),
-        metadata: { 
-          source: 'ai',
-          model: selectedModel,
-          model_tier: modelTier,
-          chunk_index: i,
-          chunk_total: chunks.length,
-          knowledge_sources: isLastChunk && sources.length > 0 ? sources : undefined,
-          tools_used: isLastChunk && toolsUsed.length > 0 ? toolsUsed : undefined,
-          link_previews: isLastChunk && linkPreviews.length > 0 ? linkPreviews : undefined,
+    if (!previewMode) {
+      for (let i = 0; i < chunks.length; i++) {
+        const chunkTimestamp = new Date(Date.now() + (i * 100)); // 100ms offset for ordering
+        const isLastChunk = i === chunks.length - 1;
+        
+        const { data: msg, error: msgError } = await supabase.from('messages').insert({
+          conversation_id: activeConversationId,
+          role: 'assistant',
+          content: chunks[i],
+          created_at: chunkTimestamp.toISOString(),
+          metadata: { 
+            source: 'ai',
+            model: selectedModel,
+            model_tier: modelTier,
+            chunk_index: i,
+            chunk_total: chunks.length,
+            knowledge_sources: isLastChunk && sources.length > 0 ? sources : undefined,
+            tools_used: isLastChunk && toolsUsed.length > 0 ? toolsUsed : undefined,
+            link_previews: isLastChunk && linkPreviews.length > 0 ? linkPreviews : undefined,
+          }
+        }).select('id').single();
+        
+        if (msgError) {
+          console.error(`Error saving chunk ${i}:`, msgError);
         }
-      }).select('id').single();
-      
-      if (msgError) {
-        console.error(`Error saving chunk ${i}:`, msgError);
+        if (msg) assistantMessageIds.push(msg.id);
       }
-      if (msg) assistantMessageIds.push(msg.id);
     }
 
     const assistantMessageId = assistantMessageIds[assistantMessageIds.length - 1];
 
-    // Update conversation metadata (message count, last activity, page visits, last message preview)
-    const currentMetadata = conversation?.metadata || {};
-    
-    // Merge page visits (keep existing ones, add new ones)
-    let mergedPageVisits = currentMetadata.visited_pages || [];
-    if (pageVisits && Array.isArray(pageVisits)) {
-      // Only add page visits that aren't already tracked
-      const existingUrls = new Set(mergedPageVisits.map((v: any) => `${v.url}-${v.entered_at}`));
-      const newVisits = pageVisits.filter((v: any) => !existingUrls.has(`${v.url}-${v.entered_at}`));
-      mergedPageVisits = [...mergedPageVisits, ...newVisits];
-      console.log(`Merged ${newVisits.length} new page visits, total: ${mergedPageVisits.length}`);
-    }
-    
-    await supabase
-      .from('conversations')
-      .update({
-        metadata: {
-          ...currentMetadata,
-          messages_count: (currentMetadata.messages_count || 0) + 2, // user + assistant
-          first_message_at: currentMetadata.first_message_at || new Date().toISOString(),
-          visited_pages: mergedPageVisits,
-          // Store last message preview for conversation list
-          last_message_preview: assistantContent.substring(0, 60),
-          last_message_role: 'assistant',
-          last_message_at: new Date().toISOString(),
-          // Track when the visitor/user last sent a message (for unread badge logic)
-          last_user_message_at: new Date().toISOString(),
-          // Preserve shown_properties: use new ones from this request, or keep existing
-          shown_properties: storedShownProperties?.length 
-            ? storedShownProperties 
-            : currentMetadata.shown_properties,
-          // Update timestamp only if we have new properties
-          ...(storedShownProperties?.length && {
-            last_property_search_at: new Date().toISOString(),
-          }),
-        },
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', activeConversationId);
+    // Update conversation metadata (skip for preview mode)
+    if (!previewMode) {
+      const currentMetadata = conversation?.metadata || {};
+      
+      // Merge page visits (keep existing ones, add new ones)
+      let mergedPageVisits = currentMetadata.visited_pages || [];
+      if (pageVisits && Array.isArray(pageVisits)) {
+        // Only add page visits that aren't already tracked
+        const existingUrls = new Set(mergedPageVisits.map((v: any) => `${v.url}-${v.entered_at}`));
+        const newVisits = pageVisits.filter((v: any) => !existingUrls.has(`${v.url}-${v.entered_at}`));
+        mergedPageVisits = [...mergedPageVisits, ...newVisits];
+        console.log(`Merged ${newVisits.length} new page visits, total: ${mergedPageVisits.length}`);
+      }
+      
+      await supabase
+        .from('conversations')
+        .update({
+          metadata: {
+            ...currentMetadata,
+            messages_count: (currentMetadata.messages_count || 0) + 2, // user + assistant
+            first_message_at: currentMetadata.first_message_at || new Date().toISOString(),
+            visited_pages: mergedPageVisits,
+            // Store last message preview for conversation list
+            last_message_preview: assistantContent.substring(0, 60),
+            last_message_role: 'assistant',
+            last_message_at: new Date().toISOString(),
+            // Track when the visitor/user last sent a message (for unread badge logic)
+            last_user_message_at: new Date().toISOString(),
+            // Preserve shown_properties: use new ones from this request, or keep existing
+            shown_properties: storedShownProperties?.length 
+              ? storedShownProperties 
+              : currentMetadata.shown_properties,
+            // Update timestamp only if we have new properties
+            ...(storedShownProperties?.length && {
+              last_property_search_at: new Date().toISOString(),
+            }),
+          },
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', activeConversationId);
 
-    // Track API call usage (fire and forget - don't wait)
-    const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-    supabase
-      .from('usage_metrics')
-      .upsert({
-        user_id: agent.user_id,
-        period_start: firstDayOfMonth.toISOString(),
-        period_end: lastDayOfMonth.toISOString(),
-        api_calls_count: currentApiCalls + 1,
-      }, {
-        onConflict: 'user_id,period_start',
-      })
-      .then(() => console.log('API usage tracked'))
-      .catch(err => console.error('Failed to track usage:', err));
+      // Track API call usage (fire and forget - don't wait)
+      const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      supabase
+        .from('usage_metrics')
+        .upsert({
+          user_id: agent.user_id,
+          period_start: firstDayOfMonth.toISOString(),
+          period_end: lastDayOfMonth.toISOString(),
+          api_calls_count: currentApiCalls + 1,
+        }, {
+          onConflict: 'user_id,period_start',
+        })
+        .then(() => console.log('API usage tracked'))
+        .catch(err => console.error('Failed to track usage:', err));
 
-    // PHASE 4: Extract and store semantic memories (fire and forget - don't block response)
-    // Only extract from substantive conversations, not greetings
-    if (!isGreetingRequest && messages && messages.length > 0) {
-      const lastUserMsg = messages.filter((m: any) => m.role === 'user').pop();
-      if (lastUserMsg?.content && assistantContent) {
-        const leadId = conversationMetadata?.lead_id as string | undefined;
-        extractAndStoreMemories(
-          supabase,
-          agentId,
-          leadId || null,
-          activeConversationId,
-          lastUserMsg.content,
-          assistantContent,
-          OPENROUTER_API_KEY
-        ).catch(err => console.error('Memory extraction error:', err));
+      // PHASE 4: Extract and store semantic memories (fire and forget - don't block response)
+      // Only extract from substantive conversations, not greetings
+      if (!isGreetingRequest && messages && messages.length > 0) {
+        const lastUserMsg = messages.filter((m: any) => m.role === 'user').pop();
+        if (lastUserMsg?.content && assistantContent) {
+          const leadId = conversationMetadata?.lead_id as string | undefined;
+          extractAndStoreMemories(
+            supabase,
+            agentId,
+            leadId || null,
+            activeConversationId,
+            lastUserMsg.content,
+            assistantContent,
+            OPENROUTER_API_KEY
+          ).catch(err => console.error('Memory extraction error:', err));
+        }
       }
     }
 
@@ -3939,18 +3962,18 @@ NEVER mark complete when:
     // Return the response with chunked messages for staggered display
     return new Response(
       JSON.stringify({
-        conversationId: activeConversationId,
+        conversationId: previewMode ? null : activeConversationId, // No conversationId for preview mode
         requestId, // Include for client-side correlation
         // New: array of message chunks for staggered display
         messages: chunks.map((content, i) => ({
-          id: assistantMessageIds[i],
+          id: previewMode ? `preview-${i}` : assistantMessageIds[i],
           content,
           chunkIndex: i,
         })),
         // Legacy: keep single response for backward compatibility
         response: assistantContent,
-        userMessageId,
-        assistantMessageId,
+        userMessageId: previewMode ? undefined : userMessageId,
+        assistantMessageId: previewMode ? undefined : assistantMessageId,
         sources: sources.length > 0 ? sources : undefined,
         toolsUsed: toolsUsed.length > 0 ? toolsUsed : undefined,
         linkPreviews: linkPreviews.length > 0 ? linkPreviews : undefined,
