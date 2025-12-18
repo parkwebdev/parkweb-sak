@@ -364,7 +364,7 @@ export const HelpView = ({
                 </div>
               ) : (
                 <div className="space-y-3">
-                  <p className="text-sm font-medium text-center">Was this article helpful?</p>
+                  <p className="text-sm font-medium text-center text-foreground">Was this article helpful?</p>
                   <div className="flex justify-center gap-3">
                     <WidgetButton
                       size="sm"
