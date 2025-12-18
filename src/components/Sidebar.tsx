@@ -276,7 +276,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
                     className={`items-center flex w-full p-[11px] rounded-md transition-colors text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
                       isActive 
                         ? 'bg-accent text-accent-foreground' 
-                        : 'bg-transparent hover:bg-accent/50 text-muted-foreground hover:text-foreground'
+                        : isGetSetUp && !isCollapsed
+                          ? 'bg-card text-muted-foreground hover:text-foreground'
+                          : 'bg-transparent hover:bg-accent/50 text-muted-foreground hover:text-foreground'
                     }`}
                     title={isCollapsed ? item.label : ''}
                   >
