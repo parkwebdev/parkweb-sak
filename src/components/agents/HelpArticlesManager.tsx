@@ -440,8 +440,11 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
       return;
     }
     try {
-      await addCategory(newCategoryForm.name, newCategoryForm.description, newCategoryForm.icon);
+      const categoryName = newCategoryForm.name.trim();
+      await addCategory(categoryName, newCategoryForm.description, newCategoryForm.icon);
       toast.success('Category added');
+      // Auto-select the newly created category in the article form
+      setFormData(prev => ({ ...prev, category: categoryName }));
       setNewCategoryForm({ name: '', description: '', icon: 'book' });
       setNewCategoryDialogOpen(false);
     } catch (error) {
@@ -934,7 +937,13 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
                 <Label htmlFor="category">Category *</Label>
                 <Select
                   value={formData.category}
-                  onValueChange={(value) => setFormData({ ...formData, category: value })}
+                  onValueChange={(value) => {
+                    if (value === '__create_new__') {
+                      setNewCategoryDialogOpen(true);
+                    } else {
+                      setFormData({ ...formData, category: value });
+                    }
+                  }}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select category" />
@@ -948,11 +957,13 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
                         </div>
                       </SelectItem>
                     ))}
-                    {categories.length === 0 && (
-                      <div className="p-2 text-sm text-muted-foreground">
-                        No categories yet. Add one first.
+                    {categories.length > 0 && <Separator className="my-1" />}
+                    <SelectItem value="__create_new__" className="text-primary">
+                      <div className="flex items-center gap-2">
+                        <Plus className="h-4 w-4" />
+                        Create new category
                       </div>
-                    )}
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
