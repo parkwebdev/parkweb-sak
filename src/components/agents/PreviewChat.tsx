@@ -34,6 +34,7 @@ import { LinkPreviewsWidget } from '@/widget/components/LinkPreviewsWidget';
 import { QuickReplies } from '@/widget/components/QuickReplies';
 import { CallButton, type CallAction } from '@/widget/components/CallButton';
 import { DayPicker, TimePicker, BookingConfirmed } from '@/widget/constants';
+import { stripUrlsFromContent, stripPhoneNumbersFromContent } from '@/widget/utils/url-stripper';
 import type { 
   DayPickerData, 
   TimePickerData, 
@@ -185,12 +186,6 @@ export const PreviewChat: React.FC<PreviewChatProps> = ({
     sendMessage(suggestion);
   }, [sendMessage]);
 
-  // Compute user message background color (12% opacity of primary)
-  const userBubbleStyle = {
-    backgroundColor: `${primaryColor}1F`, // 1F = ~12% opacity in hex
-  };
-
-  // Find last assistant message index for showing quick replies/call buttons
   // Find last assistant message index (ES5-compatible)
   let lastAssistantIndex = -1;
   for (let i = messages.length - 1; i >= 0; i--) {
@@ -273,14 +268,24 @@ export const PreviewChat: React.FC<PreviewChatProps> = ({
                     {/* Message Bubble */}
                     <div
                       className={cn(
-                        "max-w-[80%] px-3 py-2 rounded-2xl text-sm",
+                        "max-w-[80%] p-3 rounded-lg text-sm text-foreground",
                         message.role === 'user' 
-                          ? "rounded-br-md" 
-                          : "bg-muted rounded-bl-md"
+                          ? "" 
+                          : "bg-muted"
                       )}
-                      style={message.role === 'user' ? userBubbleStyle : undefined}
+                      style={message.role === 'user' ? { backgroundColor: 'rgb(1 110 237 / 7%)' } : undefined}
                     >
-                      {message.content}
+                      <p className="whitespace-pre-wrap break-words">
+                        {message.role === 'assistant' 
+                          ? stripPhoneNumbersFromContent(
+                              stripUrlsFromContent(
+                                message.content.replace(/\*\*(.*?)\*\*/g, '$1'),
+                                !!(message.linkPreviews && message.linkPreviews.length > 0)
+                              ),
+                              !!(message.callActions && message.callActions.length > 0)
+                            )
+                          : message.content}
+                      </p>
                       
                       {/* Link Previews (inside bubble for assistant) */}
                       {message.role === 'assistant' && message.linkPreviews && message.linkPreviews.length > 0 && (
@@ -288,7 +293,6 @@ export const PreviewChat: React.FC<PreviewChatProps> = ({
                           <LinkPreviewsWidget 
                             content={message.content} 
                             cachedPreviews={message.linkPreviews as LinkPreviewData[]}
-                            compact
                           />
                         </div>
                       )}
@@ -371,7 +375,7 @@ export const PreviewChat: React.FC<PreviewChatProps> = ({
                 <div className="w-7 h-7 rounded-full bg-muted border border-border flex items-center justify-center flex-shrink-0">
                   <span className="text-xs font-semibold text-muted-foreground">A</span>
                 </div>
-                <div className="bg-muted px-3 py-2 rounded-2xl rounded-bl-md">
+                <div className="bg-muted p-3 rounded-lg">
                   <div className="flex gap-1">
                     <span className="w-2 h-2 bg-muted-foreground/40 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                     <span className="w-2 h-2 bg-muted-foreground/40 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
