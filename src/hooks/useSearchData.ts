@@ -118,7 +118,7 @@ export const useSearchData = () => {
           title: 'Ari',
           description: 'Configure your AI agent',
           category: 'Navigation',
-          iconName: 'Cube01',
+          iconName: 'AriLogo',
           action: () => navigate('/ari'),
         },
         {

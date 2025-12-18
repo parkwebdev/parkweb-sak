@@ -21,6 +21,7 @@ import {
 import { useGlobalSearch } from '@/hooks/useGlobalSearch';
 import { useSearchData, type SearchResult } from '@/hooks/useSearchData';
 import * as Icons from '@untitledui/icons';
+import AriAgentsIcon from '@/components/icons/AriAgentsIcon';
 
 /**
  * Global search command palette component.
@@ -100,9 +101,10 @@ export const GlobalSearch = () => {
             <CommandEmpty>No results found.</CommandEmpty>
             {Object.entries(groupedResults).map(([category, results]) => (
               <CommandGroup key={category} heading={category}>
-                {results.map((result) => {
+              {results.map((result) => {
+                  const isAriLogo = result.iconName === 'AriLogo';
                   const IconsRecord = Icons as Record<string, React.ComponentType<{ className?: string }>>;
-                  const IconComponent = result.iconName ? IconsRecord[result.iconName] : null;
+                  const IconComponent = isAriLogo ? null : (result.iconName ? IconsRecord[result.iconName] : null);
                   
                   return (
                     <CommandItem
@@ -110,9 +112,11 @@ export const GlobalSearch = () => {
                       value={`${result.title} ${result.description || ''}`}
                       onSelect={() => handleSelect(result)}
                     >
-                      {IconComponent && (
+                      {isAriLogo ? (
+                        <AriAgentsIcon className="mr-2 h-4 w-4 text-muted-foreground" size={16} />
+                      ) : IconComponent ? (
                         <IconComponent className="mr-2 h-4 w-4 text-muted-foreground" />
-                      )}
+                      ) : null}
                       <div className="flex flex-col">
                         <span className="font-medium">{result.title}</span>
                         {result.description && (
