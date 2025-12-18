@@ -62,8 +62,10 @@ const SYNC_INTERVAL_OPTIONS = [
   { value: 'manual', label: 'Manual only' },
   { value: 'hourly_1', label: 'Every hour' },
   { value: 'hourly_2', label: 'Every 2 hours' },
+  { value: 'hourly_3', label: 'Every 3 hours' },
   { value: 'hourly_4', label: 'Every 4 hours' },
   { value: 'hourly_6', label: 'Every 6 hours' },
+  { value: 'hourly_8', label: 'Every 8 hours' },
   { value: 'hourly_12', label: 'Every 12 hours' },
   { value: 'daily', label: 'Daily' },
 ];
