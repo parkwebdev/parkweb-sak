@@ -202,20 +202,22 @@ export const LocationDetails: React.FC<LocationDetailsProps> = ({
         </div>
       </AnimatedItem>
 
-      {/* WordPress - only show if has data */}
+      {/* URL Slug - only show if has data */}
       {(location.wordpress_slug || location.wordpress_community_id) && (
         <AnimatedItem>
           <div className="space-y-3">
-            <span className="text-xs text-muted-foreground uppercase tracking-wide">WordPress</span>
+            <span className="text-xs text-muted-foreground uppercase tracking-wide">URL Slug</span>
             <Input
               id="wordpress_slug"
               size="sm"
               value={formData.wordpress_slug || ''}
-              onChange={(e) => handleChange('wordpress_slug', e.target.value)}
+              readOnly
+              disabled
+              className="bg-muted/50"
               placeholder="Community slug"
             />
             {location.wordpress_community_id && (
-              <p className="text-xs text-muted-foreground">ID: {location.wordpress_community_id}</p>
+              <p className="text-xs text-muted-foreground">WordPress ID: {location.wordpress_community_id}</p>
             )}
           </div>
         </AnimatedItem>

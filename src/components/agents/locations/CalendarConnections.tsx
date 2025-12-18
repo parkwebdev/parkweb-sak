@@ -175,7 +175,7 @@ export const CalendarConnections: React.FC<CalendarConnectionsProps> = ({
       </div>
 
       <p className="text-xs text-muted-foreground">
-        Connected calendars will sync appointments and enable booking through the AI agent.
+        Connected calendars will sync appointments and enable booking through Ari's booking system.
       </p>
 
       <SimpleDeleteDialog
