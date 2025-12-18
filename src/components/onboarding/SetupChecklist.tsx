@@ -1,8 +1,8 @@
 /**
  * Setup Checklist Component
  * 
- * Borderless container for the onboarding steps.
- * Matches Intercom's minimal list style.
+ * Two-column layout: steps on left, video preview on right.
+ * Matches Intercom's onboarding style.
  * 
  * @module components/onboarding/SetupChecklist
  */
@@ -10,6 +10,7 @@
 import React, { useState, useEffect } from 'react';
 import { SetupProgress } from './SetupProgress';
 import { SetupStepCard } from './SetupStepCard';
+import { VideoPlaceholder } from './VideoPlaceholder';
 import type { OnboardingStep } from '@/hooks/useOnboardingProgress';
 
 interface SetupChecklistProps {
@@ -53,16 +54,25 @@ export const SetupChecklist: React.FC<SetupChecklistProps> = ({
         totalCount={totalCount}
       />
 
-      <div>
-        {steps.map((step) => (
-          <SetupStepCard
-            key={step.id}
-            step={step}
-            isExpanded={expandedStepId === step.id}
-            onClick={() => handleStepClick(step)}
-            onAction={() => onStepAction(step)}
-          />
-        ))}
+      {/* Two-column layout: steps left, video right */}
+      <div className="flex gap-6">
+        {/* Left column: Step list */}
+        <div className="flex-1 min-w-0">
+          {steps.map((step) => (
+            <SetupStepCard
+              key={step.id}
+              step={step}
+              isExpanded={expandedStepId === step.id}
+              onClick={() => handleStepClick(step)}
+              onAction={() => onStepAction(step)}
+            />
+          ))}
+        </div>
+
+        {/* Right column: Video placeholder spanning full height */}
+        <div className="hidden sm:flex w-56 md:w-64 lg:w-72 flex-shrink-0">
+          <VideoPlaceholder stepId={expandedStepId || steps[0]?.id} />
+        </div>
       </div>
     </div>
   );

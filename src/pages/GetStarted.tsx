@@ -58,10 +58,10 @@ export const GetStarted: React.FC = () => {
 
   return (
     <main className="flex-1 min-h-0 h-full overflow-y-auto bg-background">
-      <div className="max-w-2xl mx-auto px-4 py-8 lg:py-12">
+      <div className="max-w-4xl mx-auto px-6 py-8 lg:py-12">
         {/* Header */}
         <motion.header 
-          className="mb-8"
+          className="mb-6"
           initial={prefersReducedMotion ? false : { opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={springs.smooth}
