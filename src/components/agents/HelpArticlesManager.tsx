@@ -155,7 +155,7 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
           orderIndex: article.order,
           featuredImage: article.featured_image || null,
           hasEmbedding: article.has_embedding,
-          createdAt: null,
+          createdAt: article.created_at || null,
           updatedAt: null,
         };
       })

@@ -35,6 +35,7 @@ export interface HelpArticle {
   order: number;
   featured_image?: string;
   has_embedding?: boolean;
+  created_at?: string;
 }
 
 export interface HelpCategory {
