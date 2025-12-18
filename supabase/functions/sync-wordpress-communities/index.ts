@@ -16,8 +16,12 @@ const corsHeaders = {
 
 interface WordPressConfig {
   site_url: string;
+  community_endpoint?: string;
+  home_endpoint?: string;
   last_community_sync?: string;
   community_count?: number;
+  community_sync_interval?: string;
+  home_sync_interval?: string;
 }
 
 interface WordPressCommunity {
@@ -25,6 +29,12 @@ interface WordPressCommunity {
   slug: string;
   title: { rendered: string };
   acf?: Record<string, unknown>;
+}
+
+interface DiscoveredEndpoint {
+  slug: string;
+  name: string;
+  rest_base: string;
 }
 
 /**
@@ -73,20 +83,17 @@ function extractAcfNumber(acf: Record<string, unknown> | undefined, ...keywords:
 
 /**
  * Find matching taxonomy term ID with fuzzy slug matching.
- * Handles cases where community post slug differs from taxonomy term slug.
- * e.g., community slug "wildwind" should match taxonomy term "lake-wildwind"
  */
 function findMatchingTermId(
   taxonomyTerms: Map<string, number>,
   communitySlug: string
 ): number | null {
-  // 1. Exact match (current behavior)
+  // 1. Exact match
   if (taxonomyTerms.has(communitySlug)) {
     return taxonomyTerms.get(communitySlug)!;
   }
   
   // 2. Check if community slug is contained in any term slug or vice versa
-  // e.g., "wildwind" matches "lake-wildwind"
   for (const [termSlug, termId] of taxonomyTerms.entries()) {
     if (termSlug.includes(communitySlug) || communitySlug.includes(termSlug)) {
       console.log(`🔍 Fuzzy matched: community "${communitySlug}" → term "${termSlug}" (term ID ${termId})`);
@@ -109,53 +116,44 @@ function findMatchingTermId(
 }
 
 /**
- * Infer timezone from state - supports abbreviations and full names
- * Uses latitude/longitude if available for more accuracy
+ * Infer timezone from state
  */
 function inferTimezone(
   state: string | null, 
   latitude?: number | null, 
   longitude?: number | null
 ): string {
-  // If we have coordinates, use longitude-based detection (more accurate)
   if (longitude != null) {
-    // Rough US timezone boundaries by longitude
-    if (longitude >= -67 && longitude < -71) return 'America/New_York'; // Eastern edge
-    if (longitude >= -71 && longitude < -85) return 'America/New_York'; // Eastern
-    if (longitude >= -85 && longitude < -100) return 'America/Chicago'; // Central
-    if (longitude >= -100 && longitude < -115) return 'America/Denver'; // Mountain
-    if (longitude >= -115 && longitude < -125) return 'America/Los_Angeles'; // Pacific
-    if (longitude >= -125 && longitude < -140) return 'America/Anchorage'; // Alaska
-    if (longitude >= -155 && longitude < -162) return 'Pacific/Honolulu'; // Hawaii
+    if (longitude >= -67 && longitude < -71) return 'America/New_York';
+    if (longitude >= -71 && longitude < -85) return 'America/New_York';
+    if (longitude >= -85 && longitude < -100) return 'America/Chicago';
+    if (longitude >= -100 && longitude < -115) return 'America/Denver';
+    if (longitude >= -115 && longitude < -125) return 'America/Los_Angeles';
+    if (longitude >= -125 && longitude < -140) return 'America/Anchorage';
+    if (longitude >= -155 && longitude < -162) return 'Pacific/Honolulu';
   }
   
   if (!state) return 'America/New_York';
   
   const normalized = state.toLowerCase().trim();
   
-  // Map state names and abbreviations to timezones
-  // Eastern Time
   const eastern = ['ct', 'connecticut', 'de', 'delaware', 'fl', 'florida', 'ga', 'georgia', 
     'me', 'maine', 'md', 'maryland', 'ma', 'massachusetts', 'mi', 'michigan', 
     'nh', 'new hampshire', 'nj', 'new jersey', 'ny', 'new york', 'nc', 'north carolina',
     'oh', 'ohio', 'pa', 'pennsylvania', 'ri', 'rhode island', 'sc', 'south carolina',
     'vt', 'vermont', 'va', 'virginia', 'wv', 'west virginia', 'dc', 'district of columbia'];
   
-  // Central Time
   const central = ['al', 'alabama', 'ar', 'arkansas', 'il', 'illinois', 'ia', 'iowa',
     'ks', 'kansas', 'ky', 'kentucky', 'la', 'louisiana', 'mn', 'minnesota', 
     'ms', 'mississippi', 'mo', 'missouri', 'ne', 'nebraska', 'nd', 'north dakota',
     'ok', 'oklahoma', 'sd', 'south dakota', 'tn', 'tennessee', 'tx', 'texas', 'wi', 'wisconsin'];
   
-  // Mountain Time
   const mountain = ['co', 'colorado', 'id', 'idaho', 'mt', 'montana', 'nm', 'new mexico',
     'ut', 'utah', 'wy', 'wyoming'];
   
-  // Pacific Time
   const pacific = ['ca', 'california', 'nv', 'nevada', 'or', 'oregon', 'wa', 'washington'];
   
-  // Special cases
-  if (normalized === 'az' || normalized === 'arizona') return 'America/Phoenix'; // No DST
+  if (normalized === 'az' || normalized === 'arizona') return 'America/Phoenix';
   if (normalized === 'hi' || normalized === 'hawaii') return 'Pacific/Honolulu';
   if (normalized === 'ak' || normalized === 'alaska') return 'America/Anchorage';
   if (normalized === 'in' || normalized === 'indiana') return 'America/Indiana/Indianapolis';
@@ -165,11 +163,11 @@ function inferTimezone(
   if (mountain.includes(normalized)) return 'America/Denver';
   if (pacific.includes(normalized)) return 'America/Los_Angeles';
   
-  return 'America/New_York'; // Default fallback
+  return 'America/New_York';
 }
 
 /**
- * Extract ZIP code from full address if not provided separately
+ * Extract ZIP code from full address
  */
 function extractZipFromAddress(address: string | null): string | null {
   if (!address) return null;
@@ -180,25 +178,22 @@ function extractZipFromAddress(address: string | null): string | null {
 interface SyncResult {
   created: number;
   updated: number;
-  skipped: number;
+  deleted: number;
   errors: string[];
 }
 
 /**
- * Normalize WordPress site URL by stripping API paths if user entered full endpoint
+ * Normalize WordPress site URL
  */
 function normalizeSiteUrl(url: string): string {
   let normalized = url.trim();
   
-  // Add https if missing
   if (!normalized.startsWith('http://') && !normalized.startsWith('https://')) {
     normalized = `https://${normalized}`;
   }
   
-  // Remove trailing slash
   normalized = normalized.replace(/\/$/, '');
   
-  // Strip common WordPress REST API paths if user entered full endpoint
   const pathsToStrip = [
     '/wp-json/wp/v2/community',
     '/wp-json/wp/v2/communities',
@@ -216,8 +211,91 @@ function normalizeSiteUrl(url: string): string {
   return normalized;
 }
 
+/**
+ * Auto-detect available custom post types from WordPress REST API root
+ */
+async function discoverEndpoints(siteUrl: string): Promise<{
+  communityEndpoints: DiscoveredEndpoint[];
+  homeEndpoints: DiscoveredEndpoint[];
+}> {
+  const normalizedUrl = normalizeSiteUrl(siteUrl);
+  const communityEndpoints: DiscoveredEndpoint[] = [];
+  const homeEndpoints: DiscoveredEndpoint[] = [];
+  
+  try {
+    // Fetch WordPress REST API root to discover available endpoints
+    const response = await fetch(`${normalizedUrl}/wp-json/wp/v2`, {
+      headers: {
+        'Accept': 'application/json',
+        'User-Agent': 'ChatPad/1.0',
+      },
+    });
+    
+    if (!response.ok) {
+      console.log(`Could not fetch /wp-json/wp/v2: ${response.status}`);
+      return { communityEndpoints, homeEndpoints };
+    }
+    
+    const data = await response.json();
+    
+    // WordPress REST API v2 returns available routes
+    // We need to check /wp-json to get post types
+    const rootResponse = await fetch(`${normalizedUrl}/wp-json`, {
+      headers: {
+        'Accept': 'application/json',
+        'User-Agent': 'ChatPad/1.0',
+      },
+    });
+    
+    if (!rootResponse.ok) {
+      return { communityEndpoints, homeEndpoints };
+    }
+    
+    const rootData = await rootResponse.json();
+    const routes = rootData.routes || {};
+    
+    // Community-related keywords
+    const communityKeywords = ['community', 'communities', 'location', 'locations', 'site', 'sites', 'park', 'parks'];
+    // Home/property-related keywords
+    const homeKeywords = ['home', 'homes', 'property', 'properties', 'listing', 'listings', 'house', 'houses', 'unit', 'units'];
+    
+    // Check each route for custom post types
+    for (const [route, info] of Object.entries(routes)) {
+      // Routes look like /wp/v2/community
+      const match = route.match(/^\/wp\/v2\/([a-z0-9_-]+)$/i);
+      if (!match) continue;
+      
+      const slug = match[1];
+      const routeInfo = info as { namespace?: string; methods?: string[] };
+      
+      // Skip WordPress core types
+      const coreTypes = ['posts', 'pages', 'media', 'blocks', 'templates', 'template-parts', 'navigation', 'comments', 'search', 'categories', 'tags', 'users', 'settings', 'themes', 'plugins', 'block-types', 'block-patterns', 'block-directory'];
+      if (coreTypes.includes(slug)) continue;
+      
+      const endpoint: DiscoveredEndpoint = {
+        slug,
+        name: slug.replace(/-/g, ' ').replace(/_/g, ' '),
+        rest_base: slug,
+      };
+      
+      // Categorize the endpoint
+      const lowerSlug = slug.toLowerCase();
+      if (communityKeywords.some(k => lowerSlug.includes(k))) {
+        communityEndpoints.push(endpoint);
+      } else if (homeKeywords.some(k => lowerSlug.includes(k))) {
+        homeEndpoints.push(endpoint);
+      }
+    }
+    
+    console.log(`Discovered ${communityEndpoints.length} community endpoints, ${homeEndpoints.length} home endpoints`);
+  } catch (error) {
+    console.error('Error discovering endpoints:', error);
+  }
+  
+  return { communityEndpoints, homeEndpoints };
+}
+
 Deno.serve(async (req: Request) => {
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -228,11 +306,7 @@ Deno.serve(async (req: Request) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
-    // Check for scheduled sync (internal call from cron job)
     const isScheduledSync = req.headers.get('x-scheduled-sync') === 'true';
-    
-    // For scheduled syncs, skip JWT auth (they run with service role)
-    // For user requests, verify JWT
     let userId: string | null = null;
     
     if (!isScheduledSync) {
@@ -258,8 +332,7 @@ Deno.serve(async (req: Request) => {
       userId = user.id;
     }
 
-    // Parse request body ONCE - can only be read once
-    const { action, agentId, siteUrl, communitySyncInterval, homeSyncInterval, deleteLocations, forceReactivate } = await req.json();
+    const { action, agentId, siteUrl, communityEndpoint, homeEndpoint, communitySyncInterval, homeSyncInterval, deleteLocations } = await req.json();
 
     // Verify user has access to this agent
     const { data: agent, error: agentError } = await supabase
@@ -275,13 +348,10 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // For scheduled syncs, we already have service role access
-    // For user requests, check account access
     if (!isScheduledSync && userId) {
       let hasAccess = userId === agent.user_id;
       
       if (!hasAccess) {
-        // Check if user is a team member
         const { data: teamMember } = await supabase
           .from('team_members')
           .select('id')
@@ -300,6 +370,24 @@ Deno.serve(async (req: Request) => {
       }
     }
 
+    // Handle discover action - auto-detect available endpoints
+    if (action === 'discover') {
+      if (!siteUrl) {
+        return new Response(
+          JSON.stringify({ error: 'Site URL is required' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      const normalizedUrl = normalizeSiteUrl(siteUrl);
+      const endpoints = await discoverEndpoints(normalizedUrl);
+      
+      return new Response(
+        JSON.stringify({ success: true, ...endpoints }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Handle test connection action
     if (action === 'test') {
       if (!siteUrl) {
@@ -310,7 +398,9 @@ Deno.serve(async (req: Request) => {
       }
 
       const normalizedUrl = normalizeSiteUrl(siteUrl);
-      const testResult = await testWordPressConnection(normalizedUrl);
+      // Use provided endpoint or fall back to 'community'
+      const endpoint = communityEndpoint || 'community';
+      const testResult = await testWordPressConnection(normalizedUrl, endpoint);
       return new Response(
         JSON.stringify(testResult),
         { status: testResult.success ? 200 : 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -323,6 +413,8 @@ Deno.serve(async (req: Request) => {
       const wpConfig = deploymentConfig?.wordpress as WordPressConfig | undefined;
       
       const urlToSync = normalizeSiteUrl(siteUrl || wpConfig?.site_url || '');
+      // Use provided endpoint, or stored config, or default to 'community'
+      const endpoint = communityEndpoint || wpConfig?.community_endpoint || 'community';
       
       if (!urlToSync) {
         return new Response(
@@ -331,24 +423,23 @@ Deno.serve(async (req: Request) => {
         );
       }
 
-      console.log(`Starting WordPress community sync for agent ${agentId} from ${urlToSync}`);
+      console.log(`Starting WordPress community sync for agent ${agentId} from ${urlToSync} using endpoint /${endpoint}`);
 
-      // Fetch communities from WordPress
-      const communities = await fetchWordPressCommunities(urlToSync);
+      // Fetch communities from WordPress using the configured endpoint
+      const communities = await fetchWordPressCommunities(urlToSync, endpoint);
       console.log(`Fetched ${communities.length} communities from WordPress`);
 
-      // Fetch taxonomy terms to get term IDs (homes reference these, not post IDs)
-      const taxonomyTerms = await fetchTaxonomyTerms(urlToSync);
-      console.log(`Fetched ${taxonomyTerms.size} taxonomy terms from home_community`);
+      // Fetch taxonomy terms (try endpoint-based name first, then common names)
+      const taxonomyTerms = await fetchTaxonomyTerms(urlToSync, endpoint);
+      console.log(`Fetched ${taxonomyTerms.size} taxonomy terms`);
 
-      // Sync communities to locations
+      // Sync communities to locations (hard delete approach)
       const result = await syncCommunitiesToLocations(
         supabase,
         agentId,
         agent.user_id,
         communities,
-        taxonomyTerms,
-        forceReactivate === true
+        taxonomyTerms
       );
 
       // Update agent's deployment_config with sync info
@@ -357,6 +448,7 @@ Deno.serve(async (req: Request) => {
         wordpress: {
           ...wpConfig,
           site_url: urlToSync,
+          community_endpoint: endpoint,
           last_community_sync: new Date().toISOString(),
           community_count: communities.length,
         },
@@ -367,7 +459,7 @@ Deno.serve(async (req: Request) => {
         .update({ deployment_config: updatedConfig })
         .eq('id', agentId);
 
-      console.log(`Sync complete: ${result.created} created, ${result.updated} updated, ${result.skipped} skipped`);
+      console.log(`Sync complete: ${result.created} created, ${result.updated} updated, ${result.deleted} deleted`);
 
       return new Response(
         JSON.stringify({
@@ -379,10 +471,8 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // Handle save config action (saves URL and sync settings without syncing)
+    // Handle save config action
     if (action === 'save') {
-      // communitySyncInterval and homeSyncInterval already extracted from req.json() above
-      
       const deploymentConfig = agent.deployment_config as Record<string, unknown> | null;
       const wpConfig = deploymentConfig?.wordpress as WordPressConfig | undefined;
       
@@ -392,6 +482,8 @@ Deno.serve(async (req: Request) => {
         wordpress: {
           ...wpConfig,
           ...(normalizedUrl && { site_url: normalizedUrl }),
+          ...(communityEndpoint !== undefined && { community_endpoint: communityEndpoint }),
+          ...(homeEndpoint !== undefined && { home_endpoint: homeEndpoint }),
           ...(communitySyncInterval !== undefined && { community_sync_interval: communitySyncInterval }),
           ...(homeSyncInterval !== undefined && { home_sync_interval: homeSyncInterval }),
         },
@@ -408,17 +500,21 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // Handle disconnect action (clears WordPress config)
+    // Handle disconnect action - HARD DELETE
     if (action === 'disconnect') {
-      // deleteLocations already extracted from req.json() above
-      
-      // Optionally delete synced locations
+      // Delete synced locations (hard delete)
       if (deleteLocations) {
-        await supabase
+        const { error: deleteError } = await supabase
           .from('locations')
           .delete()
           .eq('agent_id', agentId)
           .not('wordpress_community_id', 'is', null);
+        
+        if (deleteError) {
+          console.error('Error deleting locations:', deleteError);
+        } else {
+          console.log(`Hard deleted WordPress locations for agent ${agentId}`);
+        }
       }
 
       // Clear WordPress config from agent
@@ -437,7 +533,7 @@ Deno.serve(async (req: Request) => {
     }
 
     return new Response(
-      JSON.stringify({ error: 'Invalid action. Use "test", "sync", "save", or "disconnect"' }),
+      JSON.stringify({ error: 'Invalid action. Use "test", "sync", "save", "discover", or "disconnect"' }),
       { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
@@ -450,11 +546,13 @@ Deno.serve(async (req: Request) => {
   }
 });
 
-async function testWordPressConnection(siteUrl: string): Promise<{ success: boolean; message: string; communityCount?: number }> {
+async function testWordPressConnection(
+  siteUrl: string, 
+  endpoint: string
+): Promise<{ success: boolean; message: string; communityCount?: number }> {
   try {
-    // Normalize URL
     const normalizedUrl = siteUrl.replace(/\/$/, '');
-    const apiUrl = `${normalizedUrl}/wp-json/wp/v2/community?per_page=1`;
+    const apiUrl = `${normalizedUrl}/wp-json/wp/v2/${endpoint}?per_page=1`;
 
     console.log(`Testing WordPress connection: ${apiUrl}`);
 
@@ -467,12 +565,14 @@ async function testWordPressConnection(siteUrl: string): Promise<{ success: bool
 
     if (!response.ok) {
       if (response.status === 404) {
-        return { success: false, message: 'Community endpoint not found. Ensure your WordPress site has a "community" custom post type with REST API enabled.' };
+        return { 
+          success: false, 
+          message: `Endpoint "/${endpoint}" not found. Try a different custom post type slug or use auto-detect.` 
+        };
       }
       return { success: false, message: `WordPress API returned status ${response.status}` };
     }
 
-    // Check X-WP-Total header for total count
     const totalCount = parseInt(response.headers.get('X-WP-Total') || '0', 10);
 
     const data = await response.json();
@@ -482,7 +582,7 @@ async function testWordPressConnection(siteUrl: string): Promise<{ success: bool
 
     return { 
       success: true, 
-      message: `Connection successful! Found ${totalCount} communities.`,
+      message: `Found ${totalCount} items at /${endpoint}`,
       communityCount: totalCount,
     };
   } catch (error) {
@@ -491,14 +591,17 @@ async function testWordPressConnection(siteUrl: string): Promise<{ success: bool
   }
 }
 
-async function fetchWordPressCommunities(siteUrl: string): Promise<WordPressCommunity[]> {
+async function fetchWordPressCommunities(
+  siteUrl: string, 
+  endpoint: string
+): Promise<WordPressCommunity[]> {
   const normalizedUrl = siteUrl.replace(/\/$/, '');
   const communities: WordPressCommunity[] = [];
   let page = 1;
   const perPage = 100;
 
   while (true) {
-    const apiUrl = `${normalizedUrl}/wp-json/wp/v2/community?per_page=${perPage}&page=${page}&_embed`;
+    const apiUrl = `${normalizedUrl}/wp-json/wp/v2/${endpoint}?per_page=${perPage}&page=${page}&_embed`;
     console.log(`Fetching WordPress communities page ${page}: ${apiUrl}`);
 
     const response = await fetch(apiUrl, {
@@ -510,10 +613,9 @@ async function fetchWordPressCommunities(siteUrl: string): Promise<WordPressComm
 
     if (!response.ok) {
       if (response.status === 400 && page > 1) {
-        // No more pages
         break;
       }
-      throw new Error(`WordPress API error: ${response.status}`);
+      throw new Error(`WordPress API error: ${response.status} for endpoint /${endpoint}`);
     }
 
     const data = await response.json();
@@ -523,7 +625,6 @@ async function fetchWordPressCommunities(siteUrl: string): Promise<WordPressComm
 
     communities.push(...data);
 
-    // Check if there are more pages
     const totalPages = parseInt(response.headers.get('X-WP-TotalPages') || '1', 10);
     if (page >= totalPages) {
       break;
@@ -536,60 +637,75 @@ async function fetchWordPressCommunities(siteUrl: string): Promise<WordPressComm
 }
 
 /**
- * Fetch home_community taxonomy terms to build slug -> term_id map
- * Homes reference taxonomy term IDs (not post IDs), so we need this mapping
+ * Fetch taxonomy terms - tries multiple possible taxonomy names
  */
-async function fetchTaxonomyTerms(siteUrl: string): Promise<Map<string, number>> {
+async function fetchTaxonomyTerms(
+  siteUrl: string, 
+  communityEndpoint: string
+): Promise<Map<string, number>> {
   const normalizedUrl = siteUrl.replace(/\/$/, '');
   const slugToTermId = new Map<string, number>();
-  let page = 1;
-  const perPage = 100;
+  
+  // Try common taxonomy naming patterns based on the endpoint
+  const taxonomiesToTry = [
+    `${communityEndpoint}_category`,
+    `home_${communityEndpoint}`,
+    'home_community',
+    communityEndpoint,
+  ];
+  
+  for (const taxonomy of taxonomiesToTry) {
+    let page = 1;
+    const perPage = 100;
+    let foundTerms = false;
 
-  while (true) {
-    const apiUrl = `${normalizedUrl}/wp-json/wp/v2/home_community?per_page=${perPage}&page=${page}`;
-    console.log(`Fetching home_community taxonomy terms page ${page}: ${apiUrl}`);
+    while (true) {
+      const apiUrl = `${normalizedUrl}/wp-json/wp/v2/${taxonomy}?per_page=${perPage}&page=${page}`;
+      
+      try {
+        const response = await fetch(apiUrl, {
+          headers: {
+            'Accept': 'application/json',
+            'User-Agent': 'ChatPad/1.0',
+          },
+        });
 
-    try {
-      const response = await fetch(apiUrl, {
-        headers: {
-          'Accept': 'application/json',
-          'User-Agent': 'ChatPad/1.0',
-        },
-      });
-
-      if (!response.ok) {
-        if (response.status === 404) {
-          console.warn('home_community taxonomy endpoint not found - homes may not have taxonomy terms');
+        if (!response.ok) {
+          if (response.status === 404) {
+            // Taxonomy doesn't exist, try next one
+            break;
+          }
+          if (response.status === 400 && page > 1) {
+            break;
+          }
           break;
         }
-        if (response.status === 400 && page > 1) {
+
+        const data = await response.json();
+        if (!Array.isArray(data) || data.length === 0) {
           break;
         }
-        throw new Error(`WordPress taxonomy API error: ${response.status}`);
-      }
 
-      const data = await response.json();
-      if (!Array.isArray(data) || data.length === 0) {
-        break;
-      }
-
-      // Map slug to term ID
-      for (const term of data) {
-        if (term.slug && term.id) {
-          slugToTermId.set(term.slug, term.id);
-          console.log(`  Taxonomy term: ${term.slug} -> ${term.id}`);
+        foundTerms = true;
+        for (const term of data) {
+          if (term.slug && term.id) {
+            slugToTermId.set(term.slug, term.id);
+          }
         }
-      }
 
-      // Check if there are more pages
-      const totalPages = parseInt(response.headers.get('X-WP-TotalPages') || '1', 10);
-      if (page >= totalPages) {
+        const totalPages = parseInt(response.headers.get('X-WP-TotalPages') || '1', 10);
+        if (page >= totalPages) {
+          break;
+        }
+
+        page++;
+      } catch {
         break;
       }
-
-      page++;
-    } catch (error) {
-      console.error('Error fetching taxonomy terms:', error);
+    }
+    
+    if (foundTerms) {
+      console.log(`Found taxonomy terms at /${taxonomy}: ${slugToTermId.size} terms`);
       break;
     }
   }
@@ -602,14 +718,40 @@ async function syncCommunitiesToLocations(
   agentId: string,
   userId: string,
   communities: WordPressCommunity[],
-  taxonomyTerms: Map<string, number>,
-  forceReactivate: boolean = false
+  taxonomyTerms: Map<string, number>
 ): Promise<SyncResult> {
-  const result: SyncResult = { created: 0, updated: 0, skipped: 0, errors: [] };
+  const result: SyncResult = { created: 0, updated: 0, deleted: 0, errors: [] };
+  
+  // Get IDs of communities from WordPress
+  const wpCommunityIds = new Set(communities.map(c => c.id));
+  
+  // Get existing WordPress locations for this agent
+  const { data: existingLocations } = await supabase
+    .from('locations')
+    .select('id, wordpress_community_id')
+    .eq('agent_id', agentId)
+    .not('wordpress_community_id', 'is', null);
+  
+  // Delete locations that no longer exist in WordPress (hard delete)
+  for (const loc of existingLocations || []) {
+    if (!wpCommunityIds.has(loc.wordpress_community_id)) {
+      const { error: deleteError } = await supabase
+        .from('locations')
+        .delete()
+        .eq('id', loc.id);
+      
+      if (deleteError) {
+        result.errors.push(`Failed to delete orphan location ${loc.id}: ${deleteError.message}`);
+      } else {
+        result.deleted++;
+        console.log(`🗑️ Deleted orphaned location (WP ID ${loc.wordpress_community_id} no longer exists)`);
+      }
+    }
+  }
 
+  // Create/update locations from WordPress
   for (const community of communities) {
     try {
-      // Intelligently extract fields from ACF data
       const acf = community.acf;
       const address = extractAcfField(acf, 'full_address', 'address', 'street');
       const city = extractAcfField(acf, 'city');
@@ -620,10 +762,8 @@ async function syncCommunitiesToLocations(
       const latitude = extractAcfNumber(acf, 'latitude', 'lat');
       const longitude = extractAcfNumber(acf, 'longitude', 'lng', 'long');
       
-      // Auto-detect timezone from state or coordinates
       const timezone = inferTimezone(state, latitude, longitude);
       
-      // Build metadata with any extra fields we find
       const metadata: Record<string, unknown> = {};
       if (latitude != null) metadata.latitude = latitude;
       if (longitude != null) metadata.longitude = longitude;
@@ -632,14 +772,7 @@ async function syncCommunitiesToLocations(
       const communityType = extractAcfField(acf, 'type', 'community_type');
       if (communityType) metadata.community_type = communityType;
 
-      // Look up the taxonomy term ID using fuzzy slug matching
-      // Homes reference this term ID (not the post ID) in their home_community field
       const termId = findMatchingTermId(taxonomyTerms, community.slug);
-      if (termId) {
-        console.log(`✓ Community "${community.title.rendered}" (post ${community.id}) mapped to term ID ${termId}`);
-      } else {
-        console.warn(`⚠ Community "${community.title.rendered}" has no matching taxonomy term for slug "${community.slug}"`);
-      }
 
       const locationData = {
         agent_id: agentId,
@@ -656,46 +789,22 @@ async function syncCommunitiesToLocations(
         email,
         timezone,
         metadata: Object.keys(metadata).length > 0 ? metadata : null,
-        is_active: true,
         updated_at: new Date().toISOString(),
       };
 
-      // Check if location already exists (including soft-deleted ones)
+      // Check if location already exists
       const { data: existing } = await supabase
         .from('locations')
-        .select('id, is_active')
+        .select('id')
         .eq('agent_id', agentId)
         .eq('wordpress_community_id', community.id)
         .maybeSingle();
 
-      // Handle soft-deleted locations
-      if (existing && !existing.is_active) {
-        if (forceReactivate) {
-          // Reactivate and update the soft-deleted location
-          const { error: updateError } = await supabase
-            .from('locations')
-            .update(locationData)
-            .eq('id', existing.id);
-
-          if (updateError) {
-            result.errors.push(`Failed to reactivate ${community.slug}: ${updateError.message}`);
-          } else {
-            result.updated++;
-            console.log(`↩️ Reactivated soft-deleted location: ${community.slug}`);
-          }
-        } else {
-          // Skip soft-deleted locations - respect user's deletion
-          result.skipped++;
-        }
-        continue;
-      }
-
       if (existing) {
-        // Update existing active location (don't change is_active)
-        const { is_active: _, ...updateData } = locationData;
+        // Update existing location
         const { error: updateError } = await supabase
           .from('locations')
-          .update(updateData)
+          .update(locationData)
           .eq('id', existing.id);
 
         if (updateError) {

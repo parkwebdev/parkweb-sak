@@ -2,7 +2,7 @@
  * Sync WordPress Homes Edge Function
  * 
  * Fetches homes from a WordPress REST API and upserts them as properties.
- * Supports AI extraction fallback for non-ACF WordPress sites.
+ * Supports configurable endpoints and AI extraction fallback.
  * 
  * @module functions/sync-wordpress-homes
  */
@@ -16,6 +16,8 @@ const corsHeaders = {
 
 interface WordPressConfig {
   site_url: string;
+  community_endpoint?: string;
+  home_endpoint?: string;
   last_home_sync?: string;
   home_count?: number;
   last_community_sync?: string;
@@ -29,7 +31,7 @@ interface WordPressHome {
   title: { rendered: string };
   content?: { rendered: string };
   excerpt?: { rendered: string };
-  home_community?: number[]; // Taxonomy relation
+  home_community?: number[];
   _embedded?: {
     'wp:featuredmedia'?: Array<{ source_url: string; alt_text?: string }>;
   };
@@ -37,8 +39,7 @@ interface WordPressHome {
 }
 
 /**
- * Intelligently extract a field from ACF data by searching for keywords
- * Handles prefixed fields like "home_address" when looking for "address"
+ * Intelligently extract a field from ACF data
  */
 function extractAcfField(acf: Record<string, unknown> | undefined, ...keywords: string[]): string | null {
   if (!acf) return null;
@@ -48,19 +49,16 @@ function extractAcfField(acf: Record<string, unknown> | undefined, ...keywords: 
   for (const keyword of keywords) {
     const lowerKeyword = keyword.toLowerCase();
     
-    // Priority 1: Exact match
     const exactMatch = keys.find(k => k.toLowerCase() === lowerKeyword);
     if (exactMatch && acf[exactMatch] != null && acf[exactMatch] !== '') {
       return String(acf[exactMatch]);
     }
     
-    // Priority 2: Ends with keyword (e.g., "home_address" ends with "address")
     const suffixMatch = keys.find(k => k.toLowerCase().endsWith(`_${lowerKeyword}`) || k.toLowerCase().endsWith(lowerKeyword));
     if (suffixMatch && acf[suffixMatch] != null && acf[suffixMatch] !== '') {
       return String(acf[suffixMatch]);
     }
     
-    // Priority 3: Contains keyword (e.g., "square_feet" contains "sqft" via alt keywords)
     const containsMatch = keys.find(k => k.toLowerCase().includes(lowerKeyword));
     if (containsMatch && acf[containsMatch] != null && acf[containsMatch] !== '') {
       return String(acf[containsMatch]);
@@ -70,9 +68,6 @@ function extractAcfField(acf: Record<string, unknown> | undefined, ...keywords: 
   return null;
 }
 
-/**
- * Extract numeric field from ACF data
- */
 function extractAcfNumber(acf: Record<string, unknown> | undefined, ...keywords: string[]): number | null {
   const value = extractAcfField(acf, ...keywords);
   if (!value) return null;
@@ -80,9 +75,6 @@ function extractAcfNumber(acf: Record<string, unknown> | undefined, ...keywords:
   return isNaN(num) ? null : num;
 }
 
-/**
- * Extract array field from ACF data
- */
 function extractAcfArray(acf: Record<string, unknown> | undefined, ...keywords: string[]): string[] {
   if (!acf) return [];
   
@@ -91,7 +83,6 @@ function extractAcfArray(acf: Record<string, unknown> | undefined, ...keywords: 
   for (const keyword of keywords) {
     const lowerKeyword = keyword.toLowerCase();
     
-    // Try to find matching array field
     const match = keys.find(k => {
       const lowerK = k.toLowerCase();
       return lowerK === lowerKeyword || 
@@ -107,68 +98,6 @@ function extractAcfArray(acf: Record<string, unknown> | undefined, ...keywords: 
   return [];
 }
 
-/**
- * Infer timezone from state - supports abbreviations and full names
- * Uses latitude/longitude if available for more accuracy
- */
-function inferTimezone(
-  state: string | null, 
-  latitude?: number | null, 
-  longitude?: number | null
-): string {
-  // If we have coordinates, use longitude-based detection (more accurate)
-  if (longitude != null) {
-    // Rough US timezone boundaries by longitude
-    if (longitude >= -67 && longitude < -71) return 'America/New_York';
-    if (longitude >= -71 && longitude < -85) return 'America/New_York';
-    if (longitude >= -85 && longitude < -100) return 'America/Chicago';
-    if (longitude >= -100 && longitude < -115) return 'America/Denver';
-    if (longitude >= -115 && longitude < -125) return 'America/Los_Angeles';
-    if (longitude >= -125 && longitude < -140) return 'America/Anchorage';
-    if (longitude >= -155 && longitude < -162) return 'Pacific/Honolulu';
-  }
-  
-  if (!state) return 'America/New_York';
-  
-  const normalized = state.toLowerCase().trim();
-  
-  // Eastern Time
-  const eastern = ['ct', 'connecticut', 'de', 'delaware', 'fl', 'florida', 'ga', 'georgia', 
-    'me', 'maine', 'md', 'maryland', 'ma', 'massachusetts', 'mi', 'michigan', 
-    'nh', 'new hampshire', 'nj', 'new jersey', 'ny', 'new york', 'nc', 'north carolina',
-    'oh', 'ohio', 'pa', 'pennsylvania', 'ri', 'rhode island', 'sc', 'south carolina',
-    'vt', 'vermont', 'va', 'virginia', 'wv', 'west virginia', 'dc', 'district of columbia'];
-  
-  // Central Time
-  const central = ['al', 'alabama', 'ar', 'arkansas', 'il', 'illinois', 'ia', 'iowa',
-    'ks', 'kansas', 'ky', 'kentucky', 'la', 'louisiana', 'mn', 'minnesota', 
-    'ms', 'mississippi', 'mo', 'missouri', 'ne', 'nebraska', 'nd', 'north dakota',
-    'ok', 'oklahoma', 'sd', 'south dakota', 'tn', 'tennessee', 'tx', 'texas', 'wi', 'wisconsin'];
-  
-  // Mountain Time
-  const mountain = ['co', 'colorado', 'id', 'idaho', 'mt', 'montana', 'nm', 'new mexico',
-    'ut', 'utah', 'wy', 'wyoming'];
-  
-  // Pacific Time
-  const pacific = ['ca', 'california', 'nv', 'nevada', 'or', 'oregon', 'wa', 'washington'];
-  
-  // Special cases
-  if (normalized === 'az' || normalized === 'arizona') return 'America/Phoenix';
-  if (normalized === 'hi' || normalized === 'hawaii') return 'Pacific/Honolulu';
-  if (normalized === 'ak' || normalized === 'alaska') return 'America/Anchorage';
-  if (normalized === 'in' || normalized === 'indiana') return 'America/Indiana/Indianapolis';
-  
-  if (eastern.includes(normalized)) return 'America/New_York';
-  if (central.includes(normalized)) return 'America/Chicago';
-  if (mountain.includes(normalized)) return 'America/Denver';
-  if (pacific.includes(normalized)) return 'America/Los_Angeles';
-  
-  return 'America/New_York';
-}
-
-/**
- * Extract ZIP code from full address if not provided separately
- */
 function extractZipFromAddress(address: string | null): string | null {
   if (!address) return null;
   const match = address.match(/\b(\d{5})(-\d{4})?\b/);
@@ -178,45 +107,23 @@ function extractZipFromAddress(address: string | null): string | null {
 interface SyncResult {
   created: number;
   updated: number;
-  skipped: number;
+  deleted: number;
   errors: string[];
 }
 
-interface ExtractedProperty {
-  external_id: string;
-  address?: string;
-  lot_number?: string;
-  city?: string;
-  state?: string;
-  zip?: string;
-  status?: string;
-  price?: number;
-  price_type?: string;
-  beds?: number;
-  baths?: number;
-  sqft?: number;
-  year_built?: number;
-  description?: string;
-  features?: string[];
-  images?: Array<{ url: string; alt?: string }>;
-  listing_url?: string;
+interface LocationMaps {
+  termIdMap: Map<number, string>;
 }
 
-/**
- * Normalize WordPress site URL by stripping API paths if user entered full endpoint
- */
 function normalizeSiteUrl(url: string): string {
   let normalized = url.trim();
   
-  // Add https if missing
   if (!normalized.startsWith('http://') && !normalized.startsWith('https://')) {
     normalized = `https://${normalized}`;
   }
   
-  // Remove trailing slash
   normalized = normalized.replace(/\/$/, '');
   
-  // Strip common WordPress REST API paths if user entered full endpoint
   const pathsToStrip = [
     '/wp-json/wp/v2/home',
     '/wp-json/wp/v2/homes',
@@ -239,7 +146,6 @@ function normalizeSiteUrl(url: string): string {
 }
 
 Deno.serve(async (req: Request) => {
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -250,11 +156,7 @@ Deno.serve(async (req: Request) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
-    // Check for scheduled sync (internal call from cron job)
     const isScheduledSync = req.headers.get('x-scheduled-sync') === 'true';
-    
-    // For scheduled syncs, skip JWT auth (they run with service role)
-    // For user requests, verify JWT
     let userId: string | null = null;
     
     if (!isScheduledSync) {
@@ -280,9 +182,8 @@ Deno.serve(async (req: Request) => {
       userId = user.id;
     }
 
-    const { action, agentId, siteUrl, useAiExtraction } = await req.json();
+    const { action, agentId, siteUrl, homeEndpoint, useAiExtraction } = await req.json();
 
-    // Verify user has access to this agent
     const { data: agent, error: agentError } = await supabase
       .from('agents')
       .select('id, user_id, deployment_config')
@@ -296,13 +197,10 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // For scheduled syncs, we already have service role access
-    // For user requests, check account access
     if (!isScheduledSync && userId) {
       let hasAccess = userId === agent.user_id;
       
       if (!hasAccess) {
-        // Check if user is a team member
         const { data: teamMember } = await supabase
           .from('team_members')
           .select('id')
@@ -331,7 +229,12 @@ Deno.serve(async (req: Request) => {
       }
 
       const normalizedUrl = normalizeSiteUrl(siteUrl);
-      const testResult = await testWordPressHomesEndpoint(normalizedUrl);
+      const deploymentConfig = agent.deployment_config as Record<string, unknown> | null;
+      const wpConfig = deploymentConfig?.wordpress as WordPressConfig | undefined;
+      // Use provided endpoint, stored config, or try auto-detection
+      const endpoint = homeEndpoint || wpConfig?.home_endpoint;
+      
+      const testResult = await testWordPressHomesEndpoint(normalizedUrl, endpoint);
       return new Response(
         JSON.stringify(testResult),
         { status: testResult.success ? 200 : 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -344,6 +247,7 @@ Deno.serve(async (req: Request) => {
       const wpConfig = deploymentConfig?.wordpress as WordPressConfig | undefined;
       
       const urlToSync = normalizeSiteUrl(siteUrl || wpConfig?.site_url || '');
+      const endpoint = homeEndpoint || wpConfig?.home_endpoint;
       
       if (!urlToSync) {
         return new Response(
@@ -352,7 +256,7 @@ Deno.serve(async (req: Request) => {
         );
       }
 
-      console.log(`Starting WordPress homes sync for agent ${agentId} from ${urlToSync}`);
+      console.log(`Starting WordPress homes sync for agent ${agentId} from ${urlToSync}${endpoint ? ` using endpoint /${endpoint}` : ''}`);
 
       // Get or create WordPress knowledge source
       const knowledgeSourceId = await getOrCreateWordPressSource(
@@ -363,16 +267,13 @@ Deno.serve(async (req: Request) => {
       );
 
       // Get locations with WordPress community term IDs for auto-matching
-      // Homes reference taxonomy term IDs (not post IDs), so we match on wordpress_community_term_id
       const { data: locations } = await supabase
         .from('locations')
         .select('id, wordpress_community_term_id')
         .eq('agent_id', agentId)
         .not('wordpress_community_term_id', 'is', null);
 
-      // Build WordPress taxonomy term ID -> location ID map (ONLY matching strategy)
       const termIdMap = new Map<number, string>();
-      
       for (const loc of locations || []) {
         if (loc.wordpress_community_term_id) {
           termIdMap.set(loc.wordpress_community_term_id, loc.id);
@@ -382,33 +283,18 @@ Deno.serve(async (req: Request) => {
       const locationMaps: LocationMaps = { termIdMap };
       console.log(`Built location map with ${termIdMap.size} WordPress taxonomy term IDs`);
 
-      // Fetch homes from WordPress
-      const homes = await fetchWordPressHomes(urlToSync);
+      // Fetch homes from WordPress using configured endpoint
+      const homes = await fetchWordPressHomes(urlToSync, endpoint);
       console.log(`Fetched ${homes.length} homes from WordPress`);
 
-      let result: SyncResult;
-      
-      if (useAiExtraction) {
-        // Use AI extraction for non-ACF sites
-        const extractedProperties = await extractPropertiesWithAI(homes, urlToSync);
-        result = await syncPropertiesToDatabase(
-          supabase,
-          agentId,
-          knowledgeSourceId,
-          locationMaps,
-          extractedProperties,
-          homes
-        );
-      } else {
-        // Use direct ACF field mapping
-        result = await syncHomesToProperties(
-          supabase,
-          agentId,
-          knowledgeSourceId,
-          locationMaps,
-          homes
-        );
-      }
+      // Sync homes to properties
+      const result = await syncHomesToProperties(
+        supabase,
+        agentId,
+        knowledgeSourceId,
+        locationMaps,
+        homes
+      );
 
       // Update agent's deployment_config with sync info
       const updatedConfig = {
@@ -416,6 +302,7 @@ Deno.serve(async (req: Request) => {
         wordpress: {
           ...wpConfig,
           site_url: urlToSync,
+          ...(endpoint && { home_endpoint: endpoint }),
           last_home_sync: new Date().toISOString(),
           home_count: homes.length,
         },
@@ -455,7 +342,10 @@ Deno.serve(async (req: Request) => {
 /**
  * Test if WordPress has a homes endpoint
  */
-async function testWordPressHomesEndpoint(siteUrl: string): Promise<{ success: boolean; message: string; homeCount?: number }> {
+async function testWordPressHomesEndpoint(
+  siteUrl: string, 
+  endpoint?: string
+): Promise<{ success: boolean; message: string; homeCount?: number; detectedEndpoint?: string }> {
   try {
     let formattedUrl = siteUrl.trim();
     if (!formattedUrl.startsWith('http://') && !formattedUrl.startsWith('https://')) {
@@ -463,30 +353,53 @@ async function testWordPressHomesEndpoint(siteUrl: string): Promise<{ success: b
     }
     formattedUrl = formattedUrl.replace(/\/$/, '');
 
-    // Try different home/property endpoints
+    // If endpoint provided, use it directly
+    if (endpoint) {
+      const response = await fetch(`${formattedUrl}/wp-json/wp/v2/${endpoint}?per_page=1`, {
+        headers: { 'Accept': 'application/json' },
+      });
+
+      if (response.ok) {
+        const total = response.headers.get('X-WP-Total');
+        return {
+          success: true,
+          message: `Found homes endpoint at /${endpoint}`,
+          homeCount: total ? parseInt(total, 10) : 0,
+          detectedEndpoint: endpoint,
+        };
+      } else {
+        return {
+          success: false,
+          message: `Endpoint /${endpoint} not found (status ${response.status})`,
+        };
+      }
+    }
+
+    // Try auto-detecting common endpoints
     const endpoints = [
-      '/wp-json/wp/v2/home',
-      '/wp-json/wp/v2/homes',
-      '/wp-json/wp/v2/property',
-      '/wp-json/wp/v2/properties',
-      '/wp-json/wp/v2/listing',
-      '/wp-json/wp/v2/listings',
+      'home',
+      'homes',
+      'property',
+      'properties',
+      'listing',
+      'listings',
+      'available-homes',
+      'units',
     ];
 
-    for (const endpoint of endpoints) {
+    for (const ep of endpoints) {
       try {
-        const response = await fetch(`${formattedUrl}${endpoint}?per_page=1`, {
+        const response = await fetch(`${formattedUrl}/wp-json/wp/v2/${ep}?per_page=1`, {
           headers: { 'Accept': 'application/json' },
         });
 
         if (response.ok) {
-          const data = await response.json();
           const total = response.headers.get('X-WP-Total');
-          
           return {
             success: true,
-            message: `Found homes endpoint at ${endpoint}`,
-            homeCount: total ? parseInt(total, 10) : (Array.isArray(data) ? data.length : 0),
+            message: `Found homes endpoint at /${ep}`,
+            homeCount: total ? parseInt(total, 10) : 0,
+            detectedEndpoint: ep,
           };
         }
       } catch {
@@ -496,229 +409,131 @@ async function testWordPressHomesEndpoint(siteUrl: string): Promise<{ success: b
 
     return {
       success: false,
-      message: 'No homes/properties endpoint found. WordPress may not have property listings configured.',
+      message: 'No homes/properties endpoint found. Configure a custom endpoint slug in Advanced Settings.',
     };
   } catch (error) {
-    return {
-      success: false,
-      message: `Failed to test connection: ${error instanceof Error ? error.message : 'Unknown error'}`,
-    };
+    return { success: false, message: `Connection failed: ${error.message}` };
   }
 }
 
 /**
- * Fetch all homes from WordPress REST API with pagination
+ * Fetch homes from WordPress
  */
-async function fetchWordPressHomes(siteUrl: string): Promise<WordPressHome[]> {
+async function fetchWordPressHomes(
+  siteUrl: string, 
+  endpoint?: string
+): Promise<WordPressHome[]> {
   let formattedUrl = siteUrl.trim();
   if (!formattedUrl.startsWith('http://') && !formattedUrl.startsWith('https://')) {
     formattedUrl = `https://${formattedUrl}`;
   }
   formattedUrl = formattedUrl.replace(/\/$/, '');
 
-  const allHomes: WordPressHome[] = [];
+  // Determine which endpoint to use
+  let activeEndpoint = endpoint;
   
-  // Try different endpoints
-  const endpoints = [
-    '/wp-json/wp/v2/home',
-    '/wp-json/wp/v2/homes',
-    '/wp-json/wp/v2/property',
-    '/wp-json/wp/v2/properties',
-  ];
-
-  let successfulEndpoint = '';
-  
-  for (const endpoint of endpoints) {
-    try {
-      const testResponse = await fetch(`${formattedUrl}${endpoint}?per_page=1`, {
-        headers: { 'Accept': 'application/json' },
-      });
-      if (testResponse.ok) {
-        successfulEndpoint = endpoint;
-        break;
+  if (!activeEndpoint) {
+    // Auto-detect endpoint
+    const endpoints = ['home', 'homes', 'property', 'properties', 'listing', 'listings', 'available-homes', 'units'];
+    
+    for (const ep of endpoints) {
+      try {
+        const response = await fetch(`${formattedUrl}/wp-json/wp/v2/${ep}?per_page=1`, {
+          headers: { 'Accept': 'application/json' },
+        });
+        if (response.ok) {
+          activeEndpoint = ep;
+          break;
+        }
+      } catch {
+        continue;
       }
-    } catch {
-      continue;
     }
   }
 
-  if (!successfulEndpoint) {
-    console.log('No homes endpoint found');
+  if (!activeEndpoint) {
+    console.warn('No homes endpoint found');
     return [];
   }
 
+  console.log(`Using homes endpoint: /${activeEndpoint}`);
+
+  const homes: WordPressHome[] = [];
   let page = 1;
-  let hasMore = true;
+  const perPage = 100;
 
-  while (hasMore) {
-    try {
-      const response = await fetch(
-        `${formattedUrl}${successfulEndpoint}?per_page=100&page=${page}&_embed`,
-        { headers: { 'Accept': 'application/json' } }
-      );
+  while (true) {
+    const apiUrl = `${formattedUrl}/wp-json/wp/v2/${activeEndpoint}?per_page=${perPage}&page=${page}&_embed`;
+    console.log(`Fetching WordPress homes page ${page}: ${apiUrl}`);
 
-      if (!response.ok) {
-        hasMore = false;
+    const response = await fetch(apiUrl, {
+      headers: { 'Accept': 'application/json', 'User-Agent': 'ChatPad/1.0' },
+    });
+
+    if (!response.ok) {
+      if (response.status === 400 && page > 1) {
         break;
       }
-
-      const homes: WordPressHome[] = await response.json();
-      
-      if (homes.length === 0) {
-        hasMore = false;
-      } else {
-        allHomes.push(...homes);
-        page++;
-        
-        const totalPages = response.headers.get('X-WP-TotalPages');
-        if (totalPages && page > parseInt(totalPages, 10)) {
-          hasMore = false;
-        }
-      }
-    } catch (error) {
-      console.error(`Error fetching page ${page}:`, error);
-      hasMore = false;
+      throw new Error(`WordPress API error: ${response.status}`);
     }
+
+    const data = await response.json();
+    if (!Array.isArray(data) || data.length === 0) {
+      break;
+    }
+
+    homes.push(...data);
+
+    const totalPages = parseInt(response.headers.get('X-WP-TotalPages') || '1', 10);
+    if (page >= totalPages) {
+      break;
+    }
+
+    page++;
   }
 
-  return allHomes;
+  return homes;
 }
 
-/**
- * Get or create a WordPress knowledge source for tracking
- */
 async function getOrCreateWordPressSource(
   supabase: ReturnType<typeof createClient>,
   agentId: string,
   userId: string,
   siteUrl: string
 ): Promise<string> {
-  // Check for existing WordPress source
+  const sourceName = `WordPress: ${siteUrl}`;
+  
   const { data: existing } = await supabase
     .from('knowledge_sources')
     .select('id')
     .eq('agent_id', agentId)
-    .eq('source_type', 'wordpress_home')
-    .single();
+    .eq('source', sourceName)
+    .eq('type', 'wordpress')
+    .maybeSingle();
 
   if (existing) {
     return existing.id;
   }
 
-  // Create new knowledge source
   const { data: newSource, error } = await supabase
     .from('knowledge_sources')
     .insert({
       agent_id: agentId,
       user_id: userId,
-      type: 'url',
-      source_type: 'wordpress_home',
-      source: siteUrl,
+      source: sourceName,
+      type: 'wordpress',
       status: 'ready',
-      refresh_strategy: 'daily',
-      metadata: {
-        wordpress_homes: true,
-        auto_created: true,
-      },
     })
     .select('id')
     .single();
 
   if (error) {
-    console.error('Error creating WordPress knowledge source:', error);
-    throw error;
+    throw new Error(`Failed to create knowledge source: ${error.message}`);
   }
 
   return newSource.id;
 }
 
-/**
- * Map WordPress home status to our status enum
- */
-function mapStatus(wpStatus?: string): string {
-  if (!wpStatus) return 'available';
-  
-  const statusLower = wpStatus.toLowerCase();
-  
-  if (statusLower.includes('sold')) return 'sold';
-  if (statusLower.includes('pending') || statusLower.includes('under contract')) return 'pending';
-  if (statusLower.includes('rent')) return 'rented';
-  if (statusLower.includes('coming') || statusLower.includes('soon')) return 'coming_soon';
-  
-  return 'available';
-}
-
-/**
- * Parse price from various formats
- */
-function parsePrice(value?: number | string): number | null {
-  if (value === undefined || value === null) return null;
-  
-  if (typeof value === 'number') {
-    return Math.round(value * 100); // Convert to cents
-  }
-  
-  // Remove currency symbols and commas
-  const cleaned = value.toString().replace(/[$,\s]/g, '');
-  const parsed = parseFloat(cleaned);
-  
-  return isNaN(parsed) ? null : Math.round(parsed * 100);
-}
-
-/**
- * Parse number fields
- */
-function parseNumber(value?: number | string): number | null {
-  if (value === undefined || value === null) return null;
-  if (typeof value === 'number') return value;
-  
-  const parsed = parseFloat(value.toString());
-  return isNaN(parsed) ? null : parsed;
-}
-
-/**
- * Extract images from WordPress home
- */
-function extractImages(home: WordPressHome): Array<{ url: string; alt?: string }> {
-  const images: Array<{ url: string; alt?: string }> = [];
-  
-  // Featured image from _embedded
-  if (home._embedded?.['wp:featuredmedia']?.[0]) {
-    const featured = home._embedded['wp:featuredmedia'][0];
-    images.push({
-      url: featured.source_url,
-      alt: featured.alt_text,
-    });
-  }
-  
-  // ACF images/gallery
-  if (home.acf?.images) {
-    images.push(...home.acf.images);
-  }
-  if (home.acf?.gallery) {
-    images.push(...home.acf.gallery);
-  }
-  
-  return images;
-}
-
-/**
- * Auto-match a property to a location using WordPress community taxonomy term ID.
- * This is the ONLY matching strategy - WordPress community term_id is the authoritative link.
- */
-function autoMatchLocation(
-  locationMaps: LocationMaps,
-  communityTermId: number | undefined
-): string | null {
-  if (communityTermId && locationMaps.termIdMap.has(communityTermId)) {
-    return locationMaps.termIdMap.get(communityTermId)!;
-  }
-  return null;
-}
-
-/**
- * Sync homes to properties table using ACF field mapping
- */
 async function syncHomesToProperties(
   supabase: ReturnType<typeof createClient>,
   agentId: string,
@@ -726,397 +541,153 @@ async function syncHomesToProperties(
   locationMaps: LocationMaps,
   homes: WordPressHome[]
 ): Promise<SyncResult> {
-  const result: SyncResult = { created: 0, updated: 0, skipped: 0, errors: [] };
+  const result: SyncResult = { created: 0, updated: 0, deleted: 0, errors: [] };
+  
+  // Get IDs of homes from WordPress
+  const wpHomeIds = new Set(homes.map(h => String(h.id)));
+  
+  // Get existing WordPress properties for this agent
+  const { data: existingProperties } = await supabase
+    .from('properties')
+    .select('id, external_id')
+    .eq('agent_id', agentId)
+    .eq('knowledge_source_id', knowledgeSourceId);
+  
+  // Delete properties that no longer exist in WordPress (hard delete)
+  for (const prop of existingProperties || []) {
+    if (prop.external_id && !wpHomeIds.has(prop.external_id)) {
+      const { error: deleteError } = await supabase
+        .from('properties')
+        .delete()
+        .eq('id', prop.id);
+      
+      if (deleteError) {
+        result.errors.push(`Failed to delete orphan property ${prop.id}: ${deleteError.message}`);
+      } else {
+        result.deleted++;
+        console.log(`🗑️ Deleted orphaned property (WP ID ${prop.external_id} no longer exists)`);
+      }
+    }
+  }
 
+  // Create/update properties from WordPress
   for (const home of homes) {
     try {
-      const externalId = `wp_home_${home.id}`;
-      
       const acf = home.acf;
       
-      // Intelligently extract fields from ACF data
-      const address = extractAcfField(acf, 'address', 'full_address', 'street') || decodeHtmlEntities(home.title.rendered);
+      // Extract property data from ACF
+      const address = extractAcfField(acf, 'address', 'full_address', 'street_address');
+      const lotNumber = extractAcfField(acf, 'lot', 'lot_number', 'lot_num', 'site_number', 'unit_number', 'home_unit_number');
       const city = extractAcfField(acf, 'city');
       const state = extractAcfField(acf, 'state');
-      const zip = extractAcfField(acf, 'zip', 'zipcode', 'postal', 'postal_code') || extractZipFromAddress(address);
+      const zip = extractAcfField(acf, 'zip', 'zipcode', 'postal_code') || extractZipFromAddress(address);
       
-      // Extract lot number with expanded field detection for MHP/real estate
-      const lotNumber = extractAcfField(acf, 
-        'lot', 'lot_number', 'lot_num', 'lot_no',
-        'site', 'site_number', 'site_num', 'site_no',
-        'unit', 'unit_number', 'unit_num', 'unit_no',
-        'home_unit_number', // WordPress ACF field name discovered via logging
-        'space', 'space_number', 'space_num',
-        'home_site', 'homesite', 'pad', 'pad_number'
-      );
-      
-      // Debug: Log ACF keys for homes without lot numbers to help diagnose
-      if (!lotNumber && acf) {
-        console.log(`📋 ACF fields for "${address}" (no lot found): ${Object.keys(acf).join(', ')}`);
+      // Price handling - convert to cents
+      let price: number | null = null;
+      const priceValue = extractAcfNumber(acf, 'price', 'asking_price', 'list_price', 'sale_price');
+      if (priceValue != null) {
+        price = Math.round(priceValue * 100);
       }
       
-      // Auto-match to location using WordPress taxonomy term ID ONLY
-      // home_community contains taxonomy term IDs (not post IDs)
-      const communityTermId = home.home_community?.[0];
-      const locationId = autoMatchLocation(locationMaps, communityTermId);
+      const priceType = extractAcfField(acf, 'price_type', 'listing_type') || 'sale';
+      const beds = extractAcfNumber(acf, 'beds', 'bedrooms', 'bed', 'bedroom');
+      const baths = extractAcfNumber(acf, 'baths', 'bathrooms', 'bath', 'bathroom');
+      const sqft = extractAcfNumber(acf, 'sqft', 'square_feet', 'sq_ft', 'square_footage', 'size');
+      const yearBuilt = extractAcfNumber(acf, 'year_built', 'year', 'built');
+      const status = extractAcfField(acf, 'status', 'listing_status', 'availability') || 'available';
+      const description = extractAcfField(acf, 'description', 'details', 'summary') || 
+                          home.excerpt?.rendered?.replace(/<[^>]*>/g, '').trim() ||
+                          home.content?.rendered?.replace(/<[^>]*>/g, '').substring(0, 500).trim();
       
-      if (locationId) {
-        console.log(`✓ Matched "${address}" to location via taxonomy term ID ${communityTermId}`);
-      } else if (communityTermId) {
-        console.warn(`⚠ Property "${address}" has taxonomy term ID ${communityTermId} but no matching location found`);
-      } else {
-        console.warn(`⚠ Property "${address}" has no WordPress community taxonomy assigned`);
+      const features = extractAcfArray(acf, 'features', 'amenities', 'highlights');
+      
+      // Get images
+      const images: Array<{ url: string; alt?: string }> = [];
+      if (home._embedded?.['wp:featuredmedia']?.[0]) {
+        const featured = home._embedded['wp:featuredmedia'][0];
+        images.push({ url: featured.source_url, alt: featured.alt_text });
       }
       
-      // Determine price type based on field names
-      const rentPrice = extractAcfNumber(acf, 'rent', 'monthly_rent', 'rental');
-      const salePrice = extractAcfNumber(acf, 'price', 'sale_price', 'asking_price');
-      const price = rentPrice || salePrice;
-      const priceType = rentPrice ? 'rent_monthly' : 'sale';
-      
+      // Match to location via taxonomy term ID
+      let locationId: string | null = null;
+      if (home.home_community?.[0]) {
+        const termId = home.home_community[0];
+        locationId = locationMaps.termIdMap.get(termId) || null;
+      }
+
       const propertyData = {
         agent_id: agentId,
         knowledge_source_id: knowledgeSourceId,
-        location_id: locationId,
-        external_id: externalId,
+        external_id: String(home.id),
+        listing_url: home.link,
         address,
         lot_number: lotNumber,
         city,
         state,
         zip,
-        status: mapStatus(extractAcfField(acf, 'status')),
-        price: price ? Math.round(price * 100) : null, // Convert to cents
-        price_type: priceType,
-        beds: extractAcfNumber(acf, 'beds', 'bedrooms', 'bedroom'),
-        baths: extractAcfNumber(acf, 'baths', 'bathrooms', 'bathroom'),
-        sqft: extractAcfNumber(acf, 'sqft', 'square_feet', 'sq_ft', 'size'),
-        year_built: extractAcfNumber(acf, 'year_built', 'year', 'built'),
-        description: extractAcfField(acf, 'description') || stripHtml(home.content?.rendered || home.excerpt?.rendered || ''),
-        features: extractAcfArray(acf, 'features', 'amenities'),
-        images: extractImages(home),
-        listing_url: home.link,
-        last_seen_at: new Date().toISOString(),
-      };
-
-      // Check if property exists
-      const { data: existing } = await supabase
-        .from('properties')
-        .select('id')
-        .eq('knowledge_source_id', knowledgeSourceId)
-        .eq('external_id', externalId)
-        .single();
-
-      if (existing) {
-        // Update existing
-        const { error } = await supabase
-          .from('properties')
-          .update(propertyData)
-          .eq('id', existing.id);
-
-        if (error) {
-          result.errors.push(`Failed to update ${externalId}: ${error.message}`);
-        } else {
-          result.updated++;
-        }
-      } else {
-        // Create new
-        const { error } = await supabase
-          .from('properties')
-          .insert({
-            ...propertyData,
-            first_seen_at: new Date().toISOString(),
-          });
-
-        if (error) {
-          result.errors.push(`Failed to create ${externalId}: ${error.message}`);
-        } else {
-          result.created++;
-        }
-      }
-    } catch (error) {
-      result.errors.push(`Error processing home ${home.id}: ${error instanceof Error ? error.message : 'Unknown'}`);
-    }
-  }
-
-  return result;
-}
-
-/**
- * Use AI to extract property data from WordPress homes
- */
-async function extractPropertiesWithAI(
-  homes: WordPressHome[],
-  siteUrl: string
-): Promise<ExtractedProperty[]> {
-  const openrouterKey = Deno.env.get('OPENROUTER_API_KEY');
-  if (!openrouterKey) {
-    console.warn('OPENROUTER_API_KEY not set, falling back to direct mapping');
-    return homes.map(home => ({
-      external_id: `wp_home_${home.id}`,
-      address: decodeHtmlEntities(home.title.rendered),
-      listing_url: home.link,
-      description: stripHtml(home.content?.rendered || home.excerpt?.rendered || ''),
-      images: extractImages(home),
-    }));
-  }
-
-  // Batch homes for efficiency (max 10 per request)
-  const batches: WordPressHome[][] = [];
-  for (let i = 0; i < homes.length; i += 10) {
-    batches.push(homes.slice(i, i + 10));
-  }
-
-  const allProperties: ExtractedProperty[] = [];
-
-  for (const batch of batches) {
-    try {
-      const homesData = batch.map(home => ({
-        id: home.id,
-        title: decodeHtmlEntities(home.title.rendered),
-        content: stripHtml(home.content?.rendered || ''),
-        excerpt: stripHtml(home.excerpt?.rendered || ''),
-        link: home.link,
-        acf: home.acf,
-      }));
-
-      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${openrouterKey}`,
-          'Content-Type': 'application/json',
-          'HTTP-Referer': siteUrl,
-        },
-        body: JSON.stringify({
-          model: 'google/gemini-2.5-flash',
-          messages: [
-            {
-              role: 'system',
-              content: `You are a property listing data extractor. Extract structured property data from WordPress home listings.
-              
-For each home, extract:
-- address: Full street address
-- lot_number: Lot or unit number if mentioned
-- city, state, zip: Location details
-- status: One of: available, pending, sold, rented, coming_soon
-- price: Numeric price in dollars (no commas/symbols)
-- price_type: sale, rent_monthly, or rent_weekly
-- beds: Number of bedrooms
-- baths: Number of bathrooms (can be decimal like 1.5)
-- sqft: Square footage
-- year_built: Year the home was built
-- description: Brief property description
-- features: Array of features/amenities
-
-Return a JSON array of extracted properties.`,
-            },
-            {
-              role: 'user',
-              content: `Extract property data from these homes:\n\n${JSON.stringify(homesData, null, 2)}`,
-            },
-          ],
-          response_format: { type: 'json_object' },
-          max_tokens: 4000,
-          temperature: 0.1,
-        }),
-      });
-
-      if (!response.ok) {
-        console.error('AI extraction failed:', await response.text());
-        // Fall back to basic extraction for this batch
-        allProperties.push(...batch.map(home => ({
-          external_id: `wp_home_${home.id}`,
-          address: decodeHtmlEntities(home.title.rendered),
-          listing_url: home.link,
-          images: extractImages(home),
-        })));
-        continue;
-      }
-
-      const data = await response.json();
-      const content = data.choices?.[0]?.message?.content;
-      
-      if (content) {
-        try {
-          const parsed = JSON.parse(content);
-          const properties = parsed.properties || parsed;
-          
-          if (Array.isArray(properties)) {
-            for (let i = 0; i < properties.length && i < batch.length; i++) {
-              const prop = properties[i];
-              const home = batch[i];
-              
-              allProperties.push({
-                external_id: `wp_home_${home.id}`,
-                address: prop.address || decodeHtmlEntities(home.title.rendered),
-                lot_number: prop.lot_number,
-                city: prop.city,
-                state: prop.state,
-                zip: prop.zip,
-                status: prop.status,
-                price: prop.price ? Math.round(prop.price * 100) : undefined,
-                price_type: prop.price_type,
-                beds: prop.beds,
-                baths: prop.baths,
-                sqft: prop.sqft,
-                year_built: prop.year_built,
-                description: prop.description,
-                features: prop.features,
-                images: extractImages(home),
-                listing_url: home.link,
-              });
-            }
-          }
-        } catch (parseError) {
-          console.error('Failed to parse AI response:', parseError);
-          // Fall back to basic extraction
-          allProperties.push(...batch.map(home => ({
-            external_id: `wp_home_${home.id}`,
-            address: decodeHtmlEntities(home.title.rendered),
-            listing_url: home.link,
-            images: extractImages(home),
-          })));
-        }
-      }
-    } catch (error) {
-      console.error('AI extraction batch error:', error);
-      // Fall back to basic extraction for this batch
-      allProperties.push(...batch.map(home => ({
-        external_id: `wp_home_${home.id}`,
-        address: decodeHtmlEntities(home.title.rendered),
-        listing_url: home.link,
-        images: extractImages(home),
-      })));
-    }
-  }
-
-  return allProperties;
-}
-
-/**
- * Sync AI-extracted properties to database
- */
-async function syncPropertiesToDatabase(
-  supabase: ReturnType<typeof createClient>,
-  agentId: string,
-  knowledgeSourceId: string,
-  locationMaps: LocationMaps,
-  properties: ExtractedProperty[],
-  homes: WordPressHome[]
-): Promise<SyncResult> {
-  const result: SyncResult = { created: 0, updated: 0, skipped: 0, errors: [] };
-
-  // Create a map of external_id to home for location lookup
-  const homeMap = new Map<string, WordPressHome>();
-  for (const home of homes) {
-    homeMap.set(`wp_home_${home.id}`, home);
-  }
-
-  for (const prop of properties) {
-    try {
-      const home = homeMap.get(prop.external_id);
-      // home_community contains taxonomy term IDs (not post IDs)
-      const communityTermId = home?.home_community?.[0];
-      
-      // Auto-match to location using WordPress taxonomy term ID ONLY
-      const locationId = autoMatchLocation(locationMaps, communityTermId);
-      
-      if (locationId) {
-        console.log(`✓ Matched AI-extracted "${prop.address}" to location via taxonomy term ID ${communityTermId}`);
-      } else if (communityTermId) {
-        console.warn(`⚠ AI-extracted "${prop.address}" has taxonomy term ID ${communityTermId} but no matching location found`);
-      } else {
-        console.warn(`⚠ AI-extracted "${prop.address}" has no WordPress community taxonomy assigned`);
-      }
-
-      const propertyData = {
-        agent_id: agentId,
-        knowledge_source_id: knowledgeSourceId,
+        price,
+        price_type: priceType as 'sale' | 'rent' | 'lease' | null,
+        beds,
+        baths,
+        sqft,
+        year_built: yearBuilt,
+        status: normalizeStatus(status),
+        description,
+        features: features.length > 0 ? features : null,
+        images: images.length > 0 ? images : null,
         location_id: locationId,
-        external_id: prop.external_id,
-        address: prop.address,
-        lot_number: prop.lot_number,
-        city: prop.city,
-        state: prop.state,
-        zip: prop.zip,
-        status: prop.status || 'available',
-        price: prop.price,
-        price_type: prop.price_type || 'sale',
-        beds: prop.beds,
-        baths: prop.baths,
-        sqft: prop.sqft,
-        year_built: prop.year_built,
-        description: prop.description,
-        features: prop.features || [],
-        images: prop.images || [],
-        listing_url: prop.listing_url,
         last_seen_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       };
 
-      // Check if property exists
+      // Check if property already exists
       const { data: existing } = await supabase
         .from('properties')
         .select('id')
-        .eq('knowledge_source_id', knowledgeSourceId)
-        .eq('external_id', prop.external_id)
-        .single();
+        .eq('agent_id', agentId)
+        .eq('external_id', String(home.id))
+        .maybeSingle();
 
       if (existing) {
-        const { error } = await supabase
+        const { error: updateError } = await supabase
           .from('properties')
           .update(propertyData)
           .eq('id', existing.id);
 
-        if (error) {
-          result.errors.push(`Failed to update ${prop.external_id}: ${error.message}`);
+        if (updateError) {
+          result.errors.push(`Failed to update home ${home.slug}: ${updateError.message}`);
         } else {
           result.updated++;
         }
       } else {
-        const { error } = await supabase
+        const { error: insertError } = await supabase
           .from('properties')
           .insert({
             ...propertyData,
             first_seen_at: new Date().toISOString(),
           });
 
-        if (error) {
-          result.errors.push(`Failed to create ${prop.external_id}: ${error.message}`);
+        if (insertError) {
+          result.errors.push(`Failed to create home ${home.slug}: ${insertError.message}`);
         } else {
           result.created++;
         }
       }
     } catch (error) {
-      result.errors.push(`Error processing ${prop.external_id}: ${error instanceof Error ? error.message : 'Unknown'}`);
+      result.errors.push(`Error processing home ${home.slug}: ${error.message}`);
     }
   }
 
   return result;
 }
 
-/**
- * Strip HTML tags from content
- */
-function stripHtml(html: string): string {
-  return html
-    .replace(/<[^>]*>/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
-
-/**
- * Decode HTML entities
- */
-function decodeHtmlEntities(text: string): string {
-  return text
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#039;/g, "'")
-    .replace(/&#8211;/g, '\u2013')
-    .replace(/&#8212;/g, '\u2014')
-    .replace(/&#8216;/g, '\u2018')
-    .replace(/&#8217;/g, '\u2019')
-    .replace(/&#8220;/g, '\u201C')
-    .replace(/&#8221;/g, '\u201D');
+function normalizeStatus(status: string | null): 'available' | 'pending' | 'sold' | 'rented' | 'off_market' | null {
+  if (!status) return null;
+  const lower = status.toLowerCase();
+  if (lower.includes('available') || lower.includes('active') || lower.includes('for sale')) return 'available';
+  if (lower.includes('pending') || lower.includes('under contract')) return 'pending';
+  if (lower.includes('sold') || lower.includes('closed')) return 'sold';
+  if (lower.includes('rented') || lower.includes('leased')) return 'rented';
+  if (lower.includes('off') || lower.includes('inactive') || lower.includes('withdrawn')) return 'off_market';
+  return 'available';
 }

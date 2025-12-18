@@ -14,6 +14,7 @@ import type { Tables } from '@/integrations/supabase/types';
 
 interface WordPressConfig {
   site_url?: string;
+  home_endpoint?: string;
   last_home_sync?: string;
   home_count?: number;
   last_community_sync?: string;
@@ -24,13 +25,14 @@ interface TestResult {
   success: boolean;
   message: string;
   homeCount?: number;
+  detectedEndpoint?: string;
 }
 
 interface SyncResult {
   success: boolean;
   created?: number;
   updated?: number;
-  skipped?: number;
+  deleted?: number;
   total?: number;
   errors?: string[];
 }
@@ -52,11 +54,12 @@ export function useWordPressHomes({ agent, onSyncComplete }: UseWordPressHomesOp
   }, [agent?.deployment_config]);
 
   const siteUrl = wordpressConfig?.site_url || '';
+  const homeEndpoint = wordpressConfig?.home_endpoint || '';
   const lastSync = wordpressConfig?.last_home_sync || null;
   const homeCount = wordpressConfig?.home_count;
   const isConnected = Boolean(siteUrl);
 
-  const testHomesEndpoint = useCallback(async (url: string): Promise<TestResult> => {
+  const testHomesEndpoint = useCallback(async (url: string, endpoint?: string): Promise<TestResult> => {
     if (!agent?.id) {
       return { success: false, message: 'No agent selected' };
     }
@@ -75,6 +78,7 @@ export function useWordPressHomes({ agent, onSyncComplete }: UseWordPressHomesOp
           action: 'test',
           agentId: agent.id,
           siteUrl: url,
+          homeEndpoint: endpoint || homeEndpoint || undefined,
         },
       });
 
@@ -84,6 +88,7 @@ export function useWordPressHomes({ agent, onSyncComplete }: UseWordPressHomesOp
         success: data.success,
         message: data.message || (data.success ? 'Homes endpoint found!' : 'No homes endpoint found'),
         homeCount: data.homeCount,
+        detectedEndpoint: data.detectedEndpoint,
       };
 
       setTestResult(result);
@@ -99,9 +104,9 @@ export function useWordPressHomes({ agent, onSyncComplete }: UseWordPressHomesOp
     } finally {
       setIsTesting(false);
     }
-  }, [agent?.id]);
+  }, [agent?.id, homeEndpoint]);
 
-  const syncHomes = useCallback(async (url?: string, useAiExtraction?: boolean): Promise<SyncResult> => {
+  const syncHomes = useCallback(async (url?: string, useAiExtraction?: boolean, endpoint?: string): Promise<SyncResult> => {
     if (!agent?.id) {
       return { success: false, errors: ['No agent selected'] };
     }
@@ -124,6 +129,7 @@ export function useWordPressHomes({ agent, onSyncComplete }: UseWordPressHomesOp
           action: 'sync',
           agentId: agent.id,
           siteUrl: syncUrl,
+          homeEndpoint: endpoint || homeEndpoint || undefined,
           useAiExtraction: useAiExtraction ?? false,
         },
       });
@@ -131,8 +137,14 @@ export function useWordPressHomes({ agent, onSyncComplete }: UseWordPressHomesOp
       if (error) throw error;
 
       if (data.success) {
-        const message = `Synced ${data.total} homes (${data.created} new, ${data.updated} updated)`;
-        toast.success('Homes synchronized', { description: message });
+        const parts = [];
+        if (data.created > 0) parts.push(`${data.created} new`);
+        if (data.updated > 0) parts.push(`${data.updated} updated`);
+        if (data.deleted > 0) parts.push(`${data.deleted} removed`);
+        
+        toast.success('Homes synchronized', { 
+          description: parts.length > 0 ? parts.join(', ') : 'No changes' 
+        });
         onSyncComplete?.();
       } else {
         toast.error('Sync failed', { description: data.error || 'Unknown error' });
@@ -142,7 +154,7 @@ export function useWordPressHomes({ agent, onSyncComplete }: UseWordPressHomesOp
         success: data.success,
         created: data.created,
         updated: data.updated,
-        skipped: data.skipped,
+        deleted: data.deleted,
         total: data.total,
         errors: data.errors,
       };
@@ -154,7 +166,7 @@ export function useWordPressHomes({ agent, onSyncComplete }: UseWordPressHomesOp
     } finally {
       setIsSyncing(false);
     }
-  }, [agent?.id, siteUrl, onSyncComplete]);
+  }, [agent?.id, siteUrl, homeEndpoint, onSyncComplete]);
 
   const clearTestResult = useCallback(() => {
     setTestResult(null);
@@ -162,6 +174,7 @@ export function useWordPressHomes({ agent, onSyncComplete }: UseWordPressHomesOp
 
   return {
     siteUrl,
+    homeEndpoint,
     lastSync,
     homeCount,
     isConnected,

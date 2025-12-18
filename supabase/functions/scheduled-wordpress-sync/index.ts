@@ -18,6 +18,8 @@ const corsHeaders = {
 
 interface WordPressConfig {
   site_url: string;
+  community_endpoint?: string;
+  home_endpoint?: string;
   last_community_sync?: string;
   last_home_sync?: string;
   community_sync_interval?: string;
@@ -47,7 +49,7 @@ function intervalToMinutes(interval: string): number | null {
  * Check if sync is due based on interval and last sync time
  */
 function isSyncDue(lastSync: string | undefined, intervalMinutes: number): boolean {
-  if (!lastSync) return true; // Never synced, always due
+  if (!lastSync) return true;
   
   const lastSyncTime = new Date(lastSync).getTime();
   const now = Date.now();
@@ -57,7 +59,6 @@ function isSyncDue(lastSync: string | undefined, intervalMinutes: number): boole
 }
 
 Deno.serve(async (req: Request) => {
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -113,10 +114,10 @@ Deno.serve(async (req: Request) => {
               action: 'sync',
               agentId: agent.id,
               siteUrl: wpConfig.site_url,
+              // Pass stored endpoint configuration
+              communityEndpoint: wpConfig.community_endpoint,
             },
             headers: {
-              // Use service role for internal calls - create a mock auth header
-              // The function will use service role key directly for scheduled calls
               'x-scheduled-sync': 'true',
             },
           });
@@ -125,7 +126,7 @@ Deno.serve(async (req: Request) => {
             console.error(`❌ Agent ${agent.id}: Community sync failed:`, error);
             results.errors.push(`Agent ${agent.id} community sync: ${error.message}`);
           } else {
-            console.log(`✅ Agent ${agent.id}: Community sync complete - ${data?.created || 0} created, ${data?.updated || 0} updated`);
+            console.log(`✅ Agent ${agent.id}: Community sync complete - ${data?.created || 0} created, ${data?.updated || 0} updated, ${data?.deleted || 0} deleted`);
             results.communitySyncs++;
           }
         } catch (syncError) {
@@ -147,6 +148,8 @@ Deno.serve(async (req: Request) => {
               action: 'sync',
               agentId: agent.id,
               siteUrl: wpConfig.site_url,
+              // Pass stored endpoint configuration
+              homeEndpoint: wpConfig.home_endpoint,
             },
             headers: {
               'x-scheduled-sync': 'true',
@@ -157,7 +160,7 @@ Deno.serve(async (req: Request) => {
             console.error(`❌ Agent ${agent.id}: Home sync failed:`, error);
             results.errors.push(`Agent ${agent.id} home sync: ${error.message}`);
           } else {
-            console.log(`✅ Agent ${agent.id}: Home sync complete - ${data?.created || 0} created, ${data?.updated || 0} updated`);
+            console.log(`✅ Agent ${agent.id}: Home sync complete - ${data?.created || 0} created, ${data?.updated || 0} updated, ${data?.deleted || 0} deleted`);
             results.homeSyncs++;
           }
         } catch (syncError) {
