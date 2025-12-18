@@ -9,3 +9,4 @@ export { SetupStepCard } from './SetupStepCard';
 export { SetupChecklist } from './SetupChecklist';
 export { VideoPlaceholder } from './VideoPlaceholder';
 export { GoFurtherSection } from './GoFurtherSection';
+export { CompletionCelebration } from './CompletionCelebration';
