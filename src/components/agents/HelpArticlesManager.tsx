@@ -44,6 +44,7 @@ import {
   type HelpArticleWithMeta 
 } from '@/components/data-table/columns/help-articles-columns';
 import { logger } from '@/utils/logger';
+import { supabase } from '@/integrations/supabase/client';
 
 interface HelpArticlesManagerProps {
   agentId: string;
@@ -431,15 +432,32 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
       category: category?.name || '',
       featured_image: data.featured_image || undefined,
     });
-    // Update selected article
+    // Update selected article with camelCase properties
     setSelectedArticle(prev => prev ? {
       ...prev,
       title: data.title,
       content: data.content,
-      category_id: data.category_id,
-      category_name: category?.name || '',
-      featured_image: data.featured_image,
+      categoryId: data.category_id,
+      categoryName: category?.name || '',
+      featuredImage: data.featured_image,
     } : null);
+  };
+
+  // Re-embed article
+  const handleReembedArticle = async (id: string) => {
+    const article = articles.find(a => a.id === id);
+    if (!article) return;
+    
+    try {
+      const { error } = await supabase.functions.invoke('embed-help-article', {
+        body: { articleId: id, title: article.title, content: article.content },
+      });
+      if (error) throw error;
+      toast.success('Article re-embedded successfully');
+    } catch (err) {
+      console.error('Re-embed failed:', err);
+      toast.error('Failed to re-embed article');
+    }
   };
 
   // Active filter count
@@ -995,6 +1013,7 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
           if (articleToDelete) handleDelete(articleToDelete);
           setSheetOpen(false);
         }}
+        onReembed={handleReembedArticle}
         categories={categories.map(c => ({
           id: c.id,
           agent_id: agentId,
