@@ -7,13 +7,12 @@
  * @module components/agents/HelpArticlesManager
  */
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import {
   useReactTable,
   getCoreRowModel,
   getFilteredRowModel,
   getSortedRowModel,
-  flexRender,
   type SortingState,
   type RowSelectionState,
 } from '@tanstack/react-table';
@@ -28,9 +27,10 @@ import { LoadingState } from '@/components/ui/loading-state';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Separator } from '@/components/ui/separator';
 import { 
-  BookOpen01, XClose, Image01, Plus, FilterLines, SearchSm, Trash01, RefreshCcw01, ChevronDown 
+  BookOpen01, XClose, Image01, Plus, FilterLines, SearchSm, Trash01, RefreshCcw01, ChevronDown, X 
 } from '@untitledui/icons';
 import { useHelpArticles } from '@/hooks/useHelpArticles';
 import { toast } from '@/lib/toast';
@@ -39,6 +39,9 @@ import { CATEGORY_ICON_OPTIONS, CategoryIcon, type CategoryIconName } from '@/wi
 import { BulkImportDialog } from './BulkImportDialog';
 import { DeleteCategoryDialog } from './DeleteCategoryDialog';
 import { ArticleDetailsSheet } from './articles/ArticleDetailsSheet';
+import { DataTable } from '@/components/data-table/DataTable';
+import { DataTableToolbar } from '@/components/data-table/DataTableToolbar';
+import { SimpleDeleteDialog } from '@/components/ui/simple-delete-dialog';
 import { 
   createHelpArticlesColumns, 
   type HelpArticleWithMeta 
@@ -49,6 +52,19 @@ import { supabase } from '@/integrations/supabase/client';
 interface HelpArticlesManagerProps {
   agentId: string;
   userId: string;
+}
+
+// Status labels for display
+const STATUS_LABELS: Record<string, string> = {
+  embedded: 'Embedded',
+  pending: 'Not Embedded',
+};
+
+// Interface for active filters
+interface ActiveFilter {
+  type: 'category' | 'status';
+  value: string;
+  label: string;
 }
 
 export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProps) => {
@@ -72,10 +88,13 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [globalFilter, setGlobalFilter] = useState('');
   
-  // Filter state
-  const [categoryFilter, setCategoryFilter] = useState<string>('all');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [filtersOpen, setFiltersOpen] = useState(false);
+  // Filter state - multi-select arrays
+  const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
+  const [statusFilter, setStatusFilter] = useState<string[]>([]);
+  
+  // Infinite scroll state
+  const [displayCount, setDisplayCount] = useState(20);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
   
   // Dialog state
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -83,6 +102,9 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
   const [editCategoryDialogOpen, setEditCategoryDialogOpen] = useState(false);
   const [deleteCategoryDialogOpen, setDeleteCategoryDialogOpen] = useState(false);
   const [bulkImportOpen, setBulkImportOpen] = useState(false);
+  
+  // Delete confirmation state
+  const [deleteArticle_, setDeleteArticle] = useState<HelpArticleWithMeta | null>(null);
   
   // Edit state
   const [editingCategoryName, setEditingCategoryName] = useState('');
@@ -131,29 +153,99 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
         orderIndex: article.order,
         featuredImage: article.featured_image || null,
         hasEmbedding: article.has_embedding,
-        createdAt: null, // Not available in current HelpArticle type
+        createdAt: null,
         updatedAt: null,
       };
     });
   }, [articles, categories]);
 
-  // Filter articles
+  // Get unique categories for filter
+  const uniqueCategories = useMemo(() => {
+    const cats = new Set<string>();
+    articlesWithMeta.forEach(a => {
+      if (a.categoryName) cats.add(a.categoryName);
+    });
+    return Array.from(cats).sort();
+  }, [articlesWithMeta]);
+
+  // Filter articles with multi-select
   const filteredArticles = useMemo(() => {
     return articlesWithMeta.filter(article => {
-      // Category filter
-      if (categoryFilter !== 'all' && article.categoryName !== categoryFilter) {
+      // Category filter (multi-select)
+      if (categoryFilter.length > 0 && !categoryFilter.includes(article.categoryName)) {
         return false;
       }
-      // Status filter
-      if (statusFilter === 'embedded' && !article.hasEmbedding) {
-        return false;
-      }
-      if (statusFilter === 'pending' && article.hasEmbedding) {
-        return false;
+      // Status filter (multi-select)
+      if (statusFilter.length > 0) {
+        const articleStatus = article.hasEmbedding ? 'embedded' : 'pending';
+        if (!statusFilter.includes(articleStatus)) {
+          return false;
+        }
       }
       return true;
     });
   }, [articlesWithMeta, categoryFilter, statusFilter]);
+
+  // Active filters for chips
+  const activeFilters: ActiveFilter[] = useMemo(() => {
+    const filters: ActiveFilter[] = [];
+    categoryFilter.forEach(cat => {
+      filters.push({
+        type: 'category',
+        value: cat,
+        label: cat,
+      });
+    });
+    statusFilter.forEach(status => {
+      filters.push({
+        type: 'status',
+        value: status,
+        label: STATUS_LABELS[status] || status,
+      });
+    });
+    return filters;
+  }, [categoryFilter, statusFilter]);
+
+  // Clear individual filter
+  const clearFilter = (type: ActiveFilter['type'], value: string) => {
+    if (type === 'category') setCategoryFilter(prev => prev.filter(v => v !== value));
+    if (type === 'status') setStatusFilter(prev => prev.filter(v => v !== value));
+  };
+
+  // Clear all filters
+  const clearAllFilters = () => {
+    setCategoryFilter([]);
+    setStatusFilter([]);
+  };
+
+  // Infinite scroll observer
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && displayCount < filteredArticles.length) {
+          setDisplayCount(prev => Math.min(prev + 20, filteredArticles.length));
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (loadMoreRef.current) {
+      observer.observe(loadMoreRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [filteredArticles.length, displayCount]);
+
+  // Reset display count when filters change
+  useEffect(() => {
+    setDisplayCount(20);
+  }, [categoryFilter, statusFilter, globalFilter]);
+
+  // Displayed articles with pagination
+  const displayedArticles = useMemo(
+    () => filteredArticles.slice(0, displayCount),
+    [filteredArticles, displayCount]
+  );
 
   // Get articles sorted by category and order for move operations
   const getArticlesByCategoryOrder = useCallback((categoryName: string) => {
@@ -169,11 +261,9 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
     
     if (currentIndex <= 0) return;
 
-    // Swap with previous article
     const newOrder = [...categoryArticles];
     [newOrder[currentIndex - 1], newOrder[currentIndex]] = [newOrder[currentIndex], newOrder[currentIndex - 1]];
     
-    // Convert back to HelpArticle format and update
     const updatedArticles = articles.map(a => {
       const newIndex = newOrder.findIndex(n => n.id === a.id);
       if (newIndex !== -1 && a.category === article.categoryName) {
@@ -195,11 +285,9 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
     
     if (currentIndex >= categoryArticles.length - 1) return;
 
-    // Swap with next article
     const newOrder = [...categoryArticles];
     [newOrder[currentIndex], newOrder[currentIndex + 1]] = [newOrder[currentIndex + 1], newOrder[currentIndex]];
     
-    // Convert back to HelpArticle format and update
     const updatedArticles = articles.map(a => {
       const newIndex = newOrder.findIndex(n => n.id === a.id);
       if (newIndex !== -1 && a.category === article.categoryName) {
@@ -228,20 +316,28 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
     return currentIndex < categoryArticles.length - 1;
   }, [getArticlesByCategoryOrder]);
 
-  // Delete handler
-  const handleDelete = useCallback(async (article: HelpArticleWithMeta) => {
+  // Set article for delete confirmation
+  const handleSetDeleteArticle = useCallback((article: HelpArticleWithMeta) => {
+    setDeleteArticle(article);
+  }, []);
+
+  // Delete confirmation handler
+  const handleDeleteConfirm = useCallback(async () => {
+    if (!deleteArticle_) return;
+    
     try {
-      await deleteArticle(article.id);
+      await deleteArticle(deleteArticle_.id);
       toast.success('Article deleted');
       // Close sheet if viewing deleted article
-      if (selectedArticle?.id === article.id) {
+      if (selectedArticle?.id === deleteArticle_.id) {
         setSheetOpen(false);
         setSelectedArticle(null);
       }
+      setDeleteArticle(null);
     } catch (error) {
       toast.error('Failed to delete article');
     }
-  }, [deleteArticle, selectedArticle]);
+  }, [deleteArticle, deleteArticle_, selectedArticle]);
 
   // View handler
   const handleView = useCallback((article: HelpArticleWithMeta) => {
@@ -252,16 +348,16 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
   // Column definitions
   const columns = useMemo(() => createHelpArticlesColumns({
     onView: handleView,
-    onDelete: handleDelete,
+    onDelete: handleSetDeleteArticle,
     onMoveUp: handleMoveUp,
     onMoveDown: handleMoveDown,
     canMoveUp,
     canMoveDown,
-  }), [handleView, handleDelete, handleMoveUp, handleMoveDown, canMoveUp, canMoveDown]);
+  }), [handleView, handleSetDeleteArticle, handleMoveUp, handleMoveDown, canMoveUp, canMoveDown]);
 
-  // Table instance
+  // Table instance with displayed (paginated) articles
   const table = useReactTable({
-    data: filteredArticles,
+    data: displayedArticles,
     columns,
     state: {
       sorting,
@@ -277,18 +373,23 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
     getSortedRowModel: getSortedRowModel(),
   });
 
-  // Bulk delete
-  const handleBulkDelete = async () => {
-    const selectedIds = Object.keys(rowSelection).filter(key => rowSelection[key]);
-    const selectedArticleItems = selectedIds.map(index => filteredArticles[parseInt(index)]).filter(Boolean);
-    
-    if (selectedArticleItems.length === 0) return;
-    
-    if (!confirm(`Are you sure you want to delete ${selectedArticleItems.length} article(s)?`)) return;
+  const selectedCount = Object.keys(rowSelection).length;
 
+  // Clear selection
+  const clearSelection = () => {
+    setRowSelection({});
+  };
+
+  // Bulk delete handler
+  const handleBulkDelete = async () => {
+    const selectedRows = table.getFilteredSelectedRowModel().rows;
+    if (selectedRows.length === 0) return;
+    
+    const count = selectedRows.length;
+    
     try {
-      await Promise.all(selectedArticleItems.map(a => deleteArticle(a.id)));
-      toast.success(`Deleted ${selectedArticleItems.length} articles`);
+      await Promise.all(selectedRows.map(row => deleteArticle(row.original.id)));
+      toast.success(`Deleted ${count} article${count > 1 ? 's' : ''}`);
       setRowSelection({});
     } catch (error) {
       toast.error('Failed to delete some articles');
@@ -460,13 +561,15 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
     }
   };
 
-  // Active filter count
-  const activeFilterCount = [
-    categoryFilter !== 'all',
-    statusFilter !== 'all',
-  ].filter(Boolean).length;
+  // Handle delete from sheet
+  const handleDeleteFromSheet = (id: string) => {
+    const articleToDelete = articlesWithMeta.find(a => a.id === id);
+    if (articleToDelete) {
+      setDeleteArticle(articleToDelete);
+    }
+    setSheetOpen(false);
+  };
 
-  const selectedCount = Object.values(rowSelection).filter(Boolean).length;
   const deletingCategoryArticleCount = articles.filter(a => a.category === deletingCategoryName).length;
   const otherCategories = categories.filter(c => c.name !== deletingCategoryName);
 
@@ -474,402 +577,435 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
     return <LoadingState size="md" text="Loading help articles..." />;
   }
 
-  return (
-    <div className="space-y-4">
-      {/* Toolbar */}
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-2 flex-1">
-          {/* Search */}
-          <div className="relative max-w-xs w-full">
-            <SearchSm className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Search articles..."
-              value={globalFilter}
-              onChange={(e) => setGlobalFilter(e.target.value)}
-              className="pl-9"
-            />
-          </div>
-
-          {/* Filters */}
-          <Popover open={filtersOpen} onOpenChange={setFiltersOpen}>
-            <PopoverTrigger asChild>
-              <Button variant="outline" size="sm" className="gap-2">
-                <FilterLines className="h-4 w-4" />
-                Filters
-                {activeFilterCount > 0 && (
-                  <Badge variant="secondary" className="ml-1 h-5 px-1.5">
-                    {activeFilterCount}
-                  </Badge>
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent align="start" className="w-64 space-y-4">
-              <div className="space-y-2">
-                <Label className="text-xs text-muted-foreground">Category</Label>
-                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Categories</SelectItem>
-                    {categories.map(cat => (
-                      <SelectItem key={cat.id} value={cat.name}>
-                        <div className="flex items-center gap-2">
-                          <CategoryIcon name={(cat.icon as CategoryIconName) || 'book'} className="h-4 w-4" />
-                          {cat.name}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+  // Filter Popover component
+  const FilterPopover = (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button variant="outline" className="gap-1.5">
+          <FilterLines size={16} />
+          Filters
+          {activeFilters.length > 0 && (
+            <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-xs">
+              {activeFilters.length}
+            </Badge>
+          )}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-72 p-4" align="end">
+        <div className="space-y-4">
+          {/* Category Filter */}
+          {uniqueCategories.length > 0 && (
+            <div className="space-y-2">
+              <Label className="text-xs font-medium text-muted-foreground uppercase">Category</Label>
+              <div className="space-y-2 max-h-32 overflow-y-auto">
+                {uniqueCategories.map(cat => (
+                  <div key={cat} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`cat-${cat}`}
+                      checked={categoryFilter.includes(cat)}
+                      onCheckedChange={(checked) => {
+                        setCategoryFilter(prev => 
+                          checked 
+                            ? [...prev, cat]
+                            : prev.filter(c => c !== cat)
+                        );
+                      }}
+                    />
+                    <Label htmlFor={`cat-${cat}`} className="text-sm font-normal cursor-pointer flex items-center gap-2">
+                      <CategoryIcon name={(categories.find(c => c.name === cat)?.icon as CategoryIconName) || 'book'} className="h-4 w-4" />
+                      {cat}
+                    </Label>
+                  </div>
+                ))}
               </div>
-              <div className="space-y-2">
-                <Label className="text-xs text-muted-foreground">Status</Label>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="embedded">Embedded</SelectItem>
-                    <SelectItem value="pending">Not Embedded</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              {activeFilterCount > 0 && (
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="w-full"
-                  onClick={() => {
-                    setCategoryFilter('all');
-                    setStatusFilter('all');
-                  }}
-                >
-                  Clear all filters
-                </Button>
-              )}
-            </PopoverContent>
-          </Popover>
-        </div>
-
-        {/* Actions */}
-        <div className="flex items-center gap-2">
-          {/* Bulk selection actions */}
-          {selectedCount > 0 && (
-            <div className="flex items-center gap-2 mr-2">
-              <span className="text-sm text-muted-foreground">{selectedCount} selected</span>
-              <Button size="sm" variant="ghost" onClick={() => setRowSelection({})}>
-                Clear
-              </Button>
-              <Button 
-                size="sm" 
-                variant="outline" 
-                className="text-destructive hover:text-destructive"
-                onClick={handleBulkDelete}
-              >
-                <Trash01 className="h-4 w-4 mr-1" />
-                Delete
-              </Button>
             </div>
           )}
 
-          {/* Embed All */}
-          {articles.some(a => !a.has_embedding) && (
-            <Button 
-              size="sm" 
-              variant="outline" 
-              onClick={handleEmbedAll}
-              disabled={isEmbedding}
-            >
-              <RefreshCcw01 className={`h-4 w-4 mr-1 ${isEmbedding ? 'animate-spin' : ''}`} />
-              {isEmbedding 
-                ? `Embedding ${embeddingProgress.current}/${embeddingProgress.total}...` 
-                : `Embed All (${articles.filter(a => !a.has_embedding).length})`
-              }
-            </Button>
-          )}
-          
-          <Button size="sm" variant="outline" onClick={() => setBulkImportOpen(true)}>
-            Import CSV
-          </Button>
+          {uniqueCategories.length > 0 && <Separator />}
 
-          {/* Category Management */}
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button size="sm" variant="outline" className="gap-1">
-                Categories
-                <ChevronDown className="h-3 w-3" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent align="end" className="w-64">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label className="text-xs text-muted-foreground">Manage Categories</Label>
-                  <Button 
-                    size="sm" 
-                    variant="ghost" 
-                    className="h-6 px-2"
-                    onClick={() => setNewCategoryDialogOpen(true)}
-                  >
-                    <Plus className="h-3 w-3 mr-1" />
-                    Add
-                  </Button>
-                </div>
-                {categories.length === 0 ? (
-                  <p className="text-sm text-muted-foreground py-2">No categories yet</p>
-                ) : (
-                  <div className="space-y-1 max-h-48 overflow-y-auto">
-                    {categories.map(cat => (
-                      <div key={cat.id} className="flex items-center justify-between p-2 rounded hover:bg-accent group">
-                        <div className="flex items-center gap-2">
-                          <CategoryIcon name={(cat.icon as CategoryIconName) || 'book'} className="h-4 w-4" />
-                          <span className="text-sm">{cat.name}</span>
-                          <Badge variant="secondary" className="h-5 px-1.5 text-xs">
-                            {articles.filter(a => a.category === cat.name).length}
-                          </Badge>
-                        </div>
-                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button 
-                            size="sm" 
-                            variant="ghost" 
-                            className="h-6 w-6 p-0"
-                            onClick={() => handleEditCategory(cat.name)}
-                          >
-                            <span className="text-xs">Edit</span>
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            variant="ghost" 
-                            className="h-6 w-6 p-0 text-destructive hover:text-destructive"
-                            onClick={() => handleDeleteCategoryClick(cat.name)}
-                          >
-                            <Trash01 className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+          {/* Status Filter */}
+          <div className="space-y-2">
+            <Label className="text-xs font-medium text-muted-foreground uppercase">Status</Label>
+            <div className="space-y-2">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="status-embedded"
+                  checked={statusFilter.includes('embedded')}
+                  onCheckedChange={(checked) => {
+                    setStatusFilter(prev => 
+                      checked 
+                        ? [...prev, 'embedded']
+                        : prev.filter(s => s !== 'embedded')
+                    );
+                  }}
+                />
+                <Label htmlFor="status-embedded" className="text-sm font-normal cursor-pointer">
+                  Embedded
+                </Label>
               </div>
-            </PopoverContent>
-          </Popover>
-
-          {/* Add Article */}
-          <Dialog open={dialogOpen} onOpenChange={(open) => {
-            setDialogOpen(open);
-            if (!open) resetForm();
-          }}>
-            <DialogTrigger asChild>
-              <Button size="sm">
-                <Plus className="h-4 w-4 mr-1" />
-                Add Article
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-3xl max-h-[85vh] overflow-hidden flex flex-col">
-              <DialogHeader>
-                <DialogTitle>Add Help Article</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 py-4 overflow-y-auto flex-1 pr-2">
-                <div className="space-y-2">
-                  <Label htmlFor="title">Title *</Label>
-                  <Input
-                    id="title"
-                    value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    placeholder="How to get started"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Content *</Label>
-                  <RichTextEditor
-                    content={formData.content}
-                    onChange={(html) => setFormData({ ...formData, content: html })}
-                    placeholder="Write your help article content here..."
-                    agentId={agentId}
-                    userId={userId}
-                    minHeight="250px"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="category">Category *</Label>
-                    <Select
-                      value={formData.category}
-                      onValueChange={(value) => setFormData({ ...formData, category: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {categories.map((cat) => (
-                          <SelectItem key={cat.name} value={cat.name}>
-                            <div className="flex items-center gap-2">
-                              <CategoryIcon name={(cat.icon as CategoryIconName) || 'book'} className="h-4 w-4" />
-                              {cat.name}
-                            </div>
-                          </SelectItem>
-                        ))}
-                        {categories.length === 0 && (
-                          <div className="p-2 text-sm text-muted-foreground">
-                            No categories yet. Add one first.
-                          </div>
-                        )}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                {/* Featured Image Upload */}
-                <div className="space-y-2">
-                  <Label>Featured Image (Hero)</Label>
-                  <p className="text-xs text-muted-foreground">
-                    This image will appear as a hero banner at the top of the article
-                  </p>
-                  {formData.featured_image ? (
-                    <div className="relative rounded-lg overflow-hidden">
-                      <img 
-                        src={formData.featured_image} 
-                        alt="Featured" 
-                        className="w-full h-40 object-cover"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                      <Button 
-                        size="sm" 
-                        variant="secondary" 
-                        className="absolute top-2 right-2"
-                        onClick={() => setFormData({ ...formData, featured_image: '' })}
-                      >
-                        <XClose className="h-4 w-4 mr-1" />
-                        Remove
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="border-2 border-dashed rounded-lg p-6 text-center hover:bg-muted/50 transition-colors">
-                      <input 
-                        type="file" 
-                        accept="image/*" 
-                        onChange={handleFeaturedImageUpload}
-                        className="hidden"
-                        id="featured-image-upload"
-                        disabled={featuredImageUploading}
-                      />
-                      <label htmlFor="featured-image-upload" className="cursor-pointer block">
-                        {featuredImageUploading ? (
-                          <div className="flex flex-col items-center">
-                            <div className="h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent mb-2" />
-                            <p className="text-sm text-muted-foreground">Uploading...</p>
-                          </div>
-                        ) : (
-                          <>
-                            <Image01 className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                            <p className="text-sm text-muted-foreground">Click to upload featured image</p>
-                            <p className="text-xs text-muted-foreground mt-1">Recommended: 1200×400px</p>
-                          </>
-                        )}
-                      </label>
-                    </div>
-                  )}
-                </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="status-pending"
+                  checked={statusFilter.includes('pending')}
+                  onCheckedChange={(checked) => {
+                    setStatusFilter(prev => 
+                      checked 
+                        ? [...prev, 'pending']
+                        : prev.filter(s => s !== 'pending')
+                    );
+                  }}
+                />
+                <Label htmlFor="status-pending" className="text-sm font-normal cursor-pointer">
+                  Not Embedded
+                </Label>
               </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => {
-                  setDialogOpen(false);
-                  resetForm();
-                }}>
-                  Cancel
-                </Button>
-                <Button onClick={handleSubmit}>Add Article</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </div>
-      </div>
+            </div>
+          </div>
 
-      {/* Active Filter Chips */}
-      {activeFilterCount > 0 && (
-        <div className="flex items-center gap-2 flex-wrap">
-          {categoryFilter !== 'all' && (
-            <Badge variant="secondary" className="gap-1">
-              Category: {categoryFilter}
-              <button 
-                onClick={() => setCategoryFilter('all')}
-                className="ml-1 hover:text-foreground"
+          {activeFilters.length > 0 && (
+            <>
+              <Separator />
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full"
+                onClick={clearAllFilters}
               >
-                <XClose className="h-3 w-3" />
-              </button>
-            </Badge>
-          )}
-          {statusFilter !== 'all' && (
-            <Badge variant="secondary" className="gap-1">
-              Status: {statusFilter === 'embedded' ? 'Embedded' : 'Not Embedded'}
-              <button 
-                onClick={() => setStatusFilter('all')}
-                className="ml-1 hover:text-foreground"
-              >
-                <XClose className="h-3 w-3" />
-              </button>
-            </Badge>
+                Clear all filters
+              </Button>
+            </>
           )}
         </div>
-      )}
+      </PopoverContent>
+    </Popover>
+  );
 
-      {/* Table or Empty State */}
+  return (
+    <div className="space-y-4">
+      {/* Empty State */}
       {articles.length === 0 && categories.length === 0 ? (
         <EmptyState
           icon={<BookOpen01 className="h-5 w-5 text-muted-foreground/50" />}
           title="No help articles yet"
           description="Create help articles to display in your chat widget's help tab"
-        />
-      ) : filteredArticles.length === 0 ? (
-        <EmptyState
-          icon={<SearchSm className="h-5 w-5 text-muted-foreground/50" />}
-          title="No articles found"
-          description="Try adjusting your search or filter criteria"
+          action={
+            <Button onClick={() => setDialogOpen(true)} size="sm">
+              <Plus className="h-4 w-4 mr-1" />
+              Add Article
+            </Button>
+          }
         />
       ) : (
-        <div className="border rounded-lg">
-          <Table>
-            <TableHeader>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => (
-                    <TableHead key={header.id}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(header.column.columnDef.header, header.getContext())}
-                    </TableHead>
-                  ))}
-                </TableRow>
-              ))}
-            </TableHeader>
-            <TableBody>
-              {table.getRowModel().rows.map((row) => (
-                <TableRow 
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                  className="cursor-pointer"
-                  onClick={(e) => {
-                    // Don't open sheet if clicking checkbox or action buttons
-                    const target = e.target as HTMLElement;
-                    if (target.closest('button') || target.closest('[role="checkbox"]')) {
-                      return;
-                    }
-                    handleView(row.original);
-                  }}
+        <>
+          {/* Bulk selection action bar */}
+          {selectedCount > 0 && (
+            <div className="flex items-center justify-between rounded-lg border bg-muted/50 px-4 py-2">
+              <span className="text-sm text-muted-foreground">
+                {selectedCount} article{selectedCount > 1 ? 's' : ''} selected
+              </span>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearSelection}
+                  className="h-8 gap-1.5"
                 >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </TableCell>
-                  ))}
-                </TableRow>
+                  <XClose className="h-4 w-4" />
+                  Clear
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleBulkDelete}
+                  className="h-8 gap-1.5"
+                >
+                  <Trash01 className="h-4 w-4" />
+                  Delete
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Toolbar */}
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2 flex-1">
+              <DataTableToolbar
+                table={table}
+                searchPlaceholder="Search articles..."
+                globalFilter
+                searchClassName="max-w-xs"
+              />
+              {FilterPopover}
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center gap-2">
+              {/* Embed All */}
+              {articles.some(a => !a.has_embedding) && (
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={handleEmbedAll}
+                  disabled={isEmbedding}
+                >
+                  <RefreshCcw01 className={`h-4 w-4 mr-1 ${isEmbedding ? 'animate-spin' : ''}`} />
+                  {isEmbedding 
+                    ? `Embedding ${embeddingProgress.current}/${embeddingProgress.total}...` 
+                    : `Embed All (${articles.filter(a => !a.has_embedding).length})`
+                  }
+                </Button>
+              )}
+              
+              <Button size="sm" variant="outline" onClick={() => setBulkImportOpen(true)}>
+                Import CSV
+              </Button>
+
+              {/* Category Management */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button size="sm" variant="outline" className="gap-1">
+                    Categories
+                    <ChevronDown className="h-3 w-3" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent align="end" className="w-64">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs text-muted-foreground">Manage Categories</Label>
+                      <Button 
+                        size="sm" 
+                        variant="ghost" 
+                        className="h-6 px-2"
+                        onClick={() => setNewCategoryDialogOpen(true)}
+                      >
+                        <Plus className="h-3 w-3 mr-1" />
+                        Add
+                      </Button>
+                    </div>
+                    {categories.length === 0 ? (
+                      <p className="text-sm text-muted-foreground py-2">No categories yet</p>
+                    ) : (
+                      <div className="space-y-1 max-h-48 overflow-y-auto">
+                        {categories.map(cat => (
+                          <div key={cat.id} className="flex items-center justify-between p-2 rounded hover:bg-accent group">
+                            <div className="flex items-center gap-2">
+                              <CategoryIcon name={(cat.icon as CategoryIconName) || 'book'} className="h-4 w-4" />
+                              <span className="text-sm">{cat.name}</span>
+                              <Badge variant="secondary" className="h-5 px-1.5 text-xs">
+                                {articles.filter(a => a.category === cat.name).length}
+                              </Badge>
+                            </div>
+                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Button 
+                                size="sm" 
+                                variant="ghost" 
+                                className="h-6 w-6 p-0"
+                                onClick={() => handleEditCategory(cat.name)}
+                              >
+                                <span className="text-xs">Edit</span>
+                              </Button>
+                              <Button 
+                                size="sm" 
+                                variant="ghost" 
+                                className="h-6 w-6 p-0 text-destructive hover:text-destructive"
+                                onClick={() => handleDeleteCategoryClick(cat.name)}
+                              >
+                                <Trash01 className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </PopoverContent>
+              </Popover>
+
+              {/* Add Article */}
+              <Dialog open={dialogOpen} onOpenChange={(open) => {
+                setDialogOpen(open);
+                if (!open) resetForm();
+              }}>
+                <DialogTrigger asChild>
+                  <Button size="sm">
+                    <Plus className="h-4 w-4 mr-1" />
+                    Add Article
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-3xl max-h-[85vh] overflow-hidden flex flex-col">
+                  <DialogHeader>
+                    <DialogTitle>Add Help Article</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4 overflow-y-auto flex-1 pr-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="title">Title *</Label>
+                      <Input
+                        id="title"
+                        value={formData.title}
+                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                        placeholder="How to get started"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Content *</Label>
+                      <RichTextEditor
+                        content={formData.content}
+                        onChange={(html) => setFormData({ ...formData, content: html })}
+                        placeholder="Write your help article content here..."
+                        agentId={agentId}
+                        userId={userId}
+                        minHeight="250px"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="category">Category *</Label>
+                        <Select
+                          value={formData.category}
+                          onValueChange={(value) => setFormData({ ...formData, category: value })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select category" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {categories.map((cat) => (
+                              <SelectItem key={cat.name} value={cat.name}>
+                                <div className="flex items-center gap-2">
+                                  <CategoryIcon name={(cat.icon as CategoryIconName) || 'book'} className="h-4 w-4" />
+                                  {cat.name}
+                                </div>
+                              </SelectItem>
+                            ))}
+                            {categories.length === 0 && (
+                              <div className="p-2 text-sm text-muted-foreground">
+                                No categories yet. Add one first.
+                              </div>
+                            )}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    {/* Featured Image Upload */}
+                    <div className="space-y-2">
+                      <Label>Featured Image (Hero)</Label>
+                      <p className="text-xs text-muted-foreground">
+                        This image will appear as a hero banner at the top of the article
+                      </p>
+                      {formData.featured_image ? (
+                        <div className="relative rounded-lg overflow-hidden">
+                          <img 
+                            src={formData.featured_image} 
+                            alt="Featured" 
+                            className="w-full h-40 object-cover"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                          <Button 
+                            size="sm" 
+                            variant="secondary" 
+                            className="absolute top-2 right-2"
+                            onClick={() => setFormData({ ...formData, featured_image: '' })}
+                          >
+                            <XClose className="h-4 w-4 mr-1" />
+                            Remove
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="border-2 border-dashed rounded-lg p-6 text-center hover:bg-muted/50 transition-colors">
+                          <input 
+                            type="file" 
+                            accept="image/*" 
+                            onChange={handleFeaturedImageUpload}
+                            className="hidden"
+                            id="featured-image-upload"
+                            disabled={featuredImageUploading}
+                          />
+                          <label htmlFor="featured-image-upload" className="cursor-pointer block">
+                            {featuredImageUploading ? (
+                              <div className="flex flex-col items-center">
+                                <div className="h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent mb-2" />
+                                <p className="text-sm text-muted-foreground">Uploading...</p>
+                              </div>
+                            ) : (
+                              <>
+                                <Image01 className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                                <p className="text-sm text-muted-foreground">Click to upload featured image</p>
+                                <p className="text-xs text-muted-foreground mt-1">Recommended: 1200×400px</p>
+                              </>
+                            )}
+                          </label>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => {
+                      setDialogOpen(false);
+                      resetForm();
+                    }}>
+                      Cancel
+                    </Button>
+                    <Button onClick={handleSubmit}>Add Article</Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </div>
+          </div>
+
+          {/* Active Filter Chips */}
+          {activeFilters.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2">
+              {activeFilters.map((filter, index) => (
+                <Badge
+                  key={`${filter.type}-${filter.value}-${index}`}
+                  variant="secondary"
+                  className="gap-1 pr-1"
+                >
+                  {filter.label}
+                  <button
+                    onClick={() => clearFilter(filter.type, filter.value)}
+                    className="ml-1 rounded-full p-0.5 hover:bg-muted-foreground/20"
+                  >
+                    <X size={12} />
+                  </button>
+                </Badge>
               ))}
-            </TableBody>
-          </Table>
-        </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearAllFilters}
+                className="h-6 px-2 text-xs"
+              >
+                Clear all
+              </Button>
+            </div>
+          )}
+
+          {/* DataTable or Empty Search State */}
+          {filteredArticles.length === 0 ? (
+            <EmptyState
+              icon={<SearchSm className="h-5 w-5 text-muted-foreground/50" />}
+              title="No articles found"
+              description="Try adjusting your search or filter criteria"
+            />
+          ) : (
+            <DataTable
+              table={table}
+              columns={columns}
+              onRowClick={handleView}
+              emptyMessage="No articles found."
+            />
+          )}
+
+          {/* Infinite scroll trigger */}
+          {displayCount < filteredArticles.length && (
+            <div ref={loadMoreRef} className="h-10 flex items-center justify-center">
+              <span className="text-sm text-muted-foreground">Loading more...</span>
+            </div>
+          )}
+        </>
       )}
 
       {/* Add Category Dialog */}
@@ -1008,11 +1144,7 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
         open={sheetOpen}
         onOpenChange={setSheetOpen}
         onSave={handleSaveArticle}
-        onDelete={(id) => {
-          const articleToDelete = articlesWithMeta.find(a => a.id === id);
-          if (articleToDelete) handleDelete(articleToDelete);
-          setSheetOpen(false);
-        }}
+        onDelete={handleDeleteFromSheet}
         onReembed={handleReembedArticle}
         categories={categories.map(c => ({
           id: c.id,
@@ -1027,6 +1159,15 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
         }))}
         agentId={agentId}
         userId={userId}
+      />
+
+      {/* Delete confirmation dialog */}
+      <SimpleDeleteDialog
+        open={!!deleteArticle_}
+        onOpenChange={(open) => !open && setDeleteArticle(null)}
+        title="Delete Article"
+        description="Are you sure you want to delete this article? This action cannot be undone."
+        onConfirm={handleDeleteConfirm}
       />
     </div>
   );
