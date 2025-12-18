@@ -197,7 +197,7 @@ export const createHelpArticlesColumns = ({
     size: 150,
     minSize: 120,
     maxSize: 180,
-    header: () => <span>Category</span>,
+    header: () => <span className="text-xs font-medium">Category</span>,
     cell: ({ row }) => {
       const article = row.original;
       const CategoryIcon = getCategoryIcon(article.categoryIcon);
@@ -218,7 +218,7 @@ export const createHelpArticlesColumns = ({
     size: 90,
     minSize: 90,
     maxSize: 100,
-    header: () => <span>Status</span>,
+    header: () => <span className="text-xs font-medium">Status</span>,
     cell: ({ row }) => {
       const hasEmbedding = row.original.hasEmbedding;
       
@@ -270,7 +270,7 @@ export const createHelpArticlesColumns = ({
     size: 150,
     minSize: 150,
     maxSize: 150,
-    header: () => <span>Actions</span>,
+    header: () => <span className="text-xs font-medium">Actions</span>,
     cell: ({ row }) => {
       const article = row.original;
       const canUp = canMoveUp(article);
