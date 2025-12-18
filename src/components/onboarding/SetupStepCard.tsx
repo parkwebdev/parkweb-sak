@@ -1,8 +1,8 @@
 /**
  * Setup Step Card Component
  * 
- * Individual expandable step card for the onboarding checklist.
- * Shows completion state, title, subtitle, and CTA button.
+ * Borderless expandable step matching Intercom's minimal onboarding style.
+ * Shows inline video placeholder when expanded.
  * 
  * @module components/onboarding/SetupStepCard
  */
@@ -11,99 +11,64 @@ import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { CheckCircle, ChevronRight } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
+import { VideoPlaceholder } from './VideoPlaceholder';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
-import { springs } from '@/lib/motion-variants';
 import type { OnboardingStep } from '@/hooks/useOnboardingProgress';
 
 interface SetupStepCardProps {
   step: OnboardingStep;
-  stepNumber: number;
   isExpanded: boolean;
-  isCurrent: boolean;
   onClick: () => void;
   onAction: () => void;
 }
 
 export const SetupStepCard: React.FC<SetupStepCardProps> = ({
   step,
-  stepNumber,
   isExpanded,
-  isCurrent,
   onClick,
   onAction,
 }) => {
   const prefersReducedMotion = useReducedMotion();
-  const Icon = step.icon;
-
-  // Determine visual state
   const isComplete = step.isComplete;
 
   return (
-    <motion.div
-      className={`
-        rounded-lg border transition-colors cursor-pointer
-        ${isComplete 
-          ? 'bg-status-active/5 dark:bg-status-active/10 border-status-active/20' 
-          : isCurrent 
-            ? 'bg-card border-primary ring-2 ring-primary/20' 
-            : 'bg-muted/50 dark:bg-muted/30 border-border hover:border-border/80'
-        }
-      `}
-      onClick={onClick}
-      layout={!prefersReducedMotion}
-      transition={prefersReducedMotion ? { duration: 0 } : springs.smooth}
-    >
-      {/* Header - always visible */}
-      <div className="flex items-center gap-3 p-4">
+    <div className="border-b border-border last:border-b-0">
+      {/* Header row - always visible */}
+      <button
+        onClick={onClick}
+        className="w-full flex items-center gap-3 py-3 px-1 hover:bg-muted/50 rounded-lg transition-colors text-left"
+      >
         {/* Step indicator */}
         <div className="flex-shrink-0">
           {isComplete ? (
             <motion.div
               initial={prefersReducedMotion ? false : { scale: 0 }}
               animate={{ scale: 1 }}
-              transition={springs.bouncy}
+              transition={{ type: 'spring', stiffness: 500, damping: 25 }}
             >
-              <CheckCircle size={24} className="text-status-active" />
+              <CheckCircle size={20} className="text-status-active" />
             </motion.div>
           ) : (
-            <div className={`
-              w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium
-              ${isCurrent 
-                ? 'bg-primary text-primary-foreground' 
-                : 'bg-muted-foreground/20 text-muted-foreground'
-              }
-            `}>
-              {stepNumber}
-            </div>
+            <div className="w-5 h-5 rounded-full border-2 border-muted-foreground/40" />
           )}
         </div>
 
-        {/* Title and icon */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <Icon size={16} className={isComplete ? 'text-status-active' : 'text-muted-foreground'} />
-            <h3 className={`text-base font-medium truncate ${isComplete ? 'text-status-active' : 'text-foreground'}`}>
-              {step.title}
-            </h3>
-          </div>
-          {!isExpanded && (
-            <p className="text-sm text-muted-foreground truncate mt-0.5">
-              {isComplete ? 'Completed' : step.subtitle}
-            </p>
-          )}
-        </div>
+        {/* Title */}
+        <span className={`flex-1 text-sm font-medium ${isComplete ? 'text-muted-foreground line-through' : 'text-foreground'}`}>
+          {step.title}
+        </span>
 
-        {/* Chevron indicator */}
+        {/* Chevron */}
         <motion.div
           animate={{ rotate: isExpanded ? 90 : 0 }}
-          transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.2 }}
+          transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.15 }}
           className="flex-shrink-0"
         >
-          <ChevronRight size={20} className="text-muted-foreground" />
+          <ChevronRight size={18} className="text-muted-foreground" />
         </motion.div>
-      </div>
+      </button>
 
-      {/* Expanded content */}
+      {/* Expanded content with inline video */}
       <AnimatePresence initial={false}>
         {isExpanded && (
           <motion.div
@@ -113,26 +78,34 @@ export const SetupStepCard: React.FC<SetupStepCardProps> = ({
             transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.2, ease: 'easeOut' }}
             className="overflow-hidden"
           >
-            <div className="px-4 pb-4 pt-0">
-              <div className="pl-9">
-                <p className="text-sm text-muted-foreground mb-4">
-                  {step.description}
-                </p>
-                <Button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onAction();
-                  }}
-                  size="sm"
-                  variant={isComplete ? 'outline' : 'default'}
-                >
-                  {step.action.label}
-                </Button>
+            <div className="pb-4 pl-8 pr-1">
+              <div className="flex flex-col sm:flex-row gap-4">
+                {/* Left: Description and CTA */}
+                <div className="flex-1 space-y-3">
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    {step.description}
+                  </p>
+                  <Button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onAction();
+                    }}
+                    size="sm"
+                    variant={isComplete ? 'outline' : 'default'}
+                  >
+                    {step.action.label}
+                  </Button>
+                </div>
+
+                {/* Right: Video placeholder */}
+                <div className="w-full sm:w-48 md:w-56 flex-shrink-0">
+                  <VideoPlaceholder stepId={step.id} />
+                </div>
               </div>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
-    </motion.div>
+    </div>
   );
 };
