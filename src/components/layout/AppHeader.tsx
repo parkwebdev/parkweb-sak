@@ -6,7 +6,6 @@
 import React, { useEffect, useState } from 'react';
 import { Menu01 as Menu } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
-import { SearchInput } from '@/components/SearchInput';
 import { NotificationCenter } from '@/components/notifications/NotificationCenter';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -73,7 +72,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ onMenuClick }) => {
 
   return (
     <header className="flex items-center justify-between px-4 lg:px-6 py-3 border-b border-border bg-card/50 backdrop-blur-sm z-30 relative">
-      {/* Left side - Menu and Search */}
+      {/* Left side - Menu */}
       <div className="flex items-center gap-4 flex-1">
         {/* Mobile menu button */}
         <Button
@@ -85,11 +84,6 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ onMenuClick }) => {
         >
           <Menu size={18} aria-hidden="true" />
         </Button>
-
-        {/* Search - hidden on mobile */}
-        <div className="hidden md:block flex-1 max-w-md">
-          <SearchInput placeholder="Search everything..." />
-        </div>
       </div>
 
       {/* Right side actions */}
