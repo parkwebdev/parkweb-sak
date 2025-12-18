@@ -105,6 +105,7 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
   
   // Delete confirmation state
   const [deleteArticle_, setDeleteArticle] = useState<HelpArticleWithMeta | null>(null);
+  const [bulkDeletePending, setBulkDeletePending] = useState(false);
   
   // Edit state
   const [editingCategoryName, setEditingCategoryName] = useState('');
@@ -139,24 +140,32 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
     icon: 'book' as CategoryIconName,
   });
 
-  // Transform articles to include category metadata
+  // Transform articles to include category metadata and sort by category then orderIndex
   const articlesWithMeta: HelpArticleWithMeta[] = useMemo(() => {
-    return articles.map(article => {
-      const category = categories.find(c => c.name === article.category);
-      return {
-        id: article.id,
-        title: article.title,
-        content: article.content,
-        categoryId: category?.id || '',
-        categoryName: article.category,
-        categoryIcon: category?.icon || 'book',
-        orderIndex: article.order,
-        featuredImage: article.featured_image || null,
-        hasEmbedding: article.has_embedding,
-        createdAt: null,
-        updatedAt: null,
-      };
-    });
+    return articles
+      .map(article => {
+        const category = categories.find(c => c.name === article.category);
+        return {
+          id: article.id,
+          title: article.title,
+          content: article.content,
+          categoryId: category?.id || '',
+          categoryName: article.category,
+          categoryIcon: category?.icon || 'book',
+          orderIndex: article.order,
+          featuredImage: article.featured_image || null,
+          hasEmbedding: article.has_embedding,
+          createdAt: null,
+          updatedAt: null,
+        };
+      })
+      .sort((a, b) => {
+        // Sort by category first, then by orderIndex within category
+        if (a.categoryName !== b.categoryName) {
+          return a.categoryName.localeCompare(b.categoryName);
+        }
+        return (a.orderIndex || 0) - (b.orderIndex || 0);
+      });
   }, [articles, categories]);
 
   // Get unique categories for filter
@@ -380,11 +389,16 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
     setRowSelection({});
   };
 
-  // Bulk delete handler
-  const handleBulkDelete = async () => {
+  // Bulk delete handler - opens confirmation dialog
+  const handleBulkDelete = () => {
     const selectedRows = table.getFilteredSelectedRowModel().rows;
     if (selectedRows.length === 0) return;
-    
+    setBulkDeletePending(true);
+  };
+
+  // Bulk delete confirmation handler
+  const handleBulkDeleteConfirm = async () => {
+    const selectedRows = table.getFilteredSelectedRowModel().rows;
     const count = selectedRows.length;
     
     try {
@@ -393,6 +407,8 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
       setRowSelection({});
     } catch (error) {
       toast.error('Failed to delete some articles');
+    } finally {
+      setBulkDeletePending(false);
     }
   };
 
@@ -1168,6 +1184,15 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
         title="Delete Article"
         description="Are you sure you want to delete this article? This action cannot be undone."
         onConfirm={handleDeleteConfirm}
+      />
+
+      {/* Bulk delete confirmation dialog */}
+      <SimpleDeleteDialog
+        open={bulkDeletePending}
+        onOpenChange={setBulkDeletePending}
+        title="Delete Selected Articles"
+        description={`Are you sure you want to delete ${selectedCount} article${selectedCount !== 1 ? 's' : ''}? This action cannot be undone.`}
+        onConfirm={handleBulkDeleteConfirm}
       />
     </div>
   );
