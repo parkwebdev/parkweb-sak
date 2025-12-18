@@ -708,12 +708,11 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
           title="No help articles yet"
           description="Create help articles to display in your chat widget's help tab"
           action={
-            <div className="flex items-center gap-2">
+            <div className="flex items-center justify-center gap-2">
               <Button onClick={() => setDialogOpen(true)} size="sm">
                 Add Article
               </Button>
               <Button variant="outline" size="sm" onClick={() => setBulkImportOpen(true)}>
-                <Upload01 className="h-4 w-4 mr-1.5" />
                 Import CSV
               </Button>
             </div>
