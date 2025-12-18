@@ -126,15 +126,23 @@ export const PreviewChat: React.FC<PreviewChatProps> = ({
         true       // previewMode - skip persistence
       );
 
+      // DEBUG: Log API response to trace link previews and call actions
+      console.log('[PreviewChat] API Response:', {
+        response: response.response?.substring(0, 100),
+        linkPreviews: response.linkPreviews,
+        callActions: response.callActions,
+        quickReplies: response.quickReplies,
+      });
+
       // Add AI response with all rich content
       const assistantMessage: Message = {
         id: `assistant-${Date.now()}`,
         role: 'assistant',
         content: response.response || 'Sorry, I could not generate a response.',
         timestamp: new Date(),
-        linkPreviews: response.linkPreviews,
-        quickReplies: response.quickReplies,
-        callActions: response.callActions,
+        linkPreviews: response.linkPreviews || [],
+        quickReplies: response.quickReplies || [],
+        callActions: response.callActions || [],
         dayPicker: response.dayPicker,
         timePicker: response.timePicker,
         bookingConfirmed: response.bookingConfirmed,
@@ -276,15 +284,29 @@ export const PreviewChat: React.FC<PreviewChatProps> = ({
                       style={message.role === 'user' ? { backgroundColor: 'rgb(1 110 237 / 7%)' } : undefined}
                     >
                       <p className="whitespace-pre-wrap break-words">
-                        {message.role === 'assistant' 
-                          ? stripPhoneNumbersFromContent(
-                              stripUrlsFromContent(
-                                message.content.replace(/\*\*(.*?)\*\*/g, '$1'),
-                                !!(message.linkPreviews && message.linkPreviews.length > 0)
-                              ),
-                              !!(message.callActions && message.callActions.length > 0)
-                            )
-                          : message.content}
+                        {(() => {
+                          if (message.role !== 'assistant') return message.content;
+                          
+                          const hasLinkPreviews = !!(message.linkPreviews && message.linkPreviews.length > 0);
+                          const hasCallActions = !!(message.callActions && message.callActions.length > 0);
+                          
+                          // DEBUG: Log stripping conditions and data
+                          console.log('[PreviewChat] Content processing:', {
+                            hasLinkPreviews,
+                            hasCallActions,
+                            linkPreviews: message.linkPreviews,
+                            callActions: message.callActions,
+                            contentPreview: message.content.substring(0, 100),
+                          });
+                          
+                          let processed = message.content.replace(/\*\*(.*?)\*\*/g, '$1');
+                          processed = stripUrlsFromContent(processed, hasLinkPreviews);
+                          processed = stripPhoneNumbersFromContent(processed, hasCallActions);
+                          
+                          console.log('[PreviewChat] After stripping:', processed.substring(0, 100));
+                          
+                          return processed;
+                        })()}
                       </p>
                       
                       {/* Link Previews (inside bubble for assistant) */}
