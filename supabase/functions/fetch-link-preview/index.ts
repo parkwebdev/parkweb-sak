@@ -314,7 +314,7 @@ serve(async (req) => {
 
     // For non-video URLs, fetch the page to extract metadata
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 5000);
+    const timeout = setTimeout(() => controller.abort(), 8000);
 
     const response = await fetch(url, {
       headers: {
