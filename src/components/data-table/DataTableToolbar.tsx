@@ -63,7 +63,7 @@ export function DataTableToolbar<TData>({
     <div className={cn('flex items-center justify-between gap-2', className)}>
       <div className="flex items-center gap-2 flex-1">
         {prefix}
-        <div className={cn('relative w-full max-w-xs', searchClassName)}>
+        <div className={cn('relative w-full', searchClassName)}>
           <SearchSm className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder={searchPlaceholder}
