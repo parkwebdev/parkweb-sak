@@ -508,7 +508,7 @@ async function getOrCreateWordPressSource(
     .select('id')
     .eq('agent_id', agentId)
     .eq('source', sourceName)
-    .eq('type', 'wordpress')
+    .eq('type', 'api')
     .maybeSingle();
 
   if (existing) {
@@ -521,7 +521,7 @@ async function getOrCreateWordPressSource(
       agent_id: agentId,
       user_id: userId,
       source: sourceName,
-      type: 'wordpress',
+      type: 'api',
       status: 'ready',
     })
     .select('id')
