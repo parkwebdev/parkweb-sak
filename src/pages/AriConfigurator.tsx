@@ -248,19 +248,17 @@ const AriConfigurator = () => {
 
       {/* Center: Content Area */}
       <main className="flex-1 overflow-y-auto p-6">
-        <div className="max-w-3xl">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeSection}
-              initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={prefersReducedMotion ? undefined : { opacity: 0, y: -8 }}
-              transition={{ duration: 0.2, ease: 'easeOut' }}
-            >
-              {renderSectionContent()}
-            </motion.div>
-          </AnimatePresence>
-        </div>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeSection}
+            initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={prefersReducedMotion ? undefined : { opacity: 0, y: -8 }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
+          >
+            {renderSectionContent()}
+          </motion.div>
+        </AnimatePresence>
       </main>
 
       {/* Right: Widget Preview (desktop only) */}
