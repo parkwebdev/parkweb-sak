@@ -62,7 +62,7 @@ export const SatisfactionRating = ({
       {/* Close button */}
       <button
         onClick={onDismiss}
-        className="absolute top-3 right-3 p-1 rounded-full hover:bg-muted transition-colors"
+        className="absolute top-3 right-3 p-1 rounded-full hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         aria-label="Dismiss"
       >
         <XClose className="w-4 h-4 text-muted-foreground" />
@@ -84,7 +84,7 @@ export const SatisfactionRating = ({
               onClick={() => setRating(star)}
               onMouseEnter={() => setHoveredRating(star)}
               onMouseLeave={() => setHoveredRating(0)}
-              className="p-1 transition-transform hover:scale-110 focus:outline-none"
+              className="p-1 transition-transform hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-sm"
               aria-label={`Rate ${star} stars`}
             >
               <Star01
@@ -114,7 +114,7 @@ export const SatisfactionRating = ({
               value={feedback}
               onChange={(e) => setFeedback(e.target.value)}
               placeholder="Tell us more (optional)"
-              className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground resize-none focus:outline-none focus:ring-2 focus:ring-primary/20"
+              className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground resize-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               rows={2}
               maxLength={500}
             />
@@ -122,7 +122,7 @@ export const SatisfactionRating = ({
             <button
               onClick={handleSubmit}
               disabled={isSubmitting}
-              className="w-full py-2.5 px-4 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 text-primary-foreground"
+              className="w-full py-2.5 px-4 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               style={{ backgroundColor: primaryColor }}
             >
               {isSubmitting ? 'Submitting...' : 'Submit Feedback'}
