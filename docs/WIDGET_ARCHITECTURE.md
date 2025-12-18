@@ -493,7 +493,7 @@ All feature-rich components have been reimplemented without heavy dependencies:
 | `WidgetAudioPlayer` | motion/react | Canvas waveform + CSS |
 | `WidgetMessageReactions` | @radix-ui/react-popover | React Context popover |
 | `WidgetEmojiPicker` | @radix-ui/react-tabs | React state tabs |
-| `WidgetPhoneInput` | libphonenumber-js | Regex US/CA formatting |
+| `WidgetPhoneInput` | N/A | libphonenumber-js/min for international formatting with country detection |
 
 ### Allowed Main App Imports
 
