@@ -58,7 +58,7 @@ const NewsView = lazy(() => import('./views/NewsView').then(m => ({ default: m.N
 import { FloatingButton, WidgetHeader, WidgetNav, SatisfactionRating } from './components';
 import { WidgetCard } from './ui';
 
-export const ChatWidget = ({ config: configProp, previewMode = false, containedPreview = false, embeddedPreview = false, isLoading: isLoadingProp = false }: ChatWidgetProps) => {
+export const ChatWidget = ({ config: configProp, previewMode = false, containedPreview = false, isLoading: isLoadingProp = false }: ChatWidgetProps) => {
   // Mobile detection for removing border radius on full-screen mobile
   const [isMobileFullScreen, setIsMobileFullScreen] = useState(getIsMobileFullScreen);
   
@@ -75,7 +75,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     previewMode
   );
   
-  const [isOpen, setIsOpen] = useState(embeddedPreview); // Start open if embedded
+  const [isOpen, setIsOpen] = useState(false);
   const [currentView, setCurrentView] = useState<ViewType>('home');
   
   const [chatUser, setChatUser] = useState<ChatUser | null>(() => {
@@ -779,13 +779,11 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
   // Widget content
   const widgetContent = (
     <div id="chatpad-widget-root" className="h-full bg-transparent flex flex-col items-end gap-4 justify-end">
-      {(isOpen || isIframeMode || embeddedPreview) && (
+      {(isOpen || isIframeMode) && (
         <WidgetCard
           className={isIframeMode 
             ? `w-full h-full flex flex-col shadow-none overflow-hidden border-0 ${isMobileFullScreen ? 'rounded-none' : 'rounded-3xl'}` 
-            : embeddedPreview
-              ? "w-full h-full flex flex-col shadow-none overflow-hidden border-0 rounded-2xl"
-              : "w-[380px] h-[650px] flex flex-col shadow-xl overflow-hidden border-0 rounded-3xl"}
+            : "w-[380px] h-[650px] flex flex-col shadow-xl overflow-hidden border-0 rounded-3xl"}
           style={{
             background: currentView === 'home' 
               ? `linear-gradient(to bottom right, ${config.gradientStartColor}, ${config.gradientEndColor})`
@@ -909,8 +907,8 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
         </WidgetCard>
       )}
       
-      {/* FloatingButton - only in contained preview mode, not iframe or embedded (parent handles button) */}
-      {!isIframeMode && !embeddedPreview && (
+      {/* FloatingButton - only in contained preview mode, not iframe (parent handles button) */}
+      {!isIframeMode && (
         <FloatingButton
           onClick={() => setIsOpen(!isOpen)}
           isOpen={isOpen}
@@ -922,15 +920,6 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
   // For iframe mode, render widget content directly
   if (isIframeMode) {
     return widgetContent;
-  }
-
-  // For embedded preview mode (settings panel), render filling container
-  if (embeddedPreview) {
-    return (
-      <div className="w-full h-full">
-        {widgetContent}
-      </div>
-    );
   }
 
   // For contained preview mode (embed tab preview), render with absolute positioning

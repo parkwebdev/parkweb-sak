@@ -264,7 +264,7 @@ const AriConfigurator = () => {
       </main>
 
       {/* Right: Widget Preview (desktop only) */}
-      <AriPreviewColumn widgetConfig={widgetConfig} />
+      <AriPreviewColumn agentId={agentId} primaryColor={embedConfig?.primaryColor} />
 
       {/* Mobile/Tablet: Floating widget preview */}
       {widgetConfig && (

@@ -1,43 +1,30 @@
 /**
  * AriPreviewColumn Component
  * 
- * Right column containing the chat widget preview.
- * Fixed width with responsive collapse behavior.
+ * Right column containing the simplified preview chat interface.
+ * Shows a clean test chat for previewing AI responses.
  * 
  * @module components/agents/AriPreviewColumn
  */
 
 import React from 'react';
-import { ChatWidget } from '@/widget/ChatWidget';
-import type { WidgetConfig } from '@/widget/api';
+import { PreviewChat } from './PreviewChat';
 
 interface AriPreviewColumnProps {
-  widgetConfig: WidgetConfig | null;
+  agentId: string;
+  primaryColor?: string;
 }
 
 export const AriPreviewColumn: React.FC<AriPreviewColumnProps> = ({
-  widgetConfig,
+  agentId,
+  primaryColor,
 }) => {
-  if (!widgetConfig) return null;
-
   return (
-    <div className="w-[375px] flex-shrink-0 border-l bg-muted/20 hidden xl:flex flex-col relative">
-      {/* Preview label */}
-      <div className="absolute top-4 left-0 right-0 text-center z-10">
-        <span className="text-xs font-medium text-muted-foreground/60 uppercase tracking-wider">
-          Live Preview
-        </span>
-      </div>
-      
-      {/* Widget container - fills remaining height below label */}
-      <div className="flex-1 mt-10 p-4 pb-6">
-        <ChatWidget 
-          key={`${widgetConfig.agentId}-${widgetConfig.position}`}
-          config={widgetConfig} 
-          previewMode={true}
-          embeddedPreview={true}
-        />
-      </div>
+    <div className="w-[375px] flex-shrink-0 border-l bg-card hidden xl:flex flex-col">
+      <PreviewChat 
+        agentId={agentId}
+        primaryColor={primaryColor}
+      />
     </div>
   );
 };
