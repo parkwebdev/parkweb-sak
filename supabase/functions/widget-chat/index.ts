@@ -223,7 +223,7 @@ async function fetchLinkPreviews(content: string, supabaseUrl: string, supabaseK
     urls.map(async (url) => {
       try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000);
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
         
         const response = await fetch(`${supabaseUrl}/functions/v1/fetch-link-preview`, {
           method: 'POST',
