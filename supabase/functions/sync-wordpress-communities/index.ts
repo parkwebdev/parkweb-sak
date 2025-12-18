@@ -259,7 +259,7 @@ Deno.serve(async (req: Request) => {
     }
 
     // Parse request body ONCE - can only be read once
-    const { action, agentId, siteUrl, communitySyncInterval, homeSyncInterval, deleteLocations } = await req.json();
+    const { action, agentId, siteUrl, communitySyncInterval, homeSyncInterval, deleteLocations, forceReactivate } = await req.json();
 
     // Verify user has access to this agent
     const { data: agent, error: agentError } = await supabase
@@ -347,7 +347,8 @@ Deno.serve(async (req: Request) => {
         agentId,
         agent.user_id,
         communities,
-        taxonomyTerms
+        taxonomyTerms,
+        forceReactivate === true
       );
 
       // Update agent's deployment_config with sync info
@@ -601,7 +602,8 @@ async function syncCommunitiesToLocations(
   agentId: string,
   userId: string,
   communities: WordPressCommunity[],
-  taxonomyTerms: Map<string, number>
+  taxonomyTerms: Map<string, number>,
+  forceReactivate: boolean = false
 ): Promise<SyncResult> {
   const result: SyncResult = { created: 0, updated: 0, skipped: 0, errors: [] };
 
@@ -666,14 +668,30 @@ async function syncCommunitiesToLocations(
         .eq('wordpress_community_id', community.id)
         .maybeSingle();
 
-      // Skip if location was soft-deleted by user - respect their deletion
+      // Handle soft-deleted locations
       if (existing && !existing.is_active) {
-        result.skipped++;
+        if (forceReactivate) {
+          // Reactivate and update the soft-deleted location
+          const { error: updateError } = await supabase
+            .from('locations')
+            .update(locationData)
+            .eq('id', existing.id);
+
+          if (updateError) {
+            result.errors.push(`Failed to reactivate ${community.slug}: ${updateError.message}`);
+          } else {
+            result.updated++;
+            console.log(`↩️ Reactivated soft-deleted location: ${community.slug}`);
+          }
+        } else {
+          // Skip soft-deleted locations - respect user's deletion
+          result.skipped++;
+        }
         continue;
       }
 
       if (existing) {
-        // Update existing active location (don't set is_active to avoid resurrection)
+        // Update existing active location (don't change is_active)
         const { is_active: _, ...updateData } = locationData;
         const { error: updateError } = await supabase
           .from('locations')

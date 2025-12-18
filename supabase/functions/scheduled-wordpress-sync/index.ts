@@ -33,8 +33,10 @@ function intervalToMinutes(interval: string): number | null {
   const intervalMap: Record<string, number> = {
     'hourly_1': 60,
     'hourly_2': 120,
+    'hourly_3': 180,
     'hourly_4': 240,
     'hourly_6': 360,
+    'hourly_8': 480,
     'hourly_12': 720,
     'daily': 1440,
   };
