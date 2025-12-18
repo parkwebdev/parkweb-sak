@@ -1,7 +1,7 @@
 /**
  * Video Placeholder Component
  * 
- * Displays a styled placeholder for tutorial videos in the preview panel.
+ * Compact video placeholder for inline display within step cards.
  * Shows step-specific gradients and supports future video integration.
  * 
  * @module components/onboarding/VideoPlaceholder
@@ -28,52 +28,38 @@ const STEP_GRADIENTS: Record<string, string> = {
   test: 'from-primary/20 via-primary/15 to-primary/20',
 };
 
-const STEP_VIDEO_TITLES: Record<string, string> = {
-  personality: 'How to write a system prompt',
-  knowledge: 'Adding your first knowledge source',
-  appearance: 'Customizing your widget colors',
-  installation: 'Copying the embed code',
-  test: 'Your first conversation with Ari',
-};
-
 export const VideoPlaceholder: React.FC<VideoPlaceholderProps> = ({
   stepId,
-  title,
 }) => {
   const prefersReducedMotion = useReducedMotion();
   const gradient = STEP_GRADIENTS[stepId] || STEP_GRADIENTS.test;
-  const videoTitle = title || STEP_VIDEO_TITLES[stepId] || 'Watch tutorial';
 
   return (
-    <div className="relative aspect-video rounded-xl overflow-hidden border border-border">
+    <div className="relative aspect-video rounded-lg overflow-hidden border border-border bg-muted/30">
       {/* Gradient background */}
       <div className={`absolute inset-0 bg-gradient-to-br ${gradient}`} />
       
       {/* Subtle pattern overlay */}
       <div 
-        className="absolute inset-0 opacity-30"
+        className="absolute inset-0 opacity-20"
         style={{
-          backgroundImage: `radial-gradient(circle at 1px 1px, hsl(var(--muted-foreground) / 0.15) 1px, transparent 0)`,
-          backgroundSize: '24px 24px',
+          backgroundImage: `radial-gradient(circle at 1px 1px, hsl(var(--muted-foreground) / 0.2) 1px, transparent 0)`,
+          backgroundSize: '16px 16px',
         }}
       />
 
       {/* Play button */}
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
+      <div className="absolute inset-0 flex items-center justify-center">
         <motion.div
-          className="w-16 h-16 rounded-full bg-background/90 backdrop-blur-sm flex items-center justify-center shadow-lg border border-border cursor-pointer group"
-          whileHover={prefersReducedMotion ? {} : { scale: 1.05 }}
+          className="w-10 h-10 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center shadow-md border border-border/50 cursor-pointer"
+          whileHover={prefersReducedMotion ? {} : { scale: 1.1 }}
           whileTap={prefersReducedMotion ? {} : { scale: 0.95 }}
           role="button"
           tabIndex={0}
+          aria-label="Play tutorial video"
         >
-          <PlayCircle size={28} className="text-foreground" />
+          <PlayCircle size={20} className="text-foreground" />
         </motion.div>
-        
-        <div className="mt-4 text-center">
-          <p className="text-sm font-medium text-foreground">{videoTitle}</p>
-          <p className="text-xs text-muted-foreground mt-1">Coming soon</p>
-        </div>
       </div>
     </div>
   );
