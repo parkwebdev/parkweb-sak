@@ -84,6 +84,7 @@ export const useHelpArticles = (agentId: string) => {
         order: article.order_index,
         featured_image: article.featured_image || undefined,
         has_embedding: article.embedding !== null,
+        created_at: article.created_at || undefined,
       }));
 
       setCategories(mappedCategories);
