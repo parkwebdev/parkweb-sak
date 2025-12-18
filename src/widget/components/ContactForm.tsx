@@ -183,7 +183,7 @@ export const ContactForm = ({
             </div>
           ))}
           
-          <WidgetButton type="submit" size="lg" className="w-full text-white" style={{ backgroundColor: primaryColor }}>
+          <WidgetButton type="submit" size="default" className="w-full text-white" style={{ backgroundColor: primaryColor }}>
             Start Chat
           </WidgetButton>
         </form>
