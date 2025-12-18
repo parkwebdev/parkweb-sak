@@ -10,3 +10,6 @@ export { createLocationsColumns, type Location, type LocationWithCounts } from '
 
 // Properties table columns
 export { createPropertiesColumns, type PropertyWithLocation } from './properties-columns';
+
+// Knowledge sources table columns
+export { createKnowledgeColumns, type KnowledgeSourceWithMeta, type KnowledgeColumnsProps } from './knowledge-columns';
