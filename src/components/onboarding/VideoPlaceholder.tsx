@@ -1,66 +1,57 @@
 /**
  * Video Placeholder Component
  * 
- * Compact video placeholder for inline display within step cards.
- * Shows step-specific gradients and supports future video integration.
+ * Placeholder for onboarding video that spans the full height of the step list.
+ * Shows a play button overlay with decorative background.
  * 
  * @module components/onboarding/VideoPlaceholder
  */
 
 import React from 'react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { PlayCircle } from '@untitledui/icons';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 interface VideoPlaceholderProps {
   stepId: string;
-  title?: string;
 }
 
-/**
- * Step-specific gradient configurations
- */
-const STEP_GRADIENTS: Record<string, string> = {
-  personality: 'from-purple-500/20 via-pink-500/20 to-purple-600/20',
-  knowledge: 'from-blue-500/20 via-teal-500/20 to-cyan-500/20',
-  appearance: 'from-orange-500/20 via-yellow-500/20 to-amber-500/20',
-  installation: 'from-emerald-500/20 via-green-500/20 to-teal-500/20',
-  test: 'from-primary/20 via-primary/15 to-primary/20',
-};
-
-export const VideoPlaceholder: React.FC<VideoPlaceholderProps> = ({
-  stepId,
-}) => {
+export const VideoPlaceholder: React.FC<VideoPlaceholderProps> = ({ stepId }) => {
   const prefersReducedMotion = useReducedMotion();
-  const gradient = STEP_GRADIENTS[stepId] || STEP_GRADIENTS.test;
 
   return (
-    <div className="relative aspect-video rounded-lg overflow-hidden border border-border bg-muted/30">
-      {/* Gradient background */}
-      <div className={`absolute inset-0 bg-gradient-to-br ${gradient}`} />
-      
-      {/* Subtle pattern overlay */}
-      <div 
-        className="absolute inset-0 opacity-20"
-        style={{
-          backgroundImage: `radial-gradient(circle at 1px 1px, hsl(var(--muted-foreground) / 0.2) 1px, transparent 0)`,
-          backgroundSize: '16px 16px',
-        }}
-      />
-
-      {/* Play button */}
-      <div className="absolute inset-0 flex items-center justify-center">
-        <motion.div
-          className="w-10 h-10 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center shadow-md border border-border/50 cursor-pointer"
-          whileHover={prefersReducedMotion ? {} : { scale: 1.1 }}
-          whileTap={prefersReducedMotion ? {} : { scale: 0.95 }}
-          role="button"
-          tabIndex={0}
-          aria-label="Play tutorial video"
-        >
-          <PlayCircle size={20} className="text-foreground" />
-        </motion.div>
+    <div className="relative w-full h-full min-h-[280px] rounded-xl overflow-hidden bg-gradient-to-br from-emerald-600 via-teal-500 to-cyan-600 shadow-lg">
+      {/* Decorative background pattern */}
+      <div className="absolute inset-0 opacity-30">
+        <div className="absolute top-4 left-4 w-20 h-20 rounded-full bg-yellow-400/60" />
+        <div className="absolute top-12 right-8 w-16 h-16 rounded-full bg-orange-400/50" />
+        <div className="absolute bottom-8 left-8 w-24 h-24 rounded-full bg-pink-400/40" />
+        <div className="absolute bottom-4 right-4 w-12 h-12 rounded-full bg-purple-400/50" />
       </div>
+
+      {/* Animated content indicator */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={stepId}
+          initial={prefersReducedMotion ? false : { opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={prefersReducedMotion ? undefined : { opacity: 0, scale: 0.95 }}
+          transition={{ duration: 0.2 }}
+          className="absolute inset-0 flex items-center justify-center"
+        >
+          {/* Play button */}
+          <button
+            className="group flex items-center justify-center w-14 h-14 rounded-full bg-background/90 shadow-lg hover:bg-background transition-colors"
+            onClick={() => {
+              // TODO: Open video modal
+              console.log('Play video for step:', stepId);
+            }}
+            aria-label="Play tutorial video"
+          >
+            <PlayCircle size={28} className="text-foreground group-hover:text-primary transition-colors" />
+          </button>
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 };

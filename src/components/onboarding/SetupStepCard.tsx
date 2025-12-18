@@ -2,7 +2,7 @@
  * Setup Step Card Component
  * 
  * Borderless expandable step matching Intercom's minimal onboarding style.
- * Shows inline video placeholder when expanded.
+ * Description shown on expand, video is in separate column.
  * 
  * @module components/onboarding/SetupStepCard
  */
@@ -11,7 +11,6 @@ import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { CheckCircle, ChevronRight } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
-import { VideoPlaceholder } from './VideoPlaceholder';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import type { OnboardingStep } from '@/hooks/useOnboardingProgress';
 
@@ -68,7 +67,7 @@ export const SetupStepCard: React.FC<SetupStepCardProps> = ({
         </motion.div>
       </button>
 
-      {/* Expanded content with inline video */}
+      {/* Expanded content - just description and CTA, no video */}
       <AnimatePresence initial={false}>
         {isExpanded && (
           <motion.div
@@ -78,30 +77,20 @@ export const SetupStepCard: React.FC<SetupStepCardProps> = ({
             transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.2, ease: 'easeOut' }}
             className="overflow-hidden"
           >
-            <div className="pb-4 pl-8 pr-1">
-              <div className="flex flex-col sm:flex-row gap-4">
-                {/* Left: Description and CTA */}
-                <div className="flex-1 space-y-3">
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    {step.description}
-                  </p>
-                  <Button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onAction();
-                    }}
-                    size="sm"
-                    variant={isComplete ? 'outline' : 'default'}
-                  >
-                    {step.action.label}
-                  </Button>
-                </div>
-
-                {/* Right: Video placeholder */}
-                <div className="w-full sm:w-48 md:w-56 flex-shrink-0">
-                  <VideoPlaceholder stepId={step.id} />
-                </div>
-              </div>
+            <div className="pb-4 pl-8 pr-1 space-y-3">
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                {step.description}
+              </p>
+              <Button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onAction();
+                }}
+                size="sm"
+                variant={isComplete ? 'outline' : 'default'}
+              >
+                {step.action.label}
+              </Button>
             </div>
           </motion.div>
         )}
