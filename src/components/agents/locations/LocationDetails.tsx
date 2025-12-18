@@ -45,7 +45,6 @@ export const LocationDetails: React.FC<LocationDetailsProps> = ({
   });
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [hoursOpen, setHoursOpen] = useState(false);
-  const [calendarsOpen, setCalendarsOpen] = useState(false);
 
   // Reset form when location changes
   useEffect(() => {
@@ -105,6 +104,17 @@ export const LocationDetails: React.FC<LocationDetailsProps> = ({
             onChange={(e) => handleChange('name', e.target.value)}
             placeholder="e.g., Downtown Community"
             className="text-lg font-medium border-0 border-b rounded-none px-0 focus-visible:ring-0 focus-visible:border-primary"
+          />
+        </div>
+      </AnimatedItem>
+
+      {/* Connected Calendars - Always visible */}
+      <AnimatedItem>
+        <div className="space-y-3">
+          <span className="text-xs text-muted-foreground uppercase tracking-wide">Connected Calendars</span>
+          <CalendarConnections
+            locationId={location.id}
+            agentId={agentId}
           />
         </div>
       </AnimatedItem>
@@ -226,26 +236,6 @@ export const LocationDetails: React.FC<LocationDetailsProps> = ({
             <BusinessHoursEditor
               value={formData.business_hours || {}}
               onChange={(hours) => handleChange('business_hours', hours)}
-            />
-          </CollapsibleContent>
-        </Collapsible>
-      </AnimatedItem>
-
-      {/* Calendars - Collapsible with lazy loading */}
-      <AnimatedItem>
-        <Collapsible open={calendarsOpen} onOpenChange={setCalendarsOpen} lazy>
-          <CollapsibleTrigger className="flex items-center gap-2 w-full text-left py-2">
-            {calendarsOpen ? (
-              <ChevronDown className="h-4 w-4 text-muted-foreground" />
-            ) : (
-              <ChevronRight className="h-4 w-4 text-muted-foreground" />
-            )}
-            <span className="text-xs text-muted-foreground uppercase tracking-wide">Connected Calendars</span>
-          </CollapsibleTrigger>
-          <CollapsibleContent className="pt-3">
-            <CalendarConnections
-              locationId={location.id}
-              agentId={agentId}
             />
           </CollapsibleContent>
         </Collapsible>
