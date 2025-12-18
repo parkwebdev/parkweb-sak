@@ -2,7 +2,7 @@
  * useWordPressConnection Hook
  * 
  * Manages WordPress site connection for community imports.
- * Handles testing connections, saving config, and triggering syncs.
+ * Handles testing connections, saving config, endpoint discovery, and triggering syncs.
  * 
  * @module hooks/useWordPressConnection
  */
@@ -15,6 +15,8 @@ import type { Tables } from '@/integrations/supabase/types';
 
 interface WordPressConfig {
   site_url: string;
+  community_endpoint?: string;
+  home_endpoint?: string;
   last_community_sync?: string;
   community_count?: number;
   community_sync_interval?: string;
@@ -29,13 +31,18 @@ interface TestResult {
   communityCount?: number;
 }
 
-type SyncInterval = 'manual' | 'hourly_1' | 'hourly_2' | 'hourly_4' | 'hourly_6' | 'hourly_12' | 'daily';
+interface DiscoveredEndpoints {
+  communityEndpoints: Array<{ slug: string; name: string; rest_base: string }>;
+  homeEndpoints: Array<{ slug: string; name: string; rest_base: string }>;
+}
+
+type SyncInterval = 'manual' | 'hourly_1' | 'hourly_2' | 'hourly_3' | 'hourly_4' | 'hourly_6' | 'hourly_8' | 'hourly_12' | 'daily';
 
 interface SyncResult {
   success: boolean;
   created: number;
   updated: number;
-  skipped: number;
+  deleted: number;
   total: number;
   errors?: string[];
 }
@@ -49,11 +56,15 @@ export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressCo
   const [isTesting, setIsTesting] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isDiscovering, setIsDiscovering] = useState(false);
   const [testResult, setTestResult] = useState<TestResult | null>(null);
+  const [discoveredEndpoints, setDiscoveredEndpoints] = useState<DiscoveredEndpoints | null>(null);
   
   // Local state for optimistic UI updates
   const [localCommunitySyncInterval, setLocalCommunitySyncInterval] = useState<string | null>(null);
   const [localHomeSyncInterval, setLocalHomeSyncInterval] = useState<string | null>(null);
+  const [localCommunityEndpoint, setLocalCommunityEndpoint] = useState<string | null>(null);
+  const [localHomeEndpoint, setLocalHomeEndpoint] = useState<string | null>(null);
 
   // Extract WordPress config from agent
   const wordpressConfig = useMemo((): WordPressConfig | null => {
@@ -62,20 +73,63 @@ export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressCo
     return (config.wordpress as WordPressConfig) || null;
   }, [agent?.deployment_config]);
 
-  // Reset local state when agent config changes (refetched data takes over)
+  // Reset local state when agent config changes
   useEffect(() => {
     setLocalCommunitySyncInterval(null);
     setLocalHomeSyncInterval(null);
-  }, [wordpressConfig?.community_sync_interval, wordpressConfig?.home_sync_interval]);
+    setLocalCommunityEndpoint(null);
+    setLocalHomeEndpoint(null);
+  }, [wordpressConfig?.community_sync_interval, wordpressConfig?.home_sync_interval, wordpressConfig?.community_endpoint, wordpressConfig?.home_endpoint]);
 
   const siteUrl = wordpressConfig?.site_url || '';
   const lastSync = wordpressConfig?.last_community_sync;
   const communityCount = wordpressConfig?.community_count;
-  // Use local state for immediate feedback, fallback to config value
   const communitySyncInterval = localCommunitySyncInterval ?? wordpressConfig?.community_sync_interval ?? 'manual';
   const homeSyncInterval = localHomeSyncInterval ?? wordpressConfig?.home_sync_interval ?? 'manual';
+  const communityEndpoint = localCommunityEndpoint ?? wordpressConfig?.community_endpoint ?? '';
+  const homeEndpoint = localHomeEndpoint ?? wordpressConfig?.home_endpoint ?? '';
 
-  // Save URL immediately (without testing) - persists URL even if connection fails
+  // Discover available endpoints from WordPress
+  const discoverEndpoints = useCallback(async (url: string): Promise<DiscoveredEndpoints | null> => {
+    if (!agent?.id || !url.trim()) return null;
+
+    setIsDiscovering(true);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('Not authenticated');
+      }
+
+      const { data, error } = await supabase.functions.invoke('sync-wordpress-communities', {
+        body: {
+          action: 'discover',
+          agentId: agent.id,
+          siteUrl: url.trim(),
+        },
+      });
+
+      if (error) throw error;
+
+      if (data.success) {
+        const endpoints: DiscoveredEndpoints = {
+          communityEndpoints: data.communityEndpoints || [],
+          homeEndpoints: data.homeEndpoints || [],
+        };
+        setDiscoveredEndpoints(endpoints);
+        return endpoints;
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Failed to discover endpoints:', error);
+      return null;
+    } finally {
+      setIsDiscovering(false);
+    }
+  }, [agent?.id]);
+
+  // Save URL immediately without testing
   const saveUrl = useCallback(async (url: string): Promise<boolean> => {
     if (!agent?.id || !url.trim()) return false;
 
@@ -105,13 +159,12 @@ export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressCo
     }
   }, [agent?.id, onSyncComplete]);
 
-  // Test WordPress connection (URL is saved first, then tested)
-  const testConnection = useCallback(async (url: string): Promise<TestResult> => {
+  // Test WordPress connection
+  const testConnection = useCallback(async (url: string, endpoint?: string): Promise<TestResult> => {
     if (!agent?.id) {
       return { success: false, message: 'No agent selected' };
     }
 
-    // Save URL FIRST so it persists even if test fails
     await saveUrl(url);
 
     setIsTesting(true);
@@ -128,6 +181,7 @@ export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressCo
           action: 'test',
           agentId: agent.id,
           siteUrl: url,
+          communityEndpoint: endpoint || communityEndpoint || undefined,
         },
       });
 
@@ -156,7 +210,7 @@ export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressCo
     } finally {
       setIsTesting(false);
     }
-  }, [agent?.id, saveUrl]);
+  }, [agent?.id, saveUrl, communityEndpoint]);
 
   // Save WordPress config without syncing
   const saveConfig = useCallback(async (url: string): Promise<boolean> => {
@@ -193,7 +247,7 @@ export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressCo
   }, [agent?.id]);
 
   // Import communities from WordPress
-  const importCommunities = useCallback(async (url?: string): Promise<SyncResult | null> => {
+  const importCommunities = useCallback(async (url?: string, endpoint?: string): Promise<SyncResult | null> => {
     if (!agent?.id) return null;
 
     setIsSyncing(true);
@@ -209,6 +263,7 @@ export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressCo
           action: 'sync',
           agentId: agent.id,
           siteUrl: url,
+          communityEndpoint: endpoint || communityEndpoint || undefined,
         },
       });
 
@@ -218,14 +273,19 @@ export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressCo
         success: data.success,
         created: data.created,
         updated: data.updated,
-        skipped: data.skipped,
+        deleted: data.deleted || 0,
         total: data.total,
         errors: data.errors,
       };
 
       if (result.success) {
+        const parts = [];
+        if (result.created > 0) parts.push(`${result.created} created`);
+        if (result.updated > 0) parts.push(`${result.updated} updated`);
+        if (result.deleted > 0) parts.push(`${result.deleted} removed`);
+        
         toast.success('Communities imported', {
-          description: `${result.created} created, ${result.updated} updated, ${result.skipped} skipped`,
+          description: parts.length > 0 ? parts.join(', ') : 'No changes',
         });
         onSyncComplete?.();
       } else {
@@ -243,6 +303,59 @@ export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressCo
     } finally {
       setIsSyncing(false);
     }
+  }, [agent?.id, onSyncComplete, communityEndpoint]);
+
+  // Update endpoint configuration
+  const updateEndpoint = useCallback(async (
+    type: 'community' | 'home',
+    endpoint: string
+  ): Promise<boolean> => {
+    if (!agent?.id) return false;
+
+    // Optimistic update
+    if (type === 'community') {
+      setLocalCommunityEndpoint(endpoint);
+    } else {
+      setLocalHomeEndpoint(endpoint);
+    }
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('Not authenticated');
+      }
+
+      const body: Record<string, unknown> = {
+        action: 'save',
+        agentId: agent.id,
+      };
+
+      if (type === 'community') {
+        body.communityEndpoint = endpoint;
+      } else {
+        body.homeEndpoint = endpoint;
+      }
+
+      const { error } = await supabase.functions.invoke('sync-wordpress-communities', {
+        body,
+      });
+
+      if (error) throw error;
+      
+      onSyncComplete?.();
+      return true;
+    } catch (error) {
+      // Revert on error
+      if (type === 'community') {
+        setLocalCommunityEndpoint(null);
+      } else {
+        setLocalHomeEndpoint(null);
+      }
+      toast.error('Failed to update endpoint', {
+        description: getErrorMessage(error),
+      });
+      return false;
+    }
   }, [agent?.id, onSyncComplete]);
 
   // Update sync interval settings
@@ -252,7 +365,7 @@ export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressCo
   ): Promise<boolean> => {
     if (!agent?.id) return false;
 
-    // Set local state immediately for optimistic UI
+    // Optimistic update
     if (type === 'community') {
       setLocalCommunitySyncInterval(interval);
     } else {
@@ -282,11 +395,10 @@ export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressCo
 
       if (error) throw error;
       
-      // Refresh agent data to sync with database
       onSyncComplete?.();
       return true;
     } catch (error) {
-      // Revert local state on error
+      // Revert on error
       if (type === 'community') {
         setLocalCommunitySyncInterval(null);
       } else {
@@ -299,7 +411,7 @@ export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressCo
     }
   }, [agent?.id, onSyncComplete]);
 
-  // Disconnect WordPress integration
+  // Disconnect WordPress integration (hard delete)
   const disconnect = useCallback(async (deleteLocations: boolean = false): Promise<boolean> => {
     if (!agent?.id) return false;
 
@@ -322,7 +434,7 @@ export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressCo
       if (error) throw error;
 
       toast.success('WordPress disconnected', {
-        description: deleteLocations ? 'All synced locations have been removed' : 'Configuration cleared',
+        description: deleteLocations ? 'All synced locations have been deleted' : 'Configuration cleared',
       });
       onSyncComplete?.();
       return true;
@@ -343,10 +455,14 @@ export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressCo
     communityCount,
     communitySyncInterval,
     homeSyncInterval,
+    communityEndpoint,
+    homeEndpoint,
     isTesting,
     isSyncing,
     isSaving,
+    isDiscovering,
     testResult,
+    discoveredEndpoints,
     isConnected: !!siteUrl,
 
     // Actions
@@ -355,7 +471,10 @@ export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressCo
     saveConfig,
     importCommunities,
     updateSyncInterval,
+    updateEndpoint,
+    discoverEndpoints,
     disconnect,
     clearTestResult: () => setTestResult(null),
+    clearDiscoveredEndpoints: () => setDiscoveredEndpoints(null),
   };
 }

@@ -85,15 +85,21 @@ export function WordPressIntegrationSection({ agent, onSyncComplete }: WordPress
     communityCount,
     communitySyncInterval,
     homeSyncInterval,
+    communityEndpoint,
+    homeEndpoint,
     isTesting: connectionTesting,
     isSyncing: connectionSyncing,
     isSaving,
+    isDiscovering,
     testResult: connectionTestResult,
+    discoveredEndpoints,
     isConnected,
     testConnection,
     saveUrl,
     importCommunities,
     updateSyncInterval,
+    updateEndpoint,
+    discoverEndpoints,
     disconnect,
     clearTestResult: clearConnectionTestResult,
   } = useWordPressConnection({ agent, onSyncComplete });
@@ -108,6 +114,10 @@ export function WordPressIntegrationSection({ agent, onSyncComplete }: WordPress
     syncHomes,
     clearTestResult: clearHomesTestResult,
   } = useWordPressHomes({ agent, onSyncComplete });
+
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [communityEndpointInput, setCommunityEndpointInput] = useState(communityEndpoint);
+  const [homeEndpointInput, setHomeEndpointInput] = useState(homeEndpoint);
 
   // Update input when siteUrl changes
   useEffect(() => {

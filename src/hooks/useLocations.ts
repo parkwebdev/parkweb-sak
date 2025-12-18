@@ -3,6 +3,7 @@
  * 
  * Hook for managing locations (communities/properties/sites) for agents.
  * Provides CRUD operations and real-time updates.
+ * Uses HARD DELETES - deleted locations are permanently removed.
  * 
  * @module hooks/useLocations
  */
@@ -37,11 +38,11 @@ export const useLocations = (agentId?: string) => {
     }
 
     try {
+      // Fetch ALL locations - no is_active filter (hard deletes now)
       const { data, error } = await supabase
         .from('locations')
         .select('*')
         .eq('agent_id', agentId)
-        .eq('is_active', true)
         .order('name', { ascending: true });
 
       if (error) throw error;
@@ -58,7 +59,6 @@ export const useLocations = (agentId?: string) => {
   }, [agentId]);
 
   // Initial fetch and real-time subscription
-  // Use ref to avoid re-subscribing when fetchLocations changes
   const fetchLocationsRef = useRef(fetchLocations);
   fetchLocationsRef.current = fetchLocations;
 
@@ -81,6 +81,7 @@ export const useLocations = (agentId?: string) => {
         (payload) => {
           if (payload.eventType === 'INSERT') {
             setLocations((prev) => {
+              // Avoid duplicates
               if (prev.some((l) => l.id === (payload.new as Location).id)) {
                 return prev;
               }
@@ -97,6 +98,7 @@ export const useLocations = (agentId?: string) => {
               )
             );
           } else if (payload.eventType === 'DELETE') {
+            // Real-time DELETE event - remove from state
             setLocations((prev) =>
               prev.filter((l) => l.id !== (payload.old as { id: string }).id)
             );
@@ -120,7 +122,6 @@ export const useLocations = (agentId?: string) => {
     if (!agentId) return null;
 
     try {
-      // Use RPC or direct insert with proper typing
       const insertData = {
         agent_id: agentId,
         user_id: userId,
@@ -193,19 +194,19 @@ export const useLocations = (agentId?: string) => {
   };
 
   /**
-   * Delete a location (soft delete - sets is_active to false)
+   * Delete a location (HARD DELETE - permanently removes the record)
    */
   const deleteLocation = async (locationId: string): Promise<boolean> => {
     try {
-      // Soft delete
+      // HARD DELETE - permanently remove the location
       const { error } = await supabase
         .from('locations')
-        .update({ is_active: false })
+        .delete()
         .eq('id', locationId);
 
       if (error) throw error;
 
-      // Optimistic update
+      // Optimistic update - remove from local state immediately
       setLocations((prev) => prev.filter((l) => l.id !== locationId));
 
       toast.success('Location deleted');
