@@ -11,7 +11,7 @@
  */
 
 import React, { useState } from 'react';
-import { User01 as User, Settings04 as Settings, LogOut01 as LogOut, CreditCard01, Users01, Keyboard01 } from '@untitledui/icons';
+import { User01 as User, Settings04 as Settings, LogOut01 as LogOut, CreditCard01, Users01, Keyboard01, PieChart01 } from '@untitledui/icons';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Link, useNavigate } from 'react-router-dom';
@@ -189,6 +189,12 @@ export const UserAccountCard: React.FC<UserAccountCardProps> = ({ isCollapsed = 
               <Link to="/settings?tab=team" className="w-full flex items-center gap-2">
                 <Users01 size={16} />
                 Team
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link to="/settings?tab=usage" className="w-full flex items-center gap-2">
+                <PieChart01 size={16} />
+                Usage
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
