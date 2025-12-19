@@ -159,11 +159,11 @@ export const UserAccountCard: React.FC<UserAccountCardProps> = ({ isCollapsed = 
       <DropdownMenuContent 
         align="end" 
         className="bg-background border shadow-lg z-50 transition-all duration-200 ease-out"
-        style={{ width: showShortcuts ? '340px' : '192px' }}
+        style={{ width: showShortcuts ? '400px' : '192px' }}
       >
         <div className="flex">
           {/* Main menu column */}
-          <div className={`${showShortcuts ? 'w-[148px]' : 'w-full'} flex-shrink-0`}>
+          <div className={`${showShortcuts ? 'w-[160px]' : 'w-full'} flex-shrink-0`}>
             <DropdownMenuItem asChild>
               <Link to="/settings?tab=profile" className="w-full flex items-center gap-2">
                 <User size={16} />
@@ -206,21 +206,21 @@ export const UserAccountCard: React.FC<UserAccountCardProps> = ({ isCollapsed = 
           {/* Shortcuts column - shows on hover */}
           {showShortcuts && (
             <div 
-              className="border-l border-border pl-3 pr-2 py-1 animate-fade-in"
+              className="border-l border-border pl-3 pr-3 py-2 animate-fade-in"
               onMouseLeave={() => setShowShortcuts(false)}
             >
-              <div className="text-2xs font-semibold text-muted-foreground mb-2">Shortcuts</div>
-              <div className="space-y-1.5">
+              <div className="text-xs font-semibold text-muted-foreground mb-2">Shortcuts</div>
+              <div className="space-y-2">
                 {shortcuts.map((shortcut, index) => (
-                  <div key={index} className="flex items-center justify-between gap-3">
-                    <span className="text-2xs text-foreground whitespace-nowrap">{shortcut.description}</span>
+                  <div key={index} className="flex items-center justify-between gap-4">
+                    <span className="text-xs text-foreground whitespace-nowrap">{shortcut.description}</span>
                     <div className="flex items-center gap-0.5">
                       {formatShortcut(shortcut).map((key, keyIndex) => (
                         <Badge 
                           key={keyIndex}
                           variant="secondary" 
                           size="sm"
-                          className="px-1 py-0 font-mono text-2xs h-auto"
+                          className="px-1.5 py-0.5 font-mono text-xs h-auto"
                         >
                           {key}
                         </Badge>
