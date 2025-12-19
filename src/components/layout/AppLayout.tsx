@@ -1,13 +1,14 @@
 /**
  * @fileoverview Main application layout wrapper.
- * Provides sidebar navigation, header, and responsive content area.
+ * Provides sidebar navigation and responsive content area.
  */
 
 import React, { useState } from 'react';
 import { Sidebar } from '@/components/Sidebar';
-import { AppHeader } from './AppHeader';
 import { useSidebar } from '@/hooks/use-sidebar';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
+import { Button } from '@/components/ui/button';
+import { Menu01 as Menu } from '@untitledui/icons';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -49,8 +50,17 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
         isCollapsed ? 'lg:ml-[64px]' : 'lg:ml-[240px]'
       }`}>
         <div className="flex-1 min-h-0 m-2 ml-0 lg:m-4 lg:ml-0 rounded-2xl bg-card border border-border shadow-sm overflow-hidden flex flex-col">
-          {/* Global Header */}
-          <AppHeader onMenuClick={() => setSidebarOpen(true)} />
+          {/* Mobile menu button */}
+          <div className="lg:hidden flex items-center px-4 py-3 border-b border-border">
+            <Button
+              variant="ghost"
+              size="sm"
+              aria-label="Open navigation menu"
+              onClick={() => setSidebarOpen(true)}
+            >
+              <Menu size={18} aria-hidden="true" />
+            </Button>
+          </div>
           
           {/* Page Content - flex-1 fills remaining space, min-h-0 enables children overflow */}
           <main id="main-content" className="flex-1 min-h-0 overflow-hidden" tabIndex={-1}>
