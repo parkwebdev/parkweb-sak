@@ -10,18 +10,19 @@
  * <UserAccountCard isCollapsed={false} />
  */
 
-import React from 'react';
-import { User01 as User, Settings04 as Settings, LogOut01 as LogOut, CreditCard01, Users01 } from '@untitledui/icons';
+import React, { useState } from 'react';
+import { User01 as User, Settings04 as Settings, LogOut01 as LogOut, CreditCard01, Users01, Keyboard01 } from '@untitledui/icons';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/lib/toast';
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { KeyboardShortcutsDropdown } from '@/components/KeyboardShortcutsDropdown';
 import { Spinner } from '@/components/ui/spinner';
 import { logger } from '@/utils/logger';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 
 /** User profile data from database */
 interface UserProfile {
@@ -39,10 +40,40 @@ interface UserAccountCardProps {
   isCollapsed?: boolean;
 }
 
+/** Keyboard shortcut definition */
+interface KeyboardShortcut {
+  key: string;
+  ctrlKey?: boolean;
+  altKey?: boolean;
+  shiftKey?: boolean;
+  description: string;
+}
+
+const shortcuts: KeyboardShortcut[] = [
+  { key: 'k', ctrlKey: true, description: 'Global Search' },
+  { key: 'd', altKey: true, description: 'Dashboard' },
+  { key: 'a', altKey: true, description: 'Ari' },
+  { key: 'c', altKey: true, description: 'Inbox' },
+  { key: 'l', altKey: true, description: 'Leads' },
+  { key: 'y', altKey: true, description: 'Analytics' },
+  { key: 'p', altKey: true, description: 'Planner' },
+  { key: 's', altKey: true, description: 'Settings' },
+];
+
+const formatShortcut = (shortcut: KeyboardShortcut) => {
+  const keys = [];
+  if (shortcut.ctrlKey) keys.push('⌘');
+  if (shortcut.altKey) keys.push('Alt');
+  if (shortcut.shiftKey) keys.push('⇧');
+  keys.push(shortcut.key.toUpperCase());
+  return keys;
+};
+
 export const UserAccountCard: React.FC<UserAccountCardProps> = ({ isCollapsed = false }) => {
   const { user, signOut } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showShortcuts, setShowShortcuts] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -101,7 +132,7 @@ export const UserAccountCard: React.FC<UserAccountCardProps> = ({ isCollapsed = 
   const initials = displayName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
 
   return (
-    <DropdownMenu>
+    <DropdownMenu onOpenChange={(open) => !open && setShowShortcuts(false)}>
       <DropdownMenuTrigger asChild>
         <button className={`relative flex items-center w-full ${isCollapsed ? 'justify-center p-[6px]' : 'gap-3 p-[11px]'} hover:bg-accent/50 rounded-md transition-all duration-150`}>
           <div className="relative flex-shrink-0">
@@ -125,37 +156,82 @@ export const UserAccountCard: React.FC<UserAccountCardProps> = ({ isCollapsed = 
           )}
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-48 bg-background border shadow-lg z-50">
-        <DropdownMenuItem asChild>
-          <Link to="/settings?tab=profile" className="w-full flex items-center gap-2">
-            <User size={16} />
-            Profile
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link to="/settings?tab=team" className="w-full flex items-center gap-2">
-            <Users01 size={16} />
-            Team
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link to="/settings?tab=billing" className="w-full flex items-center gap-2">
-            <CreditCard01 size={16} />
-            Billing
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link to="/settings" className="w-full flex items-center gap-2">
-            <Settings size={16} />
-            Settings
-          </Link>
-        </DropdownMenuItem>
-        <KeyboardShortcutsDropdown />
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
-          <LogOut size={16} className="mr-2" />
-          Sign Out
-        </DropdownMenuItem>
+      <DropdownMenuContent 
+        align="end" 
+        className="bg-background border shadow-lg z-50 transition-all duration-200 ease-out"
+        style={{ width: showShortcuts ? '340px' : '192px' }}
+      >
+        <div className="flex">
+          {/* Main menu column */}
+          <div className={`${showShortcuts ? 'w-[148px]' : 'w-full'} flex-shrink-0`}>
+            <DropdownMenuItem asChild>
+              <Link to="/settings?tab=profile" className="w-full flex items-center gap-2">
+                <User size={16} />
+                Profile
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link to="/settings?tab=team" className="w-full flex items-center gap-2">
+                <Users01 size={16} />
+                Team
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link to="/settings?tab=billing" className="w-full flex items-center gap-2">
+                <CreditCard01 size={16} />
+                Billing
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link to="/settings" className="w-full flex items-center gap-2">
+                <Settings size={16} />
+                Settings
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem 
+              onMouseEnter={() => setShowShortcuts(true)}
+              className="flex items-center gap-2 cursor-default"
+              onSelect={(e) => e.preventDefault()}
+            >
+              <Keyboard01 size={16} />
+              Shortcuts
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
+              <LogOut size={16} className="mr-2" />
+              Sign Out
+            </DropdownMenuItem>
+          </div>
+
+          {/* Shortcuts column - shows on hover */}
+          {showShortcuts && (
+            <div 
+              className="border-l border-border pl-3 pr-2 py-1 animate-fade-in"
+              onMouseLeave={() => setShowShortcuts(false)}
+            >
+              <div className="text-2xs font-semibold text-muted-foreground mb-2">Shortcuts</div>
+              <div className="space-y-1.5">
+                {shortcuts.map((shortcut, index) => (
+                  <div key={index} className="flex items-center justify-between gap-3">
+                    <span className="text-2xs text-foreground whitespace-nowrap">{shortcut.description}</span>
+                    <div className="flex items-center gap-0.5">
+                      {formatShortcut(shortcut).map((key, keyIndex) => (
+                        <Badge 
+                          key={keyIndex}
+                          variant="secondary" 
+                          size="sm"
+                          className="px-1 py-0 font-mono text-2xs h-auto"
+                        >
+                          {key}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       </DropdownMenuContent>
     </DropdownMenu>
   );
