@@ -2,16 +2,19 @@
  * Setup Checklist Component
  * 
  * Two-column layout: steps on left, video preview on right.
- * Matches Intercom's onboarding style.
+ * Uses the shared Accordion component for consistency.
  * 
  * @module components/onboarding/SetupChecklist
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { CheckCircle, ArrowUpRight } from '@untitledui/icons';
+import { motion } from 'motion/react';
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { SetupProgress } from './SetupProgress';
-import { SetupStepCard } from './SetupStepCard';
 import { VideoPlaceholder } from './VideoPlaceholder';
+import { Button } from '@/components/ui/button';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import type { OnboardingStep } from '@/hooks/useOnboardingProgress';
 
 interface SetupChecklistProps {
@@ -28,19 +31,11 @@ export const SetupChecklist: React.FC<SetupChecklistProps> = ({
   onStepAction,
 }) => {
   const allComplete = completedCount === totalCount;
+  const prefersReducedMotion = useReducedMotion();
   
-  // Track which step is expanded - default to first incomplete step
-  const [expandedStepId, setExpandedStepId] = useState<string | null>(() => {
-    const firstIncomplete = steps.find(s => !s.isComplete);
-    return firstIncomplete?.id || steps[0]?.id || null;
-  });
-
-  // Auto-expand next incomplete step only on initial load, not when current step completes
-  // This allows users to keep completed steps open if they want
-
-  const handleStepClick = (step: OnboardingStep) => {
-    setExpandedStepId(prev => prev === step.id ? null : step.id);
-  };
+  // Default to first incomplete step
+  const defaultStep = steps.find(s => !s.isComplete)?.id || steps[0]?.id || '';
+  const [expandedStepId, setExpandedStepId] = useState<string>(defaultStep);
 
   // All complete state
   if (allComplete) {
@@ -102,17 +97,61 @@ export const SetupChecklist: React.FC<SetupChecklistProps> = ({
       <div className="border border-border rounded-xl bg-card shadow-sm p-6">
         {/* Two-column layout: steps left, video right */}
         <div className="flex gap-6">
-          {/* Left column: Step list */}
+          {/* Left column: Step list using Accordion */}
           <div className="flex-1 min-w-0">
-            {steps.map((step) => (
-              <SetupStepCard
-                key={step.id}
-                step={step}
-                isExpanded={expandedStepId === step.id}
-                onClick={() => handleStepClick(step)}
-                onAction={() => onStepAction(step)}
-              />
-            ))}
+            <Accordion
+              type="single"
+              collapsible
+              value={expandedStepId}
+              onValueChange={(value) => setExpandedStepId(value || '')}
+              className="bg-transparent border-0 px-0"
+            >
+              {steps.map((step) => (
+                <AccordionItem key={step.id} value={step.id} className="border-border">
+                  <AccordionTrigger showIcon={false} className="py-3 px-1 hover:bg-muted/30 transition-colors">
+                    <div className="flex items-center gap-3 w-full">
+                      {/* Step indicator */}
+                      <div className="flex-shrink-0">
+                        {step.isComplete ? (
+                          <motion.div
+                            initial={prefersReducedMotion ? false : { scale: 0 }}
+                            animate={{ scale: 1 }}
+                            transition={{ type: 'spring', stiffness: 500, damping: 25 }}
+                          >
+                            <CheckCircle size={20} className="text-status-active" />
+                          </motion.div>
+                        ) : (
+                          <div className="w-5 h-5 rounded-full border-2 border-muted-foreground/40" />
+                        )}
+                      </div>
+
+                      {/* Title */}
+                      <span className={`flex-1 text-left text-sm font-medium ${step.isComplete ? 'text-muted-foreground line-through' : 'text-foreground'}`}>
+                        {step.title}
+                      </span>
+                    </div>
+                  </AccordionTrigger>
+                  
+                  <AccordionContent className="pb-4 pl-8 pr-1">
+                    <div className="space-y-3">
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        {step.description}
+                      </p>
+                      <Button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onStepAction(step);
+                        }}
+                        size="sm"
+                        variant={step.isComplete ? 'outline' : 'default'}
+                      >
+                        {step.action.label}
+                      </Button>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
           </div>
 
           {/* Right column: Video placeholder spanning full height */}

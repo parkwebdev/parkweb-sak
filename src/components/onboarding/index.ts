@@ -5,7 +5,6 @@
  */
 
 export { SetupProgress } from './SetupProgress';
-export { SetupStepCard } from './SetupStepCard';
 export { SetupChecklist } from './SetupChecklist';
 export { VideoPlaceholder } from './VideoPlaceholder';
 export { GoFurtherSection } from './GoFurtherSection';
