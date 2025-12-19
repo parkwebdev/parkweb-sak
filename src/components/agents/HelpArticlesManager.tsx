@@ -750,8 +750,8 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
           )}
 
           {/* Toolbar */}
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-2 flex-1">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex items-center gap-2 flex-1 min-w-0 flex-wrap">
               <DataTableToolbar
                 table={table}
                 searchPlaceholder="Search articles..."
@@ -762,7 +762,7 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
             </div>
 
             {/* Actions */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap justify-start lg:justify-end">
               {/* Embed All */}
               {articles.some(a => !a.has_embedding) && (
                 <Button 
@@ -770,12 +770,15 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
                   variant="outline" 
                   onClick={handleEmbedAll}
                   disabled={isEmbedding}
+                  className="max-w-xs"
                 >
                   <RefreshCcw01 className={`h-4 w-4 mr-1 ${isEmbedding ? 'animate-spin' : ''}`} />
-                  {isEmbedding 
-                    ? `Embedding ${embeddingProgress.current}/${embeddingProgress.total}...` 
-                    : `Embed All (${articles.filter(a => !a.has_embedding).length})`
-                  }
+                  <span className="truncate">
+                    {isEmbedding 
+                      ? `Embedding ${embeddingProgress.current}/${embeddingProgress.total}...` 
+                      : `Embed All (${articles.filter(a => !a.has_embedding).length})`
+                    }
+                  </span>
                 </Button>
               )}
               
