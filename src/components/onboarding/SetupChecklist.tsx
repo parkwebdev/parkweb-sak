@@ -8,7 +8,7 @@
  */
 
 import React, { useState } from 'react';
-import { CheckCircle, ArrowUpRight } from '@untitledui/icons';
+import { ArrowUpRight, CheckCircle } from '@untitledui/icons';
 import { motion } from 'motion/react';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { SetupProgress } from './SetupProgress';
@@ -117,8 +117,9 @@ export const SetupChecklist: React.FC<SetupChecklistProps> = ({
                             initial={prefersReducedMotion ? false : { scale: 0 }}
                             animate={{ scale: 1 }}
                             transition={{ type: 'spring', stiffness: 500, damping: 25 }}
+                            className="w-5 h-5 rounded-full border-2 border-status-active flex items-center justify-center"
                           >
-                            <CheckCircle size={20} className="text-status-active" />
+                            <div className="w-2.5 h-2.5 rounded-full bg-status-active" />
                           </motion.div>
                         ) : (
                           <div className="w-5 h-5 rounded-full border-2 border-muted-foreground/40" />
@@ -155,7 +156,7 @@ export const SetupChecklist: React.FC<SetupChecklistProps> = ({
           </div>
 
           {/* Right column: Video placeholder spanning full height */}
-          <div className="hidden sm:flex w-64 md:w-80 lg:w-96 flex-shrink-0">
+          <div className="hidden sm:flex w-72 md:w-96 lg:w-[28rem] flex-shrink-0">
             <VideoPlaceholder stepId={expandedStepId || steps[0]?.id} />
           </div>
         </div>
