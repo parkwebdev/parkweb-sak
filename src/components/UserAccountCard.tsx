@@ -105,7 +105,7 @@ export const UserAccountCard: React.FC<UserAccountCardProps> = ({ isCollapsed = 
       <DropdownMenuTrigger asChild>
         <button className={`relative flex items-center w-full ${isCollapsed ? 'justify-center p-[6px]' : 'gap-3 p-[11px]'} hover:bg-accent/50 rounded-md transition-all duration-150`}>
           <div className="relative flex-shrink-0">
-            <Avatar className="h-8 w-8">
+            <Avatar className="h-7 w-7">
               <AvatarImage src={avatarUrl} alt={displayName} />
               <AvatarFallback className="font-medium text-xs">
                 {initials}
