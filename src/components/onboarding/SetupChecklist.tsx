@@ -35,16 +35,8 @@ export const SetupChecklist: React.FC<SetupChecklistProps> = ({
     return firstIncomplete?.id || steps[0]?.id || null;
   });
 
-  // Update expanded step when steps change (e.g., a step becomes complete)
-  useEffect(() => {
-    const currentStep = steps.find(s => s.id === expandedStepId);
-    if (currentStep?.isComplete) {
-      const nextIncomplete = steps.find(s => !s.isComplete);
-      if (nextIncomplete) {
-        setExpandedStepId(nextIncomplete.id);
-      }
-    }
-  }, [steps, expandedStepId]);
+  // Auto-expand next incomplete step only on initial load, not when current step completes
+  // This allows users to keep completed steps open if they want
 
   const handleStepClick = (step: OnboardingStep) => {
     setExpandedStepId(prev => prev === step.id ? null : step.id);
