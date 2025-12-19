@@ -84,6 +84,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
   const { allComplete, completedCount, totalCount } = useOnboardingProgress();
   const { setOpen: setSearchOpen } = useGlobalSearch();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  // Handle dropdown state changes - expand sidebar when opening
+  const handleDropdownOpenChange = (open: boolean) => {
+    setIsDropdownOpen(open);
+    if (open) {
+      setCollapsed(false);
+    }
+  };
   
   // Count unread conversations for admin notification badge
   const unreadConversationsCount = conversations.filter(conv => {
@@ -344,7 +352,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
           
           {/* User account card */}
           <div className="pt-2">
-            <UserAccountCard isCollapsed={isCollapsed} onOpenChange={setIsDropdownOpen} />
+            <UserAccountCard isCollapsed={isCollapsed} onOpenChange={handleDropdownOpenChange} />
           </div>
         </div>
       </nav>
