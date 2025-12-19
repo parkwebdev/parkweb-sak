@@ -155,7 +155,7 @@ export const SetupChecklist: React.FC<SetupChecklistProps> = ({
           </div>
 
           {/* Right column: Video placeholder spanning full height */}
-          <div className="hidden sm:flex w-56 md:w-64 lg:w-72 flex-shrink-0">
+          <div className="hidden sm:flex w-64 md:w-80 lg:w-96 flex-shrink-0">
             <VideoPlaceholder stepId={expandedStepId || steps[0]?.id} />
           </div>
         </div>
