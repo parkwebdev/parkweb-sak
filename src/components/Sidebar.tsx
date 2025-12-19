@@ -201,7 +201,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
         </div>
 
         {/* Footer with get set up, search, settings and user account */}
-        <div className="pt-4 space-y-1">
+        <div className="pt-4">
           {/* Bottom navigation (get set up, search, settings) */}
           {bottomItems.map((item, index) => {
             const isActive = location.pathname === item.path;
