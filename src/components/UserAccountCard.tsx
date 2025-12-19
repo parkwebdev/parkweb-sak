@@ -206,21 +206,21 @@ export const UserAccountCard: React.FC<UserAccountCardProps> = ({ isCollapsed = 
           {/* Shortcuts column - shows on hover */}
           {showShortcuts && (
             <div 
-              className="border-l border-border pl-3 pr-3 py-2 animate-fade-in"
+              className="border-l border-border pl-3 pr-3 py-2 animate-fade-in flex-1"
               onMouseLeave={() => setShowShortcuts(false)}
             >
               <div className="text-xs font-semibold text-muted-foreground mb-2">Shortcuts</div>
               <div className="space-y-2">
                 {shortcuts.map((shortcut, index) => (
-                  <div key={index} className="flex items-center justify-between gap-4">
-                    <span className="text-xs text-foreground whitespace-nowrap">{shortcut.description}</span>
-                    <div className="flex items-center gap-0.5">
+                  <div key={index} className="flex items-center justify-between w-full">
+                    <span className="text-xs text-foreground">{shortcut.description}</span>
+                    <div className="flex items-center gap-0.5 ml-auto">
                       {formatShortcut(shortcut).map((key, keyIndex) => (
                         <Badge 
                           key={keyIndex}
                           variant="secondary" 
                           size="sm"
-                          className="px-1.5 py-0.5 font-mono text-xs h-auto"
+                          className="px-1.5 py-0.5 font-mono text-xs h-auto rounded-sm"
                         >
                           {key}
                         </Badge>
