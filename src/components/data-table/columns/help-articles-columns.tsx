@@ -156,13 +156,13 @@ export const createHelpArticlesColumns = ({
     ),
     cell: ({ row }) => {
       const article = row.original;
-      const preview = getContentPreview(article.content);
+      const preview = getContentPreview(article.content, 50);
       
       return (
-        <div className="flex items-center gap-3 min-w-0 py-1">
+        <div className="flex items-center gap-2 min-w-0 py-1 max-w-[200px]">
           {/* Thumbnail */}
           {article.featuredImage ? (
-            <div className="w-10 h-10 rounded-md overflow-hidden shrink-0 bg-muted">
+            <div className="w-8 h-8 rounded overflow-hidden shrink-0 bg-muted">
               <img 
                 src={article.featuredImage} 
                 alt="" 
@@ -170,15 +170,15 @@ export const createHelpArticlesColumns = ({
               />
             </div>
           ) : (
-            <div className="w-10 h-10 rounded-md shrink-0 bg-accent flex items-center justify-center">
-              <File06 className="h-4 w-4 text-accent-foreground" />
+            <div className="w-8 h-8 rounded shrink-0 bg-accent flex items-center justify-center">
+              <File06 className="h-3.5 w-3.5 text-accent-foreground" />
             </div>
           )}
           
           {/* Title and preview */}
           <div className="min-w-0 flex-1">
-            <p className="font-medium truncate">{article.title}</p>
-            <p className="text-sm text-muted-foreground truncate">{preview || 'No content'}</p>
+            <p className="text-sm font-medium truncate">{article.title}</p>
+            <p className="text-xs text-muted-foreground truncate">{preview || 'No content'}</p>
           </div>
         </div>
       );
@@ -194,8 +194,8 @@ export const createHelpArticlesColumns = ({
       const CategoryIcon = getCategoryIcon(article.categoryIcon);
       
       return (
-        <Badge variant="outline" className="text-xs gap-1.5">
-          <CategoryIcon className="h-3 w-3" />
+        <Badge variant="outline" className="text-xs gap-1 max-w-[100px]">
+          <CategoryIcon className="h-3 w-3 shrink-0" />
           <span className="truncate">{article.categoryName}</span>
         </Badge>
       );
@@ -262,14 +262,14 @@ export const createHelpArticlesColumns = ({
   // Actions column with reorder arrows, edit, and delete
   {
     id: 'actions',
-    header: () => <span className="text-xs font-medium">Actions</span>,
+    header: () => null,
     cell: ({ row }) => {
       const article = row.original;
       const canUp = canMoveUp(article);
       const canDown = canMoveDown(article);
       
       return (
-        <div className="flex items-center justify-end gap-0.5" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-end gap-0" onClick={(e) => e.stopPropagation()}>
           {/* Reorder buttons */}
           <Tooltip>
             <TooltipTrigger asChild>
@@ -278,10 +278,10 @@ export const createHelpArticlesColumns = ({
                 size="sm"
                 onClick={() => onMoveUp(article)}
                 disabled={!canUp}
-                className="h-8 w-8 p-0"
+                className="h-7 w-7 p-0"
                 aria-label="Move up"
               >
-                <ChevronUp className={`h-4 w-4 ${canUp ? 'text-muted-foreground hover:text-foreground' : 'text-muted-foreground/30'}`} />
+                <ChevronUp className={`h-3.5 w-3.5 ${canUp ? 'text-muted-foreground hover:text-foreground' : 'text-muted-foreground/30'}`} />
               </Button>
             </TooltipTrigger>
             <TooltipContent>
@@ -296,10 +296,10 @@ export const createHelpArticlesColumns = ({
                 size="sm"
                 onClick={() => onMoveDown(article)}
                 disabled={!canDown}
-                className="h-8 w-8 p-0"
+                className="h-7 w-7 p-0"
                 aria-label="Move down"
               >
-                <ChevronDown className={`h-4 w-4 ${canDown ? 'text-muted-foreground hover:text-foreground' : 'text-muted-foreground/30'}`} />
+                <ChevronDown className={`h-3.5 w-3.5 ${canDown ? 'text-muted-foreground hover:text-foreground' : 'text-muted-foreground/30'}`} />
               </Button>
             </TooltipTrigger>
             <TooltipContent>
@@ -314,10 +314,10 @@ export const createHelpArticlesColumns = ({
                 variant="ghost"
                 size="sm"
                 onClick={() => onView(article)}
-                className="h-8 w-8 p-0"
+                className="h-7 w-7 p-0"
                 aria-label="Edit article"
               >
-                <Edit05 className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                <Edit05 className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>
@@ -332,10 +332,10 @@ export const createHelpArticlesColumns = ({
                 variant="ghost"
                 size="sm"
                 onClick={() => onDelete(article)}
-                className="h-8 w-8 p-0"
+                className="h-7 w-7 p-0"
                 aria-label="Delete article"
               >
-                <Trash01 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
+                <Trash01 className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
               </Button>
             </TooltipTrigger>
             <TooltipContent>
