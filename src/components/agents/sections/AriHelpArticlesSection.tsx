@@ -14,7 +14,7 @@ interface AriHelpArticlesSectionProps {
 
 export const AriHelpArticlesSection: React.FC<AriHelpArticlesSectionProps> = ({ agentId, userId }) => {
   return (
-    <div>
+    <div className="min-w-0 w-full">
       <AriSectionHeader
         title="Help Articles"
         description="Create and organize help articles that Ari can reference and share"

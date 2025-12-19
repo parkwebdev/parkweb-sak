@@ -700,7 +700,7 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
   );
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 min-w-0 w-full overflow-hidden">
       {/* Empty State */}
       {articles.length === 0 && categories.length === 0 ? (
         <EmptyState
