@@ -179,7 +179,6 @@ export function useOnboardingProgress(): OnboardingProgress {
         action: {
           label: 'Open Chat Preview',
           route: '/ari',
-          section: 'preview',
         },
       },
     ];
