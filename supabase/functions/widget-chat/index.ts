@@ -2288,16 +2288,20 @@ function isWidgetRequest(req: Request): boolean {
 const BLOCKED_URL_PATTERNS = [
   /^https?:\/\/localhost/i,
   /^https?:\/\/127\.\d+\.\d+\.\d+/i,
+  /^https?:\/\/0\.0\.0\.0/i, // Bind-all address
   /^https?:\/\/10\.\d+\.\d+\.\d+/i,
   /^https?:\/\/172\.(1[6-9]|2\d|3[01])\.\d+\.\d+/i,
   /^https?:\/\/192\.168\.\d+\.\d+/i,
   /^https?:\/\/169\.254\.\d+\.\d+/i, // Link-local
   /^https?:\/\/\[::1\]/i, // IPv6 localhost
   /^https?:\/\/\[fe80:/i, // IPv6 link-local
+  /^https?:\/\/\[fc00:/i, // IPv6 unique local address
+  /^https?:\/\/fd00:/i, // Private IPv6
   /^https?:\/\/metadata\.google\.internal/i,
+  /^https?:\/\/metadata\.goog/i, // GCP alternative
+  /^https?:\/\/instance-data/i, // AWS alternative hostname
   /^https?:\/\/169\.254\.169\.254/i, // AWS/GCP metadata
   /^https?:\/\/100\.100\.100\.200/i, // Alibaba metadata
-  /^https?:\/\/fd00:/i, // Private IPv6
 ];
 
 /**
