@@ -50,11 +50,11 @@ export const GetStarted: React.FC = () => {
   }, [allComplete, isLoading]);
 
   /**
-   * Handle celebration complete - redirect to analytics
+   * Handle celebration complete - dismiss the modal
    */
   const handleCelebrationComplete = useCallback(() => {
-    navigate('/analytics');
-  }, [navigate]);
+    setShowCelebration(false);
+  }, []);
 
   /**
    * Handle step action - navigate to the appropriate section
