@@ -171,8 +171,8 @@ export const UserAccountCard: React.FC<UserAccountCardProps> = ({ isCollapsed = 
         side="right"
         align="end"
         sideOffset={16}
-        alignOffset={8}
-        className="bg-background border shadow-lg z-50 transition-all duration-200 ease-out"
+        alignOffset={4}
+        className="bg-background border shadow-lg z-50 transition-all duration-200 ease-out rounded-xl"
         style={{ width: showShortcuts ? '400px' : '192px' }}
       >
         <div className="flex">
