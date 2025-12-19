@@ -272,7 +272,7 @@ export const createHelpArticlesColumns = ({
         .replace(/ /, '');
       
       return (
-        <span className="text-sm text-muted-foreground whitespace-nowrap">
+        <span className="text-sm text-muted-foreground whitespace-nowrap pl-4">
           {short} ago
         </span>
       );
