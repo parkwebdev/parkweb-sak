@@ -233,7 +233,7 @@ export const UserAccountCard: React.FC<UserAccountCardProps> = ({ isCollapsed = 
             >
               <div className="px-2 pb-1.5 text-sm font-semibold text-muted-foreground">Shortcuts</div>
               <DropdownMenuSeparator className="mb-1" />
-              <div className="space-y-2 px-2">
+              <div className="space-y-2 px-2 pt-1">
                 {shortcuts.map((shortcut, index) => (
                   <div key={index} className="flex items-center justify-between w-full">
                     <span className="text-sm text-foreground">{shortcut.description}</span>
