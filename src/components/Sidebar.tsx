@@ -351,7 +351,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
           })}
           
           {/* User account card */}
-          <div className="pt-2">
+          <div className="pt-2" onMouseDown={() => setIsDropdownOpen(true)}>
             <UserAccountCard isCollapsed={isCollapsed} onOpenChange={handleDropdownOpenChange} />
           </div>
         </div>
