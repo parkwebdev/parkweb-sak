@@ -7,7 +7,7 @@
  * @module components/Sidebar
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { X, Settings04 as Settings, Grid01 as Grid, User03, PieChart01, Calendar, CheckCircle, Circle, SearchMd } from '@untitledui/icons';
 import AriAgentsIcon from './icons/AriAgentsIcon';
 import { DashboardFilled, InboxOutline, InboxFilled, PlannerFilled, LeadsFilled, AnalyticsFilled, SettingsFilled } from './icons/SidebarIcons';
@@ -83,6 +83,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
   const prefersReducedMotion = useReducedMotion();
   const { allComplete, completedCount, totalCount } = useOnboardingProgress();
   const { setOpen: setSearchOpen } = useGlobalSearch();
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   
   // Count unread conversations for admin notification badge
   const unreadConversationsCount = conversations.filter(conv => {
@@ -106,7 +107,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
       animate={{ width: isCollapsed ? 64 : 240 }}
       transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
       onMouseEnter={() => setCollapsed(false)}
-      onMouseLeave={() => setCollapsed(true)}
+      onMouseLeave={() => !isDropdownOpen && setCollapsed(true)}
     >
       <nav className="w-full flex flex-col pt-6 px-3 pb-4" aria-label="Main navigation">
         {/* Header with logo */}
@@ -343,7 +344,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
           
           {/* User account card */}
           <div className="pt-2">
-            <UserAccountCard isCollapsed={isCollapsed} />
+            <UserAccountCard isCollapsed={isCollapsed} onOpenChange={setIsDropdownOpen} />
           </div>
         </div>
       </nav>
