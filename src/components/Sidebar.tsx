@@ -7,7 +7,7 @@
  * @module components/Sidebar
  */
 
-import React, { useState } from 'react';
+import React from 'react';
 import { X, Settings04 as Settings, Grid01 as Grid, User03, PieChart01, Calendar, CheckCircle, Circle, SearchMd } from '@untitledui/icons';
 import AriAgentsIcon from './icons/AriAgentsIcon';
 import { DashboardFilled, InboxOutline, InboxFilled, PlannerFilled, LeadsFilled, AnalyticsFilled, SettingsFilled } from './icons/SidebarIcons';
@@ -83,15 +83,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
   const prefersReducedMotion = useReducedMotion();
   const { allComplete, completedCount, totalCount } = useOnboardingProgress();
   const { setOpen: setSearchOpen } = useGlobalSearch();
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-
-  // Handle dropdown state changes - expand sidebar when opening
-  const handleDropdownOpenChange = (open: boolean) => {
-    setIsDropdownOpen(open);
-    if (open) {
-      setCollapsed(false);
-    }
-  };
   
   // Count unread conversations for admin notification badge
   const unreadConversationsCount = conversations.filter(conv => {
@@ -114,10 +105,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
       className="flex h-screen bg-app-background"
       animate={{ width: isCollapsed ? 64 : 240 }}
       transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-      onMouseEnter={() => {
-        if (!isDropdownOpen) setCollapsed(false);
-      }}
-      onMouseLeave={() => !isDropdownOpen && setCollapsed(true)}
+      onMouseEnter={() => setCollapsed(false)}
+      onMouseLeave={() => setCollapsed(true)}
     >
       <nav className="w-full flex flex-col pt-6 px-3 pb-4" aria-label="Main navigation">
         {/* Header with logo */}
@@ -353,8 +342,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
           })}
           
           {/* User account card */}
-          <div className="pt-2" onMouseDown={() => setIsDropdownOpen(true)}>
-            <UserAccountCard isCollapsed={isCollapsed} onOpenChange={handleDropdownOpenChange} />
+          <div className="pt-2">
+            <UserAccountCard isCollapsed={isCollapsed} />
           </div>
         </div>
       </nav>

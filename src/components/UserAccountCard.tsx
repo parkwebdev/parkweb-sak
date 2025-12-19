@@ -37,11 +37,9 @@ interface UserProfile {
 interface UserAccountCardProps {
   /** Whether the sidebar is collapsed (shows avatar only) */
   isCollapsed?: boolean;
-  /** Callback when dropdown open state changes */
-  onOpenChange?: (open: boolean) => void;
 }
 
-export const UserAccountCard: React.FC<UserAccountCardProps> = ({ isCollapsed = false, onOpenChange }) => {
+export const UserAccountCard: React.FC<UserAccountCardProps> = ({ isCollapsed = false }) => {
   const { user, signOut } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -103,7 +101,7 @@ export const UserAccountCard: React.FC<UserAccountCardProps> = ({ isCollapsed = 
   const initials = displayName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
 
   return (
-    <DropdownMenu onOpenChange={onOpenChange}>
+    <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button className={`relative flex items-center w-full ${isCollapsed ? 'justify-center p-[6px]' : 'gap-3 p-[11px]'} hover:bg-accent/50 rounded-md transition-all duration-150`}>
           <div className="relative flex-shrink-0">
