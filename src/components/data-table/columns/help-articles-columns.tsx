@@ -255,9 +255,25 @@ export const createHelpArticlesColumns = ({
     cell: ({ row }) => {
       const date = row.original.createdAt;
       if (!date) return <span className="text-muted-foreground">-</span>;
+      
+      const distance = formatDistanceToNow(new Date(date));
+      // Convert "about X hours" to "Xhrs", "X days" to "Xd", etc.
+      const short = distance
+        .replace(/^about /, '')
+        .replace(/^less than /, '<')
+        .replace(/^over /, '>')
+        .replace(/ seconds?/, 's')
+        .replace(/ minutes?/, 'm')
+        .replace(/ hours?/, 'hrs')
+        .replace(/ days?/, 'd')
+        .replace(/ weeks?/, 'w')
+        .replace(/ months?/, 'mo')
+        .replace(/ years?/, 'y')
+        .replace(/ /, '');
+      
       return (
         <span className="text-sm text-muted-foreground whitespace-nowrap">
-          {formatDistanceToNow(new Date(date), { addSuffix: true })}
+          {short} ago
         </span>
       );
     },
