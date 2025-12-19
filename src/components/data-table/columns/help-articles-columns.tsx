@@ -190,16 +190,18 @@ export const createHelpArticlesColumns = ({
   {
     id: 'category',
     size: 100,
-    header: () => <span className="text-xs font-medium">Category</span>,
+    header: () => <span className="text-xs font-medium block text-center">Category</span>,
     cell: ({ row }) => {
       const article = row.original;
       const CategoryIcon = getCategoryIcon(article.categoryIcon);
       
       return (
-        <Badge variant="outline" className="text-xs gap-1 max-w-[90px]">
-          <CategoryIcon className="h-3 w-3 shrink-0" />
-          <span className="truncate">{article.categoryName}</span>
-        </Badge>
+        <div className="flex justify-center">
+          <Badge variant="outline" className="text-xs gap-1 max-w-[90px]">
+            <CategoryIcon className="h-3 w-3 shrink-0" />
+            <span className="truncate">{article.categoryName}</span>
+          </Badge>
+        </div>
       );
     },
     enableSorting: false,
@@ -209,37 +211,39 @@ export const createHelpArticlesColumns = ({
   {
     id: 'status',
     size: 80,
-    header: () => <span className="text-xs font-medium">Status</span>,
+    header: () => <span className="text-xs font-medium block text-center">Status</span>,
     cell: ({ row }) => {
       const hasEmbedding = row.original.hasEmbedding;
       
       return (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Badge 
-              variant={hasEmbedding ? 'default' : 'secondary'} 
-              className={`text-xs gap-1 cursor-default ${hasEmbedding ? 'bg-status-active/10 text-status-active border-status-active/20 hover:bg-status-active/10' : 'hover:bg-secondary'}`}
-            >
-              {hasEmbedding ? (
-                <>
-                  <CheckVerified01 className="h-3 w-3" />
-                  Ready
-                </>
-              ) : (
-                <>
-                  <Clock className="h-3 w-3" />
-                  Pending
-                </>
-              )}
-            </Badge>
-          </TooltipTrigger>
-          <TooltipContent>
-            {hasEmbedding 
-              ? "Article is embedded and ready for AI-powered search"
-              : "Article is pending embedding for AI search"
-            }
-          </TooltipContent>
-        </Tooltip>
+        <div className="flex justify-center">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Badge 
+                variant={hasEmbedding ? 'default' : 'secondary'} 
+                className={`text-xs gap-1 cursor-default ${hasEmbedding ? 'bg-status-active/10 text-status-active border-status-active/20 hover:bg-status-active/10' : 'hover:bg-secondary'}`}
+              >
+                {hasEmbedding ? (
+                  <>
+                    <CheckVerified01 className="h-3 w-3" />
+                    Ready
+                  </>
+                ) : (
+                  <>
+                    <Clock className="h-3 w-3" />
+                    Pending
+                  </>
+                )}
+              </Badge>
+            </TooltipTrigger>
+            <TooltipContent>
+              {hasEmbedding 
+                ? "Article is embedded and ready for AI-powered search"
+                : "Article is pending embedding for AI search"
+              }
+            </TooltipContent>
+          </Tooltip>
+        </div>
       );
     },
     enableSorting: false,
@@ -250,11 +254,13 @@ export const createHelpArticlesColumns = ({
     accessorKey: 'createdAt',
     size: 100,
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Added" />
+      <div className="text-center">
+        <DataTableColumnHeader column={column} title="Added" />
+      </div>
     ),
     cell: ({ row }) => {
       const date = row.original.createdAt;
-      if (!date) return <span className="text-muted-foreground">-</span>;
+      if (!date) return <span className="text-muted-foreground text-center block">-</span>;
       
       const distance = formatDistanceToNow(new Date(date));
       // Convert "about X hours" to "Xhrs", "X days" to "Xd", etc.
@@ -272,7 +278,7 @@ export const createHelpArticlesColumns = ({
         .replace(/ /, '');
       
       return (
-        <span className="text-sm text-muted-foreground whitespace-nowrap pl-4">
+        <span className="text-sm text-muted-foreground whitespace-nowrap block text-center">
           {short} ago
         </span>
       );
