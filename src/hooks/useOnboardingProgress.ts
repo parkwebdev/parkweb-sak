@@ -62,7 +62,9 @@ export interface OnboardingProgress {
  * Default appearance values to check against
  */
 const DEFAULT_GRADIENT_START = '#000000';
-const DEFAULT_GRADIENT_END = '#000000';
+const DEFAULT_GRADIENT_END = '#1e40af';
+const DEFAULT_WELCOME_TITLE = 'Hi';
+const DEFAULT_WELCOME_SUBTITLE = 'How can we help you today?';
 
 /**
  * Check if agent has custom appearance settings
@@ -71,15 +73,21 @@ function hasCustomAppearance(deploymentConfig: AgentDeploymentConfig | null | un
   if (!deploymentConfig) return false;
   
   const config = deploymentConfig as Record<string, unknown>;
+  const embeddedChat = config.embedded_chat as Record<string, unknown> | undefined;
   
-  // Check for any appearance customization
+  if (!embeddedChat) return false;
+  
+  // Check for gradient color customization
   const hasCustomGradient = 
-    (config.gradientStart && config.gradientStart !== DEFAULT_GRADIENT_START) ||
-    (config.gradientEnd && config.gradientEnd !== DEFAULT_GRADIENT_END);
+    (embeddedChat.gradientStartColor && embeddedChat.gradientStartColor !== DEFAULT_GRADIENT_START) ||
+    (embeddedChat.gradientEndColor && embeddedChat.gradientEndColor !== DEFAULT_GRADIENT_END);
   
-  const hasWelcomeMessage = !!config.welcomeMessage;
+  // Check for welcome message customization
+  const hasCustomWelcome = 
+    (embeddedChat.welcomeTitle && embeddedChat.welcomeTitle !== DEFAULT_WELCOME_TITLE) ||
+    (embeddedChat.welcomeSubtitle && embeddedChat.welcomeSubtitle !== DEFAULT_WELCOME_SUBTITLE);
   
-  return hasCustomGradient || hasWelcomeMessage;
+  return hasCustomGradient || hasCustomWelcome;
 }
 
 /**
