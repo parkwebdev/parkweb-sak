@@ -127,6 +127,7 @@ export const createHelpArticlesColumns = ({
   // Checkbox column for row selection
   {
     id: 'select',
+    size: 40,
     header: ({ table }) => (
       <Checkbox
         checked={table.getIsAllPageRowsSelected()}
@@ -159,7 +160,7 @@ export const createHelpArticlesColumns = ({
       const preview = getContentPreview(article.content, 50);
       
       return (
-        <div className="flex items-center gap-2 min-w-0 py-1 max-w-[200px]">
+        <div className="flex items-center gap-2 min-w-0 py-1">
           {/* Thumbnail */}
           {article.featuredImage ? (
             <div className="w-8 h-8 rounded overflow-hidden shrink-0 bg-muted">
@@ -188,13 +189,14 @@ export const createHelpArticlesColumns = ({
   // Category badge with icon
   {
     id: 'category',
+    size: 100,
     header: () => <span className="text-xs font-medium">Category</span>,
     cell: ({ row }) => {
       const article = row.original;
       const CategoryIcon = getCategoryIcon(article.categoryIcon);
       
       return (
-        <Badge variant="outline" className="text-xs gap-1 max-w-[100px]">
+        <Badge variant="outline" className="text-xs gap-1 max-w-[90px]">
           <CategoryIcon className="h-3 w-3 shrink-0" />
           <span className="truncate">{article.categoryName}</span>
         </Badge>
@@ -206,6 +208,7 @@ export const createHelpArticlesColumns = ({
   // Embedding status
   {
     id: 'status',
+    size: 80,
     header: () => <span className="text-xs font-medium">Status</span>,
     cell: ({ row }) => {
       const hasEmbedding = row.original.hasEmbedding;
@@ -245,6 +248,7 @@ export const createHelpArticlesColumns = ({
   // Date added
   {
     accessorKey: 'createdAt',
+    size: 100,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Added" />
     ),
@@ -259,9 +263,10 @@ export const createHelpArticlesColumns = ({
     },
   },
   
-  // Actions column with reorder arrows, edit, and delete
+  // Actions column with reorder arrows and delete
   {
     id: 'actions',
+    size: 100,
     header: () => null,
     cell: ({ row }) => {
       const article = row.original;

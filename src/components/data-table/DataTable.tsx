@@ -70,7 +70,11 @@ export function DataTable<TData, TValue>({
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
               {headerGroup.headers.map((header) => (
-                <TableHead key={header.id} colSpan={header.colSpan}>
+                <TableHead 
+                  key={header.id} 
+                  colSpan={header.colSpan}
+                  style={{ width: header.column.getSize() !== 150 ? header.column.getSize() : undefined }}
+                >
                   {header.isPlaceholder
                     ? null
                     : flexRender(
