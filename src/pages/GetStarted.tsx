@@ -61,13 +61,7 @@ export const GetStarted: React.FC = () => {
    */
   const handleStepAction = useCallback((step: OnboardingStep) => {
     if (step.action.section) {
-      navigate('/ari');
-      setTimeout(() => {
-        const element = document.getElementById(step.action.section!);
-        if (element) {
-          element.scrollIntoView({ behavior: 'smooth' });
-        }
-      }, 100);
+      navigate(`/ari?section=${step.action.section}`);
     } else {
       navigate(step.action.route);
     }

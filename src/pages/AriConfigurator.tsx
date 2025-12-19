@@ -9,7 +9,8 @@
  * @module pages/AriConfigurator
  */
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import { useAgent } from '@/hooks/useAgent';
 import { useAuth } from '@/contexts/AuthContext';
@@ -53,11 +54,36 @@ const loadingStates = [
 ];
 const MIN_DISPLAY_TIME = loadingStates.length * STEP_DURATION;
 
+// Valid sections for URL parameter
+const VALID_SECTIONS: AriSection[] = [
+  'model-behavior', 'system-prompt', 'appearance', 'welcome-messages', 
+  'lead-capture', 'knowledge', 'locations', 'help-articles', 'announcements',
+  'news', 'custom-tools', 'webhooks', 'integrations', 'api-access', 'installation'
+];
+
 const AriConfigurator = () => {
   const prefersReducedMotion = useReducedMotion();
   const { hasSeenAriLoader, setHasSeenAriLoader } = useAuth();
   const { agent, agentId, updateAgent, loading: agentLoading } = useAgent();
-  const [activeSection, setActiveSection] = useState<AriSection>('model-behavior');
+  const [searchParams] = useSearchParams();
+  
+  // Get initial section from URL or default to model-behavior
+  const initialSection = useMemo(() => {
+    const sectionFromUrl = searchParams.get('section') as AriSection;
+    return sectionFromUrl && VALID_SECTIONS.includes(sectionFromUrl) 
+      ? sectionFromUrl 
+      : 'model-behavior';
+  }, []); // Only compute once on mount
+  
+  const [activeSection, setActiveSection] = useState<AriSection>(initialSection);
+  
+  // Sync section from URL when it changes (for deep linking)
+  useEffect(() => {
+    const sectionFromUrl = searchParams.get('section') as AriSection;
+    if (sectionFromUrl && VALID_SECTIONS.includes(sectionFromUrl)) {
+      setActiveSection(sectionFromUrl);
+    }
+  }, [searchParams]);
   
   // Only show loader if user hasn't seen it this session
   const [showLoader, setShowLoader] = useState(!hasSeenAriLoader);
