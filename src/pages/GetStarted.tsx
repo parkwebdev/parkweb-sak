@@ -79,7 +79,7 @@ export const GetStarted: React.FC = () => {
       />
       
       <main className="flex-1 min-h-0 h-full overflow-y-auto bg-background">
-        <div className="max-w-4xl mx-auto px-6 py-8 lg:py-12">
+        <div className="max-w-5xl mx-auto px-6 py-8 lg:py-12">
           {/* Header */}
           <motion.header 
             className="mb-6"
