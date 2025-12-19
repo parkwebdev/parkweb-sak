@@ -228,12 +228,12 @@ export const UserAccountCard: React.FC<UserAccountCardProps> = ({ isCollapsed = 
           {/* Shortcuts column - shows on hover */}
           {showShortcuts && (
             <div 
-              className="border-l border-border pl-3 pr-3 py-2 animate-fade-in flex-1"
+              className="border-l border-border py-2 animate-fade-in flex-1"
               onMouseLeave={() => setShowShortcuts(false)}
             >
-              <div className="pb-1.5 text-sm font-semibold text-muted-foreground">Shortcuts</div>
-              <div className="border-b border-border mb-1" />
-              <div className="space-y-2">
+              <div className="px-2 pb-1.5 text-sm font-semibold text-muted-foreground">Shortcuts</div>
+              <DropdownMenuSeparator className="mb-1" />
+              <div className="space-y-2 px-2">
                 {shortcuts.map((shortcut, index) => (
                   <div key={index} className="flex items-center justify-between w-full">
                     <span className="text-sm text-foreground">{shortcut.description}</span>
