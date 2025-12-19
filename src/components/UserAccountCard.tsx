@@ -178,6 +178,7 @@ export const UserAccountCard: React.FC<UserAccountCardProps> = ({ isCollapsed = 
         <div className="flex">
           {/* Main menu column */}
           <div className={`${showShortcuts ? 'w-[160px]' : 'w-full'} flex-shrink-0`}>
+            <div className="px-2 py-1.5 text-sm font-semibold text-muted-foreground">Account</div>
             <DropdownMenuItem asChild>
               <Link to="/settings?tab=profile" className="w-full flex items-center gap-2">
                 <User size={16} />
