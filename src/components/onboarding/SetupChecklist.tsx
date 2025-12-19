@@ -117,7 +117,7 @@ export const SetupChecklist: React.FC<SetupChecklistProps> = ({
                             initial={prefersReducedMotion ? false : { scale: 0 }}
                             animate={{ scale: 1 }}
                             transition={{ type: 'spring', stiffness: 500, damping: 25 }}
-                            className="w-4 h-4 rounded-full border-2 border-muted-foreground/40 flex items-center justify-center"
+                            className="w-4 h-4 rounded-full border-2 border-status-active/40 flex items-center justify-center"
                           >
                             <div className="w-1.5 h-1.5 rounded-full bg-status-active" />
                           </motion.div>
