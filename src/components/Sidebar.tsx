@@ -114,7 +114,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
       className="flex h-screen bg-app-background"
       animate={{ width: isCollapsed ? 64 : 240 }}
       transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-      onMouseEnter={() => setCollapsed(false)}
+      onMouseEnter={() => {
+        if (!isDropdownOpen) setCollapsed(false);
+      }}
       onMouseLeave={() => !isDropdownOpen && setCollapsed(true)}
     >
       <nav className="w-full flex flex-col pt-6 px-3 pb-4" aria-label="Main navigation">
