@@ -12,6 +12,99 @@ interface WebhookPayload {
   testMode?: boolean;
 }
 
+// =============================================================================
+// SSRF PROTECTION - Block internal/private network URLs
+// =============================================================================
+const BLOCKED_URL_PATTERNS = [
+  /^https?:\/\/localhost/i,
+  /^https?:\/\/127\.\d+\.\d+\.\d+/i,
+  /^https?:\/\/0\.0\.0\.0/i,
+  /^https?:\/\/10\.\d+\.\d+\.\d+/i,
+  /^https?:\/\/172\.(1[6-9]|2\d|3[01])\.\d+\.\d+/i,
+  /^https?:\/\/192\.168\.\d+\.\d+/i,
+  /^https?:\/\/169\.254\.\d+\.\d+/i, // Link-local
+  /^https?:\/\/\[::1\]/i, // IPv6 localhost
+  /^https?:\/\/\[fe80:/i, // IPv6 link-local
+  /^https?:\/\/\[fc00:/i, // IPv6 unique local
+  /^https?:\/\/fd00:/i, // Private IPv6
+  /^https?:\/\/metadata\.google\.internal/i,
+  /^https?:\/\/metadata\.goog/i, // GCP alternative
+  /^https?:\/\/instance-data/i, // AWS alternative hostname
+  /^https?:\/\/169\.254\.169\.254/i, // AWS/GCP metadata
+  /^https?:\/\/100\.100\.100\.200/i, // Alibaba metadata
+];
+
+function isBlockedUrl(url: string): boolean {
+  return BLOCKED_URL_PATTERNS.some(pattern => pattern.test(url));
+}
+
+// =============================================================================
+// SECURITY UTILITIES
+// =============================================================================
+const SENSITIVE_HEADERS = ['authorization', 'x-api-key', 'api-key', 'apikey', 'token', 'secret', 'password'];
+
+function maskHeadersForLogging(headers: Record<string, string>): Record<string, string> {
+  const masked: Record<string, string> = {};
+  for (const [key, value] of Object.entries(headers)) {
+    const lowerKey = key.toLowerCase();
+    const isSensitive = SENSITIVE_HEADERS.some(h => lowerKey.includes(h));
+    masked[key] = isSensitive ? `${value.substring(0, 4)}...MASKED` : value;
+  }
+  return masked;
+}
+
+// Response size limit (1MB)
+const MAX_RESPONSE_SIZE = 1024 * 1024;
+
+async function fetchWithSizeLimit(url: string, options: RequestInit): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
+
+  try {
+    const response = await fetch(url, { ...options, signal: controller.signal });
+    
+    // Check Content-Length header if available
+    const contentLength = response.headers.get('content-length');
+    if (contentLength && parseInt(contentLength, 10) > MAX_RESPONSE_SIZE) {
+      throw new Error(`Response too large: ${contentLength} bytes exceeds ${MAX_RESPONSE_SIZE} limit`);
+    }
+    
+    return response;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+async function readResponseWithLimit(response: Response): Promise<string> {
+  const reader = response.body?.getReader();
+  if (!reader) {
+    return '';
+  }
+
+  const chunks: Uint8Array[] = [];
+  let totalSize = 0;
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      
+      totalSize += value.length;
+      if (totalSize > MAX_RESPONSE_SIZE) {
+        reader.cancel();
+        throw new Error(`Response body exceeded ${MAX_RESPONSE_SIZE} byte limit`);
+      }
+      
+      chunks.push(value);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+
+  const decoder = new TextDecoder();
+  return chunks.map(chunk => decoder.decode(chunk, { stream: true })).join('');
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -39,6 +132,35 @@ Deno.serve(async (req) => {
 
     if (!webhook.active) {
       throw new Error('Webhook is not active');
+    }
+
+    // SSRF Protection: Validate URL before making request
+    if (isBlockedUrl(webhook.url)) {
+      console.error('SSRF Protection: Blocked internal URL:', webhook.url);
+      
+      // Log the blocked attempt
+      await supabase.from('webhook_logs').insert({
+        webhook_id: webhookId,
+        event_type: testMode ? 'test' : eventType,
+        payload: { blocked: true, reason: 'SSRF protection' },
+        response_status: null,
+        response_body: null,
+        error_message: 'URL blocked by SSRF protection - internal/private network addresses not allowed',
+        retry_count: 0,
+        delivered: false,
+        delivered_at: null,
+      });
+
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'URL blocked by security policy',
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400,
+        }
+      );
     }
 
     console.log('Webhook config:', { 
@@ -82,6 +204,9 @@ Deno.serve(async (req) => {
       console.log('Added Basic Auth authorization');
     }
 
+    // Log masked headers for security
+    console.log('Request headers (masked):', maskHeadersForLogging(headers));
+
     // Send webhook with retry logic
     let attempt = 0;
     let success = false;
@@ -103,16 +228,22 @@ Deno.serve(async (req) => {
           fetchOptions.body = JSON.stringify(payload);
         }
         
-        const response = await fetch(webhook.url, fetchOptions);
+        const response = await fetchWithSizeLimit(webhook.url, fetchOptions);
 
         responseStatus = response.status;
-        responseBody = await response.text();
+        
+        try {
+          responseBody = await readResponseWithLimit(response);
+        } catch (sizeError) {
+          responseBody = '[Response truncated - exceeded size limit]';
+          console.warn('Response size limit exceeded:', sizeError);
+        }
 
         if (response.ok) {
           success = true;
           console.log('Webhook delivered successfully');
         } else {
-          lastError = `HTTP ${response.status}: ${responseBody}`;
+          lastError = `HTTP ${response.status}: ${responseBody?.substring(0, 200)}`;
           console.error('Webhook delivery failed:', lastError);
         }
       } catch (error) {
@@ -130,7 +261,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Log the webhook delivery attempt
+    // Log the webhook delivery attempt (with truncated response body)
     const { error: logError } = await supabase
       .from('webhook_logs')
       .insert({
