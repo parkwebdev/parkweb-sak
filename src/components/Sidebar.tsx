@@ -8,7 +8,7 @@
  */
 
 import React from 'react';
-import { X, Settings04 as Settings, Grid01 as Grid, User03, PieChart01, Calendar, CheckCircle, Circle, SearchMd, Moon02 as Moon, Sun } from '@untitledui/icons';
+import { X, Settings04 as Settings, Grid01 as Grid, User03, PieChart01, Calendar, CheckCircle, Circle, SearchMd } from '@untitledui/icons';
 import AriAgentsIcon from './icons/AriAgentsIcon';
 import { DashboardFilled, InboxOutline, InboxFilled, PlannerFilled, LeadsFilled, AnalyticsFilled, SettingsFilled } from './icons/SidebarIcons';
 import { Link, useLocation } from 'react-router-dom';
@@ -19,7 +19,7 @@ import { useConversations } from '@/hooks/useConversations';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useOnboardingProgress } from '@/hooks/useOnboardingProgress';
 import { useGlobalSearch } from '@/hooks/useGlobalSearch';
-import { useTheme } from '@/components/ThemeProvider';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import ChatPadLogo from './ChatPadLogo';
 import { springs } from '@/lib/motion-variants';
 import type { ConversationMetadata } from '@/types/metadata';
@@ -84,15 +84,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
   const prefersReducedMotion = useReducedMotion();
   const { allComplete, completedCount, totalCount } = useOnboardingProgress();
   const { setOpen: setSearchOpen } = useGlobalSearch();
-  const { theme, setTheme } = useTheme();
-  
-  // Determine if currently in dark mode
-  const isDarkMode = theme === 'dark' || 
-    (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-  
-  const handleThemeToggle = () => {
-    setTheme(isDarkMode ? 'light' : 'dark');
-  };
   
   // Count unread conversations for admin notification badge
   const unreadConversationsCount = conversations.filter(conv => {
@@ -355,30 +346,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: (navigationItems.length + index + 0.6) * 0.03, ...springs.smooth }}
                     >
-                      <button
-                        onClick={handleThemeToggle}
-                        className="items-center flex w-full p-[11px] rounded-md transition-colors text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background bg-transparent hover:bg-accent/50 text-muted-foreground hover:text-foreground"
-                        title={isCollapsed ? (isDarkMode ? 'Light mode' : 'Dark mode') : ''}
-                        aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-                      >
-                        <div className="items-center flex gap-2 my-auto w-full overflow-hidden">
-                          <div className="items-center flex my-auto w-[18px] flex-shrink-0 justify-center">
-                            {isDarkMode ? (
-                              <Sun size={14} className="self-stretch my-auto" />
-                            ) : (
-                              <Moon size={14} className="self-stretch my-auto" />
-                            )}
-                          </div>
-                          <motion.div
-                            className="text-sm font-normal leading-4 my-auto whitespace-nowrap"
-                            initial={false}
-                            animate={{ opacity: isCollapsed ? 0 : 1 }}
-                            transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.15 }}
-                          >
-                            {isDarkMode ? 'Light mode' : 'Dark mode'}
-                          </motion.div>
-                        </div>
-                      </button>
+                      <ThemeToggle isCollapsed={isCollapsed} isSidebarItem />
                     </motion.div>
                   </>
                 )}
