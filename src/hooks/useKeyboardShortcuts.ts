@@ -1,5 +1,6 @@
 import { useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTheme } from '@/components/ThemeProvider';
 
 interface KeyboardShortcut {
   key: string;
@@ -21,14 +22,19 @@ interface KeyboardShortcut {
  */
 export const useKeyboardShortcuts = (shortcuts: KeyboardShortcut[] = []) => {
   const navigate = useNavigate();
+  const { theme, setTheme } = useTheme();
+
+  // Determine if currently in dark mode
+  const isDarkMode = theme === 'dark' || 
+    (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
 
   // Default global shortcuts (using Alt+key to avoid browser conflicts)
   const defaultShortcuts: KeyboardShortcut[] = [
     {
-      key: 'd',
+      key: 't',
       altKey: true,
-      description: 'Go to Dashboard',
-      action: () => navigate('/')
+      description: 'Toggle Theme',
+      action: () => setTheme(isDarkMode ? 'light' : 'dark')
     },
     {
       key: 'a',
