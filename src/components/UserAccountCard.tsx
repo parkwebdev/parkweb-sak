@@ -51,7 +51,7 @@ interface KeyboardShortcut {
 
 const shortcuts: KeyboardShortcut[] = [
   { key: 'k', ctrlKey: true, description: 'Global Search' },
-  { key: 'd', altKey: true, description: 'Dashboard' },
+  { key: 't', altKey: true, description: 'Theme' },
   { key: 'a', altKey: true, description: 'Ari' },
   { key: 'c', altKey: true, description: 'Inbox' },
   { key: 'l', altKey: true, description: 'Leads' },
