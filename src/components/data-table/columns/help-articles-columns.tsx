@@ -307,24 +307,6 @@ export const createHelpArticlesColumns = ({
             </TooltipContent>
           </Tooltip>
           
-          {/* Edit button */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onView(article)}
-                className="h-7 w-7 p-0"
-                aria-label="Edit article"
-              >
-                <Edit05 className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Edit</p>
-            </TooltipContent>
-          </Tooltip>
-          
           {/* Delete button */}
           <Tooltip>
             <TooltipTrigger asChild>
