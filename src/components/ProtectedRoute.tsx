@@ -57,8 +57,8 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   }
 
   // Determine if we're in the loading/blur phase
-  const showLoadingOverlay = justSignedIn;
-  const showBlur = justSignedIn || (loadingComplete && !hasShownToast);
+  const showLoadingOverlay = justSignedIn && !loadingComplete;
+  const showBlur = justSignedIn && !loadingComplete;
 
   // Always wrap children in the same container to prevent remounting
   return (
@@ -71,7 +71,8 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
         }
         transition={{ duration: 0.5, ease: "easeOut" }}
         onAnimationComplete={() => {
-          if (loadingComplete && !hasShownToast) {
+          // Show toast when transitioning from blurred to clear
+          if (!showBlur && loadingComplete && !hasShownToast) {
             setHasShownToast(true);
             toast.success("Welcome back!", {
               description: "You have been signed in successfully.",
