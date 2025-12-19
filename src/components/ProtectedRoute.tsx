@@ -56,41 +56,40 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // For fresh sign-ins: render BOTH loading screen AND children (blurred underneath)
-  if (justSignedIn || (loadingComplete && !hasShownToast)) {
-    return (
-      <>
-        {/* Children underneath - start blurred, animate to clear when loading completes */}
-        <motion.div
-          initial={{ filter: "blur(8px)", opacity: 0.7 }}
-          animate={loadingComplete 
-            ? { filter: "blur(0px)", opacity: 1 } 
-            : { filter: "blur(8px)", opacity: 0.7 }
+  // Determine if we're in the loading/blur phase
+  const showLoadingOverlay = justSignedIn;
+  const showBlur = justSignedIn || (loadingComplete && !hasShownToast);
+
+  // Always wrap children in the same container to prevent remounting
+  return (
+    <>
+      <motion.div
+        initial={showBlur ? { filter: "blur(8px)", opacity: 0.7 } : false}
+        animate={showBlur 
+          ? { filter: "blur(8px)", opacity: 0.7 } 
+          : { filter: "blur(0px)", opacity: 1 }
+        }
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        onAnimationComplete={() => {
+          if (loadingComplete && !hasShownToast) {
+            setHasShownToast(true);
+            toast.success("Welcome back!", {
+              description: "You have been signed in successfully.",
+            });
           }
-          transition={{ duration: 0.5, ease: "easeOut" }}
-          onAnimationComplete={() => {
-            if (loadingComplete && !hasShownToast) {
-              setHasShownToast(true);
-              toast.success("Welcome back!", {
-                description: "You have been signed in successfully.",
-              });
-            }
-          }}
-          className="h-full"
-        >
-          {children}
-        </motion.div>
+        }}
+        className="h-full"
+      >
+        {children}
+      </motion.div>
 
-        {/* Loading screen on top - exits instantly when complete */}
-        {justSignedIn && (
-          <AppLoadingScreen 
-            isLoading={false}
-            onLoadingComplete={handleLoadingComplete}
-          />
-        )}
-      </>
-    );
-  }
-
-  return <>{children}</>;
+      {/* Loading screen overlay */}
+      {showLoadingOverlay && (
+        <AppLoadingScreen 
+          isLoading={false}
+          onLoadingComplete={handleLoadingComplete}
+        />
+      )}
+    </>
+  );
 };
