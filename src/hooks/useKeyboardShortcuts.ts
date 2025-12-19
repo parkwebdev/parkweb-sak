@@ -1,6 +1,5 @@
 import { useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useTheme } from '@/components/ThemeProvider';
 
 interface KeyboardShortcut {
   key: string;
@@ -22,11 +21,6 @@ interface KeyboardShortcut {
  */
 export const useKeyboardShortcuts = (shortcuts: KeyboardShortcut[] = []) => {
   const navigate = useNavigate();
-  const { theme, setTheme } = useTheme();
-
-  // Determine if currently in dark mode
-  const isDarkMode = theme === 'dark' || 
-    (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
 
   // Default global shortcuts (using Alt+key to avoid browser conflicts)
   const defaultShortcuts: KeyboardShortcut[] = [
@@ -34,7 +28,13 @@ export const useKeyboardShortcuts = (shortcuts: KeyboardShortcut[] = []) => {
       key: 't',
       altKey: true,
       description: 'Toggle Theme',
-      action: () => setTheme(isDarkMode ? 'light' : 'dark')
+      action: () => {
+        // Trigger the sidebar theme toggle button to get the View Transitions animation
+        const themeToggle = document.querySelector('[data-theme-toggle]') as HTMLButtonElement;
+        if (themeToggle) {
+          themeToggle.click();
+        }
+      }
     },
     {
       key: 'a',

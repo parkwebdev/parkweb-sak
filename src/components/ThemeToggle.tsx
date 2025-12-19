@@ -94,6 +94,7 @@ export function ThemeToggle({ isCollapsed = false, isSidebarItem = false }: Them
       <button
         ref={ref}
         onClick={handleToggle}
+        data-theme-toggle
         className="items-center flex w-full p-[11px] rounded-md transition-colors text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background bg-transparent hover:bg-accent/50 text-muted-foreground hover:text-foreground"
         title={isCollapsed ? (isDarkMode ? 'Light mode' : 'Dark mode') : ''}
         aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
