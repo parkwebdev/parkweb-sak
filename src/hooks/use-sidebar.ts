@@ -41,9 +41,14 @@ export function useSidebar() {
     sidebarState.setCollapsed(collapsed);
   };
 
+  const setLocked = (locked: boolean) => {
+    sidebarState.setLocked(locked);
+  };
+
   return {
     isCollapsed,
     toggle,
-    setCollapsed
+    setCollapsed,
+    setLocked
   };
 }

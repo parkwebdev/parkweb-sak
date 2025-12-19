@@ -22,7 +22,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Spinner } from '@/components/ui/spinner';
 import { logger } from '@/utils/logger';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
+import { useSidebar } from '@/hooks/use-sidebar';
 
 /** User profile data from database */
 interface UserProfile {
@@ -74,7 +74,18 @@ export const UserAccountCard: React.FC<UserAccountCardProps> = ({ isCollapsed = 
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [showShortcuts, setShowShortcuts] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const navigate = useNavigate();
+  const { setLocked } = useSidebar();
+
+  // Lock sidebar when dropdown opens, unlock when it closes
+  const handleDropdownOpenChange = (open: boolean) => {
+    setIsDropdownOpen(open);
+    setLocked(open);
+    if (!open) {
+      setShowShortcuts(false);
+    }
+  };
 
   useEffect(() => {
     if (user) {
@@ -132,7 +143,7 @@ export const UserAccountCard: React.FC<UserAccountCardProps> = ({ isCollapsed = 
   const initials = displayName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
 
   return (
-    <DropdownMenu onOpenChange={(open) => !open && setShowShortcuts(false)}>
+    <DropdownMenu onOpenChange={handleDropdownOpenChange}>
       <DropdownMenuTrigger asChild>
         <button className={`relative flex items-center w-full ${isCollapsed ? 'justify-center p-[6px]' : 'gap-3 p-[11px]'} hover:bg-accent/50 rounded-md transition-all duration-150`}>
           <div className="relative flex-shrink-0">
