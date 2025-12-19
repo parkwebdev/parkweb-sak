@@ -157,7 +157,9 @@ export const UserAccountCard: React.FC<UserAccountCardProps> = ({ isCollapsed = 
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent 
-        align="end" 
+        side="right"
+        align="end"
+        sideOffset={8}
         className="bg-background border shadow-lg z-50 transition-all duration-200 ease-out"
         style={{ width: showShortcuts ? '400px' : '192px' }}
       >
