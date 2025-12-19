@@ -36,7 +36,7 @@ export function DataTable<TData, TValue>({
 }: DataTableProps<TData, TValue>) {
   if (isLoading) {
     return (
-      <div className="rounded-md border" role="status" aria-live="polite" aria-label="Loading table data">
+      <div className="rounded-md border overflow-x-auto min-w-0" role="status" aria-live="polite" aria-label="Loading table data">
         <Table>
           <TableHeader>
             <TableRow>
@@ -64,7 +64,7 @@ export function DataTable<TData, TValue>({
   }
 
   return (
-    <div className="rounded-md border">
+    <div className="rounded-md border overflow-x-auto min-w-0">
       <Table>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
