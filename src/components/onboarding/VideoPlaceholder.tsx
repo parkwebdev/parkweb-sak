@@ -41,62 +41,23 @@ interface VideoPlaceholderProps {
 /**
  * Step-specific gradient configurations
  */
-const STEP_GRADIENTS: Record<string, {
-  gradient: string;
-  decorations: { position: string; size: string; color: string }[];
-}> = {
-  personality: {
-    gradient: 'from-violet-600 via-purple-500 to-fuchsia-500',
-    decorations: [
-      { position: 'top-4 left-4', size: 'w-20 h-20', color: 'bg-pink-400/60' },
-      { position: 'top-12 right-8', size: 'w-16 h-16', color: 'bg-yellow-400/50' },
-      { position: 'bottom-8 left-8', size: 'w-24 h-24', color: 'bg-blue-400/40' },
-      { position: 'bottom-4 right-4', size: 'w-12 h-12', color: 'bg-indigo-400/50' },
-    ],
-  },
-  knowledge: {
-    gradient: 'from-blue-600 via-cyan-500 to-teal-500',
-    decorations: [
-      { position: 'top-4 left-4', size: 'w-20 h-20', color: 'bg-cyan-400/60' },
-      { position: 'top-12 right-8', size: 'w-16 h-16', color: 'bg-emerald-400/50' },
-      { position: 'bottom-8 left-8', size: 'w-24 h-24', color: 'bg-sky-400/40' },
-      { position: 'bottom-4 right-4', size: 'w-12 h-12', color: 'bg-teal-400/50' },
-    ],
-  },
-  appearance: {
-    gradient: 'from-orange-500 via-amber-500 to-yellow-500',
-    decorations: [
-      { position: 'top-4 left-4', size: 'w-20 h-20', color: 'bg-red-400/60' },
-      { position: 'top-12 right-8', size: 'w-16 h-16', color: 'bg-pink-400/50' },
-      { position: 'bottom-8 left-8', size: 'w-24 h-24', color: 'bg-orange-400/40' },
-      { position: 'bottom-4 right-4', size: 'w-12 h-12', color: 'bg-yellow-400/50' },
-    ],
-  },
-  installation: {
-    gradient: 'from-emerald-600 via-green-500 to-lime-500',
-    decorations: [
-      { position: 'top-4 left-4', size: 'w-20 h-20', color: 'bg-teal-400/60' },
-      { position: 'top-12 right-8', size: 'w-16 h-16', color: 'bg-cyan-400/50' },
-      { position: 'bottom-8 left-8', size: 'w-24 h-24', color: 'bg-emerald-400/40' },
-      { position: 'bottom-4 right-4', size: 'w-12 h-12', color: 'bg-green-400/50' },
-    ],
-  },
-  test: {
-    gradient: 'from-rose-600 via-pink-500 to-fuchsia-500',
-    decorations: [
-      { position: 'top-4 left-4', size: 'w-20 h-20', color: 'bg-purple-400/60' },
-      { position: 'top-12 right-8', size: 'w-16 h-16', color: 'bg-violet-400/50' },
-      { position: 'bottom-8 left-8', size: 'w-24 h-24', color: 'bg-pink-400/40' },
-      { position: 'bottom-4 right-4', size: 'w-12 h-12', color: 'bg-rose-400/50' },
-    ],
-  },
+const STEP_GRADIENTS: Record<string, string> = {
+  personality: 'from-violet-600 via-purple-500 to-fuchsia-500',
+  knowledge: 'from-blue-600 via-cyan-500 to-teal-500',
+  appearance: 'from-orange-500 via-amber-500 to-yellow-500',
+  installation: 'from-emerald-600 via-green-500 to-lime-500',
+  test: 'from-rose-600 via-pink-500 to-fuchsia-500',
+  locations: 'from-sky-600 via-blue-500 to-indigo-500',
+  'help-articles': 'from-teal-600 via-emerald-500 to-green-500',
+  announcements: 'from-amber-600 via-orange-500 to-red-500',
+  news: 'from-indigo-600 via-purple-500 to-pink-500',
 };
 
-const DEFAULT_CONFIG = STEP_GRADIENTS.personality;
+const DEFAULT_GRADIENT = STEP_GRADIENTS.personality;
 
 export const VideoPlaceholder: React.FC<VideoPlaceholderProps> = ({ stepId }) => {
   const prefersReducedMotion = useReducedMotion();
-  const config = STEP_GRADIENTS[stepId] || DEFAULT_CONFIG;
+  const gradient = STEP_GRADIENTS[stepId] || DEFAULT_GRADIENT;
 
   return (
     <AnimatePresence mode="wait">
@@ -106,17 +67,8 @@ export const VideoPlaceholder: React.FC<VideoPlaceholderProps> = ({ stepId }) =>
         animate={{ opacity: 1 }}
         exit={prefersReducedMotion ? undefined : { opacity: 0 }}
         transition={{ duration: 0.3 }}
-        className={`relative w-full h-full min-h-[280px] rounded-xl overflow-hidden bg-gradient-to-br ${config.gradient} shadow-lg`}
+        className={`relative w-full h-full min-h-[280px] rounded-xl overflow-hidden bg-gradient-to-br ${gradient} shadow-lg`}
       >
-        {/* Decorative background pattern */}
-        <div className="absolute inset-0 opacity-30">
-          {config.decorations.map((dec, i) => (
-            <div
-              key={i}
-              className={`absolute ${dec.position} ${dec.size} rounded-full ${dec.color}`}
-            />
-          ))}
-        </div>
 
         {/* Play button */}
         <div className="absolute inset-0 flex items-center justify-center">
