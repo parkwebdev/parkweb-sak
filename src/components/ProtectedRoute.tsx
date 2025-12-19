@@ -71,12 +71,9 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
         }
         transition={{ duration: 0.5, ease: "easeOut" }}
         onAnimationComplete={() => {
-          // Show toast when transitioning from blurred to clear
+          // Mark animation complete when transitioning from blurred to clear
           if (!showBlur && loadingComplete && !hasShownToast) {
             setHasShownToast(true);
-            toast.success("Welcome back!", {
-              description: "You have been signed in successfully.",
-            });
           }
         }}
         className="h-full"
