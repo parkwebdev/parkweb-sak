@@ -77,12 +77,9 @@ function hasCustomAppearance(deploymentConfig: AgentDeploymentConfig | null | un
     (config.gradientStart && config.gradientStart !== DEFAULT_GRADIENT_START) ||
     (config.gradientEnd && config.gradientEnd !== DEFAULT_GRADIENT_END);
   
-  const hasWidgetColor = !!config.widgetColor;
-  const hasCustomBotName = !!config.botName;
-  const hasCustomAvatar = !!config.avatarUrl;
   const hasWelcomeMessage = !!config.welcomeMessage;
   
-  return hasCustomGradient || hasWidgetColor || hasCustomBotName || hasCustomAvatar || hasWelcomeMessage;
+  return hasCustomGradient || hasWelcomeMessage;
 }
 
 /**
@@ -132,10 +129,8 @@ export function useOnboardingProgress(): OnboardingProgress {
     // Step 7: Appearance - any appearance setting changed from default
     const appearanceComplete = hasCustomAppearance(agent?.deployment_config as AgentDeploymentConfig);
 
-    // Step 8: Installation - localStorage flag
-    const installationComplete = agentId 
-      ? localStorage.getItem(`has_viewed_embed_code_${agentId}`) === 'true'
-      : false;
+    // Step 8: Installation - persisted to database
+    const installationComplete = agent?.has_viewed_installation === true;
 
     // Step 9: Test - at least 1 conversation exists
     const testComplete = (conversations?.length ?? 0) > 0;
