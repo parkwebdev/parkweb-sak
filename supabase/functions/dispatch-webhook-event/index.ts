@@ -34,7 +34,7 @@ Deno.serve(async (req) => {
     let eventData = payload.record;
     let agentId: string | null = null;
 
-  if (payload.table === 'leads') {
+    if (payload.table === 'leads') {
       if (payload.type === 'insert') {
         eventType = 'lead.created';
       } else if (payload.type === 'update') {
