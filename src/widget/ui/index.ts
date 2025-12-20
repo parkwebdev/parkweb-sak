@@ -28,3 +28,4 @@ export {
   WidgetCardFooter 
 } from './WidgetCard';
 export { WidgetSpinner } from './WidgetSpinner';
+export { WidgetCheckbox } from './WidgetCheckbox';
