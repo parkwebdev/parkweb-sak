@@ -54,7 +54,7 @@ export const FloatingButton = ({
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 130.1 154.21"
-            className="h-6 w-6"
+            className="h-7 w-7"
             style={{ fill: iconColor }}
           >
             <path d={ChatBubbleLogoPath} />
