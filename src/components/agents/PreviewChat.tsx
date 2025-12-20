@@ -27,7 +27,7 @@ import { IconButton } from '@/components/ui/icon-button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { sendChatMessage, type ChatResponse } from '@/widget/api';
-import AriAgentsIcon from '@/components/icons/AriAgentsIcon';
+import { ChatBubbleIcon } from '@/components/agents/ChatBubbleIcon';
 
 // Widget components for rich content
 import { LinkPreviewsWidget } from '@/widget/components/LinkPreviewsWidget';
@@ -245,7 +245,7 @@ export const PreviewChat: React.FC<PreviewChatProps> = ({
         {messages.length === 0 ? (
           /* Empty State */
           <div className="flex flex-col items-center justify-center h-full text-center px-6">
-            <AriAgentsIcon size={40} className="text-foreground mb-4" />
+            <ChatBubbleIcon className="h-10 w-10 text-foreground mb-4" />
             <p className="text-sm text-muted-foreground mb-1">
               Ask Ari a question your customers would ask to see how it will respond.
             </p>
@@ -270,8 +270,8 @@ export const PreviewChat: React.FC<PreviewChatProps> = ({
                   >
                     {/* AI Avatar */}
                     {message.role === 'assistant' && (
-                      <div className="w-7 h-7 rounded-full bg-foreground flex items-center justify-center flex-shrink-0 overflow-hidden">
-                        <AriAgentsIcon size={20} className="text-background" />
+                      <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                        <ChatBubbleIcon className="h-4 w-4 text-foreground" />
                       </div>
                     )}
 
@@ -396,8 +396,8 @@ export const PreviewChat: React.FC<PreviewChatProps> = ({
             {/* Typing Indicator */}
             {isLoading && (
               <div className="flex gap-2 justify-start">
-                <div className="w-7 h-7 rounded-full bg-foreground flex items-center justify-center flex-shrink-0 overflow-hidden">
-                  <AriAgentsIcon size={20} className="text-background" />
+                <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+                  <ChatBubbleIcon className="h-4 w-4 text-foreground" />
                 </div>
                 <div className="bg-muted p-3 rounded-lg">
                   <div className="flex gap-1">
