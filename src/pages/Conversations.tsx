@@ -22,6 +22,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { SearchMd, MessageChatSquare, User01, Send01, FaceSmile, Globe01, Check, CheckCircle, XCircle, Download01, Attachment01, XClose, ChevronLeft, ChevronRight, SwitchVertical01, ChevronDown, Translate01 } from '@untitledui/icons';
 import AriAgentsIcon from '@/components/icons/AriAgentsIcon';
+import { ChatBubbleIcon } from '@/components/agents/ChatBubbleIcon';
 import { LinkPreviews } from '@/components/chat/LinkPreviews';
 import { FileTypeIcon } from '@/components/chat/FileTypeIcons';
 import { formatFileSize, validateFiles } from '@/lib/file-validation';
@@ -941,7 +942,16 @@ const Conversations: React.FC = () => {
                     </div>
                   ) : (
                   <div className="space-y-3 max-w-4xl mx-auto">
-                    {messages.map((message, msgIndex) => {
+                    {messages
+                      .filter(msg => {
+                        const meta = (msg.metadata || {}) as Record<string, unknown>;
+                        // Hide empty messages that are tool call placeholders
+                        if (!msg.content?.trim() && meta.message_type === 'tool_call') {
+                          return false;
+                        }
+                        return true;
+                      })
+                      .map((message, msgIndex) => {
                       const isUser = message.role === 'user';
                       const msgMetadata = (message.metadata || {}) as MessageMetadata;
                       const isHumanSent = msgMetadata.sender_type === 'human';
@@ -1047,8 +1057,8 @@ const Conversations: React.FC = () => {
                                   </span>
                                 </div>
                               ) : (
-                                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-1">
-                                  <User01 size={14} className="text-primary" />
+                                <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0 mt-1">
+                                  <ChatBubbleIcon className="h-4 w-4 text-foreground" />
                                 </div>
                               )
                             )}
@@ -1057,7 +1067,7 @@ const Conversations: React.FC = () => {
                               {!isContinuation && (
                                 <div className={`flex items-center gap-1.5 text-2xs text-muted-foreground mb-1 ${isUser ? 'justify-end mr-1' : 'ml-1'}`}>
                                   <span className="font-medium">
-                                    {isUser ? (((selectedConversation?.metadata || {}) as ConversationMetadata).lead_name || 'Visitor') : (isHumanSent ? formatSenderName(msgMetadata.sender_name) : 'AI Agent')}
+                                    {isUser ? (((selectedConversation?.metadata || {}) as ConversationMetadata).lead_name || 'Visitor') : (isHumanSent ? formatSenderName(msgMetadata.sender_name) : 'Ari')}
                                   </span>
                                   <span>•</span>
                                   <span>{formatShortTime(new Date(message.created_at))}</span>
