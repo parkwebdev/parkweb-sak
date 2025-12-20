@@ -45,6 +45,7 @@ import { QuickEmojiButton } from '@/components/chat/QuickEmojiButton';
 import { useAutoResizeTextarea } from '@/hooks/useAutoResizeTextarea';
 import { toast } from '@/lib/toast';
 import { logger } from '@/utils/logger';
+import { formatMarkdownBullets } from '@/widget/utils/url-stripper';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { messageBubbleVariants, messageBubbleUserVariants, messageBubbleReducedVariants, getVariants } from '@/lib/motion-variants';
 
@@ -1166,8 +1167,8 @@ const Conversations: React.FC = () => {
                                   <div>
                                     <p className="text-sm whitespace-pre-wrap leading-relaxed">
                                       {showTranslation && translatedMessages[message.id] 
-                                        ? translatedMessages[message.id] 
-                                        : message.content}
+                                        ? formatMarkdownBullets(translatedMessages[message.id])
+                                        : formatMarkdownBullets(message.content)}
                                     </p>
                                     {showTranslation && translatedMessages[message.id] && translatedMessages[message.id] !== message.content && (
                                       <p className="text-xs text-muted-foreground mt-1 italic border-t border-dashed pt-1">
