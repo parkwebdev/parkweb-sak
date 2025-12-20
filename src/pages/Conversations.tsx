@@ -913,7 +913,6 @@ const Conversations: React.FC = () => {
               return (
                 <div className="px-6 py-2 bg-muted/50 border-b flex items-center justify-between">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <span className="text-base">{getLanguageFlag(convMetadata.detected_language_code || '')}</span>
                     <span>This conversation is in <strong>{convMetadata.detected_language}</strong></span>
                   </div>
                   <Button
