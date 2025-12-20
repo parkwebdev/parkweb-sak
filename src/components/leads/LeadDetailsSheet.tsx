@@ -121,7 +121,9 @@ export const LeadDetailsSheet = ({
                       <span className="text-muted-foreground capitalize">
                         {key.replace(/_/g, ' ')}:
                       </span>
-                      <span className="font-medium">{String(value)}</span>
+                      <span className="font-medium">
+                        {typeof value === 'boolean' ? (value ? 'Yes' : 'No') : String(value)}
+                      </span>
                     </div>
                   ))}
                 </div>
