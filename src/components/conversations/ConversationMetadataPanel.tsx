@@ -65,6 +65,20 @@ const getCustomFieldIcon = (fieldName: string) => {
   }
   return File06;
 };
+
+// Helper to get flag emoji for language code
+const getLanguageFlag = (languageCode: string): string => {
+  const flagMap: Record<string, string> = {
+    'es': '🇪🇸', // Spanish
+    'pt': '🇵🇹', // Portuguese
+    'pt-BR': '🇧🇷', // Brazilian Portuguese
+    'en': '🇺🇸', // English
+    'fr': '🇫🇷', // French
+    'de': '🇩🇪', // German
+    'it': '🇮🇹', // Italian
+  };
+  return flagMap[languageCode] || '🌐'; // Fallback to globe emoji
+};
 import { formatDistanceToNow, format } from 'date-fns';
 import type { Tables } from '@/integrations/supabase/types';
 import { cn } from '@/lib/utils';
@@ -472,7 +486,9 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <div className="flex items-center gap-2.5 text-sm">
-                            <Globe01 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                            <span className="text-base flex-shrink-0">
+                              {getLanguageFlag(metadata.detected_language_code || '')}
+                            </span>
                             <Badge variant="outline" className="text-xs">
                               {metadata.detected_language}
                             </Badge>
