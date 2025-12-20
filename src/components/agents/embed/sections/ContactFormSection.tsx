@@ -156,10 +156,9 @@ export const ContactFormSection = ({ config, onConfigChange }: ContactFormSectio
                   />
                 )}
 
-                {/* Rich text editor for checkbox consent text */}
+                {/* Rich text editor for checkbox text */}
                 {field.fieldType === 'checkbox' && (
                   <div className="space-y-2">
-                    <Label className="text-xs">Consent Text (supports bold, italic, links)</Label>
                     <RichTextEditor
                       content={field.richTextContent || ''}
                       onChange={(html) => updateCustomField(field.id, { richTextContent: html })}
