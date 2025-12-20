@@ -60,6 +60,8 @@ interface ParentPageRefs {
   parentUtmParamsRef: React.MutableRefObject<Partial<ReferrerJourney> | null>;
   /** Ref for current page tracking */
   currentPageRef: React.MutableRefObject<{ url: string; entered_at: string }>;
+  /** Ref for browser language preference (e.g., "es", "es-ES") */
+  browserLanguageRef: React.MutableRefObject<string | null>;
 }
 
 /**
@@ -89,6 +91,7 @@ export function useParentMessages(
     parentReferrerRef,
     parentUtmParamsRef,
     currentPageRef,
+    browserLanguageRef,
   } = refs;
 
   // Listen for parent page info messages (iframe mode - parent sends real page URL)
@@ -99,8 +102,14 @@ export function useParentMessages(
       if (!event.data || typeof event.data !== 'object') return;
       
       if (event.data.type === 'chatpad-parent-page-info') {
-        const { url, referrer, utmParams } = event.data;
-        console.log('[Widget] Received parent page info:', { url, referrer, utmParams });
+        const { url, referrer, utmParams, browserLanguage } = event.data;
+        console.log('[Widget] Received parent page info:', { url, referrer, utmParams, browserLanguage });
+        
+        // Store browser language preference (e.g., "es", "es-ES", "pt-BR")
+        if (browserLanguage && browserLanguageRef) {
+          browserLanguageRef.current = browserLanguage;
+          console.log('[Widget] Browser language detected:', browserLanguage);
+        }
         
         // Skip tracking if this is the widget.html page itself
         if (isInternalWidgetUrl(url)) {

@@ -161,6 +161,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     parentPageUrlRef,
     parentReferrerRef,
     parentUtmParamsRef,
+    browserLanguageRef,
   } = useVisitorAnalytics({
     agentId,
     visitorId,
@@ -185,6 +186,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
       parentReferrerRef,
       parentUtmParamsRef,
       currentPageRef,
+      browserLanguageRef,
     }
   );
 
@@ -460,6 +462,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
         pageVisitsCount: finalPageVisits.length,
         referrerJourney: referrerJourney ? 'present' : 'null',
         conversationId: activeConversationId,
+        browserLanguage: browserLanguageRef.current,
       });
 
       const response = await sendChatMessage(
@@ -469,7 +472,10 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
         chatUser?.leadId,
         finalPageVisits.length > 0 ? finalPageVisits : undefined,
         referrerJourney || undefined,
-        visitorId
+        visitorId,
+        undefined, // locationId
+        undefined, // previewMode
+        browserLanguageRef.current // Browser language preference
       );
 
       if (response.conversationId && response.conversationId !== activeConversationId) {

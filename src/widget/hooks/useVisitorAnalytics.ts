@@ -58,6 +58,9 @@ export function useVisitorAnalytics(options: UseVisitorAnalyticsOptions) {
   const parentPageUrlRef = useRef<string | null>(null);
   const parentReferrerRef = useRef<string | null>(null);
   const parentUtmParamsRef = useRef<Partial<ReferrerJourney> | null>(null);
+  
+  // Browser language preference (e.g., "es", "es-ES", "pt-BR")
+  const browserLanguageRef = useRef<string | null>(null);
 
   // Helper function to capture referrer journey from window.location (fallback)
   const captureReferrerJourneyFallback = useCallback(() => {
@@ -250,5 +253,6 @@ export function useVisitorAnalytics(options: UseVisitorAnalyticsOptions) {
     parentPageUrlRef,
     parentReferrerRef,
     parentUtmParamsRef,
+    browserLanguageRef,
   };
 }

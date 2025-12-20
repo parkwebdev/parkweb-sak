@@ -559,6 +559,9 @@
         url: this.currentParentUrl,
         referrer: this.parentReferrer,
         utmParams: utmParams,
+        // Browser language detection - user's preferred language
+        browserLanguage: navigator.language || null,
+        browserLanguages: navigator.languages ? Array.from(navigator.languages) : [],
       }, '*');
     }
     
