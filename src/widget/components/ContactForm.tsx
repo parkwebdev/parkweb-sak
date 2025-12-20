@@ -8,7 +8,7 @@
  */
 
 import { Suspense, useState } from 'react';
-import { WidgetButton, WidgetInput } from '../ui';
+import { WidgetButton, WidgetInput, WidgetCheckbox } from '../ui';
 import { WidgetSelect, WidgetSelectTrigger, WidgetSelectValue, WidgetSelectContent, WidgetSelectItem } from '../ui';
 import { Textarea } from '@/components/ui/textarea';
 import { PhoneInputField } from '../constants';
@@ -65,7 +65,7 @@ export const ContactForm = ({
   onSubmit,
 }: ContactFormProps) => {
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
-
+  const [checkboxValues, setCheckboxValues] = useState<Record<string, boolean>>({});
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
@@ -80,10 +80,16 @@ export const ContactForm = ({
       return;
     }
 
+    // Collect custom field values
     customFields.forEach(field => {
-      const value = formData.get(field.id);
-      if (value) {
-        customFieldData[field.label] = value;
+      if (field.fieldType === 'checkbox') {
+        // Store checkbox value as boolean
+        customFieldData[field.label] = checkboxValues[field.id] || false;
+      } else {
+        const value = formData.get(field.id);
+        if (value) {
+          customFieldData[field.label] = value;
+        }
       }
     });
 
@@ -102,6 +108,15 @@ export const ContactForm = ({
       if (!trimmedEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail) || trimmedEmail.length > 255) {
         errors.email = 'Valid email is required';
       }
+      
+      // Validate required checkboxes
+      customFields.forEach(field => {
+        if (field.fieldType === 'checkbox' && field.required) {
+          if (!checkboxValues[field.id]) {
+            errors[field.id] = `${field.label} is required`;
+          }
+        }
+      });
       
       if (Object.keys(errors).length > 0) {
         setFormErrors(errors);
@@ -157,7 +172,22 @@ export const ContactForm = ({
           
           {customFields.map(field => (
             <div key={field.id}>
-              {field.fieldType === 'select' ? (
+              {field.fieldType === 'checkbox' ? (
+                <>
+                  <WidgetCheckbox
+                    name={field.id}
+                    label={field.label}
+                    richTextContent={field.richTextContent}
+                    required={field.required}
+                    checked={checkboxValues[field.id] || false}
+                    onChange={(checked) => setCheckboxValues(prev => ({ ...prev, [field.id]: checked }))}
+                    error={!!formErrors[field.id]}
+                  />
+                  {formErrors[field.id] && (
+                    <p className="text-xs text-destructive mt-1 pl-7" role="alert">{formErrors[field.id]}</p>
+                  )}
+                </>
+              ) : field.fieldType === 'select' ? (
                 <WidgetSelect name={field.id} required={field.required}>
                   <WidgetSelectTrigger className="text-sm">
                     <WidgetSelectValue placeholder={field.label} />
