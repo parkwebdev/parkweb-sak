@@ -13,6 +13,7 @@ import { X } from '@untitledui/icons/X';
 import { XClose } from '@untitledui/icons/XClose';
 import { ChevronRight } from '@untitledui/icons/ChevronRight';
 import { ChevronLeft } from '@untitledui/icons/ChevronLeft';
+import { ChevronDown } from '@untitledui/icons/ChevronDown';
 
 // Messaging
 import { Send01 } from '@untitledui/icons/Send01';
@@ -54,6 +55,7 @@ export {
   XClose,
   ChevronRight,
   ChevronLeft,
+  ChevronDown,
   // Messaging
   Send01,
   MessageChatCircle,

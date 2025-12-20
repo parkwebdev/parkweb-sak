@@ -8,7 +8,7 @@
  * @module widget/components/FloatingButton
  */
 
-import { XClose } from '../icons';
+import { ChevronDown } from '../icons';
 import { useSystemTheme } from '../hooks/useSystemTheme';
 
 /** Chat bubble logo SVG path */
@@ -47,9 +47,9 @@ export const FloatingButton = ({
       className="w-[50px] h-[50px] rounded-3xl flex items-center justify-center shadow-lg transition-all duration-200 hover:scale-105"
       style={{ backgroundColor: buttonBg }}
     >
-      <div className={`transition-transform duration-200 ${isOpen ? 'rotate-90' : 'rotate-0'}`}>
+      <div className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : 'rotate-0'}`}>
         {isOpen ? (
-          <XClose className="h-6 w-6" style={{ color: iconColor }} />
+          <ChevronDown className="h-6 w-6" style={{ color: iconColor }} />
         ) : (
           <svg
             xmlns="http://www.w3.org/2000/svg"
