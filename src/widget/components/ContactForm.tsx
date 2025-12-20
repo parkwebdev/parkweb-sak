@@ -22,11 +22,13 @@ interface CustomField {
   /** Display label for the field */
   label: string;
   /** Field input type */
-  fieldType: 'text' | 'email' | 'phone' | 'select' | 'textarea';
+  fieldType: 'text' | 'email' | 'phone' | 'select' | 'textarea' | 'checkbox';
   /** Whether field is required */
   required: boolean;
   /** Options for select fields */
   options?: string[];
+  /** HTML content displayed below checkbox (supports bold, italic, links) */
+  richTextContent?: string;
 }
 
 /** Props for the ContactForm component */
