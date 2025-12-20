@@ -93,6 +93,14 @@ export interface ConversationMetadata {
   detected_language?: string;
   /** ISO 639-1 language code (e.g., "es", "pt", "fr") */
   detected_language_code?: string;
+  
+  // Language re-evaluation tracking
+  /** Count of consecutive messages detected in a different language than stored */
+  language_mismatch_count?: number;
+  /** How the language was originally detected: browser preference, character patterns, or AI */
+  language_detection_source?: 'browser' | 'character' | 'ai';
+  /** ISO timestamp of last language re-evaluation (rate limiting) */
+  language_last_reevaluated_at?: string;
 }
 
 /**
