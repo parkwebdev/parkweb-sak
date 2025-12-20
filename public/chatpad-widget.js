@@ -51,7 +51,7 @@
     /* Close icon (chevron down) - hidden by default */
     .chatpad-widget-button .chatpad-icon-close {
       opacity: 0;
-      transform: rotate(180deg) scale(0.5);
+      transform: rotate(0deg) scale(0.5);
     }
     
     /* When widget is open: swap icons with rotation */
