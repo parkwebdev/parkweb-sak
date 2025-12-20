@@ -104,7 +104,58 @@ export const useLeads = () => {
         .eq('id', id)
         .single();
 
-      // Delete the lead first
+      // Delete conversation_memories for this lead
+      await supabase
+        .from('conversation_memories')
+        .delete()
+        .eq('lead_id', id);
+
+      // Clear lead reference from calendar_events (keep the event)
+      await supabase
+        .from('calendar_events')
+        .update({ lead_id: null })
+        .eq('lead_id', id);
+
+      // If deleteConversation is true and there's an associated conversation, delete it
+      if (deleteConversation && lead?.conversation_id) {
+        // Delete conversation_takeovers
+        await supabase
+          .from('conversation_takeovers')
+          .delete()
+          .eq('conversation_id', lead.conversation_id);
+
+        // Delete conversation_ratings
+        await supabase
+          .from('conversation_ratings')
+          .delete()
+          .eq('conversation_id', lead.conversation_id);
+
+        // Delete messages
+        await supabase
+          .from('messages')
+          .delete()
+          .eq('conversation_id', lead.conversation_id);
+
+        // Clear conversation reference from calendar_events
+        await supabase
+          .from('calendar_events')
+          .update({ conversation_id: null })
+          .eq('conversation_id', lead.conversation_id);
+
+        // Delete conversation_memories for this conversation
+        await supabase
+          .from('conversation_memories')
+          .delete()
+          .eq('conversation_id', lead.conversation_id);
+        
+        // Delete the conversation
+        await supabase
+          .from('conversations')
+          .delete()
+          .eq('id', lead.conversation_id);
+      }
+
+      // Finally delete the lead
       const { error } = await supabase
         .from('leads')
         .delete()
@@ -112,24 +163,9 @@ export const useLeads = () => {
 
       if (error) throw error;
 
-      // If deleteConversation is true and there's an associated conversation, delete it
-      if (deleteConversation && lead?.conversation_id) {
-        // Delete messages first (foreign key constraint)
-        await supabase
-          .from('messages')
-          .delete()
-          .eq('conversation_id', lead.conversation_id);
-        
-        // Then delete the conversation
-        await supabase
-          .from('conversations')
-          .delete()
-          .eq('id', lead.conversation_id);
-      }
-
       toast.success('Lead deleted', {
         description: deleteConversation && lead?.conversation_id 
-          ? 'Lead and conversation have been deleted successfully'
+          ? 'Lead and all related data have been deleted'
           : 'Lead has been deleted successfully',
       });
 
@@ -152,11 +188,62 @@ export const useLeads = () => {
         .select('id, conversation_id')
         .in('id', ids);
 
-      const conversationIds = leadsToDelete
+      const conversationIds = (leadsToDelete
         ?.filter(l => l.conversation_id)
-        .map(l => l.conversation_id) || [];
+        .map(l => l.conversation_id) || []) as string[];
 
-      // Delete the leads first
+      // Delete conversation_memories for these leads
+      await supabase
+        .from('conversation_memories')
+        .delete()
+        .in('lead_id', ids);
+
+      // Clear lead references from calendar_events
+      await supabase
+        .from('calendar_events')
+        .update({ lead_id: null })
+        .in('lead_id', ids);
+
+      // If deleteConversations is true and there are associated conversations, delete them
+      if (deleteConversations && conversationIds.length > 0) {
+        // Delete conversation_takeovers
+        await supabase
+          .from('conversation_takeovers')
+          .delete()
+          .in('conversation_id', conversationIds);
+
+        // Delete conversation_ratings
+        await supabase
+          .from('conversation_ratings')
+          .delete()
+          .in('conversation_id', conversationIds);
+
+        // Delete messages
+        await supabase
+          .from('messages')
+          .delete()
+          .in('conversation_id', conversationIds);
+
+        // Clear conversation references from calendar_events
+        await supabase
+          .from('calendar_events')
+          .update({ conversation_id: null })
+          .in('conversation_id', conversationIds);
+
+        // Delete conversation_memories for these conversations
+        await supabase
+          .from('conversation_memories')
+          .delete()
+          .in('conversation_id', conversationIds);
+        
+        // Delete the conversations
+        await supabase
+          .from('conversations')
+          .delete()
+          .in('id', conversationIds);
+      }
+
+      // Finally delete the leads
       const { error } = await supabase
         .from('leads')
         .delete()
@@ -164,27 +251,12 @@ export const useLeads = () => {
 
       if (error) throw error;
 
-      // If deleteConversations is true and there are associated conversations, delete them
-      if (deleteConversations && conversationIds.length > 0) {
-        // Delete messages first (foreign key constraint)
-        await supabase
-          .from('messages')
-          .delete()
-          .in('conversation_id', conversationIds);
-        
-        // Then delete the conversations
-        await supabase
-          .from('conversations')
-          .delete()
-          .in('id', conversationIds);
-      }
-
       const conversationText = deleteConversations && conversationIds.length > 0
         ? ` and ${conversationIds.length} conversation${conversationIds.length > 1 ? 's' : ''}`
         : '';
 
       toast.success(`${ids.length} lead${ids.length > 1 ? 's' : ''}${conversationText} deleted`, {
-        description: 'Selected items have been deleted successfully',
+        description: 'All related data has been cleaned up',
       });
 
       fetchLeads();
