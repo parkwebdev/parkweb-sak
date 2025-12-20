@@ -5,6 +5,7 @@
  */
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { getLanguageFlag } from '@/lib/language-utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -66,19 +67,6 @@ const getCustomFieldIcon = (fieldName: string) => {
   return File06;
 };
 
-// Helper to get flag emoji for language code
-const getLanguageFlag = (languageCode: string): string => {
-  const flagMap: Record<string, string> = {
-    'es': '🇪🇸', // Spanish
-    'pt': '🇵🇹', // Portuguese
-    'pt-BR': '🇧🇷', // Brazilian Portuguese
-    'en': '🇺🇸', // English
-    'fr': '🇫🇷', // French
-    'de': '🇩🇪', // German
-    'it': '🇮🇹', // Italian
-  };
-  return flagMap[languageCode] || '🌐'; // Fallback to globe emoji
-};
 import { formatDistanceToNow, format } from 'date-fns';
 import type { Tables } from '@/integrations/supabase/types';
 import { cn } from '@/lib/utils';

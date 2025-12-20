@@ -46,6 +46,7 @@ import { useAutoResizeTextarea } from '@/hooks/useAutoResizeTextarea';
 import { toast } from '@/lib/toast';
 import { logger } from '@/utils/logger';
 import { formatMarkdownBullets } from '@/widget/utils/url-stripper';
+import { getLanguageFlag } from '@/lib/language-utils';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { messageBubbleVariants, messageBubbleUserVariants, messageBubbleReducedVariants, getVariants } from '@/lib/motion-variants';
 
@@ -202,19 +203,6 @@ const Conversations: React.FC = () => {
     return activeVisitors[visitorId] || null;
   };
 
-  // Helper to get flag emoji for language code
-  const getLanguageFlag = (languageCode: string): string => {
-    const flagMap: Record<string, string> = {
-      'es': '🇪🇸', // Spanish
-      'pt': '🇵🇹', // Portuguese
-      'pt-BR': '🇧🇷', // Brazilian Portuguese
-      'en': '🇺🇸', // English
-      'fr': '🇫🇷', // French
-      'de': '🇩🇪', // German
-      'it': '🇮🇹', // Italian
-    };
-    return flagMap[languageCode] || '🌐'; // Fallback to globe emoji
-  };
 
   // Translate messages to English
   const handleTranslate = async () => {
