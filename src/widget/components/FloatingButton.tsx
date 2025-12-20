@@ -49,7 +49,7 @@ export const FloatingButton = ({
     >
       <div className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : 'rotate-0'}`}>
         {isOpen ? (
-          <ChevronDown className="h-6 w-6" style={{ color: iconColor }} />
+          <ChevronDown className="h-6 w-6 rotate-180" style={{ color: iconColor }} />
         ) : (
           <svg
             xmlns="http://www.w3.org/2000/svg"
