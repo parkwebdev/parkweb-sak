@@ -147,6 +147,13 @@ interface ConversationMetadata {
   // PHASE 2: Conversation summarization for context continuity
   conversation_summary?: string;
   summary_generated_at?: string;
+  // Language detection
+  detected_language?: string;
+  detected_language_code?: string;
+  // Language re-evaluation tracking
+  language_mismatch_count?: number;
+  language_detection_source?: 'browser' | 'character' | 'ai';
+  language_last_reevaluated_at?: string;
 }
 
 // URL regex for extracting links from content
@@ -445,6 +452,27 @@ Respond ONLY with the JSON object, no explanation.`
     console.warn('[Language Detection] AI detection error:', error);
     return null;
   }
+}
+
+/**
+ * Detect language of a single message for re-evaluation purposes.
+ * Uses character-based detection first, falls back to AI.
+ * Returns null if language matches English (default).
+ */
+async function detectMessageLanguage(
+  messageText: string,
+  openrouterKey: string
+): Promise<{ code: string; name: string } | null> {
+  if (!messageText || messageText.length < 10) return null;
+  
+  // Try fast character-based detection first
+  const charDetected = detectLanguageByCharacters(messageText);
+  if (charDetected) {
+    return charDetected;
+  }
+  
+  // Fall back to AI for Latin-script languages
+  return await detectLanguageWithAI(messageText, openrouterKey);
 }
 
 // US State abbreviation to full name mapping for bidirectional search
@@ -4189,16 +4217,28 @@ NEVER mark complete when:
       
       // Detect language from user input if not already detected
       // Priority: 1) Browser language 2) Character-based detection 3) AI detection
-      let languageMetadata: { detected_language?: string; detected_language_code?: string } = {};
-      if (!currentMetadata.detected_language_code) {
+      // Also handles language re-evaluation if user switches languages
+      let languageMetadata: { 
+        detected_language?: string; 
+        detected_language_code?: string;
+        language_detection_source?: 'browser' | 'character' | 'ai';
+        language_mismatch_count?: number;
+        language_last_reevaluated_at?: string;
+      } = {};
+      
+      const currentLanguageCode = currentMetadata.detected_language_code;
+      
+      // === CASE 1: First-time language detection ===
+      if (!currentLanguageCode) {
         // Step 1: Try browser language first (most reliable for user preference)
-        // This works instantly without API calls and reflects what the user actually wants
         const browserLangResult = parseBrowserLanguage(browserLanguage);
         if (browserLangResult) {
           console.log(`[Language Detection] Browser language: ${browserLangResult.name} (${browserLangResult.code}) from "${browserLanguage}"`);
           languageMetadata = {
             detected_language: browserLangResult.name,
             detected_language_code: browserLangResult.code,
+            language_detection_source: 'browser',
+            language_mismatch_count: 0,
           };
         }
         
@@ -4207,7 +4247,7 @@ NEVER mark complete when:
           // Collect all user text for detection
           const textsToCheck: string[] = [];
           
-          // Priority 1: Contact form Message field (often contains first non-English text)
+          // Priority 1: Contact form Message field
           const contactFormMessage = currentMetadata.custom_fields?.Message;
           if (contactFormMessage && typeof contactFormMessage === 'string') {
             textsToCheck.push(contactFormMessage);
@@ -4230,24 +4270,80 @@ NEVER mark complete when:
           // Combine texts for detection (max 1000 chars)
           const combinedText = textsToCheck.join(' ').substring(0, 1000);
           
-          // Step 2: Try fast character-based detection (unique scripts like Chinese, Arabic, Russian)
+          // Step 2: Try fast character-based detection
           const detected = detectLanguageByCharacters(combinedText);
           if (detected) {
             console.log(`[Language Detection] Character-based: ${detected.name} (${detected.code})`);
             languageMetadata = {
               detected_language: detected.name,
               detected_language_code: detected.code,
+              language_detection_source: 'character',
+              language_mismatch_count: 0,
             };
           } else if (combinedText.length >= 10) {
-            // Step 3: Use AI detection via OpenRouter for Latin-alphabet languages
-            // This handles misspellings and informal text accurately
+            // Step 3: Use AI detection via OpenRouter
             const aiDetected = await detectLanguageWithAI(combinedText, OPENROUTER_API_KEY);
             if (aiDetected) {
               console.log(`[Language Detection] AI-based: ${aiDetected.name} (${aiDetected.code})`);
               languageMetadata = {
                 detected_language: aiDetected.name,
                 detected_language_code: aiDetected.code,
+                language_detection_source: 'ai',
+                language_mismatch_count: 0,
               };
+            }
+          }
+        }
+      }
+      // === CASE 2: Language re-evaluation (language already detected) ===
+      else {
+        // Get the current user message (most recent)
+        const currentUserMessage = messages?.filter((m: any) => m.role === 'user').pop()?.content;
+        
+        if (currentUserMessage && currentUserMessage.length >= 10) {
+          // Rate limit: Only re-evaluate every 5 minutes max
+          const lastReevaluated = currentMetadata.language_last_reevaluated_at;
+          const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
+          const canReevaluate = !lastReevaluated || new Date(lastReevaluated).getTime() < fiveMinutesAgo;
+          
+          if (canReevaluate) {
+            // Detect language of THIS message
+            const messageLanguage = await detectMessageLanguage(currentUserMessage, OPENROUTER_API_KEY);
+            
+            if (messageLanguage) {
+              // Compare to stored language
+              if (messageLanguage.code !== currentLanguageCode) {
+                // Language mismatch detected! Increment counter
+                const mismatchCount = (currentMetadata.language_mismatch_count || 0) + 1;
+                console.log(`[Language Re-eval] Mismatch #${mismatchCount}: message="${messageLanguage.name}", stored="${currentMetadata.detected_language}"`);
+                
+                if (mismatchCount >= 3) {
+                  // 3+ consecutive mismatches: UPDATE the language!
+                  console.log(`[Language Re-eval] Switching from ${currentMetadata.detected_language} to ${messageLanguage.name}`);
+                  languageMetadata = {
+                    detected_language: messageLanguage.name,
+                    detected_language_code: messageLanguage.code,
+                    language_detection_source: 'ai',
+                    language_mismatch_count: 0, // Reset counter
+                    language_last_reevaluated_at: new Date().toISOString(),
+                  };
+                } else {
+                  // Not enough mismatches yet, just update counter
+                  languageMetadata = {
+                    language_mismatch_count: mismatchCount,
+                    language_last_reevaluated_at: new Date().toISOString(),
+                  };
+                }
+              } else {
+                // Language matches! Reset mismatch counter if needed
+                if ((currentMetadata.language_mismatch_count || 0) > 0) {
+                  console.log(`[Language Re-eval] Language matches again, resetting mismatch counter`);
+                  languageMetadata = { 
+                    language_mismatch_count: 0,
+                    language_last_reevaluated_at: new Date().toISOString(),
+                  };
+                }
+              }
             }
           }
         }
