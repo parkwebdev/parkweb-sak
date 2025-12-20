@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Trash01 } from '@untitledui/icons';
 import { ToggleSettingRow } from '@/components/ui/toggle-setting-row';
+import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import type { EmbeddedChatConfig, CustomField } from '@/hooks/useEmbeddedChatConfig';
 
 interface ContactFormSectionProps {
@@ -16,7 +17,7 @@ interface ContactFormSectionProps {
 
 export const ContactFormSection = ({ config, onConfigChange }: ContactFormSectionProps) => {
   const [newFieldLabel, setNewFieldLabel] = useState('');
-  const [newFieldType, setNewFieldType] = useState<'text' | 'email' | 'phone' | 'textarea' | 'select'>('text');
+  const [newFieldType, setNewFieldType] = useState<'text' | 'email' | 'phone' | 'textarea' | 'select' | 'checkbox'>('text');
 
   const addCustomField = () => {
     if (!newFieldLabel.trim()) return;
@@ -26,8 +27,9 @@ export const ContactFormSection = ({ config, onConfigChange }: ContactFormSectio
       label: newFieldLabel,
       fieldType: newFieldType,
       required: false,
-      placeholder: '',
+      placeholder: newFieldType === 'checkbox' ? undefined : '',
       options: newFieldType === 'select' ? [] : undefined,
+      richTextContent: newFieldType === 'checkbox' ? '' : undefined,
     };
     
     onConfigChange({
@@ -113,8 +115,13 @@ export const ContactFormSection = ({ config, onConfigChange }: ContactFormSectio
                 <div className="grid grid-cols-2 gap-2">
                   <Select
                     value={field.fieldType}
-                    onValueChange={(value: 'text' | 'email' | 'phone' | 'textarea' | 'select') => 
-                      updateCustomField(field.id, { fieldType: value })
+                    onValueChange={(value: 'text' | 'email' | 'phone' | 'textarea' | 'select' | 'checkbox') => 
+                      updateCustomField(field.id, { 
+                        fieldType: value,
+                        // Clear placeholder for checkbox, set richTextContent
+                        placeholder: value === 'checkbox' ? undefined : (field.placeholder || ''),
+                        richTextContent: value === 'checkbox' ? (field.richTextContent || '') : undefined,
+                      })
                     }
                   >
                     <SelectTrigger className="text-sm">
@@ -126,6 +133,7 @@ export const ContactFormSection = ({ config, onConfigChange }: ContactFormSectio
                       <SelectItem value="phone">Phone</SelectItem>
                       <SelectItem value="textarea">Text Area</SelectItem>
                       <SelectItem value="select">Select</SelectItem>
+                      <SelectItem value="checkbox">Checkbox</SelectItem>
                     </SelectContent>
                   </Select>
 
@@ -138,13 +146,31 @@ export const ContactFormSection = ({ config, onConfigChange }: ContactFormSectio
                   </div>
                 </div>
 
-                <Input
-                  value={field.placeholder || ''}
-                  onChange={(e) => updateCustomField(field.id, { placeholder: e.target.value })}
-                  placeholder="Placeholder text"
-                  className="text-sm"
-                />
+                {/* Placeholder - hidden for checkbox */}
+                {field.fieldType !== 'checkbox' && (
+                  <Input
+                    value={field.placeholder || ''}
+                    onChange={(e) => updateCustomField(field.id, { placeholder: e.target.value })}
+                    placeholder="Placeholder text"
+                    className="text-sm"
+                  />
+                )}
 
+                {/* Rich text editor for checkbox consent text */}
+                {field.fieldType === 'checkbox' && (
+                  <div className="space-y-2">
+                    <Label className="text-xs">Consent Text (supports bold, italic, links)</Label>
+                    <RichTextEditor
+                      content={field.richTextContent || ''}
+                      onChange={(html) => updateCustomField(field.id, { richTextContent: html })}
+                      placeholder="By submitting, you agree to our Terms of Service..."
+                      minHeight="80px"
+                      minimalMode={true}
+                    />
+                  </div>
+                )}
+
+                {/* Options for select fields */}
                 {field.fieldType === 'select' && (
                   <div className="space-y-2">
                     <Label className="text-xs">Options (comma-separated)</Label>
@@ -173,7 +199,7 @@ export const ContactFormSection = ({ config, onConfigChange }: ContactFormSectio
                 />
                 <Select
                   value={newFieldType}
-                  onValueChange={(value: 'text' | 'email' | 'phone' | 'textarea' | 'select') => 
+                  onValueChange={(value: 'text' | 'email' | 'phone' | 'textarea' | 'select' | 'checkbox') => 
                     setNewFieldType(value)
                   }
                 >
@@ -186,6 +212,7 @@ export const ContactFormSection = ({ config, onConfigChange }: ContactFormSectio
                     <SelectItem value="phone">Phone</SelectItem>
                     <SelectItem value="textarea">Text Area</SelectItem>
                     <SelectItem value="select">Select</SelectItem>
+                    <SelectItem value="checkbox">Checkbox</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
