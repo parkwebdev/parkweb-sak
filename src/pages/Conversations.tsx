@@ -46,7 +46,7 @@ import { useAutoResizeTextarea } from '@/hooks/useAutoResizeTextarea';
 import { toast } from '@/lib/toast';
 import { logger } from '@/utils/logger';
 import { formatMarkdownBullets } from '@/widget/utils/url-stripper';
-import { getLanguageFlag } from '@/lib/language-utils';
+
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { messageBubbleVariants, messageBubbleUserVariants, messageBubbleReducedVariants, getVariants } from '@/lib/motion-variants';
 
