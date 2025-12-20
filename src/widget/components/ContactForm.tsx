@@ -149,7 +149,7 @@ export const ContactForm = ({
   return (
     <div className="flex items-start">
       <div className="bg-muted rounded-lg p-3 w-full">
-        <p className="text-base font-semibold mb-1.5">{title}</p>
+        <p className="text-base font-semibold mb-0.5">{title}</p>
         {subtitle && (
           <p className="text-sm text-muted-foreground mb-4">{subtitle}</p>
         )}
