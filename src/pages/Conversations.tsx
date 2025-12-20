@@ -200,20 +200,47 @@ const Conversations: React.FC = () => {
     return activeVisitors[visitorId] || null;
   };
 
+  // Helper to get flag emoji for language code
+  const getLanguageFlag = (languageCode: string): string => {
+    const flagMap: Record<string, string> = {
+      'es': '🇪🇸', // Spanish
+      'pt': '🇵🇹', // Portuguese
+      'pt-BR': '🇧🇷', // Brazilian Portuguese
+      'en': '🇺🇸', // English
+      'fr': '🇫🇷', // French
+      'de': '🇩🇪', // German
+      'it': '🇮🇹', // Italian
+    };
+    return flagMap[languageCode] || '🌐'; // Fallback to globe emoji
+  };
+
   // Translate messages to English
   const handleTranslate = async () => {
     if (!selectedConversation || messages.length === 0) return;
     setIsTranslating(true);
     try {
       const messagesToTranslate = messages.map(m => ({ id: m.id, content: m.content }));
+      console.log('Sending for translation:', messagesToTranslate.length, 'messages');
+      
       const { data, error } = await supabase.functions.invoke('translate-messages', {
         body: { messages: messagesToTranslate, targetLanguage: 'en' }
       });
+      
+      console.log('Translation response:', data);
+      
       if (error) throw error;
+      
       const translations: Record<string, string> = {};
-      data.translations?.forEach((t: { id: string; translated: string }) => {
+      // Handle both direct array and nested response structure
+      const translationsArray = data?.translations || data?.data?.translations || [];
+      console.log('Translations array:', translationsArray);
+      
+      translationsArray.forEach((t: { id: string; translated: string }) => {
         translations[t.id] = t.translated;
       });
+      
+      console.log('Parsed translations map:', Object.keys(translations).length, 'entries');
+      
       setTranslatedMessages(translations);
       setShowTranslation(true);
     } catch (err) {
@@ -886,7 +913,7 @@ const Conversations: React.FC = () => {
               return (
                 <div className="px-6 py-2 bg-muted/50 border-b flex items-center justify-between">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Globe01 size={16} />
+                    <span className="text-base">{getLanguageFlag(convMetadata.detected_language_code || '')}</span>
                     <span>This conversation is in <strong>{convMetadata.detected_language}</strong></span>
                   </div>
                   <Button
