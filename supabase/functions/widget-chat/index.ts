@@ -296,57 +296,100 @@ OTHER RULES:
 // LANGUAGE DETECTION
 // ============================================
 
-// Common language patterns for detection based on unique characters and common words
-const LANGUAGE_PATTERNS: Array<{ code: string; name: string; patterns: RegExp[] }> = [
-  { code: 'es', name: 'Spanish', patterns: [/[áéíóúñ¿¡]/i, /\b(hola|gracias|por favor|buenos|cómo|qué|está|tengo|quiero|necesito)\b/i] },
-  { code: 'pt', name: 'Portuguese', patterns: [/[ãõçâê]/i, /\b(olá|obrigad[ao]|por favor|bom|como|está|tenho|quero|preciso|você)\b/i] },
-  { code: 'fr', name: 'French', patterns: [/[àâçéèêëîïôûùü]/i, /\b(bonjour|merci|s'il vous plaît|comment|je suis|j'ai|je voudrais|salut)\b/i] },
-  { code: 'de', name: 'German', patterns: [/[äöüß]/i, /\b(guten|danke|bitte|ich bin|ich habe|wie|möchte|brauche)\b/i] },
-  { code: 'it', name: 'Italian', patterns: [/[àèéìòù]/i, /\b(ciao|grazie|per favore|come|sono|ho|vorrei|buon)\b/i] },
-  { code: 'nl', name: 'Dutch', patterns: [/\b(hallo|dank|alstublieft|hoe|ik ben|ik heb|goedemorgen)\b/i] },
-  { code: 'pl', name: 'Polish', patterns: [/[ąćęłńóśźż]/i, /\b(cześć|dziękuję|proszę|jak|jestem|mam|potrzebuję)\b/i] },
-  { code: 'ru', name: 'Russian', patterns: [/[а-яА-ЯёЁ]/] },
-  { code: 'zh', name: 'Chinese', patterns: [/[\u4e00-\u9fff]/, /[\u3400-\u4dbf]/] },
-  { code: 'ja', name: 'Japanese', patterns: [/[\u3040-\u309f]/, /[\u30a0-\u30ff]/, /[\u4e00-\u9fff]/] },
-  { code: 'ko', name: 'Korean', patterns: [/[\uac00-\ud7af]/, /[\u1100-\u11ff]/] },
-  { code: 'ar', name: 'Arabic', patterns: [/[\u0600-\u06ff]/] },
-  { code: 'hi', name: 'Hindi', patterns: [/[\u0900-\u097f]/] },
-  { code: 'vi', name: 'Vietnamese', patterns: [/[àảãáạăằẳẵắặâầẩẫấậèẻẽéẹêềểễếệìỉĩíịòỏõóọôồổỗốộơờởỡớợùủũúụưừửữứựỳỷỹýỵđ]/i] },
-  { code: 'th', name: 'Thai', patterns: [/[\u0e00-\u0e7f]/] },
-  { code: 'tr', name: 'Turkish', patterns: [/[çğıöşü]/i, /\b(merhaba|teşekkür|lütfen|nasıl|ben|istiyorum)\b/i] },
-  { code: 'uk', name: 'Ukrainian', patterns: [/[їієґ]/i] },
-  { code: 'he', name: 'Hebrew', patterns: [/[\u0590-\u05ff]/] },
-  { code: 'el', name: 'Greek', patterns: [/[\u0370-\u03ff]/] },
-  { code: 'sv', name: 'Swedish', patterns: [/[åäö]/i, /\b(hej|tack|snälla|hur|jag är|jag har)\b/i] },
-  { code: 'da', name: 'Danish', patterns: [/[æøå]/i, /\b(hej|tak|venligst|hvordan|jeg er|jeg har)\b/i] },
-  { code: 'no', name: 'Norwegian', patterns: [/[æøå]/i, /\b(hei|takk|vær så snill|hvordan|jeg er|jeg har)\b/i] },
-  { code: 'fi', name: 'Finnish', patterns: [/[äö]/i, /\b(hei|kiitos|ole hyvä|miten|olen|minulla on)\b/i] },
-  { code: 'cs', name: 'Czech', patterns: [/[ěščřžýáíé]/i, /\b(ahoj|děkuji|prosím|jak|jsem|mám)\b/i] },
-  { code: 'ro', name: 'Romanian', patterns: [/[ăâîșț]/i, /\b(salut|mulțumesc|vă rog|cum|sunt|am)\b/i] },
-  { code: 'hu', name: 'Hungarian', patterns: [/[áéíóöőúüű]/i, /\b(szia|köszönöm|kérem|hogyan|vagyok)\b/i] },
+// Character-based patterns for languages with unique scripts (100% reliable)
+// Word-based patterns for Latin-alphabet languages are handled by AI detection
+const CHARACTER_BASED_PATTERNS: Array<{ code: string; name: string; pattern: RegExp }> = [
+  { code: 'ru', name: 'Russian', pattern: /[а-яА-ЯёЁ]/ },
+  { code: 'zh', name: 'Chinese', pattern: /[\u4e00-\u9fff]|[\u3400-\u4dbf]/ },
+  { code: 'ja', name: 'Japanese', pattern: /[\u3040-\u309f]|[\u30a0-\u30ff]/ },
+  { code: 'ko', name: 'Korean', pattern: /[\uac00-\ud7af]|[\u1100-\u11ff]/ },
+  { code: 'ar', name: 'Arabic', pattern: /[\u0600-\u06ff]/ },
+  { code: 'he', name: 'Hebrew', pattern: /[\u0590-\u05ff]/ },
+  { code: 'hi', name: 'Hindi', pattern: /[\u0900-\u097f]/ },
+  { code: 'th', name: 'Thai', pattern: /[\u0e00-\u0e7f]/ },
+  { code: 'el', name: 'Greek', pattern: /[\u0370-\u03ff]/ },
+  { code: 'uk', name: 'Ukrainian', pattern: /[їієґ]/i },
+  { code: 'vi', name: 'Vietnamese', pattern: /[àảãáạăằẳẵắặâầẩẫấậèẻẽéẹêềểễếệìỉĩíịòỏõóọôồổỗốộơờởỡớợùủũúụưừửữứựỳỷỹýỵđ]/i },
 ];
 
 /**
- * Detect the language of a text message.
- * Returns null for English or undetected languages (most users are English-speaking).
+ * Fast character-based language detection for unique scripts.
+ * Returns null for Latin-alphabet languages (handled by AI detection).
  */
-function detectLanguage(text: string): { code: string; name: string } | null {
+function detectLanguageByCharacters(text: string): { code: string; name: string } | null {
   if (!text || text.length < 3) return null;
   
-  // Normalize text for matching
-  const normalizedText = text.toLowerCase();
-  
-  // Check each language pattern
-  for (const lang of LANGUAGE_PATTERNS) {
-    for (const pattern of lang.patterns) {
-      if (pattern.test(normalizedText)) {
-        return { code: lang.code, name: lang.name };
-      }
+  for (const lang of CHARACTER_BASED_PATTERNS) {
+    if (lang.pattern.test(text)) {
+      return { code: lang.code, name: lang.name };
     }
   }
-  
-  // Default to null (English or unknown)
   return null;
+}
+
+/**
+ * Detect language using AI via OpenRouter (uses lite tier for cost efficiency).
+ * Only called when character-based detection doesn't match.
+ * Cost: ~50-100 tokens per call (~$0.000001 per detection)
+ */
+async function detectLanguageWithAI(
+  text: string, 
+  openrouterKey: string
+): Promise<{ code: string; name: string } | null> {
+  if (!text || text.length < 10) return null;
+  
+  try {
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openrouterKey}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': 'https://chatpad.ai',
+        'X-Title': 'ChatPad Language Detection',
+      },
+      body: JSON.stringify({
+        model: MODEL_TIERS.lite, // google/gemini-2.5-flash-lite - cheapest tier
+        messages: [
+          {
+            role: 'system',
+            content: `Detect the primary language of the user's message. Return ONLY a JSON object: {"code":"xx","name":"Language Name"}
+
+Common codes: en=English, es=Spanish, pt=Portuguese, fr=French, de=German, it=Italian, nl=Dutch, pl=Polish, tr=Turkish, sv=Swedish, da=Danish, no=Norwegian, fi=Finnish, cs=Czech, ro=Romanian, hu=Hungarian, id=Indonesian, ms=Malay, tl=Filipino.
+If the text is primarily English or you're unsure, return: {"code":"en","name":"English"}
+Handle misspellings naturally - "necessito" is Spanish even though misspelled.
+Respond ONLY with the JSON object, no explanation.`
+          },
+          { role: 'user', content: text.substring(0, 500) }
+        ],
+        max_tokens: 30,
+        temperature: 0,
+      }),
+    });
+
+    if (!response.ok) {
+      console.warn('[Language Detection] OpenRouter API error:', response.status);
+      return null;
+    }
+
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content?.trim();
+    
+    // Parse JSON response - handle potential markdown wrapping
+    let jsonStr = content;
+    if (content.includes('```')) {
+      jsonStr = content.replace(/```json?\s*/g, '').replace(/```/g, '').trim();
+    }
+    
+    const parsed = JSON.parse(jsonStr);
+    if (parsed.code && parsed.name && parsed.code !== 'en') {
+      console.log(`[Language Detection] AI detected: ${parsed.name} (${parsed.code})`);
+      return { code: parsed.code, name: parsed.name };
+    }
+    return null;
+  } catch (error) {
+    console.warn('[Language Detection] AI detection error:', error);
+    return null;
+  }
 }
 
 // US State abbreviation to full name mapping for bidirectional search
@@ -4091,44 +4134,48 @@ NEVER mark complete when:
       // Detect language from user input if not already detected
       let languageMetadata: { detected_language?: string; detected_language_code?: string } = {};
       if (!currentMetadata.detected_language_code) {
-        // Priority 1: Check contact form Message field (often contains first non-English text)
+        // Collect all user text for detection
+        const textsToCheck: string[] = [];
+        
+        // Priority 1: Contact form Message field (often contains first non-English text)
         const contactFormMessage = currentMetadata.custom_fields?.Message;
         if (contactFormMessage && typeof contactFormMessage === 'string') {
-          const detected = detectLanguage(contactFormMessage);
-          if (detected) {
-            languageMetadata = {
-              detected_language: detected.name,
-              detected_language_code: detected.code,
-            };
-          }
+          textsToCheck.push(contactFormMessage);
         }
         
-        // Priority 2: Check current user message being processed
+        // Priority 2: Current user message being processed
         const currentUserMessage = messages?.filter((m: any) => m.role === 'user').pop()?.content;
-        if (!languageMetadata.detected_language_code && currentUserMessage) {
-          const detected = detectLanguage(currentUserMessage);
-          if (detected) {
-            languageMetadata = {
-              detected_language: detected.name,
-              detected_language_code: detected.code,
-            };
+        if (currentUserMessage) {
+          textsToCheck.push(currentUserMessage);
+        }
+        
+        // Priority 3: Previous user messages
+        const userMessages = messages?.filter((m: any) => m.role === 'user') || [];
+        for (const msg of userMessages) {
+          if (msg.content && typeof msg.content === 'string') {
+            textsToCheck.push(msg.content);
           }
         }
         
-        // Priority 3: Check previous user messages in conversation
-        if (!languageMetadata.detected_language_code) {
-          const userMessages = messages?.filter((m: any) => m.role === 'user') || [];
-          for (const msg of userMessages) {
-            if (msg.content && typeof msg.content === 'string') {
-              const detected = detectLanguage(msg.content);
-              if (detected) {
-                languageMetadata = {
-                  detected_language: detected.name,
-                  detected_language_code: detected.code,
-                };
-                break;
-              }
-            }
+        // Combine texts for detection (max 1000 chars)
+        const combinedText = textsToCheck.join(' ').substring(0, 1000);
+        
+        // Step 1: Try fast character-based detection (unique scripts like Chinese, Arabic, Russian)
+        const detected = detectLanguageByCharacters(combinedText);
+        if (detected) {
+          languageMetadata = {
+            detected_language: detected.name,
+            detected_language_code: detected.code,
+          };
+        } else if (combinedText.length >= 10) {
+          // Step 2: Use AI detection via OpenRouter for Latin-alphabet languages
+          // This handles misspellings and informal text accurately
+          const aiDetected = await detectLanguageWithAI(combinedText, OPENROUTER_API_KEY);
+          if (aiDetected) {
+            languageMetadata = {
+              detected_language: aiDetected.name,
+              detected_language_code: aiDetected.code,
+            };
           }
         }
       }
