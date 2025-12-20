@@ -1,21 +1,23 @@
 /**
- * ChatBubbleIcon Component
+ * WidgetStarIcon Component
  * 
  * Star/sparkle icon used in widget avatars and branding.
- * @module components/agents/ChatBubbleIcon
+ * 
+ * @module widget/icons/WidgetStarIcon
  */
 
 import * as React from "react";
 
-interface ChatBubbleIconProps extends React.SVGProps<SVGSVGElement> {
-  className?: string;
-}
-
-export const ChatBubbleIcon = (props: ChatBubbleIconProps) => (
+/**
+ * Star icon SVG component for widget use.
+ * Uses currentColor for theming support.
+ */
+export const WidgetStarIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 78.54 76.83"
     fill="currentColor"
+    aria-hidden="true"
     {...props}
   >
     <path
