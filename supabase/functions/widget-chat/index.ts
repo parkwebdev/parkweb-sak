@@ -443,7 +443,7 @@ Respond ONLY with the JSON object, no explanation.`
     }
     
     const parsed = JSON.parse(jsonStr);
-    if (parsed.code && parsed.name && parsed.code !== 'en') {
+    if (parsed.code && parsed.name) {
       console.log(`[Language Detection] AI detected: ${parsed.name} (${parsed.code})`);
       return { code: parsed.code, name: parsed.name };
     }
@@ -4315,33 +4315,28 @@ NEVER mark complete when:
             
             if (messageLanguage) {
               // Compare to stored language
+              const isEnglishMessage = messageLanguage.code === 'en';
+              const isStoredEnglish = !currentLanguageCode || currentLanguageCode === 'en';
+              
               if (messageLanguage.code !== currentLanguageCode) {
-                // Language mismatch detected! Increment counter
-                const mismatchCount = (currentMetadata.language_mismatch_count || 0) + 1;
-                console.log(`[Language Re-eval] Mismatch #${mismatchCount}: message="${messageLanguage.name}", stored="${currentMetadata.detected_language}"`);
+                // Language mismatch detected! Switch immediately (threshold = 1)
+                console.log(`[Language Re-eval] Switching from ${currentMetadata.detected_language || 'English'} to ${messageLanguage.name}`);
                 
-                if (mismatchCount >= 3) {
-                  // 3+ consecutive mismatches: UPDATE the language!
-                  console.log(`[Language Re-eval] Switching from ${currentMetadata.detected_language} to ${messageLanguage.name}`);
+                if (isEnglishMessage && !isStoredEnglish) {
+                  // Switching back to English: clear language metadata (English is default)
+                  languageMetadata = {
+                    detected_language: undefined,
+                    detected_language_code: undefined,
+                    language_detection_source: undefined,
+                    language_mismatch_count: 0,
+                    language_last_reevaluated_at: new Date().toISOString(),
+                  };
+                } else {
+                  // Switching to a non-English language
                   languageMetadata = {
                     detected_language: messageLanguage.name,
                     detected_language_code: messageLanguage.code,
                     language_detection_source: 'ai',
-                    language_mismatch_count: 0, // Reset counter
-                    language_last_reevaluated_at: new Date().toISOString(),
-                  };
-                } else {
-                  // Not enough mismatches yet, just update counter
-                  languageMetadata = {
-                    language_mismatch_count: mismatchCount,
-                    language_last_reevaluated_at: new Date().toISOString(),
-                  };
-                }
-              } else {
-                // Language matches! Reset mismatch counter if needed
-                if ((currentMetadata.language_mismatch_count || 0) > 0) {
-                  console.log(`[Language Re-eval] Language matches again, resetting mismatch counter`);
-                  languageMetadata = { 
                     language_mismatch_count: 0,
                     language_last_reevaluated_at: new Date().toISOString(),
                   };
