@@ -34,7 +34,7 @@ import { LinkPreviewsWidget } from '@/widget/components/LinkPreviewsWidget';
 import { QuickReplies } from '@/widget/components/QuickReplies';
 import { CallButton, type CallAction } from '@/widget/components/CallButton';
 import { DayPicker, TimePicker, BookingConfirmed } from '@/widget/constants';
-import { stripUrlsFromContent, stripPhoneNumbersFromContent } from '@/widget/utils/url-stripper';
+import { stripUrlsFromContent, stripPhoneNumbersFromContent, formatMarkdownBullets } from '@/widget/utils/url-stripper';
 import type { 
   DayPickerData, 
   TimePickerData, 
@@ -304,6 +304,7 @@ export const PreviewChat: React.FC<PreviewChatProps> = ({
                           let processed = message.content.replace(/\*\*(.*?)\*\*/g, '$1');
                           processed = stripUrlsFromContent(processed, hasLinkPreviews);
                           processed = stripPhoneNumbersFromContent(processed, hasCallActions);
+                          processed = formatMarkdownBullets(processed);
                           
                           console.log('[PreviewChat] After stripping:', processed.substring(0, 100));
                           

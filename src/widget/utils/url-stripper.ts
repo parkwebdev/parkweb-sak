@@ -91,3 +91,16 @@ export function stripPhoneNumbersFromContent(content: string, hasCallActions: bo
   
   return cleanupFormatting(cleaned);
 }
+
+/**
+ * Converts markdown bullet syntax (* or -) to Unicode bullets (•) for display.
+ * This ensures proper bullet point rendering instead of raw asterisks.
+ */
+export function formatMarkdownBullets(content: string): string {
+  if (!content) return content;
+  
+  // Replace markdown bullets (* or -) at start of lines with Unicode bullet
+  return content
+    .replace(/^[*-]\s+/gm, '• ')    // Start of string/line
+    .replace(/\n[*-]\s+/g, '\n• '); // After newline
+}

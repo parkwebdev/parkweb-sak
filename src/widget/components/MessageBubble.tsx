@@ -18,7 +18,7 @@ import { formatFileSize } from '@/lib/file-validation';
 import { downloadFile } from '@/lib/file-download';
 import { AudioPlayer, MessageReactions, DayPicker, TimePicker, BookingConfirmed } from '../constants';
 import { FileTypeIcon } from '@/components/chat/FileTypeIcons';
-import { stripUrlsFromContent, stripPhoneNumbersFromContent } from '../utils/url-stripper';
+import { stripUrlsFromContent, stripPhoneNumbersFromContent, formatMarkdownBullets } from '../utils/url-stripper';
 import type { Message, BookingDay, BookingTime } from '../types';
 
 /** Props for the MessageBubble component */
@@ -204,12 +204,14 @@ export const MessageBubble = ({
             {(message.type === 'text' || !message.type) && (
               <p className="text-sm whitespace-pre-wrap break-words">
                 {message.role === 'assistant' 
-                  ? stripPhoneNumbersFromContent(
-                      stripUrlsFromContent(
-                        message.content.replace(/\*\*(.*?)\*\*/g, '$1'),
-                        !!(message.linkPreviews && message.linkPreviews.length > 0)
-                      ),
-                      !!(message.callActions && message.callActions.length > 0)
+                  ? formatMarkdownBullets(
+                      stripPhoneNumbersFromContent(
+                        stripUrlsFromContent(
+                          message.content.replace(/\*\*(.*?)\*\*/g, '$1'),
+                          !!(message.linkPreviews && message.linkPreviews.length > 0)
+                        ),
+                        !!(message.callActions && message.callActions.length > 0)
+                      )
                     )
                   : message.content}
               </p>
