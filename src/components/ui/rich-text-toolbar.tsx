@@ -30,6 +30,8 @@ interface RichTextToolbarProps {
   editor: Editor | null;
   onImageUpload: (file: File) => Promise<void>;
   isUploading?: boolean;
+  /** When true, only show Bold, Italic, and Link buttons */
+  minimalMode?: boolean;
 }
 
 interface ToolbarButtonProps {
@@ -60,7 +62,7 @@ const ToolbarButton = ({ icon, label, isActive, onClick, disabled }: ToolbarButt
   </Tooltip>
 );
 
-export const RichTextToolbar = ({ editor, onImageUpload, isUploading }: RichTextToolbarProps) => {
+export const RichTextToolbar = ({ editor, onImageUpload, isUploading, minimalMode }: RichTextToolbarProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!editor) return null;
@@ -85,6 +87,32 @@ export const RichTextToolbar = ({ editor, onImageUpload, isUploading }: RichText
       editor.chain().focus().setLink({ href: url }).run();
     }
   };
+
+  // Minimal mode: Only Bold, Italic, Link
+  if (minimalMode) {
+    return (
+      <div className="flex items-center gap-0.5 p-2 border-b border-border bg-muted/30 rounded-t-md">
+        <ToolbarButton
+          icon={<Bold01 className="h-4 w-4" />}
+          label="Bold"
+          isActive={editor.isActive('bold')}
+          onClick={() => editor.chain().focus().toggleBold().run()}
+        />
+        <ToolbarButton
+          icon={<Italic01 className="h-4 w-4" />}
+          label="Italic"
+          isActive={editor.isActive('italic')}
+          onClick={() => editor.chain().focus().toggleItalic().run()}
+        />
+        <ToolbarButton
+          icon={<Link01 className="h-4 w-4" />}
+          label="Add Link"
+          isActive={editor.isActive('link')}
+          onClick={addLink}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-wrap items-center gap-0.5 p-2 border-b border-border bg-muted/30 rounded-t-md">
