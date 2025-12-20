@@ -349,7 +349,7 @@ const CHARACTER_BASED_PATTERNS: Array<{ code: string; name: string; pattern: Reg
   { code: 'th', name: 'Thai', pattern: /[\u0e00-\u0e7f]/ },
   { code: 'el', name: 'Greek', pattern: /[\u0370-\u03ff]/ },
   { code: 'uk', name: 'Ukrainian', pattern: /[їієґ]/i },
-  { code: 'vi', name: 'Vietnamese', pattern: /[àảãáạăằẳẵắặâầẩẫấậèẻẽéẹêềểễếệìỉĩíịòỏõóọôồổỗốộơờởỡớợùủũúụưừửữứựỳỷỹýỵđ]/i },
+  { code: 'vi', name: 'Vietnamese', pattern: /[ảạăằẳẵắặẩẫậẻẹềểễệỉịỏọổỗộơờởỡớợủụưừửữứựỷỵđ]/i },
 ];
 
 /**
