@@ -296,6 +296,39 @@ OTHER RULES:
 // LANGUAGE DETECTION
 // ============================================
 
+// Browser language code to name mapping (ISO 639-1 codes)
+const BROWSER_LANGUAGE_NAMES: Record<string, string> = {
+  'es': 'Spanish',
+  'pt': 'Portuguese',
+  'fr': 'French',
+  'de': 'German',
+  'it': 'Italian',
+  'nl': 'Dutch',
+  'pl': 'Polish',
+  'ru': 'Russian',
+  'zh': 'Chinese',
+  'ja': 'Japanese',
+  'ko': 'Korean',
+  'ar': 'Arabic',
+  'he': 'Hebrew',
+  'hi': 'Hindi',
+  'th': 'Thai',
+  'el': 'Greek',
+  'uk': 'Ukrainian',
+  'vi': 'Vietnamese',
+  'tr': 'Turkish',
+  'sv': 'Swedish',
+  'da': 'Danish',
+  'no': 'Norwegian',
+  'fi': 'Finnish',
+  'cs': 'Czech',
+  'ro': 'Romanian',
+  'hu': 'Hungarian',
+  'id': 'Indonesian',
+  'ms': 'Malay',
+  'tl': 'Filipino',
+};
+
 // Character-based patterns for languages with unique scripts (100% reliable)
 // Word-based patterns for Latin-alphabet languages are handled by AI detection
 const CHARACTER_BASED_PATTERNS: Array<{ code: string; name: string; pattern: RegExp }> = [
@@ -311,6 +344,28 @@ const CHARACTER_BASED_PATTERNS: Array<{ code: string; name: string; pattern: Reg
   { code: 'uk', name: 'Ukrainian', pattern: /[їієґ]/i },
   { code: 'vi', name: 'Vietnamese', pattern: /[àảãáạăằẳẵắặâầẩẫấậèẻẽéẹêềểễếệìỉĩíịòỏõóọôồổỗốộơờởỡớợùủũúụưừửữứựỳỷỹýỵđ]/i },
 ];
+
+/**
+ * Parse browser language code and return language info.
+ * Handles formats like "es", "es-ES", "pt-BR", etc.
+ * Only returns non-English languages (since English is the default).
+ */
+function parseBrowserLanguage(browserLang: string | null | undefined): { code: string; name: string } | null {
+  if (!browserLang) return null;
+  
+  // Extract base language code (e.g., "es-ES" → "es")
+  const langCode = browserLang.split('-')[0].toLowerCase();
+  
+  // Skip English (default fallback language)
+  if (langCode === 'en') return null;
+  
+  const langName = BROWSER_LANGUAGE_NAMES[langCode];
+  if (langName) {
+    return { code: langCode, name: langName };
+  }
+  
+  return null;
+}
 
 /**
  * Fast character-based language detection for unique scripts.
@@ -2606,7 +2661,7 @@ serve(async (req) => {
   }
 
   try {
-    const { agentId, conversationId, messages, leadId, pageVisits, referrerJourney, visitorId, previewMode } = await req.json();
+    const { agentId, conversationId, messages, leadId, pageVisits, referrerJourney, visitorId, previewMode, browserLanguage } = await req.json();
 
     // Log incoming request
     log.info('Request received', {
@@ -2617,6 +2672,7 @@ serve(async (req) => {
       hasReferrerJourney: !!referrerJourney,
       visitorId: visitorId || null,
       previewMode: !!previewMode,
+      browserLanguage: browserLanguage || null,
     });
 
     // Validate required fields
@@ -4132,50 +4188,67 @@ NEVER mark complete when:
       }
       
       // Detect language from user input if not already detected
+      // Priority: 1) Browser language 2) Character-based detection 3) AI detection
       let languageMetadata: { detected_language?: string; detected_language_code?: string } = {};
       if (!currentMetadata.detected_language_code) {
-        // Collect all user text for detection
-        const textsToCheck: string[] = [];
-        
-        // Priority 1: Contact form Message field (often contains first non-English text)
-        const contactFormMessage = currentMetadata.custom_fields?.Message;
-        if (contactFormMessage && typeof contactFormMessage === 'string') {
-          textsToCheck.push(contactFormMessage);
-        }
-        
-        // Priority 2: Current user message being processed
-        const currentUserMessage = messages?.filter((m: any) => m.role === 'user').pop()?.content;
-        if (currentUserMessage) {
-          textsToCheck.push(currentUserMessage);
-        }
-        
-        // Priority 3: Previous user messages
-        const userMessages = messages?.filter((m: any) => m.role === 'user') || [];
-        for (const msg of userMessages) {
-          if (msg.content && typeof msg.content === 'string') {
-            textsToCheck.push(msg.content);
-          }
-        }
-        
-        // Combine texts for detection (max 1000 chars)
-        const combinedText = textsToCheck.join(' ').substring(0, 1000);
-        
-        // Step 1: Try fast character-based detection (unique scripts like Chinese, Arabic, Russian)
-        const detected = detectLanguageByCharacters(combinedText);
-        if (detected) {
+        // Step 1: Try browser language first (most reliable for user preference)
+        // This works instantly without API calls and reflects what the user actually wants
+        const browserLangResult = parseBrowserLanguage(browserLanguage);
+        if (browserLangResult) {
+          console.log(`[Language Detection] Browser language: ${browserLangResult.name} (${browserLangResult.code}) from "${browserLanguage}"`);
           languageMetadata = {
-            detected_language: detected.name,
-            detected_language_code: detected.code,
+            detected_language: browserLangResult.name,
+            detected_language_code: browserLangResult.code,
           };
-        } else if (combinedText.length >= 10) {
-          // Step 2: Use AI detection via OpenRouter for Latin-alphabet languages
-          // This handles misspellings and informal text accurately
-          const aiDetected = await detectLanguageWithAI(combinedText, OPENROUTER_API_KEY);
-          if (aiDetected) {
+        }
+        
+        // Only fall back to text analysis if browser language didn't provide a non-English result
+        if (!languageMetadata.detected_language_code) {
+          // Collect all user text for detection
+          const textsToCheck: string[] = [];
+          
+          // Priority 1: Contact form Message field (often contains first non-English text)
+          const contactFormMessage = currentMetadata.custom_fields?.Message;
+          if (contactFormMessage && typeof contactFormMessage === 'string') {
+            textsToCheck.push(contactFormMessage);
+          }
+          
+          // Priority 2: Current user message being processed
+          const currentUserMessage = messages?.filter((m: any) => m.role === 'user').pop()?.content;
+          if (currentUserMessage) {
+            textsToCheck.push(currentUserMessage);
+          }
+          
+          // Priority 3: Previous user messages
+          const userMessages = messages?.filter((m: any) => m.role === 'user') || [];
+          for (const msg of userMessages) {
+            if (msg.content && typeof msg.content === 'string') {
+              textsToCheck.push(msg.content);
+            }
+          }
+          
+          // Combine texts for detection (max 1000 chars)
+          const combinedText = textsToCheck.join(' ').substring(0, 1000);
+          
+          // Step 2: Try fast character-based detection (unique scripts like Chinese, Arabic, Russian)
+          const detected = detectLanguageByCharacters(combinedText);
+          if (detected) {
+            console.log(`[Language Detection] Character-based: ${detected.name} (${detected.code})`);
             languageMetadata = {
-              detected_language: aiDetected.name,
-              detected_language_code: aiDetected.code,
+              detected_language: detected.name,
+              detected_language_code: detected.code,
             };
+          } else if (combinedText.length >= 10) {
+            // Step 3: Use AI detection via OpenRouter for Latin-alphabet languages
+            // This handles misspellings and informal text accurately
+            const aiDetected = await detectLanguageWithAI(combinedText, OPENROUTER_API_KEY);
+            if (aiDetected) {
+              console.log(`[Language Detection] AI-based: ${aiDetected.name} (${aiDetected.code})`);
+              languageMetadata = {
+                detected_language: aiDetected.name,
+                detected_language_code: aiDetected.code,
+              };
+            }
           }
         }
       }

@@ -470,7 +470,8 @@ export async function sendChatMessage(
   referrerJourney?: ReferrerJourney,
   visitorId?: string,
   locationId?: string,
-  previewMode?: boolean
+  previewMode?: boolean,
+  browserLanguage?: string | null
 ): Promise<ChatResponse> {
   // Client-side validation before making request
   if (newUserMessage.content && newUserMessage.content.length > MAX_MESSAGE_LENGTH) {
@@ -504,6 +505,7 @@ export async function sendChatMessage(
       visitorId,
       locationId,
       previewMode, // Skip persistence for preview/testing
+      browserLanguage, // Browser language preference for detection (e.g., "es", "es-ES")
     }),
   });
 
