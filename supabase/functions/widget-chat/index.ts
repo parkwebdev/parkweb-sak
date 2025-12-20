@@ -4100,7 +4100,6 @@ NEVER mark complete when:
               detected_language: detected.name,
               detected_language_code: detected.code,
             };
-            console.log(`Language detected from contact form: ${detected.name} (${detected.code})`);
           }
         }
         
@@ -4112,7 +4111,6 @@ NEVER mark complete when:
               detected_language: detected.name,
               detected_language_code: detected.code,
             };
-            console.log(`Language detected from current message: ${detected.name} (${detected.code})`);
           }
         }
         
@@ -4127,7 +4125,6 @@ NEVER mark complete when:
                   detected_language: detected.name,
                   detected_language_code: detected.code,
                 };
-                console.log(`Language detected from chat history: ${detected.name} (${detected.code})`);
                 break;
               }
             }
