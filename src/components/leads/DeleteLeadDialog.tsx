@@ -71,6 +71,21 @@ export const DeleteLeadDialog = ({
               <p>
                 This action cannot be undone. {isBulk ? 'These leads' : 'This lead'} will be permanently deleted.
               </p>
+
+              <div className="rounded-lg border border-border bg-muted/50 p-3 space-y-2">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">What gets deleted:</p>
+                <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
+                  <li>Lead contact information</li>
+                  <li>AI memories associated with {isBulk ? 'these leads' : 'this lead'}</li>
+                  <li>Calendar event references (events are kept)</li>
+                  {hasConversations && deleteOption === 'lead-and-conversation' && (
+                    <>
+                      <li>All messages in {isBulk ? 'linked conversations' : 'the linked conversation'}</li>
+                      <li>Conversation ratings and takeover history</li>
+                    </>
+                  )}
+                </ul>
+              </div>
               
               {hasConversations && (
                 <div className="rounded-lg border p-4 space-y-3">
