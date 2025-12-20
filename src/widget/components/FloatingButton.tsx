@@ -47,7 +47,7 @@ export const FloatingButton = ({
       className="w-[50px] h-[50px] rounded-3xl flex items-center justify-center shadow-lg transition-all duration-200 hover:scale-105"
       style={{ backgroundColor: buttonBg }}
     >
-      <div className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : 'rotate-0'}`}>
+      <div className="transition-transform duration-200">
         {isOpen ? (
           <ChevronDown className="h-6 w-6" style={{ color: iconColor }} />
         ) : (
