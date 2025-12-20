@@ -68,7 +68,7 @@ export const WidgetCheckbox = ({
   return (
     <div className={cn(className)}>
       {/* Checkbox + Inline Label - 44px min touch target */}
-      <label className="flex items-start gap-3 cursor-pointer min-h-[44px] py-2">
+      <label className="flex items-start gap-3 cursor-pointer min-h-[44px] py-1">
         <input
           type="checkbox"
           name={name}
