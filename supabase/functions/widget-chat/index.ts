@@ -4088,21 +4088,48 @@ NEVER mark complete when:
         console.log(`Merged ${newVisits.length} new page visits, total: ${mergedPageVisits.length}`);
       }
       
-      // Detect language from user messages if not already detected
+      // Detect language from user input if not already detected
       let languageMetadata: { detected_language?: string; detected_language_code?: string } = {};
       if (!currentMetadata.detected_language_code) {
-        // Get all user messages for language detection
-        const userMessages = messages?.filter((m: any) => m.role === 'user') || [];
-        for (const msg of userMessages) {
-          if (msg.content && typeof msg.content === 'string') {
-            const detected = detectLanguage(msg.content);
-            if (detected) {
-              languageMetadata = {
-                detected_language: detected.name,
-                detected_language_code: detected.code,
-              };
-              console.log(`Language detected: ${detected.name} (${detected.code})`);
-              break;
+        // Priority 1: Check contact form Message field (often contains first non-English text)
+        const contactFormMessage = currentMetadata.custom_fields?.Message;
+        if (contactFormMessage && typeof contactFormMessage === 'string') {
+          const detected = detectLanguage(contactFormMessage);
+          if (detected) {
+            languageMetadata = {
+              detected_language: detected.name,
+              detected_language_code: detected.code,
+            };
+            console.log(`Language detected from contact form: ${detected.name} (${detected.code})`);
+          }
+        }
+        
+        // Priority 2: Check current user message being processed
+        if (!languageMetadata.detected_language_code && message) {
+          const detected = detectLanguage(message);
+          if (detected) {
+            languageMetadata = {
+              detected_language: detected.name,
+              detected_language_code: detected.code,
+            };
+            console.log(`Language detected from current message: ${detected.name} (${detected.code})`);
+          }
+        }
+        
+        // Priority 3: Check previous user messages in conversation
+        if (!languageMetadata.detected_language_code) {
+          const userMessages = messages?.filter((m: any) => m.role === 'user') || [];
+          for (const msg of userMessages) {
+            if (msg.content && typeof msg.content === 'string') {
+              const detected = detectLanguage(msg.content);
+              if (detected) {
+                languageMetadata = {
+                  detected_language: detected.name,
+                  detected_language_code: detected.code,
+                };
+                console.log(`Language detected from chat history: ${detected.name} (${detected.code})`);
+                break;
+              }
             }
           }
         }
