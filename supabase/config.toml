@@ -119,3 +119,6 @@ schedule = "0 * * * *"
 
 [functions.proxy-image]
 verify_jwt = false
+
+[functions.translate-messages]
+verify_jwt = true
