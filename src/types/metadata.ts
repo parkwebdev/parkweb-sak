@@ -87,6 +87,12 @@ export interface ConversationMetadata {
   visited_pages?: VisitedPage[];
   /** Custom fields from contact form or integrations */
   custom_fields?: Record<string, string | number | boolean>;
+
+  // Language detection
+  /** Detected language of the conversation (e.g., "Spanish", "Portuguese") */
+  detected_language?: string;
+  /** ISO 639-1 language code (e.g., "es", "pt", "fr") */
+  detected_language_code?: string;
 }
 
 /**

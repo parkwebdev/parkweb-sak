@@ -153,6 +153,9 @@ interface ConversationMetadata {
   notes?: string;
   visited_pages?: PageVisit[];
   referrer_journey?: ReferrerJourney;
+  // Language detection
+  detected_language?: string;
+  detected_language_code?: string;
 }
 
 interface ConversationMetadataPanelProps {
@@ -463,6 +466,20 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
                         <Building07 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                         <span className="truncate">{metadata.lead_company}</span>
                       </div>
+                    )}
+                    {/* Language Badge - only show for non-English conversations */}
+                    {metadata.detected_language && metadata.detected_language_code !== 'en' && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="flex items-center gap-2.5 text-sm">
+                            <Globe01 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                            <Badge variant="outline" className="text-xs">
+                              {metadata.detected_language}
+                            </Badge>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>Detected conversation language</TooltipContent>
+                      </Tooltip>
                     )}
                     {!metadata.lead_name && !metadata.lead_email && phoneFieldEntries.length === 0 && (
                       <p className="text-sm text-muted-foreground italic">No contact info</p>

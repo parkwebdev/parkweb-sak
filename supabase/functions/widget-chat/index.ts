@@ -292,6 +292,63 @@ OTHER RULES:
 - Lead with the ANSWER first, then add brief context if needed
 - If you're writing more than 30 words without a break, STOP and restructure`;
 
+// ============================================
+// LANGUAGE DETECTION
+// ============================================
+
+// Common language patterns for detection based on unique characters and common words
+const LANGUAGE_PATTERNS: Array<{ code: string; name: string; patterns: RegExp[] }> = [
+  { code: 'es', name: 'Spanish', patterns: [/[áéíóúñ¿¡]/i, /\b(hola|gracias|por favor|buenos|cómo|qué|está|tengo|quiero|necesito)\b/i] },
+  { code: 'pt', name: 'Portuguese', patterns: [/[ãõçâê]/i, /\b(olá|obrigad[ao]|por favor|bom|como|está|tenho|quero|preciso|você)\b/i] },
+  { code: 'fr', name: 'French', patterns: [/[àâçéèêëîïôûùü]/i, /\b(bonjour|merci|s'il vous plaît|comment|je suis|j'ai|je voudrais|salut)\b/i] },
+  { code: 'de', name: 'German', patterns: [/[äöüß]/i, /\b(guten|danke|bitte|ich bin|ich habe|wie|möchte|brauche)\b/i] },
+  { code: 'it', name: 'Italian', patterns: [/[àèéìòù]/i, /\b(ciao|grazie|per favore|come|sono|ho|vorrei|buon)\b/i] },
+  { code: 'nl', name: 'Dutch', patterns: [/\b(hallo|dank|alstublieft|hoe|ik ben|ik heb|goedemorgen)\b/i] },
+  { code: 'pl', name: 'Polish', patterns: [/[ąćęłńóśźż]/i, /\b(cześć|dziękuję|proszę|jak|jestem|mam|potrzebuję)\b/i] },
+  { code: 'ru', name: 'Russian', patterns: [/[а-яА-ЯёЁ]/] },
+  { code: 'zh', name: 'Chinese', patterns: [/[\u4e00-\u9fff]/, /[\u3400-\u4dbf]/] },
+  { code: 'ja', name: 'Japanese', patterns: [/[\u3040-\u309f]/, /[\u30a0-\u30ff]/, /[\u4e00-\u9fff]/] },
+  { code: 'ko', name: 'Korean', patterns: [/[\uac00-\ud7af]/, /[\u1100-\u11ff]/] },
+  { code: 'ar', name: 'Arabic', patterns: [/[\u0600-\u06ff]/] },
+  { code: 'hi', name: 'Hindi', patterns: [/[\u0900-\u097f]/] },
+  { code: 'vi', name: 'Vietnamese', patterns: [/[àảãáạăằẳẵắặâầẩẫấậèẻẽéẹêềểễếệìỉĩíịòỏõóọôồổỗốộơờởỡớợùủũúụưừửữứựỳỷỹýỵđ]/i] },
+  { code: 'th', name: 'Thai', patterns: [/[\u0e00-\u0e7f]/] },
+  { code: 'tr', name: 'Turkish', patterns: [/[çğıöşü]/i, /\b(merhaba|teşekkür|lütfen|nasıl|ben|istiyorum)\b/i] },
+  { code: 'uk', name: 'Ukrainian', patterns: [/[їієґ]/i] },
+  { code: 'he', name: 'Hebrew', patterns: [/[\u0590-\u05ff]/] },
+  { code: 'el', name: 'Greek', patterns: [/[\u0370-\u03ff]/] },
+  { code: 'sv', name: 'Swedish', patterns: [/[åäö]/i, /\b(hej|tack|snälla|hur|jag är|jag har)\b/i] },
+  { code: 'da', name: 'Danish', patterns: [/[æøå]/i, /\b(hej|tak|venligst|hvordan|jeg er|jeg har)\b/i] },
+  { code: 'no', name: 'Norwegian', patterns: [/[æøå]/i, /\b(hei|takk|vær så snill|hvordan|jeg er|jeg har)\b/i] },
+  { code: 'fi', name: 'Finnish', patterns: [/[äö]/i, /\b(hei|kiitos|ole hyvä|miten|olen|minulla on)\b/i] },
+  { code: 'cs', name: 'Czech', patterns: [/[ěščřžýáíé]/i, /\b(ahoj|děkuji|prosím|jak|jsem|mám)\b/i] },
+  { code: 'ro', name: 'Romanian', patterns: [/[ăâîșț]/i, /\b(salut|mulțumesc|vă rog|cum|sunt|am)\b/i] },
+  { code: 'hu', name: 'Hungarian', patterns: [/[áéíóöőúüű]/i, /\b(szia|köszönöm|kérem|hogyan|vagyok)\b/i] },
+];
+
+/**
+ * Detect the language of a text message.
+ * Returns null for English or undetected languages (most users are English-speaking).
+ */
+function detectLanguage(text: string): { code: string; name: string } | null {
+  if (!text || text.length < 3) return null;
+  
+  // Normalize text for matching
+  const normalizedText = text.toLowerCase();
+  
+  // Check each language pattern
+  for (const lang of LANGUAGE_PATTERNS) {
+    for (const pattern of lang.patterns) {
+      if (pattern.test(normalizedText)) {
+        return { code: lang.code, name: lang.name };
+      }
+    }
+  }
+  
+  // Default to null (English or unknown)
+  return null;
+}
+
 // US State abbreviation to full name mapping for bidirectional search
 const STATE_ABBREVIATIONS: Record<string, string> = {
   'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas',
@@ -3236,6 +3293,11 @@ Use this remembered information naturally when relevant. Don't explicitly say "I
     // PHASE 8: Append formatting rules for digestible responses
     systemPrompt = systemPrompt + RESPONSE_FORMATTING_RULES;
 
+    // LANGUAGE MATCHING: Always respond in the user's language
+    systemPrompt += `
+
+LANGUAGE: Always respond in the same language the user is writing in. If they write in Spanish, respond in Spanish. If they write in Portuguese, respond in Portuguese. Match their language naturally without mentioning that you're doing so.`;
+
     // PROPERTY TOOLS INSTRUCTIONS: When agent has locations, instruct AI to use property tools
     if (hasLocations) {
       // Check if we have shown properties in context for reference resolution
@@ -4026,6 +4088,26 @@ NEVER mark complete when:
         console.log(`Merged ${newVisits.length} new page visits, total: ${mergedPageVisits.length}`);
       }
       
+      // Detect language from user messages if not already detected
+      let languageMetadata: { detected_language?: string; detected_language_code?: string } = {};
+      if (!currentMetadata.detected_language_code) {
+        // Get all user messages for language detection
+        const userMessages = messages?.filter((m: any) => m.role === 'user') || [];
+        for (const msg of userMessages) {
+          if (msg.content && typeof msg.content === 'string') {
+            const detected = detectLanguage(msg.content);
+            if (detected) {
+              languageMetadata = {
+                detected_language: detected.name,
+                detected_language_code: detected.code,
+              };
+              console.log(`Language detected: ${detected.name} (${detected.code})`);
+              break;
+            }
+          }
+        }
+      }
+      
       await supabase
         .from('conversations')
         .update({
@@ -4048,6 +4130,8 @@ NEVER mark complete when:
             ...(storedShownProperties?.length && {
               last_property_search_at: new Date().toISOString(),
             }),
+            // Add language detection if detected
+            ...languageMetadata,
           },
           updated_at: new Date().toISOString(),
         })

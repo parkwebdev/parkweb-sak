@@ -20,7 +20,7 @@ import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { SearchMd, MessageChatSquare, User01, Send01, FaceSmile, Globe01, Check, CheckCircle, XCircle, Download01, Attachment01, XClose, ChevronLeft, ChevronRight, SwitchVertical01, ChevronDown } from '@untitledui/icons';
+import { SearchMd, MessageChatSquare, User01, Send01, FaceSmile, Globe01, Check, CheckCircle, XCircle, Download01, Attachment01, XClose, ChevronLeft, ChevronRight, SwitchVertical01, ChevronDown, Translate01 } from '@untitledui/icons';
 import AriAgentsIcon from '@/components/icons/AriAgentsIcon';
 import { LinkPreviews } from '@/components/chat/LinkPreviews';
 import { FileTypeIcon } from '@/components/chat/FileTypeIcons';
@@ -125,6 +125,11 @@ const Conversations: React.FC = () => {
   });
   const [activeFilter, setActiveFilter] = useState<InboxFilter>({ type: 'all', label: 'All Conversations' });
   const [sortBy, setSortBy] = useState<'last_activity' | 'newest' | 'oldest'>('last_activity');
+  
+  // Translation state
+  const [showTranslation, setShowTranslation] = useState(false);
+  const [translatedMessages, setTranslatedMessages] = useState<Record<string, string>>({});
+  const [isTranslating, setIsTranslating] = useState(false);
 
   // Persist collapsed states
   useEffect(() => {
@@ -194,6 +199,36 @@ const Conversations: React.FC = () => {
     if (!visitorId) return null;
     return activeVisitors[visitorId] || null;
   };
+
+  // Translate messages to English
+  const handleTranslate = async () => {
+    if (!selectedConversation || messages.length === 0) return;
+    setIsTranslating(true);
+    try {
+      const messagesToTranslate = messages.map(m => ({ id: m.id, content: m.content }));
+      const { data, error } = await supabase.functions.invoke('translate-messages', {
+        body: { messages: messagesToTranslate, targetLanguage: 'en' }
+      });
+      if (error) throw error;
+      const translations: Record<string, string> = {};
+      data.translations?.forEach((t: { id: string; translated: string }) => {
+        translations[t.id] = t.translated;
+      });
+      setTranslatedMessages(translations);
+      setShowTranslation(true);
+    } catch (err) {
+      toast.error('Failed to translate messages');
+      console.error('Translation error:', err);
+    } finally {
+      setIsTranslating(false);
+    }
+  };
+
+  // Reset translation when conversation changes
+  useEffect(() => {
+    setShowTranslation(false);
+    setTranslatedMessages({});
+  }, [selectedConversation?.id]);
 
   // Load messages when conversation is selected
   useEffect(() => {
@@ -840,6 +875,29 @@ const Conversations: React.FC = () => {
                       </Button>
                     )}
                   </div>
+                </div>
+              );
+            })()}
+            {/* Translation Banner - show for non-English conversations */}
+            {(() => {
+              const convMetadata = (selectedConversation.metadata || {}) as ConversationMetadata;
+              const isNonEnglish = convMetadata.detected_language && convMetadata.detected_language_code !== 'en';
+              if (!isNonEnglish) return null;
+              return (
+                <div className="px-6 py-2 bg-muted/50 border-b flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Globe01 size={16} />
+                    <span>This conversation is in <strong>{convMetadata.detected_language}</strong></span>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant={showTranslation ? "secondary" : "outline"}
+                    onClick={() => showTranslation ? setShowTranslation(false) : handleTranslate()}
+                    disabled={isTranslating}
+                  >
+                    <Translate01 size={14} className="mr-1.5" />
+                    {isTranslating ? 'Translating...' : showTranslation ? 'View Original' : 'Translate to English'}
+                  </Button>
                 </div>
               );
             })()}
