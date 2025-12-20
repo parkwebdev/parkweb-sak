@@ -23,10 +23,12 @@ interface RichTextEditorProps {
   content: string;
   onChange: (html: string) => void;
   placeholder?: string;
-  agentId: string;
-  userId: string;
+  agentId?: string;
+  userId?: string;
   className?: string;
   minHeight?: string;
+  /** When true, only show Bold, Italic, and Link buttons. Disables image upload. */
+  minimalMode?: boolean;
 }
 
 export const RichTextEditor = ({
@@ -37,6 +39,7 @@ export const RichTextEditor = ({
   userId,
   className,
   minHeight = '200px',
+  minimalMode = false,
 }: RichTextEditorProps) => {
   const [isUploading, setIsUploading] = useState(false);
 
@@ -74,7 +77,8 @@ export const RichTextEditor = ({
         class: cn('article-content max-w-none focus:outline-none p-4'),
         style: `min-height: ${minHeight}`,
       },
-      handleDrop: (view, event, slice, moved) => {
+      // Disable image drop/paste in minimal mode
+      handleDrop: minimalMode ? undefined : (view, event, slice, moved) => {
         if (!moved && event.dataTransfer?.files?.length) {
           const file = event.dataTransfer.files[0];
           if (file.type.startsWith('image/')) {
@@ -84,7 +88,7 @@ export const RichTextEditor = ({
         }
         return false;
       },
-      handlePaste: (view, event) => {
+      handlePaste: minimalMode ? undefined : (view, event) => {
         const items = event.clipboardData?.items;
         if (items) {
           for (const item of items) {
@@ -148,6 +152,7 @@ export const RichTextEditor = ({
         editor={editor}
         onImageUpload={handleImageUpload}
         isUploading={isUploading}
+        minimalMode={minimalMode}
       />
       <EditorContent editor={editor} />
     </div>
