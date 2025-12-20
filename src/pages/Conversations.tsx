@@ -1125,9 +1125,20 @@ const Conversations: React.FC = () => {
                                     ))}
                                   </div>
                                 )}
-                                {/* Regular text content */}
+                                {/* Regular text content - show translation if available */}
                                 {message.content && message.content !== 'Sent files' && (
-                                  <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</p>
+                                  <div>
+                                    <p className="text-sm whitespace-pre-wrap leading-relaxed">
+                                      {showTranslation && translatedMessages[message.id] 
+                                        ? translatedMessages[message.id] 
+                                        : message.content}
+                                    </p>
+                                    {showTranslation && translatedMessages[message.id] && translatedMessages[message.id] !== message.content && (
+                                      <p className="text-xs text-muted-foreground mt-1 italic border-t border-dashed pt-1">
+                                        Original: {message.content.length > 100 ? message.content.substring(0, 100) + '...' : message.content}
+                                      </p>
+                                    )}
+                                  </div>
                                 )}
                                 <LinkPreviews content={message.content} />
                               </div>
