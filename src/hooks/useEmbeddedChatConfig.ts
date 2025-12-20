@@ -13,10 +13,11 @@ import { getErrorMessage } from '@/types/errors';
 export interface CustomField {
   id: string;
   label: string;
-  fieldType: 'text' | 'email' | 'phone' | 'textarea' | 'select';
+  fieldType: 'text' | 'email' | 'phone' | 'textarea' | 'select' | 'checkbox';
   required: boolean;
   placeholder?: string;
   options?: string[]; // For select fields
+  richTextContent?: string; // HTML content displayed below checkbox (supports bold, italic, links)
 }
 
 export interface QuickAction {
@@ -243,6 +244,7 @@ export const useEmbeddedChatConfig = (agentId: string) => {
           required: field.required,
           placeholder: field.placeholder || '',
           options: field.options || [],
+          richTextContent: field.richTextContent || '',
         })),
       };
 

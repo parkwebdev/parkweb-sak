@@ -129,9 +129,10 @@ export interface WidgetConfig {
   customFields: Array<{
     id: string;
     label: string;
-    fieldType: 'text' | 'email' | 'phone' | 'textarea' | 'select';
+    fieldType: 'text' | 'email' | 'phone' | 'textarea' | 'select' | 'checkbox';
     required: boolean;
     options?: string[];
+    richTextContent?: string;
   }>;
   
   // Quick actions
