@@ -249,80 +249,103 @@ const Conversations: React.FC = () => {
 
   // Load messages when conversation is selected
   useEffect(() => {
-    if (selectedConversation) {
-      isInitialLoadRef.current = true;
-      loadMessages(selectedConversation.id, true);
+    if (!selectedConversation) return;
+    
+    let hasLoadedMessages = false;
+    isInitialLoadRef.current = true;
+    setLoadingMessages(true); // Show loading state immediately
 
-      // Set up real-time subscription for messages
-      const channel = supabase
-        .channel(`conv-messages-${selectedConversation.id}`)
-        .on(
-          'postgres_changes',
-          {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'messages',
-            filter: `conversation_id=eq.${selectedConversation.id}`
-          },
-          (payload) => {
-            const newMessage = payload.new as Message;
+    // Set up real-time subscription for messages
+    const channel = supabase
+      .channel(`conv-messages-${selectedConversation.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `conversation_id=eq.${selectedConversation.id}`
+        },
+        (payload) => {
+          const newMessage = payload.new as Message;
+          
+          // Check if this replaces a pending optimistic message
+          setMessages(prev => {
+            // Avoid duplicates (real-time + optimistic update race)
+            if (prev.some(m => m.id === newMessage.id)) return prev;
             
-            // Check if this replaces a pending optimistic message
-            setMessages(prev => {
-              // Avoid duplicates (real-time + optimistic update race)
-              if (prev.some(m => m.id === newMessage.id)) return prev;
-              
-              // Check if we're replacing an optimistic temp message
-              const isReplacingOptimistic = prev.some(m => 
-                m.id.startsWith('temp-') && 
-                (m.metadata as MessageMetadata)?.pending && 
-                m.content === newMessage.content
-              );
-              
-              // Only animate if it's a genuinely new message (not during initial load, not replacing optimistic)
-              if (!isInitialLoadRef.current && !isReplacingOptimistic) {
-                newMessageIdsRef.current.add(newMessage.id);
-                setTimeout(() => newMessageIdsRef.current.delete(newMessage.id), 300);
-              }
-              
-              // Remove any pending optimistic message with matching content
-              const withoutTemp = prev.filter(m => {
-                if (!m.id.startsWith('temp-')) return true;
-                const tempMeta = (m.metadata || {}) as MessageMetadata;
-                return !(tempMeta.pending && m.content === newMessage.content);
-              });
-              return [...withoutTemp, newMessage];
+            // Check if we're replacing an optimistic temp message
+            const isReplacingOptimistic = prev.some(m => 
+              m.id.startsWith('temp-') && 
+              (m.metadata as MessageMetadata)?.pending && 
+              m.content === newMessage.content
+            );
+            
+            // Only animate if it's a genuinely new message (not during initial load, not replacing optimistic)
+            if (!isInitialLoadRef.current && !isReplacingOptimistic) {
+              newMessageIdsRef.current.add(newMessage.id);
+              setTimeout(() => newMessageIdsRef.current.delete(newMessage.id), 300);
+            }
+            
+            // Remove any pending optimistic message with matching content
+            const withoutTemp = prev.filter(m => {
+              if (!m.id.startsWith('temp-')) return true;
+              const tempMeta = (m.metadata || {}) as MessageMetadata;
+              return !(tempMeta.pending && m.content === newMessage.content);
             });
-          }
-        )
-        .on(
-          'postgres_changes',
-          {
-            event: 'UPDATE',
-            schema: 'public',
-            table: 'messages',
-            filter: `conversation_id=eq.${selectedConversation.id}`
-          },
-          (payload) => {
-            logger.debug('[Admin] Message UPDATE received', {
-              messageId: payload.new?.id,
-              metadata: ((payload.new as Message)?.metadata as MessageMetadata),
-              reactions: ((payload.new as Message)?.metadata as MessageMetadata)?.reactions,
-            });
-            const updatedMessage = payload.new as Message;
-            // Incremental update - only update the affected message
-            setMessages(prev => {
-              logger.debug('[Admin] Updating message in state', updatedMessage.id);
-              return prev.map(m => m.id === updatedMessage.id ? updatedMessage : m);
-            });
-          }
-        )
-        .subscribe();
+            return [...withoutTemp, newMessage];
+          });
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'messages',
+          filter: `conversation_id=eq.${selectedConversation.id}`
+        },
+        (payload) => {
+          logger.debug('[Admin] Message UPDATE received', {
+            messageId: payload.new?.id,
+            metadata: ((payload.new as Message)?.metadata as MessageMetadata),
+            reactions: ((payload.new as Message)?.metadata as MessageMetadata)?.reactions,
+          });
+          const updatedMessage = payload.new as Message;
+          // Incremental update - only update the affected message
+          setMessages(prev => {
+            logger.debug('[Admin] Updating message in state', updatedMessage.id);
+            return prev.map(m => m.id === updatedMessage.id ? updatedMessage : m);
+          });
+        }
+      )
+      .subscribe(async (status) => {
+        console.log('[Conversations] Subscription status:', status);
+        
+        if (status === 'SUBSCRIBED' && !hasLoadedMessages) {
+          // NOW fetch messages - subscription is guaranteed to catch new ones
+          hasLoadedMessages = true;
+          await loadMessages(selectedConversation.id, true);
+        } else if (status === 'CHANNEL_ERROR' && !hasLoadedMessages) {
+          console.error('[Conversations] Channel error - falling back to immediate fetch');
+          hasLoadedMessages = true;
+          await loadMessages(selectedConversation.id, true);
+        }
+      });
 
-      return () => {
-        supabase.removeChannel(channel);
-      };
-    }
+    // Timeout fallback - don't leave user waiting forever if subscription hangs
+    const fetchTimeout = setTimeout(() => {
+      if (!hasLoadedMessages) {
+        console.log('[Conversations] Subscription timeout - fetching anyway');
+        hasLoadedMessages = true;
+        loadMessages(selectedConversation.id, true);
+      }
+    }, 2000);
+
+    return () => {
+      clearTimeout(fetchTimeout);
+      supabase.removeChannel(channel);
+    };
   }, [selectedConversation?.id]);
 
   // Update selected conversation when conversations list updates
