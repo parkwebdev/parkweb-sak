@@ -2058,22 +2058,40 @@ export type Database = {
         Args: { p_email: string; p_token: string }
         Returns: undefined
       }
-      search_conversation_memories: {
-        Args: {
-          p_agent_id: string
-          p_lead_id: string
-          p_match_count?: number
-          p_match_threshold?: number
-          p_query_embedding: string
-        }
-        Returns: {
-          confidence: number
-          content: string
-          memory_id: string
-          memory_type: string
-          similarity: number
-        }[]
-      }
+      search_conversation_memories:
+        | {
+            Args: {
+              p_agent_id: string
+              p_lead_id: string
+              p_match_count?: number
+              p_match_threshold?: number
+              p_query_embedding: string
+            }
+            Returns: {
+              confidence: number
+              content: string
+              memory_id: string
+              memory_type: string
+              similarity: number
+            }[]
+          }
+        | {
+            Args: {
+              p_agent_id: string
+              p_conversation_id?: string
+              p_lead_id: string
+              p_match_count?: number
+              p_match_threshold?: number
+              p_query_embedding: string
+            }
+            Returns: {
+              confidence: number
+              content: string
+              memory_id: string
+              memory_type: string
+              similarity: number
+            }[]
+          }
       search_help_articles: {
         Args: {
           p_agent_id: string

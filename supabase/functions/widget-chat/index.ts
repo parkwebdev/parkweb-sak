@@ -1927,6 +1927,7 @@ async function searchSemanticMemories(
   supabase: any,
   agentId: string,
   leadId: string | null,
+  conversationId: string | null,
   queryEmbedding: number[],
   matchThreshold: number = 0.6,
   matchCount: number = 5
@@ -1939,6 +1940,7 @@ async function searchSemanticMemories(
     p_query_embedding: embeddingVector,
     p_match_threshold: matchThreshold,
     p_match_count: matchCount,
+    p_conversation_id: conversationId,
   });
   
   if (error) {
@@ -3260,6 +3262,7 @@ serve(async (req) => {
             supabase,
             agentId,
             leadId || null,
+            activeConversationId || null,
             queryEmbedding,
             0.6, // Memory match threshold
             5    // Max memories to retrieve
