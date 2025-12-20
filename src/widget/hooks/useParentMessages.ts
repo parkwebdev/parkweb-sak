@@ -187,6 +187,10 @@ export function useParentMessages(
           setIsOpen(true);
           break;
         case 'chatpad-widget-closed':
+          // Blur any focused elements to release mobile keyboard/scroll lock
+          if (document.activeElement instanceof HTMLElement) {
+            document.activeElement.blur();
+          }
           setIsOpen(false);
           break;
       }

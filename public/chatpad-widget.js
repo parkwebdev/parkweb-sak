@@ -79,12 +79,14 @@
       opacity: 0;
       pointer-events: none;
       transform: translateY(20px) scale(0.95);
+      visibility: hidden;
     }
     
     .chatpad-widget-iframe-container.visible {
       opacity: 1;
       pointer-events: all;
       transform: translateY(0) scale(1);
+      visibility: visible;
     }
     
     .chatpad-widget-iframe {
@@ -453,6 +455,8 @@
     
     open() {
       this.isOpen = true;
+      // Remove inert attribute to allow interactions
+      this.iframeContainer.removeAttribute('inert');
       this.showContainer();
       // Clear unread badge when opening
       this.updateUnreadBadge(0);
@@ -463,6 +467,20 @@
       this.iframeContainer.classList.remove('visible');
       this.iframeContainer.classList.add('hidden');
       this.button.classList.remove('chatpad-widget-button-open');
+      
+      // Set inert attribute to fully disable interactions and prevent scroll lock
+      this.iframeContainer.setAttribute('inert', '');
+      
+      // Blur iframe to release any keyboard/scroll control
+      if (this.iframe) {
+        try {
+          this.iframe.blur();
+          // Also try to blur document inside iframe
+          this.iframe.contentWindow?.document?.activeElement?.blur();
+        } catch (e) {
+          // Cross-origin restrictions may prevent this
+        }
+      }
       
       // Notify iframe (if loaded)
       if (this.iframe && this.iframe.contentWindow) {
