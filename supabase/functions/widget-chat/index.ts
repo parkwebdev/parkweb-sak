@@ -4104,8 +4104,9 @@ NEVER mark complete when:
         }
         
         // Priority 2: Check current user message being processed
-        if (!languageMetadata.detected_language_code && message) {
-          const detected = detectLanguage(message);
+        const currentUserMessage = messages?.filter((m: any) => m.role === 'user').pop()?.content;
+        if (!languageMetadata.detected_language_code && currentUserMessage) {
+          const detected = detectLanguage(currentUserMessage);
           if (detected) {
             languageMetadata = {
               detected_language: detected.name,
