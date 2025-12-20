@@ -10,7 +10,7 @@
 import { useRef } from 'react';
 import { WidgetButton } from '../ui';
 import { X, ChevronRight, MessageChatCircle, BookOpen01, Zap } from '../icons';
-import ChatPadLogo from '@/components/ChatPadLogo';
+import { WidgetStarIcon } from '../icons/WidgetStarIcon';
 import { CSSAnimatedList } from '../CSSAnimatedList';
 import { CSSAnimatedItem } from '../CSSAnimatedItem';
 import { CSSBubbleBackground } from '@/components/ui/css-bubble-background';
@@ -77,7 +77,7 @@ export const HomeView = ({
         )}
         
         {/* Logo in top left - aligned with content text */}
-        <ChatPadLogo 
+        <WidgetStarIcon 
           className="absolute top-4 left-6 h-8 w-8 text-white transition-opacity duration-300 z-10"
           style={{ opacity: logoOpacity }}
         />
@@ -229,7 +229,7 @@ export const HomeView = ({
                 rel="noopener noreferrer"
                 className="text-xs text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-0.5 ml-1"
               >
-                <ChatPadLogo className="h-3 w-3" /> ChatPad
+                <WidgetStarIcon className="h-3 w-3" /> ChatPad
               </a>
             </span>
           </div>
