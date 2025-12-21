@@ -45,12 +45,15 @@ export const LeadDetailsSheet = ({
     setEditedCustomData({});
   }, [lead?.id]);
 
-  // Get custom fields from lead.data (excluding internal tracking fields)
+  // Get custom fields from lead.data (excluding internal tracking fields and name fields handled above)
   const customFields = useMemo(() => {
     if (!lead) return [];
     const data = (lead.data || {}) as Record<string, unknown>;
-    const internalFields = ['source', 'referrer', 'page_url', 'visitor_id'];
-    return Object.entries(data).filter(([key]) => !internalFields.includes(key));
+    const excludedFields = [
+      'source', 'referrer', 'page_url', 'visitor_id',
+      'first_name', 'firstName', 'last_name', 'lastName', 'name', 'full_name', 'fullName'
+    ];
+    return Object.entries(data).filter(([key]) => !excludedFields.includes(key));
   }, [lead]);
 
   const handleSave = async () => {
