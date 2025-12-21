@@ -99,6 +99,7 @@ export const LeadsTable = ({
       <DataTable
         table={table}
         columns={columns}
+        onRowClick={onView}
         emptyMessage="No leads found"
       />
       {leads.length > 10 && (
