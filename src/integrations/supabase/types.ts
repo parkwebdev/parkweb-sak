@@ -1371,6 +1371,8 @@ export type Database = {
           email: string | null
           has_seen_onboarding_celebration: boolean | null
           id: string
+          setup_feedback_text: string | null
+          setup_rating: number | null
           updated_at: string
           user_id: string
         }
@@ -1381,6 +1383,8 @@ export type Database = {
           email?: string | null
           has_seen_onboarding_celebration?: boolean | null
           id?: string
+          setup_feedback_text?: string | null
+          setup_rating?: number | null
           updated_at?: string
           user_id: string
         }
@@ -1391,6 +1395,8 @@ export type Database = {
           email?: string | null
           has_seen_onboarding_celebration?: boolean | null
           id?: string
+          setup_feedback_text?: string | null
+          setup_rating?: number | null
           updated_at?: string
           user_id?: string
         }
