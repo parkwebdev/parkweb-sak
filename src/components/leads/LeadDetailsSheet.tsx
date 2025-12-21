@@ -190,7 +190,7 @@ export const LeadDetailsSheet = ({
               </Tooltip>
             </TooltipProvider>
           </div>
-          <p className={`text-sm bg-muted/50 rounded-md p-3 ${consented ? 'text-status-active' : 'text-muted-foreground'}`}>
+          <p className="text-sm bg-muted/50 rounded-md p-3">
             {consented ? 'Yes' : 'No'}
           </p>
         </div>
