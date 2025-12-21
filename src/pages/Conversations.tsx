@@ -750,7 +750,7 @@ const Conversations: React.FC = () => {
         }`}
       >
         {/* Header */}
-        <div className={`border-b shrink-0 ${conversationsCollapsed ? 'py-3 px-2' : 'p-4 pb-3'}`}>
+        <div className={`border-b shrink-0 ${conversationsCollapsed ? 'h-14 px-2 flex items-center' : 'h-14 px-4 flex items-center'}`}>
           <div className="flex items-center justify-between">
             {!conversationsCollapsed && (
               <h2 className="text-lg font-semibold text-foreground">{activeFilter.label}</h2>
@@ -912,7 +912,7 @@ const Conversations: React.FC = () => {
               const isActive = !!visitorPresence;
               
               return (
-                <div className="px-6 py-3 border-b flex items-center justify-between bg-background shrink-0">
+                <div className="h-14 px-6 border-b flex items-center justify-between bg-background shrink-0">
                   <div className="flex items-center gap-3">
                     {/* Active indicator dot */}
                     {isActive && (
