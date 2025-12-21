@@ -197,21 +197,29 @@ export function useConversations(options: UseConversationsOptions) {
     loadMessagesFromDB();
   }, [activeConversationId]);
 
-  // Auto-scroll (always enabled)
+  // Auto-scroll: scroll to bottom for conversations with messages, scroll to top for empty/form view
   useEffect(() => {
     if (currentView === 'messages' && activeConversationId) {
-      const scrollToBottom = () => {
-        if (messagesEndRef.current) {
-          const behavior = isOpeningConversationRef.current ? 'instant' : 'smooth';
-          messagesEndRef.current.scrollIntoView({ behavior });
-          isOpeningConversationRef.current = false;
+      // If there are messages, scroll to bottom (for conversation continuity)
+      if (messages.length > 0) {
+        const scrollToBottom = () => {
+          if (messagesEndRef.current) {
+            const behavior = isOpeningConversationRef.current ? 'instant' : 'smooth';
+            messagesEndRef.current.scrollIntoView({ behavior });
+            isOpeningConversationRef.current = false;
+          }
+        };
+        
+        // Double RAF ensures the DOM has painted after state changes
+        requestAnimationFrame(() => {
+          requestAnimationFrame(scrollToBottom);
+        });
+      } else {
+        // No messages yet (contact form view) - scroll to top
+        if (messagesContainerRef.current) {
+          messagesContainerRef.current.scrollTop = 0;
         }
-      };
-      
-      // Double RAF ensures the DOM has painted after state changes
-      requestAnimationFrame(() => {
-        requestAnimationFrame(scrollToBottom);
-      });
+      }
     }
   }, [messages, currentView, activeConversationId]);
 
