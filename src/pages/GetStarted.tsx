@@ -150,10 +150,10 @@ export const GetStarted: React.FC = () => {
         onComplete={handleCelebrationComplete} 
       />
       
-      <main className="flex-1 min-h-0 h-full overflow-y-auto bg-background flex items-center justify-center">
-        <div className="max-w-5xl mx-auto w-full">
+      <main className="flex-1 min-h-0 overflow-y-auto bg-background">
+        <div className="max-w-5xl mx-auto w-full py-4 lg:py-8">
           {/* Header */}
-          <header className="w-full font-medium pt-4 lg:pt-8">
+          <header className="w-full font-medium">
             <div className="items-stretch flex w-full flex-col gap-2 px-4 lg:px-8 py-0">
               <h1 className="text-3xl font-bold text-foreground">
                 Get started with Ari, your AI sales agent
