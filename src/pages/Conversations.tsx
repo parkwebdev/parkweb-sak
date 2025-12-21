@@ -36,6 +36,7 @@ import type { ConversationMetadata, MessageMetadata, MessageReaction } from '@/t
 import type { VisitorPresenceState } from '@/types/report';
 import { formatDistanceToNow } from 'date-fns';
 import { downloadFile } from '@/lib/file-download';
+import { getLanguageFlag } from '@/lib/language-utils';
 import { TakeoverDialog } from '@/components/conversations/TakeoverDialog';
 import { supabase } from '@/integrations/supabase/client';
 import type { RealtimeChannel } from '@supabase/supabase-js';
@@ -918,7 +919,35 @@ const Conversations: React.FC = () => {
                 </div>
               );
             })()}
-            {/* Translation feature is available via the translate button in messages */}
+            {/* Translation Banner - show for non-English conversations */}
+            {(() => {
+              const convMetadata = (selectedConversation?.metadata || {}) as ConversationMetadata;
+              const detectedLang = convMetadata.detected_language_code;
+              const langName = convMetadata.detected_language;
+              
+              if (!detectedLang || detectedLang === 'en') return null;
+              
+              return (
+                <div className="px-6 py-2.5 border-b bg-accent/30 flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="text-base">{getLanguageFlag(detectedLang)}</span>
+                    <span className="text-muted-foreground">
+                      This conversation is in <span className="font-medium text-foreground">{langName || detectedLang}</span>
+                    </span>
+                  </div>
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={showTranslation ? () => setShowTranslation(false) : handleTranslate}
+                    disabled={isTranslating}
+                    className="gap-2"
+                  >
+                    <Translate01 size={16} />
+                    {isTranslating ? 'Translating...' : showTranslation ? 'Show Original' : 'Translate to English'}
+                  </Button>
+                </div>
+              );
+            })()}
             <div ref={messagesScrollRef} className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-6 py-4">
                   {loadingMessages ? (
                     <div className="text-center py-12 text-sm text-muted-foreground">
