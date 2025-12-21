@@ -47,7 +47,7 @@ export const LeadDetailsSheet = ({
 
   // Check if phone exists in custom data
   // Get phone value from custom data if it exists
-  const phoneKeys = ['phone', 'Phone', 'phone_number', 'phoneNumber', 'telephone', 'mobile'];
+  const phoneKeys = ['phone', 'Phone', 'phone_number', 'phoneNumber', 'Phone Number', 'Phone number', 'telephone', 'mobile'];
   
   const customPhoneValue = useMemo(() => {
     if (!lead) return '';
