@@ -147,6 +147,9 @@ interface ConversationMetadata {
   // PHASE 2: Conversation summarization for context continuity
   conversation_summary?: string;
   summary_generated_at?: string;
+  // Language detection for translation banner
+  detected_language_code?: string;  // ISO code: 'es', 'fr', 'pt', etc.
+  detected_language?: string;       // Full name: 'Spanish', 'French', etc.
 }
 
 // URL regex for extracting links from content
@@ -292,8 +295,128 @@ OTHER RULES:
 - Lead with the ANSWER first, then add brief context if needed
 - If you're writing more than 30 words without a break, STOP and restructure`;
 
-// Language matching is handled naturally by the AI - no detection infrastructure needed.
-// The system prompt instructs the AI to respond in the same language the user writes in.
+// Language detection mapping for common languages
+const LANGUAGE_NAMES: Record<string, string> = {
+  'en': 'English',
+  'es': 'Spanish',
+  'fr': 'French',
+  'de': 'German',
+  'pt': 'Portuguese',
+  'it': 'Italian',
+  'nl': 'Dutch',
+  'ru': 'Russian',
+  'ja': 'Japanese',
+  'ko': 'Korean',
+  'zh': 'Chinese',
+  'ar': 'Arabic',
+  'hi': 'Hindi',
+  'pl': 'Polish',
+  'tr': 'Turkish',
+  'vi': 'Vietnamese',
+  'th': 'Thai',
+  'sv': 'Swedish',
+  'da': 'Danish',
+  'no': 'Norwegian',
+  'fi': 'Finnish',
+  'cs': 'Czech',
+  'el': 'Greek',
+  'he': 'Hebrew',
+  'hu': 'Hungarian',
+  'id': 'Indonesian',
+  'ms': 'Malay',
+  'ro': 'Romanian',
+  'uk': 'Ukrainian',
+  'bg': 'Bulgarian',
+  'hr': 'Croatian',
+  'sk': 'Slovak',
+  'sl': 'Slovenian',
+  'sr': 'Serbian',
+  'ca': 'Catalan',
+  'tl': 'Tagalog',
+};
+
+/**
+ * Detect the language of user messages using AI.
+ * Returns the ISO language code and full name, or null if English or detection fails.
+ * Only detects if user has sent substantive messages (not just greetings).
+ */
+async function detectConversationLanguage(
+  userMessages: string[],
+  openRouterApiKey: string
+): Promise<{ code: string; name: string } | null> {
+  // Need at least some text to detect
+  const allUserText = userMessages.join(' ').trim();
+  if (allUserText.length < 10) return null;
+  
+  // Quick heuristic check for common non-English characters
+  const hasNonLatinChars = /[\u0400-\u04FF\u0600-\u06FF\u4E00-\u9FFF\u3040-\u309F\u30A0-\u30FF\uAC00-\uD7AF\u0E00-\u0E7F]/.test(allUserText);
+  const hasSpanishChars = /[¿¡ñáéíóúü]/i.test(allUserText);
+  const hasFrenchChars = /[àâäéèêëïîôùûüÿç]/i.test(allUserText);
+  const hasGermanChars = /[äöüß]/i.test(allUserText);
+  
+  // If text appears to be plain ASCII English, skip detection
+  if (!hasNonLatinChars && !hasSpanishChars && !hasFrenchChars && !hasGermanChars) {
+    // Additional check: if text is very short and looks like English common words, skip
+    const lowerText = allUserText.toLowerCase();
+    const englishWords = ['hello', 'hi', 'help', 'thanks', 'please', 'what', 'how', 'when', 'where', 'yes', 'no', 'the', 'and', 'is', 'are'];
+    const wordCount = allUserText.split(/\s+/).length;
+    const englishWordCount = englishWords.filter(w => lowerText.includes(w)).length;
+    
+    // If short text with English words, likely English - skip expensive AI call
+    if (wordCount <= 20 && englishWordCount >= 2) {
+      return null;
+    }
+  }
+  
+  try {
+    // Use fast/cheap model for detection
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openRouterApiKey}`,
+        'HTTP-Referer': 'https://chatpad.ai',
+        'X-Title': 'ChatPad',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash-lite',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a language detector. Respond with ONLY the ISO 639-1 two-letter language code (e.g., "es" for Spanish, "fr" for French, "en" for English). No other text.',
+          },
+          {
+            role: 'user',
+            content: `Detect the language of this text: "${allUserText.substring(0, 500)}"`,
+          },
+        ],
+        max_tokens: 10,
+        temperature: 0,
+      }),
+    });
+    
+    if (!response.ok) {
+      console.error('Language detection API error:', response.status);
+      return null;
+    }
+    
+    const data = await response.json();
+    const detectedCode = (data.choices?.[0]?.message?.content || '').trim().toLowerCase().replace(/[^a-z]/g, '').substring(0, 2);
+    
+    if (!detectedCode || detectedCode === 'en') {
+      return null; // English or failed detection
+    }
+    
+    const languageName = LANGUAGE_NAMES[detectedCode] || detectedCode.toUpperCase();
+    console.log(`Detected language: ${detectedCode} (${languageName})`);
+    
+    return { code: detectedCode, name: languageName };
+  } catch (error) {
+    console.error('Language detection error:', error);
+    return null;
+  }
+}
+
 
 // US State abbreviation to full name mapping for bidirectional search
 const STATE_ABBREVIATIONS: Record<string, string> = {
@@ -4038,8 +4161,22 @@ NEVER mark complete when:
         console.log(`Merged ${newVisits.length} new page visits, total: ${mergedPageVisits.length}`);
       }
       
-      // Language matching is handled naturally by the AI via the system prompt:
-      // "LANGUAGE: Always respond in the same language the user is writing in..."
+      // Language detection: detect language if not already detected
+      // Only run on first few messages to avoid repeated detection
+      let detectedLanguage: { code: string; name: string } | null = null;
+      const existingLangCode = (currentMetadata as ConversationMetadata)?.detected_language_code;
+      
+      if (!existingLangCode) {
+        // Collect user messages for detection
+        const userMsgsForDetection = (messagesToSend || [])
+          .filter((m: any) => m.role === 'user')
+          .map((m: any) => m.content || '')
+          .slice(-3); // Use last 3 user messages
+        
+        if (userMsgsForDetection.length > 0) {
+          detectedLanguage = await detectConversationLanguage(userMsgsForDetection, OPENROUTER_API_KEY);
+        }
+      }
       
       await supabase
         .from('conversations')
@@ -4062,6 +4199,11 @@ NEVER mark complete when:
             // Update timestamp only if we have new properties
             ...(storedShownProperties?.length && {
               last_property_search_at: new Date().toISOString(),
+            }),
+            // Language detection: save detected language for translation banner
+            ...(detectedLanguage && {
+              detected_language_code: detectedLanguage.code,
+              detected_language: detectedLanguage.name,
             }),
           },
           updated_at: new Date().toISOString(),
