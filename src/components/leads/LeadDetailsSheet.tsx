@@ -10,9 +10,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
-import { Switch } from '@/components/ui/switch';
 import { PhoneInputField } from '@/components/ui/phone-input';
-import { Trash02, Save01, LinkExternal02 } from '@untitledui/icons';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Trash02, Save01, LinkExternal02, InfoCircle } from '@untitledui/icons';
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
@@ -117,6 +117,23 @@ export const LeadDetailsSheet = ({
     return messageKeys.includes(key);
   };
 
+  // Check if field is a consent field
+  const isConsentField = (key: string): boolean => {
+    const consentKeys = ['consent', 'Consent', 'i_consent', 'I Consent', 'I consent', 'agree', 'Agree', 'terms', 'Terms'];
+    return consentKeys.some(k => key.toLowerCase().includes(k.toLowerCase()));
+  };
+
+  // Get consent content from custom data (look for related content field)
+  const getConsentContent = (key: string, data: Record<string, unknown>): string | null => {
+    const contentKeys = [`${key}_content`, `${key}Content`, `${key}_text`, `${key}Text`, 'consent_content', 'consentContent'];
+    for (const contentKey of contentKeys) {
+      if (data[contentKey] && typeof data[contentKey] === 'string') {
+        return data[contentKey] as string;
+      }
+    }
+    return null;
+  };
+
   // Render input based on value type
   const renderCustomFieldInput = (key: string, value: unknown, currentCustomData: Record<string, unknown>) => {
     const currentValue = currentCustomData[key] ?? value;
@@ -133,16 +150,30 @@ export const LeadDetailsSheet = ({
         </div>
       );
     }
-    
-    if (typeof value === 'boolean' || typeof currentValue === 'boolean') {
+
+    // Consent fields show as read-only text with tooltip
+    if (isConsentField(key) || typeof value === 'boolean' || typeof currentValue === 'boolean') {
+      const consented = Boolean(currentValue);
+      const consentContent = getConsentContent(key, currentCustomData);
+      
       return (
-        <div className="flex items-center justify-between">
-          <Label htmlFor={key}>{formatLabel(key)}</Label>
-          <Switch
-            id={key}
-            checked={Boolean(currentValue)}
-            onCheckedChange={(checked) => setEditedCustomData({ ...editedCustomData, [key]: checked })}
-          />
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <Label>{formatLabel(key)}</Label>
+            {consentContent && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <InfoCircle className="h-4 w-4 text-muted-foreground cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-xs">
+                  <p className="text-sm">{consentContent}</p>
+                </TooltipContent>
+              </Tooltip>
+            )}
+          </div>
+          <p className={`text-sm bg-muted/50 rounded-md p-3 ${consented ? 'text-status-active' : 'text-muted-foreground'}`}>
+            {consented ? 'Yes' : 'No'}
+          </p>
         </div>
       );
     }
