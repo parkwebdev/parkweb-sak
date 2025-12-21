@@ -100,7 +100,8 @@ export function formatMarkdownBullets(content: string): string {
   if (!content) return content;
   
   // Replace markdown bullets (* or -) at start of lines with Unicode bullet
+  // Handle both "* text" and "*text" patterns (with or without space after asterisk)
   return content
-    .replace(/^[*-]\s+/gm, '• ')    // Start of string/line
-    .replace(/\n[*-]\s+/g, '\n• '); // After newline
+    .replace(/^[*-]\s*/gm, '• ')    // Start of string/line
+    .replace(/\n[*-]\s*/g, '\n• '); // After newline
 }
