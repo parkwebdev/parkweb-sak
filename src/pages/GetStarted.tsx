@@ -22,14 +22,14 @@ import {
 } from '@/components/onboarding';
 import { PageHeader } from '@/components/ui/page-header';
 import { springs } from '@/lib/motion-variants';
-
-const CELEBRATION_SHOWN_KEY = 'onboarding_celebration_shown';
+import { supabase } from '@/integrations/supabase/client';
 
 export const GetStarted: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const prefersReducedMotion = useReducedMotion();
   const [showCelebration, setShowCelebration] = useState(false);
+  const [celebrationChecked, setCelebrationChecked] = useState(false);
   
   const { 
     steps, 
@@ -40,17 +40,33 @@ export const GetStarted: React.FC = () => {
   } = useOnboardingProgress();
 
   /**
-   * Show celebration only once when all steps complete for the first time
+   * Check if user has already seen the celebration and show it if not
    */
   useEffect(() => {
-    if (allComplete && !isLoading) {
-      const alreadyShown = localStorage.getItem(CELEBRATION_SHOWN_KEY);
-      if (!alreadyShown) {
+    const checkAndShowCelebration = async () => {
+      if (!allComplete || isLoading || !user || celebrationChecked) return;
+      
+      setCelebrationChecked(true);
+      
+      // Check if user has already seen the celebration
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('has_seen_onboarding_celebration')
+        .eq('user_id', user.id)
+        .single();
+      
+      if (profile && !profile.has_seen_onboarding_celebration) {
         setShowCelebration(true);
-        localStorage.setItem(CELEBRATION_SHOWN_KEY, 'true');
+        // Mark as seen in database
+        await supabase
+          .from('profiles')
+          .update({ has_seen_onboarding_celebration: true })
+          .eq('user_id', user.id);
       }
-    }
-  }, [allComplete, isLoading]);
+    };
+    
+    checkAndShowCelebration();
+  }, [allComplete, isLoading, user, celebrationChecked]);
 
   /**
    * Handle celebration complete - dismiss the modal
