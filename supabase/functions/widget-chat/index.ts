@@ -150,8 +150,6 @@ interface ConversationMetadata {
   // Language detection
   detected_language?: string;
   detected_language_code?: string;
-  // Language re-evaluation tracking
-  language_mismatch_count?: number;
   language_detection_source?: 'browser' | 'character' | 'ai';
   language_last_reevaluated_at?: string;
 }
@@ -303,38 +301,43 @@ OTHER RULES:
 // LANGUAGE DETECTION
 // ============================================
 
-// Browser language code to name mapping (ISO 639-1 codes)
-const BROWSER_LANGUAGE_NAMES: Record<string, string> = {
-  'es': 'Spanish',
-  'pt': 'Portuguese',
-  'fr': 'French',
-  'de': 'German',
-  'it': 'Italian',
-  'nl': 'Dutch',
-  'pl': 'Polish',
-  'ru': 'Russian',
-  'zh': 'Chinese',
-  'ja': 'Japanese',
-  'ko': 'Korean',
-  'ar': 'Arabic',
-  'he': 'Hebrew',
-  'hi': 'Hindi',
-  'th': 'Thai',
-  'el': 'Greek',
-  'uk': 'Ukrainian',
-  'vi': 'Vietnamese',
-  'tr': 'Turkish',
-  'sv': 'Swedish',
-  'da': 'Danish',
-  'no': 'Norwegian',
-  'fi': 'Finnish',
-  'cs': 'Czech',
-  'ro': 'Romanian',
-  'hu': 'Hungarian',
-  'id': 'Indonesian',
-  'ms': 'Malay',
-  'tl': 'Filipino',
+// Unified language data - single source of truth for language codes, names, and patterns
+const LANGUAGE_DATA: Record<string, { name: string; flag?: string }> = {
+  'es': { name: 'Spanish', flag: '🇪🇸' },
+  'pt': { name: 'Portuguese', flag: '🇵🇹' },
+  'fr': { name: 'French', flag: '🇫🇷' },
+  'de': { name: 'German', flag: '🇩🇪' },
+  'it': { name: 'Italian', flag: '🇮🇹' },
+  'nl': { name: 'Dutch', flag: '🇳🇱' },
+  'pl': { name: 'Polish', flag: '🇵🇱' },
+  'ru': { name: 'Russian', flag: '🇷🇺' },
+  'zh': { name: 'Chinese', flag: '🇨🇳' },
+  'ja': { name: 'Japanese', flag: '🇯🇵' },
+  'ko': { name: 'Korean', flag: '🇰🇷' },
+  'ar': { name: 'Arabic', flag: '🇸🇦' },
+  'he': { name: 'Hebrew', flag: '🇮🇱' },
+  'hi': { name: 'Hindi', flag: '🇮🇳' },
+  'th': { name: 'Thai', flag: '🇹🇭' },
+  'el': { name: 'Greek', flag: '🇬🇷' },
+  'uk': { name: 'Ukrainian', flag: '🇺🇦' },
+  'vi': { name: 'Vietnamese', flag: '🇻🇳' },
+  'tr': { name: 'Turkish', flag: '🇹🇷' },
+  'sv': { name: 'Swedish', flag: '🇸🇪' },
+  'da': { name: 'Danish', flag: '🇩🇰' },
+  'no': { name: 'Norwegian', flag: '🇳🇴' },
+  'fi': { name: 'Finnish', flag: '🇫🇮' },
+  'cs': { name: 'Czech', flag: '🇨🇿' },
+  'ro': { name: 'Romanian', flag: '🇷🇴' },
+  'hu': { name: 'Hungarian', flag: '🇭🇺' },
+  'id': { name: 'Indonesian', flag: '🇮🇩' },
+  'ms': { name: 'Malay', flag: '🇲🇾' },
+  'tl': { name: 'Filipino', flag: '🇵🇭' },
 };
+
+// Generate AI prompt codes list dynamically from LANGUAGE_DATA
+const AI_LANGUAGE_CODES = Object.entries(LANGUAGE_DATA)
+  .map(([code, { name }]) => `${code}=${name}`)
+  .join(', ');
 
 // Character-based patterns for languages with unique scripts (100% reliable)
 // Word-based patterns for Latin-alphabet languages are handled by AI detection
@@ -366,9 +369,9 @@ function parseBrowserLanguage(browserLang: string | null | undefined): { code: s
   // Skip English (default fallback language)
   if (langCode === 'en') return null;
   
-  const langName = BROWSER_LANGUAGE_NAMES[langCode];
-  if (langName) {
-    return { code: langCode, name: langName };
+  const langData = LANGUAGE_DATA[langCode];
+  if (langData) {
+    return { code: langCode, name: langData.name };
   }
   
   return null;
@@ -416,7 +419,7 @@ async function detectLanguageWithAI(
             role: 'system',
             content: `Detect the primary language of the user's message. Return ONLY a JSON object: {"code":"xx","name":"Language Name"}
 
-Common codes: en=English, es=Spanish, pt=Portuguese, fr=French, de=German, it=Italian, nl=Dutch, pl=Polish, tr=Turkish, sv=Swedish, da=Danish, no=Norwegian, fi=Finnish, cs=Czech, ro=Romanian, hu=Hungarian, id=Indonesian, ms=Malay, tl=Filipino.
+Common codes: en=English, ${AI_LANGUAGE_CODES}.
 If the text is primarily English or you're unsure, return: {"code":"en","name":"English"}
 Handle misspellings naturally - "necessito" is Spanish even though misspelled.
 Respond ONLY with the JSON object, no explanation.`
@@ -4225,7 +4228,6 @@ NEVER mark complete when:
         detected_language?: string; 
         detected_language_code?: string;
         language_detection_source?: 'browser' | 'character' | 'ai';
-        language_mismatch_count?: number;
         language_last_reevaluated_at?: string;
       } = {};
       
@@ -4241,7 +4243,6 @@ NEVER mark complete when:
             detected_language: browserLangResult.name,
             detected_language_code: browserLangResult.code,
             language_detection_source: 'browser',
-            language_mismatch_count: 0,
           };
         }
         
@@ -4281,7 +4282,6 @@ NEVER mark complete when:
               detected_language: detected.name,
               detected_language_code: detected.code,
               language_detection_source: 'character',
-              language_mismatch_count: 0,
             };
           } else if (combinedText.length >= 10) {
             // Step 3: Use AI detection via OpenRouter
@@ -4292,7 +4292,6 @@ NEVER mark complete when:
                 detected_language: aiDetected.name,
                 detected_language_code: aiDetected.code,
                 language_detection_source: 'ai',
-                language_mismatch_count: 0,
               };
             }
           }
@@ -4304,43 +4303,34 @@ NEVER mark complete when:
         const currentUserMessage = messages?.filter((m: any) => m.role === 'user').pop()?.content;
         
         if (currentUserMessage && currentUserMessage.length >= 10) {
-          // Rate limit: Only re-evaluate every 5 minutes max
-          const lastReevaluated = currentMetadata.language_last_reevaluated_at;
-          const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
-          const canReevaluate = !lastReevaluated || new Date(lastReevaluated).getTime() < fiveMinutesAgo;
+          // Detect language of THIS message (instant switching - no rate limit)
+          const messageLanguage = await detectMessageLanguage(currentUserMessage, OPENROUTER_API_KEY);
           
-          if (canReevaluate) {
-            // Detect language of THIS message
-            const messageLanguage = await detectMessageLanguage(currentUserMessage, OPENROUTER_API_KEY);
+          if (messageLanguage) {
+            // Compare to stored language
+            const isEnglishMessage = messageLanguage.code === 'en';
+            const isStoredEnglish = !currentLanguageCode || currentLanguageCode === 'en';
             
-            if (messageLanguage) {
-              // Compare to stored language
-              const isEnglishMessage = messageLanguage.code === 'en';
-              const isStoredEnglish = !currentLanguageCode || currentLanguageCode === 'en';
+            if (messageLanguage.code !== currentLanguageCode) {
+              // Language mismatch detected! Switch immediately
+              console.log(`[Language Re-eval] Switching from ${currentMetadata.detected_language || 'English'} to ${messageLanguage.name}`);
               
-              if (messageLanguage.code !== currentLanguageCode) {
-                // Language mismatch detected! Switch immediately (threshold = 1)
-                console.log(`[Language Re-eval] Switching from ${currentMetadata.detected_language || 'English'} to ${messageLanguage.name}`);
-                
-                if (isEnglishMessage && !isStoredEnglish) {
-                  // Switching back to English: clear language metadata (English is default)
-                  languageMetadata = {
-                    detected_language: undefined,
-                    detected_language_code: undefined,
-                    language_detection_source: undefined,
-                    language_mismatch_count: 0,
-                    language_last_reevaluated_at: new Date().toISOString(),
-                  };
-                } else {
-                  // Switching to a non-English language
-                  languageMetadata = {
-                    detected_language: messageLanguage.name,
-                    detected_language_code: messageLanguage.code,
-                    language_detection_source: 'ai',
-                    language_mismatch_count: 0,
-                    language_last_reevaluated_at: new Date().toISOString(),
-                  };
-                }
+              if (isEnglishMessage && !isStoredEnglish) {
+                // Switching back to English: clear language metadata (English is default)
+                languageMetadata = {
+                  detected_language: undefined,
+                  detected_language_code: undefined,
+                  language_detection_source: undefined,
+                  language_last_reevaluated_at: new Date().toISOString(),
+                };
+              } else {
+                // Switching to a non-English language
+                languageMetadata = {
+                  detected_language: messageLanguage.name,
+                  detected_language_code: messageLanguage.code,
+                  language_detection_source: 'ai',
+                  language_last_reevaluated_at: new Date().toISOString(),
+                };
               }
             }
           }
