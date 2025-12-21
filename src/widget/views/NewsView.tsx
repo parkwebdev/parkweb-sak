@@ -8,7 +8,7 @@
  * @module widget/views/NewsView
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ChevronLeft, ChevronRight } from '../icons';
 import { WidgetAvatar, WidgetAvatarImage, WidgetAvatarFallback } from '../ui';
 import { CSSAnimatedList } from '../CSSAnimatedList';
@@ -51,6 +51,14 @@ export const NewsView = ({ config, newsItems }: NewsViewProps) => {
   const [selectedArticle, setSelectedArticle] = useState<NewsItem | null>(null);
   const [sanitizedContent, setSanitizedContent] = useState<string>('');
   const [isLoadingContent, setIsLoadingContent] = useState(false);
+  const articleContentRef = useRef<HTMLDivElement>(null);
+
+  // Scroll to top when article changes (for prev/next navigation)
+  useEffect(() => {
+    if (selectedArticle && articleContentRef.current) {
+      articleContentRef.current.scrollTop = 0;
+    }
+  }, [selectedArticle]);
 
   // Lazy-load and sanitize article content
   useEffect(() => {
@@ -108,7 +116,7 @@ export const NewsView = ({ config, newsItems }: NewsViewProps) => {
         </div>
 
         {/* Article content */}
-        <div className="flex-1 overflow-y-auto">
+        <div ref={articleContentRef} className="flex-1 overflow-y-auto">
           {selectedArticle.featured_image_url && (
             <img
               src={selectedArticle.featured_image_url}
