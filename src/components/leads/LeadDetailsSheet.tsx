@@ -215,6 +215,7 @@ export const LeadDetailsSheet = ({
                       id="firstName"
                       value={firstName}
                       onChange={(e) => handleNameChange(e.target.value, lastName)}
+                      className="bg-muted/50 border-transparent focus:border-input focus:bg-background"
                     />
                   </div>
                   <div className="space-y-2">
@@ -223,6 +224,7 @@ export const LeadDetailsSheet = ({
                       id="lastName"
                       value={lastName}
                       onChange={(e) => handleNameChange(firstName, e.target.value)}
+                      className="bg-muted/50 border-transparent focus:border-input focus:bg-background"
                     />
                   </div>
                 </div>
@@ -235,6 +237,7 @@ export const LeadDetailsSheet = ({
                       type="email"
                       value={{ ...lead, ...editedLead }.email || ''}
                       onChange={(e) => setEditedLead({ ...editedLead, email: e.target.value })}
+                      className="bg-muted/50 border-transparent focus:border-input focus:bg-background"
                     />
                   </div>
                   <div className="space-y-2">
@@ -243,7 +246,7 @@ export const LeadDetailsSheet = ({
                       id="phone"
                       value={customPhoneValue}
                       readOnly
-                      className="bg-muted/50"
+                      className="bg-muted/50 border-transparent"
                     />
                   </div>
                 </div>
