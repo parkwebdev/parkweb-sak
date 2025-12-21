@@ -38,6 +38,8 @@ export const createLeadsColumns = ({
     ),
     enableSorting: false,
     enableHiding: false,
+    size: 40,
+    maxSize: 40,
   },
   {
     accessorKey: 'name',
