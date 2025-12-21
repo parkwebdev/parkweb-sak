@@ -32,7 +32,7 @@ const FEATURE_CARDS: FeatureCard[] = [
     activeIcon: WebhookFilled,
     title: 'Webhooks',
     description: 'Connect to your tools',
-    route: '/ari',
+    route: '/ari?section=webhooks',
   },
   {
     id: 'tools',
@@ -40,7 +40,7 @@ const FEATURE_CARDS: FeatureCard[] = [
     activeIcon: CodeBrowserFilled,
     title: 'Custom Tools',
     description: 'Add API actions',
-    route: '/ari',
+    route: '/ari?section=custom-tools',
   },
   {
     id: 'analytics',
