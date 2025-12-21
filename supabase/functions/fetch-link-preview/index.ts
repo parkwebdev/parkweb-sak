@@ -111,6 +111,52 @@ function detectVideoEmbed(url: string): { type: 'youtube' | 'vimeo' | 'loom' | '
   return null;
 }
 
+// Fetch video metadata via oEmbed APIs (no API keys required)
+async function fetchOEmbedData(url: string, videoType: string): Promise<{ title?: string; author?: string; thumbnail?: string } | null> {
+  try {
+    let oembedUrl: string | null = null;
+    
+    if (videoType === 'youtube') {
+      oembedUrl = `https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`;
+    } else if (videoType === 'vimeo') {
+      oembedUrl = `https://vimeo.com/api/oembed.json?url=${encodeURIComponent(url)}`;
+    } else if (videoType === 'loom') {
+      oembedUrl = `https://www.loom.com/v1/oembed?url=${encodeURIComponent(url)}`;
+    }
+    
+    if (!oembedUrl) return null;
+    
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 3000);
+    
+    const response = await fetch(oembedUrl, { 
+      signal: controller.signal,
+      headers: {
+        'Accept': 'application/json',
+      }
+    });
+    
+    clearTimeout(timeout);
+    
+    if (!response.ok) {
+      console.log(`oEmbed request failed for ${videoType}: ${response.status}`);
+      return null;
+    }
+    
+    const data = await response.json();
+    console.log(`oEmbed data for ${videoType}:`, JSON.stringify(data, null, 2));
+    
+    return {
+      title: data.title,
+      author: data.author_name,
+      thumbnail: data.thumbnail_url,
+    };
+  } catch (error) {
+    console.log(`oEmbed fetch failed for ${videoType}:`, error.message);
+    return null;
+  }
+}
+
 // Extract meta tag content from HTML
 function extractMetaContent(html: string, property: string): string | undefined {
   // Try og: property first
@@ -275,30 +321,36 @@ serve(async (req) => {
     // Check for video embed before fetching (saves network request for known video platforms)
     const videoEmbed = detectVideoEmbed(url);
 
-    // For known video platforms, return preview data directly without fetching
-    // This avoids rate limiting issues with YouTube, Vimeo, etc.
+    // For known video platforms, fetch metadata via oEmbed then return
+    // This avoids rate limiting issues with scraping YouTube, Vimeo, etc.
     if (videoEmbed) {
+      // Fetch title/author via oEmbed API (fast, no rate limits, no API keys)
+      const oembedData = await fetchOEmbedData(url, videoEmbed.type);
+      
       const videoPreviewData: LinkPreviewData = {
         url,
         domain: getDomain(url),
         videoType: videoEmbed.type,
         videoId: videoEmbed.videoId,
         embedUrl: videoEmbed.embedUrl,
+        title: oembedData?.title,
+        description: oembedData?.author ? `By ${oembedData.author}` : undefined,
       };
 
       // Add platform-specific metadata
       if (videoEmbed.type === 'youtube') {
         videoPreviewData.siteName = 'YouTube';
         videoPreviewData.favicon = 'https://www.youtube.com/favicon.ico';
-        // YouTube thumbnail URL pattern
-        videoPreviewData.image = `https://i.ytimg.com/vi/${videoEmbed.videoId}/hqdefault.jpg`;
+        // Use oEmbed thumbnail or fallback to standard YouTube pattern
+        videoPreviewData.image = oembedData?.thumbnail || `https://i.ytimg.com/vi/${videoEmbed.videoId}/hqdefault.jpg`;
       } else if (videoEmbed.type === 'vimeo') {
         videoPreviewData.siteName = 'Vimeo';
         videoPreviewData.favicon = 'https://vimeo.com/favicon.ico';
+        videoPreviewData.image = oembedData?.thumbnail;
       } else if (videoEmbed.type === 'loom') {
         videoPreviewData.siteName = 'Loom';
         videoPreviewData.favicon = 'https://www.loom.com/favicon.ico';
-        videoPreviewData.image = `https://cdn.loom.com/sessions/thumbnails/${videoEmbed.videoId}-with-play.gif`;
+        videoPreviewData.image = oembedData?.thumbnail || `https://cdn.loom.com/sessions/thumbnails/${videoEmbed.videoId}-with-play.gif`;
       } else if (videoEmbed.type === 'wistia') {
         videoPreviewData.siteName = 'Wistia';
         videoPreviewData.favicon = 'https://wistia.com/favicon.ico';
