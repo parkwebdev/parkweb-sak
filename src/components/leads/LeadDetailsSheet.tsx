@@ -220,27 +220,7 @@ export const LeadDetailsSheet = ({
                   </div>
                 </div>
 
-                {hasCustomPhone ? (
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        value={{ ...lead, ...editedLead }.email || ''}
-                        onChange={(e) => setEditedLead({ ...editedLead, email: e.target.value })}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="phone">Phone</Label>
-                      <PhoneInputField
-                        name="phone"
-                        value={{ ...lead, ...editedLead }.phone || ''}
-                        onChange={(phone) => setEditedLead({ ...editedLead, phone })}
-                      />
-                    </div>
-                  </div>
-                ) : (
+                <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
                     <Input
@@ -250,7 +230,15 @@ export const LeadDetailsSheet = ({
                       onChange={(e) => setEditedLead({ ...editedLead, email: e.target.value })}
                     />
                   </div>
-                )}
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Phone</Label>
+                    <PhoneInputField
+                      name="phone"
+                      value={{ ...lead, ...editedLead }.phone || ''}
+                      onChange={(phone) => setEditedLead({ ...editedLead, phone })}
+                    />
+                  </div>
+                </div>
               </div>
 
               {/* Dynamic Custom Fields */}
