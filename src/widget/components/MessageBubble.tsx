@@ -201,21 +201,33 @@ export const MessageBubble = ({
                 )}
               </div>
             )}
-            {(message.type === 'text' || !message.type) && (
-              <p className="text-sm whitespace-pre-wrap break-words">
-                {message.role === 'assistant' 
-                  ? formatMarkdownBullets(
-                      stripPhoneNumbersFromContent(
-                        stripUrlsFromContent(
-                          message.content.replace(/\*\*(.*?)\*\*/g, '$1'),
-                          !!(message.linkPreviews && message.linkPreviews.length > 0)
-                        ),
-                        !!(message.callActions && message.callActions.length > 0)
-                      )
-                    )
-                  : message.content}
-              </p>
-            )}
+            {(message.type === 'text' || !message.type) && (() => {
+              // Check if we have link previews (cached or will fetch for URLs)
+              const hasLinkPreviews = 
+                (message.linkPreviews && message.linkPreviews.length > 0) ||
+                /https?:\/\/[^\s<>"')\]]+/i.test(message.content);
+              
+              // Check for call actions
+              const hasCallActions = !!(message.callActions && message.callActions.length > 0);
+              
+              // Apply stripping for ALL message types when previews exist
+              const processedContent = formatMarkdownBullets(
+                stripPhoneNumbersFromContent(
+                  stripUrlsFromContent(
+                    message.content.replace(/\*\*(.*?)\*\*/g, '$1'),
+                    hasLinkPreviews
+                  ),
+                  hasCallActions
+                )
+              );
+              
+              // Only render if there's content after stripping
+              return processedContent.trim() ? (
+                <p className="text-sm whitespace-pre-wrap break-words">
+                  {processedContent}
+                </p>
+              ) : null;
+            })()}
             
             {/* Link previews for messages with URLs */}
             {(
