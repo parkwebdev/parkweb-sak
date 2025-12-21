@@ -92,9 +92,28 @@ export const LeadDetailsSheet = ({
       .trim();
   };
 
+  // Check if field is a message field (should be read-only)
+  const isMessageField = (key: string): boolean => {
+    const messageKeys = ['message', 'Message', 'comments', 'Comments', 'note', 'notes'];
+    return messageKeys.includes(key);
+  };
+
   // Render input based on value type
   const renderCustomFieldInput = (key: string, value: unknown, currentCustomData: Record<string, unknown>) => {
     const currentValue = currentCustomData[key] ?? value;
+    
+    // Message fields are read-only
+    if (isMessageField(key)) {
+      const strValue = String(currentValue || '');
+      return (
+        <div className="space-y-2">
+          <Label>{formatLabel(key)}</Label>
+          <p className="text-sm text-muted-foreground whitespace-pre-wrap bg-muted/50 rounded-md p-3">
+            {strValue || '-'}
+          </p>
+        </div>
+      );
+    }
     
     if (typeof value === 'boolean' || typeof currentValue === 'boolean') {
       return (
@@ -136,6 +155,17 @@ export const LeadDetailsSheet = ({
     );
   };
 
+  // Parse name into first and last
+  const currentName = { ...lead, ...editedLead }.name || '';
+  const nameParts = currentName.split(' ');
+  const firstName = nameParts[0] || '';
+  const lastName = nameParts.slice(1).join(' ') || '';
+
+  const handleNameChange = (first: string, last: string) => {
+    const fullName = [first, last].filter(Boolean).join(' ');
+    setEditedLead({ ...editedLead, name: fullName });
+  };
+
   // Always render Sheet for proper animation handling
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -159,13 +189,23 @@ export const LeadDetailsSheet = ({
               <div className="space-y-4">
                 <h3 className="font-semibold">Contact Information</h3>
                 
-                <div className="space-y-2">
-                  <Label htmlFor="name">Name</Label>
-                  <Input
-                    id="name"
-                    value={{ ...lead, ...editedLead }.name || ''}
-                    onChange={(e) => setEditedLead({ ...editedLead, name: e.target.value })}
-                  />
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="firstName">First Name</Label>
+                    <Input
+                      id="firstName"
+                      value={firstName}
+                      onChange={(e) => handleNameChange(e.target.value, lastName)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="lastName">Last Name</Label>
+                    <Input
+                      id="lastName"
+                      value={lastName}
+                      onChange={(e) => handleNameChange(firstName, e.target.value)}
+                    />
+                  </div>
                 </div>
 
                 <div className="space-y-2">
