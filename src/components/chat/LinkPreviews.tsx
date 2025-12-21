@@ -121,7 +121,10 @@ export function LinkPreviews({ content, compact = false, cachedPreviews }: LinkP
 
   // Multiple previews: carousel mode
   return (
-    <div className="relative w-full max-w-full min-w-0 overflow-hidden">
+    <div
+      className="relative w-full max-w-full min-w-0 overflow-hidden"
+      style={{ contain: 'inline-size' }}
+    >
       {/* Carousel container with scroll snap */}
       <div
         ref={carouselRef}
