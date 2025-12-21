@@ -79,8 +79,25 @@ export const GetStarted: React.FC = () => {
         onComplete={handleCelebrationComplete} 
       />
       
-      <main className="flex-1 min-h-0 h-full overflow-y-auto bg-background">
-        <div className="max-w-5xl mx-auto">
+      <main className="flex-1 min-h-0 h-full overflow-y-auto bg-background relative">
+        {/* Decorative gradient background */}
+        <div 
+          className="absolute inset-x-0 top-0 h-80 pointer-events-none"
+          style={{
+            background: 'radial-gradient(ellipse 80% 50% at 50% -20%, hsl(var(--primary) / 0.08), transparent)',
+          }}
+        />
+        
+        {/* Decorative dot pattern */}
+        <div 
+          className="absolute inset-0 pointer-events-none opacity-[0.03]"
+          style={{
+            backgroundImage: 'radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)',
+            backgroundSize: '24px 24px',
+          }}
+        />
+
+        <div className="max-w-5xl mx-auto relative">
           {/* Header */}
           <PageHeader
             title={`Welcome, ${firstName} 👋`}

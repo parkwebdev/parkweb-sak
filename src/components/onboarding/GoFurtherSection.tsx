@@ -2,7 +2,7 @@
  * Go Further Section Component
  * 
  * Displays advanced feature cards for users who want to explore more.
- * Simpler card style matching Intercom's onboarding aesthetic.
+ * Enhanced with hover effects and elevated card styling.
  * 
  * @module components/onboarding/GoFurtherSection
  */
@@ -66,20 +66,25 @@ const FeatureCardItem: React.FC<{ card: FeatureCard; index: number; prefersReduc
       initial={prefersReducedMotion ? false : { opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.3 + index * 0.05, ...springs.smooth }}
+      whileHover={prefersReducedMotion ? {} : { y: -2 }}
     >
       <Link
         to={card.route}
-        className="block bg-muted/50 rounded-lg p-3 hover:bg-muted transition-colors group"
+        className="block bg-card border border-border rounded-xl p-4 shadow-sm hover:shadow-md hover:border-primary/20 transition-all duration-200 group"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        <div className="flex items-center gap-2">
-          <Icon size={16} className="text-muted-foreground group-hover:text-foreground transition-colors" />
-          <span className="text-sm font-medium text-foreground">{card.title}</span>
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-lg bg-muted/50 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+            <Icon size={18} className="text-muted-foreground group-hover:text-primary transition-colors" />
+          </div>
+          <div>
+            <span className="block text-sm font-medium text-foreground">{card.title}</span>
+            <p className="text-xs text-muted-foreground">
+              {card.description}
+            </p>
+          </div>
         </div>
-        <p className="text-xs text-muted-foreground mt-1">
-          {card.description}
-        </p>
       </Link>
     </motion.div>
   );
@@ -89,10 +94,10 @@ export const GoFurtherSection: React.FC = () => {
   const prefersReducedMotion = useReducedMotion();
 
   return (
-    <section className="mt-10 space-y-3">
-      <h2 className="text-sm font-medium text-muted-foreground">Go further</h2>
+    <section className="mt-10 space-y-4">
+      <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Go further</h2>
       
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {FEATURE_CARDS.map((card, index) => (
           <FeatureCardItem
             key={card.id}
