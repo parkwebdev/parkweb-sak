@@ -3082,7 +3082,7 @@ serve(async (req) => {
     
     const { data: usageMetrics } = await supabase
       .from('usage_metrics')
-      .select('api_calls_count')
+      .select('api_calls_count, messages_count')
       .eq('user_id', agent.user_id)
       .gte('period_start', firstDayOfMonth.toISOString())
       .order('created_at', { ascending: false })
@@ -3090,6 +3090,7 @@ serve(async (req) => {
       .maybeSingle();
 
     const currentApiCalls = usageMetrics?.api_calls_count || 0;
+    const currentMessagesCount = usageMetrics?.messages_count || 0;
 
     // Hard limit enforcement
     if (currentApiCalls >= maxApiCalls) {
@@ -4247,7 +4248,8 @@ NEVER mark complete when:
         })
         .eq('id', activeConversationId);
 
-      // Track API call usage (fire and forget - don't wait)
+      // Track API call and message usage (fire and forget - don't wait)
+      // +2 messages: 1 user message + 1 assistant response
       const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
       supabase
         .from('usage_metrics')
@@ -4256,10 +4258,11 @@ NEVER mark complete when:
           period_start: firstDayOfMonth.toISOString(),
           period_end: lastDayOfMonth.toISOString(),
           api_calls_count: currentApiCalls + 1,
+          messages_count: currentMessagesCount + 2,
         }, {
           onConflict: 'user_id,period_start',
         })
-        .then(() => console.log('API usage tracked'))
+        .then(() => console.log('API and message usage tracked'))
         .catch(err => console.error('Failed to track usage:', err));
 
       // PHASE 4: Extract and store semantic memories (fire and forget - don't block response)
