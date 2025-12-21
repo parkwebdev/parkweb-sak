@@ -94,12 +94,21 @@ export const LeadsTable = ({
     getPaginationRowModel: getPaginationRowModel(),
   });
 
+  const handleRowClick = (lead: Lead) => {
+    console.log('LeadsTable handleRowClick called with:', lead);
+    try {
+      onView(lead);
+    } catch (error) {
+      console.error('Error in onView handler:', error);
+    }
+  };
+
   return (
     <div className="space-y-4">
       <DataTable
         table={table}
         columns={columns}
-        onRowClick={onView}
+        onRowClick={handleRowClick}
         emptyMessage="No leads found"
       />
       {leads.length > 10 && (

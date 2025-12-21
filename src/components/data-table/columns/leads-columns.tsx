@@ -76,7 +76,7 @@ export const createLeadsColumns = ({
       <DataTableColumnHeader column={column} title="Status" />
     ),
     cell: ({ row }) => (
-      <div onClick={(e) => e.stopPropagation()}>
+      <div onClick={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()}>
         <StatusDropdown
           status={row.original.status}
           onStatusChange={(status) => onStatusChange(row.original.id, status)}
