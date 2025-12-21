@@ -2,7 +2,7 @@
  * Setup Feedback Toast Component
  * 
  * Floating toast-style popup in the bottom right corner for feedback.
- * Shows 5 emojis for quick rating.
+ * Shows 5 emojis for quick rating, then optional textarea for details.
  * 
  * @module components/onboarding/SetupFeedbackToast
  */
@@ -14,6 +14,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { IconButton } from '@/components/ui/icon-button';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 
 const EMOJI_RATINGS = [
   { value: 1, emoji: '😞', label: 'Poor' },
@@ -31,6 +33,8 @@ export const SetupFeedbackToast: React.FC<SetupFeedbackToastProps> = ({ hasRated
   const { user } = useAuth();
   const prefersReducedMotion = useReducedMotion();
   const [selectedRating, setSelectedRating] = useState<number | null>(null);
+  const [showFollowUp, setShowFollowUp] = useState(false);
+  const [feedbackText, setFeedbackText] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(hasRated);
   const [isDismissed, setIsDismissed] = useState(hasRated);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -49,12 +53,8 @@ export const SetupFeedbackToast: React.FC<SetupFeedbackToastProps> = ({ hasRated
 
       if (error) throw error;
 
-      setIsSubmitted(true);
-      
-      // Auto-dismiss after showing thank you
-      setTimeout(() => {
-        setIsDismissed(true);
-      }, 2000);
+      // Show follow-up textarea instead of immediately dismissing
+      setShowFollowUp(true);
     } catch (error) {
       console.error('Failed to save rating:', error);
       setSelectedRating(null);
@@ -63,11 +63,36 @@ export const SetupFeedbackToast: React.FC<SetupFeedbackToastProps> = ({ hasRated
     }
   };
 
+  const handleSubmitFeedback = async () => {
+    if (!user) return;
+    
+    setIsSubmitting(true);
+    try {
+      if (feedbackText.trim()) {
+        await supabase
+          .from('profiles')
+          .update({ setup_feedback_text: feedbackText.trim() })
+          .eq('user_id', user.id);
+      }
+      
+      setIsSubmitted(true);
+      setTimeout(() => setIsDismissed(true), 2000);
+    } catch (error) {
+      console.error('Failed to save feedback:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSkipFeedback = () => {
+    setIsSubmitted(true);
+    setTimeout(() => setIsDismissed(true), 2000);
+  };
+
   const handleDismiss = async () => {
-    // Save a "dismissed" state by setting rating to 0 (or just dismiss locally)
     setIsDismissed(true);
     
-    // Optionally mark as seen so it doesn't show again
+    // Mark as seen so it doesn't show again
     if (user) {
       await supabase
         .from('profiles')
@@ -78,6 +103,8 @@ export const SetupFeedbackToast: React.FC<SetupFeedbackToastProps> = ({ hasRated
 
   if (isDismissed) return null;
 
+  const selectedEmoji = EMOJI_RATINGS.find(e => e.value === selectedRating)?.emoji;
+
   return (
     <AnimatePresence>
       <motion.div
@@ -87,8 +114,9 @@ export const SetupFeedbackToast: React.FC<SetupFeedbackToastProps> = ({ hasRated
         transition={{ type: 'spring', stiffness: 400, damping: 30 }}
         className="fixed bottom-6 right-6 z-50"
       >
-        <div className="bg-card border border-border rounded-xl shadow-lg p-4 min-w-[280px]">
+        <div className="bg-card border border-border rounded-xl shadow-lg p-4 min-w-[280px] max-w-[320px]">
           {isSubmitted ? (
+            // Final thank you state
             <motion.div
               initial={prefersReducedMotion ? false : { opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -99,9 +127,44 @@ export const SetupFeedbackToast: React.FC<SetupFeedbackToastProps> = ({ hasRated
               </div>
               <span>Thanks for your feedback!</span>
             </motion.div>
+          ) : showFollowUp ? (
+            // Follow-up textarea step
+            <motion.div
+              initial={prefersReducedMotion ? false : { opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="space-y-3"
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-xl">{selectedEmoji}</span>
+                <span className="text-sm text-foreground font-medium">Thanks!</span>
+              </div>
+              <Textarea
+                placeholder="Tell us more (optional)"
+                value={feedbackText}
+                onChange={(e) => setFeedbackText(e.target.value)}
+                className="min-h-[80px] text-sm resize-none"
+              />
+              <div className="flex gap-2 justify-end">
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  onClick={handleSkipFeedback}
+                  disabled={isSubmitting}
+                >
+                  Skip
+                </Button>
+                <Button 
+                  size="sm" 
+                  onClick={handleSubmitFeedback}
+                  disabled={isSubmitting}
+                >
+                  Submit
+                </Button>
+              </div>
+            </motion.div>
           ) : (
+            // Initial emoji rating step
             <>
-              {/* Header with dismiss button */}
               <div className="flex items-start justify-between gap-2 mb-3">
                 <p className="text-sm text-foreground font-medium">How was your setup experience?</p>
                 <IconButton
@@ -115,7 +178,6 @@ export const SetupFeedbackToast: React.FC<SetupFeedbackToastProps> = ({ hasRated
                 </IconButton>
               </div>
               
-              {/* Emoji rating buttons */}
               <div className="flex items-center justify-between gap-1">
                 {EMOJI_RATINGS.map(({ value, emoji, label }) => (
                   <motion.button
