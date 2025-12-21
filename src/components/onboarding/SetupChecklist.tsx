@@ -115,25 +115,21 @@ export const SetupChecklist: React.FC<SetupChecklistProps> = ({
               >
                 You're all set up! Explore more features or check out helpful resources to get the most out of Ari.
               </motion.p>
-              <motion.div variants={itemVariants} className="flex flex-wrap gap-2 mb-4">
+              <motion.div variants={itemVariants} className="mb-4">
                 <a 
                   href="https://docs.lovable.dev" 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline transition-colors"
+                  className="group inline-flex items-center gap-1.5 text-sm text-primary hover:underline transition-colors"
                 >
                   Explore the Help Center
-                  <ArrowUpRight size={14} />
-                </a>
-                <span className="text-muted-foreground">·</span>
-                <a 
-                  href="https://lovable.dev/blog" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline transition-colors"
-                >
-                  Discover our blog
-                  <ArrowUpRight size={14} />
+                  <motion.span
+                    className="inline-block"
+                    whileHover={{ x: 2, y: -2 }}
+                    transition={{ type: 'spring' as const, stiffness: 400, damping: 20 }}
+                  >
+                    <ArrowUpRight size={14} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                  </motion.span>
                 </a>
               </motion.div>
 
