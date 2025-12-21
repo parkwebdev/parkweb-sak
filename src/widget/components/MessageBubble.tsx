@@ -217,10 +217,18 @@ export const MessageBubble = ({
               </p>
             )}
             
-            {/* Link previews for assistant messages */}
-            {message.role === 'assistant' && message.linkPreviews && message.linkPreviews.length > 0 && (
+            {/* Link previews for messages with URLs */}
+            {(
+              // Assistant messages with cached previews
+              (message.role === 'assistant' && message.linkPreviews && message.linkPreviews.length > 0) ||
+              // User messages - let LinkPreviewsWidget fetch on client if URL detected
+              (message.role === 'user' && /https?:\/\/[^\s<>"')\]]+/i.test(message.content))
+            ) && (
               <div className="mt-2">
-                <LinkPreviewsWidget content={message.content} cachedPreviews={message.linkPreviews} />
+                <LinkPreviewsWidget 
+                  content={message.content} 
+                  cachedPreviews={message.role === 'assistant' ? message.linkPreviews : undefined} 
+                />
               </div>
             )}
           </div>
