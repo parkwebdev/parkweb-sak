@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { PlayCircle } from '@untitledui/icons';
+import { PlayIcon } from '@/components/icons/PlayIcon';
 
 // YouTube thumbnail resolutions in priority order (highest to lowest)
 const YOUTUBE_THUMBNAILS = ['maxresdefault', 'sddefault', 'hqdefault', 'mqdefault', 'default'];
@@ -62,10 +62,10 @@ export function VideoEmbed({ embedUrl, videoType, title, thumbnail, compact = fa
           </div>
         )}
         
-        {/* Play button overlay */}
-        <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">
-          <div className="w-14 h-14 rounded-full bg-primary/90 flex items-center justify-center shadow-lg">
-            <PlayCircle className="w-8 h-8 text-primary-foreground" />
+        {/* Play button overlay - frosted glass style */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="flex items-center justify-center w-14 h-14 rounded-full bg-white/20 backdrop-blur-md shadow-lg group-hover:bg-white/30 transition-colors">
+            <PlayIcon size={32} className="text-white group-hover:text-white/90 transition-colors" />
           </div>
         </div>
 
