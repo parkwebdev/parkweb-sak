@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { PhoneInputField } from '@/components/ui/phone-input';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Trash02, Save01, LinkExternal02, InfoCircle } from '@untitledui/icons';
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -160,16 +160,16 @@ export const LeadDetailsSheet = ({
         <div className="space-y-2">
           <div className="flex items-center gap-2">
             <Label>{formatLabel(key)}</Label>
-            {consentContent && (
+            <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <InfoCircle className="h-4 w-4 text-muted-foreground cursor-help" />
                 </TooltipTrigger>
                 <TooltipContent side="top" className="max-w-xs">
-                  <p className="text-sm">{consentContent}</p>
+                  <p className="text-sm">{consentContent || 'User agreed to the consent checkbox on the contact form.'}</p>
                 </TooltipContent>
               </Tooltip>
-            )}
+            </TooltipProvider>
           </div>
           <p className={`text-sm bg-muted/50 rounded-md p-3 ${consented ? 'text-status-active' : 'text-muted-foreground'}`}>
             {consented ? 'Yes' : 'No'}
