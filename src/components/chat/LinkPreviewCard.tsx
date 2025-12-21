@@ -113,7 +113,7 @@ export function LinkPreviewCard({ data, compact = false }: LinkPreviewCardProps)
 
       <div className="p-3 space-y-1">
         {/* Domain with favicon */}
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground min-w-0">
           {data.favicon && !faviconError ? (
             <img
               src={data.favicon}
@@ -124,7 +124,7 @@ export function LinkPreviewCard({ data, compact = false }: LinkPreviewCardProps)
           ) : (
             <Globe02 className="w-3.5 h-3.5" />
           )}
-          <span className="truncate">{data.siteName || data.domain}</span>
+          <span className="truncate min-w-0">{data.siteName || data.domain}</span>
           <LinkExternal01 className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity ml-auto flex-shrink-0" />
         </div>
 
