@@ -45,7 +45,7 @@ import { QuickEmojiButton } from '@/components/chat/QuickEmojiButton';
 import { useAutoResizeTextarea } from '@/hooks/useAutoResizeTextarea';
 import { toast } from '@/lib/toast';
 import { logger } from '@/utils/logger';
-import { formatMarkdownBullets } from '@/widget/utils/url-stripper';
+import { formatMarkdownBullets, stripUrlsFromContent } from '@/widget/utils/url-stripper';
 
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { messageBubbleVariants, messageBubbleUserVariants, messageBubbleReducedVariants, getVariants } from '@/lib/motion-variants';
@@ -1153,20 +1153,28 @@ const Conversations: React.FC = () => {
                                   </div>
                                 )}
                                 {/* Regular text content - show translation if available */}
-                                {message.content && message.content !== 'Sent files' && (
-                                  <div className="min-w-0 overflow-hidden">
-                                    <p className="text-sm whitespace-pre-wrap leading-relaxed break-words">
-                                      {showTranslation && translatedMessages[message.id] 
-                                        ? formatMarkdownBullets(translatedMessages[message.id])
-                                        : formatMarkdownBullets(message.content)}
-                                    </p>
-                                    {showTranslation && translatedMessages[message.id] && translatedMessages[message.id] !== message.content && (
-                                      <p className="text-xs text-muted-foreground mt-1 italic border-t border-dashed pt-1">
-                                        Original: {message.content.length > 100 ? message.content.substring(0, 100) + '...' : message.content}
+                                {message.content && message.content !== 'Sent files' && (() => {
+                                  // Check if URLs exist in content (LinkPreviews will show them)
+                                  const hasUrls = /https?:\/\/[^\s<>"')\]]+/i.test(message.content);
+                                  
+                                  const displayContent = showTranslation && translatedMessages[message.id]
+                                    ? formatMarkdownBullets(stripUrlsFromContent(translatedMessages[message.id], hasUrls))
+                                    : formatMarkdownBullets(stripUrlsFromContent(message.content, hasUrls));
+                                  
+                                  // Only render text if there's content after stripping
+                                  return displayContent.trim() ? (
+                                    <div className="min-w-0 overflow-hidden">
+                                      <p className="text-sm whitespace-pre-wrap leading-relaxed break-words">
+                                        {displayContent}
                                       </p>
-                                    )}
-                                  </div>
-                                )}
+                                      {showTranslation && translatedMessages[message.id] && translatedMessages[message.id] !== message.content && (
+                                        <p className="text-xs text-muted-foreground mt-1 italic border-t border-dashed pt-1">
+                                          Original: {message.content.length > 100 ? message.content.substring(0, 100) + '...' : message.content}
+                                        </p>
+                                      )}
+                                    </div>
+                                  ) : null;
+                                })()}
                                 <LinkPreviews content={message.content} />
                               </div>
                               {/* Reactions row - only show for last message in group, team members can only react to user messages */}
