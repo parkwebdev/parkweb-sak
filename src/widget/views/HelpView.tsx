@@ -359,69 +359,69 @@ export const HelpView = ({
                 )}
               </div>
             )}
-            
-            {/* Feedback Section - always at bottom of content */}
-            <div className="p-4 border-t bg-muted/30">
-              {feedbackSubmitted ? (
-                <div className="text-center py-4">
-                  <CheckCircle className="h-8 w-8 text-success mx-auto mb-2" />
-                  <p className="text-sm font-medium">Thanks for your feedback!</p>
-                  <p className="text-xs text-muted-foreground mt-1">Your input helps us improve.</p>
+          </div>
+          
+          {/* Feedback Section - pinned at bottom of container */}
+          <div className="flex-shrink-0 p-4 border-t bg-muted/30">
+            {feedbackSubmitted ? (
+              <div className="text-center py-4">
+                <CheckCircle className="h-8 w-8 text-success mx-auto mb-2" />
+                <p className="text-sm font-medium">Thanks for your feedback!</p>
+                <p className="text-xs text-muted-foreground mt-1">Your input helps us improve.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <p className="text-sm font-medium text-center text-foreground">Was this article helpful?</p>
+                <div className="flex justify-center gap-3">
+                  <WidgetButton
+                    size="sm"
+                    variant={articleFeedback === 'helpful' ? 'default' : 'outline'}
+                    onClick={() => {
+                      setArticleFeedback('helpful');
+                      setShowFeedbackComment(true);
+                    }}
+                    className="gap-1.5"
+                    style={articleFeedback === 'helpful' ? { backgroundColor: accentColor, color: buttonTextColor } : undefined}
+                  >
+                    <ThumbsUp className="h-4 w-4" />
+                    Yes
+                  </WidgetButton>
+                  <WidgetButton
+                    size="sm"
+                    variant={articleFeedback === 'not_helpful' ? 'default' : 'outline'}
+                    onClick={() => {
+                      setArticleFeedback('not_helpful');
+                      setShowFeedbackComment(true);
+                    }}
+                    className="gap-1.5"
+                    style={articleFeedback === 'not_helpful' ? { backgroundColor: accentColor, color: buttonTextColor } : undefined}
+                  >
+                    <ThumbsDown className="h-4 w-4" />
+                    No
+                  </WidgetButton>
                 </div>
-              ) : (
-                <div className="space-y-3">
-                  <p className="text-sm font-medium text-center text-foreground">Was this article helpful?</p>
-                  <div className="flex justify-center gap-3">
+                
+                {showFeedbackComment && (
+                  <div className="space-y-2 mt-3">
+                    <Textarea
+                      value={feedbackComment}
+                      onChange={(e) => setFeedbackComment(e.target.value)}
+                      placeholder={articleFeedback === 'helpful' ? "What did you find most helpful? (optional)" : "How can we improve this article? (optional)"}
+                      className="text-sm resize-none"
+                      rows={3}
+                    />
                     <WidgetButton
                       size="sm"
-                      variant={articleFeedback === 'helpful' ? 'default' : 'outline'}
-                      onClick={() => {
-                        setArticleFeedback('helpful');
-                        setShowFeedbackComment(true);
-                      }}
-                      className="gap-1.5"
-                      style={articleFeedback === 'helpful' ? { backgroundColor: accentColor, color: buttonTextColor } : undefined}
+                      onClick={handleSubmitFeedback}
+                      className="w-full"
+                      style={{ backgroundColor: accentColor, color: buttonTextColor }}
                     >
-                      <ThumbsUp className="h-4 w-4" />
-                      Yes
-                    </WidgetButton>
-                    <WidgetButton
-                      size="sm"
-                      variant={articleFeedback === 'not_helpful' ? 'default' : 'outline'}
-                      onClick={() => {
-                        setArticleFeedback('not_helpful');
-                        setShowFeedbackComment(true);
-                      }}
-                      className="gap-1.5"
-                      style={articleFeedback === 'not_helpful' ? { backgroundColor: accentColor, color: buttonTextColor } : undefined}
-                    >
-                      <ThumbsDown className="h-4 w-4" />
-                      No
+                      Submit Feedback
                     </WidgetButton>
                   </div>
-                  
-                  {showFeedbackComment && (
-                    <div className="space-y-2 mt-3">
-                      <Textarea
-                        value={feedbackComment}
-                        onChange={(e) => setFeedbackComment(e.target.value)}
-                        placeholder={articleFeedback === 'helpful' ? "What did you find most helpful? (optional)" : "How can we improve this article? (optional)"}
-                        className="text-sm resize-none"
-                        rows={3}
-                      />
-                      <WidgetButton
-                        size="sm"
-                        onClick={handleSubmitFeedback}
-                        className="w-full"
-                        style={{ backgroundColor: accentColor, color: buttonTextColor }}
-                      >
-                        Submit Feedback
-                      </WidgetButton>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}
