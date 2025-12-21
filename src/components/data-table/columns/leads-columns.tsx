@@ -1,8 +1,6 @@
 import { ColumnDef } from '@tanstack/react-table';
 import { formatDistanceToNow } from 'date-fns';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Button } from '@/components/ui/button';
-import { Eye } from '@untitledui/icons';
 import { DataTableColumnHeader } from '../DataTableColumnHeader';
 import type { Tables } from '@/integrations/supabase/types';
 
@@ -15,7 +13,6 @@ interface LeadsColumnsProps {
 }
 
 export const createLeadsColumns = ({
-  onView,
   onStatusChange,
   StatusDropdown,
 }: LeadsColumnsProps): ColumnDef<Lead>[] => [
@@ -26,6 +23,7 @@ export const createLeadsColumns = ({
         checked={table.getIsAllPageRowsSelected()}
         onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
         aria-label="Select all"
+        onClick={(e) => e.stopPropagation()}
       />
     ),
     cell: ({ row }) => (
@@ -33,6 +31,7 @@ export const createLeadsColumns = ({
         checked={row.getIsSelected()}
         onCheckedChange={(value) => row.toggleSelected(!!value)}
         aria-label={`Select ${row.original.name || 'lead'}`}
+        onClick={(e) => e.stopPropagation()}
       />
     ),
     enableSorting: false,
@@ -62,22 +61,17 @@ export const createLeadsColumns = ({
     cell: ({ row }) => row.original.phone || '-',
   },
   {
-    accessorKey: 'company',
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Company" />
-    ),
-    cell: ({ row }) => row.original.company || '-',
-  },
-  {
     accessorKey: 'status',
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Status" />
     ),
     cell: ({ row }) => (
-      <StatusDropdown
-        status={row.original.status}
-        onStatusChange={(status) => onStatusChange(row.original.id, status)}
-      />
+      <div onClick={(e) => e.stopPropagation()}>
+        <StatusDropdown
+          status={row.original.status}
+          onStatusChange={(status) => onStatusChange(row.original.id, status)}
+        />
+      </div>
     ),
   },
   {
@@ -87,20 +81,5 @@ export const createLeadsColumns = ({
     ),
     cell: ({ row }) =>
       formatDistanceToNow(new Date(row.original.created_at), { addSuffix: true }),
-  },
-  {
-    id: 'actions',
-    header: () => <span className="text-right">Actions</span>,
-    cell: ({ row }) => (
-      <div className="text-right">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => onView(row.original)}
-        >
-          <Eye className="h-4 w-4" />
-        </Button>
-      </div>
-    ),
   },
 ];
