@@ -3587,59 +3587,60 @@ Generate a warm, personalized greeting using the user information provided above
         name: 'mark_conversation_complete',
         description: `Intelligently determine if a conversation has reached a natural conclusion. Current conversation has ${userMessageCount} user messages.
 
-CONTEXT REQUIREMENTS:
-- Minimum 3 user message exchanges before considering HIGH confidence completion
-- Short conversations (1-2 exchanges) should use MEDIUM confidence at most
+COMPLETION CRITERIA (Intercom-style):
+1. EXPLICIT FAREWELL + 1+ exchanges = HIGH confidence
+   - Clear farewell phrases: "goodbye", "bye", "thanks, that's all", "perfect, thank you", "have a great day", "take care", "got what I needed", "all set", "you've been helpful"
+   
+2. STANDARD COMPLETION (3+ exchanges) = HIGH confidence
+   - User expresses satisfaction
+   - No pending questions
+   - Original inquiry addressed
 
-HIGH CONFIDENCE SIGNALS (multiple should apply):
-- User expresses gratitude WITH finality: "thanks, that's exactly what I needed!", "perfect, you've been very helpful!", "great, I'm all set now"
-- No pending questions or unresolved topics from the user
-- User's original inquiry has been addressed
-- Last user message does NOT contain a follow-up question
-- Conversation has sufficient depth (3+ exchanges)
+HIGH CONFIDENCE SIGNALS:
+- Explicit farewell phrase WITH positive sentiment (even in short conversations)
+- "Thanks, that's exactly what I needed!", "Perfect, you've been very helpful!"
+- "Great, I'm all set now", "That answers my question"
+- "Goodbye", "Take care", "Have a nice day"
 
-NEGATIVE SIGNALS (DO NOT mark complete if present):
-- "Thanks" or "got it" followed by "but...", "however...", "one more thing...", or a new question
-- User expressing confusion, frustration, or dissatisfaction
-- Conversation ends mid-topic without resolution
-- User says "thanks" but immediately asks another question
-- Any explicit "I have another question" or "Also..." or "What about..."
-- Questions marks in the user's last message after acknowledgment
+NEGATIVE SIGNALS (DO NOT mark complete):
+- "Thanks" followed by "but...", "however...", "one more thing..."
+- Question marks after acknowledgment
+- "I have another question", "Also...", "What about..."
+- User frustration or confusion
+- Conversation ends mid-topic
 
-MEDIUM CONFIDENCE (log only, no rating prompt):
-- Single acknowledgment words without elaboration: just "ok", "thanks", "got it"
-- Short conversations (under 3 user exchanges) even with positive signals
-- User appears satisfied but hasn't explicitly confirmed resolution
+MEDIUM CONFIDENCE (log only):
+- Just "ok", "thanks", "got it" without elaboration
+- User appears satisfied but no explicit confirmation
 
 NEVER mark complete when:
-- User is frustrated or upset (negative sentiment)
+- User is frustrated or upset
 - There are unanswered questions
-- The conversation is still actively exploring a topic
-- User gave perfunctory acknowledgment mid-conversation`,
+- Still actively exploring a topic`,
         parameters: {
           type: 'object',
           properties: {
             reason: {
               type: 'string',
-              description: 'Detailed explanation of why the conversation appears complete, referencing specific user signals observed'
+              description: 'Detailed explanation of why the conversation appears complete'
             },
             confidence: {
               type: 'string',
               enum: ['high', 'medium'],
-              description: 'HIGH: Clear resolution with explicit satisfaction AND 3+ exchanges. MEDIUM: Likely complete but ambiguous signals or short conversation.'
+              description: 'HIGH: Explicit farewell + 1+ exchanges, OR 3+ exchanges with satisfaction. MEDIUM: Likely complete but ambiguous.'
             },
             user_signal: {
               type: 'string',
-              description: 'The specific phrase or message from the user that indicates completion (quote directly)'
+              description: 'The specific phrase from the user that indicates completion (quote directly)'
             },
             sentiment: {
               type: 'string',
               enum: ['satisfied', 'neutral', 'uncertain', 'frustrated'],
-              description: 'Overall sentiment of the user based on their final messages'
+              description: 'Overall sentiment based on final messages'
             },
             has_pending_questions: {
               type: 'boolean',
-              description: 'Whether the user has any unanswered questions or unresolved topics'
+              description: 'Whether user has unanswered questions'
             }
           },
           required: ['reason', 'confidence', 'user_signal', 'sentiment']
@@ -3743,22 +3744,37 @@ NEVER mark complete when:
           const hasPendingQuestions = toolArgs.has_pending_questions || false;
           const userSignal = toolArgs.user_signal || '';
           
-          // Validation: require minimum exchanges for high confidence
-          const meetsMinimumExchanges = userMessageCount >= 3;
+          // Intercom-style: Explicit farewell patterns that can trigger completion with fewer exchanges
+          const EXPLICIT_FAREWELL_PATTERNS = /\b(goodbye|bye|thanks[\s,!.]+that'?s?\s*(all|it|perfect|great|exactly|what i needed)|have a (great|good|nice) (day|one)|take care|perfect[\s,!.]+thank|got (it|what i needed)|all set|that answers|you'?ve been (very )?helpful|that'?s? (all|exactly|perfect|great)|i'?m (all )?set)\b/i;
+          
+          const hasExplicitFarewell = EXPLICIT_FAREWELL_PATTERNS.test(userSignal);
+          const meetsMinimumExchanges = userMessageCount >= 1; // At least 1 exchange for farewell path
+          const meetsStandardExchanges = userMessageCount >= 3; // Standard path needs 3+
           const hasPositiveSentiment = sentiment === 'satisfied' || sentiment === 'neutral';
           const noPendingQuestions = !hasPendingQuestions;
           
           // Additional signal validation: check for question marks or "but" patterns in user signal
           const hasNegativePattern = /\?|but\s|however\s|also\s|what about|one more/i.test(userSignal);
           
-          if (toolArgs.confidence === 'high' && meetsMinimumExchanges && hasPositiveSentiment && noPendingQuestions && !hasNegativePattern) {
+          // Intercom-style completion logic:
+          // Path 1: Explicit farewell + at least 1 exchange + positive sentiment + no pending questions
+          // Path 2: Standard 3+ exchanges with satisfaction (original logic)
+          const canCompleteWithFarewell = hasExplicitFarewell && meetsMinimumExchanges && hasPositiveSentiment && noPendingQuestions && !hasNegativePattern;
+          const canCompleteStandard = meetsStandardExchanges && hasPositiveSentiment && noPendingQuestions && !hasNegativePattern;
+          
+          const canComplete = toolArgs.confidence === 'high' && (canCompleteWithFarewell || canCompleteStandard);
+          
+          if (canComplete) {
             aiMarkedComplete = true;
-            console.log('Conversation marked complete with HIGH confidence', {
+            const completionPath = canCompleteWithFarewell ? 'farewell_detected' : 'standard_exchanges';
+            console.log(`Conversation marked complete with HIGH confidence (${completionPath})`, {
               reason: toolArgs.reason,
               userSignal,
               sentiment,
               userMessageCount,
               hasPendingQuestions,
+              hasExplicitFarewell,
+              completionPath,
             });
             
             // Update conversation metadata with rich completion context
@@ -3774,6 +3790,7 @@ NEVER mark complete when:
                   ai_complete_signal: userSignal,
                   ai_complete_sentiment: sentiment,
                   ai_complete_exchange_count: userMessageCount,
+                  ai_complete_path: completionPath,
                 },
               })
               .eq('id', activeConversationId);
@@ -3781,10 +3798,18 @@ NEVER mark complete when:
             // Log detailed reason for not triggering
             const rejectionReasons = [];
             if (toolArgs.confidence !== 'high') rejectionReasons.push(`confidence=${toolArgs.confidence}`);
-            if (!meetsMinimumExchanges) rejectionReasons.push(`only ${userMessageCount} exchanges (need 3+)`);
+            if (!hasExplicitFarewell && !meetsStandardExchanges) {
+              rejectionReasons.push(`only ${userMessageCount} exchanges (need 3+ without farewell)`);
+            }
+            if (hasExplicitFarewell && !meetsMinimumExchanges) {
+              rejectionReasons.push(`no exchanges yet`);
+            }
             if (!hasPositiveSentiment) rejectionReasons.push(`negative sentiment: ${sentiment}`);
             if (hasPendingQuestions) rejectionReasons.push('has pending questions');
             if (hasNegativePattern) rejectionReasons.push(`negative pattern in signal: "${userSignal}"`);
+            if (!hasExplicitFarewell && userMessageCount < 3) {
+              rejectionReasons.push(`no explicit farewell detected in: "${userSignal}"`);
+            }
             
             console.log('Completion not triggered:', {
               confidence: toolArgs.confidence,
@@ -3792,6 +3817,7 @@ NEVER mark complete when:
               userSignal,
               sentiment,
               userMessageCount,
+              hasExplicitFarewell,
             });
           }
           // Don't add to toolResults - this is a client-side only tool
