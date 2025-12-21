@@ -41,7 +41,7 @@ export const SetupChecklist: React.FC<SetupChecklistProps> = ({
   if (allComplete) {
     return (
       <div className="border border-border rounded-xl bg-card shadow-sm p-6">
-        <h2 className="text-base font-medium text-foreground mb-4">What's next?</h2>
+        <h2 className="text-base font-medium text-foreground mb-1">What's next?</h2>
 
         <p className="text-sm text-muted-foreground leading-relaxed mb-4">
           You're all set up! Explore more features or check out helpful resources to get the most out of Ari.
