@@ -484,9 +484,8 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <div className="flex items-center gap-2.5 text-sm">
-                            <span className="text-base flex-shrink-0">
-                              {getLanguageFlag(metadata.detected_language_code || '')}
-                            </span>
+                            <Globe01 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                            <span className="text-muted-foreground">Language</span>
                             <Badge variant="outline" className="text-xs">
                               {metadata.detected_language}
                             </Badge>
