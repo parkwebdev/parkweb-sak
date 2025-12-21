@@ -14,11 +14,12 @@ import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/
 import { SetupProgress } from './SetupProgress';
 import { VideoPlaceholder } from './VideoPlaceholder';
 import { QuickStatsSummary } from './QuickStatsSummary';
-import { InviteTeamCard } from './InviteTeamCard';
+import { InviteTeamInline } from './InviteTeamInline';
 import { KeyboardShortcutsCard } from './KeyboardShortcutsCard';
-import { NextLevelVideoSection } from './NextLevelVideoSection';
 import { SetupFeedback } from './SetupFeedback';
 import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
+import { PlayIcon } from '@/components/icons/PlayIcon';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -67,46 +68,73 @@ export const SetupChecklist: React.FC<SetupChecklistProps> = ({
   if (allComplete) {
     return (
       <div className="space-y-4">
-        {/* What's next card */}
+        {/* What's next card - contains video, links, and invite */}
         <div className="border border-border rounded-xl bg-card shadow-sm p-6">
-          <h2 className="text-base font-medium text-foreground mb-1">What's next?</h2>
-          <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-            You're all set up! Explore more features or check out helpful resources to get the most out of Ari.
-          </p>
-          <div className="flex flex-wrap gap-2">
-            <a 
-              href="https://docs.lovable.dev" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
-            >
-              Explore the Help Center
-              <ArrowUpRight size={14} />
-            </a>
-            <span className="text-muted-foreground">·</span>
-            <a 
-              href="https://lovable.dev/blog" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
-            >
-              Discover our blog
-              <ArrowUpRight size={14} />
-            </a>
+          {/* Two-column layout: content left, video right */}
+          <div className="flex gap-6">
+            {/* Left column: Text content */}
+            <div className="flex-1 min-w-0 flex flex-col">
+              <h2 className="text-base font-medium text-foreground mb-1">What's next?</h2>
+              <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+                You're all set up! Explore more features or check out helpful resources to get the most out of Ari.
+              </p>
+              <div className="flex flex-wrap gap-2 mb-4">
+                <a 
+                  href="https://docs.lovable.dev" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
+                >
+                  Explore the Help Center
+                  <ArrowUpRight size={14} />
+                </a>
+                <span className="text-muted-foreground">·</span>
+                <a 
+                  href="https://lovable.dev/blog" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
+                >
+                  Discover our blog
+                  <ArrowUpRight size={14} />
+                </a>
+              </div>
+
+              {/* Divider and Invite Team inline */}
+              <Separator className="my-4" />
+              <InviteTeamInline />
+            </div>
+
+            {/* Right column: Video placeholder (same style as steps page) */}
+            <div className="hidden sm:flex w-72 md:w-96 lg:w-[28rem] flex-shrink-0">
+              <div className="relative w-full h-full min-h-[280px] rounded-xl overflow-hidden bg-gradient-to-br from-violet-600 via-purple-500 to-fuchsia-500 shadow-lg">
+                {/* Play button */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <button
+                    className="group flex items-center justify-center w-14 h-14 rounded-full bg-white/20 backdrop-blur-md shadow-lg hover:bg-white/30 transition-colors"
+                    onClick={() => {
+                      // TODO: Open video modal
+                      console.log('Play next level video');
+                    }}
+                    aria-label="Play tutorial video"
+                  >
+                    <PlayIcon size={32} className="text-white group-hover:text-white/90 transition-colors" />
+                  </button>
+                </div>
+                {/* Duration badge */}
+                <div className="absolute bottom-3 right-3 px-2 py-1 rounded bg-white/20 backdrop-blur-sm text-xs text-white font-medium">
+                  3:24
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Quick Stats Summary */}
         <QuickStatsSummary />
 
-        {/* Two-column: Invite Team | Keyboard Shortcuts */}
-        <div className="flex flex-col sm:flex-row gap-4">
-          <InviteTeamCard />
-          <KeyboardShortcutsCard />
-        </div>
-
-        {/* Video Tutorial Section */}
-        <NextLevelVideoSection />
+        {/* Keyboard Shortcuts */}
+        <KeyboardShortcutsCard />
 
         {/* Feedback/NPS Prompt */}
         <SetupFeedback hasRated={hasRated} />
