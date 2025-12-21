@@ -698,7 +698,7 @@ const Conversations: React.FC = () => {
   };
 
   return (
-    <div className="h-full flex min-h-0">
+    <div className="h-full flex min-h-0 overflow-x-hidden">
       {/* Inbox Navigation Sidebar */}
       <InboxNavSidebar
         activeFilter={activeFilter}
@@ -919,7 +919,7 @@ const Conversations: React.FC = () => {
               );
             })()}
             {/* Translation feature is available via the translate button in messages */}
-            <div ref={messagesScrollRef} className="flex-1 min-h-0 overflow-y-auto px-6 py-4">
+            <div ref={messagesScrollRef} className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-6 py-4">
                   {loadingMessages ? (
                     <div className="text-center py-12 text-sm text-muted-foreground">
                       Loading messages...
@@ -1033,7 +1033,7 @@ const Conversations: React.FC = () => {
                           initial={isNewMessage ? "hidden" : false}
                           animate={isNewMessage ? "visible" : undefined}
                         >
-                          <div className={`flex items-start gap-2 max-w-[75%] ${isContinuation && !isUser ? 'ml-10' : ''}`}>
+                          <div className={`flex items-start gap-2 max-w-[75%] min-w-0 ${isContinuation && !isUser ? 'ml-10' : ''}`}>
                           {!isUser && !isContinuation && (
                               isHumanSent && msgMetadata?.sender_avatar ? (
                                 <img 
@@ -1053,7 +1053,7 @@ const Conversations: React.FC = () => {
                                 </div>
                               )
                             )}
-                            <div className="flex flex-col">
+                            <div className="flex flex-col min-w-0">
                               {/* Name + Timestamp header row - only show if !isContinuation */}
                               {!isContinuation && (
                                 <div className={`flex items-center gap-1.5 text-2xs text-muted-foreground mb-1 ${isUser ? 'justify-end mr-1' : 'ml-1'}`}>
