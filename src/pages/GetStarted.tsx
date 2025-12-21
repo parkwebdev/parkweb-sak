@@ -79,12 +79,11 @@ export const GetStarted: React.FC = () => {
         onComplete={handleCelebrationComplete} 
       />
       
-      <main className="flex-1 min-h-0 h-full overflow-y-auto bg-background">
-        <div className="max-w-5xl mx-auto">
+      <main className="flex-1 min-h-0 h-full overflow-y-auto bg-background flex items-center justify-center">
+        <div className="max-w-5xl mx-auto w-full">
           {/* Header */}
           <PageHeader
-            title={`Welcome, ${firstName} 👋`}
-            description={allComplete ? undefined : "Let's get Ari ready to help your customers."}
+            title="Get started with Ari, your AI sales agent"
           />
 
           {/* Checklist */}
