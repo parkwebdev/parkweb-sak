@@ -918,28 +918,7 @@ const Conversations: React.FC = () => {
                 </div>
               );
             })()}
-            {/* Translation Banner - show for non-English conversations */}
-            {(() => {
-              const convMetadata = (selectedConversation.metadata || {}) as ConversationMetadata;
-              const isNonEnglish = convMetadata.detected_language && convMetadata.detected_language_code !== 'en';
-              if (!isNonEnglish) return null;
-              return (
-                <div className="px-6 py-2 bg-muted/50 border-b flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <span>This conversation is in <strong>{convMetadata.detected_language}</strong></span>
-                  </div>
-                  <Button
-                    size="sm"
-                    variant={showTranslation ? "secondary" : "outline"}
-                    onClick={() => showTranslation ? setShowTranslation(false) : handleTranslate()}
-                    disabled={isTranslating}
-                  >
-                    <Translate01 size={14} className="mr-1.5" />
-                    {isTranslating ? 'Translating...' : showTranslation ? 'View Original' : 'Translate to English'}
-                  </Button>
-                </div>
-              );
-            })()}
+            {/* Translation feature is available via the translate button in messages */}
             <div ref={messagesScrollRef} className="flex-1 min-h-0 overflow-y-auto px-6 py-4">
                   {loadingMessages ? (
                     <div className="text-center py-12 text-sm text-muted-foreground">
