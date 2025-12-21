@@ -1369,6 +1369,7 @@ export type Database = {
           created_at: string
           display_name: string | null
           email: string | null
+          has_seen_onboarding_celebration: boolean | null
           id: string
           updated_at: string
           user_id: string
@@ -1378,6 +1379,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           email?: string | null
+          has_seen_onboarding_celebration?: boolean | null
           id?: string
           updated_at?: string
           user_id: string
@@ -1387,6 +1389,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           email?: string | null
+          has_seen_onboarding_celebration?: boolean | null
           id?: string
           updated_at?: string
           user_id?: string
