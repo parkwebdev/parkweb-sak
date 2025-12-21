@@ -58,7 +58,15 @@ export const createLeadsColumns = ({
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Phone" />
     ),
-    cell: ({ row }) => row.original.phone || '-',
+    cell: ({ row }) => {
+      // Check direct phone column first, then look in data JSONB for common phone field names
+      const directPhone = row.original.phone;
+      if (directPhone) return directPhone;
+      
+      const data = (row.original.data || {}) as Record<string, unknown>;
+      const phoneFromData = data['Phone Number'] || data['phone'] || data['Phone'] || data['phoneNumber'];
+      return phoneFromData ? String(phoneFromData) : '-';
+    },
   },
   {
     accessorKey: 'status',
