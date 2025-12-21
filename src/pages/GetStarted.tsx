@@ -23,6 +23,8 @@ import {
 import { PageHeader } from '@/components/ui/page-header';
 import { springs } from '@/lib/motion-variants';
 
+const CELEBRATION_SHOWN_KEY = 'onboarding_celebration_shown';
+
 export const GetStarted: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -37,16 +39,16 @@ export const GetStarted: React.FC = () => {
     isLoading,
   } = useOnboardingProgress();
 
-  // Get user's first name for greeting (capitalize first letter)
-  const rawName = user?.email?.split('@')[0] || 'there';
-  const firstName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
-
   /**
-   * Show celebration and redirect when all steps complete
+   * Show celebration only once when all steps complete for the first time
    */
   useEffect(() => {
     if (allComplete && !isLoading) {
-      setShowCelebration(true);
+      const alreadyShown = localStorage.getItem(CELEBRATION_SHOWN_KEY);
+      if (!alreadyShown) {
+        setShowCelebration(true);
+        localStorage.setItem(CELEBRATION_SHOWN_KEY, 'true');
+      }
     }
   }, [allComplete, isLoading]);
 
@@ -87,7 +89,7 @@ export const GetStarted: React.FC = () => {
           />
 
           {/* Checklist */}
-          <div className="px-4 lg:px-8 pb-8">
+          <div className="px-4 lg:px-8 pb-8 pt-6">
             <motion.div
               initial={prefersReducedMotion ? false : { opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
