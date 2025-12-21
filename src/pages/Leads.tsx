@@ -162,10 +162,10 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
         description="Track and manage leads captured from conversations"
         onMenuClick={onMenuClick}
       >
-        <Button variant="outline" onClick={handleExport} disabled={filteredLeads.length === 0}>
+        <Button variant="outline" size="sm" onClick={handleExport} disabled={filteredLeads.length === 0}>
           Export
         </Button>
-        <Button onClick={() => setIsCreateOpen(true)}>
+        <Button size="sm" onClick={() => setIsCreateOpen(true)}>
           Add Lead
         </Button>
       </PageHeader>
