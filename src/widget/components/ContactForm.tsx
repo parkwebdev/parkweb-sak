@@ -91,6 +91,10 @@ export const ContactForm = ({
       if (field.fieldType === 'checkbox') {
         // Store checkbox value as boolean
         customFieldData[field.label] = checkboxValues[field.id] || false;
+        // Also store the rich text content for display in lead details
+        if (field.richTextContent) {
+          customFieldData[`${field.label}_content`] = field.richTextContent;
+        }
       } else {
         const value = formData.get(field.id);
         if (value) {
