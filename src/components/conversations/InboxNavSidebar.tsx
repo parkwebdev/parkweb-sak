@@ -121,7 +121,7 @@ export function InboxNavSidebar({ activeFilter, onFilterChange, counts, searchQu
   return (
     <div className="w-48 border-r bg-background flex flex-col">
       {/* Header with Inbox title and search */}
-      <div className="p-3 border-b">
+      <div className="py-3 border-b">
         <div className="flex items-center justify-between px-3">
           {searchExpanded ? (
             <div className="flex-1 flex items-center gap-2">
