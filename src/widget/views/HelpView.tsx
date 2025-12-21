@@ -19,6 +19,7 @@ import { CSSAnimatedItem } from '../CSSAnimatedItem';
 import { CategoryIcon } from '../category-icons';
 import { submitArticleFeedback } from '../api';
 import { getSessionId } from '../utils';
+import { useSystemTheme } from '../hooks/useSystemTheme';
 import type { WidgetConfig } from '../api';
 
 // Lazy-load DOMPurify (~8KB savings from initial load)
@@ -69,6 +70,11 @@ export const HelpView = ({
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
   const [sanitizedContent, setSanitizedContent] = useState<string>('');
   const [isLoadingContent, setIsLoadingContent] = useState(false);
+  const systemTheme = useSystemTheme();
+
+  // Theme-aware colors: white in dark mode, primaryColor in light mode
+  const accentColor = systemTheme === 'dark' ? '#FFFFFF' : config.primaryColor;
+  const buttonTextColor = systemTheme === 'dark' ? '#000000' : '#FFFFFF';
 
   // Lazy-load and sanitize article content
   useEffect(() => {
@@ -374,7 +380,7 @@ export const HelpView = ({
                         setShowFeedbackComment(true);
                       }}
                       className="gap-1.5"
-                      style={articleFeedback === 'helpful' ? { backgroundColor: config.primaryColor } : undefined}
+                      style={articleFeedback === 'helpful' ? { backgroundColor: accentColor, color: buttonTextColor } : undefined}
                     >
                       <ThumbsUp className="h-4 w-4" />
                       Yes
@@ -387,7 +393,7 @@ export const HelpView = ({
                         setShowFeedbackComment(true);
                       }}
                       className="gap-1.5"
-                      style={articleFeedback === 'not_helpful' ? { backgroundColor: config.primaryColor } : undefined}
+                      style={articleFeedback === 'not_helpful' ? { backgroundColor: accentColor, color: buttonTextColor } : undefined}
                     >
                       <ThumbsDown className="h-4 w-4" />
                       No
@@ -407,7 +413,7 @@ export const HelpView = ({
                         size="sm"
                         onClick={handleSubmitFeedback}
                         className="w-full"
-                        style={{ backgroundColor: config.primaryColor }}
+                        style={{ backgroundColor: accentColor, color: buttonTextColor }}
                       >
                         Submit Feedback
                       </WidgetButton>

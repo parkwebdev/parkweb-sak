@@ -6,6 +6,7 @@
  */
 import { useState } from 'react';
 import { Star01, XClose } from '../icons';
+import { useSystemTheme } from '../hooks/useSystemTheme';
 
 interface SatisfactionRatingProps {
   conversationId: string;
@@ -27,6 +28,11 @@ export const SatisfactionRating = ({
   const [feedback, setFeedback] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const systemTheme = useSystemTheme();
+
+  // Theme-aware colors: white in dark mode, primaryColor in light mode
+  const accentColor = systemTheme === 'dark' ? '#FFFFFF' : primaryColor;
+  const buttonTextColor = systemTheme === 'dark' ? '#000000' : '#FFFFFF';
 
   const handleSubmit = async () => {
     if (rating === 0) return;
@@ -90,8 +96,8 @@ export const SatisfactionRating = ({
               <Star01
                 className="w-8 h-8 transition-colors"
                 style={{
-                  fill: star <= (hoveredRating || rating) ? primaryColor : 'transparent',
-                  stroke: star <= (hoveredRating || rating) ? primaryColor : 'hsl(var(--muted-foreground))',
+                  fill: star <= (hoveredRating || rating) ? accentColor : 'transparent',
+                  stroke: star <= (hoveredRating || rating) ? accentColor : 'hsl(var(--muted-foreground))',
                 }}
               />
             </button>
@@ -122,8 +128,8 @@ export const SatisfactionRating = ({
             <button
               onClick={handleSubmit}
               disabled={isSubmitting}
-              className="w-full py-2.5 px-4 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              style={{ backgroundColor: primaryColor }}
+              className="w-full py-2.5 px-4 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              style={{ backgroundColor: accentColor, color: buttonTextColor }}
             >
               {isSubmitting ? 'Submitting...' : 'Submit Feedback'}
             </button>
