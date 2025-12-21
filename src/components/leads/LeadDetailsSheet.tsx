@@ -125,12 +125,31 @@ export const LeadDetailsSheet = ({
 
   // Get consent content from custom data (look for related content field)
   const getConsentContent = (key: string, data: Record<string, unknown>): string | null => {
-    const contentKeys = [`${key}_content`, `${key}Content`, `${key}_text`, `${key}Text`, 'consent_content', 'consentContent'];
+    // Look for content stored with various naming patterns
+    const baseKey = key.toLowerCase().replace(/[_\s]/g, '');
+    const contentKeys = [
+      `${key}_content`, `${key}Content`, `${key}_text`, `${key}Text`,
+      `${key}_label`, `${key}Label`, `${key}_description`,
+      'consent_content', 'consentContent', 'consent_text', 'consentText',
+      'consent_label', 'consentLabel', 'checkbox_text', 'checkboxText'
+    ];
+    
     for (const contentKey of contentKeys) {
       if (data[contentKey] && typeof data[contentKey] === 'string') {
         return data[contentKey] as string;
       }
     }
+    
+    // Also check for any key that might contain consent text
+    for (const [dataKey, value] of Object.entries(data)) {
+      const normalizedKey = dataKey.toLowerCase().replace(/[_\s]/g, '');
+      if ((normalizedKey.includes('consent') || normalizedKey.includes(baseKey)) && 
+          (normalizedKey.includes('text') || normalizedKey.includes('content') || normalizedKey.includes('label')) &&
+          typeof value === 'string') {
+        return value;
+      }
+    }
+    
     return null;
   };
 
@@ -163,7 +182,7 @@ export const LeadDetailsSheet = ({
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <InfoCircle className="h-4 w-4 text-muted-foreground cursor-help" />
+                  <InfoCircle className="h-4 w-4 text-muted-foreground" />
                 </TooltipTrigger>
                 <TooltipContent side="top" className="max-w-xs">
                   <p className="text-sm">{consentContent || 'User agreed to the consent checkbox on the contact form.'}</p>
