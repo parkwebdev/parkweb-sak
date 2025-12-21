@@ -84,7 +84,7 @@ export const GetStarted: React.FC = () => {
           {/* Header */}
           <PageHeader
             title={`Welcome, ${firstName} 👋`}
-            description="Let's get Ari ready to help your customers."
+            description={allComplete ? undefined : "Let's get Ari ready to help your customers."}
           />
 
           {/* Checklist */}

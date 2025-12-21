@@ -40,47 +40,37 @@ export const SetupChecklist: React.FC<SetupChecklistProps> = ({
   // All complete state
   if (allComplete) {
     return (
-      <div className="space-y-4">
-        <SetupProgress
-          completedCount={completedCount}
-          totalCount={totalCount}
-        />
-
-        <div className="border border-border rounded-xl bg-card shadow-sm p-6">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-8 h-8 rounded-full bg-status-active/10 flex items-center justify-center">
-              <CheckCircle size={18} className="text-status-active" />
-            </div>
-            <span className="text-base font-medium text-foreground">All steps are complete</span>
+      <div className="border border-border rounded-xl bg-card shadow-sm p-6">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-8 h-8 rounded-full bg-status-active/10 flex items-center justify-center">
+            <CheckCircle size={18} className="text-status-active" />
           </div>
+          <span className="text-base font-medium text-foreground">What's next?</span>
+        </div>
 
-          <div className="space-y-3">
-            <h3 className="text-sm font-medium text-foreground">What's next?</h3>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              You're all set up! Explore more features or check out helpful resources to get the most out of Ari.
-            </p>
-            <div className="flex flex-wrap gap-2 pt-2">
-              <a 
-                href="https://docs.lovable.dev" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
-              >
-                Explore the Help Center
-                <ArrowUpRight size={14} />
-              </a>
-              <span className="text-muted-foreground">·</span>
-              <a 
-                href="https://lovable.dev/blog" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
-              >
-                Discover our blog
-                <ArrowUpRight size={14} />
-              </a>
-            </div>
-          </div>
+        <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+          You're all set up! Explore more features or check out helpful resources to get the most out of Ari.
+        </p>
+        <div className="flex flex-wrap gap-2">
+          <a 
+            href="https://docs.lovable.dev" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
+          >
+            Explore the Help Center
+            <ArrowUpRight size={14} />
+          </a>
+          <span className="text-muted-foreground">·</span>
+          <a 
+            href="https://lovable.dev/blog" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
+          >
+            Discover our blog
+            <ArrowUpRight size={14} />
+          </a>
         </div>
       </div>
     );
