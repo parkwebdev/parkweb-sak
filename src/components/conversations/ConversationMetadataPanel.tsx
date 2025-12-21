@@ -67,6 +67,16 @@ const getCustomFieldIcon = (fieldName: string) => {
   return File06;
 };
 
+// Convert ISO 3166-1 alpha-2 country code to emoji flag
+const countryCodeToFlag = (code: string): string => {
+  if (!code || code.length !== 2) return '';
+  return code
+    .toUpperCase()
+    .split('')
+    .map(char => String.fromCodePoint(127397 + char.charCodeAt(0)))
+    .join('');
+};
+
 import { formatDistanceToNow, format } from 'date-fns';
 import type { Tables } from '@/integrations/supabase/types';
 import { cn } from '@/lib/utils';
@@ -559,11 +569,9 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
                           {!metadata.city && !metadata.region && metadata.country}
                         </span>
                         {(metadata.country_code || getCountryCode(metadata.country)) && (
-                          <img 
-                            src={`https://flagcdn.com/${(metadata.country_code || getCountryCode(metadata.country))!.toLowerCase()}.svg`}
-                            alt={metadata.country_code || getCountryCode(metadata.country) || ''}
-                            className="h-3 w-auto flex-shrink-0"
-                          />
+                          <span className="text-sm flex-shrink-0" role="img" aria-label={metadata.country || ''}>
+                            {countryCodeToFlag((metadata.country_code || getCountryCode(metadata.country))!)}
+                          </span>
                         )}
                       </div>
                     </TooltipTrigger>
