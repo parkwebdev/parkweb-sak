@@ -45,13 +45,22 @@ export const LeadDetailsSheet = ({
     setEditedCustomData({});
   }, [lead?.id]);
 
-  // Get custom fields from lead.data (excluding internal tracking fields and name fields handled above)
+  // Check if phone exists in custom data
+  const hasCustomPhone = useMemo(() => {
+    if (!lead) return false;
+    const data = (lead.data || {}) as Record<string, unknown>;
+    const phoneKeys = ['phone', 'Phone', 'phone_number', 'phoneNumber', 'telephone', 'mobile'];
+    return phoneKeys.some(key => key in data && data[key]);
+  }, [lead]);
+
+  // Get custom fields from lead.data (excluding internal tracking fields, name fields, and phone fields)
   const customFields = useMemo(() => {
     if (!lead) return [];
     const data = (lead.data || {}) as Record<string, unknown>;
     const excludedFields = [
       'source', 'referrer', 'page_url', 'visitor_id',
-      'first_name', 'firstName', 'last_name', 'lastName', 'name', 'full_name', 'fullName'
+      'first_name', 'firstName', 'last_name', 'lastName', 'name', 'full_name', 'fullName',
+      'phone', 'Phone', 'phone_number', 'phoneNumber', 'telephone', 'mobile'
     ];
     return Object.entries(data).filter(([key]) => !excludedFields.includes(key));
   }, [lead]);
@@ -211,24 +220,37 @@ export const LeadDetailsSheet = ({
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={{ ...lead, ...editedLead }.email || ''}
-                    onChange={(e) => setEditedLead({ ...editedLead, email: e.target.value })}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Phone</Label>
-                  <PhoneInputField
-                    name="phone"
-                    value={{ ...lead, ...editedLead }.phone || ''}
-                    onChange={(phone) => setEditedLead({ ...editedLead, phone })}
-                  />
-                </div>
+                {hasCustomPhone ? (
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={{ ...lead, ...editedLead }.email || ''}
+                        onChange={(e) => setEditedLead({ ...editedLead, email: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="phone">Phone</Label>
+                      <PhoneInputField
+                        name="phone"
+                        value={{ ...lead, ...editedLead }.phone || ''}
+                        onChange={(phone) => setEditedLead({ ...editedLead, phone })}
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={{ ...lead, ...editedLead }.email || ''}
+                      onChange={(e) => setEditedLead({ ...editedLead, email: e.target.value })}
+                    />
+                  </div>
+                )}
               </div>
 
               {/* Dynamic Custom Fields */}
