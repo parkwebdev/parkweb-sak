@@ -20,6 +20,7 @@ import {
   GoFurtherSection,
   CompletionCelebration,
 } from '@/components/onboarding';
+import { PageHeader } from '@/components/ui/page-header';
 import { springs } from '@/lib/motion-variants';
 
 export const GetStarted: React.FC = () => {
@@ -79,38 +80,31 @@ export const GetStarted: React.FC = () => {
       />
       
       <main className="flex-1 min-h-0 h-full overflow-y-auto bg-background">
-        <div className="max-w-5xl mx-auto px-6 py-8 lg:py-12">
+        <div className="max-w-5xl mx-auto">
           {/* Header */}
-          <motion.header 
-            className="mb-6"
-            initial={prefersReducedMotion ? false : { opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={springs.smooth}
-          >
-            <h1 className="text-xl font-semibold text-foreground">
-              Welcome, {firstName} 👋
-            </h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              Let's get Ari ready to help your customers.
-            </p>
-          </motion.header>
+          <PageHeader
+            title={`Welcome, ${firstName} 👋`}
+            description="Let's get Ari ready to help your customers."
+          />
 
           {/* Checklist */}
-          <motion.div
-            initial={prefersReducedMotion ? false : { opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1, ...springs.smooth }}
-          >
-            <SetupChecklist
-              steps={steps}
-              completedCount={completedCount}
-              totalCount={totalCount}
-              onStepAction={handleStepAction}
-            />
-          </motion.div>
+          <div className="px-4 lg:px-8 pb-8">
+            <motion.div
+              initial={prefersReducedMotion ? false : { opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1, ...springs.smooth }}
+            >
+              <SetupChecklist
+                steps={steps}
+                completedCount={completedCount}
+                totalCount={totalCount}
+                onStepAction={handleStepAction}
+              />
+            </motion.div>
 
-          {/* Go Further section */}
-          <GoFurtherSection />
+            {/* Go Further section */}
+            <GoFurtherSection />
+          </div>
         </div>
       </main>
     </>
