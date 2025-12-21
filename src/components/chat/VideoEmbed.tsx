@@ -1,5 +1,8 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { PlayCircle } from '@untitledui/icons';
+
+// YouTube thumbnail resolutions in priority order (highest to lowest)
+const YOUTUBE_THUMBNAILS = ['maxresdefault', 'sddefault', 'hqdefault', 'mqdefault', 'default'];
 
 interface VideoEmbedProps {
   embedUrl: string;
@@ -11,24 +14,33 @@ interface VideoEmbedProps {
 
 export function VideoEmbed({ embedUrl, videoType, title, thumbnail, compact = false }: VideoEmbedProps) {
   const [showPlayer, setShowPlayer] = useState(false);
-  const [thumbnailError, setThumbnailError] = useState(false);
+  const [fallbackIndex, setFallbackIndex] = useState(0);
 
-  // Generate platform-specific thumbnail if not provided
-  const getThumbnail = (): string | undefined => {
-    if (thumbnail && !thumbnailError) return thumbnail;
-    
-    // Extract video ID from embed URL for fallback thumbnails
+  // Extract YouTube video ID once
+  const youtubeVideoId = useMemo(() => {
     if (videoType === 'youtube') {
       const match = embedUrl.match(/\/embed\/([^?]+)/);
-      if (match) {
-        return `https://img.youtube.com/vi/${match[1]}/hqdefault.jpg`;
-      }
+      return match ? match[1] : null;
+    }
+    return null;
+  }, [embedUrl, videoType]);
+
+  // Progressive thumbnail with fallback
+  const displayThumbnail = useMemo(() => {
+    // If provided thumbnail hasn't failed yet, use it
+    if (thumbnail && fallbackIndex === 0) return thumbnail;
+    
+    // YouTube progressive fallback
+    if (youtubeVideoId && fallbackIndex < YOUTUBE_THUMBNAILS.length) {
+      return `https://i.ytimg.com/vi/${youtubeVideoId}/${YOUTUBE_THUMBNAILS[fallbackIndex]}.jpg`;
     }
     
-    return undefined;
-  };
+    return undefined; // Show placeholder, not broken image
+  }, [thumbnail, fallbackIndex, youtubeVideoId]);
 
-  const displayThumbnail = getThumbnail();
+  const handleImageError = () => {
+    setFallbackIndex(prev => prev + 1);
+  };
 
   // Click-to-play pattern: Show thumbnail with play button first
   if (!showPlayer) {
@@ -42,7 +54,7 @@ export function VideoEmbed({ embedUrl, videoType, title, thumbnail, compact = fa
             src={displayThumbnail} 
             alt={title || 'Video thumbnail'}
             className="w-full h-full object-cover transition-opacity duration-300"
-            onError={() => setThumbnailError(true)}
+            onError={handleImageError}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-muted">
