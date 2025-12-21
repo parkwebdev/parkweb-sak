@@ -20,9 +20,60 @@ import {
   GoFurtherSection,
   CompletionCelebration,
 } from '@/components/onboarding';
-import { PageHeader } from '@/components/ui/page-header';
 import { springs } from '@/lib/motion-variants';
 import { supabase } from '@/integrations/supabase/client';
+
+/**
+ * Circular progress indicator matching sidebar style
+ */
+const ProgressCircle: React.FC<{ completedCount: number; totalCount: number }> = ({
+  completedCount,
+  totalCount,
+}) => {
+  const isAllComplete = completedCount === totalCount;
+  const progress = totalCount > 0 ? completedCount / totalCount : 0;
+  const circumference = 2 * Math.PI * 6;
+  const strokeDashoffset = circumference * (1 - progress);
+
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" className="flex-shrink-0">
+      <circle
+        cx="8"
+        cy="8"
+        r="6"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        className="text-muted-foreground/30"
+      />
+      <circle
+        cx="8"
+        cy="8"
+        r="6"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        className="text-status-active"
+        strokeDasharray={circumference}
+        strokeDashoffset={strokeDashoffset}
+        transform="rotate(-90 8 8)"
+        style={{ transition: 'stroke-dashoffset 0.3s ease' }}
+      />
+      {isAllComplete && (
+        <path
+          d="M5 8l2 2 4-4"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="text-status-active"
+        />
+      )}
+    </svg>
+  );
+};
 
 export const GetStarted: React.FC = () => {
   const navigate = useNavigate();
@@ -100,9 +151,24 @@ export const GetStarted: React.FC = () => {
       <main className="flex-1 min-h-0 h-full overflow-y-auto bg-background flex items-center justify-center">
         <div className="max-w-5xl mx-auto w-full">
           {/* Header */}
-          <PageHeader
-            title="Get started with Ari, your AI sales agent"
-          />
+          <header className="w-full font-medium pt-4 lg:pt-8">
+            <div className="items-stretch flex w-full flex-col gap-2 px-4 lg:px-8 py-0">
+              <h1 className="text-3xl font-bold text-foreground">
+                Get started with Ari, your AI sales agent
+              </h1>
+              {/* Progress subheader */}
+              <div className="flex items-center gap-2 text-sm">
+                <ProgressCircle completedCount={completedCount} totalCount={totalCount} />
+                <span className="text-muted-foreground">
+                  {allComplete ? 'Completed' : 'Progress'}
+                </span>
+                <span className="text-muted-foreground">•</span>
+                <span className="text-muted-foreground">
+                  {completedCount}/{totalCount} steps
+                </span>
+              </div>
+            </div>
+          </header>
 
           {/* Checklist */}
           <div className="px-4 lg:px-8 pb-8 pt-6">
