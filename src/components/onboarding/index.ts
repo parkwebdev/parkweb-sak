@@ -15,3 +15,4 @@ export { InviteTeamInline } from './InviteTeamInline';
 export { KeyboardShortcutsCard } from './KeyboardShortcutsCard';
 export { NextLevelVideoSection } from './NextLevelVideoSection';
 export { SetupFeedback } from './SetupFeedback';
+export { SetupFeedbackToast } from './SetupFeedbackToast';

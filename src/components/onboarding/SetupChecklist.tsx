@@ -13,10 +13,8 @@ import { motion } from 'motion/react';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { SetupProgress } from './SetupProgress';
 import { VideoPlaceholder } from './VideoPlaceholder';
-import { QuickStatsSummary } from './QuickStatsSummary';
 import { InviteTeamInline } from './InviteTeamInline';
-import { KeyboardShortcutsCard } from './KeyboardShortcutsCard';
-import { SetupFeedback } from './SetupFeedback';
+import { SetupFeedbackToast } from './SetupFeedbackToast';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { PlayIcon } from '@/components/icons/PlayIcon';
@@ -67,7 +65,7 @@ export const SetupChecklist: React.FC<SetupChecklistProps> = ({
   // All complete state - enhanced version
   if (allComplete) {
     return (
-      <div className="space-y-4">
+      <>
         {/* What's next card - contains video, links, and invite */}
         <div className="border border-border rounded-xl bg-card shadow-sm p-6">
           {/* Two-column layout: content left, video right */}
@@ -130,15 +128,9 @@ export const SetupChecklist: React.FC<SetupChecklistProps> = ({
           </div>
         </div>
 
-        {/* Quick Stats Summary */}
-        <QuickStatsSummary />
-
-        {/* Keyboard Shortcuts */}
-        <KeyboardShortcutsCard />
-
-        {/* Feedback/NPS Prompt */}
-        <SetupFeedback hasRated={hasRated} />
-      </div>
+        {/* Floating feedback toast */}
+        <SetupFeedbackToast hasRated={hasRated} />
+      </>
     );
   }
 
