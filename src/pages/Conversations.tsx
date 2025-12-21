@@ -932,7 +932,7 @@ const Conversations: React.FC = () => {
                       </div>
                     </div>
                   ) : (
-                  <div className="space-y-3 max-w-4xl mx-auto">
+                  <div className="space-y-3 max-w-4xl mx-auto w-full">
                     {messages
                       .filter(msg => {
                         const meta = (msg.metadata || {}) as Record<string, unknown>;
@@ -1053,7 +1053,7 @@ const Conversations: React.FC = () => {
                                 </div>
                               )
                             )}
-                            <div className="flex flex-col min-w-0">
+                            <div className="flex flex-col min-w-0 overflow-hidden">
                               {/* Name + Timestamp header row - only show if !isContinuation */}
                               {!isContinuation && (
                                 <div className={`flex items-center gap-1.5 text-2xs text-muted-foreground mb-1 ${isUser ? 'justify-end mr-1' : 'ml-1'}`}>
@@ -1154,8 +1154,8 @@ const Conversations: React.FC = () => {
                                 )}
                                 {/* Regular text content - show translation if available */}
                                 {message.content && message.content !== 'Sent files' && (
-                                  <div className="min-w-0 overflow-hidden">
-                                    <p className="text-sm whitespace-pre-wrap leading-relaxed break-words">
+                                  <div className="min-w-0 overflow-hidden w-full">
+                                    <p className="text-sm whitespace-pre-wrap leading-relaxed break-all">
                                       {showTranslation && translatedMessages[message.id] 
                                         ? formatMarkdownBullets(translatedMessages[message.id])
                                         : formatMarkdownBullets(message.content)}
