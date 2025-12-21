@@ -42,7 +42,35 @@ import { AnimatedItem } from '@/components/ui/animated-item';
 import { logger } from '@/utils/logger';
 
 // Add visual variance to sparse data for interesting sparkline curves
-const ensureVisualVariance = (trend: number[]): number[] => {
+// Ensures a minimum of 7 data points for smooth rendering
+const ensureVisualVariance = (trend: number[], minPoints: number = 7): number[] => {
+  // If we have no data, create a baseline curve
+  if (trend.length === 0) {
+    return Array.from({ length: minPoints }, (_, i) => {
+      const progress = i / (minPoints - 1);
+      return Math.sin(progress * Math.PI) * 0.3 + 0.2;
+    });
+  }
+  
+  // If we have fewer points than minimum, interpolate/extend
+  if (trend.length < minPoints) {
+    const actualValue = trend[trend.length - 1] || 1;
+    const result: number[] = [];
+    
+    for (let i = 0; i < minPoints; i++) {
+      const progress = i / (minPoints - 1);
+      // Create a gentle wave leading up to the actual value
+      const wave = Math.sin(progress * Math.PI * 0.8) * 0.3;
+      const growth = progress * 0.5;
+      const baseValue = Math.max(0.1, actualValue * (0.3 + wave + growth));
+      result.push(baseValue);
+    }
+    // Ensure last point reflects the actual value
+    result[minPoints - 1] = Math.max(0.1, actualValue);
+    return result;
+  }
+  
+  // Existing logic for when we have enough points
   const allZero = trend.every(v => v === 0);
   const allSame = trend.every(v => v === trend[0]);
   
@@ -56,6 +84,7 @@ const ensureVisualVariance = (trend: number[]): number[] => {
     });
   }
   
+  // Amplify small variance
   const max = Math.max(...trend);
   const min = Math.min(...trend);
   if (max > 0 && (max - min) / max < 0.2) {
