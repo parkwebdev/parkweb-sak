@@ -8,13 +8,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
 import { PhoneInputField } from '@/components/ui/phone-input';
 import { Trash02, Save01, LinkExternal02 } from '@untitledui/icons';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
-import type { Tables, Enums } from '@/integrations/supabase/types';
+import type { Tables, Enums, Json } from '@/integrations/supabase/types';
 import { LeadStatusDropdown } from './LeadStatusDropdown';
 
 interface LeadDetailsSheetProps {
@@ -32,15 +33,28 @@ export const LeadDetailsSheet = ({
   onUpdate,
   onDelete,
 }: LeadDetailsSheetProps) => {
+  const navigate = useNavigate();
   const [editedLead, setEditedLead] = useState<Partial<Tables<'leads'>>>({});
+  const [editedCustomData, setEditedCustomData] = useState<Record<string, unknown>>({});
   const [isSaving, setIsSaving] = useState(false);
 
   if (!lead) return null;
 
   const handleSave = async () => {
     setIsSaving(true);
-    await onUpdate(lead.id, editedLead);
+    
+    // Merge custom data edits into the lead.data JSONB
+    const currentData = (lead.data || {}) as Record<string, unknown>;
+    const mergedData = { ...currentData, ...editedCustomData };
+    
+    const updates: Partial<Tables<'leads'>> = {
+      ...editedLead,
+      ...(Object.keys(editedCustomData).length > 0 ? { data: mergedData as Json } : {}),
+    };
+    
+    await onUpdate(lead.id, updates);
     setEditedLead({});
+    setEditedCustomData({});
     setIsSaving(false);
   };
 
@@ -48,7 +62,79 @@ export const LeadDetailsSheet = ({
     onDelete(lead.id);
   };
 
+  const handleViewConversation = () => {
+    if (lead.conversation_id) {
+      onOpenChange(false);
+      navigate(`/conversations?id=${lead.conversation_id}`);
+    }
+  };
+
+  // Get custom fields from lead.data (excluding internal tracking fields)
+  const customFields = useMemo(() => {
+    const data = (lead.data || {}) as Record<string, unknown>;
+    // Filter out any internal fields we don't want to show
+    const internalFields = ['source', 'referrer', 'page_url', 'visitor_id'];
+    return Object.entries(data).filter(([key]) => !internalFields.includes(key));
+  }, [lead.data]);
+
   const currentData = { ...lead, ...editedLead };
+  const currentCustomData = { ...((lead.data || {}) as Record<string, unknown>), ...editedCustomData };
+
+  const hasChanges = Object.keys(editedLead).length > 0 || Object.keys(editedCustomData).length > 0;
+
+  // Helper to format field label from key
+  const formatLabel = (key: string): string => {
+    return key
+      .replace(/_/g, ' ')
+      .replace(/([A-Z])/g, ' $1')
+      .replace(/^./, str => str.toUpperCase())
+      .trim();
+  };
+
+  // Render input based on value type
+  const renderCustomFieldInput = (key: string, value: unknown) => {
+    const currentValue = currentCustomData[key] ?? value;
+    
+    if (typeof value === 'boolean' || typeof currentValue === 'boolean') {
+      return (
+        <div className="flex items-center justify-between">
+          <Label htmlFor={key}>{formatLabel(key)}</Label>
+          <Switch
+            id={key}
+            checked={Boolean(currentValue)}
+            onCheckedChange={(checked) => setEditedCustomData({ ...editedCustomData, [key]: checked })}
+          />
+        </div>
+      );
+    }
+    
+    // Check if it's a long text (textarea)
+    const strValue = String(currentValue || '');
+    if (strValue.length > 100) {
+      return (
+        <div className="space-y-2">
+          <Label htmlFor={key}>{formatLabel(key)}</Label>
+          <Textarea
+            id={key}
+            value={strValue}
+            onChange={(e) => setEditedCustomData({ ...editedCustomData, [key]: e.target.value })}
+            rows={3}
+          />
+        </div>
+      );
+    }
+    
+    return (
+      <div className="space-y-2">
+        <Label htmlFor={key}>{formatLabel(key)}</Label>
+        <Input
+          id={key}
+          value={strValue}
+          onChange={(e) => setEditedCustomData({ ...editedCustomData, [key]: e.target.value })}
+        />
+      </div>
+    );
+  };
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -66,9 +152,9 @@ export const LeadDetailsSheet = ({
         </SheetHeader>
 
         <div className="space-y-6 py-6">
-          {/* Basic Information */}
+          {/* Contact Information - Core fields always shown */}
           <div className="space-y-4">
-            <h3 className="font-semibold">Basic Information</h3>
+            <h3 className="font-semibold">Contact Information</h3>
             
             <div className="space-y-2">
               <Label htmlFor="name">Name</Label>
@@ -97,42 +183,26 @@ export const LeadDetailsSheet = ({
                 onChange={(phone) => setEditedLead({ ...editedLead, phone })}
               />
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="company">Company</Label>
-              <Input
-                id="company"
-                value={currentData.company || ''}
-                onChange={(e) => setEditedLead({ ...editedLead, company: e.target.value })}
-              />
-            </div>
           </div>
 
-          <Separator />
-
-          {/* Additional Data */}
-          {currentData.data && Object.keys(currentData.data as object).length > 0 && (
+          {/* Dynamic Custom Fields - Only show if there are custom fields */}
+          {customFields.length > 0 && (
             <>
+              <Separator />
               <div className="space-y-4">
                 <h3 className="font-semibold">Additional Information</h3>
-                <div className="space-y-2 text-sm">
-                  {Object.entries(currentData.data as object).map(([key, value]) => (
-                    <div key={key} className="flex justify-between">
-                      <span className="text-muted-foreground capitalize">
-                        {key.replace(/_/g, ' ')}:
-                      </span>
-                      <span className="font-medium">
-                        {typeof value === 'boolean' ? (value ? 'Yes' : 'No') : String(value)}
-                      </span>
-                    </div>
-                  ))}
-                </div>
+                {customFields.map(([key, value]) => (
+                  <div key={key}>
+                    {renderCustomFieldInput(key, value)}
+                  </div>
+                ))}
               </div>
-              <Separator />
             </>
           )}
 
-          {/* Metadata */}
+          <Separator />
+
+          {/* Timeline */}
           <div className="space-y-4">
             <h3 className="font-semibold">Timeline</h3>
             <div className="space-y-2 text-sm">
@@ -152,11 +222,9 @@ export const LeadDetailsSheet = ({
               <Separator />
               <div className="space-y-2">
                 <h3 className="font-semibold">Related Conversation</h3>
-                <Button variant="outline" className="w-full" asChild>
-                  <a href={`/conversations?id=${lead.conversation_id}`}>
-                    <LinkExternal02 className="h-4 w-4 mr-2" />
-                    View Conversation
-                  </a>
+                <Button variant="outline" className="w-full" onClick={handleViewConversation}>
+                  <LinkExternal02 className="h-4 w-4 mr-2" />
+                  View Conversation
                 </Button>
               </div>
             </>
@@ -166,7 +234,7 @@ export const LeadDetailsSheet = ({
           <div className="flex gap-2 pt-4">
             <Button
               onClick={handleSave}
-              disabled={isSaving || Object.keys(editedLead).length === 0}
+              disabled={isSaving || !hasChanges}
               className="flex-1"
             >
               <Save01 className="h-4 w-4 mr-2" />
