@@ -9,6 +9,7 @@
  */
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'motion/react';
@@ -78,6 +79,7 @@ async function updateMessageReaction(
 
 const Conversations: React.FC = () => {
   const { user } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   const prefersReducedMotion = useReducedMotion();
   const {
     conversations, 
@@ -382,6 +384,19 @@ const Conversations: React.FC = () => {
       supabase.removeChannel(channel);
     };
   }, [selectedConversation?.id]);
+
+  // Handle conversation ID from URL query param (e.g., from "View Conversation" in leads)
+  useEffect(() => {
+    const conversationIdFromUrl = searchParams.get('id');
+    if (conversationIdFromUrl && conversations.length > 0 && !loading) {
+      const conv = conversations.find(c => c.id === conversationIdFromUrl);
+      if (conv) {
+        setSelectedConversation(conv);
+        // Clear the query param after selecting
+        setSearchParams({}, { replace: true });
+      }
+    }
+  }, [searchParams, conversations, loading]);
 
   // Update selected conversation when conversations list updates
   useEffect(() => {
