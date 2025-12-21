@@ -750,7 +750,7 @@ const Conversations: React.FC = () => {
         }`}
       >
         {/* Header */}
-        <div className={`border-b shrink-0 ${conversationsCollapsed ? 'p-2' : 'p-4 pb-3'}`}>
+        <div className={`border-b shrink-0 ${conversationsCollapsed ? 'py-3 px-2' : 'p-4 pb-3'}`}>
           <div className="flex items-center justify-between">
             {!conversationsCollapsed && (
               <h2 className="text-lg font-semibold text-foreground">{activeFilter.label}</h2>
