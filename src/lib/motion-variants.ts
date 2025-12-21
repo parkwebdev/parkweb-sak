@@ -397,12 +397,3 @@ export function getVariants(
   return prefersReducedMotion ? reducedVariants : normalVariants;
 }
 
-/**
- * Get appropriate transition based on reduced motion preference
- */
-export function getTransition(
-  normalTransition: Transition,
-  prefersReducedMotion: boolean
-): Transition {
-  return prefersReducedMotion ? { duration: 0 } : normalTransition;
-}
