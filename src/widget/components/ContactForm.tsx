@@ -13,6 +13,7 @@ import { WidgetSelect, WidgetSelectTrigger, WidgetSelectValue, WidgetSelectConte
 import { Textarea } from '@/components/ui/textarea';
 import { PhoneInputField } from '../constants';
 import { createLead } from '../api';
+import { useSystemTheme } from '../hooks/useSystemTheme';
 import type { ChatUser } from '../types';
 
 /** Custom field configuration */
@@ -66,6 +67,11 @@ export const ContactForm = ({
 }: ContactFormProps) => {
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [checkboxValues, setCheckboxValues] = useState<Record<string, boolean>>({});
+  const systemTheme = useSystemTheme();
+
+  // Theme-aware colors: white in dark mode, primaryColor in light mode
+  const buttonBgColor = systemTheme === 'dark' ? '#FFFFFF' : primaryColor;
+  const buttonTextColor = systemTheme === 'dark' ? '#000000' : '#FFFFFF';
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
@@ -215,7 +221,7 @@ export const ContactForm = ({
             </div>
           ))}
           
-          <WidgetButton type="submit" size="default" className="w-full text-white" style={{ backgroundColor: primaryColor }}>
+          <WidgetButton type="submit" size="default" className="w-full" style={{ backgroundColor: buttonBgColor, color: buttonTextColor }}>
             Start Chat
           </WidgetButton>
         </form>
