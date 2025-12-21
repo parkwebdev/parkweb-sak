@@ -42,6 +42,7 @@ import {
   Hash01,
   Browser,
   ClockStopwatch,
+  Flag01,
 } from '@untitledui/icons';
 import { toast } from 'sonner';
 
@@ -484,7 +485,7 @@ export const ConversationMetadataPanel: React.FC<ConversationMetadataPanelProps>
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <div className="flex items-center gap-2.5 text-sm">
-                            <Globe01 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                            <Flag01 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                             <span className="text-muted-foreground">Language</span>
                             <Badge variant="outline" className="text-xs">
                               {metadata.detected_language}
