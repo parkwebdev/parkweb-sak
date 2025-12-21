@@ -2132,11 +2132,21 @@ async function getCachedEmbedding(supabase: any, queryHash: string, agentId: str
     .then(() => {})
     .catch(() => {});
   
-  // Parse embedding string to array
+  // Parse embedding string to array - FIXED to handle scientific notation properly
   try {
     const embeddingStr = data.embedding as string;
-    const matches = embeddingStr.match(/[\d.-]+/g);
-    return matches ? matches.map(Number) : null;
+    // Remove brackets and split by comma - handles scientific notation like 1.23e-05
+    const cleaned = embeddingStr.replace(/^\[|\]$/g, '');
+    const values = cleaned.split(',').map(v => parseFloat(v.trim()));
+    
+    // Validate we got the expected 1024 dimensions
+    if (values.length !== 1024) {
+      console.error(`Cached embedding has wrong dimensions: ${values.length}, expected 1024`);
+      return null;
+    }
+    
+    console.log(`Embedding CACHE HIT - retrieved ${values.length} dimensions`);
+    return values;
   } catch {
     return null;
   }
@@ -3745,7 +3755,8 @@ NEVER mark complete when:
           const userSignal = toolArgs.user_signal || '';
           
           // Intercom-style: Explicit farewell patterns that can trigger completion with fewer exchanges
-          const EXPLICIT_FAREWELL_PATTERNS = /\b(goodbye|bye|thanks[\s,!.]+that'?s?\s*(all|it|perfect|great|exactly|what i needed)|have a (great|good|nice) (day|one)|take care|perfect[\s,!.]+thank|got (it|what i needed)|all set|that answers|you'?ve been (very )?helpful|that'?s? (all|exactly|perfect|great)|i'?m (all )?set)\b/i;
+          // Includes contextual dismissals like "no", "nope", "nothing else" for "anything else?" responses
+          const EXPLICIT_FAREWELL_PATTERNS = /\b(goodbye|bye|no(\s+(thanks?|thank you))?|nope|nothing(\s+else)?|not (right now|at the moment|at this time)|thanks[\s,!.]+that'?s?\s*(all|it|perfect|great|exactly|what i needed)|have a (great|good|nice) (day|one)|take care|perfect[\s,!.]+thank|got (it|what i needed)|all set|that answers|you'?ve been (very )?helpful|that'?s? (all|exactly|perfect|great)|i'?m (all )?set)\b/i;
           
           const hasExplicitFarewell = EXPLICIT_FAREWELL_PATTERNS.test(userSignal);
           const meetsMinimumExchanges = userMessageCount >= 1; // At least 1 exchange for farewell path
