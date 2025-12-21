@@ -60,12 +60,26 @@ const FeatureCardItem: React.FC<{ card: FeatureCard; index: number; prefersReduc
   const [isHovered, setIsHovered] = useState(false);
   const Icon = isHovered ? card.activeIcon : card.icon;
 
+  const itemVariants = {
+    hidden: { opacity: 0, y: 15 },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: { 
+        type: 'spring' as const, 
+        stiffness: 300, 
+        damping: 24,
+        delay: index * 0.05
+      }
+    },
+  };
+
   return (
     <motion.div
       key={card.id}
-      initial={prefersReducedMotion ? false : { opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.3 + index * 0.05, ...springs.smooth }}
+      variants={itemVariants}
+      whileHover={prefersReducedMotion ? {} : { y: -2, scale: 1.02 }}
+      whileTap={prefersReducedMotion ? {} : { scale: 0.98 }}
     >
       <Link
         to={card.route}
@@ -74,7 +88,13 @@ const FeatureCardItem: React.FC<{ card: FeatureCard; index: number; prefersReduc
         onMouseLeave={() => setIsHovered(false)}
       >
         <div className="flex items-center gap-2">
-          <Icon size={16} className="text-muted-foreground group-hover:text-foreground transition-colors" />
+          <motion.div
+            initial={false}
+            animate={isHovered ? { scale: 1.1 } : { scale: 1 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+          >
+            <Icon size={16} className="text-muted-foreground group-hover:text-foreground transition-colors" />
+          </motion.div>
           <span className="text-sm font-medium text-foreground">{card.title}</span>
         </div>
         <p className="text-xs text-muted-foreground mt-1">
@@ -88,9 +108,39 @@ const FeatureCardItem: React.FC<{ card: FeatureCard; index: number; prefersReduc
 export const GoFurtherSection: React.FC = () => {
   const prefersReducedMotion = useReducedMotion();
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.08,
+        delayChildren: 0.2,
+      },
+    },
+  } as const;
+
+  const headerVariants = {
+    hidden: { opacity: 0, y: 10 },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: { type: 'spring' as const, stiffness: 300, damping: 24 }
+    },
+  };
+
   return (
-    <section className="mt-10 space-y-3">
-      <h2 className="text-sm font-medium text-muted-foreground">Go further</h2>
+    <motion.section 
+      initial={prefersReducedMotion ? false : "hidden"}
+      animate="visible"
+      variants={containerVariants}
+      className="mt-10 space-y-3"
+    >
+      <motion.h2 
+        variants={headerVariants}
+        className="text-sm font-medium text-muted-foreground"
+      >
+        Go further
+      </motion.h2>
       
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {FEATURE_CARDS.map((card, index) => (
@@ -102,6 +152,6 @@ export const GoFurtherSection: React.FC = () => {
           />
         ))}
       </div>
-    </section>
+    </motion.section>
   );
 };
