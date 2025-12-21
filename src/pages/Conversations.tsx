@@ -1154,8 +1154,8 @@ const Conversations: React.FC = () => {
                                 )}
                                 {/* Regular text content - show translation if available */}
                                 {message.content && message.content !== 'Sent files' && (
-                                  <div>
-                                    <p className="text-sm whitespace-pre-wrap leading-relaxed">
+                                  <div className="min-w-0 overflow-hidden">
+                                    <p className="text-sm whitespace-pre-wrap leading-relaxed break-words">
                                       {showTranslation && translatedMessages[message.id] 
                                         ? formatMarkdownBullets(translatedMessages[message.id])
                                         : formatMarkdownBullets(message.content)}
