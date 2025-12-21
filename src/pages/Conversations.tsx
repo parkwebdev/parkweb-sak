@@ -1099,7 +1099,7 @@ const Conversations: React.FC = () => {
                               )}
                               {/* Message bubble - content only */}
                               <div
-                                className={`rounded-lg px-3 py-2 text-foreground ${isUser ? '' : 'bg-muted'}`}
+                                className={`rounded-lg px-3 py-2 text-foreground overflow-hidden min-w-0 ${isUser ? '' : 'bg-muted'}`}
                                 style={isUser ? { backgroundColor: 'rgb(1 110 237 / 7%)' } : undefined}
                               >
                                 {/* Check for file attachments in metadata */}

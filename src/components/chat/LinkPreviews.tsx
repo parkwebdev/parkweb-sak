@@ -121,16 +121,16 @@ export function LinkPreviews({ content, compact = false, cachedPreviews }: LinkP
 
   // Multiple previews: carousel mode
   return (
-    <div className="relative max-w-full min-w-0">
+    <div className="relative w-full max-w-full min-w-0 overflow-hidden">
       {/* Carousel container with scroll snap */}
       <div 
         ref={carouselRef}
         onScroll={handleScroll}
-        className="flex max-w-full min-w-0 overflow-x-auto snap-x snap-mandatory gap-2 pb-1"
+        className="flex w-full max-w-full min-w-0 overflow-x-auto snap-x snap-mandatory gap-2 pb-1"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         {displayPreviews.map((preview, i) => (
-          <div key={i} className="snap-center shrink-0 w-full">
+          <div key={i} className="snap-center shrink-0" style={{ width: '100%' }}>
             <LinkPreviewCard data={preview} compact={compact} />
           </div>
         ))}
