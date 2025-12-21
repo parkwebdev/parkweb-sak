@@ -7,14 +7,21 @@
  * @module components/onboarding/SetupChecklist
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ArrowUpRight } from '@untitledui/icons';
 import { motion } from 'motion/react';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { SetupProgress } from './SetupProgress';
 import { VideoPlaceholder } from './VideoPlaceholder';
+import { QuickStatsSummary } from './QuickStatsSummary';
+import { InviteTeamCard } from './InviteTeamCard';
+import { KeyboardShortcutsCard } from './KeyboardShortcutsCard';
+import { NextLevelVideoSection } from './NextLevelVideoSection';
+import { SetupFeedback } from './SetupFeedback';
 import { Button } from '@/components/ui/button';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import type { OnboardingStep } from '@/hooks/useOnboardingProgress';
 
 interface SetupChecklistProps {
@@ -32,41 +39,77 @@ export const SetupChecklist: React.FC<SetupChecklistProps> = ({
 }) => {
   const allComplete = completedCount === totalCount;
   const prefersReducedMotion = useReducedMotion();
+  const { user } = useAuth();
+  const [hasRated, setHasRated] = useState(false);
   
   // Default to first incomplete step
   const defaultStep = steps.find(s => !s.isComplete)?.id || steps[0]?.id || '';
   const [expandedStepId, setExpandedStepId] = useState<string>(defaultStep);
 
-  // All complete state
+  // Check if user has already rated
+  useEffect(() => {
+    const checkRating = async () => {
+      if (!user) return;
+      const { data } = await supabase
+        .from('profiles')
+        .select('setup_rating')
+        .eq('user_id', user.id)
+        .single();
+      
+      if (data?.setup_rating) {
+        setHasRated(true);
+      }
+    };
+    checkRating();
+  }, [user]);
+
+  // All complete state - enhanced version
   if (allComplete) {
     return (
-      <div className="border border-border rounded-xl bg-card shadow-sm p-6">
-        <h2 className="text-base font-medium text-foreground mb-1">What's next?</h2>
-
-        <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-          You're all set up! Explore more features or check out helpful resources to get the most out of Ari.
-        </p>
-        <div className="flex flex-wrap gap-2">
-          <a 
-            href="https://docs.lovable.dev" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
-          >
-            Explore the Help Center
-            <ArrowUpRight size={14} />
-          </a>
-          <span className="text-muted-foreground">·</span>
-          <a 
-            href="https://lovable.dev/blog" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
-          >
-            Discover our blog
-            <ArrowUpRight size={14} />
-          </a>
+      <div className="space-y-4">
+        {/* What's next card */}
+        <div className="border border-border rounded-xl bg-card shadow-sm p-6">
+          <h2 className="text-base font-medium text-foreground mb-1">What's next?</h2>
+          <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+            You're all set up! Explore more features or check out helpful resources to get the most out of Ari.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <a 
+              href="https://docs.lovable.dev" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
+            >
+              Explore the Help Center
+              <ArrowUpRight size={14} />
+            </a>
+            <span className="text-muted-foreground">·</span>
+            <a 
+              href="https://lovable.dev/blog" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
+            >
+              Discover our blog
+              <ArrowUpRight size={14} />
+            </a>
+          </div>
         </div>
+
+        {/* Quick Stats Summary */}
+        <QuickStatsSummary />
+
+        {/* Two-column: Invite Team | Keyboard Shortcuts */}
+        <div className="flex flex-col sm:flex-row gap-4">
+          <InviteTeamCard />
+          <KeyboardShortcutsCard />
+        </div>
+
+        {/* Video Tutorial Section */}
+        <NextLevelVideoSection />
+
+        {/* Feedback/NPS Prompt */}
+        <SetupFeedback hasRated={hasRated} />
       </div>
     );
   }
