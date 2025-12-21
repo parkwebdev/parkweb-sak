@@ -101,7 +101,7 @@ export function MetricCardWithChart({
         </div>
 
         {/* Chart */}
-        <ResponsiveContainer height={56}>
+        <ResponsiveContainer width="100%" height={56}>
           <AreaChart
             data={chartData}
             margin={{ left: 0, right: 0, top: 4, bottom: 0 }}
