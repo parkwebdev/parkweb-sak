@@ -8,7 +8,7 @@
  */
 
 import React, { useState } from 'react';
-import { ArrowUpRight, CheckCircle } from '@untitledui/icons';
+import { ArrowUpRight } from '@untitledui/icons';
 import { motion } from 'motion/react';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import { SetupProgress } from './SetupProgress';
@@ -41,12 +41,7 @@ export const SetupChecklist: React.FC<SetupChecklistProps> = ({
   if (allComplete) {
     return (
       <div className="border border-border rounded-xl bg-card shadow-sm p-6">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-8 h-8 rounded-full bg-status-active/10 flex items-center justify-center">
-            <CheckCircle size={18} className="text-status-active" />
-          </div>
-          <span className="text-base font-medium text-foreground">What's next?</span>
-        </div>
+        <h2 className="text-base font-medium text-foreground mb-4">What's next?</h2>
 
         <p className="text-sm text-muted-foreground leading-relaxed mb-4">
           You're all set up! Explore more features or check out helpful resources to get the most out of Ari.
