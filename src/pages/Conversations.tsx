@@ -134,6 +134,7 @@ const Conversations: React.FC = () => {
   const [showTranslation, setShowTranslation] = useState(false);
   const [translatedMessages, setTranslatedMessages] = useState<Record<string, string>>({});
   const [isTranslating, setIsTranslating] = useState(false);
+  const [isTranslatingOutbound, setIsTranslatingOutbound] = useState(false);
 
   // Persist collapsed states
   useEffect(() => {
@@ -239,6 +240,39 @@ const Conversations: React.FC = () => {
       console.error('Translation error:', err);
     } finally {
       setIsTranslating(false);
+    }
+  };
+
+  // Translate outbound message from English to conversation language
+  const handleTranslateOutbound = async () => {
+    const convMetadata = (selectedConversation?.metadata || {}) as ConversationMetadata;
+    const targetLang = convMetadata.detected_language_code;
+    const targetLangName = convMetadata.detected_language || targetLang;
+    
+    if (!targetLang || !messageInput.trim()) return;
+    
+    setIsTranslatingOutbound(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('translate-messages', {
+        body: { 
+          messages: [{ id: 'outbound', content: messageInput }], 
+          targetLanguage: targetLang 
+        }
+      });
+      
+      if (error) throw error;
+      
+      const translationsArray = data?.translations || data?.data?.translations || [];
+      const translated = translationsArray[0]?.translated;
+      if (translated) {
+        setMessageInput(translated);
+        toast.success(`Translated to ${targetLangName}`);
+      }
+    } catch (err) {
+      toast.error('Failed to translate message');
+      console.error('Outbound translation error:', err);
+    } finally {
+      setIsTranslatingOutbound(false);
     }
   };
 
@@ -1375,6 +1409,42 @@ const Conversations: React.FC = () => {
                   >
                     <Attachment01 size={18} aria-hidden="true" />
                   </Button>
+                  
+                  {/* Translate Outbound Button - show for non-English conversations */}
+                  {(() => {
+                    const convMetadata = (selectedConversation?.metadata || {}) as ConversationMetadata;
+                    const detectedLang = convMetadata.detected_language_code;
+                    const langName = convMetadata.detected_language || detectedLang;
+                    
+                    if (!detectedLang || detectedLang === 'en') return null;
+                    
+                    return (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            type="button"
+                            size="icon"
+                            variant="ghost"
+                            onClick={handleTranslateOutbound}
+                            disabled={isTranslatingOutbound || !messageInput.trim()}
+                            className="h-10 w-10"
+                            aria-label={`Translate to ${langName}`}
+                          >
+                            {isTranslatingOutbound ? (
+                              <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                            ) : (
+                              <Translate01 size={18} />
+                            )}
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <span className="flex items-center gap-1.5">
+                            {getLanguageFlag(detectedLang)} Translate to {langName}
+                          </span>
+                        </TooltipContent>
+                      </Tooltip>
+                    );
+                  })()}
                   
                   <div className="relative flex-1">
                     <Textarea
