@@ -24,19 +24,51 @@ import {
   useDroppable,
   useSensor,
   useSensors,
+  pointerWithin,
   type Announcements,
   type DndContextProps,
   type DragEndEvent,
   type DragOverEvent,
   type DragStartEvent,
+  type DropAnimation,
+  defaultDropAnimationSideEffects,
 } from "@dnd-kit/core";
-import { arrayMove, SortableContext, useSortable } from "@dnd-kit/sortable";
+import {
+  arrayMove,
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+  defaultAnimateLayoutChanges,
+  type AnimateLayoutChanges,
+} from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Card } from "@/components/ui/card";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 
 export type { DragEndEvent } from "@dnd-kit/core";
+
+// Smooth drop animation configuration
+const dropAnimationConfig: DropAnimation = {
+  sideEffects: defaultDropAnimationSideEffects({
+    styles: {
+      active: {
+        opacity: "0.5",
+      },
+    },
+  }),
+  duration: 200,
+  easing: "cubic-bezier(0.18, 0.67, 0.6, 1.22)",
+};
+
+// Custom animate layout changes for smoother reordering
+const animateLayoutChanges: AnimateLayoutChanges = (args) => {
+  const { isSorting, wasDragging } = args;
+  if (isSorting || wasDragging) {
+    return defaultAnimateLayoutChanges(args);
+  }
+  return true;
+};
 
 // Base types for kanban items and columns
 type KanbanItemProps = {
@@ -82,8 +114,8 @@ export const KanbanBoard = ({ id, children, className }: KanbanBoardProps) => {
     <div
       ref={setNodeRef}
       className={cn(
-        "flex w-80 shrink-0 flex-col rounded-lg bg-muted/40 p-2",
-        isOver && "ring-2 ring-primary/20",
+        "flex w-80 shrink-0 flex-col rounded-lg bg-muted/40 p-2 transition-all duration-200",
+        isOver && "ring-2 ring-primary/20 bg-muted/60",
         className
       )}
     >
@@ -111,11 +143,20 @@ export const KanbanCard = <T extends KanbanItemProps>({
     transition,
     transform,
     isDragging,
-  } = useSortable({ id });
+  } = useSortable({
+    id,
+    animateLayoutChanges,
+    transition: {
+      duration: 200,
+      easing: "cubic-bezier(0.25, 1, 0.5, 1)",
+    },
+  });
 
-  const style = {
+  const style: React.CSSProperties = {
     transition,
     transform: CSS.Transform.toString(transform),
+    zIndex: isDragging ? 10 : undefined,
+    position: "relative" as const,
   };
 
   return (
@@ -125,8 +166,9 @@ export const KanbanCard = <T extends KanbanItemProps>({
       {...attributes}
       {...listeners}
       className={cn(
-        "cursor-grab rounded-md border bg-card p-3 shadow-sm active:cursor-grabbing",
-        isDragging && "opacity-50",
+        "cursor-grab rounded-md border bg-card p-3 shadow-sm active:cursor-grabbing transition-shadow duration-200",
+        isDragging && "opacity-50 shadow-lg scale-[1.02]",
+        !isDragging && "hover:shadow-md",
         className
       )}
     >
@@ -157,10 +199,10 @@ export const KanbanCards = <T extends KanbanItemProps>({
   const items = filteredData.map((item) => item.id);
 
   return (
-    <SortableContext items={items}>
+    <SortableContext items={items} strategy={verticalListSortingStrategy}>
       <ScrollArea className="max-h-[calc(100vh-320px)]">
         <div
-          className={cn("flex flex-col gap-2 p-0.5", className)}
+          className={cn("flex flex-col gap-2 p-0.5 min-h-[100px]", className)}
           {...props}
         >
           {filteredData.map(children)}
@@ -194,6 +236,7 @@ export type KanbanProviderProps<
   onDragStart?: (event: DragStartEvent) => void;
   onDragEnd?: (event: DragEndEvent) => void;
   onDragOver?: (event: DragOverEvent) => void;
+  renderOverlay?: (item: T) => ReactNode;
 };
 
 export const KanbanProvider = <
@@ -208,6 +251,7 @@ export const KanbanProvider = <
   columns,
   data,
   onDataChange,
+  renderOverlay,
   ...props
 }: KanbanProviderProps<T, C>) => {
   const [activeCardId, setActiveCardId] = useState<string | null>(null);
@@ -269,6 +313,16 @@ export const KanbanProvider = <
       }
       
       onDataChange?.(newData);
+    } else if (overItem && active.id !== over.id) {
+      // Same column reordering
+      let newData = [...data];
+      const activeIndex = newData.findIndex((item) => item.id === active.id);
+      const overIndex = newData.findIndex((item) => item.id === over.id);
+
+      if (activeIndex !== -1 && overIndex !== -1) {
+        newData = arrayMove(newData, activeIndex, overIndex);
+        onDataChange?.(newData);
+      }
     }
 
     onDragOver?.(event);
@@ -342,11 +396,17 @@ export const KanbanProvider = <
         </div>
         {typeof window !== "undefined" &&
           createPortal(
-            <DragOverlay>
+            <DragOverlay dropAnimation={dropAnimationConfig}>
               {activeCard ? (
-                <Card className="cursor-grabbing rounded-md border bg-card p-3 shadow-lg">
-                  <p className="text-sm font-medium">{activeCard.name}</p>
-                </Card>
+                renderOverlay ? (
+                  <div className="w-80">
+                    {renderOverlay(activeCard)}
+                  </div>
+                ) : (
+                  <Card className="w-80 cursor-grabbing rounded-md border bg-card p-3 shadow-xl ring-2 ring-primary/20">
+                    <p className="text-sm font-medium">{activeCard.name}</p>
+                  </Card>
+                )
               ) : null}
             </DragOverlay>,
             document.body
