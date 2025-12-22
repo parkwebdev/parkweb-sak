@@ -34,7 +34,7 @@ interface LeadsProps {
 }
 
 const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
-  const { leads, loading, createLead, updateLead, deleteLead, deleteLeads, getLeadsWithConversations } = useLeads();
+  const { leads, loading, createLead, updateLead, updateLeadOrders, deleteLead, deleteLeads, getLeadsWithConversations } = useLeads();
   const [selectedLead, setSelectedLead] = useState<Tables<'leads'> | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -286,6 +286,7 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
                   leads={filteredLeads}
                   onStatusChange={(leadId, status) => updateLead(leadId, { status })}
                   onViewLead={handleViewLead}
+                  onOrderChange={updateLeadOrders}
                 />
               ) : (
                 <LeadsTable

@@ -45,6 +45,7 @@ interface LeadsKanbanBoardProps {
   leads: Tables<"leads">[];
   onStatusChange: (leadId: string, status: Enums<"lead_status">) => void;
   onViewLead: (lead: Tables<"leads">) => void;
+  onOrderChange?: (updates: { id: string; kanban_order: number; status?: Enums<"lead_status"> }[]) => void;
 }
 
 // Individual lead card content - exported for use in overlay
@@ -97,6 +98,7 @@ export function LeadsKanbanBoard({
   leads,
   onStatusChange,
   onViewLead,
+  onOrderChange,
 }: LeadsKanbanBoardProps) {
   // Transform leads to kanban format with column property
   const kanbanLeads = useMemo<KanbanLead[]>(
@@ -129,16 +131,55 @@ export function LeadsKanbanBoard({
   // Handle data changes from drag operations
   const handleDataChange = useCallback(
     (newData: KanbanLead[]) => {
-      // Find the lead that changed columns
-      for (const item of newData) {
-        const original = kanbanLeads.find((l) => l.id === item.id);
-        if (original && original.column !== item.column) {
-          onStatusChange(item.id, item.column as Enums<"lead_status">);
-          break;
+      if (!onOrderChange) {
+        // Fallback: only handle column changes via onStatusChange
+        for (const item of newData) {
+          const original = kanbanLeads.find((l) => l.id === item.id);
+          if (original && original.column !== item.column) {
+            onStatusChange(item.id, item.column as Enums<"lead_status">);
+            break;
+          }
         }
+        return;
+      }
+
+      // Build updates for all leads that changed position or column
+      const updates: { id: string; kanban_order: number; status?: Enums<"lead_status"> }[] = [];
+      
+      // Group new data by column to calculate order within each column
+      const byColumn = new Map<string, KanbanLead[]>();
+      for (const item of newData) {
+        const list = byColumn.get(item.column) || [];
+        list.push(item);
+        byColumn.set(item.column, list);
+      }
+
+      // For each column, assign sequential order values
+      for (const [column, items] of byColumn) {
+        items.forEach((item, index) => {
+          const original = kanbanLeads.find((l) => l.id === item.id);
+          const originalIndex = kanbanLeads
+            .filter((l) => l.column === column)
+            .findIndex((l) => l.id === item.id);
+          
+          const columnChanged = original && original.column !== item.column;
+          const orderChanged = originalIndex !== index;
+          
+          if (columnChanged || orderChanged) {
+            updates.push({
+              id: item.id,
+              kanban_order: index + 1,
+              ...(columnChanged && { status: item.column as Enums<"lead_status"> }),
+            });
+          }
+        });
+      }
+
+      if (updates.length > 0) {
+        onOrderChange(updates);
       }
     },
-    [kanbanLeads, onStatusChange]
+    [kanbanLeads, onStatusChange, onOrderChange]
   );
 
   // Render overlay for dragged card

@@ -959,6 +959,7 @@ export type Database = {
           data: Json | null
           email: string | null
           id: string
+          kanban_order: number | null
           name: string | null
           phone: string | null
           status: Database["public"]["Enums"]["lead_status"]
@@ -972,6 +973,7 @@ export type Database = {
           data?: Json | null
           email?: string | null
           id?: string
+          kanban_order?: number | null
           name?: string | null
           phone?: string | null
           status?: Database["public"]["Enums"]["lead_status"]
@@ -985,6 +987,7 @@ export type Database = {
           data?: Json | null
           email?: string | null
           id?: string
+          kanban_order?: number | null
           name?: string | null
           phone?: string | null
           status?: Database["public"]["Enums"]["lead_status"]
