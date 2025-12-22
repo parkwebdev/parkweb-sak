@@ -1,9 +1,12 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/lib/toast';
 import { logger } from '@/utils/logger';
 import { playNotificationSound } from '@/lib/notification-sound';
+import { useSupabaseQuery } from '@/hooks/useSupabaseQuery';
+import { queryKeys } from '@/lib/query-keys';
 import type { Tables } from '@/integrations/supabase/types';
 import type { NotificationPreferencesData, ConversationMetadata } from '@/types/metadata';
 
@@ -16,8 +19,8 @@ type Message = Tables<'messages'>;
 
 /**
  * Hook for managing chat conversations.
- * Handles conversation CRUD, messages, human takeover, and real-time updates.
- * Plays notification sounds for new user messages when enabled.
+ * Uses React Query for caching with real-time Supabase subscriptions.
+ * Handles conversation CRUD, messages, human takeover, and notification sounds.
  * 
  * @returns {Object} Conversation management methods and state
  * @returns {Conversation[]} conversations - List of user's conversations
@@ -33,9 +36,38 @@ type Message = Tables<'messages'>;
  */
 export const useConversations = () => {
   const { user } = useAuth();
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const soundEnabledRef = useRef<boolean>(true);
+
+  // Fetch conversations using React Query with real-time updates
+  const { 
+    data: conversations = [], 
+    isLoading: loading,
+    refetch,
+  } = useSupabaseQuery<Conversation[]>({
+    queryKey: queryKeys.conversations.lists(),
+    queryFn: async () => {
+      if (!user?.id) return [];
+      
+      const { data, error } = await supabase
+        .from('conversations')
+        .select(`
+          *,
+          agents!fk_conversations_agent(name)
+        `)
+        .eq('user_id', user.id)
+        .order('updated_at', { ascending: false });
+
+      if (error) throw error;
+      return data || [];
+    },
+    realtime: user?.id ? {
+      table: 'conversations',
+      filter: `user_id=eq.${user.id}`,
+    } : undefined,
+    enabled: !!user?.id,
+    staleTime: 30_000, // Consider data fresh for 30 seconds
+  });
 
   // Fetch user's sound notification preference
   const fetchSoundPreference = useCallback(async () => {
@@ -55,56 +87,16 @@ export const useConversations = () => {
     }
   }, [user?.id]);
 
-  const fetchConversations = async (showLoading = true) => {
-    if (!user?.id) return;
-    
-    if (showLoading) setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('conversations')
-        .select(`
-          *,
-          agents!fk_conversations_agent(name)
-        `)
-        .eq('user_id', user.id)
-        .order('updated_at', { ascending: false });
-
-      if (error) throw error;
-      setConversations(data || []);
-    } catch (error) {
-      logger.error('Error fetching conversations:', error);
-      toast.error('Failed to load conversations');
-    } finally {
-      if (showLoading) setLoading(false);
-    }
-  };
-
+  // Set up message notifications and notification preferences subscriptions
+  // These are side-effects only, not data fetching
   useEffect(() => {
-    fetchConversations();
+    if (!user?.id) return;
+
     fetchSoundPreference();
 
-    // Set up real-time subscription
-    if (!user?.id) return;
-
-    const conversationsChannel = supabase
-      .channel('conversations-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'conversations',
-          filter: `user_id=eq.${user.id}`
-        },
-        () => {
-          fetchConversations(false);
-        }
-      )
-      .subscribe();
-
-    // Subscribe to new messages for instant updates
+    // Subscribe to new messages for notification sounds only
     const messagesChannel = supabase
-      .channel('messages-changes')
+      .channel('messages-notifications')
       .on(
         'postgres_changes',
         {
@@ -120,8 +112,8 @@ export const useConversations = () => {
             playNotificationSound();
           }
           
-          // Instant refetch - no artificial delay
-          fetchConversations(false);
+          // Invalidate conversations to update metadata (last_message_at, etc.)
+          queryClient.invalidateQueries({ queryKey: queryKeys.conversations.all });
         }
       )
       .subscribe();
@@ -145,11 +137,10 @@ export const useConversations = () => {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(conversationsChannel);
       supabase.removeChannel(messagesChannel);
       supabase.removeChannel(prefsChannel);
     };
-  }, [user?.id, fetchSoundPreference]);
+  }, [user?.id, fetchSoundPreference, queryClient]);
 
   const fetchMessages = async (conversationId: string): Promise<Message[]> => {
     try {
@@ -181,7 +172,9 @@ export const useConversations = () => {
       if (error) throw error;
       
       toast.success(`Conversation ${status === 'human_takeover' ? 'taken over' : status}`);
-      await fetchConversations();
+      
+      // Invalidate cache to trigger refetch
+      await queryClient.invalidateQueries({ queryKey: queryKeys.conversations.all });
     } catch (error) {
       logger.error('Error updating conversation:', error);
       toast.error('Failed to update conversation');
@@ -193,6 +186,8 @@ export const useConversations = () => {
     metadata: Record<string, any>,
     options?: { silent?: boolean }
   ) => {
+    const previousConversations = queryClient.getQueryData<Conversation[]>(queryKeys.conversations.lists());
+
     try {
       // First fetch current conversation to merge metadata
       const { data: current, error: fetchError } = await supabase
@@ -209,6 +204,16 @@ export const useConversations = () => {
         ...metadata,
       };
 
+      // Optimistically update cache
+      queryClient.setQueryData<Conversation[]>(queryKeys.conversations.lists(), (oldConversations) => {
+        if (!oldConversations) return oldConversations;
+        return oldConversations.map(conv => 
+          conv.id === conversationId 
+            ? { ...conv, metadata: mergedMetadata as typeof conv.metadata }
+            : conv
+        );
+      });
+
       const { error } = await supabase
         .from('conversations')
         .update({ metadata: mergedMetadata })
@@ -216,19 +221,14 @@ export const useConversations = () => {
 
       if (error) throw error;
       
-      // Update local state
-      setConversations(prev => 
-        prev.map(conv => 
-          conv.id === conversationId 
-            ? { ...conv, metadata: mergedMetadata as typeof conv.metadata }
-            : conv
-        )
-      );
-      
       if (!options?.silent) {
         toast.success('Updated successfully');
       }
     } catch (error) {
+      // Revert on error
+      if (previousConversations) {
+        queryClient.setQueryData(queryKeys.conversations.lists(), previousConversations);
+      }
       logger.error('Error updating conversation metadata:', error);
       toast.error('Failed to update');
       throw error;
@@ -383,6 +383,6 @@ export const useConversations = () => {
     returnToAI,
     sendHumanMessage,
     reopenConversation,
-    refetch: fetchConversations,
+    refetch,
   };
 };
