@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/lib/toast';
 import { getErrorMessage } from '@/types/errors';
@@ -15,7 +15,7 @@ type Lead = Tables<'leads'> & {
  * 
  * @returns {Object} Lead management methods and state
  * @returns {Lead[]} leads - List of user's leads with linked conversations
- * @returns {boolean} loading - Loading state
+ * @returns {boolean} loading - Loading state (only true on initial load)
  * @returns {Function} createLead - Create a new lead
  * @returns {Function} updateLead - Update an existing lead
  * @returns {Function} deleteLead - Delete a lead (optionally with linked conversation)
@@ -27,12 +27,19 @@ export const useLeads = () => {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  
+  // Only show loader on initial fetch, not on refetches
+  const hasLoadedOnce = useRef(false);
 
   const fetchLeads = async () => {
     if (!user?.id) return;
     
     try {
-      setLoading(true);
+      // Only set loading on initial fetch
+      if (!hasLoadedOnce.current) {
+        setLoading(true);
+      }
+      
       const { data, error } = await supabase
         .from('leads')
         .select('*, conversations!fk_leads_conversation(id, created_at)')
@@ -41,6 +48,7 @@ export const useLeads = () => {
 
       if (error) throw error;
       setLeads(data || []);
+      hasLoadedOnce.current = true;
     } catch (error: unknown) {
       toast.error('Error fetching leads', {
         description: getErrorMessage(error),
