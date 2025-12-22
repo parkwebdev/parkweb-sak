@@ -177,7 +177,18 @@ export function LeadsKanbanBoard({
               </KanbanHeader>
               <KanbanCards id={column.id}>
                 {(lead: KanbanLead) => (
-                  <KanbanCard key={lead.id} id={lead.id} name={lead.name} column={lead.column}>
+                  <KanbanCard
+                    key={lead.id}
+                    id={lead.id}
+                    name={lead.name}
+                    column={lead.column}
+                    onClick={() => {
+                      const originalLead = findOriginalLead(lead.id);
+                      if (originalLead) {
+                        onViewLead(originalLead);
+                      }
+                    }}
+                  >
                     <LeadCardContent
                       lead={lead}
                       onView={() => {
