@@ -154,8 +154,9 @@ export function LeadsKanbanBoard({
   );
 
   return (
-    <div className="w-full overflow-x-auto pb-4">
-      <KanbanProvider
+    <div className="relative -mx-4 lg:-mx-8">
+      <div className="overflow-x-auto px-4 lg:px-8 pb-4">
+        <KanbanProvider
         columns={COLUMNS as unknown as { id: string; name: string }[]}
         data={kanbanLeads}
         onDataChange={handleDataChange}
@@ -192,7 +193,8 @@ export function LeadsKanbanBoard({
             </KanbanCards>
           </KanbanBoard>
         )}
-      </KanbanProvider>
+        </KanbanProvider>
+      </div>
     </div>
   );
 }
