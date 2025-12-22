@@ -89,19 +89,6 @@ export function LeadCardContent({
         )}
       </div>
 
-      <Button
-        variant="ghost"
-        size="sm"
-        className="h-7 w-full text-xs"
-        onClick={(e) => {
-          e.stopPropagation();
-          onView();
-        }}
-        onPointerDown={(e) => e.stopPropagation()}
-      >
-        <Eye size={14} className="mr-1.5" />
-        View Details
-      </Button>
     </div>
   );
 }
