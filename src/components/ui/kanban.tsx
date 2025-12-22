@@ -10,21 +10,22 @@ import {
   createContext,
   useContext,
   useState,
+  useEffect,
   type HTMLAttributes,
   type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
 import {
-  closestCenter,
+  closestCorners,
   DndContext,
   DragOverlay,
   KeyboardSensor,
+  MeasuringStrategy,
   MouseSensor,
   TouchSensor,
   useDroppable,
   useSensor,
   useSensors,
-  pointerWithin,
   type Announcements,
   type DndContextProps,
   type DragEndEvent,
@@ -199,7 +200,7 @@ export const KanbanCards = <T extends KanbanItemProps>({
   const items = filteredData.map((item) => item.id);
 
   return (
-    <SortableContext items={items} strategy={verticalListSortingStrategy}>
+    <SortableContext id={id} items={items} strategy={verticalListSortingStrategy}>
       <ScrollArea className="max-h-[calc(100vh-320px)]">
         <div
           className={cn("flex flex-col gap-2 p-0.5 min-h-[100px]", className)}
@@ -256,6 +257,16 @@ export const KanbanProvider = <
 }: KanbanProviderProps<T, C>) => {
   const [activeCardId, setActiveCardId] = useState<string | null>(null);
   const [activeCardContent, setActiveCardContent] = useState<ReactNode | null>(null);
+  
+  // LOCAL state for visual updates during drag - only committed on dragEnd
+  const [localData, setLocalData] = useState<T[]>(data);
+
+  // Sync external data changes when NOT dragging
+  useEffect(() => {
+    if (!activeCardId) {
+      setLocalData(data);
+    }
+  }, [data, activeCardId]);
 
   // Add activation constraints to prevent accidental drags
   const sensors = useSensors(
@@ -274,7 +285,7 @@ export const KanbanProvider = <
   );
 
   const handleDragStart = (event: DragStartEvent) => {
-    const card = data.find((item) => item.id === event.active.id);
+    const card = localData.find((item) => item.id === event.active.id);
     if (card) {
       setActiveCardId(event.active.id as string);
     }
@@ -288,8 +299,8 @@ export const KanbanProvider = <
       return;
     }
 
-    const activeItem = data.find((item) => item.id === active.id);
-    const overItem = data.find((item) => item.id === over.id);
+    const activeItem = localData.find((item) => item.id === active.id);
+    const overItem = localData.find((item) => item.id === over.id);
 
     if (!activeItem) {
       return;
@@ -298,65 +309,72 @@ export const KanbanProvider = <
     const activeColumn = activeItem.column;
     const overColumn =
       overItem?.column ||
-      columns.find((col) => col.id === over.id)?.id ||
-      columns[0]?.id;
+      columns.find((col) => col.id === over.id)?.id;
 
+    if (!overColumn) {
+      return;
+    }
+
+    // Moving to a different column
     if (activeColumn !== overColumn) {
-      let newData = [...data];
-      const activeIndex = newData.findIndex((item) => item.id === active.id);
-      const overIndex = newData.findIndex((item) => item.id === over.id);
-
-      newData[activeIndex] = { ...newData[activeIndex], column: overColumn };
-      
-      if (overIndex !== -1) {
-        newData = arrayMove(newData, activeIndex, overIndex);
-      }
-      
-      onDataChange?.(newData);
-    } else if (overItem && active.id !== over.id) {
-      // Same column reordering
-      let newData = [...data];
-      const activeIndex = newData.findIndex((item) => item.id === active.id);
-      const overIndex = newData.findIndex((item) => item.id === over.id);
-
-      if (activeIndex !== -1 && overIndex !== -1) {
-        newData = arrayMove(newData, activeIndex, overIndex);
-        onDataChange?.(newData);
-      }
+      setLocalData((prev) => {
+        const newData = [...prev];
+        const activeIndex = newData.findIndex((item) => item.id === active.id);
+        
+        // Update the column
+        newData[activeIndex] = { ...newData[activeIndex], column: overColumn };
+        
+        // If dropping on another item, reorder
+        if (overItem) {
+          const overIndex = newData.findIndex((item) => item.id === over.id);
+          return arrayMove(newData, activeIndex, overIndex);
+        }
+        
+        return newData;
+      });
+    } 
+    // Same column reordering
+    else if (overItem && active.id !== over.id) {
+      setLocalData((prev) => {
+        const activeIndex = prev.findIndex((item) => item.id === active.id);
+        const overIndex = prev.findIndex((item) => item.id === over.id);
+        
+        if (activeIndex !== -1 && overIndex !== -1) {
+          return arrayMove(prev, activeIndex, overIndex);
+        }
+        return prev;
+      });
     }
 
     onDragOver?.(event);
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
+    // Commit the local state to parent
+    if (activeCardId) {
+      onDataChange?.(localData);
+    }
+    
     setActiveCardId(null);
     setActiveCardContent(null);
     onDragEnd?.(event);
+  };
 
-    const { active, over } = event;
-
-    if (!over || active.id === over.id) {
-      return;
-    }
-
-    let newData = [...data];
-    const oldIndex = newData.findIndex((item) => item.id === active.id);
-    const newIndex = newData.findIndex((item) => item.id === over.id);
-
-    if (oldIndex !== -1 && newIndex !== -1) {
-      newData = arrayMove(newData, oldIndex, newIndex);
-      onDataChange?.(newData);
-    }
+  const handleDragCancel = () => {
+    // Reset to original data on cancel
+    setLocalData(data);
+    setActiveCardId(null);
+    setActiveCardContent(null);
   };
 
   const announcements: Announcements = {
     onDragStart({ active }) {
-      const item = data.find((item) => item.id === active.id);
+      const item = localData.find((item) => item.id === active.id);
       const columnName = columns.find((col) => col.id === item?.column)?.name;
       return `Picked up card "${item?.name}" from "${columnName}" column`;
     },
     onDragOver({ active, over }) {
-      const item = data.find((item) => item.id === active.id);
+      const item = localData.find((item) => item.id === active.id);
       const newColumn = columns.find((col) => col.id === over?.id)?.name;
       if (newColumn) {
         return `Dragged card "${item?.name}" over "${newColumn}" column`;
@@ -364,7 +382,7 @@ export const KanbanProvider = <
       return "";
     },
     onDragEnd({ active, over }) {
-      const item = data.find((item) => item.id === active.id);
+      const item = localData.find((item) => item.id === active.id);
       const newColumn = columns.find((col) => col.id === over?.id)?.name;
       if (newColumn) {
         return `Dropped card "${item?.name}" into "${newColumn}" column`;
@@ -372,22 +390,28 @@ export const KanbanProvider = <
       return `Dropped card "${item?.name}"`;
     },
     onDragCancel({ active }) {
-      const item = data.find((item) => item.id === active.id);
+      const item = localData.find((item) => item.id === active.id);
       return `Cancelled dragging card "${item?.name}"`;
     },
   };
 
   // Get active card data for overlay
-  const activeCard = activeCardId ? data.find((item) => item.id === activeCardId) : null;
+  const activeCard = activeCardId ? localData.find((item) => item.id === activeCardId) : null;
 
   return (
-    <KanbanContext.Provider value={{ columns, data, activeCardId, activeCardContent }}>
+    <KanbanContext.Provider value={{ columns, data: localData, activeCardId, activeCardContent }}>
       <DndContext
         sensors={sensors}
-        collisionDetection={closestCenter}
+        collisionDetection={closestCorners}
+        measuring={{
+          droppable: {
+            strategy: MeasuringStrategy.Always,
+          },
+        }}
         onDragStart={handleDragStart}
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
+        onDragCancel={handleDragCancel}
         accessibility={{ announcements }}
         {...props}
       >
