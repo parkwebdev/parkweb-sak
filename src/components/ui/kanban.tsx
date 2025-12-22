@@ -599,9 +599,9 @@ export const KanbanProvider = <
             <DragOverlay dropAnimation={dropAnimationConfig}>
               {activeCard ? (
                 renderOverlay ? (
-                  <div className="w-80">{renderOverlay(activeCard)}</div>
+                  <div className="w-[304px]">{renderOverlay(activeCard)}</div>
                 ) : (
-                  <Card className="w-80 cursor-grabbing rounded-md border bg-card p-3 shadow-xl ring-2 ring-primary/20">
+                  <Card className="w-[304px] cursor-grabbing rounded-md border bg-card p-3 shadow-md">
                     <p className="text-sm font-medium">{activeCard.name}</p>
                   </Card>
                 )
