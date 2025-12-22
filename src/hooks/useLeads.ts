@@ -1,8 +1,11 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/lib/toast';
 import { getErrorMessage } from '@/types/errors';
 import { useAuth } from '@/hooks/useAuth';
+import { useSupabaseQuery } from '@/hooks/useSupabaseQuery';
+import { queryKeys } from '@/lib/query-keys';
 import type { Tables, Enums } from '@/integrations/supabase/types';
 
 type Lead = Tables<'leads'> & {
@@ -11,34 +14,32 @@ type Lead = Tables<'leads'> & {
 
 /**
  * Hook for managing leads captured from widget contact forms.
- * Provides CRUD operations with real-time updates and conversation linkage.
+ * Uses React Query for caching and real-time Supabase subscriptions.
  * 
  * @returns {Object} Lead management methods and state
  * @returns {Lead[]} leads - List of user's leads with linked conversations
  * @returns {boolean} loading - Loading state (only true on initial load)
  * @returns {Function} createLead - Create a new lead
  * @returns {Function} updateLead - Update an existing lead
+ * @returns {Function} updateLeadOrders - Batch update kanban order for drag-and-drop
  * @returns {Function} deleteLead - Delete a lead (optionally with linked conversation)
  * @returns {Function} deleteLeads - Bulk delete leads
  * @returns {Function} getLeadsWithConversations - Check if leads have linked conversations
  * @returns {Function} refetch - Manually refresh leads list
  */
 export const useLeads = () => {
-  const [leads, setLeads] = useState<Lead[]>([]);
-  const [loading, setLoading] = useState(true);
   const { user } = useAuth();
-  
-  // Only show loader on initial fetch, not on refetches
-  const hasLoadedOnce = useRef(false);
+  const queryClient = useQueryClient();
 
-  const fetchLeads = async () => {
-    if (!user?.id) return;
-    
-    try {
-      // Only set loading on initial fetch
-      if (!hasLoadedOnce.current) {
-        setLoading(true);
-      }
+  // Fetch leads using React Query with real-time updates
+  const { 
+    data: leads = [], 
+    isLoading: loading,
+    refetch,
+  } = useSupabaseQuery<Lead[]>({
+    queryKey: queryKeys.leads.list(),
+    queryFn: async () => {
+      if (!user?.id) return [];
       
       const { data, error } = await supabase
         .from('leads')
@@ -49,22 +50,21 @@ export const useLeads = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setLeads(data || []);
-      hasLoadedOnce.current = true;
-    } catch (error: unknown) {
-      toast.error('Error fetching leads', {
-        description: getErrorMessage(error),
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+      return data || [];
+    },
+    realtime: user?.id ? {
+      table: 'leads',
+      filter: `user_id=eq.${user.id}`,
+    } : undefined,
+    enabled: !!user?.id,
+    staleTime: 30_000, // Consider data fresh for 30 seconds
+  });
 
   const createLead = async (leadData: Partial<Tables<'leads'>>) => {
     if (!user?.id) return;
 
     try {
-      const { data, error} = await supabase
+      const { data, error } = await supabase
         .from('leads')
         .insert([{ ...leadData, user_id: user.id }])
         .select()
@@ -76,7 +76,7 @@ export const useLeads = () => {
         description: 'Lead has been created successfully',
       });
 
-      // Real-time subscription will refresh the list.
+      // Real-time subscription will refresh the list
       return data;
     } catch (error: unknown) {
       toast.error('Error creating lead', {
@@ -95,8 +95,8 @@ export const useLeads = () => {
 
       if (error) throw error;
 
-      // Success - no toast needed (SavedIndicator shows feedback for status changes)
-      fetchLeads();
+      // Invalidate cache to trigger refetch
+      await queryClient.invalidateQueries({ queryKey: queryKeys.leads.all });
     } catch (error: unknown) {
       toast.error('Error updating lead', {
         description: getErrorMessage(error),
@@ -112,10 +112,14 @@ export const useLeads = () => {
   const updateLeadOrders = async (updates: { id: string; kanban_order: number; status?: Enums<'lead_status'> }[]) => {
     if (updates.length === 0) return;
 
-    // Optimistically update local state
-    setLeads(prevLeads => {
+    const previousLeads = queryClient.getQueryData<Lead[]>(queryKeys.leads.list());
+
+    // Optimistically update cache
+    queryClient.setQueryData<Lead[]>(queryKeys.leads.list(), (oldLeads) => {
+      if (!oldLeads) return oldLeads;
+      
       const updatesMap = new Map(updates.map(u => [u.id, u]));
-      return prevLeads.map(lead => {
+      return oldLeads.map(lead => {
         const update = updatesMap.get(lead.id);
         if (update) {
           return { 
@@ -143,11 +147,13 @@ export const useLeads = () => {
       
       // Don't refetch - we already updated optimistically
     } catch (error: unknown) {
-      // Revert on error by refetching
+      // Revert on error
+      if (previousLeads) {
+        queryClient.setQueryData(queryKeys.leads.list(), previousLeads);
+      }
       toast.error('Error updating lead order', {
         description: getErrorMessage(error),
       });
-      fetchLeads();
     }
   };
 
@@ -225,7 +231,11 @@ export const useLeads = () => {
           : 'Lead has been deleted successfully',
       });
 
-      // Real-time subscription will refresh the list.
+      // Invalidate both leads and conversations caches
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.leads.all }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.conversations.all }),
+      ]);
     } catch (error: unknown) {
       toast.error('Error deleting lead', {
         description: getErrorMessage(error),
@@ -315,7 +325,11 @@ export const useLeads = () => {
         description: 'All related data has been cleaned up',
       });
 
-      // Real-time subscription will refresh the list.
+      // Invalidate both leads and conversations caches
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.leads.all }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.conversations.all }),
+      ]);
     } catch (error: unknown) {
       toast.error('Error deleting leads', {
         description: getErrorMessage(error),
@@ -329,31 +343,6 @@ export const useLeads = () => {
     return leads.some(lead => ids.includes(lead.id) && lead.conversation_id);
   }, [leads]);
 
-  useEffect(() => {
-    fetchLeads();
-
-    // Subscribe to real-time updates
-    const channel = supabase
-      .channel('leads-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'leads',
-          filter: `user_id=eq.${user?.id}`,
-        },
-        () => {
-          fetchLeads();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user?.id]);
-
   return {
     leads,
     loading,
@@ -363,6 +352,6 @@ export const useLeads = () => {
     deleteLead,
     deleteLeads,
     getLeadsWithConversations,
-    refetch: fetchLeads,
+    refetch,
   };
 };

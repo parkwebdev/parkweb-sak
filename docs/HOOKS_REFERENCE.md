@@ -119,22 +119,31 @@ const {
 
 ### useConversations
 
-Manages conversation data with real-time subscriptions.
+Manages chat conversations with real-time updates. **Powered by React Query** with Supabase subscriptions.
 
 ```tsx
 import { useConversations } from '@/hooks/useConversations';
 
 const {
-  conversations,          // Conversation[] - All conversations
-  isLoading,             // boolean
-  selectedConversation,  // Conversation | null
-  messages,              // Message[] - Messages for selected
-  takeover,              // (id) => Promise - Start takeover
-  returnToAI,            // (id) => Promise - End takeover
-  closeConversation,     // (id) => Promise - Close conversation
-  sendMessage,           // (content) => Promise - Send human message
-} = useConversations(agentId?: string);
+  conversations,            // Conversation[] - All conversations
+  loading,                  // boolean - Loading state
+  fetchMessages,            // (conversationId) => Promise<Message[]>
+  updateConversationStatus, // (id, status) => Promise - Change status
+  updateConversationMetadata, // (id, metadata, options?) => Promise - Update metadata
+  takeover,                 // (conversationId, reason?) => Promise - Start takeover
+  returnToAI,               // (conversationId) => Promise - End takeover
+  sendHumanMessage,         // (conversationId, content, files?) => Promise<boolean>
+  reopenConversation,       // (conversationId) => Promise - Reopen closed
+  refetch,                  // () => void - Trigger background refetch
+} = useConversations();
 ```
+
+**Key Features**:
+- React Query caching with 30-second stale time
+- Real-time updates via Supabase subscription on `conversations` table
+- Separate subscription for message notifications (plays sound on new user messages)
+- Optimistic updates for metadata changes
+- Automatic cache invalidation on status changes
 
 **File**: `src/hooks/useConversations.ts`
 
@@ -142,20 +151,30 @@ const {
 
 ### useLeads
 
-Manages lead data and status updates.
+Manages leads captured from widget contact forms. **Powered by React Query** with real-time updates.
 
 ```tsx
 import { useLeads } from '@/hooks/useLeads';
 
 const {
-  leads,           // Lead[] - All leads
-  isLoading,       // boolean
-  createLead,      // (data) => Promise - Create lead
-  updateLead,      // (id, data) => Promise - Update lead
-  deleteLead,      // (id) => Promise - Delete lead
-  updateStatus,    // (id, status) => Promise - Update status
+  leads,                    // Lead[] - All leads with linked conversations
+  loading,                  // boolean - Loading state
+  createLead,               // (leadData) => Promise<Lead> - Create lead
+  updateLead,               // (id, updates) => Promise - Update lead
+  updateLeadOrders,         // (updates[]) => Promise - Batch update kanban order
+  deleteLead,               // (id, deleteConversation?) => Promise - Delete lead
+  deleteLeads,              // (ids[], deleteConversations?) => Promise - Bulk delete
+  getLeadsWithConversations, // (ids[]) => boolean - Check for linked conversations
+  refetch,                  // () => void - Trigger background refetch
 } = useLeads();
 ```
+
+**Key Features**:
+- React Query caching with 30-second stale time
+- Real-time updates via Supabase subscription on `leads` table
+- Optimistic updates for kanban drag-and-drop reordering
+- Automatic cache invalidation on mutations
+- Cleans up related data (memories, calendar events) on delete
 
 **File**: `src/hooks/useLeads.ts`
 
@@ -438,48 +457,6 @@ const {
 ```
 
 **File**: `src/hooks/useScheduledReports.ts`
-
----
-
-### useNewsItems
-
-Manages news/announcement items for widget.
-
-```tsx
-import { useNewsItems } from '@/hooks/useNewsItems';
-
-const {
-  newsItems,        // NewsItem[] - All news items
-  isLoading,       // boolean
-  createNewsItem,  // (data) => Promise
-  updateNewsItem,  // (id, data) => Promise
-  deleteNewsItem,  // (id) => Promise
-  togglePublished, // (id, published) => Promise
-} = useNewsItems(agentId: string);
-```
-
-**File**: `src/hooks/useNewsItems.ts`
-
----
-
-### useAnnouncements
-
-Manages carousel announcements for widget home.
-
-```tsx
-import { useAnnouncements } from '@/hooks/useAnnouncements';
-
-const {
-  announcements,      // Announcement[] - All announcements
-  isLoading,         // boolean
-  createAnnouncement, // (data) => Promise
-  updateAnnouncement, // (id, data) => Promise
-  deleteAnnouncement, // (id) => Promise
-  reorder,           // (ids) => Promise
-} = useAnnouncements(agentId: string);
-```
-
-**File**: `src/hooks/useAnnouncements.ts`
 
 ---
 
