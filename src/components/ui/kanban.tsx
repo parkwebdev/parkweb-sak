@@ -58,12 +58,14 @@ type KanbanContextProps<
   columns: C[];
   data: T[];
   activeCardId: string | null;
+  activeCardContent: ReactNode | null;
 };
 
 const KanbanContext = createContext<KanbanContextProps>({
   columns: [],
   data: [],
   activeCardId: null,
+  activeCardContent: null,
 });
 
 // KanbanBoard - Droppable column container
@@ -111,41 +113,27 @@ export const KanbanCard = <T extends KanbanItemProps>({
     isDragging,
   } = useSortable({ id });
 
-  const { activeCardId } = useContext(KanbanContext) as KanbanContextProps;
-
   const style = {
     transition,
     transform: CSS.Transform.toString(transform),
   };
 
   return (
-    <>
-      <Card
-        ref={setNodeRef}
-        style={style}
-        {...attributes}
-        {...listeners}
-        className={cn(
-          "cursor-grab rounded-md border bg-card p-3 shadow-sm active:cursor-grabbing",
-          isDragging && "opacity-50",
-          className
-        )}
-      >
-        <div className="select-none">
-          {children ?? <p className="text-sm font-medium">{name}</p>}
-        </div>
-      </Card>
-      {activeCardId === id &&
-        typeof window !== "undefined" &&
-        createPortal(
-          <DragOverlay>
-            <Card className={cn("cursor-grabbing rounded-md border bg-card p-3 shadow-lg", className)}>
-              {children ?? <p className="text-sm font-medium">{name}</p>}
-            </Card>
-          </DragOverlay>,
-          document.body
-        )}
-    </>
+    <Card
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      className={cn(
+        "cursor-grab rounded-md border bg-card p-3 shadow-sm active:cursor-grabbing",
+        isDragging && "opacity-50",
+        className
+      )}
+    >
+      <div className="select-none">
+        {children ?? <p className="text-sm font-medium">{name}</p>}
+      </div>
+    </Card>
   );
 };
 
@@ -170,7 +158,7 @@ export const KanbanCards = <T extends KanbanItemProps>({
 
   return (
     <SortableContext items={items}>
-      <ScrollArea>
+      <ScrollArea className="max-h-[calc(100vh-320px)]">
         <div
           className={cn("flex flex-col gap-2 p-0.5", className)}
           {...props}
@@ -223,10 +211,21 @@ export const KanbanProvider = <
   ...props
 }: KanbanProviderProps<T, C>) => {
   const [activeCardId, setActiveCardId] = useState<string | null>(null);
+  const [activeCardContent, setActiveCardContent] = useState<ReactNode | null>(null);
 
+  // Add activation constraints to prevent accidental drags
   const sensors = useSensors(
-    useSensor(MouseSensor),
-    useSensor(TouchSensor),
+    useSensor(MouseSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 200,
+        tolerance: 5,
+      },
+    }),
     useSensor(KeyboardSensor)
   );
 
@@ -277,6 +276,7 @@ export const KanbanProvider = <
 
   const handleDragEnd = (event: DragEndEvent) => {
     setActiveCardId(null);
+    setActiveCardContent(null);
     onDragEnd?.(event);
 
     const { active, over } = event;
@@ -323,8 +323,11 @@ export const KanbanProvider = <
     },
   };
 
+  // Get active card data for overlay
+  const activeCard = activeCardId ? data.find((item) => item.id === activeCardId) : null;
+
   return (
-    <KanbanContext.Provider value={{ columns, data, activeCardId }}>
+    <KanbanContext.Provider value={{ columns, data, activeCardId, activeCardContent }}>
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
@@ -334,9 +337,20 @@ export const KanbanProvider = <
         accessibility={{ announcements }}
         {...props}
       >
-        <div className={cn("flex gap-4 overflow-x-auto p-1", className)}>
+        <div className={cn("flex gap-4 p-1", className)}>
           {columns.map((column) => children(column))}
         </div>
+        {typeof window !== "undefined" &&
+          createPortal(
+            <DragOverlay>
+              {activeCard ? (
+                <Card className="cursor-grabbing rounded-md border bg-card p-3 shadow-lg">
+                  <p className="text-sm font-medium">{activeCard.name}</p>
+                </Card>
+              ) : null}
+            </DragOverlay>,
+            document.body
+          )}
       </DndContext>
     </KanbanContext.Provider>
   );
