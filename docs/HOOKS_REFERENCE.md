@@ -1145,15 +1145,13 @@ useParentMessages({
 ### Combining Hooks
 
 ```tsx
-const AgentDashboard = ({ agentId }: { agentId: string }) => {
-  const { agents, isLoading: agentsLoading } = useAgents();
-  const { conversations } = useConversations(agentId);
-  const { sources } = useKnowledgeSources(agentId);
+const AgentDashboard = () => {
+  const { agent, agentId, loading: agentLoading } = useAgent();
+  const { conversations } = useConversations();
+  const { sources } = useKnowledgeSources(agentId || undefined);
   const { hasPermission } = useRoleAuthorization();
   
-  const agent = agents.find(a => a.id === agentId);
-  
-  if (agentsLoading) return <LoadingState />;
+  if (agentLoading) return <LoadingState />;
   
   return (
     <div>

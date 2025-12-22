@@ -1,8 +1,8 @@
 # Social Channel Integrations Architecture
 
-> **Last Updated**: December 2024  
+> **Last Updated**: December 2025  
 > **Status**: Planned  
-> **Related**: [ChatPad Architecture](./CHATPAD_ARCHITECTURE.md), [Database Schema](./DATABASE_SCHEMA.md), [Native Booking System](./NATIVE_BOOKING_SYSTEM.md)
+> **Related**: [Architecture](./ARCHITECTURE.md), [Database Schema](./DATABASE_SCHEMA.md), [Native Booking System](./NATIVE_BOOKING_SYSTEM.md)
 
 ---
 

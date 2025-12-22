@@ -1202,7 +1202,7 @@ All hooks are documented with JSDoc comments. Key data hooks:
 
 | Hook | Purpose |
 |------|---------|
-| `useAgents` | AI agent CRUD operations |
+| `useAgent` | Single Ari agent CRUD operations |
 | `useConversations` | Conversation management, human takeover |
 | `useLeads` | Lead management with conversation linkage |
 | `useTeam` | Team member and role management |
