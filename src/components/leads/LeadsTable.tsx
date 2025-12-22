@@ -95,12 +95,7 @@ export const LeadsTable = ({
   });
 
   const handleRowClick = (lead: Lead) => {
-    console.log('LeadsTable handleRowClick called with:', lead);
-    try {
-      onView(lead);
-    } catch (error) {
-      console.error('Error in onView handler:', error);
-    }
+    onView(lead);
   };
 
   return (

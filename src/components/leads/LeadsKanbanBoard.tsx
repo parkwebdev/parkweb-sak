@@ -49,13 +49,7 @@ interface LeadsKanbanBoardProps {
 }
 
 // Individual lead card content - exported for use in overlay
-export function LeadCardContent({
-  lead,
-  onView,
-}: {
-  lead: KanbanLead;
-  onView: () => void;
-}) {
+export function LeadCardContent({ lead }: { lead: KanbanLead }) {
   return (
     <div className="space-y-2">
       <div className="flex items-start justify-between gap-2">
@@ -186,7 +180,7 @@ export function LeadsKanbanBoard({
   const renderCardOverlay = useCallback(
     (lead: KanbanLead) => (
       <Card className="cursor-grabbing rounded-md border bg-card p-3 shadow-md">
-        <LeadCardContent lead={lead} onView={() => {}} />
+        <LeadCardContent lead={lead} />
       </Card>
     ),
     []
@@ -230,15 +224,7 @@ export function LeadsKanbanBoard({
                       }
                     }}
                   >
-                    <LeadCardContent
-                      lead={lead}
-                      onView={() => {
-                        const originalLead = findOriginalLead(lead.id);
-                        if (originalLead) {
-                          onViewLead(originalLead);
-                        }
-                      }}
-                    />
+                    <LeadCardContent lead={lead} />
                   </KanbanCard>
                 )}
               </KanbanCards>
