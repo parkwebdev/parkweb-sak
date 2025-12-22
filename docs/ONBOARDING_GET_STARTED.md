@@ -1,8 +1,8 @@
 # Get Started Onboarding Experience
 
-> **Last Updated**: December 2024  
-> **Status**: Planning  
-> **Related**: [Application Overview](./APPLICATION_OVERVIEW.md), [Design System](./DESIGN_SYSTEM.md), [Widget Architecture](./WIDGET_ARCHITECTURE.md)
+> **Last Updated**: December 2025  
+> **Status**: Active  
+> **Related**: [Architecture](./ARCHITECTURE.md), [Design System](./DESIGN_SYSTEM.md), [Widget Architecture](./WIDGET_ARCHITECTURE.md)
 
 ## Table of Contents
 
@@ -416,8 +416,8 @@ interface OnboardingProgress {
 }
 
 function useOnboardingProgress(): OnboardingProgress {
-  const { agent } = useAgents();
-  const { knowledgeSources } = useKnowledgeSources(agent?.id);
+  const { agent } = useAgent();
+  const { sources: knowledgeSources } = useKnowledgeSources(agent?.id);
   const { conversations } = useConversations();
   
   // Completion checks
@@ -436,7 +436,7 @@ function useOnboardingProgress(): OnboardingProgress {
 
 | Step | Check | Source |
 |------|-------|--------|
-| Personality | `system_prompt?.length > 50` | `agents` table via `useAgents` |
+| Personality | `system_prompt?.length > 50` | `agents` table via `useAgent` |
 | Knowledge | `knowledgeSources.filter(s => s.status === 'ready').length > 0` | `knowledge_sources` table via `useKnowledgeSources` |
 | Appearance | `deployment_config.widgetColor !== undefined` OR `deployment_config.gradientStart !== defaultGradientStart` | `agents.deployment_config` JSONB |
 | Installation | `localStorage.get('has_viewed_embed_code_{agentId}')` | Client-side localStorage |
@@ -526,7 +526,7 @@ const handleStepAction = (step: OnboardingStep) => {
 **Scenario:** User signs up but no agent has been created yet.
 
 **Handling:**
-- The existing `useAgents` hook auto-creates a default "Ari" agent on first access
+- The existing `useAgent` hook auto-creates a default "Ari" agent on first access
 - Get Started page waits for agent creation before rendering steps
 - Show skeleton loading state during agent creation
 

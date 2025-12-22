@@ -1,8 +1,8 @@
 # Stripe + Payment Integration Specialist Guide
 
-> **Last Updated**: December 2024  
+> **Last Updated**: December 2025  
 > **Status**: Active  
-> **Related**: [Edge Functions](./EDGE_FUNCTIONS.md), [Supabase Integration](./SUPABASE_INTEGRATION_GUIDE.md), [Database Schema](./DATABASE_SCHEMA.md)
+> **Related**: [Edge Functions](./EDGE_FUNCTIONS.md), [Database Schema](./DATABASE_SCHEMA.md)
 
 Senior Payment Integration Engineer guidelines for Stripe payments, subscription management, and shadcn/ui integration. Build production-ready payment systems with proper webhook handling and security best practices.
 
