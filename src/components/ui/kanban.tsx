@@ -326,6 +326,15 @@ export const KanbanProvider = <
     [columns]
   );
 
+  // Precompute column item IDs map for O(1) lookup in collision detection
+  const columnItemIdsMap = React.useMemo(() => {
+    const map = new Map<string, Set<string>>();
+    for (const col of columns) {
+      map.set(col.id, new Set(localData.filter((i) => i.column === col.id).map((i) => i.id)));
+    }
+    return map;
+  }, [columns, localData]);
+
   const collisionDetectionStrategy = React.useCallback<CollisionDetection>(
     (args) => {
       const { active, droppableContainers } = args;
@@ -340,20 +349,22 @@ export const KanbanProvider = <
         // If we are over a column, refine to closest card inside that column.
         if (isColumnId(overId)) {
           const columnId = String(overId);
-          const columnItemIds = new Set(getColumnItems(localData, columnId).map((i) => i.id));
+          const columnItemIds = columnItemIdsMap.get(columnId);
 
-          const cardsInColumn = droppableContainers.filter((container) =>
-            columnItemIds.has(String(container.id))
-          );
-
-          if (cardsInColumn.length > 0) {
-            overId = getFirstCollision(
-              closestCorners({
-                ...args,
-                droppableContainers: cardsInColumn,
-              }),
-              "id"
+          if (columnItemIds && columnItemIds.size > 0) {
+            const cardsInColumn = droppableContainers.filter((container) =>
+              columnItemIds.has(String(container.id))
             );
+
+            if (cardsInColumn.length > 0) {
+              overId = getFirstCollision(
+                closestCorners({
+                  ...args,
+                  droppableContainers: cardsInColumn,
+                }),
+                "id"
+              );
+            }
           }
         }
 
@@ -367,7 +378,7 @@ export const KanbanProvider = <
 
       return lastOverId.current ? [{ id: lastOverId.current }] : [];
     },
-    [getColumnItems, isColumnId, localData]
+    [columnItemIdsMap, isColumnId]
   );
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -399,13 +410,20 @@ export const KanbanProvider = <
         const activeIndex = activeItems.findIndex((i) => i.id === active.id);
         const overIndex = overItems.findIndex((i) => i.id === overId);
 
-        const isBelowOverItem =
-          !!over &&
-          !!active.rect.current.translated &&
-          active.rect.current.translated.top > over.rect.top + over.rect.height;
+        let newIndex: number;
 
-        const modifier = isBelowOverItem ? 1 : 0;
-        const newIndex = overIndex >= 0 ? overIndex + modifier : overItems.length;
+        // Handle empty column case - dropping on column itself
+        if (isColumnId(overId)) {
+          newIndex = overItems.length;
+        } else {
+          const isBelowOverItem =
+            !!over &&
+            !!active.rect.current.translated &&
+            active.rect.current.translated.top > over.rect.top + over.rect.height;
+
+          const modifier = isBelowOverItem ? 1 : 0;
+          newIndex = overIndex >= 0 ? overIndex + modifier : overItems.length;
+        }
 
         const activeItem = activeItems[activeIndex];
         if (!activeItem) return prev;
@@ -492,13 +510,12 @@ export const KanbanProvider = <
     setClonedData(null);
   };
 
-  // Reset this flag after layouts have a chance to settle.
+  // Reset this flag after layouts have a chance to settle (official pattern).
   useEffect(() => {
-    if (!activeCardId) return;
     requestAnimationFrame(() => {
       recentlyMovedToNewContainer.current = false;
     });
-  }, [localData, activeCardId]);
+  }, [localData]);
 
   const announcements: Announcements = {
     onDragStart({ active }) {
