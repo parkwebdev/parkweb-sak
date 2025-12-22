@@ -31,7 +31,7 @@ import { DataTableToolbar } from '@/components/data-table/DataTableToolbar';
 import { createLocationsColumns, type LocationWithCounts, createPropertiesColumns, type PropertyWithLocation } from '@/components/data-table/columns';
 import { EmptyState } from '@/components/ui/empty-state';
 import { MarkerPin01 } from '@untitledui/icons';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import { supabase } from '@/integrations/supabase/client';
 
 interface AriLocationsSectionProps {

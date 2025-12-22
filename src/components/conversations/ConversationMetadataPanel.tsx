@@ -44,7 +44,7 @@ import {
   ClockStopwatch,
   Flag01,
 } from '@untitledui/icons';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 
 // Helper to get appropriate icon for custom field based on field name
 const getCustomFieldIcon = (fieldName: string) => {

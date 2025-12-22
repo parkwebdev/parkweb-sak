@@ -12,7 +12,7 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { AppLoadingScreen } from '@/components/ui/app-loading-screen';
 import { motion } from 'motion/react';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 
 /**
  * Props for the ProtectedRoute component

@@ -163,46 +163,154 @@ const {
 
 ### useKnowledgeSources
 
-Manages knowledge sources for RAG.
+Manages knowledge sources for RAG. **Powered by React Query** with real-time updates.
 
 ```tsx
 import { useKnowledgeSources } from '@/hooks/useKnowledgeSources';
 
 const {
   sources,              // KnowledgeSource[] - All sources
-  isLoading,           // boolean
-  addSource,           // (type, source, file?) => Promise
-  deleteSource,        // (id) => Promise
-  retrainAll,          // () => Promise - Retrain embeddings
-  getProcessingStatus, // (id) => ProcessingStatus
-} = useKnowledgeSources(agentId: string);
+  loading,              // boolean
+  uploadDocument,       // (file, agentId, userId) => Promise<string | null>
+  addUrlSource,         // (url, agentId, userId, options?) => Promise<string | null>
+  addSitemapSource,     // (url, agentId, userId, options?) => Promise<string | null>
+  addTextSource,        // (content, agentId, userId, type?, metadata?) => Promise<string | null>
+  addPropertyListingSource, // (url, agentId, userId, options?) => Promise<string | null>
+  deleteSource,         // (id) => Promise
+  deleteChildSource,    // (id) => Promise - Delete sitemap child
+  reprocessSource,      // (id) => Promise
+  resumeProcessing,     // (id) => Promise
+  retryChildSource,     // (id) => Promise
+  retrainAllSources,    // (onProgress?) => Promise<{success, failed}>
+  triggerManualRefresh, // (id) => Promise
+  isSourceOutdated,     // (source) => boolean
+  getChildSources,      // (parentId) => KnowledgeSource[]
+  getParentSources,     // () => KnowledgeSource[]
+  refetch,              // () => void
+} = useKnowledgeSources(agentId?: string);
 ```
+
+**Key Features**:
+- React Query caching with 2-minute stale time
+- Real-time updates via Supabase subscription
+- Optimistic updates for mutations
 
 **File**: `src/hooks/useKnowledgeSources.ts`
 
 ---
 
+### useLocations
+
+Manages locations (communities/properties/sites). **Powered by React Query** with real-time updates.
+
+```tsx
+import { useLocations } from '@/hooks/useLocations';
+
+const {
+  locations,        // Location[] - All locations
+  loading,          // boolean
+  createLocation,   // (formData, userId) => Promise<string | null>
+  updateLocation,   // (id, formData) => Promise<boolean>
+  deleteLocation,   // (id) => Promise<boolean>
+  getBusinessHours, // (location) => BusinessHours
+  refetch,          // () => void
+} = useLocations(agentId?: string);
+```
+
+**Key Features**:
+- React Query caching with 2-minute stale time
+- Real-time updates via Supabase subscription
+- Hard deletes (permanent removal)
+
+**File**: `src/hooks/useLocations.ts`
+
+---
+
 ### useHelpArticles
 
-Manages help center articles and categories.
+Manages help center articles and categories. **Powered by React Query** with real-time updates.
 
 ```tsx
 import { useHelpArticles } from '@/hooks/useHelpArticles';
 
 const {
-  categories,       // Category[] - All categories with articles
-  isLoading,       // boolean
-  createCategory,  // (data) => Promise
-  updateCategory,  // (id, data) => Promise
-  deleteCategory,  // (id, targetCategoryId?) => Promise
-  createArticle,   // (data) => Promise
-  updateArticle,   // (id, data) => Promise
-  deleteArticle,   // (id) => Promise
-  reorderArticles, // (categoryId, articleIds) => Promise
+  articles,          // HelpArticle[] - All articles
+  categories,        // HelpCategory[] - All categories
+  loading,           // boolean
+  addArticle,        // (data) => Promise<string>
+  updateArticle,     // (id, updates) => Promise
+  deleteArticle,     // (id) => Promise
+  reorderArticles,   // (reorderedArticles) => Promise
+  addCategory,       // (name, description?, icon?) => Promise<string>
+  updateCategory,    // (oldName, newName, description?, icon?) => Promise
+  removeCategory,    // (name, options?) => Promise
+  moveArticleToCategory, // (articleId, targetCategory) => Promise
+  bulkImport,        // (importData) => Promise<number>
+  embedAllArticles,  // (onProgress?) => Promise<number>
+  refetch,           // () => void
 } = useHelpArticles(agentId: string);
 ```
 
+**Key Features**:
+- React Query caching with 2-minute stale time
+- Real-time updates via Supabase subscription
+- Automatic embedding generation for RAG
+
 **File**: `src/hooks/useHelpArticles.ts`
+
+---
+
+### useAnnouncements
+
+Manages widget announcement banners. **Powered by React Query** with real-time updates.
+
+```tsx
+import { useAnnouncements } from '@/hooks/useAnnouncements';
+
+const {
+  announcements,          // Announcement[] - All announcements
+  loading,                // boolean
+  addAnnouncement,        // (data) => Promise<Announcement>
+  updateAnnouncement,     // (id, updates) => Promise<Announcement>
+  deleteAnnouncement,     // (id) => Promise
+  reorderAnnouncements,   // (reorderedAnnouncements) => Promise
+  refetch,                // () => void
+} = useAnnouncements(agentId: string);
+```
+
+**Key Features**:
+- React Query caching with 2-minute stale time
+- Real-time updates via Supabase subscription
+- Automatic image cleanup on delete
+
+**File**: `src/hooks/useAnnouncements.ts`
+
+---
+
+### useNewsItems
+
+Manages widget news/updates feed. **Powered by React Query** with real-time updates.
+
+```tsx
+import { useNewsItems } from '@/hooks/useNewsItems';
+
+const {
+  newsItems,          // NewsItem[] - All news items
+  loading,            // boolean
+  addNewsItem,        // (data) => Promise<NewsItem>
+  updateNewsItem,     // (id, updates) => Promise<NewsItem>
+  deleteNewsItem,     // (id) => Promise
+  reorderNewsItems,   // (reorderedItems) => Promise
+  refetch,            // () => void
+} = useNewsItems(agentId: string);
+```
+
+**Key Features**:
+- React Query caching with 2-minute stale time
+- Real-time updates via Supabase subscription
+- Automatic image cleanup on delete
+
+**File**: `src/hooks/useNewsItems.ts`
 
 ---
 
