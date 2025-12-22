@@ -168,7 +168,7 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
         </Button>
       </PageHeader>
 
-      <div className="px-4 lg:px-8 mt-6 space-y-6">
+      <div className="px-4 lg:px-8 mt-6 space-y-6 w-full min-w-0 overflow-hidden">
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           <div className="p-4 border rounded-lg">
