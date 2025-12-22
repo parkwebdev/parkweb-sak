@@ -19,20 +19,25 @@ import {
   closestCorners,
   DndContext,
   DragOverlay,
+  getFirstCollision,
   KeyboardSensor,
   MeasuringStrategy,
   MouseSensor,
+  pointerWithin,
+  rectIntersection,
   TouchSensor,
   useDroppable,
   useSensor,
   useSensors,
   type Announcements,
+  type CollisionDetection,
   type DndContextProps,
   type DragEndEvent,
   type DragOverEvent,
   type DragStartEvent,
   type DropAnimation,
   defaultDropAnimationSideEffects,
+  type UniqueIdentifier,
 } from "@dnd-kit/core";
 import {
   arrayMove,
@@ -257,18 +262,24 @@ export const KanbanProvider = <
 }: KanbanProviderProps<T, C>) => {
   const [activeCardId, setActiveCardId] = useState<string | null>(null);
   const [activeCardContent, setActiveCardContent] = useState<ReactNode | null>(null);
-  
-  // LOCAL state for visual updates during drag - only committed on dragEnd
+
+  // Local state used for visual updates during drag; only committed to parent on drag end.
   const [localData, setLocalData] = useState<T[]>(data);
 
-  // Sync external data changes when NOT dragging
+  // Clone original drag-start state so we can restore on cancel.
+  const [clonedData, setClonedData] = useState<T[] | null>(null);
+
+  // From official dnd-kit MultipleContainers pattern: stabilizes collision detection to prevent flicker.
+  const lastOverId = React.useRef<UniqueIdentifier | null>(null);
+  const recentlyMovedToNewContainer = React.useRef(false);
+
+  // Sync external data changes when NOT dragging.
   useEffect(() => {
     if (!activeCardId) {
       setLocalData(data);
     }
   }, [data, activeCardId]);
 
-  // Add activation constraints to prevent accidental drags
   const sensors = useSensors(
     useSensor(MouseSensor, {
       activationConstraint: {
@@ -284,65 +295,143 @@ export const KanbanProvider = <
     useSensor(KeyboardSensor)
   );
 
+  const isColumnId = React.useCallback(
+    (id: UniqueIdentifier) => columns.some((c) => c.id === id),
+    [columns]
+  );
+
+  const findContainer = React.useCallback(
+    (id: UniqueIdentifier) => {
+      if (isColumnId(id)) return String(id);
+      const item = localData.find((i) => i.id === id);
+      return item?.column;
+    },
+    [isColumnId, localData]
+  );
+
+  const getColumnItems = React.useCallback(
+    (source: T[], columnId: string) => source.filter((i) => i.column === columnId),
+    []
+  );
+
+  const flattenByColumns = React.useCallback(
+    (byColumn: Map<string, T[]>) => {
+      const out: T[] = [];
+      for (const col of columns) {
+        const items = byColumn.get(col.id) ?? [];
+        out.push(...items);
+      }
+      return out;
+    },
+    [columns]
+  );
+
+  const collisionDetectionStrategy = React.useCallback<CollisionDetection>(
+    (args) => {
+      const { active, droppableContainers } = args;
+
+      const pointerIntersections = pointerWithin(args);
+      const intersections =
+        pointerIntersections.length > 0 ? pointerIntersections : rectIntersection(args);
+
+      let overId = getFirstCollision(intersections, "id");
+
+      if (overId != null) {
+        // If we are over a column, refine to closest card inside that column.
+        if (isColumnId(overId)) {
+          const columnId = String(overId);
+          const columnItemIds = new Set(getColumnItems(localData, columnId).map((i) => i.id));
+
+          const cardsInColumn = droppableContainers.filter((container) =>
+            columnItemIds.has(String(container.id))
+          );
+
+          if (cardsInColumn.length > 0) {
+            overId = getFirstCollision(
+              closestCorners({
+                ...args,
+                droppableContainers: cardsInColumn,
+              }),
+              "id"
+            );
+          }
+        }
+
+        lastOverId.current = overId;
+        return [{ id: overId }];
+      }
+
+      if (recentlyMovedToNewContainer.current) {
+        lastOverId.current = active.id;
+      }
+
+      return lastOverId.current ? [{ id: lastOverId.current }] : [];
+    },
+    [getColumnItems, isColumnId, localData]
+  );
+
   const handleDragStart = (event: DragStartEvent) => {
     const card = localData.find((item) => item.id === event.active.id);
     if (card) {
-      setActiveCardId(event.active.id as string);
+      setActiveCardId(String(event.active.id));
+      setClonedData(localData);
+      setActiveCardContent(renderOverlay ? renderOverlay(card) : null);
     }
     onDragStart?.(event);
   };
 
   const handleDragOver = (event: DragOverEvent) => {
     const { active, over } = event;
+    const overId = over?.id;
+    if (overId == null) return;
 
-    if (!over) {
-      return;
-    }
+    const activeContainer = findContainer(active.id);
+    const overContainer = findContainer(overId);
 
-    const activeItem = localData.find((item) => item.id === active.id);
-    const overItem = localData.find((item) => item.id === over.id);
+    if (!activeContainer || !overContainer) return;
 
-    if (!activeItem) {
-      return;
-    }
-
-    const activeColumn = activeItem.column;
-    const overColumn =
-      overItem?.column ||
-      columns.find((col) => col.id === over.id)?.id;
-
-    if (!overColumn) {
-      return;
-    }
-
-    // Moving to a different column
-    if (activeColumn !== overColumn) {
+    // Only handle cross-column moves here (official pattern). Same-column reordering happens on drag end.
+    if (activeContainer !== overContainer) {
       setLocalData((prev) => {
-        const newData = [...prev];
-        const activeIndex = newData.findIndex((item) => item.id === active.id);
-        
-        // Update the column
-        newData[activeIndex] = { ...newData[activeIndex], column: overColumn };
-        
-        // If dropping on another item, reorder
-        if (overItem) {
-          const overIndex = newData.findIndex((item) => item.id === over.id);
-          return arrayMove(newData, activeIndex, overIndex);
+        const activeItems = prev.filter((i) => i.column === activeContainer);
+        const overItems = prev.filter((i) => i.column === overContainer);
+
+        const activeIndex = activeItems.findIndex((i) => i.id === active.id);
+        const overIndex = overItems.findIndex((i) => i.id === overId);
+
+        const isBelowOverItem =
+          !!over &&
+          !!active.rect.current.translated &&
+          active.rect.current.translated.top > over.rect.top + over.rect.height;
+
+        const modifier = isBelowOverItem ? 1 : 0;
+        const newIndex = overIndex >= 0 ? overIndex + modifier : overItems.length;
+
+        const activeItem = activeItems[activeIndex];
+        if (!activeItem) return prev;
+
+        const updatedActive = { ...activeItem, column: overContainer } as T;
+
+        // Build per-column arrays, update just the two affected columns, then flatten in column order.
+        const byColumn = new Map<string, T[]>();
+        for (const col of columns) {
+          byColumn.set(col.id, prev.filter((i) => i.column === col.id));
         }
-        
-        return newData;
-      });
-    } 
-    // Same column reordering
-    else if (overItem && active.id !== over.id) {
-      setLocalData((prev) => {
-        const activeIndex = prev.findIndex((item) => item.id === active.id);
-        const overIndex = prev.findIndex((item) => item.id === over.id);
-        
-        if (activeIndex !== -1 && overIndex !== -1) {
-          return arrayMove(prev, activeIndex, overIndex);
-        }
-        return prev;
+
+        // Remove from old container.
+        byColumn.set(
+          activeContainer,
+          (byColumn.get(activeContainer) ?? []).filter((i) => i.id !== active.id)
+        );
+
+        // Insert into new container.
+        const nextOver = [...(byColumn.get(overContainer) ?? [])];
+        const cleanedOver = nextOver.filter((i) => i.id !== active.id);
+        cleanedOver.splice(newIndex, 0, updatedActive);
+        byColumn.set(overContainer, cleanedOver);
+
+        recentlyMovedToNewContainer.current = true;
+        return flattenByColumns(byColumn);
       });
     }
 
@@ -350,22 +439,66 @@ export const KanbanProvider = <
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
-    // Commit the local state to parent
-    if (activeCardId) {
-      onDataChange?.(localData);
+    const { active, over } = event;
+
+    if (!over) {
+      setActiveCardId(null);
+      setActiveCardContent(null);
+      setClonedData(null);
+      onDragEnd?.(event);
+      return;
     }
-    
+
+    const activeContainer = findContainer(active.id);
+    const overContainer = findContainer(over.id);
+
+    let nextData = localData;
+
+    // Same-column reordering happens on drag end (official pattern).
+    if (activeContainer && overContainer && activeContainer === overContainer) {
+      const colId = activeContainer;
+      const columnItems = localData.filter((i) => i.column === colId);
+      const activeIndex = columnItems.findIndex((i) => i.id === active.id);
+      const overIndex = columnItems.findIndex((i) => i.id === over.id);
+
+      if (activeIndex !== -1 && overIndex !== -1 && activeIndex !== overIndex) {
+        const reordered = arrayMove(columnItems, activeIndex, overIndex);
+
+        const byColumn = new Map<string, T[]>();
+        for (const col of columns) {
+          byColumn.set(col.id, localData.filter((i) => i.column === col.id));
+        }
+        byColumn.set(colId, reordered);
+        nextData = flattenByColumns(byColumn);
+      }
+    }
+
+    setLocalData(nextData);
+    onDataChange?.(nextData);
+
     setActiveCardId(null);
     setActiveCardContent(null);
+    setClonedData(null);
+
     onDragEnd?.(event);
   };
 
   const handleDragCancel = () => {
-    // Reset to original data on cancel
-    setLocalData(data);
+    if (clonedData) {
+      setLocalData(clonedData);
+    }
     setActiveCardId(null);
     setActiveCardContent(null);
+    setClonedData(null);
   };
+
+  // Reset this flag after layouts have a chance to settle.
+  useEffect(() => {
+    if (!activeCardId) return;
+    requestAnimationFrame(() => {
+      recentlyMovedToNewContainer.current = false;
+    });
+  }, [localData, activeCardId]);
 
   const announcements: Announcements = {
     onDragStart({ active }) {
@@ -395,14 +528,17 @@ export const KanbanProvider = <
     },
   };
 
-  // Get active card data for overlay
-  const activeCard = activeCardId ? localData.find((item) => item.id === activeCardId) : null;
+  const activeCard = activeCardId
+    ? localData.find((item) => item.id === activeCardId)
+    : null;
 
   return (
-    <KanbanContext.Provider value={{ columns, data: localData, activeCardId, activeCardContent }}>
+    <KanbanContext.Provider
+      value={{ columns, data: localData, activeCardId, activeCardContent }}
+    >
       <DndContext
         sensors={sensors}
-        collisionDetection={closestCorners}
+        collisionDetection={collisionDetectionStrategy}
         measuring={{
           droppable: {
             strategy: MeasuringStrategy.Always,
@@ -423,9 +559,7 @@ export const KanbanProvider = <
             <DragOverlay dropAnimation={dropAnimationConfig}>
               {activeCard ? (
                 renderOverlay ? (
-                  <div className="w-80">
-                    {renderOverlay(activeCard)}
-                  </div>
+                  <div className="w-80">{renderOverlay(activeCard)}</div>
                 ) : (
                   <Card className="w-80 cursor-grabbing rounded-md border bg-card p-3 shadow-xl ring-2 ring-primary/20">
                     <p className="text-sm font-medium">{activeCard.name}</p>
@@ -439,3 +573,4 @@ export const KanbanProvider = <
     </KanbanContext.Provider>
   );
 };
+
