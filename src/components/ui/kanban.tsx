@@ -173,7 +173,7 @@ export const KanbanCard = <T extends KanbanItemProps>({
       {...listeners}
       className={cn(
         "cursor-grab rounded-md border bg-card p-3 shadow-sm active:cursor-grabbing transition-shadow duration-200",
-        isDragging && "opacity-50 shadow-lg scale-[1.02]",
+        isDragging && "opacity-50 shadow-lg",
         !isDragging && "hover:shadow-md",
         className
       )}
