@@ -8,6 +8,7 @@ import { formatDistanceToNow } from "date-fns";
 import { Mail01, Phone, Building02, Eye } from "@untitledui/icons";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import {
   KanbanProvider,
   KanbanBoard,
@@ -46,8 +47,8 @@ interface LeadsKanbanBoardProps {
   onViewLead: (lead: Tables<"leads">) => void;
 }
 
-// Individual lead card content
-function LeadCardContent({
+// Individual lead card content - exported for use in overlay
+export function LeadCardContent({
   lead,
   onView,
 }: {
@@ -153,46 +154,57 @@ export function LeadsKanbanBoard({
     [kanbanLeads, onStatusChange]
   );
 
+  // Render overlay for dragged card
+  const renderCardOverlay = useCallback(
+    (lead: KanbanLead) => (
+      <Card className="cursor-grabbing rounded-md border bg-card p-3 shadow-xl ring-2 ring-primary/20">
+        <LeadCardContent lead={lead} onView={() => {}} />
+      </Card>
+    ),
+    []
+  );
+
   return (
     <div className="w-full min-w-0">
       <div className="overflow-x-auto pb-4">
         <KanbanProvider
-        columns={COLUMNS as unknown as { id: string; name: string }[]}
-        data={kanbanLeads}
-        onDataChange={handleDataChange}
-      >
-        {(column) => (
-          <KanbanBoard key={column.id} id={column.id}>
-            <KanbanHeader>
-              <div className="flex items-center gap-2">
-                <div
-                  className={`h-2 w-2 rounded-full ${
-                    COLUMNS.find((c) => c.id === column.id)?.colorClass
-                  }`}
-                />
-                <span className="text-sm font-medium">{column.name}</span>
-                <Badge variant="secondary" className="h-5 px-1.5 text-xs">
-                  {getColumnCount(column.id)}
-                </Badge>
-              </div>
-            </KanbanHeader>
-            <KanbanCards id={column.id}>
-              {(lead: KanbanLead) => (
-                <KanbanCard key={lead.id} id={lead.id} name={lead.name} column={lead.column}>
-                  <LeadCardContent
-                    lead={lead}
-                    onView={() => {
-                      const originalLead = findOriginalLead(lead.id);
-                      if (originalLead) {
-                        onViewLead(originalLead);
-                      }
-                    }}
+          columns={COLUMNS as unknown as { id: string; name: string }[]}
+          data={kanbanLeads}
+          onDataChange={handleDataChange}
+          renderOverlay={renderCardOverlay}
+        >
+          {(column) => (
+            <KanbanBoard key={column.id} id={column.id}>
+              <KanbanHeader>
+                <div className="flex items-center gap-2">
+                  <div
+                    className={`h-2 w-2 rounded-full ${
+                      COLUMNS.find((c) => c.id === column.id)?.colorClass
+                    }`}
                   />
-                </KanbanCard>
-              )}
-            </KanbanCards>
-          </KanbanBoard>
-        )}
+                  <span className="text-sm font-medium">{column.name}</span>
+                  <Badge variant="secondary" className="h-5 px-1.5 text-xs">
+                    {getColumnCount(column.id)}
+                  </Badge>
+                </div>
+              </KanbanHeader>
+              <KanbanCards id={column.id}>
+                {(lead: KanbanLead) => (
+                  <KanbanCard key={lead.id} id={lead.id} name={lead.name} column={lead.column}>
+                    <LeadCardContent
+                      lead={lead}
+                      onView={() => {
+                        const originalLead = findOriginalLead(lead.id);
+                        if (originalLead) {
+                          onViewLead(originalLead);
+                        }
+                      }}
+                    />
+                  </KanbanCard>
+                )}
+              </KanbanCards>
+            </KanbanBoard>
+          )}
         </KanbanProvider>
       </div>
     </div>
