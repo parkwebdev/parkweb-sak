@@ -274,17 +274,14 @@ export const KanbanProvider = <
   const recentlyMovedToNewContainer = React.useRef(false);
 
   // Prevent "flash" when parent data refetches right after we commit a drag.
-  // We allow one incoming `data` update to be ignored, because our localData
-  // already reflects the committed UI state.
-  const justCommittedRef = React.useRef(false);
+  // Some parents may refetch multiple times (e.g., mutation + realtime update).
+  // We ignore *all* incoming `data` updates for a short window after committing.
+  const commitTimeRef = React.useRef<number>(0);
 
   // Sync external data changes when NOT dragging.
   useEffect(() => {
     if (!activeCardId) {
-      if (justCommittedRef.current) {
-        justCommittedRef.current = false;
-        return;
-      }
+      if (Date.now() - commitTimeRef.current < 500) return;
       setLocalData(data);
     }
   }, [data, activeCardId]);
@@ -484,7 +481,7 @@ export const KanbanProvider = <
     // moved the item into the correct column/position, so we just commit.
     if (isColumnId(overId)) {
       const committed = localData;
-      justCommittedRef.current = true;
+      commitTimeRef.current = Date.now();
 
       unstable_batchedUpdates(() => {
         setLocalData(committed);
@@ -527,7 +524,7 @@ export const KanbanProvider = <
       }
     }
 
-    justCommittedRef.current = true;
+    commitTimeRef.current = Date.now();
 
     unstable_batchedUpdates(() => {
       setLocalData(nextData);
@@ -542,7 +539,8 @@ export const KanbanProvider = <
   };
 
   const handleDragCancel = () => {
-    justCommittedRef.current = false;
+    // Drag cancelled: allow immediate parent-driven resync.
+    commitTimeRef.current = 0;
     unstable_batchedUpdates(() => {
       if (clonedData) {
         setLocalData(clonedData);
