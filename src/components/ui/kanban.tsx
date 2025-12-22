@@ -120,7 +120,7 @@ export const KanbanBoard = ({ id, children, className }: KanbanBoardProps) => {
     <div
       ref={setNodeRef}
       className={cn(
-        "flex w-80 shrink-0 flex-col rounded-lg bg-muted/40 p-2 transition-all duration-200",
+        "flex w-80 shrink-0 flex-col rounded-lg bg-muted/40 p-2 transition-all duration-200 h-full",
         isOver && "ring-2 ring-primary/20 bg-muted/60",
         className
       )}
@@ -591,7 +591,7 @@ export const KanbanProvider = <
         accessibility={{ announcements }}
         {...props}
       >
-        <div className={cn("flex gap-4 p-1", className)}>
+        <div className={cn("flex gap-4 p-1 h-full min-h-[400px]", className)}>
           {columns.map((column) => children(column))}
         </div>
         {typeof window !== "undefined" &&
