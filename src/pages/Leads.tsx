@@ -15,9 +15,9 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Grid01, List, SearchLg, Trash01, XClose } from '@untitledui/icons';
+import { LayoutAlt04, List, SearchLg, Trash01, XClose } from '@untitledui/icons';
 import { useLeads } from '@/hooks/useLeads';
-import { LeadCard } from '@/components/leads/LeadCard';
+import { LeadsKanbanBoard } from '@/components/leads/LeadsKanbanBoard';
 import { LeadsTable } from '@/components/leads/LeadsTable';
 import { LeadDetailsSheet } from '@/components/leads/LeadDetailsSheet';
 import { CreateLeadDialog } from '@/components/leads/CreateLeadDialog';
@@ -25,8 +25,6 @@ import { DeleteLeadDialog } from '@/components/leads/DeleteLeadDialog';
 import { PageHeader } from '@/components/ui/page-header';
 import { LoadingState } from '@/components/ui/loading-state';
 import type { Tables, Enums } from '@/integrations/supabase/types';
-import { AnimatedList } from '@/components/ui/animated-list';
-import { AnimatedItem } from '@/components/ui/animated-item';
 
 /** Props for the Leads page */
 interface LeadsProps {
@@ -41,7 +39,7 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [viewMode, setViewMode] = useState<'grid' | 'table'>('table');
+  const [viewMode, setViewMode] = useState<'kanban' | 'table'>('kanban');
   
   // Bulk selection state
   const [selectedLeadIds, setSelectedLeadIds] = useState<Set<string>>(new Set());
@@ -221,16 +219,18 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
 
             <div className="flex border rounded-lg">
               <Button
-                variant={viewMode === 'grid' ? 'secondary' : 'ghost'}
+                variant={viewMode === 'kanban' ? 'secondary' : 'ghost'}
                 size="sm"
-                onClick={() => setViewMode('grid')}
+                onClick={() => setViewMode('kanban')}
+                aria-label="Kanban view"
               >
-                <Grid01 className="h-4 w-4" />
+                <LayoutAlt04 className="h-4 w-4" />
               </Button>
               <Button
                 variant={viewMode === 'table' ? 'secondary' : 'ghost'}
                 size="sm"
                 onClick={() => setViewMode('table')}
+                aria-label="Table view"
               >
                 <List className="h-4 w-4" />
               </Button>
@@ -268,14 +268,12 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
         {/* Content */}
         {loading ? (
           <LoadingState text="Loading leads..." />
-        ) : viewMode === 'grid' ? (
-          <AnimatedList className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" staggerDelay={0.06}>
-            {filteredLeads.map((lead) => (
-              <AnimatedItem key={lead.id}>
-                <LeadCard lead={lead} onView={handleViewLead} />
-              </AnimatedItem>
-            ))}
-          </AnimatedList>
+        ) : viewMode === 'kanban' ? (
+          <LeadsKanbanBoard
+            leads={filteredLeads}
+            onStatusChange={(leadId, status) => updateLead(leadId, { status })}
+            onViewLead={handleViewLead}
+          />
         ) : (
           <LeadsTable
             leads={filteredLeads}
