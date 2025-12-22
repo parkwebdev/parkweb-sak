@@ -1,8 +1,24 @@
-import { useState, useEffect, useRef } from 'react';
+/**
+ * Agent Hook
+ * 
+ * Hook for managing the single Ari agent.
+ * Each user has exactly one agent (Ari) - this hook provides access to it.
+ * 
+ * Uses React Query for:
+ * - Automatic caching across all 7+ components that use this hook
+ * - Background refetching for fresh data
+ * - Real-time updates via Supabase subscription
+ * 
+ * @module hooks/useAgent
+ */
+
+import { useQueryClient, useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/lib/toast';
 import { logger } from '@/utils/logger';
+import { queryKeys } from '@/lib/query-keys';
+import { useSupabaseQuery } from '@/hooks/useSupabaseQuery';
 import type { Tables, TablesUpdate, Json } from '@/integrations/supabase/types';
 import type { AgentDeploymentConfig } from '@/types/metadata';
 
@@ -10,56 +26,64 @@ type Agent = Tables<'agents'>;
 type AgentUpdate = TablesUpdate<'agents'>;
 
 /**
+ * Fetches the agent for the given user ID
+ */
+async function fetchAgent(userId: string): Promise<Agent | null> {
+  const { data, error } = await supabase
+    .from('agents')
+    .select('*')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (error) {
+    logger.error('Error fetching agent:', error);
+    throw error;
+  }
+
+  return data;
+}
+
+/**
  * Hook for managing the single Ari agent.
  * Each user has exactly one agent (Ari) - this hook provides access to it.
  * 
+ * Now powered by React Query - the agent data is cached and shared
+ * across all components that use this hook (7+ places in the codebase).
+ * 
  * @returns {Object} Agent management methods and state
  * @returns {Agent|null} agent - The user's Ari agent
- * @returns {boolean} loading - Loading state (only true on initial load)
+ * @returns {string|null} agentId - The agent's ID (convenience accessor)
+ * @returns {boolean} loading - Loading state
  * @returns {Function} updateAgent - Update the agent
  * @returns {Function} updateDeploymentConfig - Update agent deployment settings
- * @returns {Function} refetch - Manually refresh agent (silent, no loading state)
+ * @returns {Function} refetch - Manually refresh agent (triggers background refetch)
  */
 export const useAgent = () => {
   const { user } = useAuth();
-  const [agent, setAgent] = useState<Agent | null>(null);
-  const [loading, setLoading] = useState(true);
-  const initialLoadDone = useRef(false);
+  const queryClient = useQueryClient();
 
-  const fetchAgent = async (isRefetch = false) => {
-    if (!user?.id) return;
-    
-    // Only show loading state on initial load, not refetches
-    if (!isRefetch && !initialLoadDone.current) {
-      setLoading(true);
-    }
-    
-    try {
-      const { data, error } = await supabase
-        .from('agents')
-        .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle();
+  // Query for agent data with real-time subscription
+  const {
+    data: agent = null,
+    isLoading,
+    refetch,
+  } = useSupabaseQuery<Agent | null>({
+    queryKey: queryKeys.agent.detail(user?.id),
+    queryFn: () => fetchAgent(user!.id),
+    enabled: !!user?.id,
+    staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
+    gcTime: 1000 * 60 * 30, // Keep in cache for 30 minutes
+    realtime: user?.id ? {
+      table: 'agents',
+      filter: `user_id=eq.${user.id}`,
+    } : undefined,
+  });
 
-      if (error) throw error;
-      setAgent(data);
-      initialLoadDone.current = true;
-    } catch (error) {
-      logger.error('Error fetching agent:', error);
-      toast.error('Failed to load agent');
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Mutation for updating agent
+  const updateMutation = useMutation({
+    mutationFn: async (updates: AgentUpdate) => {
+      if (!agent?.id) throw new Error('No agent to update');
 
-  useEffect(() => {
-    fetchAgent(false);
-  }, [user?.id]);
-
-  const updateAgent = async (updates: AgentUpdate) => {
-    if (!agent?.id) return null;
-
-    try {
       const { data, error } = await supabase
         .from('agents')
         .update(updates)
@@ -68,27 +92,36 @@ export const useAgent = () => {
         .single();
 
       if (error) throw error;
-      
-      setAgent(data);
-      // Success - no toast needed (SavedIndicator shows feedback in tabs)
       return data;
-    } catch (error) {
+    },
+    onSuccess: (data) => {
+      // Update the cache immediately with the new data
+      queryClient.setQueryData(queryKeys.agent.detail(user?.id), data);
+    },
+    onError: (error) => {
       logger.error('Error updating agent:', error);
       toast.error('Failed to update agent');
+    },
+  });
+
+  const updateAgent = async (updates: AgentUpdate): Promise<Agent | null> => {
+    try {
+      return await updateMutation.mutateAsync(updates);
+    } catch {
       return null;
     }
   };
 
-  const updateDeploymentConfig = async (config: AgentDeploymentConfig) => {
+  const updateDeploymentConfig = async (config: AgentDeploymentConfig): Promise<Agent | null> => {
     return updateAgent({ deployment_config: config as unknown as Json });
   };
 
   return {
     agent,
     agentId: agent?.id || null,
-    loading,
+    loading: isLoading,
     updateAgent,
     updateDeploymentConfig,
-    refetch: () => fetchAgent(true),
+    refetch: () => { refetch(); },
   };
 };
