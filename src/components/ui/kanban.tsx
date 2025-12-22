@@ -277,9 +277,14 @@ export const KanbanProvider = <
   // This prevents "snap back" when the item crosses columns during dragOver.
   const activeContainerRef = React.useRef<string | null>(null);
 
+  // Prevent flash when parent data refetches right after we commit a drag.
+  const commitTimeRef = React.useRef<number>(0);
+
   // Sync external data changes when NOT dragging.
   useEffect(() => {
     if (!activeCardId) {
+      // Ignore data updates for 500ms after commit to prevent flash
+      if (Date.now() - commitTimeRef.current < 500) return;
       setLocalData(data);
     }
   }, [data, activeCardId]);
@@ -477,72 +482,31 @@ export const KanbanProvider = <
     }
 
     const overId = over.id;
-
-    const startContainer = activeContainerRef.current ?? findContainer(active.id);
-
-    // Dropped on a column (not a card). In this case, handleDragOver already
-    // moved the item into the correct column/position, so we just commit.
-    if (isColumnId(overId)) {
-      const committed = localData;
-
-      unstable_batchedUpdates(() => {
-        setLocalData(committed);
-        onDataChange?.(committed);
-
-        setActiveCardId(null);
-        setActiveCardContent(null);
-        setClonedData(null);
-      });
-
-      activeContainerRef.current = null;
-      onDragEnd?.(event);
-      return;
-    }
-
+    const startContainer = activeContainerRef.current;
     const overContainer = findContainer(overId);
-
-    // If the item crossed columns, handleDragOver already produced the correct state.
-    // Never attempt same-column arrayMove using a recalculated container (causes snap-back).
-    if (startContainer && overContainer && startContainer !== overContainer) {
-      const committed = localData;
-
-      unstable_batchedUpdates(() => {
-        setLocalData(committed);
-        onDataChange?.(committed);
-
-        setActiveCardId(null);
-        setActiveCardContent(null);
-        setClonedData(null);
-      });
-
-      activeContainerRef.current = null;
-      onDragEnd?.(event);
-      return;
-    }
 
     let nextData = localData;
 
-    // Same-column reordering happens on drag end (official pattern).
-    if (overContainer) {
-      const colId = overContainer;
-      const columnItems = localData.filter((i) => i.column === colId);
+    // Same-column reordering: only do arrayMove if we stayed in the same column
+    if (startContainer && overContainer && startContainer === overContainer && !isColumnId(overId)) {
+      const columnItems = localData.filter((i) => i.column === overContainer);
       const activeIndex = columnItems.findIndex((i) => i.id === active.id);
       const overIndex = columnItems.findIndex((i) => i.id === overId);
 
-      // Only compare indices (official pattern). If either index is missing, skip.
-      if (activeIndex !== overIndex) {
-        if (activeIndex !== -1 && overIndex !== -1) {
-          const reordered = arrayMove(columnItems, activeIndex, overIndex);
+      if (activeIndex !== -1 && overIndex !== -1 && activeIndex !== overIndex) {
+        const reordered = arrayMove(columnItems, activeIndex, overIndex);
 
-          const byColumn = new Map<string, T[]>();
-          for (const col of columns) {
-            byColumn.set(col.id, localData.filter((i) => i.column === col.id));
-          }
-          byColumn.set(colId, reordered);
-          nextData = flattenByColumns(byColumn);
+        const byColumn = new Map<string, T[]>();
+        for (const col of columns) {
+          byColumn.set(col.id, localData.filter((i) => i.column === col.id));
         }
+        byColumn.set(overContainer, reordered);
+        nextData = flattenByColumns(byColumn);
       }
     }
+    // Cross-column moves: handleDragOver already positioned the item, just commit localData
+
+    commitTimeRef.current = Date.now();
 
     unstable_batchedUpdates(() => {
       setLocalData(nextData);

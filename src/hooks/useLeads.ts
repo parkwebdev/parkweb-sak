@@ -86,7 +86,7 @@ export const useLeads = () => {
       if (error) throw error;
 
       // Success - no toast needed (SavedIndicator shows feedback for status changes)
-      // Real-time subscription will refresh the list.
+      fetchLeads();
     } catch (error: unknown) {
       toast.error('Error updating lead', {
         description: getErrorMessage(error),
