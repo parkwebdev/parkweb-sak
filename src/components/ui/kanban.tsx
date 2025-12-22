@@ -64,7 +64,7 @@ const dropAnimationConfig: DropAnimation = {
     },
   }),
   duration: 200,
-  easing: "cubic-bezier(0.18, 0.67, 0.6, 1.22)",
+  easing: "ease-out",
 };
 
 // Custom animate layout changes for smoother reordering
