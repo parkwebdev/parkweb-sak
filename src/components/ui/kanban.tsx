@@ -273,9 +273,18 @@ export const KanbanProvider = <
   const lastOverId = React.useRef<UniqueIdentifier | null>(null);
   const recentlyMovedToNewContainer = React.useRef(false);
 
+  // Prevent "flash" when parent data refetches right after we commit a drag.
+  // We allow one incoming `data` update to be ignored, because our localData
+  // already reflects the committed UI state.
+  const justCommittedRef = React.useRef(false);
+
   // Sync external data changes when NOT dragging.
   useEffect(() => {
     if (!activeCardId) {
+      if (justCommittedRef.current) {
+        justCommittedRef.current = false;
+        return;
+      }
       setLocalData(data);
     }
   }, [data, activeCardId]);
@@ -470,6 +479,26 @@ export const KanbanProvider = <
     }
 
     const overId = over.id;
+
+    // Dropped on a column (not a card). In this case, handleDragOver already
+    // moved the item into the correct column/position, so we just commit.
+    if (isColumnId(overId)) {
+      const committed = localData;
+      justCommittedRef.current = true;
+
+      unstable_batchedUpdates(() => {
+        setLocalData(committed);
+        onDataChange?.(committed);
+
+        setActiveCardId(null);
+        setActiveCardContent(null);
+        setClonedData(null);
+      });
+
+      onDragEnd?.(event);
+      return;
+    }
+
     const overContainer = findContainer(overId);
 
     let nextData = localData;
@@ -483,18 +512,22 @@ export const KanbanProvider = <
       const activeIndex = columnItems.findIndex((i) => i.id === active.id);
       const overIndex = columnItems.findIndex((i) => i.id === overId);
 
-      // Official pattern: only compare indices.
-      if (activeIndex !== overIndex && activeIndex !== -1 && overIndex !== -1) {
-        const reordered = arrayMove(columnItems, activeIndex, overIndex);
+      // Only compare indices (official pattern). If either index is missing, skip.
+      if (activeIndex !== overIndex) {
+        if (activeIndex !== -1 && overIndex !== -1) {
+          const reordered = arrayMove(columnItems, activeIndex, overIndex);
 
-        const byColumn = new Map<string, T[]>();
-        for (const col of columns) {
-          byColumn.set(col.id, localData.filter((i) => i.column === col.id));
+          const byColumn = new Map<string, T[]>();
+          for (const col of columns) {
+            byColumn.set(col.id, localData.filter((i) => i.column === col.id));
+          }
+          byColumn.set(colId, reordered);
+          nextData = flattenByColumns(byColumn);
         }
-        byColumn.set(colId, reordered);
-        nextData = flattenByColumns(byColumn);
       }
     }
+
+    justCommittedRef.current = true;
 
     unstable_batchedUpdates(() => {
       setLocalData(nextData);
@@ -509,6 +542,7 @@ export const KanbanProvider = <
   };
 
   const handleDragCancel = () => {
+    justCommittedRef.current = false;
     unstable_batchedUpdates(() => {
       if (clonedData) {
         setLocalData(clonedData);
