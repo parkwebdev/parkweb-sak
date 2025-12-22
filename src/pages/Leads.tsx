@@ -154,7 +154,7 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
   };
 
   return (
-    <main className="flex-1 bg-muted/30 h-screen overflow-auto">
+    <main className="flex-1 bg-muted/30 h-screen overflow-y-auto overflow-x-hidden">
       <PageHeader
         title="Leads"
         description="Track and manage leads captured from conversations"

@@ -8,7 +8,6 @@ import { formatDistanceToNow } from "date-fns";
 import { Mail01, Phone, Building02, Eye } from "@untitledui/icons";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import {
   KanbanProvider,
   KanbanBoard,
@@ -155,12 +154,11 @@ export function LeadsKanbanBoard({
   );
 
   return (
-    <ScrollArea className="w-full">
+    <div className="w-full overflow-x-auto pb-4">
       <KanbanProvider
         columns={COLUMNS as unknown as { id: string; name: string }[]}
         data={kanbanLeads}
         onDataChange={handleDataChange}
-        className="min-w-max pb-4"
       >
         {(column) => (
           <KanbanBoard key={column.id} id={column.id}>
@@ -195,7 +193,6 @@ export function LeadsKanbanBoard({
           </KanbanBoard>
         )}
       </KanbanProvider>
-      <ScrollBar orientation="horizontal" />
-    </ScrollArea>
+    </div>
   );
 }
