@@ -14,7 +14,7 @@ import {
   type HTMLAttributes,
   type ReactNode,
 } from "react";
-import { createPortal } from "react-dom";
+import { createPortal, unstable_batchedUpdates } from "react-dom";
 import {
   closestCorners,
   DndContext,
@@ -460,26 +460,31 @@ export const KanbanProvider = <
     const { active, over } = event;
 
     if (!over) {
-      setActiveCardId(null);
-      setActiveCardContent(null);
-      setClonedData(null);
+      unstable_batchedUpdates(() => {
+        setActiveCardId(null);
+        setActiveCardContent(null);
+        setClonedData(null);
+      });
       onDragEnd?.(event);
       return;
     }
 
-    const activeContainer = findContainer(active.id);
-    const overContainer = findContainer(over.id);
+    const overId = over.id;
+    const overContainer = findContainer(overId);
 
     let nextData = localData;
 
     // Same-column reordering happens on drag end (official pattern).
-    if (activeContainer && overContainer && activeContainer === overContainer) {
-      const colId = activeContainer;
+    // We intentionally do NOT rely on activeContainer === overContainer here because
+    // handleDragOver may have already moved the item across columns.
+    if (overContainer) {
+      const colId = overContainer;
       const columnItems = localData.filter((i) => i.column === colId);
       const activeIndex = columnItems.findIndex((i) => i.id === active.id);
-      const overIndex = columnItems.findIndex((i) => i.id === over.id);
+      const overIndex = columnItems.findIndex((i) => i.id === overId);
 
-      if (activeIndex !== -1 && overIndex !== -1 && activeIndex !== overIndex) {
+      // Official pattern: only compare indices.
+      if (activeIndex !== overIndex && activeIndex !== -1 && overIndex !== -1) {
         const reordered = arrayMove(columnItems, activeIndex, overIndex);
 
         const byColumn = new Map<string, T[]>();
@@ -491,23 +496,27 @@ export const KanbanProvider = <
       }
     }
 
-    setLocalData(nextData);
-    onDataChange?.(nextData);
+    unstable_batchedUpdates(() => {
+      setLocalData(nextData);
+      onDataChange?.(nextData);
 
-    setActiveCardId(null);
-    setActiveCardContent(null);
-    setClonedData(null);
+      setActiveCardId(null);
+      setActiveCardContent(null);
+      setClonedData(null);
+    });
 
     onDragEnd?.(event);
   };
 
   const handleDragCancel = () => {
-    if (clonedData) {
-      setLocalData(clonedData);
-    }
-    setActiveCardId(null);
-    setActiveCardContent(null);
-    setClonedData(null);
+    unstable_batchedUpdates(() => {
+      if (clonedData) {
+        setLocalData(clonedData);
+      }
+      setActiveCardId(null);
+      setActiveCardContent(null);
+      setClonedData(null);
+    });
   };
 
   // Reset this flag after layouts have a chance to settle (official pattern).
