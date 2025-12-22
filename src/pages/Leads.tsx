@@ -12,9 +12,10 @@
  */
 
 import { useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { LayoutAlt04, List, SearchLg, Trash01, XClose } from '@untitledui/icons';
 import { useLeads } from '@/hooks/useLeads';
 import { LeadsKanbanBoard } from '@/components/leads/LeadsKanbanBoard';
@@ -206,16 +207,19 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
           </div>
 
           <div className="flex gap-2 items-center">
-            <Tabs value={statusFilter} onValueChange={setStatusFilter}>
-              <TabsList>
-                <TabsTrigger value="all">All</TabsTrigger>
-                <TabsTrigger value="new">New</TabsTrigger>
-                <TabsTrigger value="contacted">Contacted</TabsTrigger>
-                <TabsTrigger value="qualified">Qualified</TabsTrigger>
-                <TabsTrigger value="converted">Converted</TabsTrigger>
-                <TabsTrigger value="lost">Lost</TabsTrigger>
-              </TabsList>
-            </Tabs>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-[140px]" size="sm">
+                <SelectValue placeholder="Filter status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Leads</SelectItem>
+                <SelectItem value="new">New</SelectItem>
+                <SelectItem value="contacted">Contacted</SelectItem>
+                <SelectItem value="qualified">Qualified</SelectItem>
+                <SelectItem value="converted">Converted</SelectItem>
+                <SelectItem value="lost">Lost</SelectItem>
+              </SelectContent>
+            </Select>
 
             <div className="flex border rounded-lg">
               <Button
@@ -268,21 +272,33 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
         {/* Content */}
         {loading ? (
           <LoadingState text="Loading leads..." />
-        ) : viewMode === 'kanban' ? (
-          <LeadsKanbanBoard
-            leads={filteredLeads}
-            onStatusChange={(leadId, status) => updateLead(leadId, { status })}
-            onViewLead={handleViewLead}
-          />
         ) : (
-          <LeadsTable
-            leads={filteredLeads}
-            selectedIds={selectedLeadIds}
-            onView={handleViewLead}
-            onStatusChange={(leadId, status) => updateLead(leadId, { status: status as Enums<'lead_status'> })}
-            onSelectionChange={handleSelectLead}
-            onSelectAll={handleSelectAll}
-          />
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={viewMode}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2, ease: 'easeOut' }}
+            >
+              {viewMode === 'kanban' ? (
+                <LeadsKanbanBoard
+                  leads={filteredLeads}
+                  onStatusChange={(leadId, status) => updateLead(leadId, { status })}
+                  onViewLead={handleViewLead}
+                />
+              ) : (
+                <LeadsTable
+                  leads={filteredLeads}
+                  selectedIds={selectedLeadIds}
+                  onView={handleViewLead}
+                  onStatusChange={(leadId, status) => updateLead(leadId, { status: status as Enums<'lead_status'> })}
+                  onSelectionChange={handleSelectLead}
+                  onSelectAll={handleSelectAll}
+                />
+              )}
+            </motion.div>
+          </AnimatePresence>
         )}
 
         {!loading && filteredLeads.length === 0 && (
