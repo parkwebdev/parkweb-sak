@@ -10,11 +10,77 @@ Complete reference for all custom React hooks in the ChatPad application.
 
 ## Table of Contents
 
-1. [Data Hooks](#data-hooks)
-2. [UI & State Hooks](#ui--state-hooks)
-3. [Authentication & Security Hooks](#authentication--security-hooks)
-4. [Widget Hooks](#widget-hooks)
-5. [Usage Patterns](#usage-patterns)
+1. [React Query Infrastructure](#react-query-infrastructure)
+2. [Data Hooks](#data-hooks)
+3. [UI & State Hooks](#ui--state-hooks)
+4. [Authentication & Security Hooks](#authentication--security-hooks)
+5. [Widget Hooks](#widget-hooks)
+6. [Usage Patterns](#usage-patterns)
+
+---
+
+## React Query Infrastructure
+
+### Query Keys (`src/lib/query-keys.ts`)
+
+Centralized query key factory for type-safe cache management. All query keys are defined here.
+
+```tsx
+import { queryKeys } from '@/lib/query-keys';
+
+// Examples
+queryKeys.agent.all           // ['agent'] - Invalidate all agent data
+queryKeys.agent.detail(userId) // ['agent', userId] - Specific user's agent
+
+queryKeys.locations.all       // Invalidate all locations
+queryKeys.locations.list(agentId) // Locations for specific agent
+
+// Use with React Query
+queryClient.invalidateQueries({ queryKey: queryKeys.agent.all });
+```
+
+**Available Keys**: `agent`, `profile`, `knowledgeSources`, `locations`, `helpArticles`, `helpCategories`, `announcements`, `newsItems`, `conversations`, `leads`, `team`, `properties`, `webhooks`, `agentTools`, `connectedAccounts`, `calendarEvents`, `analytics`, `notifications`
+
+---
+
+### useSupabaseQuery (`src/hooks/useSupabaseQuery.ts`)
+
+Combines React Query with Supabase real-time subscriptions for automatic cache invalidation.
+
+```tsx
+import { useSupabaseQuery, useSupabaseMutation } from '@/hooks/useSupabaseQuery';
+import { queryKeys } from '@/lib/query-keys';
+
+// Query with real-time updates
+const { data, isLoading, refetch } = useSupabaseQuery({
+  queryKey: queryKeys.locations.list(agentId),
+  queryFn: async () => {
+    const { data } = await supabase
+      .from('locations')
+      .select('*')
+      .eq('agent_id', agentId);
+    return data;
+  },
+  realtime: {
+    table: 'locations',
+    filter: `agent_id=eq.${agentId}`,
+  },
+  enabled: !!agentId,
+});
+
+// Mutation with automatic cache invalidation
+const mutation = useSupabaseMutation({
+  mutationFn: async (data) => { /* ... */ },
+  invalidateKeys: [queryKeys.locations.all],
+});
+```
+
+**Options**:
+- `queryKey`: Query key for caching
+- `queryFn`: Async function to fetch data
+- `realtime`: Optional config for real-time subscription
+- `enabled`: Whether to run the query
+- All standard React Query options
 
 ---
 
@@ -26,6 +92,8 @@ Hooks for fetching and mutating data with React Query and Supabase.
 
 Manages the single Ari agent for the current user (single-agent model).
 
+**Powered by React Query** - Agent data is cached and shared across all components that use this hook. Real-time updates via Supabase subscription automatically invalidate the cache.
+
 ```tsx
 import { useAgent } from '@/hooks/useAgent';
 
@@ -33,11 +101,17 @@ const {
   agent,              // Agent | null - The user's Ari agent
   agentId,            // string | null - Agent ID shortcut
   loading,            // boolean - Loading state
-  updateAgent,        // (data) => Promise - Update agent
-  updateDeploymentConfig, // (config) => Promise - Update deployment config
-  refetch             // () => void - Refresh data
+  updateAgent,        // (data) => Promise<Agent | null> - Update agent
+  updateDeploymentConfig, // (config) => Promise<Agent | null> - Update deployment config
+  refetch             // () => void - Trigger background refetch
 } = useAgent();
 ```
+
+**Key Features**:
+- Shared cache across 7+ components (no duplicate fetches)
+- 5-minute stale time (data considered fresh)
+- Real-time updates via Supabase subscription
+- Optimistic cache updates on mutations
 
 **File**: `src/hooks/useAgent.ts`
 
