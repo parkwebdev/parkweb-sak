@@ -17,7 +17,7 @@ import {
   type QueryKey,
 } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import type { RealtimeChannel, RealtimePostgresChangesPayload } from '@supabase/supabase-js';
+import type { RealtimeChannel } from '@supabase/supabase-js';
 
 /**
  * Configuration for real-time subscriptions

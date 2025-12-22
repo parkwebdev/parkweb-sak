@@ -1,44 +1,43 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import type { HelpArticle, HelpCategory } from './useEmbeddedChatConfig';
-import { logger } from '@/utils/logger';
-
 /**
+ * useHelpArticles Hook
+ * 
  * Hook for managing help center articles and categories.
  * Handles article CRUD, category management, drag-and-drop reordering,
  * bulk import, and automatic embedding generation for RAG search.
  * 
+ * Now uses React Query for caching via useSupabaseQuery.
+ * 
+ * @module hooks/useHelpArticles
+ */
+
+import { useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import type { HelpArticle, HelpCategory } from './useEmbeddedChatConfig';
+import { logger } from '@/utils/logger';
+import { useSupabaseQuery } from './useSupabaseQuery';
+import { queryKeys } from '@/lib/query-keys';
+
+interface HelpArticlesData {
+  articles: HelpArticle[];
+  categories: HelpCategory[];
+}
+
+/**
+ * Hook for managing help center articles and categories.
+ * 
  * @param {string} agentId - Agent ID to scope articles
  * @returns {Object} Help article management methods and state
- * @returns {HelpArticle[]} articles - List of help articles
- * @returns {HelpCategory[]} categories - List of categories
- * @returns {boolean} loading - Loading state
- * @returns {Function} addArticle - Create a new article
- * @returns {Function} updateArticle - Update an existing article
- * @returns {Function} deleteArticle - Delete an article (cleans up storage images)
- * @returns {Function} reorderArticles - Update article display order
- * @returns {Function} addCategory - Create a new category
- * @returns {Function} updateCategory - Update a category
- * @returns {Function} removeCategory - Delete a category (with article handling)
- * @returns {Function} moveArticleToCategory - Move article between categories
- * @returns {Function} bulkImport - Import multiple articles at once
  */
 export const useHelpArticles = (agentId: string) => {
-  const [articles, setArticles] = useState<HelpArticle[]>([]);
-  const [categories, setCategories] = useState<HelpCategory[]>([]);
-  const [loading, setLoading] = useState(true);
-  const initialLoadDone = useRef(false);
+  const queryClient = useQueryClient();
 
-  // Fetch data function wrapped in useCallback for stability
-  const fetchData = useCallback(async (isRefetch = false) => {
-    if (!agentId) return;
+  // Combined fetch for articles and categories using React Query
+  const { data, isLoading: loading, refetch } = useSupabaseQuery<HelpArticlesData>({
+    queryKey: queryKeys.helpArticles.list(agentId),
+    queryFn: async () => {
+      if (!agentId) return { articles: [], categories: [] };
 
-    // Only show loading state on initial load, not refetches
-    if (!isRefetch && !initialLoadDone.current) {
-      setLoading(true);
-    }
-
-    try {
       // Get agent's user_id first
       const { data: agent } = await supabase
         .from('agents')
@@ -48,7 +47,7 @@ export const useHelpArticles = (agentId: string) => {
 
       if (!agent) {
         logger.error('Agent not found');
-        return;
+        return { articles: [], categories: [] };
       }
 
       // Fetch categories
@@ -87,25 +86,27 @@ export const useHelpArticles = (agentId: string) => {
         created_at: article.created_at || undefined,
       }));
 
-      setCategories(mappedCategories);
-      setArticles(mappedArticles);
-      initialLoadDone.current = true;
-    } catch (error) {
-      logger.error('Error fetching help articles', error);
-    } finally {
-      setLoading(false);
-    }
-  }, [agentId]);
+      return { articles: mappedArticles, categories: mappedCategories };
+    },
+    realtime: {
+      table: 'help_articles',
+      filter: `agent_id=eq.${agentId}`,
+    },
+    enabled: !!agentId,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+  });
 
-  // Store fetchData in ref to prevent useEffect re-runs
-  const fetchDataRef = useRef(fetchData);
-  fetchDataRef.current = fetchData;
+  const articles = data?.articles || [];
+  const categories = data?.categories || [];
 
-  // Initial fetch - only depends on agentId, uses ref to call current function
-  useEffect(() => {
-    if (!agentId) return;
-    fetchDataRef.current(false);
-  }, [agentId]);
+  // Helper to optimistically update data
+  const optimisticUpdate = (updater: (prev: HelpArticlesData) => HelpArticlesData) => {
+    queryClient.setQueryData<HelpArticlesData>(
+      queryKeys.helpArticles.list(agentId),
+      (prev) => updater(prev || { articles: [], categories: [] })
+    );
+  };
 
   const addArticle = async (article: Omit<HelpArticle, 'id' | 'order'>) => {
     try {
@@ -146,7 +147,7 @@ export const useHelpArticles = (agentId: string) => {
         categoryId = newCategory.id;
       }
 
-      // Insert article (without icon field)
+      // Insert article
       const { data: newArticle, error } = await supabase
         .from('help_articles')
         .insert({
@@ -175,15 +176,18 @@ export const useHelpArticles = (agentId: string) => {
       });
 
       // Update local state
-      setArticles([...articles, {
-        id: newArticle.id,
-        title: newArticle.title,
-        content: newArticle.content,
-        category: article.category,
-        featured_image: article.featured_image,
-        order: newArticle.order_index,
-        has_embedding: false, // Will be embedded async
-      }]);
+      optimisticUpdate((prev) => ({
+        ...prev,
+        articles: [...prev.articles, {
+          id: newArticle.id,
+          title: newArticle.title,
+          content: newArticle.content,
+          category: article.category,
+          featured_image: article.featured_image,
+          order: newArticle.order_index,
+          has_embedding: false,
+        }],
+      }));
 
       return newArticle.id;
     } catch (error) {
@@ -194,7 +198,6 @@ export const useHelpArticles = (agentId: string) => {
 
   const updateArticle = async (id: string, updates: Partial<HelpArticle>) => {
     try {
-      // Get agent's user_id
       const { data: agent } = await supabase
         .from('agents')
         .select('user_id')
@@ -205,7 +208,6 @@ export const useHelpArticles = (agentId: string) => {
 
       let categoryId: string | undefined;
 
-      // If category changed, find or create it
       if (updates.category) {
         const existingCategory = await supabase
           .from('help_categories')
@@ -260,9 +262,12 @@ export const useHelpArticles = (agentId: string) => {
       }
 
       // Update local state
-      setArticles(articles.map(a =>
-        a.id === id ? { ...a, ...updates } : a
-      ));
+      optimisticUpdate((prev) => ({
+        ...prev,
+        articles: prev.articles.map(a =>
+          a.id === id ? { ...a, ...updates } : a
+        ),
+      }));
     } catch (error) {
       logger.error('Error updating article', error);
       throw error;
@@ -271,7 +276,6 @@ export const useHelpArticles = (agentId: string) => {
 
   const deleteArticle = async (id: string) => {
     try {
-      // Get the article first to find images to clean up
       const articleToDelete = articles.find(a => a.id === id);
       
       const { error } = await supabase
@@ -285,17 +289,14 @@ export const useHelpArticles = (agentId: string) => {
       if (articleToDelete) {
         const imagesToDelete: string[] = [];
         
-        // Add featured image if exists
         if (articleToDelete.featured_image) {
           const featuredPath = extractStoragePath(articleToDelete.featured_image);
           if (featuredPath) imagesToDelete.push(featuredPath);
         }
         
-        // Extract inline images from content
         const inlineImages = extractInlineImages(articleToDelete.content);
         imagesToDelete.push(...inlineImages);
         
-        // Delete all images from storage
         if (imagesToDelete.length > 0) {
           const { error: storageError } = await supabase.storage
             .from('article-images')
@@ -309,7 +310,10 @@ export const useHelpArticles = (agentId: string) => {
         }
       }
 
-      setArticles(articles.filter(a => a.id !== id));
+      optimisticUpdate((prev) => ({
+        ...prev,
+        articles: prev.articles.filter(a => a.id !== id),
+      }));
     } catch (error) {
       logger.error('Error deleting article', error);
       throw error;
@@ -319,7 +323,6 @@ export const useHelpArticles = (agentId: string) => {
   // Helper: Extract storage path from a public URL
   const extractStoragePath = (url: string): string | null => {
     try {
-      // URL format: https://<project>.supabase.co/storage/v1/object/public/article-images/<path>
       const match = url.match(/\/article-images\/(.+)$/);
       return match ? match[1] : null;
     } catch {
@@ -346,7 +349,6 @@ export const useHelpArticles = (agentId: string) => {
 
   const reorderArticles = async (reorderedArticles: HelpArticle[]) => {
     try {
-      // Update order_index for each article
       const updates = reorderedArticles.map((article, index) =>
         supabase
           .from('help_articles')
@@ -355,7 +357,11 @@ export const useHelpArticles = (agentId: string) => {
       );
 
       await Promise.all(updates);
-      setArticles(reorderedArticles);
+      
+      optimisticUpdate((prev) => ({
+        ...prev,
+        articles: reorderedArticles,
+      }));
     } catch (error) {
       logger.error('Error reordering articles', error);
       throw error;
@@ -364,7 +370,6 @@ export const useHelpArticles = (agentId: string) => {
 
   const addCategory = async (name: string, description: string = '', icon: string = 'book') => {
     try {
-      // Get agent's user_id
       const { data: agent } = await supabase
         .from('agents')
         .select('user_id')
@@ -388,7 +393,11 @@ export const useHelpArticles = (agentId: string) => {
 
       if (error) throw error;
 
-      setCategories([...categories, { id: data.id, name, description, icon }]);
+      optimisticUpdate((prev) => ({
+        ...prev,
+        categories: [...prev.categories, { id: data.id, name, description, icon }],
+      }));
+      
       return data.id;
     } catch (error) {
       logger.error('Error adding category', error);
@@ -406,13 +415,14 @@ export const useHelpArticles = (agentId: string) => {
 
       if (error) throw error;
 
-      setCategories(categories.map(c =>
-        c.name === oldName ? { id: c.id, name: newName, description, icon } : c
-      ));
-
-      setArticles(articles.map(a =>
-        a.category === oldName ? { ...a, category: newName } : a
-      ));
+      optimisticUpdate((prev) => ({
+        categories: prev.categories.map(c =>
+          c.name === oldName ? { id: c.id, name: newName, description, icon } : c
+        ),
+        articles: prev.articles.map(a =>
+          a.category === oldName ? { ...a, category: newName } : a
+        ),
+      }));
     } catch (error) {
       logger.error('Error updating category', error);
       throw error;
@@ -425,7 +435,6 @@ export const useHelpArticles = (agentId: string) => {
       
       if (articlesInCategory.length > 0) {
         if (options?.moveArticlesTo) {
-          // Move articles to target category
           const targetCategory = categories.find(c => c.name === options.moveArticlesTo);
           if (!targetCategory) throw new Error('Target category not found');
           
@@ -437,12 +446,13 @@ export const useHelpArticles = (agentId: string) => {
           
           if (moveError) throw moveError;
           
-          // Update local state for moved articles
-          setArticles(articles.map(a => 
-            a.category === name ? { ...a, category: options.moveArticlesTo! } : a
-          ));
+          optimisticUpdate((prev) => ({
+            ...prev,
+            articles: prev.articles.map(a => 
+              a.category === name ? { ...a, category: options.moveArticlesTo! } : a
+            ),
+          }));
         } else if (options?.deleteArticles) {
-          // Delete all articles in category
           const { error: deleteError } = await supabase
             .from('help_articles')
             .delete()
@@ -451,8 +461,10 @@ export const useHelpArticles = (agentId: string) => {
           
           if (deleteError) throw deleteError;
           
-          // Update local state
-          setArticles(articles.filter(a => a.category !== name));
+          optimisticUpdate((prev) => ({
+            ...prev,
+            articles: prev.articles.filter(a => a.category !== name),
+          }));
         } else {
           throw new Error('Cannot delete category with existing articles');
         }
@@ -466,7 +478,10 @@ export const useHelpArticles = (agentId: string) => {
 
       if (error) throw error;
 
-      setCategories(categories.filter(c => c.name !== name));
+      optimisticUpdate((prev) => ({
+        ...prev,
+        categories: prev.categories.filter(c => c.name !== name),
+      }));
     } catch (error) {
       logger.error('Error removing category', error);
       throw error;
@@ -485,9 +500,12 @@ export const useHelpArticles = (agentId: string) => {
 
       if (error) throw error;
 
-      setArticles(articles.map(a =>
-        a.id === articleId ? { ...a, category: targetCategoryName } : a
-      ));
+      optimisticUpdate((prev) => ({
+        ...prev,
+        articles: prev.articles.map(a =>
+          a.id === articleId ? { ...a, category: targetCategoryName } : a
+        ),
+      }));
     } catch (error) {
       logger.error('Error moving article', error);
       throw error;
@@ -495,7 +513,6 @@ export const useHelpArticles = (agentId: string) => {
   };
 
   const importFromKnowledge = async (knowledgeSourceIds: string[]) => {
-    // Placeholder for importing from knowledge sources
     logger.info('Importing from knowledge sources', knowledgeSourceIds);
   };
 
@@ -505,7 +522,6 @@ export const useHelpArticles = (agentId: string) => {
     category: string;
   }>) => {
     try {
-      // Get agent's user_id
       const { data: agent } = await supabase
         .from('agents')
         .select('user_id')
@@ -514,10 +530,7 @@ export const useHelpArticles = (agentId: string) => {
 
       if (!agent) throw new Error('Agent not found');
 
-      // Get unique categories
       const uniqueCategories = [...new Set(importData.map(item => item.category))];
-
-      // Create or find categories
       const categoryMap = new Map<string, string>();
 
       for (const catName of uniqueCategories) {
@@ -547,7 +560,6 @@ export const useHelpArticles = (agentId: string) => {
         }
       }
 
-      // Prepare articles for bulk insert
       const articlesToInsert = importData.map((item, index) => ({
         agent_id: agentId,
         user_id: agent.user_id,
@@ -564,19 +576,15 @@ export const useHelpArticles = (agentId: string) => {
 
       if (error) throw error;
 
-      // Update local state
       const newArticles = insertedArticles.map((article, index) => ({
         id: article.id,
         title: article.title,
         content: article.content,
         category: importData[index].category,
         order: article.order_index,
-        has_embedding: false, // Will be embedded async
+        has_embedding: false,
       }));
 
-      setArticles([...articles, ...newArticles]);
-
-      // Update categories if new ones were added
       const newCategoriesData = uniqueCategories
         .filter(name => !categories.some(c => c.name === name))
         .map(name => ({
@@ -585,15 +593,18 @@ export const useHelpArticles = (agentId: string) => {
           description: '',
         }));
 
-      if (newCategoriesData.length > 0) {
-        setCategories([...categories, ...newCategoriesData]);
-      }
+      optimisticUpdate((prev) => ({
+        articles: [...prev.articles, ...newArticles],
+        categories: newCategoriesData.length > 0 
+          ? [...prev.categories, ...newCategoriesData]
+          : prev.categories,
+      }));
 
-      // Trigger embedding for all imported articles in background (batch of 3)
+      // Trigger embedding for all imported articles in background
       const batchSize = 3;
       for (let i = 0; i < insertedArticles.length; i += batchSize) {
         const batch = insertedArticles.slice(i, i + batchSize);
-        Promise.all(batch.map((article, batchIndex) => 
+        Promise.all(batch.map((article) => 
           supabase.functions.invoke('embed-help-article', {
             body: { 
               articleId: article.id, 
@@ -621,7 +632,6 @@ export const useHelpArticles = (agentId: string) => {
 
     let completed = 0;
     
-    // Process in batches of 3 to avoid rate limiting
     const batchSize = 3;
     for (let i = 0; i < unembeddedArticles.length; i += batchSize) {
       const batch = unembeddedArticles.slice(i, i + batchSize);
@@ -643,18 +653,8 @@ export const useHelpArticles = (agentId: string) => {
       }));
     }
 
-    // Refresh articles to get updated embedding status
-    const { data: articlesData } = await supabase
-      .from('help_articles')
-      .select('id, embedding')
-      .eq('agent_id', agentId);
-
-    if (articlesData) {
-      setArticles(articles.map(a => ({
-        ...a,
-        has_embedding: articlesData.find(d => d.id === a.id)?.embedding !== null,
-      })));
-    }
+    // Refresh to get updated embedding status
+    await refetch();
 
     return completed;
   };
@@ -674,6 +674,6 @@ export const useHelpArticles = (agentId: string) => {
     importFromKnowledge,
     bulkImport,
     embedAllArticles,
-    refetch: () => fetchData(true),
+    refetch,
   };
 };
