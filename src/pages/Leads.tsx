@@ -63,12 +63,8 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
   });
 
   const handleViewLead = (lead: Tables<'leads'>) => {
-    console.log('handleViewLead called with:', lead);
-    console.log('Current selectedLead:', selectedLead);
-    console.log('Current isDetailsOpen:', isDetailsOpen);
     setSelectedLead(lead);
     setIsDetailsOpen(true);
-    console.log('After setting - isDetailsOpen should be true');
   };
 
   const handleExport = () => {
