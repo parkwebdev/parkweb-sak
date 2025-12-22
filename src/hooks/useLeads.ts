@@ -66,7 +66,7 @@ export const useLeads = () => {
         description: 'Lead has been created successfully',
       });
 
-      fetchLeads();
+      // Real-time subscription will refresh the list.
       return data;
     } catch (error: unknown) {
       toast.error('Error creating lead', {
@@ -86,7 +86,7 @@ export const useLeads = () => {
       if (error) throw error;
 
       // Success - no toast needed (SavedIndicator shows feedback for status changes)
-      fetchLeads();
+      // Real-time subscription will refresh the list.
     } catch (error: unknown) {
       toast.error('Error updating lead', {
         description: getErrorMessage(error),
@@ -169,7 +169,7 @@ export const useLeads = () => {
           : 'Lead has been deleted successfully',
       });
 
-      fetchLeads();
+      // Real-time subscription will refresh the list.
     } catch (error: unknown) {
       toast.error('Error deleting lead', {
         description: getErrorMessage(error),
@@ -259,7 +259,7 @@ export const useLeads = () => {
         description: 'All related data has been cleaned up',
       });
 
-      fetchLeads();
+      // Real-time subscription will refresh the list.
     } catch (error: unknown) {
       toast.error('Error deleting leads', {
         description: getErrorMessage(error),

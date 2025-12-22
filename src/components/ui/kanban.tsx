@@ -273,15 +273,13 @@ export const KanbanProvider = <
   const lastOverId = React.useRef<UniqueIdentifier | null>(null);
   const recentlyMovedToNewContainer = React.useRef(false);
 
-  // Prevent "flash" when parent data refetches right after we commit a drag.
-  // Some parents may refetch multiple times (e.g., mutation + realtime update).
-  // We ignore *all* incoming `data` updates for a short window after committing.
-  const commitTimeRef = React.useRef<number>(0);
+  // Track the item's container at drag start (official pattern).
+  // This prevents "snap back" when the item crosses columns during dragOver.
+  const activeContainerRef = React.useRef<string | null>(null);
 
   // Sync external data changes when NOT dragging.
   useEffect(() => {
     if (!activeCardId) {
-      if (Date.now() - commitTimeRef.current < 500) return;
       setLocalData(data);
     }
   }, [data, activeCardId]);
@@ -388,6 +386,8 @@ export const KanbanProvider = <
   );
 
   const handleDragStart = (event: DragStartEvent) => {
+    activeContainerRef.current = findContainer(event.active.id) ?? null;
+
     const card = localData.find((item) => item.id === event.active.id);
     if (card) {
       setActiveCardId(String(event.active.id));
@@ -471,17 +471,19 @@ export const KanbanProvider = <
         setActiveCardContent(null);
         setClonedData(null);
       });
+      activeContainerRef.current = null;
       onDragEnd?.(event);
       return;
     }
 
     const overId = over.id;
 
+    const startContainer = activeContainerRef.current ?? findContainer(active.id);
+
     // Dropped on a column (not a card). In this case, handleDragOver already
     // moved the item into the correct column/position, so we just commit.
     if (isColumnId(overId)) {
       const committed = localData;
-      commitTimeRef.current = Date.now();
 
       unstable_batchedUpdates(() => {
         setLocalData(committed);
@@ -492,17 +494,35 @@ export const KanbanProvider = <
         setClonedData(null);
       });
 
+      activeContainerRef.current = null;
       onDragEnd?.(event);
       return;
     }
 
     const overContainer = findContainer(overId);
 
+    // If the item crossed columns, handleDragOver already produced the correct state.
+    // Never attempt same-column arrayMove using a recalculated container (causes snap-back).
+    if (startContainer && overContainer && startContainer !== overContainer) {
+      const committed = localData;
+
+      unstable_batchedUpdates(() => {
+        setLocalData(committed);
+        onDataChange?.(committed);
+
+        setActiveCardId(null);
+        setActiveCardContent(null);
+        setClonedData(null);
+      });
+
+      activeContainerRef.current = null;
+      onDragEnd?.(event);
+      return;
+    }
+
     let nextData = localData;
 
     // Same-column reordering happens on drag end (official pattern).
-    // We intentionally do NOT rely on activeContainer === overContainer here because
-    // handleDragOver may have already moved the item across columns.
     if (overContainer) {
       const colId = overContainer;
       const columnItems = localData.filter((i) => i.column === colId);
@@ -524,8 +544,6 @@ export const KanbanProvider = <
       }
     }
 
-    commitTimeRef.current = Date.now();
-
     unstable_batchedUpdates(() => {
       setLocalData(nextData);
       onDataChange?.(nextData);
@@ -535,12 +553,12 @@ export const KanbanProvider = <
       setClonedData(null);
     });
 
+    activeContainerRef.current = null;
     onDragEnd?.(event);
   };
 
   const handleDragCancel = () => {
-    // Drag cancelled: allow immediate parent-driven resync.
-    commitTimeRef.current = 0;
+    activeContainerRef.current = null;
     unstable_batchedUpdates(() => {
       if (clonedData) {
         setLocalData(clonedData);
