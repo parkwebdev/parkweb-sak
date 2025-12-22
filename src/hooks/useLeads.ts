@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/lib/toast';
 import { getErrorMessage } from '@/types/errors';
 import { useAuth } from '@/hooks/useAuth';
-import type { Tables } from '@/integrations/supabase/types';
+import type { Tables, Enums } from '@/integrations/supabase/types';
 
 type Lead = Tables<'leads'> & {
   conversations?: { id: string; created_at: string };
@@ -44,6 +44,8 @@ export const useLeads = () => {
         .from('leads')
         .select('*, conversations!fk_leads_conversation(id, created_at)')
         .eq('user_id', user.id)
+        .order('status')
+        .order('kanban_order', { ascending: true, nullsFirst: false })
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -100,6 +102,52 @@ export const useLeads = () => {
         description: getErrorMessage(error),
       });
       throw error;
+    }
+  };
+
+  /**
+   * Batch update kanban order for multiple leads (used for drag-and-drop reordering)
+   * Optimistically updates local state, then persists to database
+   */
+  const updateLeadOrders = async (updates: { id: string; kanban_order: number; status?: Enums<'lead_status'> }[]) => {
+    if (updates.length === 0) return;
+
+    // Optimistically update local state
+    setLeads(prevLeads => {
+      const updatesMap = new Map(updates.map(u => [u.id, u]));
+      return prevLeads.map(lead => {
+        const update = updatesMap.get(lead.id);
+        if (update) {
+          return { 
+            ...lead, 
+            kanban_order: update.kanban_order,
+            status: update.status ?? lead.status,
+          } as Lead;
+        }
+        return lead;
+      });
+    });
+
+    try {
+      // Batch update using Promise.all for efficiency
+      const updatePromises = updates.map(({ id, kanban_order, status }) => 
+        supabase
+          .from('leads')
+          .update({ kanban_order, ...(status && { status }) })
+          .eq('id', id)
+      );
+      
+      const results = await Promise.all(updatePromises);
+      const firstError = results.find(r => r.error);
+      if (firstError?.error) throw firstError.error;
+      
+      // Don't refetch - we already updated optimistically
+    } catch (error: unknown) {
+      // Revert on error by refetching
+      toast.error('Error updating lead order', {
+        description: getErrorMessage(error),
+      });
+      fetchLeads();
     }
   };
 
@@ -311,6 +359,7 @@ export const useLeads = () => {
     loading,
     createLead,
     updateLead,
+    updateLeadOrders,
     deleteLead,
     deleteLeads,
     getLeadsWithConversations,
