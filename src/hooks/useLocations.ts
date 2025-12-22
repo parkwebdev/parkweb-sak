@@ -5,14 +5,18 @@
  * Provides CRUD operations and real-time updates.
  * Uses HARD DELETES - deleted locations are permanently removed.
  * 
+ * Now uses React Query for caching and real-time updates via useSupabaseQuery.
+ * 
  * @module hooks/useLocations
  */
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/lib/toast';
 import { logger } from '@/utils/logger';
 import { getErrorMessage } from '@/types/errors';
+import { useSupabaseQuery } from './useSupabaseQuery';
+import { queryKeys } from '@/lib/query-keys';
 import type { Tables } from '@/integrations/supabase/types';
 import type { LocationFormData, BusinessHours } from '@/types/locations';
 
@@ -22,23 +26,17 @@ type Location = Tables<'locations'>;
  * Hook for managing locations for an agent.
  * 
  * @param agentId - Agent ID to scope locations
- * @returns Location management methods and state (loading only true on initial load)
+ * @returns Location management methods and state
  */
 export const useLocations = (agentId?: string) => {
-  const [locations, setLocations] = useState<Location[]>([]);
-  const [loading, setLoading] = useState(true);
-  const initialLoadDone = useRef(false);
+  const queryClient = useQueryClient();
 
-  const fetchLocations = useCallback(async (isRefetch = false) => {
-    if (!agentId) return;
-
-    // Only show loading state on initial load, not refetches
-    if (!isRefetch && !initialLoadDone.current) {
-      setLoading(true);
-    }
-
-    try {
-      // Fetch ALL locations - no is_active filter (hard deletes now)
+  // Fetch locations using React Query with real-time subscription
+  const { data: locations = [], isLoading: loading, refetch } = useSupabaseQuery<Location[]>({
+    queryKey: queryKeys.locations.list(agentId || ''),
+    queryFn: async () => {
+      if (!agentId) return [];
+      
       const { data, error } = await supabase
         .from('locations')
         .select('*')
@@ -46,71 +44,24 @@ export const useLocations = (agentId?: string) => {
         .order('name', { ascending: true });
 
       if (error) throw error;
-      setLocations(data || []);
-      initialLoadDone.current = true;
-    } catch (error) {
-      logger.error('Error fetching locations', error);
-      toast.error('Error loading locations', {
-        description: getErrorMessage(error),
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [agentId]);
+      return data || [];
+    },
+    realtime: agentId ? {
+      table: 'locations',
+      filter: `agent_id=eq.${agentId}`,
+    } : undefined,
+    enabled: !!agentId,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+  });
 
-  // Initial fetch and real-time subscription
-  const fetchLocationsRef = useRef(fetchLocations);
-  fetchLocationsRef.current = fetchLocations;
-
-  useEffect(() => {
-    if (!agentId) return;
-
-    fetchLocationsRef.current(false);
-
-    // Subscribe to real-time updates
-    const channel = supabase
-      .channel(`locations-${agentId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'locations',
-          filter: `agent_id=eq.${agentId}`,
-        },
-        (payload) => {
-          if (payload.eventType === 'INSERT') {
-            setLocations((prev) => {
-              // Avoid duplicates
-              if (prev.some((l) => l.id === (payload.new as Location).id)) {
-                return prev;
-              }
-              return [...prev, payload.new as Location].sort((a, b) => 
-                a.name.localeCompare(b.name)
-              );
-            });
-          } else if (payload.eventType === 'UPDATE') {
-            setLocations((prev) =>
-              prev.map((l) =>
-                l.id === (payload.new as Location).id
-                  ? (payload.new as Location)
-                  : l
-              )
-            );
-          } else if (payload.eventType === 'DELETE') {
-            // Real-time DELETE event - remove from state
-            setLocations((prev) =>
-              prev.filter((l) => l.id !== (payload.old as { id: string }).id)
-            );
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [agentId]);
+  // Helper to optimistically update locations
+  const optimisticUpdate = (updater: (prev: Location[]) => Location[]) => {
+    queryClient.setQueryData<Location[]>(
+      queryKeys.locations.list(agentId || ''),
+      (prev) => updater(prev || [])
+    );
+  };
 
   /**
    * Create a new location
@@ -170,7 +121,6 @@ export const useLocations = (agentId?: string) => {
     try {
       const updateData: Record<string, unknown> = { ...formData };
       
-      // Handle business_hours JSON conversion
       if (formData.business_hours) {
         updateData.business_hours = formData.business_hours as unknown as Record<string, unknown>;
       }
@@ -198,16 +148,18 @@ export const useLocations = (agentId?: string) => {
    */
   const deleteLocation = async (locationId: string): Promise<boolean> => {
     try {
-      // HARD DELETE - permanently remove the location
+      // Optimistic update - remove from local state immediately
+      optimisticUpdate((prev) => prev.filter((l) => l.id !== locationId));
+
       const { error } = await supabase
         .from('locations')
         .delete()
         .eq('id', locationId);
 
-      if (error) throw error;
-
-      // Optimistic update - remove from local state immediately
-      setLocations((prev) => prev.filter((l) => l.id !== locationId));
+      if (error) {
+        await refetch();
+        throw error;
+      }
 
       toast.success('Location deleted');
       return true;
@@ -234,6 +186,6 @@ export const useLocations = (agentId?: string) => {
     updateLocation,
     deleteLocation,
     getBusinessHours,
-    refetch: () => fetchLocations(true),
+    refetch,
   };
 };

@@ -1,183 +1,174 @@
 /**
- * React Query Key Factory
+ * Query Key Factory
  * 
- * Centralized query key management for type-safe cache invalidation.
- * All query keys should be defined here to ensure consistency across the app.
- * 
- * Pattern: Each resource has a factory with:
- * - all: Base key for invalidating all queries of this type
- * - lists: For list queries (optionally filtered)
- * - detail: For single item queries by ID
- * 
- * @example
- * // Invalidate all agent data
- * queryClient.invalidateQueries({ queryKey: queryKeys.agent.all })
- * 
- * // Invalidate specific agent
- * queryClient.invalidateQueries({ queryKey: queryKeys.agent.detail(agentId) })
+ * Centralized query key factory for React Query.
+ * Ensures consistent cache key generation and simplifies cache invalidation.
  * 
  * @module lib/query-keys
+ * 
+ * @example
+ * ```tsx
+ * // In a hook
+ * const { data } = useQuery({
+ *   queryKey: queryKeys.agent.detail(userId),
+ *   queryFn: fetchAgent,
+ * });
+ * 
+ * // Invalidating related queries
+ * queryClient.invalidateQueries({ queryKey: queryKeys.agent.all });
+ * ```
  */
 
+/**
+ * Query key factory for consistent cache management.
+ * 
+ * Structure follows the pattern:
+ * - `all`: Base key for invalidating all queries of this type
+ * - `lists`: All list queries
+ * - `list(filters)`: Specific list with filters
+ * - `details`: All detail queries  
+ * - `detail(id)`: Specific detail by ID
+ */
 export const queryKeys = {
-  /**
-   * Agent queries - single agent per user
-   */
+  // Agent keys
   agent: {
     all: ['agent'] as const,
-    detail: (userId: string | undefined) => ['agent', userId] as const,
+    detail: (userId: string) => ['agent', 'detail', userId] as const,
   },
 
-  /**
-   * User profile queries
-   */
+  // Profile keys
   profile: {
     all: ['profile'] as const,
-    detail: (userId: string | undefined) => ['profile', userId] as const,
+    detail: (userId: string) => ['profile', 'detail', userId] as const,
   },
 
-  /**
-   * Knowledge sources queries
-   */
+  // Knowledge sources
   knowledgeSources: {
-    all: ['knowledgeSources'] as const,
-    list: (agentId: string | undefined) => ['knowledgeSources', agentId] as const,
+    all: ['knowledge-sources'] as const,
+    lists: () => [...queryKeys.knowledgeSources.all, 'list'] as const,
+    list: (agentId: string) => [...queryKeys.knowledgeSources.lists(), agentId] as const,
   },
 
-  /**
-   * Locations queries
-   */
+  // Locations
   locations: {
     all: ['locations'] as const,
-    list: (agentId: string | undefined) => ['locations', agentId] as const,
-    detail: (locationId: string) => ['locations', 'detail', locationId] as const,
+    lists: () => [...queryKeys.locations.all, 'list'] as const,
+    list: (agentId: string) => [...queryKeys.locations.lists(), agentId] as const,
   },
 
-  /**
-   * Help articles queries
-   */
+  // Help articles
   helpArticles: {
-    all: ['helpArticles'] as const,
-    list: (agentId: string | undefined) => ['helpArticles', agentId] as const,
-    detail: (articleId: string) => ['helpArticles', 'detail', articleId] as const,
+    all: ['help-articles'] as const,
+    lists: () => [...queryKeys.helpArticles.all, 'list'] as const,
+    list: (agentId: string) => [...queryKeys.helpArticles.lists(), agentId] as const,
   },
 
-  /**
-   * Help categories queries
-   */
+  // Help categories
   helpCategories: {
-    all: ['helpCategories'] as const,
-    list: (agentId: string | undefined) => ['helpCategories', agentId] as const,
+    all: ['help-categories'] as const,
+    lists: () => [...queryKeys.helpCategories.all, 'list'] as const,
+    list: (agentId: string) => [...queryKeys.helpCategories.lists(), agentId] as const,
   },
 
-  /**
-   * Announcements queries
-   */
+  // Announcements
   announcements: {
     all: ['announcements'] as const,
-    list: (agentId: string | undefined) => ['announcements', agentId] as const,
+    lists: () => [...queryKeys.announcements.all, 'list'] as const,
+    list: (agentId: string) => [...queryKeys.announcements.lists(), agentId] as const,
   },
 
-  /**
-   * News items queries
-   */
+  // News items
   newsItems: {
-    all: ['newsItems'] as const,
-    list: (agentId: string | undefined) => ['newsItems', agentId] as const,
+    all: ['news-items'] as const,
+    lists: () => [...queryKeys.newsItems.all, 'list'] as const,
+    list: (agentId: string) => [...queryKeys.newsItems.lists(), agentId] as const,
   },
 
-  /**
-   * Conversations queries
-   */
+  // Conversations
   conversations: {
     all: ['conversations'] as const,
-    list: (filters?: { status?: string; agentId?: string }) => 
-      ['conversations', filters] as const,
-    detail: (conversationId: string) => ['conversations', 'detail', conversationId] as const,
-    messages: (conversationId: string) => ['conversations', 'messages', conversationId] as const,
+    lists: () => [...queryKeys.conversations.all, 'list'] as const,
+    list: (filters?: { status?: string }) =>
+      [...queryKeys.conversations.lists(), filters] as const,
+    details: () => [...queryKeys.conversations.all, 'detail'] as const,
+    detail: (id: string) => [...queryKeys.conversations.details(), id] as const,
+    messages: (conversationId: string) =>
+      [...queryKeys.conversations.detail(conversationId), 'messages'] as const,
   },
 
-  /**
-   * Leads queries
-   */
+  // Leads
   leads: {
     all: ['leads'] as const,
-    list: (filters?: { status?: string }) => ['leads', filters] as const,
-    detail: (leadId: string) => ['leads', 'detail', leadId] as const,
+    lists: () => [...queryKeys.leads.all, 'list'] as const,
+    list: (filters?: { status?: string }) => [...queryKeys.leads.lists(), filters] as const,
+    details: () => [...queryKeys.leads.all, 'detail'] as const,
+    detail: (id: string) => [...queryKeys.leads.details(), id] as const,
   },
 
-  /**
-   * Team queries
-   */
-  team: {
-    all: ['team'] as const,
-    members: (ownerId: string | undefined) => ['team', 'members', ownerId] as const,
-    invitations: (userId: string | undefined) => ['team', 'invitations', userId] as const,
-  },
-
-  /**
-   * Properties queries
-   */
-  properties: {
-    all: ['properties'] as const,
-    list: (agentId: string | undefined) => ['properties', agentId] as const,
-  },
-
-  /**
-   * Webhooks queries
-   */
-  webhooks: {
-    all: ['webhooks'] as const,
-    list: (agentId: string | undefined) => ['webhooks', agentId] as const,
-  },
-
-  /**
-   * Agent tools queries
-   */
-  agentTools: {
-    all: ['agentTools'] as const,
-    list: (agentId: string | undefined) => ['agentTools', agentId] as const,
-  },
-
-  /**
-   * Connected accounts (calendars) queries
-   */
-  connectedAccounts: {
-    all: ['connectedAccounts'] as const,
-    list: (agentId: string | undefined) => ['connectedAccounts', agentId] as const,
-  },
-
-  /**
-   * Calendar events queries
-   */
-  calendarEvents: {
-    all: ['calendarEvents'] as const,
-    list: (filters?: { start?: Date; end?: Date }) => ['calendarEvents', filters] as const,
-  },
-
-  /**
-   * Analytics queries
-   */
+  // Analytics
   analytics: {
     all: ['analytics'] as const,
-    conversations: (params: { start: Date; end: Date }) => 
-      ['analytics', 'conversations', params] as const,
-    leads: (params: { start: Date; end: Date }) => 
-      ['analytics', 'leads', params] as const,
-    traffic: (agentId: string | undefined) => ['analytics', 'traffic', agentId] as const,
+    conversations: (params: { startDate: string; endDate: string; agentId?: string }) =>
+      [...queryKeys.analytics.all, 'conversations', params] as const,
+    traffic: (params: { startDate: string; endDate: string; agentId?: string }) =>
+      [...queryKeys.analytics.all, 'traffic', params] as const,
+    leads: (params: { startDate: string; endDate: string }) =>
+      [...queryKeys.analytics.all, 'leads', params] as const,
   },
 
-  /**
-   * Notifications queries
-   */
+  // Team
+  team: {
+    all: ['team'] as const,
+    lists: () => [...queryKeys.team.all, 'list'] as const,
+    list: (ownerId?: string) => [...queryKeys.team.lists(), ownerId] as const,
+    invitations: () => [...queryKeys.team.all, 'invitations'] as const,
+  },
+
+  // Webhooks  
+  webhooks: {
+    all: ['webhooks'] as const,
+    lists: () => [...queryKeys.webhooks.all, 'list'] as const,
+    list: (agentId: string) => [...queryKeys.webhooks.lists(), agentId] as const,
+  },
+
+  // Calendar events
+  calendarEvents: {
+    all: ['calendar-events'] as const,
+    lists: () => [...queryKeys.calendarEvents.all, 'list'] as const,
+    list: (params: { accountId?: string; start?: string; end?: string }) =>
+      [...queryKeys.calendarEvents.lists(), params] as const,
+  },
+
+  // Notifications
   notifications: {
     all: ['notifications'] as const,
-    list: (userId: string | undefined) => ['notifications', userId] as const,
-    unreadCount: (userId: string | undefined) => ['notifications', 'unread', userId] as const,
+    lists: () => [...queryKeys.notifications.all, 'list'] as const,
+    list: (userId: string) => [...queryKeys.notifications.lists(), userId] as const,
+    unreadCount: (userId: string) =>
+      [...queryKeys.notifications.all, 'unread-count', userId] as const,
+  },
+
+  // Properties
+  properties: {
+    all: ['properties'] as const,
+    lists: () => [...queryKeys.properties.all, 'list'] as const,
+    list: (agentId: string, filters?: { locationId?: string; status?: string }) =>
+      [...queryKeys.properties.lists(), agentId, filters] as const,
+  },
+
+  // Connected accounts
+  connectedAccounts: {
+    all: ['connected-accounts'] as const,
+    lists: () => [...queryKeys.connectedAccounts.all, 'list'] as const,
+    list: (agentId: string) => [...queryKeys.connectedAccounts.lists(), agentId] as const,
+  },
+
+  // Onboarding progress (computed from other queries)
+  onboarding: {
+    all: ['onboarding'] as const,
+    progress: (userId: string) => [...queryKeys.onboarding.all, 'progress', userId] as const,
   },
 } as const;
 
-/**
- * Type helper for query keys
- */
+/** Type helper for query keys */
 export type QueryKeys = typeof queryKeys;

@@ -1,8 +1,11 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/lib/toast';
 import { logger } from '@/utils/logger';
 import { getErrorMessage } from '@/types/errors';
+import { useSupabaseQuery } from './useSupabaseQuery';
+import { queryKeys } from '@/lib/query-keys';
 import type { Tables } from '@/integrations/supabase/types';
 import type { KnowledgeSourceMetadata } from '@/types/metadata';
 
@@ -14,25 +17,20 @@ type KnowledgeType = 'pdf' | 'url' | 'api' | 'json' | 'xml' | 'csv';
  * Handles URL/sitemap crawling, PDF processing, and embedding generation.
  * Supports batch processing with self-healing continuous processing architecture.
  * 
+ * Now uses React Query for caching and real-time updates via useSupabaseQuery.
+ * 
  * @param {string} [agentId] - Agent ID to scope knowledge sources
  * @returns {Object} Knowledge source management methods and state
- * @returns {KnowledgeSource[]} sources - List of knowledge sources
- * @returns {boolean} loading - Loading state
- * @returns {Function} addSource - Add a new knowledge source
- * @returns {Function} deleteSource - Delete a source (cascades to chunks)
- * @returns {Function} reprocessSource - Reprocess an existing source
- * @returns {Function} resumeBatchProcessing - Resume stalled batch processing
- * @returns {Function} refetch - Manually refresh sources list
  */
 export const useKnowledgeSources = (agentId?: string) => {
-  const [sources, setSources] = useState<KnowledgeSource[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
-  const fetchSources = useCallback(async () => {
-    if (!agentId) return;
-
-    try {
-      setLoading(true);
+  // Fetch sources using React Query with real-time subscription
+  const { data: sources = [], isLoading: loading, refetch } = useSupabaseQuery<KnowledgeSource[]>({
+    queryKey: queryKeys.knowledgeSources.list(agentId || ''),
+    queryFn: async () => {
+      if (!agentId) return [];
+      
       const { data, error } = await supabase
         .from('knowledge_sources')
         .select('*')
@@ -40,68 +38,27 @@ export const useKnowledgeSources = (agentId?: string) => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setSources(data || []);
-    } catch (error: unknown) {
-      logger.error('Error fetching knowledge sources', error);
-      toast.error('Error loading knowledge sources', {
-        description: getErrorMessage(error),
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [agentId]);
+      return data || [];
+    },
+    realtime: agentId ? {
+      table: 'knowledge_sources',
+      filter: `agent_id=eq.${agentId}`,
+    } : undefined,
+    enabled: !!agentId,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+  });
 
-  // Initial fetch and real-time subscription
-  useEffect(() => {
-    if (!agentId) return;
-
-    fetchSources();
-
-    // Subscribe to real-time updates for this agent's knowledge sources
-    const channel = supabase
-      .channel(`knowledge-sources-${agentId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'knowledge_sources',
-          filter: `agent_id=eq.${agentId}`,
-        },
-        (payload) => {
-          if (payload.eventType === 'INSERT') {
-            setSources((prev) => {
-              // Avoid duplicates (optimistic update may already have added it)
-              if (prev.some((s) => s.id === (payload.new as KnowledgeSource).id)) {
-                return prev;
-              }
-              return [payload.new as KnowledgeSource, ...prev];
-            });
-          } else if (payload.eventType === 'UPDATE') {
-            setSources((prev) =>
-              prev.map((s) =>
-                s.id === (payload.new as KnowledgeSource).id
-                  ? (payload.new as KnowledgeSource)
-                  : s
-              )
-            );
-          } else if (payload.eventType === 'DELETE') {
-            setSources((prev) =>
-              prev.filter((s) => s.id !== (payload.old as { id: string }).id)
-            );
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [agentId, fetchSources]);
+  // Helper to optimistically update sources
+  const optimisticUpdate = (updater: (prev: KnowledgeSource[]) => KnowledgeSource[]) => {
+    queryClient.setQueryData<KnowledgeSource[]>(
+      queryKeys.knowledgeSources.list(agentId || ''),
+      (prev) => updater(prev || [])
+    );
+  };
 
   const markSourceAsError = async (sourceId: string, errorMessage: string) => {
     try {
-      // Fetch existing metadata first to preserve it
       const { data: currentSource } = await supabase
         .from('knowledge_sources')
         .select('metadata')
@@ -131,7 +88,6 @@ export const useKnowledgeSources = (agentId?: string) => {
     agentId: string,
     userId: string
   ): Promise<string | null> => {
-    // PDF processing is temporarily disabled
     if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
       toast.error('PDF upload not supported', {
         description: 'PDF processing is temporarily unavailable. Please add a URL or text content instead.',
@@ -140,7 +96,6 @@ export const useKnowledgeSources = (agentId?: string) => {
     }
 
     try {
-      // Upload file to Supabase Storage
       const fileName = `${agentId}/${Date.now()}-${file.name}`;
       const { error: uploadError } = await supabase.storage
         .from('client-uploads')
@@ -148,12 +103,10 @@ export const useKnowledgeSources = (agentId?: string) => {
 
       if (uploadError) throw uploadError;
 
-      // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from('client-uploads')
         .getPublicUrl(fileName);
 
-      // Create knowledge source record
       const { data, error } = await supabase
         .from('knowledge_sources')
         .insert({
@@ -173,14 +126,12 @@ export const useKnowledgeSources = (agentId?: string) => {
 
       if (error) throw error;
 
-      // Optimistic update - add to local state immediately
-      setSources((prev) => [data, ...prev]);
+      optimisticUpdate((prev) => [data, ...prev]);
 
       toast.success('Document uploaded', {
         description: 'Processing document...',
       });
 
-      // Trigger processing in background (don't await)
       supabase.functions.invoke('process-knowledge-source', {
         body: { sourceId: data.id, agentId },
       }).then(({ error: invokeError }) => {
@@ -228,7 +179,7 @@ export const useKnowledgeSources = (agentId?: string) => {
 
       if (error) throw error;
 
-      setSources((prev) => [data, ...prev]);
+      optimisticUpdate((prev) => [data, ...prev]);
 
       toast.success('URL added', {
         description: 'Processing content...',
@@ -282,7 +233,7 @@ export const useKnowledgeSources = (agentId?: string) => {
 
       if (error) throw error;
 
-      setSources((prev) => [data, ...prev]);
+      optimisticUpdate((prev) => [data, ...prev]);
 
       toast.success('Property listing source added', {
         description: 'Extracting properties...',
@@ -339,14 +290,12 @@ export const useKnowledgeSources = (agentId?: string) => {
 
       if (error) throw error;
 
-      // Optimistic update - add to local state immediately
-      setSources((prev) => [data, ...prev]);
+      optimisticUpdate((prev) => [data, ...prev]);
 
       toast.success('Sitemap added', {
         description: 'Discovering pages...',
       });
 
-      // Trigger processing in background (don't await)
       supabase.functions.invoke('process-knowledge-source', {
         body: { sourceId: data.id, agentId },
       }).then(({ error: invokeError }) => {
@@ -393,14 +342,12 @@ export const useKnowledgeSources = (agentId?: string) => {
 
       if (error) throw error;
 
-      // Optimistic update - add to local state immediately
-      setSources((prev) => [data, ...prev]);
+      optimisticUpdate((prev) => [data, ...prev]);
 
       toast.success('Content added', {
         description: 'Processing content...',
       });
 
-      // Trigger processing in background (don't await)
       supabase.functions.invoke('process-knowledge-source', {
         body: { sourceId: data.id, agentId },
       }).then(({ error: invokeError }) => {
@@ -422,12 +369,10 @@ export const useKnowledgeSources = (agentId?: string) => {
 
   const deleteSource = async (sourceId: string) => {
     try {
-      // Find the source to check if it's a sitemap (has children)
       const sourceToDelete = sources.find(s => s.id === sourceId);
       const metadata = (sourceToDelete?.metadata || {}) as KnowledgeSourceMetadata;
       const isSitemap = metadata.is_sitemap === true;
 
-      // If it's a sitemap, first delete all child sources
       if (isSitemap) {
         logger.info(`Deleting sitemap children for source ${sourceId}`);
         const { error: childDeleteError } = await supabase
@@ -440,11 +385,8 @@ export const useKnowledgeSources = (agentId?: string) => {
         }
       }
 
-      // Optimistic update - remove from local state immediately
-      setSources((prev) => prev.filter((s) => {
-        // Remove the source itself
+      optimisticUpdate((prev) => prev.filter((s) => {
         if (s.id === sourceId) return false;
-        // Also remove any child sources if this is a sitemap
         const meta = (s.metadata || {}) as KnowledgeSourceMetadata;
         if (meta.parent_source_id === sourceId) return false;
         return true;
@@ -456,8 +398,7 @@ export const useKnowledgeSources = (agentId?: string) => {
         .eq('id', sourceId);
 
       if (error) {
-        // Revert optimistic update on error
-        await fetchSources();
+        await refetch();
         throw error;
       }
 
@@ -474,8 +415,7 @@ export const useKnowledgeSources = (agentId?: string) => {
 
   const reprocessSource = async (sourceId: string) => {
     try {
-      // Optimistic update - set status to processing immediately
-      setSources((prev) =>
+      optimisticUpdate((prev) =>
         prev.map((s) =>
           s.id === sourceId ? { ...s, status: 'processing' } : s
         )
@@ -492,7 +432,6 @@ export const useKnowledgeSources = (agentId?: string) => {
         description: 'Knowledge source is being reprocessed.',
       });
 
-      // Trigger reprocessing in background
       supabase.functions.invoke('process-knowledge-source', {
         body: { sourceId, agentId },
       }).then(({ error: invokeError }) => {
@@ -506,8 +445,7 @@ export const useKnowledgeSources = (agentId?: string) => {
       toast.error('Reprocess failed', {
         description: getErrorMessage(error),
       });
-      // Revert optimistic update
-      await fetchSources();
+      await refetch();
     }
   };
 
@@ -517,7 +455,6 @@ export const useKnowledgeSources = (agentId?: string) => {
         description: 'Resuming sitemap processing...',
       });
 
-      // Trigger resume processing in background
       supabase.functions.invoke('process-knowledge-source', {
         body: { sourceId, agentId, resume: true },
       }).then(({ error: invokeError }) => {
@@ -550,8 +487,7 @@ export const useKnowledgeSources = (agentId?: string) => {
     let completed = 0;
     let failed = 0;
 
-    // Optimistic update - set all to processing
-    setSources((prev) =>
+    optimisticUpdate((prev) =>
       prev.map((s) =>
         sourcesToRetrain.some((sr) => sr.id === s.id)
           ? { ...s, status: 'processing' }
@@ -567,11 +503,10 @@ export const useKnowledgeSources = (agentId?: string) => {
 
     if (updateError) {
       toast.error('Failed to start retraining', { description: updateError.message });
-      await fetchSources();
+      await refetch();
       return { success: 0, failed: total };
     }
 
-    // Process sources in batches of 3 to avoid rate limits
     const batchSize = 3;
     for (let i = 0; i < sourcesToRetrain.length; i += batchSize) {
       const batch = sourcesToRetrain.slice(i, i + batchSize);
@@ -594,7 +529,6 @@ export const useKnowledgeSources = (agentId?: string) => {
         })
       );
 
-      // Small delay between batches
       if (i + batchSize < sourcesToRetrain.length) {
         await new Promise(resolve => setTimeout(resolve, 500));
       }
@@ -604,25 +538,18 @@ export const useKnowledgeSources = (agentId?: string) => {
   };
 
   const isSourceOutdated = (source: KnowledgeSource): boolean => {
-    // WordPress home sources are container records, not embedding sources
     const sourceType = (source as unknown as { source_type?: string }).source_type;
     if (sourceType === 'wordpress_home') return false;
     
     const metadata = source.metadata as Record<string, unknown> | null;
     
-    // Sitemap parents don't have embeddings themselves, so they can't be "outdated"
     if (metadata?.is_sitemap === true) return false;
-    
-    // Legacy check for WordPress sources without source_type
     if (metadata?.wordpress_homes === true) return false;
-    
-    // Empty metadata on non-WordPress sources means needs reprocessing
     if (!metadata) return true;
     
     return metadata.embedding_model !== 'qwen/qwen3-embedding-8b';
   };
 
-  // Get child sources for a sitemap parent
   const getChildSources = useCallback((parentId: string): KnowledgeSource[] => {
     return sources.filter(s => {
       const metadata = s.metadata as Record<string, unknown> | null;
@@ -630,7 +557,6 @@ export const useKnowledgeSources = (agentId?: string) => {
     });
   }, [sources]);
 
-  // Get only parent sources (not child sources from sitemaps)
   const getParentSources = useCallback((): KnowledgeSource[] => {
     return sources.filter(s => {
       const metadata = s.metadata as Record<string, unknown> | null;
@@ -638,11 +564,9 @@ export const useKnowledgeSources = (agentId?: string) => {
     });
   }, [sources]);
 
-  // Delete a single child source (individual page from sitemap)
   const deleteChildSource = async (sourceId: string) => {
     try {
-      // Optimistic update
-      setSources((prev) => prev.filter((s) => s.id !== sourceId));
+      optimisticUpdate((prev) => prev.filter((s) => s.id !== sourceId));
 
       const { error } = await supabase
         .from('knowledge_sources')
@@ -650,7 +574,7 @@ export const useKnowledgeSources = (agentId?: string) => {
         .eq('id', sourceId);
 
       if (error) {
-        await fetchSources();
+        await refetch();
         throw error;
       }
 
@@ -661,11 +585,9 @@ export const useKnowledgeSources = (agentId?: string) => {
     }
   };
 
-  // Retry processing a single child source
   const retryChildSource = async (sourceId: string) => {
     try {
-      // Optimistic update
-      setSources((prev) =>
+      optimisticUpdate((prev) =>
         prev.map((s) =>
           s.id === sourceId ? { ...s, status: 'processing' } : s
         )
@@ -680,7 +602,6 @@ export const useKnowledgeSources = (agentId?: string) => {
 
       toast.success('Retrying page...');
 
-      // Trigger reprocessing in background
       supabase.functions.invoke('process-knowledge-source', {
         body: { sourceId, agentId },
       }).then(({ error: invokeError }) => {
@@ -692,15 +613,13 @@ export const useKnowledgeSources = (agentId?: string) => {
     } catch (error: unknown) {
       logger.error('Error retrying child source', error);
       toast.error('Retry failed', { description: getErrorMessage(error) });
-      await fetchSources();
+      await refetch();
     }
   };
 
-  // Manual refresh trigger for a single source
   const triggerManualRefresh = async (sourceId: string) => {
     try {
-      // Optimistic update - set status to processing
-      setSources((prev) =>
+      optimisticUpdate((prev) =>
         prev.map((s) =>
           s.id === sourceId ? { ...s, status: 'processing' } : s
         )
@@ -719,14 +638,14 @@ export const useKnowledgeSources = (agentId?: string) => {
         toast.error('Refresh failed', {
           description: error.message,
         });
-        await fetchSources();
+        await refetch();
       }
     } catch (error: unknown) {
       logger.error('Error triggering manual refresh', error);
       toast.error('Refresh failed', {
         description: getErrorMessage(error),
       });
-      await fetchSources();
+      await refetch();
     }
   };
 
@@ -748,6 +667,6 @@ export const useKnowledgeSources = (agentId?: string) => {
     isSourceOutdated,
     getChildSources,
     getParentSources,
-    refetch: fetchSources,
+    refetch,
   };
 };
