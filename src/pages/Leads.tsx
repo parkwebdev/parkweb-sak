@@ -154,7 +154,7 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
   };
 
   return (
-    <main className="flex-1 bg-muted/30 h-screen overflow-y-auto overflow-x-hidden">
+    <div className="flex flex-col h-full w-full min-w-0 bg-muted/30 overflow-y-auto">
       <PageHeader
         title="Leads"
         description="Track and manage leads captured from conversations"
@@ -168,7 +168,7 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
         </Button>
       </PageHeader>
 
-      <div className="px-4 lg:px-8 mt-6 space-y-6 w-full min-w-0 overflow-hidden">
+      <div className="px-4 lg:px-8 mt-6 space-y-6 min-w-0">
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           <div className="p-4 border rounded-lg">
@@ -326,7 +326,7 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
         onConfirm={handleSingleDeleteConfirm}
         isDeleting={isDeleting}
       />
-    </main>
+    </div>
   );
 };
 
