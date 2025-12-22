@@ -157,7 +157,7 @@ export function LeadsKanbanBoard({
   // Render overlay for dragged card
   const renderCardOverlay = useCallback(
     (lead: KanbanLead) => (
-      <Card className="cursor-grabbing rounded-md border bg-card p-3 shadow-xl ring-2 ring-primary/20">
+      <Card className="cursor-grabbing rounded-md border bg-card p-3 shadow-md">
         <LeadCardContent lead={lead} onView={() => {}} />
       </Card>
     ),
