@@ -16,7 +16,7 @@ import { CheckCircle, Copy01 } from "@untitledui/icons"
 import { motion, AnimatePresence } from "motion/react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { toast } from "sonner"
+import { toast } from "@/lib/toast"
 import { logger } from "@/utils/logger"
 
 interface CopyButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {

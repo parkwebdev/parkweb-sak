@@ -13,7 +13,7 @@ import { Check } from '@untitledui/icons';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 
 const EMOJI_RATINGS = [
   { value: 1, emoji: '😞', label: 'Poor' },
