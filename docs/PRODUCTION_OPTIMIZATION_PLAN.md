@@ -1,7 +1,7 @@
 # Production Optimization Plan
 
 > **Last Updated**: December 2024  
-> **Status**: Phase 5 ✅ COMPLETE | Phases 6-10 PENDING  
+> **Status**: Phases 6-10 PENDING  
 > **Goal**: Production-ready codebase with zero inefficiencies
 
 ---
@@ -9,16 +9,15 @@
 ## Table of Contents
 
 1. [Executive Summary](#executive-summary)
-2. [Completed: Phase 5 - Conversations Refactor](#phase-5-conversations-refactor-complete)
-3. [Phase 6: Widget Logging Cleanup](#phase-6-widget-logging-cleanup)
-4. [Phase 7: Handler Memoization Pass](#phase-7-handler-memoization-pass)
-5. [Phase 8: TODO Resolution](#phase-8-todo-resolution)
-6. [Phase 9: Widget Component Refactor](#phase-9-widget-component-refactor)
-7. [Phase 10: React.memo Additions](#phase-10-reactmemo-additions)
-8. [Low Priority: Type Safety Cleanup](#low-priority-type-safety-cleanup)
-9. [Low Priority: Key Prop Fixes](#low-priority-key-prop-fixes)
-10. [Audit Results: What's Already Done Right](#audit-results-whats-already-done-right)
-11. [Implementation Timeline](#implementation-timeline)
+2. [Phase 6: Widget Logging Cleanup](#phase-6-widget-logging-cleanup)
+3. [Phase 7: Handler Memoization Pass](#phase-7-handler-memoization-pass)
+4. [Phase 8: TODO Resolution](#phase-8-todo-resolution)
+5. [Phase 9: Widget Component Refactor](#phase-9-widget-component-refactor)
+6. [Phase 10: React.memo Additions](#phase-10-reactmemo-additions)
+7. [Low Priority: Type Safety Cleanup](#low-priority-type-safety-cleanup)
+8. [Low Priority: Key Prop Fixes](#low-priority-key-prop-fixes)
+9. [Audit Results: What's Already Done Right](#audit-results-whats-already-done-right)
+10. [Implementation Timeline](#implementation-timeline)
 
 ---
 
@@ -36,64 +35,15 @@ Exhaustive codebase audit conducted December 2024 covering:
 
 | Priority | Phase | Issue | Impact | Estimated Time |
 |----------|-------|-------|--------|----------------|
-| ✅ DONE | 5 | Conversations.tsx monolith | Maintainability | - |
 | 🔴 HIGH | 6 | Widget console.log in production | User-visible logs | 30 min |
 | 🟡 MEDIUM | 7 | Missing handler memoization | Performance | 45 min |
 | 🟡 MEDIUM | 8 | Incomplete TODO comments | Feature completeness | 1 hour |
-| 🟢 LOW | 9 | ChatWidget.tsx monolith | Maintainability | 3+ hours |
+| 🟢 LOW | 9 | ChatWidget.tsx monolith (948 lines) | Maintainability | 3+ hours |
 | 🟢 LOW | 10 | Missing React.memo | Performance | 15 min |
 | 🟢 LOW | - | Type safety cleanup | Code quality | 30 min |
 | 🟢 LOW | - | Key prop fixes | React warnings | 15 min |
 
 **Total Estimated Time**: ~6 hours
-
----
-
-## Phase 5: Conversations Refactor (COMPLETE)
-
-> **Status**: ✅ COMPLETE  
-> **Result**: Reduced from 1,528 lines to 565 lines (63% reduction)  
-> **Visual Changes**: NONE - Pure structural refactor
-
-### Overview
-
-Refactored the monolithic `Conversations.tsx` into focused hooks and components while maintaining 100% identical visual output.
-
-### New File Structure Created
-
-```
-src/
-├── hooks/
-│   ├── useConversationMessages.ts    (~120 lines)
-│   ├── useTypingPresence.ts          (~60 lines)
-│   └── useVisitorPresence.ts         (~50 lines)
-├── components/conversations/
-│   ├── ConversationsList.tsx         (~180 lines)
-│   ├── ConversationItem.tsx          (~100 lines)
-│   ├── ChatHeader.tsx                (~80 lines)
-│   ├── TranslationBanner.tsx         (~40 lines)
-│   ├── MessageThread.tsx             (~150 lines)
-│   ├── AdminMessageBubble.tsx        (~250 lines)
-│   ├── MessageInputArea.tsx          (~160 lines)
-│   └── index.ts                      (barrel export)
-├── lib/
-│   └── conversation-utils.ts         (~80 lines)
-└── pages/
-    └── Conversations.tsx             (~565 lines - composition layer)
-```
-
-### Patterns Established
-
-1. **Hook Extraction**: Complex state logic extracted into focused hooks
-2. **Component Memoization**: All components wrapped with `React.memo`
-3. **Callback Optimization**: All handlers wrapped with `useCallback`
-4. **Logger Usage**: `logger` utility instead of `console.log`
-5. **Barrel Exports**: `index.ts` for clean imports
-
-### Documentation Updated
-
-- ✅ `docs/ARCHITECTURE.md` - Component structure and data flow diagrams
-- ✅ `docs/HOOKS_REFERENCE.md` - New hooks documented
 
 ---
 
@@ -147,8 +97,6 @@ export const configureWidgetLogger = (newConfig: WidgetLoggerConfig) => {
 };
 
 const shouldLog = (): boolean => {
-  // Only log in preview mode (when testing in Lovable)
-  // Silent on production customer sites
   return config.previewMode === true;
 };
 
@@ -290,7 +238,7 @@ interface VideoModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title: string;
-  videoUrl?: string; // YouTube/Vimeo/Loom embed URL
+  videoUrl?: string;
 }
 
 export const VideoModal: React.FC<VideoModalProps> = ({
@@ -358,7 +306,6 @@ const handleCreateEvent = () => {
     toast.info('Connect a calendar in Ari Settings → Integrations to create events');
     return;
   }
-  // ... proceed with creation
 };
 ```
 
@@ -378,11 +325,9 @@ const handleCreateEvent = () => {
 
 ### Problem
 
-`src/widget/ChatWidget.tsx` at 948 lines violates single-responsibility principle, similar to how `Conversations.tsx` was before Phase 5.
+`src/widget/ChatWidget.tsx` at 948 lines violates single-responsibility principle.
 
 ### Proposed Structure
-
-Apply Phase 5 patterns:
 
 ```
 src/widget/
@@ -402,7 +347,6 @@ src/widget/
 ### Estimated Effort
 
 - 3+ hours of careful refactoring
-- Similar verification process as Phase 5
 - Low immediate impact (code works fine, just hard to maintain)
 
 ### Deferral Rationale
@@ -410,7 +354,6 @@ src/widget/
 This can wait because:
 - Widget currently functions correctly
 - No production bugs related to complexity
-- Team can navigate code with IDE tools
 - Higher priority items exist
 
 ---
@@ -425,7 +368,7 @@ This can wait because:
 
 #### `src/components/Sidebar.tsx` (366 lines)
 
-Currently re-renders on every route change. Wrapping with `React.memo` prevents unnecessary re-renders when props haven't changed.
+Currently re-renders on every route change.
 
 ```typescript
 // Before
@@ -488,15 +431,6 @@ const recordingIntervalRef = useRef<any>(null);
 const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 ```
 
-For Recharts handlers, use proper event types:
-```typescript
-// Before
-onClick={(data: any) => ...}
-
-// After
-onClick={(data: { payload: DataPoint }) => ...}
-```
-
 ---
 
 ## Low Priority: Key Prop Fixes
@@ -518,20 +452,10 @@ onClick={(data: { payload: DataPoint }) => ...}
 
 ```typescript
 // TrafficSourceChart.tsx
-// Before
-{data.map((item, index) => (
-  <div key={index}>...
-
-// After
 {data.map((item) => (
   <div key={item.source || item.name}>...
 
 // ResponseActionBuilder.tsx
-// Before
-{actions.map((action, index) => (
-  <div key={index}>...
-
-// After
 {actions.map((action) => (
   <div key={action.id}>...
 ```
@@ -552,11 +476,7 @@ Centralized in `src/lib/query-keys.ts` and used consistently across all hooks.
 Main app uses `src/utils/logger.ts` with conditional logging based on `import.meta.env.DEV`.
 
 ### ✅ React Query Patterns
-All data fetching uses `useSupabaseQuery` or direct `useQuery` with proper:
-- Enabled flags
-- Stale times
-- Error handling
-- Optimistic updates where appropriate
+All data fetching uses `useSupabaseQuery` or direct `useQuery` with proper enabled flags, stale times, error handling, and optimistic updates.
 
 ### ✅ Supabase RLS
 Database linter shows 0 warnings. All tables have appropriate RLS policies.
@@ -582,34 +502,31 @@ All edge functions include proper CORS configuration.
 ### ✅ Safe HTML Rendering
 `dangerouslySetInnerHTML` only used with DOMPurify sanitization.
 
-### ✅ Phase 5 Completion
-Conversations.tsx successfully refactored with all patterns applied.
-
 ---
 
 ## Implementation Timeline
 
 ### Immediate (Before Next Deploy)
 
-| Phase | Task | Time | Owner |
-|-------|------|------|-------|
-| 6 | Widget logging cleanup | 30 min | - |
+| Phase | Task | Time |
+|-------|------|------|
+| 6 | Widget logging cleanup | 30 min |
 
 ### This Sprint
 
-| Phase | Task | Time | Owner |
-|-------|------|------|-------|
-| 7 | Handler memoization | 45 min | - |
-| 8 | TODO resolution | 1 hour | - |
-| 10 | React.memo additions | 15 min | - |
+| Phase | Task | Time |
+|-------|------|------|
+| 7 | Handler memoization | 45 min |
+| 8 | TODO resolution | 1 hour |
+| 10 | React.memo additions | 15 min |
 
 ### Backlog
 
-| Phase | Task | Time | Owner |
-|-------|------|------|-------|
-| 9 | Widget refactor | 3+ hours | - |
-| - | Type safety cleanup | 30 min | - |
-| - | Key prop fixes | 15 min | - |
+| Phase | Task | Time |
+|-------|------|------|
+| 9 | Widget refactor | 3+ hours |
+| - | Type safety cleanup | 30 min |
+| - | Key prop fixes | 15 min |
 
 ---
 
