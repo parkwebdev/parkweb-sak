@@ -16,6 +16,7 @@ import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { IconButton } from '@/components/ui/icon-button';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { logger } from '@/utils/logger';
 
 const EMOJI_RATINGS = [
   { value: 1, emoji: '😞', label: 'Poor' },
@@ -56,7 +57,7 @@ export const SetupFeedbackToast: React.FC<SetupFeedbackToastProps> = ({ hasRated
       // Show follow-up textarea instead of immediately dismissing
       setShowFollowUp(true);
     } catch (error) {
-      console.error('Failed to save rating:', error);
+      logger.error('Failed to save rating:', error);
       setSelectedRating(null);
     } finally {
       setIsSubmitting(false);
@@ -78,7 +79,7 @@ export const SetupFeedbackToast: React.FC<SetupFeedbackToastProps> = ({ hasRated
       setIsSubmitted(true);
       setTimeout(() => setIsDismissed(true), 2000);
     } catch (error) {
-      console.error('Failed to save feedback:', error);
+      logger.error('Failed to save feedback:', error);
     } finally {
       setIsSubmitting(false);
     }

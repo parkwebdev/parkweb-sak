@@ -20,6 +20,7 @@ import { useEffect, useRef } from 'react';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { subscribeToTypingIndicator, unsubscribeFromTypingIndicator } from '../api';
 import { isValidUUID } from '../utils';
+import { logger } from '@/utils/logger';
 
 /** Options for the useTypingIndicator hook */
 interface UseTypingIndicatorOptions {
@@ -52,7 +53,7 @@ export function useTypingIndicator(options: UseTypingIndicatorOptions) {
       return;
     }
 
-    console.log('[Widget] Setting up typing indicator subscription for:', activeConversationId);
+    logger.debug('[Widget] Setting up typing indicator subscription for:', activeConversationId);
     
     if (typingChannelRef.current) {
       unsubscribeFromTypingIndicator(typingChannelRef.current);
@@ -60,7 +61,7 @@ export function useTypingIndicator(options: UseTypingIndicatorOptions) {
     }
 
     typingChannelRef.current = subscribeToTypingIndicator(activeConversationId, (typing, agentName) => {
-      console.log('[Widget] Human typing state:', typing, agentName);
+      logger.debug('[Widget] Human typing state:', { typing, agentName });
       setIsHumanTyping(typing);
       if (typing && agentName) {
         setTypingAgentName(agentName);

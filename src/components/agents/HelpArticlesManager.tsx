@@ -8,6 +8,7 @@
  */
 
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import { logger } from '@/utils/logger';
 import {
   useReactTable,
   getCoreRowModel,
@@ -575,7 +576,7 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
       if (error) throw error;
       toast.success('Article re-embedded successfully');
     } catch (err) {
-      console.error('Re-embed failed:', err);
+      logger.error('Re-embed failed:', err);
       toast.error('Failed to re-embed article');
     }
   };

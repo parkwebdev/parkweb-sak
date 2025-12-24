@@ -16,6 +16,7 @@ import { useConnectedAccounts } from '@/hooks/useConnectedAccounts';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/lib/toast';
 import { GoogleCalendarLogo, MicrosoftOutlookLogo } from '@/components/icons/CalendarLogos';
+import { logger } from '@/utils/logger';
 
 interface CalendarConnectionsProps {
   locationId: string;
@@ -85,7 +86,7 @@ export const CalendarConnections: React.FC<CalendarConnectionsProps> = ({
         }
       }, 500);
     } catch (error) {
-      console.error('OAuth initiation error:', error);
+      logger.error('OAuth initiation error:', error);
       toast.error('Failed to start calendar connection');
       setConnecting(null);
     }

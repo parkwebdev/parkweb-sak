@@ -11,6 +11,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { PlayIcon } from '@/components/icons/PlayIcon';
+import { logger } from '@/utils/logger';
 
 interface VideoPlaceholderProps {
   stepId: string;
@@ -54,7 +55,7 @@ export const VideoPlaceholder: React.FC<VideoPlaceholderProps> = ({ stepId }) =>
             className="group flex items-center justify-center w-14 h-14 rounded-full bg-white/20 backdrop-blur-md shadow-lg hover:bg-white/30 transition-colors"
             onClick={() => {
               // TODO: Open video modal
-              console.log('Play video for step:', stepId);
+              logger.debug('Play video for step:', stepId);
             }}
             aria-label="Play tutorial video"
           >

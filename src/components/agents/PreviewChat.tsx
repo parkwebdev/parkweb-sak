@@ -16,6 +16,7 @@
  */
 
 import React, { useState, useRef, useEffect, useCallback, Suspense } from 'react';
+import { logger } from '@/utils/logger';
 import { DotsVertical, RefreshCw01, Send01 } from '@untitledui/icons';
 import { 
   DropdownMenu, 
@@ -127,7 +128,7 @@ export const PreviewChat: React.FC<PreviewChatProps> = ({
       );
 
       // DEBUG: Log API response to trace link previews and call actions
-      console.log('[PreviewChat] API Response:', {
+      logger.debug('[PreviewChat] API Response:', {
         response: response.response?.substring(0, 100),
         linkPreviews: response.linkPreviews,
         callActions: response.callActions,
@@ -149,7 +150,7 @@ export const PreviewChat: React.FC<PreviewChatProps> = ({
       };
       setMessages(prev => [...prev, assistantMessage]);
     } catch (error) {
-      console.error('Preview chat error:', error);
+      logger.error('Preview chat error:', error);
       // Add error message
       const errorMessage: Message = {
         id: `error-${Date.now()}`,
@@ -293,7 +294,7 @@ export const PreviewChat: React.FC<PreviewChatProps> = ({
                           const hasCallActions = !!(message.callActions && message.callActions.length > 0);
                           
                           // DEBUG: Log stripping conditions and data
-                          console.log('[PreviewChat] Content processing:', {
+                          logger.debug('[PreviewChat] Content processing:', {
                             hasLinkPreviews,
                             hasCallActions,
                             linkPreviews: message.linkPreviews,
@@ -306,7 +307,7 @@ export const PreviewChat: React.FC<PreviewChatProps> = ({
                           processed = stripPhoneNumbersFromContent(processed, hasCallActions);
                           processed = formatMarkdownBullets(processed);
                           
-                          console.log('[PreviewChat] After stripping:', processed.substring(0, 100));
+                          logger.debug('[PreviewChat] After stripping:', processed.substring(0, 100));
                           
                           return processed;
                         })()}

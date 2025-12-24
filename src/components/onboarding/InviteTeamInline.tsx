@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/lib/toast';
+import { logger } from '@/utils/logger';
 
 export const InviteTeamInline: React.FC = () => {
   const { user } = useAuth();
@@ -57,7 +58,7 @@ export const InviteTeamInline: React.FC = () => {
         setIsSuccess(false);
       }, 3000);
     } catch (error) {
-      console.error('Failed to send invitation:', error);
+      logger.error('Failed to send invitation:', error);
       toast.error('Failed to send invitation');
     } finally {
       setIsLoading(false);
