@@ -13,6 +13,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { widgetSupabase } from '../api';
+import { widgetLogger } from '../utils';
 
 /** Location data from database */
 export interface DetectedLocation {
@@ -130,7 +131,7 @@ export function useLocationDetection({
         })));
       }
     } catch (error) {
-      console.error('[LocationDetection] Error fetching locations:', error);
+      widgetLogger.error('Error fetching locations:', error);
     }
   }, [agentId]);
 
@@ -160,7 +161,7 @@ export function useLocationDetection({
       }
       return null;
     } catch (error) {
-      console.error('[LocationDetection] Error looking up location by slug:', error);
+      widgetLogger.error('Error looking up location by slug:', error);
       return null;
     }
   }, [agentId]);
@@ -186,7 +187,7 @@ export function useLocationDetection({
       }
       return null;
     } catch (error) {
-      console.error('[LocationDetection] WordPress API lookup failed:', error);
+      widgetLogger.error('WordPress API lookup failed:', error);
       return null;
     }
   }, [wordpressSiteUrl]);
@@ -281,7 +282,7 @@ export function useLocationDetection({
         
         // No location detected - location will be null until user selects or AI prompts
       } catch (error) {
-        console.error('[LocationDetection] Detection error:', error);
+        widgetLogger.error('Detection error:', error);
       } finally {
         setIsDetecting(false);
       }

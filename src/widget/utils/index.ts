@@ -42,3 +42,10 @@ export {
  * @see {@link ./url-stripper}
  */
 export { stripUrlsFromContent, stripPhoneNumbersFromContent } from './url-stripper';
+
+/**
+ * Production-safe logging utility
+ * Silent on customer sites, enabled in preview mode
+ * @see {@link ./widget-logger}
+ */
+export { widgetLogger, configureWidgetLogger } from './widget-logger';

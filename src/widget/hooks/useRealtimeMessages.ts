@@ -25,7 +25,7 @@
 import { useEffect, useRef } from 'react';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { subscribeToMessages, unsubscribeFromMessages } from '../api';
-import { isValidUUID } from '../utils';
+import { isValidUUID, widgetLogger } from '../utils';
 import type { Message, WidgetMessageMetadata } from '../types';
 
 /** Options for the useRealtimeMessages hook */
@@ -84,7 +84,7 @@ export function useRealtimeMessages(options: UseRealtimeMessagesOptions) {
       return;
     }
 
-    console.log('[Widget] Setting up real-time subscription for:', activeConversationId);
+    widgetLogger.debug('Setting up real-time subscription for:', activeConversationId);
     
     // Unsubscribe from previous channel if exists
     if (realtimeChannelRef.current) {
@@ -102,7 +102,7 @@ export function useRealtimeMessages(options: UseRealtimeMessagesOptions) {
         // Check if this is a human message (not from AI)
         const isHumanMessage = metadata.sender_type === 'human';
         
-        console.log('[Widget] Processing new message:', { 
+        widgetLogger.debug('Processing new message:', { 
           id: newMessage.id, 
           isHuman: isHumanMessage,
           content: newMessage.content.substring(0, 50)
@@ -113,7 +113,7 @@ export function useRealtimeMessages(options: UseRealtimeMessagesOptions) {
         if (!isHumanMessage) {
           // Check if this chunk was recently added locally
           if (recentChunkIdsRef.current.has(newMessage.id)) {
-            console.log('[Widget] Ignoring realtime chunk already added locally:', newMessage.id);
+            widgetLogger.debug('Ignoring realtime chunk already added locally:', newMessage.id);
             return;
           }
         }
@@ -160,14 +160,14 @@ export function useRealtimeMessages(options: UseRealtimeMessagesOptions) {
       // Handle message updates (for real-time reaction sync AND read receipts)
       (updatedMessage) => {
         const metadata = (updatedMessage.metadata || {}) as WidgetMessageMetadata;
-        console.log('[Widget] Message UPDATE callback invoked:', {
+        widgetLogger.debug('Message UPDATE callback invoked:', {
           messageId: updatedMessage.id,
           metadata: metadata,
           reactions: metadata.reactions,
         });
         setMessages(prev => {
-          console.log('[Widget] Updating message in state:', updatedMessage.id, 'reactions:', metadata.reactions);
-          return prev.map(msg => 
+          widgetLogger.debug('Updating message in state:', updatedMessage.id, 'reactions:', metadata.reactions);
+          return prev.map(msg =>
             msg.id === updatedMessage.id 
               ? { 
                   ...msg, 

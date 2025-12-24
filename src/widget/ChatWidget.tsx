@@ -28,6 +28,7 @@
  */
 import { useState, useEffect, useRef, Suspense, lazy } from 'react';
 import { createLead, sendChatMessage, submitConversationRating, widgetSupabase, type WidgetConfig, type ReferrerJourney } from './api';
+import { widgetLogger, configureWidgetLogger } from './utils';
 
 // Types and constants extracted for maintainability
 import type { ViewType, ChatUser, Message, ChatWidgetProps } from './types';

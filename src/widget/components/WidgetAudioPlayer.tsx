@@ -82,7 +82,7 @@ export const WidgetAudioPlayer: React.FC<WidgetAudioPlayerProps> = ({
       setWaveformData(filteredData);
       tempContext.close();
     } catch (error) {
-      console.error('Error generating waveform:', error);
+      // Waveform generation error - continue without waveform
       onError?.(error instanceof Error ? error : new Error('Failed to generate waveform'));
     }
   }, [audioUrl, onError]);
@@ -154,7 +154,7 @@ export const WidgetAudioPlayer: React.FC<WidgetAudioPlayerProps> = ({
       sourceNodeRef.current.connect(analyserRef.current);
       analyserRef.current.connect(audioContextRef.current.destination);
     } catch (error) {
-      console.error('Error setting up audio analyser:', error);
+      // Audio analyser setup error - continue without visualization
     }
   }, []);
 
