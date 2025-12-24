@@ -60,6 +60,11 @@ import { FloatingButton, WidgetHeader, WidgetNav, SatisfactionRating } from './c
 import { WidgetCard } from './ui';
 
 export const ChatWidget = ({ config: configProp, previewMode = false, containedPreview = false, isLoading: isLoadingProp = false }: ChatWidgetProps) => {
+  // Configure logger once on mount based on previewMode
+  useEffect(() => {
+    configureWidgetLogger({ previewMode });
+  }, [previewMode]);
+
   // Mobile detection for removing border radius on full-screen mobile
   const [isMobileFullScreen, setIsMobileFullScreen] = useState(getIsMobileFullScreen);
   
@@ -405,8 +410,8 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
           })
         );
       } catch (uploadError) {
-        console.error('[Widget] Error uploading files to storage:', uploadError);
-        console.error('[Widget] Upload error details:', {
+        widgetLogger.error('[Widget] Error uploading files to storage:', uploadError);
+        widgetLogger.error('[Widget] Upload error details:', {
           bucket: 'conversation-files',
           conversationId: activeConversationId,
           fileCount: pendingFiles.length,
@@ -459,7 +464,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
         setPageVisits(finalPageVisits);
       }
 
-      console.log('[Widget] Sending message with:', {
+      widgetLogger.info('[Widget] Sending message with:', {
         pageVisitsCount: finalPageVisits.length,
         referrerJourney: referrerJourney ? 'present' : 'null',
         conversationId: activeConversationId,
@@ -619,7 +624,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
         }
       }
     } catch (error) {
-      console.error('Error sending message:', error);
+      widgetLogger.error('Error sending message:', error);
       // Mark the optimistic user message as failed
       setMessages(prev => prev.map(msg => 
         msg.tempId === tempId 
@@ -676,7 +681,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
         setRecordingTime(prev => prev + 1);
       }, 1000);
     } catch (error) {
-      console.error('Error starting recording:', error);
+      widgetLogger.error('Error starting recording:', error);
     }
   };
 
@@ -756,7 +761,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
         }]);
       }
     } catch (error) {
-      console.error('Error getting AI greeting:', error);
+      widgetLogger.error('Error getting AI greeting:', error);
       // Fallback to a simple greeting if AI fails
       setMessages([{ 
         role: 'assistant', 
