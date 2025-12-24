@@ -109,7 +109,7 @@ export const ResponseActionBuilder = ({ actions, onChange }: ResponseActionBuild
       {actions.length > 0 && (
         <div className="space-y-4">
           {actions.map((action, actionIndex) => (
-            <div key={actionIndex} className="border rounded-md p-4 space-y-3">
+            <div key={`action-${actionIndex}-${action.action.type}`} className="border rounded-md p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <Label className="text-sm font-medium">Action {actionIndex + 1}</Label>
                 <Button
