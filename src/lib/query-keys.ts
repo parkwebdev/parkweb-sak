@@ -129,13 +129,14 @@ export const queryKeys = {
     all: ['webhooks'] as const,
     lists: () => [...queryKeys.webhooks.all, 'list'] as const,
     list: (agentId: string) => [...queryKeys.webhooks.lists(), agentId] as const,
+    logs: (webhookId?: string) => [...queryKeys.webhooks.all, 'logs', webhookId] as const,
   },
 
   // Calendar events
   calendarEvents: {
     all: ['calendar-events'] as const,
     lists: () => [...queryKeys.calendarEvents.all, 'list'] as const,
-    list: (params: { accountId?: string; start?: string; end?: string }) =>
+    list: (params?: { locationId?: string }) =>
       [...queryKeys.calendarEvents.lists(), params] as const,
   },
 
@@ -160,7 +161,22 @@ export const queryKeys = {
   connectedAccounts: {
     all: ['connected-accounts'] as const,
     lists: () => [...queryKeys.connectedAccounts.all, 'list'] as const,
-    list: (agentId: string) => [...queryKeys.connectedAccounts.lists(), agentId] as const,
+    list: (agentId: string, locationId?: string) => 
+      [...queryKeys.connectedAccounts.lists(), agentId, locationId] as const,
+  },
+
+  // Scheduled reports
+  scheduledReports: {
+    all: ['scheduled-reports'] as const,
+    lists: () => [...queryKeys.scheduledReports.all, 'list'] as const,
+    list: (userId: string) => [...queryKeys.scheduledReports.lists(), userId] as const,
+  },
+
+  // Traffic analytics
+  trafficAnalytics: {
+    all: ['traffic-analytics'] as const,
+    data: (params: { startDate: string; endDate: string }) =>
+      [...queryKeys.trafficAnalytics.all, params] as const,
   },
 
   // Onboarding progress (computed from other queries)

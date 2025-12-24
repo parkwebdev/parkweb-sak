@@ -1,16 +1,20 @@
 /**
  * useCalendarEvents Hook
  * 
- * Fetches and manages calendar events from the database with real-time updates.
- * Transforms database calendar_events to the CalendarEvent format used by the Planner.
+ * Fetches and manages calendar events from the database with React Query caching
+ * and real-time updates. Transforms database calendar_events to CalendarEvent format.
  * 
  * @module hooks/useCalendarEvents
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/lib/toast';
+import { useSupabaseQuery } from '@/hooks/useSupabaseQuery';
+import { queryKeys } from '@/lib/query-keys';
+import { logger } from '@/utils/logger';
 import type { CalendarEvent, EventType, EventStatus } from '@/types/calendar';
 
 interface UseCalendarEventsOptions {
@@ -20,13 +24,13 @@ interface UseCalendarEventsOptions {
 
 export const useCalendarEvents = (options: UseCalendarEventsOptions = {}) => {
   const { user } = useAuth();
-  const [events, setEvents] = useState<CalendarEvent[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
 
-  const fetchEvents = useCallback(async () => {
-    if (!user) return;
+  const { data: events = [], isLoading, refetch } = useSupabaseQuery<CalendarEvent[]>({
+    queryKey: queryKeys.calendarEvents.list({ locationId: options.locationId }),
+    queryFn: async () => {
+      if (!user) return [];
 
-    try {
       // Build query to fetch calendar events
       let query = supabase
         .from('calendar_events')
@@ -59,12 +63,12 @@ export const useCalendarEvents = (options: UseCalendarEventsOptions = {}) => {
       const { data, error } = await query;
 
       if (error) {
-        console.error('Error fetching calendar events:', error);
-        return;
+        logger.error('Error fetching calendar events:', error);
+        return [];
       }
 
       // Transform database records to CalendarEvent format
-      const calendarEvents: CalendarEvent[] = (data || []).map((event) => {
+      return (data || []).map((event) => {
         const metadata = event.metadata as Record<string, unknown> | null;
         
         // Map database event_type to CalendarEvent type
@@ -102,14 +106,18 @@ export const useCalendarEvents = (options: UseCalendarEventsOptions = {}) => {
           allDay: false,
         };
       });
+    },
+    realtime: {
+      table: 'calendar_events',
+      filter: options.locationId ? `location_id=eq.${options.locationId}` : undefined,
+    },
+    enabled: !!user,
+    staleTime: 60000, // 1 minute
+  });
 
-      setEvents(calendarEvents);
-    } catch (error) {
-      console.error('Error in fetchEvents:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [user, options.locationId]);
+  const invalidateEvents = useCallback(async () => {
+    await queryClient.invalidateQueries({ queryKey: queryKeys.calendarEvents.all });
+  }, [queryClient]);
 
   // Cancel a booking
   const cancelEvent = useCallback(async (eventId: string, reason?: string) => {
@@ -125,12 +133,12 @@ export const useCalendarEvents = (options: UseCalendarEventsOptions = {}) => {
       if (error) throw error;
 
       toast.success('Booking cancelled');
-      fetchEvents();
+      await invalidateEvents();
     } catch (error) {
-      console.error('Error cancelling event:', error);
+      logger.error('Error cancelling event:', error);
       toast.error('Failed to cancel booking');
     }
-  }, [fetchEvents]);
+  }, [invalidateEvents]);
 
   // Mark booking as completed
   const completeEvent = useCallback(async (eventId: string) => {
@@ -143,12 +151,12 @@ export const useCalendarEvents = (options: UseCalendarEventsOptions = {}) => {
       if (error) throw error;
 
       toast.success('Booking marked as complete');
-      fetchEvents();
+      await invalidateEvents();
     } catch (error) {
-      console.error('Error completing event:', error);
+      logger.error('Error completing event:', error);
       toast.error('Failed to complete booking');
     }
-  }, [fetchEvents]);
+  }, [invalidateEvents]);
 
   // Reschedule a booking
   const rescheduleEvent = useCallback(async (
@@ -170,46 +178,17 @@ export const useCalendarEvents = (options: UseCalendarEventsOptions = {}) => {
       if (error) throw error;
 
       toast.success('Booking rescheduled');
-      fetchEvents();
+      await invalidateEvents();
     } catch (error) {
-      console.error('Error rescheduling event:', error);
+      logger.error('Error rescheduling event:', error);
       toast.error('Failed to reschedule booking');
     }
-  }, [fetchEvents]);
-
-  // Initial fetch
-  useEffect(() => {
-    fetchEvents();
-  }, [fetchEvents]);
-
-  // Real-time subscription for calendar event updates
-  useEffect(() => {
-    if (!user) return;
-
-    const channel = supabase
-      .channel('calendar-events-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'calendar_events',
-        },
-        () => {
-          fetchEvents();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user, fetchEvents]);
+  }, [invalidateEvents]);
 
   return {
     events,
     isLoading,
-    refetch: fetchEvents,
+    refetch,
     cancelEvent,
     completeEvent,
     rescheduleEvent,

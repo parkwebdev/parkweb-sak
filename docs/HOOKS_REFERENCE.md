@@ -335,20 +335,22 @@ const {
 
 ### useWebhooks
 
-Manages webhook configurations.
+**Powered by React Query** - Webhook data is cached and real-time updates via Supabase subscription automatically invalidate the cache.
 
 ```tsx
 import { useWebhooks } from '@/hooks/useWebhooks';
 
 const {
   webhooks,        // Webhook[] - All webhooks
-  isLoading,      // boolean
+  logs,           // WebhookLog[] - Delivery logs
+  loading,        // boolean
   createWebhook,  // (data) => Promise
   updateWebhook,  // (id, data) => Promise
   deleteWebhook,  // (id) => Promise
-  testWebhook,    // (id) => Promise<TestResult>
-  getLogs,        // (id) => Promise<WebhookLog[]>
-} = useWebhooks(agentId?: string);
+  testWebhook,    // (id) => Promise
+  fetchLogs,      // (webhookId?) => Promise
+  refetch,        // () => void
+} = useWebhooks(agentId: string);
 ```
 
 **File**: `src/hooks/useWebhooks.ts`
@@ -357,20 +359,20 @@ const {
 
 ### useTeam
 
-Manages team members and invitations.
+**Powered by React Query** - Team data is cached and real-time updates via Supabase subscription automatically invalidate the cache.
 
 ```tsx
 import { useTeam } from '@/hooks/useTeam';
 
 const {
-  members,            // TeamMember[] - All team members
-  pendingInvites,    // Invitation[] - Pending invitations
-  isLoading,         // boolean
-  inviteMember,      // (email, role) => Promise
-  updateMemberRole,  // (memberId, role) => Promise
-  removeMember,      // (memberId) => Promise
-  resendInvite,      // (inviteId) => Promise
-  cancelInvite,      // (inviteId) => Promise
+  teamMembers,       // TeamMember[] - All team members with roles
+  loading,           // boolean
+  currentUserRole,   // UserRole - Current user's role
+  canManageRoles,    // boolean - Whether user can manage roles
+  inviteMember,      // (data) => Promise<boolean>
+  updateMemberRole,  // (member, role, permissions) => Promise<boolean>
+  removeMember,      // (member) => Promise<boolean>
+  fetchTeamMembers,  // () => void - Alias for refetch
 } = useTeam();
 ```
 
@@ -407,11 +409,13 @@ Fetches visitor traffic and page analytics.
 import { useTrafficAnalytics } from '@/hooks/useTrafficAnalytics';
 
 const {
-  pageVisits,       // PageVisit[] - Page visit data
-  landingPages,     // LandingPage[] - Top landing pages
-  trafficSources,   // TrafficSource[] - Referrer breakdown
-  isLoading,       // boolean
-} = useTrafficAnalytics(agentId: string, dateRange: DateRange);
+  trafficSources,   // TrafficSourceData[] - Referrer breakdown
+  landingPages,     // LandingPageData[] - Top landing pages
+  pageVisits,       // PageVisitData[] - Page visit data
+  loading,          // boolean
+  agentId,          // string | null
+  refetch,          // () => void
+} = useTrafficAnalytics(startDate: Date, endDate: Date);
 ```
 
 **File**: `src/hooks/useTrafficAnalytics.ts`
@@ -441,18 +445,19 @@ const {
 
 ### useScheduledReports
 
-Manages scheduled analytics reports.
+**Powered by React Query** - Report data is cached and real-time updates via Supabase subscription automatically invalidate the cache.
 
 ```tsx
 import { useScheduledReports } from '@/hooks/useScheduledReports';
 
 const {
-  reports,          // ScheduledReport[] - All reports
-  isLoading,       // boolean
-  createReport,    // (data) => Promise
-  updateReport,    // (id, data) => Promise
-  deleteReport,    // (id) => Promise
-  toggleActive,    // (id, active) => Promise
+  reports,            // ScheduledReport[] - All reports
+  loading,            // boolean
+  createReport,       // (data) => Promise
+  updateReport,       // (id, data) => Promise
+  deleteReport,       // (id) => Promise
+  toggleReportStatus, // (id, active) => Promise
+  refetch,            // () => void
 } = useScheduledReports();
 ```
 
