@@ -20,6 +20,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { fetchWidgetConfig, type WidgetConfig } from '../api';
 import type { ChatWidgetProps, SimpleWidgetConfig } from '../types';
 import { useRealtimeConfig } from './useRealtimeConfig';
+import { widgetLogger } from '../utils';
 
 /** Return type for useWidgetConfig hook */
 interface UseWidgetConfigResult {
@@ -85,7 +86,7 @@ export function useWidgetConfig(
           setLoading(false);
         })
         .catch(err => {
-          console.error('Failed to load config:', err);
+          widgetLogger.error('Failed to load config:', err);
           setLoading(false);
         });
     }

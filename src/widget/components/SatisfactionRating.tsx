@@ -44,7 +44,7 @@ export const SatisfactionRating = ({
       // Auto dismiss after 2 seconds
       setTimeout(onDismiss, 2000);
     } catch (error) {
-      console.error('Error submitting rating:', error);
+      // Rating error handled silently in production
     } finally {
       setIsSubmitting(false);
     }

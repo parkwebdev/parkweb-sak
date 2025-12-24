@@ -20,6 +20,7 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { widgetSupabase, fetchWidgetConfig, type WidgetConfig } from '../api';
 import type { RealtimeChannel } from '@supabase/supabase-js';
+import { widgetLogger } from '../utils';
 
 /** Options for the useRealtimeConfig hook */
 interface UseRealtimeConfigOptions {
@@ -52,7 +53,7 @@ export function useRealtimeConfig({ agentId, enabled, onConfigUpdate }: UseRealt
         const newConfig = await fetchWidgetConfig(agentId);
         onConfigUpdate(newConfig);
       } catch (err) {
-        console.error('Failed to refresh widget config:', err);
+        widgetLogger.error('Failed to refresh widget config:', err);
       }
     }, 300); // 300ms debounce to batch rapid changes
   }, [agentId, onConfigUpdate]);
@@ -72,7 +73,7 @@ export function useRealtimeConfig({ agentId, enabled, onConfigUpdate }: UseRealt
           filter: `agent_id=eq.${agentId}`,
         },
         () => {
-          console.log('[Widget] Announcements changed, refreshing config...');
+          widgetLogger.debug('Announcements changed, refreshing config...');
           refreshConfig();
         }
       )
@@ -85,7 +86,7 @@ export function useRealtimeConfig({ agentId, enabled, onConfigUpdate }: UseRealt
           filter: `agent_id=eq.${agentId}`,
         },
         () => {
-          console.log('[Widget] Help categories changed, refreshing config...');
+          widgetLogger.debug('Help categories changed, refreshing config...');
           refreshConfig();
         }
       )
@@ -98,7 +99,7 @@ export function useRealtimeConfig({ agentId, enabled, onConfigUpdate }: UseRealt
           filter: `agent_id=eq.${agentId}`,
         },
         () => {
-          console.log('[Widget] Help articles changed, refreshing config...');
+          widgetLogger.debug('Help articles changed, refreshing config...');
           refreshConfig();
         }
       )
@@ -111,13 +112,13 @@ export function useRealtimeConfig({ agentId, enabled, onConfigUpdate }: UseRealt
           filter: `id=eq.${agentId}`,
         },
         () => {
-          console.log('[Widget] Agent config changed, refreshing config...');
+          widgetLogger.debug('Agent config changed, refreshing config...');
           refreshConfig();
         }
       )
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') {
-          console.log('[Widget] Real-time config subscription active');
+          widgetLogger.debug('Real-time config subscription active');
         }
       });
 

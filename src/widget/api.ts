@@ -18,7 +18,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import type { RealtimeChannel } from '@supabase/supabase-js';
-import { logger } from '@/utils/logger';
+import { widgetLogger } from './utils/widget-logger';
 
 const SUPABASE_URL = 'https://mvaimvwdukpgvkifkfpa.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im12YWltdndkdWtwZ3ZraWZrZnBhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcxNzI3MTYsImV4cCI6MjA3Mjc0ODcxNn0.DmeecDZcGids_IjJQQepFVQK5wdEdV0eNXDCTRzQtQo';
@@ -412,7 +412,7 @@ export async function fetchTakeoverAgent(conversationId: string): Promise<{ name
     const data = await response.json();
     return data.agent || null;
   } catch (error) {
-    console.error('Error fetching takeover agent:', error);
+    widgetLogger.error('Error fetching takeover agent:', error);
     return null;
   }
 }
@@ -514,7 +514,7 @@ export async function sendChatMessage(
     
     // Log error with requestId for debugging
     if (errorData.requestId) {
-      logger.error('Chat API error', { 
+      widgetLogger.error('Chat API error', { 
         code: errorData.code, 
         requestId: errorData.requestId,
         message: errorData.error,
@@ -572,13 +572,13 @@ export async function updatePageVisit(
     });
 
     if (!response.ok) {
-      console.error('Failed to update page visit');
+      widgetLogger.error('Failed to update page visit');
       return { success: false };
     }
 
     return { success: true };
   } catch (error) {
-    console.error('Error updating page visit:', error);
+    widgetLogger.error('Error updating page visit:', error);
     return { success: false };
   }
 }
@@ -611,13 +611,13 @@ export async function fetchConversationMessages(conversationId: string): Promise
       .order('created_at', { ascending: true });
 
     if (error) {
-      console.error('[Widget API] Error fetching messages:', error);
+      widgetLogger.error('[Widget API] Error fetching messages:', error);
       return [];
     }
 
     return data || [];
   } catch (error) {
-    console.error('[Widget API] Error fetching messages:', error);
+    widgetLogger.error('[Widget API] Error fetching messages:', error);
     return [];
   }
 }
@@ -651,13 +651,13 @@ export async function markMessagesRead(
     });
 
     if (!response.ok) {
-      console.error('Failed to mark messages as read');
+      widgetLogger.error('Failed to mark messages as read');
       return { success: false };
     }
 
     return response.json();
   } catch (error) {
-    console.error('Error marking messages as read:', error);
+    widgetLogger.error('Error marking messages as read:', error);
     return { success: false };
   }
 }
@@ -703,13 +703,13 @@ export async function updateMessageReaction(
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
-      console.error('Failed to update reaction:', error);
+      widgetLogger.error('Failed to update reaction:', error);
       return { success: false };
     }
 
     return response.json();
   } catch (error) {
-    console.error('Error updating reaction:', error);
+    widgetLogger.error('Error updating reaction:', error);
     return { success: false };
   }
 }
@@ -737,7 +737,7 @@ export function subscribeToMessages(
   onMessage: (message: { id: string; role: string; content: string; metadata: Record<string, unknown> | null; created_at: string }) => void,
   onMessageUpdate?: (message: { id: string; metadata: Record<string, unknown> | null }) => void
 ): RealtimeChannel {
-  console.log('[Widget] Subscribing to messages for conversation:', conversationId);
+  widgetLogger.debug('Subscribing to messages for conversation:', conversationId);
   
   const channel = widgetSupabase
     .channel(`widget-messages-${conversationId}`)
@@ -750,7 +750,7 @@ export function subscribeToMessages(
         filter: `conversation_id=eq.${conversationId}`,
       },
       (payload) => {
-        console.log('[Widget] New message received:', payload);
+        widgetLogger.debug('New message received:', payload);
         const newMessage = payload.new as { id: string; role: string; content: string; metadata: Record<string, unknown> | null; created_at: string };
         // Only notify for assistant messages (from human or AI)
         if (newMessage.role === 'assistant') {
@@ -773,7 +773,7 @@ export function subscribeToMessages(
         filter: `conversation_id=eq.${conversationId}`,
       },
       (payload) => {
-        console.log('[Widget] Message updated:', payload);
+        widgetLogger.debug('Message updated:', payload);
         const updatedMessage = payload.new as { id: string; metadata: Record<string, unknown> | null };
         if (onMessageUpdate) {
           onMessageUpdate({
@@ -784,12 +784,12 @@ export function subscribeToMessages(
       }
     )
     .subscribe((status, err) => {
-      console.log('[Widget] Subscription status:', status);
+      widgetLogger.debug('Subscription status:', status);
       if (err) {
-        console.error('[Widget] Subscription error:', err);
+        widgetLogger.error('Subscription error:', err);
       }
       if (status === 'CHANNEL_ERROR') {
-        console.error('[Widget] Channel error - real-time updates may not work');
+        widgetLogger.error('Channel error - real-time updates may not work');
       }
     });
 
@@ -803,7 +803,7 @@ export function subscribeToMessages(
  * @param channel - The RealtimeChannel returned by subscribeToMessages
  */
 export function unsubscribeFromMessages(channel: RealtimeChannel) {
-  console.log('[Widget] Unsubscribing from messages');
+  widgetLogger.debug('Unsubscribing from messages');
   widgetSupabase.removeChannel(channel);
 }
 
@@ -828,7 +828,7 @@ export function subscribeToConversationStatus(
   conversationId: string,
   onStatusChange: (status: 'active' | 'human_takeover' | 'closed') => void
 ): RealtimeChannel {
-  console.log('[Widget] Subscribing to conversation status for:', conversationId);
+  widgetLogger.debug('Subscribing to conversation status for:', conversationId);
   
   const channel = widgetSupabase
     .channel(`widget-conv-status-${conversationId}`)
@@ -841,7 +841,7 @@ export function subscribeToConversationStatus(
         filter: `id=eq.${conversationId}`,
       },
       (payload) => {
-        console.log('[Widget] Conversation status changed:', payload);
+        widgetLogger.debug('Conversation status changed:', payload);
         const newStatus = (payload.new as { status: 'active' | 'human_takeover' | 'closed' }).status;
         if (newStatus) {
           onStatusChange(newStatus);
@@ -849,7 +849,7 @@ export function subscribeToConversationStatus(
       }
     )
     .subscribe((status) => {
-      console.log('[Widget] Conversation status subscription:', status);
+      widgetLogger.debug('Conversation status subscription:', status);
     });
 
   return channel;
@@ -861,7 +861,7 @@ export function subscribeToConversationStatus(
  * @param channel - The RealtimeChannel returned by subscribeToConversationStatus
  */
 export function unsubscribeFromConversationStatus(channel: RealtimeChannel) {
-  console.log('[Widget] Unsubscribing from conversation status');
+  widgetLogger.debug('Unsubscribing from conversation status');
   widgetSupabase.removeChannel(channel);
 }
 
@@ -886,7 +886,7 @@ export function subscribeToTypingIndicator(
   conversationId: string,
   onTypingChange: (isTyping: boolean, agentName?: string) => void
 ): RealtimeChannel {
-  console.log('[Widget] Subscribing to typing indicator for:', conversationId);
+  widgetLogger.debug('Subscribing to typing indicator for:', conversationId);
   
   const channel = widgetSupabase
     .channel(`typing-${conversationId}`)
@@ -900,7 +900,7 @@ export function subscribeToTypingIndicator(
       onTypingChange(isAgentTyping, agentName);
     })
     .subscribe((status) => {
-      console.log('[Widget] Typing indicator subscription status:', status);
+      widgetLogger.debug('Typing indicator subscription status:', status);
     });
 
   return channel;
@@ -912,7 +912,7 @@ export function subscribeToTypingIndicator(
  * @param channel - The RealtimeChannel returned by subscribeToTypingIndicator
  */
 export function unsubscribeFromTypingIndicator(channel: RealtimeChannel) {
-  console.log('[Widget] Unsubscribing from typing indicator');
+  widgetLogger.debug('Unsubscribing from typing indicator');
   widgetSupabase.removeChannel(channel);
 }
 
@@ -948,7 +948,7 @@ export function startVisitorPresence(
     leadEmail?: string;
   }
 ): RealtimeChannel {
-  console.log('[Widget] Starting visitor presence for agent:', agentId);
+  widgetLogger.debug('Starting visitor presence for agent:', agentId);
   
   const channel = widgetSupabase.channel(`visitor-presence-${agentId}`);
   
@@ -1004,7 +1004,7 @@ export async function updateVisitorPresence(
       startedAt: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('[Widget] Error updating presence:', error);
+    widgetLogger.error('Error updating presence:', error);
   }
 }
 
@@ -1015,7 +1015,7 @@ export async function updateVisitorPresence(
  * @param channel - The presence channel to stop
  */
 export function stopVisitorPresence(channel: RealtimeChannel) {
-  console.log('[Widget] Stopping visitor presence');
+  widgetLogger.debug('Stopping visitor presence');
   widgetSupabase.removeChannel(channel);
 }
 
@@ -1055,13 +1055,13 @@ export async function submitConversationRating(
     });
 
     if (!response.ok) {
-      console.error('Failed to submit rating');
+      widgetLogger.error('Failed to submit rating');
       return { success: false };
     }
 
     return { success: true };
   } catch (error) {
-    console.error('Error submitting rating:', error);
+    widgetLogger.error('Error submitting rating:', error);
     return { success: false };
   }
 }

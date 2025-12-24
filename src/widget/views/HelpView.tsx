@@ -107,7 +107,7 @@ export const HelpView = ({
       await submitArticleFeedback(selectedArticle.id, { sessionId, isHelpful: articleFeedback === 'helpful', comment: feedbackComment });
       setFeedbackSubmitted(true);
     } catch (error: unknown) {
-      console.error('Error submitting feedback:', error);
+      // Feedback error handled silently in production
     }
   };
 
