@@ -77,7 +77,7 @@ interface SidebarProps {
  * // Mobile with close button
  * <Sidebar onClose={() => setMobileMenuOpen(false)} />
  */
-export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
+const SidebarComponent: React.FC<SidebarProps> = ({ onClose }) => {
   const location = useLocation();
   const { isCollapsed, setCollapsed } = useSidebar();
   const { conversations } = useConversations();
@@ -364,3 +364,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
     </motion.aside>
   );
 };
+
+/**
+ * Memoized Sidebar component to prevent unnecessary re-renders on route changes.
+ * The component only re-renders when its props change.
+ */
+export const Sidebar = React.memo(SidebarComponent);

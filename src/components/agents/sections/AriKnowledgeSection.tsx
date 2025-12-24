@@ -5,7 +5,7 @@
  * infinite scroll, and click-to-open details sheet.
  */
 
-import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { 
   useReactTable, 
   getCoreRowModel, 
@@ -66,7 +66,7 @@ const STATUS_LABELS: Record<string, string> = {
   error: 'Error',
 };
 
-export const AriKnowledgeSection: React.FC<AriKnowledgeSectionProps> = ({ agentId, userId }) => {
+const AriKnowledgeSectionComponent: React.FC<AriKnowledgeSectionProps> = ({ agentId, userId }) => {
   const { 
     sources, 
     loading, 
@@ -660,3 +660,9 @@ export const AriKnowledgeSection: React.FC<AriKnowledgeSectionProps> = ({ agentI
     </div>
   );
 };
+
+/**
+ * Memoized AriKnowledgeSection to prevent unnecessary re-renders.
+ * Only re-renders when agentId or userId props change.
+ */
+export const AriKnowledgeSection = React.memo(AriKnowledgeSectionComponent);
