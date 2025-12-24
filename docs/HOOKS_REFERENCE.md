@@ -149,6 +149,94 @@ const {
 
 ---
 
+### useConversationMessages
+
+Manages message state and real-time subscriptions for a selected conversation. Extracted in Phase 5 for better separation of concerns.
+
+```tsx
+import { useConversationMessages } from '@/hooks/useConversationMessages';
+
+const {
+  messages,           // Message[] - All messages for selected conversation
+  setMessages,        // Dispatch - Set messages (for optimistic updates)
+  loadingMessages,    // boolean - Loading state
+  isNewMessage,       // (id: string) => boolean - Check if message is new (for animations)
+  newMessageIdsRef,   // Ref - Mutable set of new message IDs
+  isInitialLoadRef,   // Ref - Track initial load state
+} = useConversationMessages({
+  conversationId: string | null,
+  fetchMessages: (conversationId: string) => Promise<Message[]>,
+});
+```
+
+**Key Features**:
+- Real-time message updates via Supabase subscription
+- Automatic scroll-to-bottom on new messages
+- Animation tracking for new messages
+- Cleans up subscription on unmount
+
+**File**: `src/hooks/useConversationMessages.ts`
+
+---
+
+### useTypingPresence
+
+Handles admin typing indicator broadcasting via Supabase Presence. Extracted in Phase 5.
+
+```tsx
+import { useTypingPresence } from '@/hooks/useTypingPresence';
+
+const {
+  handleTyping,         // () => void - Call on keystroke
+  stopTypingIndicator,  // () => void - Call on send/blur
+} = useTypingPresence({
+  conversation: Conversation | null,
+  userId: string | null | undefined,
+  userEmail: string | null | undefined,
+});
+```
+
+**Key Features**:
+- Debounced typing broadcast (500ms)
+- Auto-stop after 3 seconds of inactivity
+- Cleans up presence channel on unmount
+
+**File**: `src/hooks/useTypingPresence.ts`
+
+---
+
+### useVisitorPresence
+
+Tracks visitor online/offline status via Supabase Presence. Used in admin inbox to show active visitors. Extracted in Phase 5.
+
+```tsx
+import { useVisitorPresence, type VisitorPresenceData } from '@/hooks/useVisitorPresence';
+
+const {
+  activeVisitors,      // Record<string, VisitorPresenceData> - Map of active visitors
+  getVisitorPresence,  // (visitorId: string) => VisitorPresenceData | null
+} = useVisitorPresence({
+  agentId: string | null | undefined,
+});
+```
+
+**VisitorPresenceData**:
+```typescript
+interface VisitorPresenceData {
+  visitorId: string;
+  currentPage: string;
+}
+```
+
+**Key Features**:
+- Real-time presence tracking
+- Efficient Map-based lookup
+- Automatic cleanup on unmount
+
+**File**: `src/hooks/useVisitorPresence.ts`
+
+---
+
 ### useLeads
 
 Manages leads captured from widget contact forms. **Powered by React Query** with real-time updates.

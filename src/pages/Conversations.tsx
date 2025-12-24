@@ -5,6 +5,9 @@
  * to widget conversations. Features human takeover, emoji reactions,
  * file attachments, typing indicators, and conversation metadata panel.
  * 
+ * Refactored in Phase 5 to be a composition layer using extracted hooks
+ * and components for better maintainability.
+ * 
  * @page
  */
 
@@ -12,22 +15,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
-import { motion, AnimatePresence } from 'motion/react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { SearchMd, MessageChatSquare, User01, Send01, FaceSmile, Globe01, Check, CheckCircle, XCircle, Download01, Attachment01, XClose, ChevronLeft, ChevronRight, SwitchVertical01, ChevronDown, Translate01 } from '@untitledui/icons';
-import AriAgentsIcon from '@/components/icons/AriAgentsIcon';
-import { ChatBubbleIcon } from '@/components/agents/ChatBubbleIcon';
-import { LinkPreviews } from '@/components/chat/LinkPreviews';
-import { FileTypeIcon } from '@/components/chat/FileTypeIcons';
-import { formatFileSize, validateFiles } from '@/lib/file-validation';
-import { getStatusColor, getPriorityIndicator, getUnreadCount, formatUrl, updateMessageReaction } from '@/lib/conversation-utils';
+import { validateFiles } from '@/lib/file-validation';
 
 import { useConversations } from '@/hooks/useConversations';
 import { useAgent } from '@/hooks/useAgent';
@@ -44,37 +32,28 @@ import {
   MessageThread,
   MessageInputArea,
 } from '@/components/conversations';
-import type { Tables } from '@/integrations/supabase/types';
-import type { ConversationMetadata, MessageMetadata, MessageReaction } from '@/types/metadata';
-import { formatDistanceToNow } from 'date-fns';
-import { downloadFile } from '@/lib/file-download';
-import { getLanguageFlag } from '@/lib/language-utils';
 import { TakeoverDialog } from '@/components/conversations/TakeoverDialog';
+import AriAgentsIcon from '@/components/icons/AriAgentsIcon';
+
+import type { Tables } from '@/integrations/supabase/types';
+import type { ConversationMetadata } from '@/types/metadata';
 import { supabase } from '@/integrations/supabase/client';
-import { formatShortTime, formatSenderName } from '@/lib/time-formatting';
-import { QuickEmojiButton } from '@/components/chat/QuickEmojiButton';
-import { useAutoResizeTextarea } from '@/hooks/useAutoResizeTextarea';
 import { toast } from '@/lib/toast';
 import { logger } from '@/utils/logger';
-import { formatMarkdownBullets, stripUrlsFromContent } from '@/widget/utils/url-stripper';
 
-import { useReducedMotion } from '@/hooks/useReducedMotion';
-import { messageBubbleVariants, messageBubbleUserVariants, messageBubbleReducedVariants, getVariants } from '@/lib/motion-variants';
-
+// === TYPES ===
 type Conversation = Tables<'conversations'> & {
   agents?: { name: string };
 };
 
 type Message = Tables<'messages'>;
 
-const QUICK_EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '🎉'];
-
-// updateMessageReaction is now imported from @/lib/conversation-utils
-
+// === MAIN COMPONENT ===
 const Conversations: React.FC = () => {
   const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
-  const prefersReducedMotion = useReducedMotion();
+  
+  // === DATA HOOKS ===
   const {
     conversations, 
     loading, 
@@ -89,7 +68,6 @@ const Conversations: React.FC = () => {
 
   const { agent } = useAgent();
   const agentId = agent?.id;
-  const agentName = agent?.name || 'Ari';
 
   // Fetch current user's profile for optimistic message updates
   const { data: userProfile } = useQuery({
@@ -106,13 +84,14 @@ const Conversations: React.FC = () => {
     enabled: !!user?.id,
   });
 
+  // === LOCAL STATE ===
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [takeoverDialogOpen, setTakeoverDialogOpen] = useState(false);
   const [messageInput, setMessageInput] = useState('');
   const [sendingMessage, setSendingMessage] = useState(false);
   const [pendingFiles, setPendingFiles] = useState<{ files: File[]; urls: string[] } | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  
   const [metadataPanelCollapsed, setMetadataPanelCollapsed] = useState(() => {
     const saved = localStorage.getItem('conversations_metadata_collapsed');
     return saved === 'true';
@@ -130,20 +109,14 @@ const Conversations: React.FC = () => {
   const [isTranslating, setIsTranslating] = useState(false);
   const [isTranslatingOutbound, setIsTranslatingOutbound] = useState(false);
 
-  // Persist collapsed states
-  useEffect(() => {
-    localStorage.setItem('conversations_metadata_collapsed', String(metadataPanelCollapsed));
-  }, [metadataPanelCollapsed]);
-  useEffect(() => {
-    localStorage.setItem('inbox_conversations_collapsed', String(conversationsCollapsed));
-  }, [conversationsCollapsed]);
+  // Refs
   const messagesScrollRef = useRef<HTMLDivElement>(null);
-  const messageTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const lastMarkedReadRef = useRef<string | null>(null);
 
   // === EXTRACTED HOOKS (Phase 5 Section 1) ===
   
-  // Visitor presence tracking via hook
-  const { activeVisitors, getVisitorPresence: getVisitorPresenceById } = useVisitorPresence({ agentId });
+  // Visitor presence tracking
+  const { getVisitorPresence: getVisitorPresenceById } = useVisitorPresence({ agentId });
   
   // Get visitor presence for a conversation
   const getVisitorPresence = useCallback((conversation: Conversation) => {
@@ -153,33 +126,174 @@ const Conversations: React.FC = () => {
     return getVisitorPresenceById(visitorId);
   }, [getVisitorPresenceById]);
   
-  // Typing presence for human takeover via hook
+  // Typing presence for human takeover
   const { handleTyping, stopTypingIndicator } = useTypingPresence({
     conversation: selectedConversation,
     userId: user?.id,
     userEmail: user?.email,
   });
   
-  // Message state and real-time via hook
+  // Message state and real-time
   const { 
     messages, 
     setMessages, 
     loadingMessages, 
     isNewMessage,
     newMessageIdsRef,
-    isInitialLoadRef,
   } = useConversationMessages({
     conversationId: selectedConversation?.id,
     fetchMessages,
   });
 
-  // formatUrl is now imported from @/lib/conversation-utils
+  // === EFFECTS ===
+  
+  // Persist collapsed states
+  useEffect(() => {
+    localStorage.setItem('conversations_metadata_collapsed', String(metadataPanelCollapsed));
+  }, [metadataPanelCollapsed]);
+  
+  useEffect(() => {
+    localStorage.setItem('inbox_conversations_collapsed', String(conversationsCollapsed));
+  }, [conversationsCollapsed]);
 
-  // Visitor presence tracking is now handled by useVisitorPresence hook
+  // Reset translation when conversation changes
+  useEffect(() => {
+    setShowTranslation(false);
+    setTranslatedMessages({});
+  }, [selectedConversation?.id]);
 
+  // Handle conversation ID from URL query param
+  useEffect(() => {
+    const conversationIdFromUrl = searchParams.get('id');
+    if (conversationIdFromUrl && conversations.length > 0 && !loading) {
+      const conv = conversations.find(c => c.id === conversationIdFromUrl);
+      if (conv) {
+        setSelectedConversation(conv);
+        setSearchParams({}, { replace: true });
+      }
+    }
+  }, [searchParams, conversations, loading, setSearchParams]);
 
-  // Translate messages to English
-  const handleTranslate = async () => {
+  // Update selected conversation when conversations list updates
+  useEffect(() => {
+    if (selectedConversation) {
+      const updated = conversations.find(c => c.id === selectedConversation.id);
+      if (updated) {
+        setSelectedConversation(updated);
+      }
+    }
+  }, [conversations, selectedConversation]);
+
+  // Track admin_last_read_at when conversation is selected
+  useEffect(() => {
+    if (selectedConversation?.id && selectedConversation.id !== lastMarkedReadRef.current) {
+      lastMarkedReadRef.current = selectedConversation.id;
+      updateConversationMetadata(selectedConversation.id, {
+        admin_last_read_at: new Date().toISOString()
+      }, { silent: true });
+    }
+  }, [selectedConversation?.id, updateConversationMetadata]);
+
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    if (messagesScrollRef.current) {
+      messagesScrollRef.current.scrollTop = messagesScrollRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  // === QUERIES ===
+  
+  // Fetch user's active takeovers for "Your Inbox" filter
+  const { data: userTakeovers } = useQuery({
+    queryKey: ['user-takeovers', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      const { data } = await supabase
+        .from('conversation_takeovers')
+        .select('conversation_id')
+        .eq('taken_over_by', user.id)
+        .is('returned_to_ai_at', null);
+      return data?.map(t => t.conversation_id) || [];
+    },
+    enabled: !!user?.id,
+  });
+
+  // === MEMOIZED VALUES ===
+  
+  // Filter and sort conversations
+  const filteredConversations = useMemo(() => {
+    const filtered = conversations.filter((conv) => {
+      const metadata = (conv.metadata || {}) as ConversationMetadata;
+      
+      let matchesFilter = true;
+      if (activeFilter.type === 'status' && activeFilter.value) {
+        matchesFilter = conv.status === activeFilter.value;
+      } else if (activeFilter.type === 'channel' && activeFilter.value) {
+        matchesFilter = conv.channel === activeFilter.value;
+      } else if (activeFilter.type === 'yours') {
+        matchesFilter = userTakeovers?.includes(conv.id) || false;
+      }
+      
+      const matchesSearch = searchQuery === '' || 
+        conv.agents?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        metadata?.lead_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        metadata?.lead_email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (metadata?.tags || []).some((tag: string) => tag.toLowerCase().includes(searchQuery.toLowerCase()));
+      
+      return matchesFilter && matchesSearch;
+    });
+
+    return filtered.sort((a, b) => {
+      const metaA = (a.metadata || {}) as ConversationMetadata;
+      const metaB = (b.metadata || {}) as ConversationMetadata;
+      
+      if (sortBy === 'last_activity') {
+        const timeA = metaA.last_message_at ? new Date(metaA.last_message_at).getTime() : new Date(a.updated_at).getTime();
+        const timeB = metaB.last_message_at ? new Date(metaB.last_message_at).getTime() : new Date(b.updated_at).getTime();
+        return timeB - timeA;
+      } else if (sortBy === 'newest') {
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      } else {
+        return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      }
+    });
+  }, [conversations, activeFilter, searchQuery, userTakeovers, sortBy]);
+
+  // Calculate counts for nav sidebar
+  const filterCounts = useMemo(() => ({
+    all: conversations.length,
+    yours: userTakeovers?.length || 0,
+    resolved: conversations.filter(c => c.status === 'closed').length,
+    widget: conversations.filter(c => c.channel === 'widget' || !c.channel).length,
+    facebook: conversations.filter(c => c.channel === 'facebook').length,
+    instagram: conversations.filter(c => c.channel === 'instagram').length,
+    x: conversations.filter(c => c.channel === 'x').length,
+  }), [conversations, userTakeovers]);
+
+  // === HANDLERS (useCallback for Phase 4 optimization) ===
+  
+  const handleTakeover = useCallback(async (reason?: string) => {
+    if (!selectedConversation) return;
+    await takeover(selectedConversation.id, reason);
+    setTakeoverDialogOpen(false);
+  }, [selectedConversation, takeover]);
+
+  const handleReturnToAI = useCallback(async () => {
+    if (!selectedConversation) return;
+    await returnToAI(selectedConversation.id);
+  }, [selectedConversation, returnToAI]);
+
+  const handleClose = useCallback(async () => {
+    if (!selectedConversation) return;
+    await updateConversationStatus(selectedConversation.id, 'closed');
+  }, [selectedConversation, updateConversationStatus]);
+
+  const handleReopen = useCallback(async () => {
+    if (!selectedConversation) return;
+    await reopenConversation(selectedConversation.id);
+  }, [selectedConversation, reopenConversation]);
+
+  const handleTranslate = useCallback(async () => {
     if (!selectedConversation || messages.length === 0) return;
     setIsTranslating(true);
     try {
@@ -190,20 +304,13 @@ const Conversations: React.FC = () => {
         body: { messages: messagesToTranslate, targetLanguage: 'en' }
       });
       
-      logger.debug('Translation response', data);
-      
       if (error) throw error;
       
       const translations: Record<string, string> = {};
-      // Handle both direct array and nested response structure
       const translationsArray = data?.translations || data?.data?.translations || [];
-      logger.debug('Translations array', translationsArray);
-      
       translationsArray.forEach((t: { id: string; translated: string }) => {
         translations[t.id] = t.translated;
       });
-      
-      logger.debug('Parsed translations map', { entries: Object.keys(translations).length });
       
       setTranslatedMessages(translations);
       setShowTranslation(true);
@@ -213,10 +320,9 @@ const Conversations: React.FC = () => {
     } finally {
       setIsTranslating(false);
     }
-  };
+  }, [selectedConversation, messages]);
 
-  // Translate outbound message from English to conversation language
-  const handleTranslateOutbound = async () => {
+  const handleTranslateOutbound = useCallback(async () => {
     const convMetadata = (selectedConversation?.metadata || {}) as ConversationMetadata;
     const targetLang = convMetadata.detected_language_code;
     const targetLangName = convMetadata.detected_language || targetLang;
@@ -246,160 +352,20 @@ const Conversations: React.FC = () => {
     } finally {
       setIsTranslatingOutbound(false);
     }
-  };
+  }, [selectedConversation?.metadata, messageInput]);
 
-  // Reset translation when conversation changes
-  useEffect(() => {
-    setShowTranslation(false);
-    setTranslatedMessages({});
-  }, [selectedConversation?.id]);
-
-  // Message loading and real-time subscription is now handled by useConversationMessages hook
-
-  // Handle conversation ID from URL query param (e.g., from "View Conversation" in leads)
-  useEffect(() => {
-    const conversationIdFromUrl = searchParams.get('id');
-    if (conversationIdFromUrl && conversations.length > 0 && !loading) {
-      const conv = conversations.find(c => c.id === conversationIdFromUrl);
-      if (conv) {
-        setSelectedConversation(conv);
-        // Clear the query param after selecting
-        setSearchParams({}, { replace: true });
-      }
-    }
-  }, [searchParams, conversations, loading]);
-
-  // Update selected conversation when conversations list updates
-  useEffect(() => {
-    if (selectedConversation) {
-      const updated = conversations.find(c => c.id === selectedConversation.id);
-      if (updated) {
-        setSelectedConversation(updated);
-      }
-    }
-  }, [conversations]);
-
-  // Track which conversation we've marked as read to prevent duplicate updates
-  const lastMarkedReadRef = useRef<string | null>(null);
-
-  // Track admin_last_read_at when conversation is selected
-  useEffect(() => {
-    if (selectedConversation?.id && selectedConversation.id !== lastMarkedReadRef.current) {
-      lastMarkedReadRef.current = selectedConversation.id;
-      updateConversationMetadata(selectedConversation.id, {
-        admin_last_read_at: new Date().toISOString()
-      }, { silent: true });
-    }
-  }, [selectedConversation?.id]);
-
-  // loadMessages is now handled by useConversationMessages hook
-
-  // Fetch user's active takeovers for "Your Inbox" filter
-  const { data: userTakeovers } = useQuery({
-    queryKey: ['user-takeovers', user?.id],
-    queryFn: async () => {
-      if (!user?.id) return [];
-      const { data } = await supabase
-        .from('conversation_takeovers')
-        .select('conversation_id')
-        .eq('taken_over_by', user.id)
-        .is('returned_to_ai_at', null);
-      return data?.map(t => t.conversation_id) || [];
-    },
-    enabled: !!user?.id,
-  });
-
-  // Filter and sort conversations by active filter + search + sort
-  const filteredConversations = useMemo(() => {
-    const filtered = conversations.filter((conv) => {
-      const metadata = (conv.metadata || {}) as ConversationMetadata;
-      
-      // Apply nav filter
-      let matchesFilter = true;
-      if (activeFilter.type === 'status' && activeFilter.value) {
-        matchesFilter = conv.status === activeFilter.value;
-      } else if (activeFilter.type === 'channel' && activeFilter.value) {
-        matchesFilter = conv.channel === activeFilter.value;
-      } else if (activeFilter.type === 'yours') {
-        matchesFilter = userTakeovers?.includes(conv.id) || false;
-      }
-      
-      // Apply search
-      const matchesSearch = searchQuery === '' || 
-        conv.agents?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        metadata?.lead_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        metadata?.lead_email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (metadata?.tags || []).some((tag: string) => tag.toLowerCase().includes(searchQuery.toLowerCase()));
-      
-      return matchesFilter && matchesSearch;
-    });
-
-    // Sort conversations
-    return filtered.sort((a, b) => {
-      const metaA = (a.metadata || {}) as ConversationMetadata;
-      const metaB = (b.metadata || {}) as ConversationMetadata;
-      
-      if (sortBy === 'last_activity') {
-        const timeA = metaA.last_message_at ? new Date(metaA.last_message_at).getTime() : new Date(a.updated_at).getTime();
-        const timeB = metaB.last_message_at ? new Date(metaB.last_message_at).getTime() : new Date(b.updated_at).getTime();
-        return timeB - timeA; // Most recent first
-      } else if (sortBy === 'newest') {
-        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-      } else { // oldest
-        return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
-      }
-    });
-  }, [conversations, activeFilter, searchQuery, userTakeovers, sortBy]);
-
-  // Calculate counts for nav sidebar
-  const filterCounts = useMemo(() => ({
-    all: conversations.length,
-    yours: userTakeovers?.length || 0,
-    resolved: conversations.filter(c => c.status === 'closed').length,
-    widget: conversations.filter(c => c.channel === 'widget' || !c.channel).length,
-    facebook: conversations.filter(c => c.channel === 'facebook').length,
-    instagram: conversations.filter(c => c.channel === 'instagram').length,
-    x: conversations.filter(c => c.channel === 'x').length,
-  }), [conversations, userTakeovers]);
-
-  // getStatusColor, getPriorityIndicator, getUnreadCount are now imported from @/lib/conversation-utils
-
-  const handleTakeover = async (reason?: string) => {
-    if (!selectedConversation) return;
-    await takeover(selectedConversation.id, reason);
-    setTakeoverDialogOpen(false);
-  };
-
-  const handleReturnToAI = async () => {
-    if (!selectedConversation) return;
-    await returnToAI(selectedConversation.id);
-  };
-
-  const handleClose = async () => {
-    if (!selectedConversation) return;
-    await updateConversationStatus(selectedConversation.id, 'closed');
-  };
-
-  const handleReopen = async () => {
-    if (!selectedConversation) return;
-    await reopenConversation(selectedConversation.id);
-  };
-
-  const handleSendMessage = async () => {
+  const handleSendMessage = useCallback(async () => {
     if (!selectedConversation || sendingMessage) return;
     if (!messageInput.trim() && !pendingFiles) return;
     
-    // Immediately stop typing indicator
     stopTypingIndicator();
     
     const content = messageInput.trim();
     const tempId = `temp-${Date.now()}`;
     
-    // Optimistic update: show message instantly with sender info to prevent flicker
     const senderName = userProfile?.display_name || user?.email || 'Team Member';
     const senderAvatar = userProfile?.avatar_url || null;
     
-    // Build file metadata for optimistic display
     const fileMetadata = pendingFiles?.files.map((file, i) => ({
       name: file.name,
       url: pendingFiles.urls[i],
@@ -420,21 +386,18 @@ const Conversations: React.FC = () => {
         sender_avatar: senderAvatar,
         files: fileMetadata,
       },
-      // Tool columns - null for human messages
       tool_call_id: null,
       tool_name: null,
       tool_arguments: null,
       tool_result: null,
     };
     
-    // Animate the optimistic message
     newMessageIdsRef.current.add(tempId);
     setTimeout(() => newMessageIdsRef.current.delete(tempId), 300);
     
     setMessages(prev => [...prev, tempMessage]);
     setMessageInput('');
     
-    // Capture files before clearing state
     const filesToSend = pendingFiles;
     setPendingFiles(null);
     
@@ -442,17 +405,15 @@ const Conversations: React.FC = () => {
     const success = await sendHumanMessage(selectedConversation.id, content, filesToSend?.files);
     
     if (!success) {
-      // Rollback optimistic update on failure
       setMessages(prev => prev.filter(m => m.id !== tempId));
-      setMessageInput(content); // Restore input
-      setPendingFiles(filesToSend); // Restore files
+      setMessageInput(content);
+      setPendingFiles(filesToSend);
     }
-    // On success, real-time subscription will replace temp message with real one
     
     setSendingMessage(false);
-  };
-  
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  }, [selectedConversation, sendingMessage, messageInput, pendingFiles, stopTypingIndicator, userProfile, user?.email, newMessageIdsRef, setMessages, sendHumanMessage]);
+
+  const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
     const files = Array.from(e.target.files);
     
@@ -464,12 +425,9 @@ const Conversations: React.FC = () => {
     
     const urls = files.map(file => URL.createObjectURL(file));
     setPendingFiles({ files, urls });
-    
-    // Reset input
-    if (fileInputRef.current) fileInputRef.current.value = '';
-  };
-  
-  const handleRemoveFile = (index: number) => {
+  }, []);
+
+  const handleRemoveFile = useCallback((index: number) => {
     if (!pendingFiles) return;
     URL.revokeObjectURL(pendingFiles.urls[index]);
     const newFiles = pendingFiles.files.filter((_, i) => i !== index);
@@ -479,27 +437,9 @@ const Conversations: React.FC = () => {
     } else {
       setPendingFiles({ files: newFiles, urls: newUrls });
     }
-  };
+  }, [pendingFiles]);
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
-  };
-
-  // Scroll to bottom when messages change
-  useEffect(() => {
-    if (messagesScrollRef.current) {
-      messagesScrollRef.current.scrollTop = messagesScrollRef.current.scrollHeight;
-    }
-  }, [messages]);
-
-  // Auto-resize message textarea
-  useAutoResizeTextarea(messageTextareaRef, messageInput, { minRows: 1, maxRows: 5 });
-
-  // Typing is now handled by useTypingPresence hook
-
+  // === RENDER ===
   return (
     <div className="h-full flex min-h-0 overflow-x-hidden">
       {/* Inbox Navigation Sidebar */}
@@ -530,7 +470,6 @@ const Conversations: React.FC = () => {
       <div className="flex-1 flex flex-col min-w-0 min-h-0">
         {selectedConversation ? (
           <>
-            {/* Chat Header */}
             <ChatHeader
               conversation={selectedConversation}
               isVisitorActive={!!getVisitorPresence(selectedConversation)}
@@ -540,7 +479,7 @@ const Conversations: React.FC = () => {
               onReopen={handleReopen}
             />
             
-            {/* Translation Banner */}
+            {/* Translation Banner - conditional render */}
             {(() => {
               const convMetadata = (selectedConversation?.metadata || {}) as ConversationMetadata;
               const detectedLang = convMetadata.detected_language_code;
@@ -558,7 +497,6 @@ const Conversations: React.FC = () => {
               );
             })()}
             
-            {/* Message Thread */}
             <MessageThread
               ref={messagesScrollRef}
               messages={messages}
@@ -570,7 +508,6 @@ const Conversations: React.FC = () => {
               loadingMessages={loadingMessages}
             />
 
-            {/* Message Input */}
             {selectedConversation.status === 'human_takeover' && (
               <MessageInputArea
                 value={messageInput}
@@ -613,6 +550,7 @@ const Conversations: React.FC = () => {
         />
       )}
 
+      {/* Takeover Dialog */}
       {selectedConversation && (
         <TakeoverDialog
           open={takeoverDialogOpen}
