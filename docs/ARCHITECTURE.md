@@ -269,6 +269,53 @@ View, search, and filter conversations with:
 - Message reactions
 - Lead context
 
+**Component Architecture** (Phase 5 Refactor):
+
+```
+Conversations.tsx (Composition Layer - 565 lines)
+├── Hooks
+│   ├── useConversationMessages    # Message fetching, realtime, optimistic updates
+│   ├── useTypingPresence          # Admin typing indicator broadcasts
+│   └── useVisitorPresence         # Real-time visitor activity tracking
+├── UI Components
+│   ├── ConversationsList          # Collapsible sidebar with filters/sorting
+│   ├── ConversationItem           # Individual row with status/preview
+│   ├── ChatHeader                 # Visitor name, status, action buttons
+│   ├── TranslationBanner          # Language detection & translation toggle
+│   ├── MessageThread              # Scrollable message list with reactions
+│   ├── AdminMessageBubble         # Human/AI message with metadata
+│   └── MessageInputArea           # Input with emoji, attachments, translation
+└── Utilities
+    └── conversation-utils.ts      # Formatting, display helpers
+```
+
+**Data Flow:**
+
+```
+┌─────────────────┐     ┌────────────────────┐
+│  Conversations  │────▶│ useConversations   │ (existing hook)
+│    .tsx         │     │ (list + realtime)  │
+└────────┬────────┘     └────────────────────┘
+         │
+         ▼
+┌─────────────────┐     ┌────────────────────┐
+│ ConversationItem│◀────│ useVisitorPresence │
+│   (selected)    │     │ (activity status)  │
+└────────┬────────┘     └────────────────────┘
+         │
+         ▼
+┌─────────────────┐     ┌────────────────────┐
+│  MessageThread  │◀────│useConversation-    │
+│                 │     │    Messages        │
+└────────┬────────┘     └────────────────────┘
+         │
+         ▼
+┌─────────────────┐     ┌────────────────────┐
+│MessageInputArea │────▶│ useTypingPresence  │
+│                 │     │ (broadcast typing) │
+└─────────────────┘     └────────────────────┘
+```
+
 ### 4. Leads
 **Location:** `src/pages/Leads.tsx`
 
@@ -593,6 +640,30 @@ chatpad/
 | `AppLayout` | Main application shell with sidebar and header |
 | `AppHeader` | Top navigation bar |
 | `Sidebar` | Collapsible hover-expand navigation sidebar |
+
+### Conversation Components
+
+| Component | Location | Purpose |
+|-----------|----------|---------|
+| `Conversations` | `src/pages/Conversations.tsx` | Main composition layer |
+| `ConversationsList` | `src/components/conversations/` | Collapsible sidebar with filters |
+| `ConversationItem` | `src/components/conversations/` | Individual conversation row |
+| `ChatHeader` | `src/components/conversations/` | Header with visitor info and actions |
+| `TranslationBanner` | `src/components/conversations/` | Language detection banner |
+| `MessageThread` | `src/components/conversations/` | Scrollable message container |
+| `AdminMessageBubble` | `src/components/conversations/` | Message bubble with reactions |
+| `MessageInputArea` | `src/components/conversations/` | Input with emoji/attachments |
+| `ConversationMetadataPanel` | `src/components/conversations/` | Right sidebar with lead info |
+| `InboxNavSidebar` | `src/components/conversations/` | Status filter navigation |
+| `TakeoverDialog` | `src/components/conversations/` | Human takeover confirmation |
+
+### Conversation Hooks
+
+| Hook | Location | Purpose |
+|------|----------|---------|
+| `useConversationMessages` | `src/hooks/` | Message fetching with realtime & optimistic updates |
+| `useTypingPresence` | `src/hooks/` | Broadcast admin typing state |
+| `useVisitorPresence` | `src/hooks/` | Track visitor online/typing status |
 
 ### Ari Configurator Components
 
