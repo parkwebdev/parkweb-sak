@@ -47,7 +47,6 @@ import {
   createHelpArticlesColumns, 
   type HelpArticleWithMeta 
 } from '@/components/data-table/columns/help-articles-columns';
-import { logger } from '@/utils/logger';
 import { supabase } from '@/integrations/supabase/client';
 
 interface HelpArticlesManagerProps {
