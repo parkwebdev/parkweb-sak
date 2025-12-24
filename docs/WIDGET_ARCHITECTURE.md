@@ -29,6 +29,37 @@ Technical documentation for the ChatPad embeddable chat widget.
 
 The ChatPad widget is a high-performance, embeddable chat interface that can be added to any website. It provides AI-powered conversations with optional human takeover, a help center, and lead capture functionality.
 
+### Widget Usage Map
+
+The widget is used in **three contexts**:
+
+| Context | Entry Point | Description |
+|---------|-------------|-------------|
+| **Customer Embed** | `public/chatpad-widget.js` → iframe → `/widget.html` → `src/widget-entry.tsx` → `WidgetPage` → `ChatWidget` | Widget embedded on customer websites via `<script>` tag |
+| **Admin Preview** | `src/components/agents/embed/EmbedPreviewPanel.tsx` & `src/pages/AriConfigurator.tsx` | Live preview in admin panel showing widget with `containedPreview=true` |
+| **Debug Route** | `/widget` route in `src/App.tsx` → `WidgetPage` | Direct route for testing the widget in development |
+
+#### Customer Embed Flow (Production)
+
+```
+1. Customer adds <script src="https://app.chatpad.ai/widget/serve-widget?agentId=xxx">
+2. serve-widget edge function returns loader script (~1KB)
+3. Loader creates iframe pointing to /widget.html?agentId=xxx
+4. widget.html → widget-entry.tsx → WidgetPage → ChatWidget
+5. ChatWidget fetches config via get-widget-config edge function
+6. Widget renders with previewMode=false (logs suppressed)
+```
+
+#### Admin Preview Flow (Development)
+
+```
+1. User navigates to /ari in admin panel
+2. AriConfigurator renders with EmbedPreviewPanel
+3. EmbedPreviewPanel renders ChatWidget with containedPreview=true, previewMode=true
+4. Widget uses passed config directly (no API fetch)
+5. Logs are enabled via configureWidgetLogger({ previewMode: true })
+```
+
 ### Key Features
 
 - **AI Chat**: Conversational AI powered by RAG (Retrieval Augmented Generation)
