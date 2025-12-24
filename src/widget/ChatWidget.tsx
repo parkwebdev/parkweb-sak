@@ -90,7 +90,7 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
   const [recordingTime, setRecordingTime] = useState(0);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
-  const recordingIntervalRef = useRef<any>(null);
+  const recordingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [messageInput, setMessageInput] = useState('');
   const [pendingFiles, setPendingFiles] = useState<Array<{ file: File; preview: string }>>([]);
   const [formLoadTime] = useState(() => Date.now());

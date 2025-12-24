@@ -53,13 +53,18 @@ export const AnimatedList = ({
   const baseVariants = getStaggerVariants(staggerSpeed);
   
   // Override with custom values if provided
+  // Type-safe access to transition properties from Variants
+  const baseVisibleTransition = typeof baseVariants.visible === 'object' && 'transition' in baseVariants.visible 
+    ? (baseVariants.visible.transition as { staggerChildren?: number; delayChildren?: number } | undefined)
+    : undefined;
+  
   const variants = {
     hidden: baseVariants.hidden,
     visible: {
       ...baseVariants.visible,
       transition: {
-        staggerChildren: staggerDelay ?? (baseVariants.visible as any).transition?.staggerChildren,
-        delayChildren: initialDelay ?? (baseVariants.visible as any).transition?.delayChildren,
+        staggerChildren: staggerDelay ?? baseVisibleTransition?.staggerChildren,
+        delayChildren: initialDelay ?? baseVisibleTransition?.delayChildren,
       },
     },
     exit: baseVariants.exit,

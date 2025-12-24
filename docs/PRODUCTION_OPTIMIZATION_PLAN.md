@@ -1,7 +1,7 @@
 # Production Optimization Plan
 
 > **Last Updated**: December 2024  
-> **Status**: Phase 6-7, 10 COMPLETE, Phases 8-9 PENDING  
+> **Status**: Phases 6-7, 10, Type Safety, Key Props COMPLETE. Phases 8-9 PENDING  
 > **Goal**: Production-ready codebase with zero inefficiencies
 
 ---
@@ -408,30 +408,34 @@ export const AriKnowledgeSection = React.memo(AriKnowledgeSectionComponent);
 ## Low Priority: Type Safety Cleanup
 
 > **Priority**: 🟢 LOW  
-> **Status**: PENDING  
+> **Status**: ✅ COMPLETE  
 > **Issue**: `any` types reduce type safety
 
-### Files with `any` Types
+### Files Fixed
 
-| File | Location | Issue |
-|------|----------|-------|
-| `src/components/ui/animated-list.tsx` | Motion variants | `as any` cast |
-| `src/components/charts/charts-base.tsx` | Recharts handlers | `eslint-disable any` |
-| `src/components/agents/embed/EmbedSettingsPanel.tsx` | Select handlers | `any` in onChange |
-| `src/components/agents/sections/AriWebhooksSection.tsx` | Handlers | `any` type |
-| `src/components/agents/sections/AriCustomToolsSection.tsx` | Handlers | `any` type |
-| `src/components/agents/DebugConsole.tsx` | Event handlers | `any` type |
-| `src/widget/ChatWidget.tsx` | `recordingIntervalRef` | `useRef<any>` |
+| File | Fix Applied |
+|------|-------------|
+| `src/components/ui/animated-list.tsx` | Type-safe transition property access with proper type guard |
+| `src/components/charts/charts-base.tsx` | ✅ Already acceptable - eslint-disable for Recharts library types |
+| `src/components/agents/embed/EmbedSettingsPanel.tsx` | Changed `any` to union type `'text' \| 'email' \| 'phone' \| 'textarea' \| 'select'` |
+| `src/components/agents/sections/AriWebhooksSection.tsx` | Changed `details?: any` to `details?: unknown` |
+| `src/components/agents/sections/AriCustomToolsSection.tsx` | Changed `body?: any` and `details?: any` to `unknown` |
+| `src/components/agents/DebugConsole.tsx` | Changed `details?: any` to `unknown`, icon type to `React.ComponentType<{ className?: string }>` |
+| `src/widget/ChatWidget.tsx` | Changed `useRef<any>` to `useRef<ReturnType<typeof setInterval> \| null>` |
 
-### Recommended Fixes
+### Implementation Details
 
 ```typescript
-// recordingIntervalRef fix
-// Before
-const recordingIntervalRef = useRef<any>(null);
+// animated-list.tsx - Type-safe variant transition access
+const baseVisibleTransition = typeof baseVariants.visible === 'object' && 'transition' in baseVariants.visible 
+  ? (baseVariants.visible.transition as { staggerChildren?: number; delayChildren?: number } | undefined)
+  : undefined;
 
-// After
-const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+// ChatWidget.tsx - Proper interval ref typing
+const recordingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+// DebugConsole.tsx - Proper icon component typing
+const levelConfig: Record<LogLevel, { icon: React.ComponentType<{ className?: string }>; color: string; bg: string }> = { ... };
 ```
 
 ---
@@ -439,28 +443,30 @@ const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 ## Low Priority: Key Prop Fixes
 
 > **Priority**: 🟢 LOW  
-> **Status**: PENDING  
+> **Status**: ✅ COMPLETE  
 > **Issue**: Using array index as React key
 
-### Files with `key={index}`
+### Files Fixed
 
-| File | Acceptable? | Reason |
-|------|-------------|--------|
-| `src/components/analytics/TrafficSourceChart.tsx` | ⚠️ Fix | Data items should have stable IDs |
-| `src/components/agents/webhooks/ResponseActionBuilder.tsx` | ⚠️ Fix | Actions can be reordered |
-| `src/components/data-table/DataTable.tsx` | ✅ OK | Loading skeleton rows |
-| `src/components/UserAccountCard.tsx` | ✅ OK | Static keyboard shortcuts |
+| File | Fix Applied |
+|------|-------------|
+| `src/components/analytics/TrafficSourceChart.tsx` | Changed `key={index}` to `key={entry.name}` |
+| `src/components/agents/webhooks/ResponseActionBuilder.tsx` | Changed `key={actionIndex}` to `key={action-${actionIndex}-${action.action.type}}` |
+| `src/components/data-table/DataTable.tsx` | ✅ Already acceptable - loading skeleton rows |
+| `src/components/UserAccountCard.tsx` | ✅ Already acceptable - static keyboard shortcuts |
 
-### Recommended Fixes
+### Implementation Details
 
 ```typescript
-// TrafficSourceChart.tsx
-{data.map((item) => (
-  <div key={item.source || item.name}>...
+// TrafficSourceChart.tsx - Use stable name property
+{chartData.map((entry) => (
+  <Cell key={`cell-${entry.name}`} fill={entry.color} />
+))}
 
-// ResponseActionBuilder.tsx
-{actions.map((action) => (
-  <div key={action.id}>...
+// ResponseActionBuilder.tsx - Composite key with action type
+{actions.map((action, actionIndex) => (
+  <div key={`action-${actionIndex}-${action.action.type}`} className="...">
+))}
 ```
 
 ---
@@ -509,6 +515,15 @@ All edge functions include proper CORS configuration.
 
 ## Implementation Timeline
 
+### Completed
+
+| Phase | Task | Status |
+|-------|------|--------|
+| 7 | Handler memoization | ✅ DONE |
+| 10 | React.memo additions | ✅ DONE |
+| - | Type safety cleanup | ✅ DONE |
+| - | Key prop fixes | ✅ DONE |
+
 ### Immediate (Before Next Deploy)
 
 | Phase | Task | Time |
@@ -519,17 +534,13 @@ All edge functions include proper CORS configuration.
 
 | Phase | Task | Time |
 |-------|------|------|
-| 7 | Handler memoization | 45 min |
 | 8 | TODO resolution | 1 hour |
-| 10 | React.memo additions | 15 min |
 
 ### Backlog
 
 | Phase | Task | Time |
 |-------|------|------|
 | 9 | Widget refactor | 3+ hours |
-| - | Type safety cleanup | 30 min |
-| - | Key prop fixes | 15 min |
 
 ---
 

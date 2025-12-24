@@ -19,7 +19,7 @@ export interface DebugLogEntry {
   timestamp: Date;
   level: LogLevel;
   message: string;
-  details?: any;
+  details?: unknown;
 }
 
 interface DebugConsoleProps {
@@ -28,7 +28,7 @@ interface DebugConsoleProps {
   className?: string;
 }
 
-const levelConfig: Record<LogLevel, { icon: React.ComponentType<any>; color: string; bg: string }> = {
+const levelConfig: Record<LogLevel, { icon: React.ComponentType<{ className?: string }>; color: string; bg: string }> = {
   info: { icon: InfoCircle, color: 'text-info', bg: 'bg-info/10' },
   success: { icon: CheckCircle, color: 'text-success', bg: 'bg-success/10' },
   error: { icon: XCircle, color: 'text-destructive', bg: 'bg-destructive/10' },

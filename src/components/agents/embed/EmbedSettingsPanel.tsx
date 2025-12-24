@@ -262,7 +262,7 @@ export const EmbedSettingsPanel = ({ config, onConfigChange, embedCode }: EmbedS
                       <div className="grid grid-cols-2 gap-2">
                         <Select
                           value={field.fieldType}
-                          onValueChange={(value: any) => updateCustomField(field.id, { fieldType: value })}
+                          onValueChange={(value: 'text' | 'email' | 'phone' | 'textarea' | 'select') => updateCustomField(field.id, { fieldType: value })}
                         >
                           <SelectTrigger className="text-sm">
                             <SelectValue />
@@ -320,7 +320,7 @@ export const EmbedSettingsPanel = ({ config, onConfigChange, embedCode }: EmbedS
                       />
                       <Select
                         value={newFieldType}
-                        onValueChange={(value: any) => setNewFieldType(value)}
+                        onValueChange={(value: 'text' | 'email' | 'phone' | 'textarea' | 'select') => setNewFieldType(value)}
                       >
                         <SelectTrigger className="text-sm w-32">
                           <SelectValue />
