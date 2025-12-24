@@ -1,19 +1,24 @@
 /**
- * Get Started Wrapper
+ * GetStartedWrapper
  * 
- * Wrapper component for the Get Started page with page transition.
+ * Lazy-loading wrapper for the Get Started onboarding page.
+ * Reduces initial bundle size by code-splitting this component.
  * 
  * @module pages/GetStartedWrapper
  */
 
-import React from 'react';
-import { GetStarted } from './GetStarted';
+import { lazy, Suspense } from 'react';
 import { PageTransition } from '@/components/ui/page-transition';
+import { LoadingState } from '@/components/ui/loading-state';
+
+const GetStarted = lazy(() => import('./GetStarted').then(module => ({ default: module.GetStarted })));
 
 const GetStartedWrapper: React.FC = () => {
   return (
     <PageTransition>
-      <GetStarted />
+      <Suspense fallback={<LoadingState text="Loading..." className="min-h-[400px]" />}>
+        <GetStarted />
+      </Suspense>
     </PageTransition>
   );
 };
