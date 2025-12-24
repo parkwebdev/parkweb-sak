@@ -46,6 +46,12 @@ Welcome to the ChatPad documentation. This index provides quick access to all te
 | [Social Channel Integrations](./SOCIAL_CHANNEL_INTEGRATIONS.md) | Facebook, Instagram, X integrations |
 | [Stripe Payment Guide](./STRIPE_PAYMENT_GUIDE.md) | Payment integration and subscriptions |
 
+### Maintenance
+
+| Document | Description |
+|----------|-------------|
+| [Production Optimization Plan](./PRODUCTION_OPTIMIZATION_PLAN.md) | Remaining optimization tasks |
+
 ---
 
 ## Quick Reference

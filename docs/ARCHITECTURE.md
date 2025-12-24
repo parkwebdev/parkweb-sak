@@ -849,6 +849,27 @@ See [Design System](./DESIGN_SYSTEM.md) for complete styling reference.
 
 ---
 
+## Code Quality Standards
+
+Verified patterns maintained across the codebase:
+
+| Standard | Implementation |
+|----------|----------------|
+| **Icons** | UntitledUI only (`@untitledui/icons`), never Lucide |
+| **Query Keys** | Centralized in `src/lib/query-keys.ts` |
+| **Logging** | Main app: `src/utils/logger.ts`; Widget: `src/widget/utils/widget-logger.ts` |
+| **Data Fetching** | `useSupabaseQuery` or `useQuery` with proper enabled flags |
+| **Database Security** | RLS policies on all tables (0 linter warnings) |
+| **Error Handling** | All catch blocks have proper handling, no empty catches |
+| **HTML Sanitization** | `dangerouslySetInnerHTML` only with DOMPurify |
+| **CORS** | All edge functions include proper headers |
+| **Error Boundaries** | `ErrorBoundary` component at route level |
+| **Type Safety** | No critical `any` types, proper generics throughout |
+| **React Keys** | Stable keys in dynamic lists (not array indices) |
+| **Memoization** | `useCallback` on handlers, `React.memo` on large components |
+
+---
+
 ## Related Documentation
 
 - [Design System](./DESIGN_SYSTEM.md) - Colors, typography, spacing
