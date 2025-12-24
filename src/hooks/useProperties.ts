@@ -1,6 +1,9 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/utils/logger';
+import { useSupabaseQuery } from '@/hooks/useSupabaseQuery';
+import { queryKeys } from '@/lib/query-keys';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Property = Tables<'properties'>;
@@ -21,23 +24,33 @@ export interface ValidationStats {
   total: number;
 }
 
+interface LocationData {
+  id: string;
+  name: string;
+  city: string | null;
+  state: string | null;
+}
+
+interface PropertiesData {
+  properties: Property[];
+  locations: LocationData[];
+}
+
 /**
  * Hook for fetching properties with location data and validation stats.
+ * Uses React Query for caching and real-time updates.
  * 
  * @param {string} [agentId] - Agent ID to scope properties
  * @returns {Object} Property data, validation stats, and methods
  */
 export const useProperties = (agentId?: string) => {
-  const [properties, setProperties] = useState<Property[]>([]);
-  const [locationsList, setLocationsList] = useState<{ id: string; name: string; city: string | null; state: string | null }[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [propertyCounts, setPropertyCounts] = useState<Record<string, number>>({});
+  const queryClient = useQueryClient();
 
-  const fetchProperties = useCallback(async () => {
-    if (!agentId) return;
-
-    try {
-      setLoading(true);
+  // Fetch properties and locations together
+  const { data, isLoading: loading, refetch } = useSupabaseQuery<PropertiesData>({
+    queryKey: queryKeys.properties.list(agentId || ''),
+    queryFn: async () => {
+      if (!agentId) return { properties: [], locations: [] };
       
       // Fetch properties and locations in parallel
       const [propertiesResult, locationsResult] = await Promise.all([
@@ -55,49 +68,21 @@ export const useProperties = (agentId?: string) => {
       if (propertiesResult.error) throw propertiesResult.error;
       if (locationsResult.error) throw locationsResult.error;
       
-      setProperties(propertiesResult.data || []);
-      setLocationsList(locationsResult.data || []);
-      
-      // Calculate counts per knowledge source
-      const counts: Record<string, number> = {};
-      for (const prop of propertiesResult.data || []) {
-        const sourceId = prop.knowledge_source_id;
-        counts[sourceId] = (counts[sourceId] || 0) + 1;
-      }
-      setPropertyCounts(counts);
-    } catch (error) {
-      logger.error('Error fetching properties', error);
-    } finally {
-      setLoading(false);
-    }
-  }, [agentId]);
+      return {
+        properties: propertiesResult.data || [],
+        locations: locationsResult.data || [],
+      };
+    },
+    realtime: {
+      table: 'properties',
+      filter: agentId ? `agent_id=eq.${agentId}` : undefined,
+    },
+    enabled: !!agentId,
+    staleTime: 60000, // 1 minute
+  });
 
-  useEffect(() => {
-    if (!agentId) return;
-    fetchProperties();
-
-    // Subscribe to real-time updates
-    const channel = supabase
-      .channel(`properties-${agentId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'properties',
-          filter: `agent_id=eq.${agentId}`,
-        },
-        () => {
-          // Refetch on any change to update counts
-          fetchProperties();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [agentId, fetchProperties]);
+  const properties = data?.properties || [];
+  const locationsList = data?.locations || [];
 
   // Create a location lookup map
   const locationMap = useMemo(() => {
@@ -115,6 +100,16 @@ export const useProperties = (agentId?: string) => {
       location_name: prop.location_id ? locationMap.get(prop.location_id) || null : null,
     }));
   }, [properties, locationMap]);
+
+  // Calculate counts per knowledge source
+  const propertyCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const prop of properties) {
+      const sourceId = prop.knowledge_source_id;
+      counts[sourceId] = (counts[sourceId] || 0) + 1;
+    }
+    return counts;
+  }, [properties]);
 
   // Calculate validation stats
   const validationStats: ValidationStats = useMemo(() => {
@@ -175,6 +170,6 @@ export const useProperties = (agentId?: string) => {
     uniqueLocations,
     locationIdsByName,
     getPropertyCount,
-    refetch: fetchProperties,
+    refetch,
   };
 };

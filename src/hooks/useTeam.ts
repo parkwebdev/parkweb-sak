@@ -1,45 +1,38 @@
-import { useState, useEffect } from 'react';
+import { useMemo } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/lib/toast';
 import { supabase } from '@/integrations/supabase/client';
 import { TeamMember, InviteMemberData, UserRole, AppPermission } from '@/types/team';
 import { logger } from '@/utils/logger';
+import { useSupabaseQuery } from '@/hooks/useSupabaseQuery';
+import { queryKeys } from '@/lib/query-keys';
 import type { TeamProfile } from '@/types/report';
 
 /**
  * Hook for managing team members and roles.
- * Handles team invitations, role management, and member removal.
- * Uses secure RPC functions to prevent email exposure between team members.
+ * Uses React Query for caching and real-time updates.
  * 
  * @returns {Object} Team management methods and state
  * @returns {TeamMember[]} teamMembers - List of team members with profiles and roles
  * @returns {boolean} loading - Loading state
  * @returns {UserRole} currentUserRole - Current user's role
  * @returns {boolean} canManageRoles - Whether current user can manage roles
- * @returns {Function} fetchTeamMembers - Refresh team members list
+ * @returns {Function} refetch - Refresh team members list
  * @returns {Function} inviteMember - Send team invitation email
  * @returns {Function} removeMember - Remove a team member
  * @returns {Function} updateMemberRole - Update a member's role and permissions
  */
 export const useTeam = () => {
-  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [currentUserRole, setCurrentUserRole] = useState<UserRole>('member');
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
-  const canManageRoles = ['admin', 'super_admin'].includes(currentUserRole);
-
-  useEffect(() => {
-    if (user) {
-      fetchTeamMembers();
-      fetchCurrentUserRole();
-    }
-  }, [user]);
-
-  const fetchCurrentUserRole = async (): Promise<void> => {
-    if (!user) return;
-    
-    try {
+  // Fetch current user's role
+  const { data: currentUserRole = 'member' as UserRole } = useSupabaseQuery<UserRole>({
+    queryKey: [...queryKeys.team.all, 'current-role', user?.id],
+    queryFn: async () => {
+      if (!user) return 'member' as UserRole;
+      
       const { data, error } = await supabase
         .from('user_roles')
         .select('role')
@@ -48,21 +41,24 @@ export const useTeam = () => {
 
       if (error && error.code !== 'PGRST116') {
         logger.error('Error fetching user role', error);
-        return;
+        return 'member' as UserRole;
       }
 
-      setCurrentUserRole((data?.role as UserRole) || 'member');
-    } catch (error) {
-      logger.error('Error in fetchCurrentUserRole', error);
-    }
-  };
+      return (data?.role as UserRole) || 'member';
+    },
+    realtime: {
+      table: 'user_roles',
+      filter: user ? `user_id=eq.${user.id}` : undefined,
+    },
+    enabled: !!user,
+  });
 
-  const fetchTeamMembers = async (): Promise<void> => {
-    if (!user) return;
-    
-    try {
-      setLoading(true);
-      
+  // Fetch team members with profiles and roles
+  const { data: teamMembers = [], isLoading: loading, refetch } = useSupabaseQuery<TeamMember[]>({
+    queryKey: queryKeys.team.list(user?.id),
+    queryFn: async () => {
+      if (!user) return [];
+
       // Use secure function that doesn't expose emails to non-owners
       const { data: profilesData, error: profilesError } = await supabase
         .rpc('get_team_profiles', { p_owner_id: user.id });
@@ -78,22 +74,23 @@ export const useTeam = () => {
           toast.error("Error", {
             description: "Failed to load team members.",
           });
-          return;
+          return [];
         }
         
         // For single user, include their own email
-        const membersWithRoles = (fallbackData || []).map(profile => ({
+        return (fallbackData || []).map(profile => ({
           ...profile,
           role: currentUserRole,
-          permissions: [],
+          permissions: [] as string[],
         }));
-        setTeamMembers(membersWithRoles);
-        return;
       }
 
       // Fetch roles for all team members
       const profiles = (profilesData || []) as TeamProfile[];
       const userIds = profiles.map((p) => p.user_id);
+      
+      if (userIds.length === 0) return [];
+      
       const { data: rolesData, error: rolesError } = await supabase
         .from('user_roles')
         .select('user_id, role, permissions')
@@ -104,7 +101,7 @@ export const useTeam = () => {
       }
 
       // Combine profile and role data
-      const membersWithRoles = profiles.map((profile) => {
+      return profiles.map((profile) => {
         const roleData = rolesData?.find(r => r.user_id === profile.user_id);
         return {
           ...profile,
@@ -113,13 +110,21 @@ export const useTeam = () => {
           permissions: roleData?.permissions || [],
         };
       });
+    },
+    realtime: {
+      table: 'profiles',
+    },
+    enabled: !!user,
+    staleTime: 30000, // 30 seconds
+  });
 
-      setTeamMembers(membersWithRoles);
-    } catch (error) {
-      logger.error('Error in fetchTeamMembers', error);
-    } finally {
-      setLoading(false);
-    }
+  const canManageRoles = useMemo(() => 
+    ['admin', 'super_admin'].includes(currentUserRole), 
+    [currentUserRole]
+  );
+
+  const invalidateTeamQueries = async () => {
+    await queryClient.invalidateQueries({ queryKey: queryKeys.team.all });
   };
 
   const inviteMember = async (inviteData: InviteMemberData): Promise<boolean> => {
@@ -181,8 +186,7 @@ export const useTeam = () => {
         description: `${member.display_name || member.email} has been removed from the team.`,
       });
 
-      // Refresh the team members list
-      await fetchTeamMembers();
+      await invalidateTeamQueries();
       return true;
     } catch (error) {
       toast.error("Remove failed", {
@@ -220,9 +224,7 @@ export const useTeam = () => {
       }
 
       logger.success('Role update successful');
-
-      await fetchTeamMembers();
-      await fetchCurrentUserRole();
+      await invalidateTeamQueries();
       return true;
     } catch (error) {
       logger.error('Unexpected error updating role', error);
@@ -238,7 +240,7 @@ export const useTeam = () => {
     loading,
     currentUserRole,
     canManageRoles,
-    fetchTeamMembers,
+    fetchTeamMembers: refetch, // Backward compatibility
     inviteMember,
     removeMember,
     updateMemberRole,

@@ -1,8 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/lib/toast';
 import { getErrorMessage } from '@/types/errors';
 import { useAuth } from '@/hooks/useAuth';
+import { useSupabaseQuery } from '@/hooks/useSupabaseQuery';
+import { queryKeys } from '@/lib/query-keys';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Webhook = Tables<'webhooks'>;
@@ -22,52 +25,44 @@ type WebhookLog = {
 
 /**
  * Hook for managing webhooks and their delivery logs.
- * Webhooks are scoped to agents and support multiple event types.
+ * Uses React Query for caching and real-time updates.
  * 
- * @param {string} [agentId] - Optional agent ID to scope webhooks
+ * @param {string} agentId - Agent ID to scope webhooks
  * @returns {Object} Webhook management methods and state
- * @returns {Webhook[]} webhooks - List of webhooks
- * @returns {WebhookLog[]} logs - Webhook delivery logs
- * @returns {boolean} loading - Loading state
- * @returns {Function} createWebhook - Create a new webhook
- * @returns {Function} updateWebhook - Update an existing webhook
- * @returns {Function} deleteWebhook - Delete a webhook
- * @returns {Function} testWebhook - Send a test webhook
- * @returns {Function} fetchLogs - Fetch delivery logs
- * @returns {Function} refetch - Manually refresh webhooks list
  */
 export const useWebhooks = (agentId: string) => {
-  const [webhooks, setWebhooks] = useState<Webhook[]>([]);
-  const [logs, setLogs] = useState<WebhookLog[]>([]);
-  const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const [logs, setLogs] = useState<WebhookLog[]>([]);
 
-  const fetchWebhooks = async () => {
-    if (!user) return;
-    
-    try {
-      setLoading(true);
-      let query = supabase
+  // Fetch webhooks with React Query
+  const { data: webhooks = [], isLoading: loading, refetch } = useSupabaseQuery<Webhook[]>({
+    queryKey: queryKeys.webhooks.list(agentId),
+    queryFn: async () => {
+      if (!user || !agentId) return [];
+      
+      const { data, error } = await supabase
         .from('webhooks')
         .select('*')
+        .eq('agent_id', agentId)
         .order('created_at', { ascending: false });
 
-      query = query.eq('agent_id', agentId);
-
-      const { data, error } = await query;
-
       if (error) throw error;
-      setWebhooks(data || []);
-    } catch (error: unknown) {
-      toast.error('Error fetching webhooks', {
-        description: getErrorMessage(error),
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+      return data || [];
+    },
+    realtime: {
+      table: 'webhooks',
+      filter: `agent_id=eq.${agentId}`,
+    },
+    enabled: !!user && !!agentId,
+    staleTime: 30000, // 30 seconds
+  });
 
-  const fetchLogs = async (webhookId?: string) => {
+  const invalidateWebhooks = useCallback(async () => {
+    await queryClient.invalidateQueries({ queryKey: queryKeys.webhooks.all });
+  }, [queryClient]);
+
+  const fetchLogs = useCallback(async (webhookId?: string) => {
     if (!user) return;
     
     try {
@@ -90,9 +85,11 @@ export const useWebhooks = (agentId: string) => {
         description: getErrorMessage(error),
       });
     }
-  };
+  }, [user]);
 
-  const createWebhook = async (webhookData: Omit<Webhook, 'id' | 'created_at' | 'updated_at' | 'user_id' | 'agent_id'>) => {
+  const createWebhook = useCallback(async (
+    webhookData: Omit<Webhook, 'id' | 'created_at' | 'updated_at' | 'user_id' | 'agent_id'>
+  ) => {
     if (!user) return;
 
     try {
@@ -108,7 +105,7 @@ export const useWebhooks = (agentId: string) => {
         description: 'Webhook has been created successfully',
       });
 
-      fetchWebhooks();
+      await invalidateWebhooks();
       return data;
     } catch (error: unknown) {
       toast.error('Error creating webhook', {
@@ -116,9 +113,12 @@ export const useWebhooks = (agentId: string) => {
       });
       throw error;
     }
-  };
+  }, [user, agentId, invalidateWebhooks]);
 
-  const updateWebhook = async (id: string, updates: Partial<Omit<Webhook, 'id' | 'created_at' | 'updated_at' | 'user_id' | 'agent_id'>>) => {
+  const updateWebhook = useCallback(async (
+    id: string, 
+    updates: Partial<Omit<Webhook, 'id' | 'created_at' | 'updated_at' | 'user_id' | 'agent_id'>>
+  ) => {
     try {
       const { error } = await supabase
         .from('webhooks')
@@ -128,16 +128,16 @@ export const useWebhooks = (agentId: string) => {
       if (error) throw error;
 
       // Success - no toast needed (SavedIndicator shows feedback)
-      fetchWebhooks();
+      await invalidateWebhooks();
     } catch (error: unknown) {
       toast.error('Error updating webhook', {
         description: getErrorMessage(error),
       });
       throw error;
     }
-  };
+  }, [invalidateWebhooks]);
 
-  const deleteWebhook = async (id: string) => {
+  const deleteWebhook = useCallback(async (id: string) => {
     try {
       const { error } = await supabase
         .from('webhooks')
@@ -150,16 +150,16 @@ export const useWebhooks = (agentId: string) => {
         description: 'Webhook has been deleted successfully',
       });
 
-      fetchWebhooks();
+      await invalidateWebhooks();
     } catch (error: unknown) {
       toast.error('Error deleting webhook', {
         description: getErrorMessage(error),
       });
       throw error;
     }
-  };
+  }, [invalidateWebhooks]);
 
-  const testWebhook = async (id: string) => {
+  const testWebhook = useCallback(async (id: string) => {
     try {
       const { data, error } = await supabase.functions.invoke('trigger-webhook', {
         body: { 
@@ -174,7 +174,7 @@ export const useWebhooks = (agentId: string) => {
         description: 'Check the delivery logs for results',
       });
 
-      fetchLogs(id);
+      await fetchLogs(id);
       return data;
     } catch (error: unknown) {
       toast.error('Error testing webhook', {
@@ -182,45 +182,7 @@ export const useWebhooks = (agentId: string) => {
       });
       throw error;
     }
-  };
-
-  useEffect(() => {
-    fetchWebhooks();
-
-    // Subscribe to real-time updates
-    const filter = `agent_id=eq.${agentId}`;
-    
-    const channel = supabase
-      .channel(`webhooks-changes-${agentId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'webhooks',
-          filter,
-        },
-        () => {
-          fetchWebhooks();
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'webhook_logs',
-        },
-        () => {
-          fetchLogs();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user?.id, agentId]);
+  }, [fetchLogs]);
 
   return {
     webhooks,
@@ -231,6 +193,6 @@ export const useWebhooks = (agentId: string) => {
     deleteWebhook,
     testWebhook,
     fetchLogs,
-    refetch: fetchWebhooks,
+    refetch,
   };
 };
