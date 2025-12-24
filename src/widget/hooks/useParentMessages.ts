@@ -29,6 +29,7 @@ import { detectEntryType, parseUtmParams, isValidUUID } from '../utils';
 import { updatePageVisit, type ReferrerJourney } from '../api';
 import { isInternalWidgetUrl } from '../constants';
 import type { PageVisit } from '../types';
+import { logger } from '@/utils/logger';
 
 /** Options for the useParentMessages hook */
 interface UseParentMessagesOptions {
@@ -103,17 +104,17 @@ export function useParentMessages(
       
       if (event.data.type === 'chatpad-parent-page-info') {
         const { url, referrer, utmParams, browserLanguage } = event.data;
-        console.log('[Widget] Received parent page info:', { url, referrer, utmParams, browserLanguage });
+        logger.debug('[Widget] Received parent page info:', { url, referrer, utmParams, browserLanguage });
         
         // Store browser language preference (e.g., "es", "es-ES", "pt-BR")
         if (browserLanguage && browserLanguageRef) {
           browserLanguageRef.current = browserLanguage;
-          console.log('[Widget] Browser language detected:', browserLanguage);
+          logger.debug('[Widget] Browser language detected:', browserLanguage);
         }
         
         // Skip tracking if this is the widget.html page itself
         if (isInternalWidgetUrl(url)) {
-          console.log('[Widget] Skipping internal widget URL:', url);
+          logger.debug('[Widget] Skipping internal widget URL:', url);
           return;
         }
         
@@ -140,7 +141,7 @@ export function useParentMessages(
           };
           
           setReferrerJourney(journey);
-          console.log('[Widget] Set referrer journey from parent:', journey);
+          logger.debug('[Widget] Set referrer journey from parent:', journey);
           localStorage.setItem(`chatpad_referrer_journey_${agentId}`, JSON.stringify(journey));
         }
         
@@ -173,7 +174,7 @@ export function useParentMessages(
               updatePageVisit(activeConversationId, {
                 ...newVisit,
                 previous_duration_ms: previousDuration,
-              }, undefined, visitorId).catch(err => console.error('[Widget] Failed to send real-time page visit:', err));
+              }, undefined, visitorId).catch(err => logger.error('[Widget] Failed to send real-time page visit:', err));
             }
           }
         }

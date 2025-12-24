@@ -12,6 +12,7 @@ import { InstallationSection } from '@/components/agents/embed/sections/Installa
 import { AriSectionHeader } from './AriSectionHeader';
 import { LoadingState } from '@/components/ui/loading-state';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
 
 interface AriInstallationSectionProps {
   agentId: string;
@@ -30,7 +31,7 @@ export const AriInstallationSection: React.FC<AriInstallationSectionProps> = ({ 
         .eq('id', agentId)
         .then(({ error }) => {
           if (error) {
-            console.error('Failed to mark installation as viewed:', error);
+            logger.error('Failed to mark installation as viewed:', error);
           }
         });
     }

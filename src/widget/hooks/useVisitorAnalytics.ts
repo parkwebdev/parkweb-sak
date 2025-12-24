@@ -27,6 +27,7 @@ import { detectEntryType, parseUtmParams, isValidUUID } from '../utils';
 import { updatePageVisit, type ReferrerJourney } from '../api';
 import { isInternalWidgetUrl } from '../constants';
 import type { PageVisit } from '../types';
+import { logger } from '@/utils/logger';
 
 /** Options for the useVisitorAnalytics hook */
 interface UseVisitorAnalyticsOptions {
@@ -85,7 +86,7 @@ export function useVisitorAnalytics(options: UseVisitorAnalyticsOptions) {
     };
     
     setReferrerJourney(journey);
-    console.log('[Widget] Captured referrer journey (fallback):', journey);
+    logger.debug('[Widget] Captured referrer journey (fallback):', journey);
     
     // Persist to localStorage
     localStorage.setItem(`chatpad_referrer_journey_${agentId}`, JSON.stringify(journey));
@@ -101,7 +102,7 @@ export function useVisitorAnalytics(options: UseVisitorAnalyticsOptions) {
       // Give parent 1 second to send page info before falling back
       const timeout = setTimeout(() => {
         if (!parentPageUrlRef.current && !referrerJourney) {
-          console.log('[Widget] No parent page info received, using fallback');
+          logger.debug('[Widget] No parent page info received, using fallback');
           captureReferrerJourneyFallback();
         }
       }, 1000);
@@ -137,7 +138,7 @@ export function useVisitorAnalytics(options: UseVisitorAnalyticsOptions) {
       
       // Skip tracking if this is the widget.html page itself
       if (isInternalWidgetUrl(currentUrl)) {
-        console.log('[Widget] Skipping internal widget URL in fallback:', currentUrl);
+        logger.debug('[Widget] Skipping internal widget URL in fallback:', currentUrl);
         return;
       }
       
@@ -166,7 +167,7 @@ export function useVisitorAnalytics(options: UseVisitorAnalyticsOptions) {
         updatePageVisit(activeConversationId, {
           ...newVisit,
           previous_duration_ms: previousDuration,
-        }, undefined, visitorId).catch(err => console.error('[Widget] Failed to send real-time page visit:', err));
+        }, undefined, visitorId).catch(err => logger.error('[Widget] Failed to send real-time page visit:', err));
       }
     };
     
@@ -240,8 +241,8 @@ export function useVisitorAnalytics(options: UseVisitorAnalyticsOptions) {
       duration_ms: 0,
     }, referrerJourney, visitorId).then(() => {
       referrerJourneySentRef.current = true;
-      console.log('[Widget] Sent referrer journey to server');
-    }).catch(err => console.error('[Widget] Failed to send referrer journey:', err));
+      logger.debug('[Widget] Sent referrer journey to server');
+    }).catch(err => logger.error('[Widget] Failed to send referrer journey:', err));
   }, [activeConversationId, referrerJourney, previewMode, visitorId]);
 
   return {

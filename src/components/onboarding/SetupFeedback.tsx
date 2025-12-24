@@ -14,6 +14,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { toast } from '@/lib/toast';
+import { logger } from '@/utils/logger';
 
 const EMOJI_RATINGS = [
   { value: 1, emoji: '😞', label: 'Poor' },
@@ -50,7 +51,7 @@ export const SetupFeedback: React.FC<SetupFeedbackProps> = ({ hasRated = false }
 
       setIsSubmitted(true);
     } catch (error) {
-      console.error('Failed to save rating:', error);
+      logger.error('Failed to save rating:', error);
       toast.error('Failed to save feedback');
       setSelectedRating(null);
     } finally {

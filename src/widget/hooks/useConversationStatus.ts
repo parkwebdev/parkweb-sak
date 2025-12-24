@@ -25,6 +25,7 @@ import type { RealtimeChannel } from '@supabase/supabase-js';
 import { subscribeToConversationStatus, unsubscribeFromConversationStatus, fetchTakeoverAgent } from '../api';
 import { isValidUUID, hasTakeoverNoticeBeenShown, setTakeoverNoticeShown, clearTakeoverNotice } from '../utils';
 import type { Message } from '../types';
+import { logger } from '@/utils/logger';
 
 /** Options for the useConversationStatus hook */
 interface UseConversationStatusOptions {
@@ -86,7 +87,7 @@ export function useConversationStatus(options: UseConversationStatusOptions) {
       return;
     }
 
-    console.log('[Widget] Setting up status subscription for:', activeConversationId);
+    logger.debug('[Widget] Setting up status subscription for:', activeConversationId);
     
     if (statusChannelRef.current) {
       unsubscribeFromConversationStatus(statusChannelRef.current);
@@ -94,13 +95,13 @@ export function useConversationStatus(options: UseConversationStatusOptions) {
     }
 
     statusChannelRef.current = subscribeToConversationStatus(activeConversationId, async (status) => {
-      console.log('[Widget] Status changed to:', status);
+      logger.debug('[Widget] Status changed to:', status);
       const wasTakeover = isHumanTakeover;
       setIsHumanTakeover(status === 'human_takeover');
       
       // Handle conversation closed by team - trigger rating
       if (status === 'closed') {
-        console.log('[Widget] Conversation closed by team, triggering rating prompt');
+        logger.debug('[Widget] Conversation closed by team, triggering rating prompt');
         onConversationClosed?.();
         return;
       }

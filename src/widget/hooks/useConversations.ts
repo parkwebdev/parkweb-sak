@@ -27,6 +27,7 @@ import { useState, useEffect, useRef } from 'react';
 import { fetchConversationMessages, markMessagesRead } from '../api';
 import { isValidUUID } from '../utils';
 import type { Message, ChatUser, WidgetMessageMetadata } from '../types';
+import { logger } from '@/utils/logger';
 
 /** Options for the useConversations hook */
 interface UseConversationsOptions {
@@ -90,7 +91,7 @@ export function useConversations(options: UseConversationsOptions) {
   // Initialize activeConversationId from chatUser if available (for returning users)
   useEffect(() => {
     if (chatUser?.conversationId && !activeConversationId) {
-      console.log('[Widget] Restoring conversation ID from chatUser:', chatUser.conversationId);
+      logger.debug('[Widget] Restoring conversation ID from chatUser:', chatUser.conversationId);
       setActiveConversationId(chatUser.conversationId);
     }
   }, [chatUser?.conversationId, activeConversationId]);
@@ -107,7 +108,7 @@ export function useConversations(options: UseConversationsOptions) {
     
     // Skip fetch if we're actively sending a message - messages are already in local state
     if (isActivelySendingRef.current) {
-      console.log('[Widget] Skipping DB fetch - actively sending message');
+      logger.debug('[Widget] Skipping DB fetch - actively sending message');
       fetchedConversationIdRef.current = activeConversationId;
       return;
     }
@@ -115,7 +116,7 @@ export function useConversations(options: UseConversationsOptions) {
     // REF-BASED FIX: Check ref instead of messages.length to avoid stale closure issues
     // The ref is updated synchronously when setMessages is called, so it's always current
     if (hasLocalMessagesRef.current) {
-      console.log('[Widget] Skipping DB fetch - hasLocalMessagesRef is true');
+      logger.debug('[Widget] Skipping DB fetch - hasLocalMessagesRef is true');
       fetchedConversationIdRef.current = activeConversationId;
       return;
     }
@@ -123,7 +124,7 @@ export function useConversations(options: UseConversationsOptions) {
     const loadMessagesFromDB = async () => {
       fetchedConversationIdRef.current = activeConversationId;
       setIsLoadingMessages(true);
-      console.log('[Widget] Fetching messages from database for:', activeConversationId);
+      logger.debug('[Widget] Fetching messages from database for:', activeConversationId);
       
       try {
         const dbMessages = await fetchConversationMessages(activeConversationId);
@@ -154,7 +155,7 @@ export function useConversations(options: UseConversationsOptions) {
           setMessages(prev => {
             // NEVER overwrite existing messages with empty DB result
             if (formattedMessages.length === 0) {
-              console.log('[Widget] DB returned empty, preserving', prev.length, 'local messages');
+              logger.debug(`[Widget] DB returned empty, preserving ${prev.length} local messages`);
               return prev;
             }
             
@@ -184,10 +185,10 @@ export function useConversations(options: UseConversationsOptions) {
             return [...localWithoutIds, ...mergedWithIds];
           });
           
-          console.log('[Widget] Merged', formattedMessages.length, 'DB messages with local state');
+          logger.debug(`[Widget] Merged ${formattedMessages.length} DB messages with local state`);
         } else {
           // Don't overwrite existing messages (like greeting) with empty array
-          console.log('[Widget] No messages found in database, preserving local messages');
+          logger.debug('[Widget] No messages found in database, preserving local messages');
         }
       } finally {
         setIsLoadingMessages(false);
@@ -243,7 +244,7 @@ export function useConversations(options: UseConversationsOptions) {
       const timer = setTimeout(async () => {
         const result = await markMessagesRead(activeConversationId, 'user');
         if (result.success && result.updated && result.updated > 0) {
-          console.log('[Widget] Server confirmed', result.updated, 'messages as read');
+          logger.debug(`[Widget] Server confirmed ${result.updated} messages as read`);
         }
       }, 500);
       return () => clearTimeout(timer);

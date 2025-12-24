@@ -21,6 +21,7 @@ import { PlayIcon } from '@/components/icons/PlayIcon';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
 import type { OnboardingStep } from '@/hooks/useOnboardingProgress';
 
 interface SetupChecklistProps {
@@ -156,7 +157,7 @@ export const SetupChecklist: React.FC<SetupChecklistProps> = ({
                     className="flex items-center justify-center w-14 h-14 rounded-full bg-white/20 backdrop-blur-md shadow-lg hover:bg-white/30 transition-colors"
                     onClick={() => {
                       // TODO: Open video modal
-                      console.log('Play next level video');
+                      logger.debug('Play next level video');
                     }}
                     aria-label="Play tutorial video"
                   >

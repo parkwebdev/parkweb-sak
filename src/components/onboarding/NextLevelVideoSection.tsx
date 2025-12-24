@@ -10,6 +10,7 @@ import React, { useState } from 'react';
 import { PlayCircle, Star01 } from '@untitledui/icons';
 import { motion } from 'motion/react';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { logger } from '@/utils/logger';
 
 export const NextLevelVideoSection: React.FC = () => {
   const prefersReducedMotion = useReducedMotion();
@@ -18,7 +19,7 @@ export const NextLevelVideoSection: React.FC = () => {
   const handlePlay = () => {
     // TODO: Open video modal or start playback
     setIsPlaying(true);
-    console.log('Play next level video');
+    logger.debug('Play next level video');
   };
 
   return (

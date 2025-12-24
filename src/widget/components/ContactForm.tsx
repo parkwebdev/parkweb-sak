@@ -15,6 +15,7 @@ import { PhoneInputField } from '../constants';
 import { createLead } from '../api';
 import { useSystemTheme } from '../hooks/useSystemTheme';
 import type { ChatUser } from '../types';
+import { logger } from '@/utils/logger';
 
 /** Custom field configuration */
 interface CustomField {
@@ -82,7 +83,7 @@ export const ContactForm = ({
     const customFieldData: Record<string, any> = {};
 
     if (honeypot) {
-      console.log('Spam detected: honeypot filled');
+      logger.debug('Spam detected: honeypot filled');
       return;
     }
 
@@ -152,7 +153,7 @@ export const ContactForm = ({
       
       onSubmit(userData, conversationId);
     } catch (error) {
-      console.error('Error creating lead:', error);
+      logger.error('Error creating lead:', error);
     }
   };
 
