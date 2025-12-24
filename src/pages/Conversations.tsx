@@ -8,7 +8,7 @@
  * @page
  */
 
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useQuery } from '@tanstack/react-query';
@@ -30,18 +30,18 @@ import { formatFileSize, validateFiles } from '@/lib/file-validation';
 
 import { useConversations } from '@/hooks/useConversations';
 import { useAgent } from '@/hooks/useAgent';
+import { useVisitorPresence } from '@/hooks/useVisitorPresence';
+import { useTypingPresence } from '@/hooks/useTypingPresence';
+import { useConversationMessages } from '@/hooks/useConversationMessages';
 import { ConversationMetadataPanel } from '@/components/conversations/ConversationMetadataPanel';
 import { InboxNavSidebar, type InboxFilter } from '@/components/conversations/InboxNavSidebar';
 import type { Tables } from '@/integrations/supabase/types';
 import type { ConversationMetadata, MessageMetadata, MessageReaction } from '@/types/metadata';
-import type { VisitorPresenceState } from '@/types/report';
 import { formatDistanceToNow } from 'date-fns';
 import { downloadFile } from '@/lib/file-download';
 import { getLanguageFlag } from '@/lib/language-utils';
 import { TakeoverDialog } from '@/components/conversations/TakeoverDialog';
 import { supabase } from '@/integrations/supabase/client';
-import type { RealtimeChannel } from '@supabase/supabase-js';
-import { playNotificationSound } from '@/lib/notification-sound';
 import { formatShortTime, formatSenderName } from '@/lib/time-formatting';
 import { QuickEmojiButton } from '@/components/chat/QuickEmojiButton';
 import { useAutoResizeTextarea } from '@/hooks/useAutoResizeTextarea';
@@ -114,8 +114,6 @@ const Conversations: React.FC = () => {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [loadingMessages, setLoadingMessages] = useState(false);
   const [takeoverDialogOpen, setTakeoverDialogOpen] = useState(false);
   const [messageInput, setMessageInput] = useState('');
   const [sendingMessage, setSendingMessage] = useState(false);
@@ -147,16 +145,39 @@ const Conversations: React.FC = () => {
   }, [conversationsCollapsed]);
   const messagesScrollRef = useRef<HTMLDivElement>(null);
   const messageTextareaRef = useRef<HTMLTextAreaElement>(null);
-  const isInitialLoadRef = useRef(true);
-  const newMessageIdsRef = useRef<Set<string>>(new Set());
-  
-  // Typing indicator state
-  const [isTypingBroadcast, setIsTypingBroadcast] = useState(false);
-  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const typingChannelRef = useRef<RealtimeChannel | null>(null);
 
-  // Active visitor presence tracking
-  const [activeVisitors, setActiveVisitors] = useState<Record<string, { currentPage: string; visitorId: string }>>({});
+  // === EXTRACTED HOOKS (Phase 5 Section 1) ===
+  
+  // Visitor presence tracking via hook
+  const { activeVisitors, getVisitorPresence: getVisitorPresenceById } = useVisitorPresence({ agentId });
+  
+  // Get visitor presence for a conversation
+  const getVisitorPresence = useCallback((conversation: Conversation) => {
+    const metadata = (conversation.metadata || {}) as ConversationMetadata;
+    const visitorId = metadata.visitor_id;
+    if (!visitorId) return null;
+    return getVisitorPresenceById(visitorId);
+  }, [getVisitorPresenceById]);
+  
+  // Typing presence for human takeover via hook
+  const { handleTyping, stopTypingIndicator } = useTypingPresence({
+    conversation: selectedConversation,
+    userId: user?.id,
+    userEmail: user?.email,
+  });
+  
+  // Message state and real-time via hook
+  const { 
+    messages, 
+    setMessages, 
+    loadingMessages, 
+    isNewMessage,
+    newMessageIdsRef,
+    isInitialLoadRef,
+  } = useConversationMessages({
+    conversationId: selectedConversation?.id,
+    fetchMessages,
+  });
 
   // Format URL for display
   const formatUrl = (url: string): string => {
@@ -170,42 +191,7 @@ const Conversations: React.FC = () => {
     }
   };
 
-  // Subscribe to presence for the single agent to track active visitors
-  useEffect(() => {
-    if (!agentId) return;
-
-    const channel = supabase
-      .channel(`visitor-presence-${agentId}`)
-      .on('presence', { event: 'sync' }, () => {
-        const state = channel.presenceState();
-        const visitors: Record<string, { currentPage: string; visitorId: string }> = {};
-        
-        Object.values(state).flat().forEach((rawPresence) => {
-          const presence = rawPresence as unknown as VisitorPresenceState;
-          if (presence.isWidgetOpen && presence.visitorId) {
-            visitors[presence.visitorId] = {
-              visitorId: presence.visitorId,
-              currentPage: presence.currentPage || 'Unknown',
-            };
-          }
-        });
-        
-        setActiveVisitors(visitors);
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [agentId]);
-
-  // Check if a conversation's visitor is currently active
-  const getVisitorPresence = (conversation: Conversation) => {
-    const metadata = (conversation.metadata || {}) as ConversationMetadata;
-    const visitorId = metadata.visitor_id;
-    if (!visitorId) return null;
-    return activeVisitors[visitorId] || null;
-  };
+  // Visitor presence tracking is now handled by useVisitorPresence hook
 
 
   // Translate messages to English
@@ -284,106 +270,7 @@ const Conversations: React.FC = () => {
     setTranslatedMessages({});
   }, [selectedConversation?.id]);
 
-  // Load messages when conversation is selected
-  useEffect(() => {
-    if (!selectedConversation) return;
-    
-    let hasLoadedMessages = false;
-    isInitialLoadRef.current = true;
-    setLoadingMessages(true); // Show loading state immediately
-
-    // Set up real-time subscription for messages
-    const channel = supabase
-      .channel(`conv-messages-${selectedConversation.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages',
-          filter: `conversation_id=eq.${selectedConversation.id}`
-        },
-        (payload) => {
-          const newMessage = payload.new as Message;
-          
-          // Check if this replaces a pending optimistic message
-          setMessages(prev => {
-            // Avoid duplicates (real-time + optimistic update race)
-            if (prev.some(m => m.id === newMessage.id)) return prev;
-            
-            // Check if we're replacing an optimistic temp message
-            const isReplacingOptimistic = prev.some(m => 
-              m.id.startsWith('temp-') && 
-              (m.metadata as MessageMetadata)?.pending && 
-              m.content === newMessage.content
-            );
-            
-            // Only animate if it's a genuinely new message (not during initial load, not replacing optimistic)
-            if (!isInitialLoadRef.current && !isReplacingOptimistic) {
-              newMessageIdsRef.current.add(newMessage.id);
-              setTimeout(() => newMessageIdsRef.current.delete(newMessage.id), 300);
-            }
-            
-            // Remove any pending optimistic message with matching content
-            const withoutTemp = prev.filter(m => {
-              if (!m.id.startsWith('temp-')) return true;
-              const tempMeta = (m.metadata || {}) as MessageMetadata;
-              return !(tempMeta.pending && m.content === newMessage.content);
-            });
-            return [...withoutTemp, newMessage];
-          });
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'messages',
-          filter: `conversation_id=eq.${selectedConversation.id}`
-        },
-        (payload) => {
-          logger.debug('[Admin] Message UPDATE received', {
-            messageId: payload.new?.id,
-            metadata: ((payload.new as Message)?.metadata as MessageMetadata),
-            reactions: ((payload.new as Message)?.metadata as MessageMetadata)?.reactions,
-          });
-          const updatedMessage = payload.new as Message;
-          // Incremental update - only update the affected message
-          setMessages(prev => {
-            logger.debug('[Admin] Updating message in state', updatedMessage.id);
-            return prev.map(m => m.id === updatedMessage.id ? updatedMessage : m);
-          });
-        }
-      )
-      .subscribe(async (status) => {
-        logger.debug('[Conversations] Subscription status', status);
-        
-        if (status === 'SUBSCRIBED' && !hasLoadedMessages) {
-          // NOW fetch messages - subscription is guaranteed to catch new ones
-          hasLoadedMessages = true;
-          await loadMessages(selectedConversation.id, true);
-        } else if (status === 'CHANNEL_ERROR' && !hasLoadedMessages) {
-          logger.error('[Conversations] Channel error - falling back to immediate fetch');
-          hasLoadedMessages = true;
-          await loadMessages(selectedConversation.id, true);
-        }
-      });
-
-    // Timeout fallback - don't leave user waiting forever if subscription hangs
-    const fetchTimeout = setTimeout(() => {
-      if (!hasLoadedMessages) {
-        logger.debug('[Conversations] Subscription timeout - fetching anyway');
-        hasLoadedMessages = true;
-        loadMessages(selectedConversation.id, true);
-      }
-    }, 2000);
-
-    return () => {
-      clearTimeout(fetchTimeout);
-      supabase.removeChannel(channel);
-    };
-  }, [selectedConversation?.id]);
+  // Message loading and real-time subscription is now handled by useConversationMessages hook
 
   // Handle conversation ID from URL query param (e.g., from "View Conversation" in leads)
   useEffect(() => {
@@ -421,25 +308,7 @@ const Conversations: React.FC = () => {
     }
   }, [selectedConversation?.id]);
 
-  const loadMessages = async (conversationId: string, showLoading = true) => {
-    if (showLoading) setLoadingMessages(true);
-    try {
-      const msgs = await fetchMessages(conversationId);
-      setMessages(msgs);
-      
-      // Mark user messages as read by admin
-      supabase.functions.invoke('mark-messages-read', {
-        body: { conversationId, readerType: 'admin' }
-      }).then(({ data }) => {
-        if (data?.updated > 0) {
-          logger.debug('[Conversations] Marked messages as read', data.updated);
-        }
-      }).catch(err => logger.error('Failed to mark messages as read', err));
-    } finally {
-      if (showLoading) setLoadingMessages(false);
-      isInitialLoadRef.current = false;
-    }
-  };
+  // loadMessages is now handled by useConversationMessages hook
 
   // Fetch user's active takeovers for "Your Inbox" filter
   const { data: userTakeovers } = useQuery({
@@ -689,63 +558,7 @@ const Conversations: React.FC = () => {
   // Auto-resize message textarea
   useAutoResizeTextarea(messageTextareaRef, messageInput, { minRows: 1, maxRows: 5 });
 
-  // Set up typing presence channel when conversation is in human takeover mode
-  useEffect(() => {
-    if (selectedConversation && selectedConversation.status === 'human_takeover' && user) {
-      const channel = supabase.channel(`typing-${selectedConversation.id}`);
-      typingChannelRef.current = channel;
-      
-      channel.subscribe(async (status) => {
-        if (status === 'SUBSCRIBED') {
-          await channel.track({ isTyping: false, userId: user.id, name: user.email });
-        }
-      });
-
-      return () => {
-        if (typingChannelRef.current) {
-          supabase.removeChannel(typingChannelRef.current);
-          typingChannelRef.current = null;
-        }
-        if (typingTimeoutRef.current) {
-          clearTimeout(typingTimeoutRef.current);
-        }
-      };
-    }
-  }, [selectedConversation?.id, selectedConversation?.status, user]);
-
-  // Handle typing state changes with debounce
-  const handleTyping = () => {
-    if (!typingChannelRef.current || !user) return;
-
-    // Start typing
-    if (!isTypingBroadcast) {
-      setIsTypingBroadcast(true);
-      typingChannelRef.current.track({ isTyping: true, userId: user.id, name: user.email });
-    }
-
-    // Clear existing timeout
-    if (typingTimeoutRef.current) {
-      clearTimeout(typingTimeoutRef.current);
-    }
-
-    // Set timeout to stop typing indicator after 2 seconds of inactivity
-    typingTimeoutRef.current = setTimeout(() => {
-      setIsTypingBroadcast(false);
-      typingChannelRef.current?.track({ isTyping: false, userId: user?.id, name: user?.email });
-    }, 2000);
-  };
-
-  // Stop typing indicator when message is sent
-  const stopTypingIndicator = () => {
-    if (typingChannelRef.current && user) {
-      typingChannelRef.current.track({ isTyping: false, userId: user.id, name: user.email });
-    }
-    setIsTypingBroadcast(false);
-    if (typingTimeoutRef.current) {
-      clearTimeout(typingTimeoutRef.current);
-      typingTimeoutRef.current = null;
-    }
-  };
+  // Typing is now handled by useTypingPresence hook
 
   return (
     <div className="h-full flex min-h-0 overflow-x-hidden">
