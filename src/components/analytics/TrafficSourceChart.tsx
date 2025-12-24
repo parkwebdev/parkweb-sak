@@ -30,7 +30,7 @@ const TRAFFIC_COLORS: Record<string, string> = {
   referral: 'hsl(var(--accent-foreground))',
 };
 
-export const TrafficSourceChart: React.FC<TrafficSourceChartProps> = ({ data, loading }) => {
+export const TrafficSourceChart = React.memo(function TrafficSourceChart({ data, loading }: TrafficSourceChartProps) {
   const chartData = data.map(item => ({
     ...item,
     color: TRAFFIC_COLORS[item.name.toLowerCase()] || 'hsl(var(--muted-foreground))',
@@ -125,4 +125,4 @@ export const TrafficSourceChart: React.FC<TrafficSourceChartProps> = ({ data, lo
       </CardContent>
     </Card>
   );
-};
+});

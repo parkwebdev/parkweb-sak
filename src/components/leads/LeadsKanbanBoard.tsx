@@ -3,7 +3,7 @@
  * Uses the shadcn kanban pattern with render props.
  */
 
-import { useMemo, useCallback } from "react";
+import React, { useMemo, useCallback } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { Mail01, Phone, Building02, Eye } from "@untitledui/icons";
 import { Badge } from "@/components/ui/badge";
@@ -48,8 +48,8 @@ interface LeadsKanbanBoardProps {
   onOrderChange?: (updates: { id: string; kanban_order: number; status?: Enums<"lead_status"> }[]) => void;
 }
 
-// Individual lead card content - exported for use in overlay
-export function LeadCardContent({ lead }: { lead: KanbanLead }) {
+// Individual lead card content - memoized for performance
+export const LeadCardContent = React.memo(function LeadCardContent({ lead }: { lead: KanbanLead }) {
   return (
     <div className="space-y-2">
       <div className="flex items-start justify-between gap-2">
@@ -86,7 +86,7 @@ export function LeadCardContent({ lead }: { lead: KanbanLead }) {
 
     </div>
   );
-}
+});
 
 export function LeadsKanbanBoard({
   leads,

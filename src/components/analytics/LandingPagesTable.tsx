@@ -23,7 +23,7 @@ interface LandingPagesTableProps {
   loading?: boolean;
 }
 
-export const LandingPagesTable: React.FC<LandingPagesTableProps> = ({ data, loading }) => {
+export const LandingPagesTable = React.memo(function LandingPagesTable({ data, loading }: LandingPagesTableProps) {
   const [sorting, setSorting] = React.useState<SortingState>([
     { id: 'visits', desc: true },
   ]);
@@ -88,4 +88,4 @@ export const LandingPagesTable: React.FC<LandingPagesTableProps> = ({ data, load
       </CardContent>
     </Card>
   );
-};
+});

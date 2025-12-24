@@ -60,7 +60,7 @@ const statusIcons = {
   error: XCircle,
 };
 
-export const KnowledgeSourceCard: React.FC<KnowledgeSourceCardProps> = ({
+export const KnowledgeSourceCard = React.memo(function KnowledgeSourceCard({
   source,
   onDelete,
   onReprocess,
@@ -72,7 +72,7 @@ export const KnowledgeSourceCard: React.FC<KnowledgeSourceCardProps> = ({
   childSources = [],
   propertyCount,
   locationName,
-}) => {
+}: KnowledgeSourceCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const metadata = (source.metadata || {}) as KnowledgeSourceMetadata;
   const isSitemap = metadata.is_sitemap === true;
@@ -410,4 +410,4 @@ export const KnowledgeSourceCard: React.FC<KnowledgeSourceCardProps> = ({
       </Card>
     </Collapsible>
   );
-};
+});

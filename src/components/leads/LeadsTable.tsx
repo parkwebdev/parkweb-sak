@@ -3,7 +3,7 @@
  * Integrates with TanStack Table for row selection and status updates.
  */
 
-import { useMemo } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import {
   useReactTable,
   getCoreRowModel,
@@ -27,14 +27,14 @@ interface LeadsTableProps {
   onSelectAll: (checked: boolean) => void;
 }
 
-export const LeadsTable = ({
+export const LeadsTable = React.memo(function LeadsTable({
   leads,
   selectedIds,
   onView,
   onStatusChange,
   onSelectionChange,
   onSelectAll,
-}: LeadsTableProps) => {
+}: LeadsTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
 
   const rowSelection = useMemo(() => {
@@ -57,6 +57,29 @@ export const LeadsTable = ({
     [onView, onStatusChange]
   );
 
+  const handleRowSelectionChange = useCallback((updater: RowSelectionState | ((prev: RowSelectionState) => RowSelectionState)) => {
+    const newSelection = typeof updater === 'function' ? updater(rowSelection) : updater;
+    
+    // Sync with parent state
+    const allSelected = Object.keys(newSelection).length === leads.length;
+    const noneSelected = Object.keys(newSelection).length === 0;
+    
+    if (allSelected && !selectedIds.size) {
+      onSelectAll(true);
+    } else if (noneSelected && selectedIds.size > 0) {
+      onSelectAll(false);
+    } else {
+      // Individual row changes
+      leads.forEach((lead, index) => {
+        const wasSelected = selectedIds.has(lead.id);
+        const isNowSelected = newSelection[index] ?? false;
+        if (wasSelected !== isNowSelected) {
+          onSelectionChange(lead.id, isNowSelected);
+        }
+      });
+    }
+  }, [leads, selectedIds, onSelectAll, onSelectionChange, rowSelection]);
+
   const table = useReactTable({
     data: leads,
     columns,
@@ -66,37 +89,16 @@ export const LeadsTable = ({
     },
     enableRowSelection: true,
     onSortingChange: setSorting,
-    onRowSelectionChange: (updater) => {
-      const newSelection = typeof updater === 'function' ? updater(rowSelection) : updater;
-      
-      // Sync with parent state
-      const allSelected = Object.keys(newSelection).length === leads.length;
-      const noneSelected = Object.keys(newSelection).length === 0;
-      
-      if (allSelected && !selectedIds.size) {
-        onSelectAll(true);
-      } else if (noneSelected && selectedIds.size > 0) {
-        onSelectAll(false);
-      } else {
-        // Individual row changes
-        leads.forEach((lead, index) => {
-          const wasSelected = selectedIds.has(lead.id);
-          const isNowSelected = newSelection[index] ?? false;
-          if (wasSelected !== isNowSelected) {
-            onSelectionChange(lead.id, isNowSelected);
-          }
-        });
-      }
-    },
+    onRowSelectionChange: handleRowSelectionChange,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
   });
 
-  const handleRowClick = (lead: Lead) => {
+  const handleRowClick = useCallback((lead: Lead) => {
     onView(lead);
-  };
+  }, [onView]);
 
   return (
     <div className="space-y-4">
@@ -111,4 +113,4 @@ export const LeadsTable = ({
       )}
     </div>
   );
-};
+});

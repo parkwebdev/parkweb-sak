@@ -5,7 +5,7 @@
  * Fixed width, not collapsible.
  */
 
-import { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion } from 'motion/react';
 import AriAgentsIcon from '@/components/icons/AriAgentsIcon';
 import { CheckCircle, Globe01, Inbox01, SearchMd, XClose, Ticket01 } from '@untitledui/icons';
@@ -67,7 +67,7 @@ interface NavItemProps {
   prefersReducedMotion: boolean;
 }
 
-function NavItem({ icon, label, count, isActive, onClick, disabled, comingSoon, animationIndex, prefersReducedMotion }: NavItemProps) {
+const NavItem = React.memo(function NavItem({ icon, label, count, isActive, onClick, disabled, comingSoon, animationIndex, prefersReducedMotion }: NavItemProps) {
   return (
     <motion.button
       onClick={onClick}
@@ -91,15 +91,15 @@ function NavItem({ icon, label, count, isActive, onClick, disabled, comingSoon, 
       ) : null}
     </motion.button>
   );
-}
+});
 
-export function InboxNavSidebar({ activeFilter, onFilterChange, counts, searchQuery, onSearchChange }: InboxNavSidebarProps) {
+export const InboxNavSidebar = React.memo(function InboxNavSidebar({ activeFilter, onFilterChange, counts, searchQuery, onSearchChange }: InboxNavSidebarProps) {
   const [searchExpanded, setSearchExpanded] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const prefersReducedMotion = useReducedMotion();
   
-  const isActive = (type: string, value?: string) => 
-    activeFilter.type === type && activeFilter.value === value;
+  const isActive = useCallback((type: string, value?: string) => 
+    activeFilter.type === type && activeFilter.value === value, [activeFilter]);
 
   // Focus input when search expands
   useEffect(() => {
@@ -109,11 +109,23 @@ export function InboxNavSidebar({ activeFilter, onFilterChange, counts, searchQu
   }, [searchExpanded]);
 
   // Close search when clicking outside or pressing Escape
-  const handleSearchBlur = () => {
+  const handleSearchBlur = useCallback(() => {
     if (!searchQuery) {
       setSearchExpanded(false);
     }
-  };
+  }, [searchQuery]);
+
+  const handleSearchKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      onSearchChange('');
+      setSearchExpanded(false);
+    }
+  }, [onSearchChange]);
+
+  const handleClearSearch = useCallback(() => {
+    onSearchChange('');
+    setSearchExpanded(false);
+  }, [onSearchChange]);
 
   // Track animation index across all sections
   let animationIndex = 0;
@@ -131,19 +143,11 @@ export function InboxNavSidebar({ activeFilter, onFilterChange, counts, searchQu
                 value={searchQuery}
                 onChange={(e) => onSearchChange(e.target.value)}
                 onBlur={handleSearchBlur}
-                onKeyDown={(e) => {
-                  if (e.key === 'Escape') {
-                    onSearchChange('');
-                    setSearchExpanded(false);
-                  }
-                }}
+                onKeyDown={handleSearchKeyDown}
                 className="h-7 text-sm bg-muted/50 border-0"
               />
               <button
-                onClick={() => {
-                  onSearchChange('');
-                  setSearchExpanded(false);
-                }}
+                onClick={handleClearSearch}
                 className="p-1 hover:bg-accent rounded"
               >
                 <XClose size={14} className="text-muted-foreground" />
@@ -271,4 +275,4 @@ export function InboxNavSidebar({ activeFilter, onFilterChange, counts, searchQu
       </div>
     </div>
   );
-}
+});

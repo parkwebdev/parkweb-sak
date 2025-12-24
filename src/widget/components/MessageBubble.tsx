@@ -8,7 +8,7 @@
  * @module widget/components/MessageBubble
  */
 
-import { Suspense } from 'react';
+import React, { Suspense, useMemo, useCallback } from 'react';
 import { WidgetAvatar, WidgetAvatarImage, WidgetAvatarFallback } from '../ui';
 import { Check, CheckCircle, XCircle, Download01 } from '../icons';
 import { ChatBubbleIcon } from '@/components/agents/ChatBubbleIcon';
@@ -51,7 +51,7 @@ interface MessageBubbleProps {
  * @param props - Component props
  * @returns Message bubble element with content and metadata
  */
-export const MessageBubble = ({
+export const MessageBubble = React.memo(function MessageBubble({
   message,
   primaryColor,
   enableMessageReactions,
@@ -62,7 +62,7 @@ export const MessageBubble = ({
   onBookingDaySelect,
   onBookingTimeSelect,
   onBookingGoBack,
-}: MessageBubbleProps) => {
+}: MessageBubbleProps) {
   const msgWithExtras = message as Message & { isHuman?: boolean; senderName?: string; senderAvatar?: string };
 
   // System notices render differently - centered, no avatar, no timestamp
@@ -85,6 +85,27 @@ export const MessageBubble = ({
 
   // Check if this message has booking components
   const hasBookingComponent = message.dayPicker || message.timePicker || message.bookingConfirmed;
+
+  // Memoize processed content for text messages
+  const processedContent = useMemo(() => {
+    if (message.type !== 'text' && message.type !== undefined) return null;
+    
+    const hasLinkPreviews = 
+      (message.linkPreviews && message.linkPreviews.length > 0) ||
+      /https?:\/\/[^\s<>"')\]]+/i.test(message.content);
+    
+    const hasCallActions = !!(message.callActions && message.callActions.length > 0);
+    
+    return formatMarkdownBullets(
+      stripPhoneNumbersFromContent(
+        stripUrlsFromContent(
+          message.content.replace(/\*\*(.*?)\*\*/g, '$1'),
+          hasLinkPreviews
+        ),
+        hasCallActions
+      )
+    );
+  }, [message.content, message.linkPreviews, message.callActions, message.type]);
 
   return (
     <div className={`flex items-start gap-2 ${isUser ? 'justify-end' : ''} ${isContinuation ? 'mt-1' : 'mt-1 first:mt-0'}`}>
@@ -201,33 +222,11 @@ export const MessageBubble = ({
                 )}
               </div>
             )}
-            {(message.type === 'text' || !message.type) && (() => {
-              // Check if we have link previews (cached or will fetch for URLs)
-              const hasLinkPreviews = 
-                (message.linkPreviews && message.linkPreviews.length > 0) ||
-                /https?:\/\/[^\s<>"')\]]+/i.test(message.content);
-              
-              // Check for call actions
-              const hasCallActions = !!(message.callActions && message.callActions.length > 0);
-              
-              // Apply stripping for ALL message types when previews exist
-              const processedContent = formatMarkdownBullets(
-                stripPhoneNumbersFromContent(
-                  stripUrlsFromContent(
-                    message.content.replace(/\*\*(.*?)\*\*/g, '$1'),
-                    hasLinkPreviews
-                  ),
-                  hasCallActions
-                )
-              );
-              
-              // Only render if there's content after stripping
-              return processedContent.trim() ? (
-                <p className="text-sm whitespace-pre-wrap break-words">
-                  {processedContent}
-                </p>
-              ) : null;
-            })()}
+            {(message.type === 'text' || !message.type) && processedContent && processedContent.trim() && (
+              <p className="text-sm whitespace-pre-wrap break-words">
+                {processedContent}
+              </p>
+            )}
             
             {/* Link previews for messages with URLs */}
             {(
@@ -318,4 +317,4 @@ export const MessageBubble = ({
       </div>
     </div>
   );
-};
+});

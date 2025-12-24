@@ -6,6 +6,7 @@
  * @module components/analytics/ConversationChart
  */
 
+import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { ChartLegendContent, ChartTooltipContent } from '@/components/charts/charts-base';
@@ -20,7 +21,7 @@ interface ConversationChartProps {
   }>;
 }
 
-export const ConversationChart = ({ data }: ConversationChartProps) => {
+export const ConversationChart = React.memo(function ConversationChart({ data }: ConversationChartProps) {
   const isDesktop = useBreakpoint('lg');
 
   return (
@@ -142,4 +143,4 @@ export const ConversationChart = ({ data }: ConversationChartProps) => {
       </CardContent>
     </Card>
   );
-};
+});
