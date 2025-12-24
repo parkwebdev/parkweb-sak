@@ -24,6 +24,7 @@ import { LoadingState } from '@/components/ui/loading-state';
 import { useCalendarEvents } from '@/hooks/useCalendarEvents';
 import type { CalendarEvent, TimeChangeRecord } from '@/types/calendar';
 import { EVENT_TYPE_CONFIG } from '@/types/calendar';
+import { logger } from '@/utils/logger';
 
 interface PendingTimeChange {
   event: CalendarEvent;
@@ -86,7 +87,7 @@ const Planner: React.FC = () => {
 
   const handleCreateEvent = (newEvent: Omit<CalendarEvent, 'id'>) => {
     // TODO: Connect to database create when calendar accounts are connected
-    console.log('Create event:', newEvent);
+    logger.info('Create event', newEvent);
     setCreateDialogOpen(false);
     refetch();
   };
