@@ -27,6 +27,7 @@ import { ChatBubbleIcon } from '@/components/agents/ChatBubbleIcon';
 import { LinkPreviews } from '@/components/chat/LinkPreviews';
 import { FileTypeIcon } from '@/components/chat/FileTypeIcons';
 import { formatFileSize, validateFiles } from '@/lib/file-validation';
+import { getStatusColor, getPriorityIndicator, getUnreadCount, formatUrl, updateMessageReaction } from '@/lib/conversation-utils';
 
 import { useConversations } from '@/hooks/useConversations';
 import { useAgent } from '@/hooks/useAgent';
@@ -60,22 +61,7 @@ type Message = Tables<'messages'>;
 
 const QUICK_EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '🎉'];
 
-// Function to update message reaction via edge function
-async function updateMessageReaction(
-  messageId: string,
-  emoji: string,
-  action: 'add' | 'remove',
-  reactorType: 'user' | 'admin'
-): Promise<{ success: boolean }> {
-  try {
-    const { error } = await supabase.functions.invoke('update-message-reaction', {
-      body: { messageId, emoji, action, reactorType },
-    });
-    return error ? { success: false } : { success: true };
-  } catch {
-    return { success: false };
-  }
-}
+// updateMessageReaction is now imported from @/lib/conversation-utils
 
 const Conversations: React.FC = () => {
   const { user } = useAuth();
@@ -179,17 +165,7 @@ const Conversations: React.FC = () => {
     fetchMessages,
   });
 
-  // Format URL for display
-  const formatUrl = (url: string): string => {
-    try {
-      const parsed = new URL(url);
-      let path = parsed.pathname;
-      if (path === '/') return '/';
-      return path.length > 25 ? path.substring(0, 22) + '...' : path;
-    } catch {
-      return url.length > 25 ? url.substring(0, 22) + '...' : url;
-    }
-  };
+  // formatUrl is now imported from @/lib/conversation-utils
 
   // Visitor presence tracking is now handled by useVisitorPresence hook
 
@@ -378,51 +354,7 @@ const Conversations: React.FC = () => {
     x: conversations.filter(c => c.channel === 'x').length,
   }), [conversations, userTakeovers]);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'bg-success/10 text-success';
-      case 'human_takeover':
-        return 'bg-info/10 text-info';
-      case 'closed':
-        return 'bg-muted text-muted-foreground';
-      default:
-        return 'bg-muted text-muted-foreground';
-    }
-  };
-
-  const getPriorityIndicator = (priority?: string) => {
-    switch (priority) {
-      case 'urgent':
-        return <span className="w-2 h-2 rounded-full bg-destructive" />;
-      case 'high':
-        return <span className="w-2 h-2 rounded-full bg-warning" />;
-      default:
-        return null;
-    }
-  };
-
-  // Check if conversation has unread messages for admin (only user messages, not team responses)
-  const getUnreadCount = (conv: Conversation): number => {
-    const metadata = (conv.metadata || {}) as ConversationMetadata;
-    const lastReadAt = metadata?.admin_last_read_at;
-    const lastUserMessageAt = metadata?.last_user_message_at;
-    const lastMessageAt = metadata?.last_message_at;
-    const lastMessageRole = metadata?.last_message_role;
-    
-    // Prefer last_user_message_at if available
-    // Fallback to last_message_at only if last message wasn't from human team member
-    const relevantMessageAt = lastUserMessageAt || 
-      (lastMessageRole !== 'human' ? lastMessageAt : null);
-    
-    if (!relevantMessageAt) return 0;
-    
-    // Never read by admin - show indicator
-    if (!lastReadAt) return 1;
-    
-    // New user messages since last read
-    return new Date(relevantMessageAt) > new Date(lastReadAt) ? 1 : 0;
-  };
+  // getStatusColor, getPriorityIndicator, getUnreadCount are now imported from @/lib/conversation-utils
 
   const handleTakeover = async (reason?: string) => {
     if (!selectedConversation) return;
