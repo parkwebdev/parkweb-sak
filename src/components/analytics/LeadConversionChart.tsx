@@ -6,6 +6,7 @@
  * @module components/analytics/LeadConversionChart
  */
 
+import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { ChartLegendContent, ChartTooltipContent } from '@/components/charts/charts-base';
@@ -22,7 +23,7 @@ interface LeadConversionChartProps {
   }>;
 }
 
-export const LeadConversionChart = ({ data }: LeadConversionChartProps) => {
+export const LeadConversionChart = React.memo(function LeadConversionChart({ data }: LeadConversionChartProps) {
   const isDesktop = useBreakpoint('lg');
 
   return (
@@ -176,4 +177,4 @@ export const LeadConversionChart = ({ data }: LeadConversionChartProps) => {
       </CardContent>
     </Card>
   );
-};
+});

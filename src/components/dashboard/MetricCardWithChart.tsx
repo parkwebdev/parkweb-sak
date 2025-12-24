@@ -3,7 +3,7 @@
  * Displays a KPI value with percentage change and animated area chart.
  */
 
-import { useId } from "react";
+import React, { useId, useMemo } from "react";
 import { TrendUp01, TrendDown01, DotsVertical } from "@untitledui/icons";
 import { Area, AreaChart, ResponsiveContainer } from "recharts";
 import { motion } from "motion/react";
@@ -23,7 +23,7 @@ interface MetricCardWithChartProps {
   animationDelay?: number;
 }
 
-export function MetricCardWithChart({
+export const MetricCardWithChart = React.memo(function MetricCardWithChart({
   title,
   subtitle,
   change,
@@ -37,7 +37,7 @@ export function MetricCardWithChart({
   const prefersReducedMotion = useReducedMotion();
   const isPositive = change !== undefined && change >= 0;
 
-  const cardVariants = {
+  const cardVariants = useMemo(() => ({
     hidden: { opacity: 0, y: 16 },
     visible: { 
       opacity: 1, 
@@ -47,12 +47,14 @@ export function MetricCardWithChart({
         delay: animationDelay,
       }
     },
-  };
+  }), [animationDelay]);
 
-  const reducedVariants = {
+  const reducedVariants = useMemo(() => ({
     hidden: { opacity: 0 },
     visible: { opacity: 1, transition: { duration: 0, delay: animationDelay } },
-  };
+  }), [animationDelay]);
+
+  const strokeColor = isPositive ? "hsl(var(--success))" : "hsl(var(--destructive))";
 
   return (
     <motion.div 
@@ -108,8 +110,8 @@ export function MetricCardWithChart({
           >
             <defs>
               <linearGradient id={`gradient-${id}`} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor={isPositive ? "hsl(var(--success))" : "hsl(var(--destructive))"} stopOpacity={0.3} />
-                <stop offset="95%" stopColor={isPositive ? "hsl(var(--success))" : "hsl(var(--destructive))"} stopOpacity={0} />
+                <stop offset="5%" stopColor={strokeColor} stopOpacity={0.3} />
+                <stop offset="95%" stopColor={strokeColor} stopOpacity={0} />
               </linearGradient>
             </defs>
             <Area
@@ -118,7 +120,7 @@ export function MetricCardWithChart({
               animationEasing="ease-out"
               dataKey="value"
               type="monotone"
-              stroke={isPositive ? "hsl(var(--success))" : "hsl(var(--destructive))"}
+              stroke={strokeColor}
               strokeWidth={2}
               fill={`url(#gradient-${id})`}
               fillOpacity={0.2}
@@ -137,4 +139,4 @@ export function MetricCardWithChart({
       </div>
     </motion.div>
   );
-}
+});

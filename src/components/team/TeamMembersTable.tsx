@@ -25,7 +25,7 @@ interface TeamMembersTableProps {
   loading?: boolean;
 }
 
-export const TeamMembersTable: React.FC<TeamMembersTableProps> = ({
+export const TeamMembersTable = React.memo(function TeamMembersTable({
   teamMembers,
   currentUserId,
   canManageRoles,
@@ -33,7 +33,7 @@ export const TeamMembersTable: React.FC<TeamMembersTableProps> = ({
   onEditProfile,
   onRemove,
   loading,
-}) => {
+}: TeamMembersTableProps) {
   const columns = React.useMemo(
     () =>
       createTeamColumns({
@@ -79,4 +79,4 @@ export const TeamMembersTable: React.FC<TeamMembersTableProps> = ({
       />
     </div>
   );
-};
+});
