@@ -34,8 +34,16 @@ import { useAgent } from '@/hooks/useAgent';
 import { useVisitorPresence } from '@/hooks/useVisitorPresence';
 import { useTypingPresence } from '@/hooks/useTypingPresence';
 import { useConversationMessages } from '@/hooks/useConversationMessages';
-import { ConversationMetadataPanel } from '@/components/conversations/ConversationMetadataPanel';
-import { InboxNavSidebar, type InboxFilter } from '@/components/conversations/InboxNavSidebar';
+import { 
+  ConversationMetadataPanel,
+  InboxNavSidebar, 
+  type InboxFilter,
+  ConversationsList,
+  ChatHeader,
+  TranslationBanner,
+  MessageThread,
+  MessageInputArea,
+} from '@/components/conversations';
 import type { Tables } from '@/integrations/supabase/types';
 import type { ConversationMetadata, MessageMetadata, MessageReaction } from '@/types/metadata';
 import { formatDistanceToNow } from 'date-fns';
@@ -504,155 +512,19 @@ const Conversations: React.FC = () => {
       />
       
       {/* Conversations List Sidebar */}
-      <div 
-        className={`hidden lg:flex border-r flex-col bg-background min-h-0 transition-all duration-200 ease-in-out overflow-x-hidden ${
-          conversationsCollapsed ? 'w-12' : 'lg:w-80 xl:w-96'
-        }`}
-      >
-        {/* Header */}
-        <div className={`border-b shrink-0 ${conversationsCollapsed ? 'h-14 px-2 flex items-center' : 'p-4 pb-3'}`}>
-          <div className="flex items-center justify-between">
-            {!conversationsCollapsed && (
-              <h2 className="text-lg font-semibold text-foreground">{activeFilter.label}</h2>
-            )}
-            <Button
-              variant="ghost"
-              size="sm"
-              className={`h-7 w-7 p-0 hover:w-9 transition-all ${conversationsCollapsed ? 'mx-auto' : ''}`}
-              onClick={() => setConversationsCollapsed(!conversationsCollapsed)}
-              aria-label={conversationsCollapsed ? 'Expand conversations' : 'Collapse conversations'}
-            >
-              {conversationsCollapsed ? (
-                <ChevronRight className="h-4 w-4" />
-              ) : (
-                <ChevronLeft className="h-4 w-4" />
-              )}
-            </Button>
-          </div>
-          
-          {/* Filter badges row */}
-          {!conversationsCollapsed && (
-            <div className="flex items-center justify-between mt-3">
-              {/* Open count badge */}
-              <Badge variant="secondary" className="text-xs font-medium">
-                {conversations.filter(c => c.status === 'active' || c.status === 'human_takeover').length} Open
-              </Badge>
-              
-              <div className="flex items-center gap-1">
-              {/* Sort dropdown */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded hover:bg-accent">
-                    <span>{sortBy === 'last_activity' ? 'Last activity' : sortBy === 'newest' ? 'Newest first' : 'Oldest first'}</span>
-                    <ChevronDown size={12} />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start">
-                  <DropdownMenuItem onClick={() => setSortBy('last_activity')}>
-                    Last activity
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setSortBy('newest')}>
-                    Newest first
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setSortBy('oldest')}>
-                    Oldest first
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-              
-              {/* Sort toggle icon */}
-              <button 
-                onClick={() => {
-                  // Cycle through sort options
-                  if (sortBy === 'last_activity') setSortBy('newest');
-                  else if (sortBy === 'newest') setSortBy('oldest');
-                  else setSortBy('last_activity');
-                }}
-                className="p-1 text-muted-foreground hover:text-foreground hover:bg-accent rounded transition-colors"
-                aria-label="Toggle sort order"
-              >
-                <SwitchVertical01 size={14} />
-              </button>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Content - hidden when collapsed via opacity */}
-        <div 
-          className={`flex-1 min-h-0 flex flex-col transition-opacity duration-200 ${
-            conversationsCollapsed ? 'opacity-0 invisible' : 'opacity-100 visible'
-          }`}
-        >
-
-          {/* Conversation List */}
-          <div className="flex-1 min-h-0 overflow-y-auto">
-              {loading ? (
-                <div className="p-4 text-center text-sm text-muted-foreground">
-                  Loading...
-                </div>
-              ) : filteredConversations.length === 0 ? (
-                <div className="flex-1 flex items-center justify-center p-8">
-                  <div className="text-center">
-                    <MessageChatSquare size={48} className="mx-auto text-muted-foreground/40 mb-3" />
-                    <p className="text-sm font-medium text-muted-foreground">No conversations yet</p>
-                  </div>
-                </div>
-              ) : (
-                <div>
-                      {filteredConversations.map((conv) => {
-                        const isSelected = selectedConversation?.id === conv.id;
-                        const metadata = (conv.metadata || {}) as ConversationMetadata;
-                    const priority = metadata.priority;
-                    
-                    return (
-                      <button
-                        key={conv.id}
-                        onClick={() => setSelectedConversation(conv)}
-                        className={`w-full text-left p-4 hover:bg-accent/30 transition-colors border-b ${
-                          isSelected ? 'bg-accent/50' : ''
-                        }`}
-                      >
-                        <div className="flex items-start gap-3">
-                          <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 relative">
-                            <User01 size={16} className="text-primary" />
-                            {/* Unread messages indicator */}
-                            {getUnreadCount(conv) > 0 && !getVisitorPresence(conv) && (
-                              <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-destructive rounded-full border-2 border-background" />
-                            )}
-                            {/* Active visitor indicator */}
-                            {getVisitorPresence(conv) && (
-                              <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-success rounded-full border-2 border-background" />
-                            )}
-                            {getPriorityIndicator(priority) && !getVisitorPresence(conv) && !getUnreadCount(conv) && (
-                              <div className="absolute -top-0.5 -right-0.5">
-                                {getPriorityIndicator(priority)}
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium text-sm truncate text-foreground mb-0.5">
-                              {metadata.lead_name || metadata.lead_email || 'Anonymous'}
-                            </p>
-                            <p className="text-xs text-muted-foreground truncate mb-1">
-                              via {conv.agents?.name || 'Ari'}
-                            </p>
-                            {metadata.last_message_preview && (
-                              <p className="text-xs text-muted-foreground/70 truncate mb-1.5">
-                                {metadata.last_message_preview}
-                                {metadata.last_message_preview.length >= 60 && '...'}
-                              </p>
-                            )}
-                            <div className="flex items-center gap-1.5">
-                              <Badge variant="outline" size="sm" className={`${getStatusColor(conv.status)} px-2 py-0.5`}>
-                                {conv.status === 'human_takeover' ? 'Human' : conv.status === 'active' ? 'AI' : conv.status}
-                              </Badge>
-                              <span className="text-2xs text-muted-foreground">
-                                • {formatDistanceToNow(new Date(conv.updated_at), { addSuffix: true })}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
+      <ConversationsList
+        conversations={filteredConversations}
+        allConversations={conversations}
+        selectedId={selectedConversation?.id || null}
+        onSelect={setSelectedConversation}
+        isCollapsed={conversationsCollapsed}
+        onToggleCollapse={() => setConversationsCollapsed(!conversationsCollapsed)}
+        sortBy={sortBy}
+        onSortChange={setSortBy}
+        activeFilterLabel={activeFilter.label}
+        getVisitorPresence={getVisitorPresence}
+        loading={loading}
+      />
                       </button>
                     );
                   })}
@@ -666,434 +538,63 @@ const Conversations: React.FC = () => {
       <div className="flex-1 flex flex-col min-w-0 min-h-0">
         {selectedConversation ? (
           <>
-            {/* Chat Header - compact with active status */}
-            {(() => {
-              const visitorPresence = getVisitorPresence(selectedConversation);
-              const isActive = !!visitorPresence;
-              
-              return (
-                <div className="h-14 px-6 border-b flex items-center justify-between bg-background shrink-0">
-                  <div className="flex items-center gap-3">
-                    {/* Active indicator dot */}
-                    {isActive && (
-                      <div className="relative flex items-center justify-center">
-                        <div className="w-2.5 h-2.5 rounded-full bg-success" />
-                        <div className="absolute w-2.5 h-2.5 rounded-full border-2 border-success animate-ping" />
-                      </div>
-                    )}
-                    <p className="font-medium text-sm text-foreground">
-                      {((selectedConversation.metadata || {}) as ConversationMetadata).lead_name || 
-                        ((selectedConversation.metadata || {}) as ConversationMetadata).lead_email || 
-                        'Anonymous'}
-                    </p>
-                  </div>
-                  
-                  <div className="flex items-center gap-2">
-                    {selectedConversation.status === 'active' && (
-                      <Button size="sm" variant="outline" onClick={() => setTakeoverDialogOpen(true)}>
-                        Take Over
-                      </Button>
-                    )}
-                    {selectedConversation.status === 'human_takeover' && (
-                      <Button size="sm" variant="outline" onClick={handleReturnToAI}>
-                        Return to AI
-                      </Button>
-                    )}
-                    {selectedConversation.status !== 'closed' && (
-                      <Button size="sm" variant="destructive" onClick={handleClose}>
-                        Close
-                      </Button>
-                    )}
-                    {selectedConversation.status === 'closed' && (
-                      <Button size="sm" variant="outline" onClick={handleReopen}>
-                        Re-open
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              );
-            })()}
-            {/* Translation Banner - show for non-English conversations */}
+            {/* Chat Header */}
+            <ChatHeader
+              conversation={selectedConversation}
+              isVisitorActive={!!getVisitorPresence(selectedConversation)}
+              onTakeover={() => setTakeoverDialogOpen(true)}
+              onReturnToAI={handleReturnToAI}
+              onClose={handleClose}
+              onReopen={handleReopen}
+            />
+            
+            {/* Translation Banner */}
             {(() => {
               const convMetadata = (selectedConversation?.metadata || {}) as ConversationMetadata;
               const detectedLang = convMetadata.detected_language_code;
-              const langName = convMetadata.detected_language;
-              
               if (!detectedLang || detectedLang === 'en') return null;
               
               return (
-                <div className="px-6 py-2.5 border-b bg-accent/30 flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-sm">
-                    <span className="text-base">{getLanguageFlag(detectedLang)}</span>
-                    <span className="text-muted-foreground">
-                      This conversation is in <span className="font-medium text-foreground">{langName || detectedLang}</span>
-                    </span>
-                  </div>
-                  <Button 
-                    size="sm" 
-                    variant="outline"
-                    onClick={showTranslation ? () => setShowTranslation(false) : handleTranslate}
-                    disabled={isTranslating}
-                    className="gap-2"
-                  >
-                    <Translate01 size={16} />
-                    {isTranslating ? 'Translating...' : showTranslation ? 'Show Original' : 'Translate to English'}
-                  </Button>
-                </div>
+                <TranslationBanner
+                  detectedLanguageCode={detectedLang}
+                  detectedLanguageName={convMetadata.detected_language}
+                  showTranslation={showTranslation}
+                  isTranslating={isTranslating}
+                  onToggleTranslation={() => setShowTranslation(false)}
+                  onTranslate={handleTranslate}
+                />
               );
             })()}
-            <div ref={messagesScrollRef} className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-6 py-4">
-                  {loadingMessages ? (
-                    <div className="text-center py-12 text-sm text-muted-foreground">
-                      Loading messages...
-                    </div>
-                  ) : messages.length === 0 ? (
-                    <div className="flex-1 flex items-center justify-center py-12">
-                      <div className="text-center">
-                        <AriAgentsIcon className="h-12 w-12 mx-auto text-muted-foreground/40 mb-3" />
-                        <p className="text-sm font-medium text-muted-foreground">No messages yet</p>
-                      </div>
-                    </div>
-                  ) : (
-                  <div className="space-y-3 max-w-4xl mx-auto">
-                    {messages
-                      .filter(msg => {
-                        const meta = (msg.metadata || {}) as Record<string, unknown>;
-                        // Hide empty messages that are tool call placeholders
-                        if (!msg.content?.trim() && meta.message_type === 'tool_call') {
-                          return false;
-                        }
-                        return true;
-                      })
-                      .map((message, msgIndex) => {
-                      const isUser = message.role === 'user';
-                      const msgMetadata = (message.metadata || {}) as MessageMetadata;
-                      const isHumanSent = msgMetadata.sender_type === 'human';
-                      const reactions = msgMetadata.reactions;
-                      
-                      const handleAddReaction = async (emoji: string) => {
-                        // Check if admin already reacted with this emoji
-                        const existingReaction = reactions?.find(r => r.emoji === emoji);
-                        if (existingReaction?.adminReacted) return;
-                        
-                        // Optimistic update
-                        const updatedMessages = messages.map(m => {
-                          if (m.id !== message.id) return m;
-                          const meta = (m.metadata || {}) as MessageMetadata;
-                          const currentReactions = meta.reactions || [];
-                          const reactionIdx = currentReactions.findIndex((r: MessageReaction) => r.emoji === emoji);
-                          
-                          let newReactions;
-                          if (reactionIdx >= 0) {
-                            newReactions = [...currentReactions];
-                            newReactions[reactionIdx] = { ...newReactions[reactionIdx], count: newReactions[reactionIdx].count + 1, adminReacted: true };
-                          } else {
-                            newReactions = [...currentReactions, { emoji, count: 1, userReacted: false, adminReacted: true }];
-                          }
-                          
-                          return { ...m, metadata: { ...meta, reactions: newReactions } as unknown as Message['metadata'] };
-                        });
-                        setMessages(updatedMessages as Message[]);
-                        
-                        // Persist to database
-                        await updateMessageReaction(message.id, emoji, 'add', 'admin');
-                      };
-                      
-                      const handleRemoveReaction = async (emoji: string) => {
-                        const existingReaction = reactions?.find(r => r.emoji === emoji);
-                        if (!existingReaction?.adminReacted) return;
-                        
-                        // Optimistic update
-                        const updatedMessages = messages.map(m => {
-                          if (m.id !== message.id) return m;
-                          const meta = (m.metadata || {}) as MessageMetadata;
-                          const currentReactions = meta.reactions || [];
-                          const reactionIdx = currentReactions.findIndex((r: MessageReaction) => r.emoji === emoji);
-                          
-                          if (reactionIdx < 0) return m;
-                          
-                          let newReactions = [...currentReactions];
-                          newReactions[reactionIdx] = { ...newReactions[reactionIdx], count: newReactions[reactionIdx].count - 1, adminReacted: false };
-                          if (newReactions[reactionIdx].count <= 0) {
-                            newReactions = newReactions.filter((_, i) => i !== reactionIdx);
-                          }
-                          
-                          return { ...m, metadata: { ...meta, reactions: newReactions } as unknown as Message['metadata'] };
-                        });
-                        setMessages(updatedMessages as Message[]);
-                        
-                        // Persist to database
-                        await updateMessageReaction(message.id, emoji, 'remove', 'admin');
-                      };
-                      
-                      const isNewMessage = newMessageIdsRef.current.has(message.id);
-                      
-                      // Detect if this is a continuation of previous message (same sender)
-                      const prevMessage = msgIndex > 0 ? messages[msgIndex - 1] : null;
-                      const prevMsgMetadata = (prevMessage?.metadata || null) as MessageMetadata | null;
-                      const isContinuation = prevMessage && 
-                        prevMessage.role === message.role &&
-                        (message.role === 'user' || prevMsgMetadata?.sender_type === msgMetadata?.sender_type);
-                      
-                      // Check if next message is from same sender (to know if we should show metadata)
-                      const nextMessage = msgIndex < messages.length - 1 ? messages[msgIndex + 1] : null;
-                      const nextMsgMetadata = (nextMessage?.metadata || null) as MessageMetadata | null;
-                      const isLastInGroup = !nextMessage || 
-                        nextMessage.role !== message.role ||
-                        (message.role !== 'user' && nextMsgMetadata?.sender_type !== msgMetadata?.sender_type);
-                      
-                      const bubbleVariants = getVariants(
-                        isUser ? messageBubbleUserVariants : messageBubbleVariants,
-                        messageBubbleReducedVariants,
-                        prefersReducedMotion
-                      );
-                      
-                      return (
-                        <motion.div
-                          key={message.id}
-                          className={`flex ${isUser ? 'justify-end' : 'justify-start'} ${isContinuation ? 'mt-1' : 'mt-1 first:mt-0'}`}
-                          variants={isNewMessage ? bubbleVariants : undefined}
-                          initial={isNewMessage ? "hidden" : false}
-                          animate={isNewMessage ? "visible" : undefined}
-                        >
-                          <div className={`flex items-start gap-2 max-w-[75%] min-w-0 ${isContinuation && !isUser ? 'ml-10' : ''}`}>
-                          {!isUser && !isContinuation && (
-                              isHumanSent && msgMetadata?.sender_avatar ? (
-                                <img 
-                                  src={msgMetadata.sender_avatar} 
-                                  alt={msgMetadata?.sender_name || 'Team member'} 
-                                  className="w-8 h-8 rounded-full object-cover flex-shrink-0 mt-1"
-                                />
-                              ) : isHumanSent ? (
-                                <div className="w-8 h-8 rounded-full bg-info/10 flex items-center justify-center flex-shrink-0 mt-1">
-                                  <span className="text-info text-xs font-medium">
-                                    {(msgMetadata?.sender_name || 'T').charAt(0).toUpperCase()}
-                                  </span>
-                                </div>
-                              ) : (
-                                <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0 mt-1">
-                                  <ChatBubbleIcon className="h-4 w-4 text-foreground" />
-                                </div>
-                              )
-                            )}
-                            <div className="flex flex-col min-w-0">
-                              {/* Name + Timestamp header row - only show if !isContinuation */}
-                              {!isContinuation && (
-                                <div className={`flex items-center gap-1.5 text-2xs text-muted-foreground mb-1 ${isUser ? 'justify-end mr-1' : 'ml-1'}`}>
-                                  <span className="font-medium">
-                                    {isUser ? (((selectedConversation?.metadata || {}) as ConversationMetadata).lead_name || 'Visitor') : (isHumanSent ? formatSenderName(msgMetadata.sender_name) : 'Ari')}
-                                  </span>
-                                  <span>•</span>
-                                  <span>{formatShortTime(new Date(message.created_at))}</span>
-                                  {/* Status badges for human messages */}
-                                  {isHumanSent && (
-                                    <>
-                                      {(msgMetadata as Record<string, unknown>)?.error || (msgMetadata as Record<string, unknown>)?.failed ? (
-                                        <Tooltip>
-                                          <TooltipTrigger asChild>
-                                            <span className="text-destructive inline-flex items-center">
-                                              <XCircle size={12} />
-                                            </span>
-                                          </TooltipTrigger>
-                                          <TooltipContent>Failed</TooltipContent>
-                                        </Tooltip>
-                                      ) : msgMetadata?.read_at ? (
-                                        <Tooltip>
-                                          <TooltipTrigger asChild>
-                                            <span className="text-info inline-flex items-center">
-                                              <CheckCircle size={12} />
-                                            </span>
-                                          </TooltipTrigger>
-                                          <TooltipContent>Seen</TooltipContent>
-                                        </Tooltip>
-                                      ) : (
-                                        <Tooltip>
-                                          <TooltipTrigger asChild>
-                                            <span className="inline-flex items-center">
-                                              <Check size={12} />
-                                            </span>
-                                          </TooltipTrigger>
-                                          <TooltipContent>Sent</TooltipContent>
-                                        </Tooltip>
-                                      )}
-                                    </>
-                                  )}
-                                </div>
-                              )}
-                              {/* Message bubble - content only */}
-                              <div
-                                className={`rounded-lg px-3 py-2 text-foreground overflow-hidden min-w-0 ${isUser ? '' : 'bg-muted'}`}
-                                style={isUser ? { backgroundColor: 'rgb(1 110 237 / 7%)' } : undefined}
-                              >
-                                {/* Check for file attachments in metadata */}
-                                {msgMetadata?.files && Array.isArray(msgMetadata.files) && msgMetadata.files.length > 0 && (
-                                  <div className="space-y-2 mb-2">
-                                    {msgMetadata.files.map((file: { name: string; url: string; type?: string; size?: number }, i: number) => (
-                                      <div key={i}>
-                                        {file.type?.startsWith('image/') ? (
-                                          <div className="flex items-center gap-3 p-2 border rounded-lg bg-background/50 max-w-[280px]">
-                                            <a href={file.url} target="_blank" rel="noopener noreferrer" className="shrink-0">
-                                              <img 
-                                                src={file.url} 
-                                                alt={file.name} 
-                                                className="w-12 h-12 object-cover rounded-md" 
-                                              />
-                                            </a>
-                                            <div className="flex-1 min-w-0">
-                                              <p className="text-sm font-medium truncate">{file.name}</p>
-                                              {file.size && (
-                                                <p className="text-xs text-muted-foreground">{formatFileSize(file.size)}</p>
-                                              )}
-                                            </div>
-                                            <button
-                                              onClick={() => downloadFile(file.url, file.name)}
-                                              className="p-1.5 rounded-md hover:bg-accent transition-colors shrink-0"
-                                              title="Download"
-                                            >
-                                              <Download01 size={16} className="text-muted-foreground" />
-                                            </button>
-                                          </div>
-                                        ) : (
-                                          <div className="flex items-center gap-3 p-2 border rounded-lg bg-background/50 max-w-[280px]">
-                                            <FileTypeIcon fileName={file.name} width={36} height={36} className="shrink-0" />
-                                            <div className="flex-1 min-w-0">
-                                              <p className="text-sm font-medium truncate">{file.name}</p>
-                                              {file.size && (
-                                                <p className="text-xs text-muted-foreground">{formatFileSize(file.size)}</p>
-                                              )}
-                                            </div>
-                                            <button
-                                              onClick={() => downloadFile(file.url, file.name)}
-                                              className="p-1.5 rounded-md hover:bg-accent transition-colors shrink-0"
-                                              title="Download"
-                                            >
-                                              <Download01 size={16} className="text-muted-foreground" />
-                                            </button>
-                                          </div>
-                                        )}
-                                      </div>
-                                    ))}
-                                  </div>
-                                )}
-                                {/* Regular text content - show translation if available */}
-                                {message.content && message.content !== 'Sent files' && (() => {
-                                  // Check if URLs exist in content (LinkPreviews will show them)
-                                  const hasUrls = /https?:\/\/[^\s<>"')\]]+/i.test(message.content);
-                                  
-                                  const displayContent = showTranslation && translatedMessages[message.id]
-                                    ? formatMarkdownBullets(stripUrlsFromContent(translatedMessages[message.id], hasUrls))
-                                    : formatMarkdownBullets(stripUrlsFromContent(message.content, hasUrls));
-                                  
-                                  // Only render text if there's content after stripping
-                                  return displayContent.trim() ? (
-                                    <div className="min-w-0 overflow-hidden">
-                                      <p className="text-sm whitespace-pre-wrap leading-relaxed break-words">
-                                        {displayContent}
-                                      </p>
-                                      {showTranslation && translatedMessages[message.id] && translatedMessages[message.id] !== message.content && (
-                                        <p className="text-xs text-muted-foreground mt-1 italic border-t border-dashed pt-1">
-                                          Original: {message.content.length > 100 ? message.content.substring(0, 100) + '...' : message.content}
-                                        </p>
-                                      )}
-                                    </div>
-                                  ) : null;
-                                })()}
-                                <LinkPreviews content={message.content} />
-                              </div>
-                              {/* Reactions row - only show for last message in group, team members can only react to user messages */}
-                              {isLastInGroup && isUser && reactions && reactions.length > 0 && (
-                                <div className="flex items-center gap-1 mt-1 px-1 flex-wrap">
-                                  {reactions.map((reaction, i) => (
-                                    <button
-                                      key={i}
-                                      onClick={() => reaction.adminReacted ? handleRemoveReaction(reaction.emoji) : handleAddReaction(reaction.emoji)}
-                                      className={`text-xs rounded-full px-1.5 py-0.5 transition-colors ${
-                                        reaction.adminReacted 
-                                          ? 'bg-primary/20 border border-primary/30' 
-                                          : 'bg-muted hover:bg-muted/80'
-                                      }`}
-                                    >
-                                      {reaction.emoji} {reaction.count > 1 && reaction.count}
-                                    </button>
-                                  ))}
-                                  {/* Add reaction button */}
-                                  <Popover>
-                                    <PopoverTrigger asChild>
-                                      <button className="text-xs bg-muted hover:bg-muted/80 rounded-full p-1 transition-colors opacity-50 hover:opacity-100">
-                                        <FaceSmile size={12} />
-                                      </button>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-auto px-2 py-1 rounded-full" side="top" align="start">
-                                      <div className="flex gap-1">
-                                        {QUICK_EMOJIS.map((emoji) => {
-                                          const alreadyReacted = reactions?.find(r => r.emoji === emoji)?.adminReacted;
-                                          return (
-                                            <button
-                                              key={emoji}
-                                              onClick={() => alreadyReacted ? handleRemoveReaction(emoji) : handleAddReaction(emoji)}
-                                              className={`text-lg p-1 hover:bg-muted rounded transition-transform hover:scale-110 ${alreadyReacted ? 'bg-primary/20' : ''}`}
-                                            >
-                                              {emoji}
-                                            </button>
-                                          );
-                                        })}
-                                      </div>
-                                    </PopoverContent>
-                                  </Popover>
-                                </div>
-                              )}
-                              {/* Add reaction button when no reactions exist - only for user messages */}
-                              {isLastInGroup && isUser && (!reactions || reactions.length === 0) && (
-                                <div className="flex items-center gap-1 mt-1 px-1">
-                                  <Popover>
-                                    <PopoverTrigger asChild>
-                                      <button className="text-xs bg-muted hover:bg-muted/80 rounded-full p-1 transition-colors opacity-50 hover:opacity-100">
-                                        <FaceSmile size={12} />
-                                      </button>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-auto px-2 py-1 rounded-full" side="top" align="start">
-                                      <div className="flex gap-1">
-                                        {QUICK_EMOJIS.map((emoji) => (
-                                          <button
-                                            key={emoji}
-                                            onClick={() => handleAddReaction(emoji)}
-                                            className="text-lg p-1 hover:bg-muted rounded transition-transform hover:scale-110"
-                                          >
-                                            {emoji}
-                                          </button>
-                                        ))}
-                                      </div>
-                                    </PopoverContent>
-                                  </Popover>
-                                </div>
-                              )}
-                              {/* Display user reactions on assistant/team messages - read-only */}
-                              {isLastInGroup && !isUser && reactions && reactions.length > 0 && (
-                                <div className="flex items-center gap-1 mt-1 px-1 flex-wrap">
-                                  {reactions
-                                    .filter((r: any) => r.userReacted && r.count > 0)
-                                    .map((reaction: any, i: number) => (
-                                      <span 
-                                        key={i} 
-                                        className="text-xs bg-muted rounded-full px-1.5 py-0.5"
-                                      >
-                                        {reaction.emoji} {reaction.count > 1 && reaction.count}
-                                      </span>
-                                    ))}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </motion.div>
-                      );
-                    })}
-                    </div>
-                  )}
-            </div>
+            
+            {/* Message Thread */}
+            <MessageThread
+              ref={messagesScrollRef}
+              messages={messages}
+              setMessages={setMessages}
+              visitorName={((selectedConversation?.metadata || {}) as ConversationMetadata).lead_name || 'Visitor'}
+              showTranslation={showTranslation}
+              translatedMessages={translatedMessages}
+              isNewMessage={isNewMessage}
+              loadingMessages={loadingMessages}
+            />
 
             {/* Message Input */}
             {selectedConversation.status === 'human_takeover' && (
-              <div className="px-6 py-4 border-t bg-background shrink-0">
+              <MessageInputArea
+                value={messageInput}
+                onChange={setMessageInput}
+                onSend={handleSendMessage}
+                onFileSelect={handleFileSelect}
+                pendingFiles={pendingFiles}
+                onRemoveFile={handleRemoveFile}
+                isSending={sendingMessage}
+                onTyping={handleTyping}
+                detectedLanguageCode={((selectedConversation?.metadata || {}) as ConversationMetadata).detected_language_code}
+                detectedLanguageName={((selectedConversation?.metadata || {}) as ConversationMetadata).detected_language}
+                onTranslateOutbound={handleTranslateOutbound}
+                isTranslatingOutbound={isTranslatingOutbound}
+              />
+            )}
                 {/* Pending Files Preview */}
                 {pendingFiles && pendingFiles.files.length > 0 && (
                   <div className="max-w-4xl mx-auto mb-3">
