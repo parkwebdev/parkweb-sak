@@ -214,32 +214,32 @@ const Conversations: React.FC = () => {
     setIsTranslating(true);
     try {
       const messagesToTranslate = messages.map(m => ({ id: m.id, content: m.content }));
-      console.log('Sending for translation:', messagesToTranslate.length, 'messages');
+      logger.debug('Sending for translation', { count: messagesToTranslate.length });
       
       const { data, error } = await supabase.functions.invoke('translate-messages', {
         body: { messages: messagesToTranslate, targetLanguage: 'en' }
       });
       
-      console.log('Translation response:', data);
+      logger.debug('Translation response', data);
       
       if (error) throw error;
       
       const translations: Record<string, string> = {};
       // Handle both direct array and nested response structure
       const translationsArray = data?.translations || data?.data?.translations || [];
-      console.log('Translations array:', translationsArray);
+      logger.debug('Translations array', translationsArray);
       
       translationsArray.forEach((t: { id: string; translated: string }) => {
         translations[t.id] = t.translated;
       });
       
-      console.log('Parsed translations map:', Object.keys(translations).length, 'entries');
+      logger.debug('Parsed translations map', { entries: Object.keys(translations).length });
       
       setTranslatedMessages(translations);
       setShowTranslation(true);
     } catch (err) {
       toast.error('Failed to translate messages');
-      console.error('Translation error:', err);
+      logger.error('Translation error', err);
     } finally {
       setIsTranslating(false);
     }
@@ -272,7 +272,7 @@ const Conversations: React.FC = () => {
       }
     } catch (err) {
       toast.error('Failed to translate message');
-      console.error('Outbound translation error:', err);
+      logger.error('Outbound translation error', err);
     } finally {
       setIsTranslatingOutbound(false);
     }
@@ -357,14 +357,14 @@ const Conversations: React.FC = () => {
         }
       )
       .subscribe(async (status) => {
-        console.log('[Conversations] Subscription status:', status);
+        logger.debug('[Conversations] Subscription status', status);
         
         if (status === 'SUBSCRIBED' && !hasLoadedMessages) {
           // NOW fetch messages - subscription is guaranteed to catch new ones
           hasLoadedMessages = true;
           await loadMessages(selectedConversation.id, true);
         } else if (status === 'CHANNEL_ERROR' && !hasLoadedMessages) {
-          console.error('[Conversations] Channel error - falling back to immediate fetch');
+          logger.error('[Conversations] Channel error - falling back to immediate fetch');
           hasLoadedMessages = true;
           await loadMessages(selectedConversation.id, true);
         }
@@ -373,7 +373,7 @@ const Conversations: React.FC = () => {
     // Timeout fallback - don't leave user waiting forever if subscription hangs
     const fetchTimeout = setTimeout(() => {
       if (!hasLoadedMessages) {
-        console.log('[Conversations] Subscription timeout - fetching anyway');
+        logger.debug('[Conversations] Subscription timeout - fetching anyway');
         hasLoadedMessages = true;
         loadMessages(selectedConversation.id, true);
       }

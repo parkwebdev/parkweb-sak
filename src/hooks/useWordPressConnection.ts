@@ -10,6 +10,7 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/lib/toast';
+import { logger } from '@/utils/logger';
 import { getErrorMessage } from '@/types/errors';
 import type { Tables } from '@/integrations/supabase/types';
 
@@ -122,7 +123,7 @@ export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressCo
       
       return null;
     } catch (error) {
-      console.error('Failed to discover endpoints:', error);
+      logger.error('Failed to discover endpoints', error);
       return null;
     } finally {
       setIsDiscovering(false);
@@ -146,15 +147,15 @@ export function useWordPressConnection({ agent, onSyncComplete }: UseWordPressCo
       });
 
       if (error) {
-        console.error('Failed to save WordPress URL:', error);
+        logger.error('Failed to save WordPress URL', error);
         return false;
       }
 
-      console.log('WordPress URL saved');
+      logger.info('WordPress URL saved');
       onSyncComplete?.();
       return true;
     } catch (error) {
-      console.error('Failed to save WordPress URL:', error);
+      logger.error('Failed to save WordPress URL', error);
       return false;
     }
   }, [agent?.id, onSyncComplete]);
