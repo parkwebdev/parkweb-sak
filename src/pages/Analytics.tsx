@@ -15,7 +15,7 @@
  * @page
  */
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { useTrafficAnalytics } from '@/hooks/useTrafficAnalytics';
@@ -264,17 +264,17 @@ const Analytics: React.FC = () => {
     kpis,
   };
 
-  const handleDateChange = (start: Date, end: Date) => {
+  const handleDateChange = useCallback((start: Date, end: Date) => {
     setStartDate(start);
     setEndDate(end);
-  };
+  }, []);
 
-  const handleComparisonDateChange = (start: Date, end: Date) => {
+  const handleComparisonDateChange = useCallback((start: Date, end: Date) => {
     setComparisonStartDate(start);
     setComparisonEndDate(end);
-  };
+  }, []);
 
-  const handleExportCSV = async () => {
+  const handleExportCSV = useCallback(async () => {
     try {
       await generateCSVReport(analyticsData, reportConfig, startDate, endDate, user?.email || 'User');
       toast.success('CSV exported successfully');
@@ -282,9 +282,9 @@ const Analytics: React.FC = () => {
       logger.error('Export error:', error);
       toast.error('Failed to export CSV');
     }
-  };
+  }, [analyticsData, reportConfig, startDate, endDate, user?.email]);
 
-  const handleExportPDF = async () => {
+  const handleExportPDF = useCallback(async () => {
     try {
       await generatePDFReport(analyticsData, reportConfig, startDate, endDate, user?.email || 'User');
       toast.success('PDF exported successfully');
@@ -292,8 +292,7 @@ const Analytics: React.FC = () => {
       logger.error('Export error:', error);
       toast.error('Failed to export PDF');
     }
-  };
-
+  }, [analyticsData, reportConfig, startDate, endDate, user?.email]);
 
   return (
     <main className="flex-1 bg-muted/30 h-screen overflow-auto">

@@ -11,7 +11,7 @@
  * @page
  */
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -62,12 +62,12 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
     return matchesSearch && matchesStatus;
   });
 
-  const handleViewLead = (lead: Tables<'leads'>) => {
+  const handleViewLead = useCallback((lead: Tables<'leads'>) => {
     setSelectedLead(lead);
     setIsDetailsOpen(true);
-  };
+  }, []);
 
-  const handleExport = () => {
+  const handleExport = useCallback(() => {
     const csv = [
       ['Name', 'Email', 'Phone', 'Company', 'Status', 'Created'],
       ...filteredLeads.map((lead) => [
@@ -88,28 +88,30 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
     a.href = url;
     a.download = `leads-${new Date().toISOString()}.csv`;
     a.click();
-  };
+  }, [filteredLeads]);
 
   // Selection handlers
-  const handleSelectAll = (checked: boolean) => {
+  const handleSelectAll = useCallback((checked: boolean) => {
     if (checked) {
       setSelectedLeadIds(new Set(filteredLeads.map(l => l.id)));
     } else {
       setSelectedLeadIds(new Set());
     }
-  };
+  }, [filteredLeads]);
 
-  const handleSelectLead = (id: string, checked: boolean) => {
-    const newSelected = new Set(selectedLeadIds);
-    if (checked) {
-      newSelected.add(id);
-    } else {
-      newSelected.delete(id);
-    }
-    setSelectedLeadIds(newSelected);
-  };
+  const handleSelectLead = useCallback((id: string, checked: boolean) => {
+    setSelectedLeadIds(prev => {
+      const newSelected = new Set(prev);
+      if (checked) {
+        newSelected.add(id);
+      } else {
+        newSelected.delete(id);
+      }
+      return newSelected;
+    });
+  }, []);
 
-  const handleBulkDelete = async (deleteConversations: boolean) => {
+  const handleBulkDelete = useCallback(async (deleteConversations: boolean) => {
     setIsDeleting(true);
     try {
       await deleteLeads(Array.from(selectedLeadIds), deleteConversations);
@@ -118,14 +120,14 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
     } finally {
       setIsDeleting(false);
     }
-  };
+  }, [deleteLeads, selectedLeadIds]);
 
-  const handleSingleDelete = (leadId: string) => {
+  const handleSingleDelete = useCallback((leadId: string) => {
     setSingleDeleteLeadId(leadId);
     setIsSingleDeleteOpen(true);
-  };
+  }, []);
 
-  const handleSingleDeleteConfirm = async (deleteConversation: boolean) => {
+  const handleSingleDeleteConfirm = useCallback(async (deleteConversation: boolean) => {
     if (!singleDeleteLeadId) return;
     setIsDeleting(true);
     try {
@@ -136,11 +138,11 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
     } finally {
       setIsDeleting(false);
     }
-  };
+  }, [deleteLead, singleDeleteLeadId]);
 
-  const clearSelection = () => {
+  const clearSelection = useCallback(() => {
     setSelectedLeadIds(new Set());
-  };
+  }, []);
 
   const stats = {
     total: leads.length,
