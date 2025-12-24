@@ -1,0 +1,635 @@
+# Production Optimization Plan
+
+> **Last Updated**: December 2024  
+> **Status**: Phase 5 ✅ COMPLETE | Phases 6-10 PENDING  
+> **Goal**: Production-ready codebase with zero inefficiencies
+
+---
+
+## Table of Contents
+
+1. [Executive Summary](#executive-summary)
+2. [Completed: Phase 5 - Conversations Refactor](#phase-5-conversations-refactor-complete)
+3. [Phase 6: Widget Logging Cleanup](#phase-6-widget-logging-cleanup)
+4. [Phase 7: Handler Memoization Pass](#phase-7-handler-memoization-pass)
+5. [Phase 8: TODO Resolution](#phase-8-todo-resolution)
+6. [Phase 9: Widget Component Refactor](#phase-9-widget-component-refactor)
+7. [Phase 10: React.memo Additions](#phase-10-reactmemo-additions)
+8. [Low Priority: Type Safety Cleanup](#low-priority-type-safety-cleanup)
+9. [Low Priority: Key Prop Fixes](#low-priority-key-prop-fixes)
+10. [Audit Results: What's Already Done Right](#audit-results-whats-already-done-right)
+11. [Implementation Timeline](#implementation-timeline)
+
+---
+
+## Executive Summary
+
+Exhaustive codebase audit conducted December 2024 covering:
+- All pages (14 files)
+- All hooks (40+ files)
+- All components (100+ files)
+- All utilities (20+ files)
+- All widget code (50+ files)
+- All edge functions (35 files)
+
+**Critical Finding**: Widget code contains `console.log` statements visible to end-users in production.
+
+| Priority | Phase | Issue | Impact | Estimated Time |
+|----------|-------|-------|--------|----------------|
+| ✅ DONE | 5 | Conversations.tsx monolith | Maintainability | - |
+| 🔴 HIGH | 6 | Widget console.log in production | User-visible logs | 30 min |
+| 🟡 MEDIUM | 7 | Missing handler memoization | Performance | 45 min |
+| 🟡 MEDIUM | 8 | Incomplete TODO comments | Feature completeness | 1 hour |
+| 🟢 LOW | 9 | ChatWidget.tsx monolith | Maintainability | 3+ hours |
+| 🟢 LOW | 10 | Missing React.memo | Performance | 15 min |
+| 🟢 LOW | - | Type safety cleanup | Code quality | 30 min |
+| 🟢 LOW | - | Key prop fixes | React warnings | 15 min |
+
+**Total Estimated Time**: ~6 hours
+
+---
+
+## Phase 5: Conversations Refactor (COMPLETE)
+
+> **Status**: ✅ COMPLETE  
+> **Result**: Reduced from 1,528 lines to 565 lines (63% reduction)  
+> **Visual Changes**: NONE - Pure structural refactor
+
+### Overview
+
+Refactored the monolithic `Conversations.tsx` into focused hooks and components while maintaining 100% identical visual output.
+
+### New File Structure Created
+
+```
+src/
+├── hooks/
+│   ├── useConversationMessages.ts    (~120 lines)
+│   ├── useTypingPresence.ts          (~60 lines)
+│   └── useVisitorPresence.ts         (~50 lines)
+├── components/conversations/
+│   ├── ConversationsList.tsx         (~180 lines)
+│   ├── ConversationItem.tsx          (~100 lines)
+│   ├── ChatHeader.tsx                (~80 lines)
+│   ├── TranslationBanner.tsx         (~40 lines)
+│   ├── MessageThread.tsx             (~150 lines)
+│   ├── AdminMessageBubble.tsx        (~250 lines)
+│   ├── MessageInputArea.tsx          (~160 lines)
+│   └── index.ts                      (barrel export)
+├── lib/
+│   └── conversation-utils.ts         (~80 lines)
+└── pages/
+    └── Conversations.tsx             (~565 lines - composition layer)
+```
+
+### Patterns Established
+
+1. **Hook Extraction**: Complex state logic extracted into focused hooks
+2. **Component Memoization**: All components wrapped with `React.memo`
+3. **Callback Optimization**: All handlers wrapped with `useCallback`
+4. **Logger Usage**: `logger` utility instead of `console.log`
+5. **Barrel Exports**: `index.ts` for clean imports
+
+### Documentation Updated
+
+- ✅ `docs/ARCHITECTURE.md` - Component structure and data flow diagrams
+- ✅ `docs/HOOKS_REFERENCE.md` - New hooks documented
+
+---
+
+## Phase 6: Widget Logging Cleanup
+
+> **Priority**: 🔴 HIGH - Production blocking  
+> **Status**: PENDING  
+> **Issue**: `console.log` statements in widget code visible to end-users
+
+### Problem
+
+The widget runs on customer websites. Any `console.log` statements pollute their browser console, appearing unprofessional and potentially leaking debug information.
+
+### Files Affected
+
+| File | Line(s) | Statement Type |
+|------|---------|----------------|
+| `src/widget/ChatWidget.tsx` | 461 | `console.log` |
+| `src/widget/hooks/useRealtimeMessages.ts` | 87, 105, 116, 163, 169 | `console.log` |
+| `src/widget/hooks/useRealtimeConfig.ts` | 75, 88, 101, 114, 120 | `console.log` |
+| `src/widget/api.ts` | 740, 753, 776, 780, 792 | `console.log` |
+| `src/widget/views/ChatView.tsx` | Multiple | `console.log` |
+| `src/widget/views/HelpView.tsx` | Multiple | `console.log` |
+| `src/widget/hooks/useLocationDetection.ts` | Multiple | `console.log` |
+| `src/widget/components/SatisfactionRating.tsx` | Multiple | `console.log` |
+| `src/widget/components/WidgetAudioPlayer.tsx` | Multiple | `console.error` |
+
+### Solution
+
+1. **Create `src/widget/utils/widget-logger.ts`**:
+
+```typescript
+/**
+ * Widget-specific logger that is silent in production.
+ * In preview mode (when embedded in Lovable preview), logs are enabled.
+ * On customer sites (production), logs are completely suppressed.
+ */
+
+type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+
+interface WidgetLoggerConfig {
+  previewMode?: boolean;
+}
+
+let config: WidgetLoggerConfig = {
+  previewMode: false
+};
+
+export const configureWidgetLogger = (newConfig: WidgetLoggerConfig) => {
+  config = { ...config, ...newConfig };
+};
+
+const shouldLog = (): boolean => {
+  // Only log in preview mode (when testing in Lovable)
+  // Silent on production customer sites
+  return config.previewMode === true;
+};
+
+const formatMessage = (level: LogLevel, message: string, ...args: unknown[]): void => {
+  if (!shouldLog()) return;
+  
+  const prefix = `[Widget:${level.toUpperCase()}]`;
+  
+  switch (level) {
+    case 'debug':
+      console.debug(prefix, message, ...args);
+      break;
+    case 'info':
+      console.info(prefix, message, ...args);
+      break;
+    case 'warn':
+      console.warn(prefix, message, ...args);
+      break;
+    case 'error':
+      console.error(prefix, message, ...args);
+      break;
+  }
+};
+
+export const widgetLogger = {
+  debug: (message: string, ...args: unknown[]) => formatMessage('debug', message, ...args),
+  info: (message: string, ...args: unknown[]) => formatMessage('info', message, ...args),
+  warn: (message: string, ...args: unknown[]) => formatMessage('warn', message, ...args),
+  error: (message: string, ...args: unknown[]) => formatMessage('error', message, ...args),
+};
+
+export default widgetLogger;
+```
+
+2. **Update `src/widget/ChatWidget.tsx`**:
+   - Import: `import { configureWidgetLogger, widgetLogger } from './utils/widget-logger';`
+   - In useEffect where config is received: `configureWidgetLogger({ previewMode: config.previewMode });`
+   - Replace all `console.log` with `widgetLogger.info` or `widgetLogger.debug`
+   - Replace all `console.error` with `widgetLogger.error`
+
+3. **Update all affected widget files** to use `widgetLogger` instead of `console.*`
+
+### Verification
+
+After implementation:
+- Open widget on a test customer site (not in preview mode)
+- Open browser console
+- Verify zero `[Widget:*]` logs appear
+- Test in preview mode and verify logs DO appear
+
+---
+
+## Phase 7: Handler Memoization Pass
+
+> **Priority**: 🟡 MEDIUM  
+> **Status**: PENDING  
+> **Issue**: Event handlers recreated on every render
+
+### Problem
+
+Several page components define event handlers inline without `useCallback`, causing child components to re-render unnecessarily.
+
+### Files Affected
+
+#### `src/pages/Analytics.tsx`
+
+Handlers to wrap with `useCallback`:
+- `handleDateChange`
+- `handleComparisonDateChange`
+- `handleExportCSV`
+- `handleExportPDF`
+- Any `onClick` handlers passed to child components
+
+#### `src/pages/Leads.tsx`
+
+Handlers to wrap with `useCallback`:
+- `handleViewLead`
+- `handleExport`
+- `handleSelectAll`
+- `handleSelectLead`
+- `handleBulkDelete`
+- `handleSingleDelete`
+- `handleSingleDeleteConfirm`
+- `clearSelection`
+- `handleStatusChange`
+- `handleKanbanMove`
+
+### Implementation Pattern
+
+```typescript
+// Before
+const handleViewLead = (lead: Lead) => {
+  setSelectedLead(lead);
+  setIsDetailsOpen(true);
+};
+
+// After
+const handleViewLead = useCallback((lead: Lead) => {
+  setSelectedLead(lead);
+  setIsDetailsOpen(true);
+}, []);
+```
+
+### Verification
+
+- No functionality changes
+- React DevTools Profiler shows fewer re-renders
+- Child components with `React.memo` properly skip updates
+
+---
+
+## Phase 8: TODO Resolution
+
+> **Priority**: 🟡 MEDIUM  
+> **Status**: PENDING  
+> **Issue**: Incomplete features marked with TODO
+
+### Incomplete TODOs Found
+
+#### 1. Video Modal Implementation
+
+**Files**:
+- `src/components/onboarding/VideoPlaceholder.tsx` - Line 47: `// TODO: Open video modal`
+- `src/components/onboarding/SetupChecklist.tsx` - Line 181: `// TODO: Open video modal`
+- `src/components/onboarding/NextLevelVideoSection.tsx` - Line 48: `// TODO: Open video modal`
+
+**Solution**: Create `src/components/onboarding/VideoModal.tsx`
+
+```typescript
+import * as React from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+
+interface VideoModalProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  title: string;
+  videoUrl?: string; // YouTube/Vimeo/Loom embed URL
+}
+
+export const VideoModal: React.FC<VideoModalProps> = ({
+  open,
+  onOpenChange,
+  title,
+  videoUrl,
+}) => {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-4xl">
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+        </DialogHeader>
+        <div className="aspect-video w-full bg-muted rounded-lg overflow-hidden">
+          {videoUrl ? (
+            <iframe
+              src={videoUrl}
+              className="w-full h-full"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+              Video coming soon
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+```
+
+Then update each component:
+1. Add state: `const [videoModalOpen, setVideoModalOpen] = useState(false);`
+2. Replace TODO with: `setVideoModalOpen(true);`
+3. Add modal to render: `<VideoModal open={videoModalOpen} onOpenChange={setVideoModalOpen} title="..." />`
+
+#### 2. Planner Calendar Database Connection
+
+**File**: `src/pages/Planner.tsx` - Line 76: `// TODO: Connect to database`
+
+**Current Behavior**: Creates local events that don't persist
+
+**Solutions** (choose one):
+
+**Option A**: Connect to existing `useCalendarEvents` hook
+```typescript
+const { events, createEvent } = useCalendarEvents(connectedAccount?.id);
+
+const handleCreateEvent = async (event: CalendarEventInput) => {
+  if (!connectedAccount) {
+    toast.error('Connect a calendar in Settings to create events');
+    return;
+  }
+  await createEvent(event);
+};
+```
+
+**Option B**: Show informative message if no calendar connected
+```typescript
+const handleCreateEvent = () => {
+  if (!connectedAccount) {
+    toast.info('Connect a calendar in Ari Settings → Integrations to create events');
+    return;
+  }
+  // ... proceed with creation
+};
+```
+
+### Verification
+
+- All TODO comments resolved or have graceful fallback
+- Video modals open and close correctly
+- Planner either saves events or shows clear message
+
+---
+
+## Phase 9: Widget Component Refactor
+
+> **Priority**: 🟢 LOW - Future optimization  
+> **Status**: PENDING  
+> **Issue**: `ChatWidget.tsx` is 948 lines
+
+### Problem
+
+`src/widget/ChatWidget.tsx` at 948 lines violates single-responsibility principle, similar to how `Conversations.tsx` was before Phase 5.
+
+### Proposed Structure
+
+Apply Phase 5 patterns:
+
+```
+src/widget/
+├── ChatWidget.tsx                    (Composition layer - target ~400 lines)
+├── hooks/
+│   ├── useWidgetMessaging.ts        (Message send/receive logic)
+│   ├── useWidgetRecording.ts        (Audio recording logic)
+│   ├── useWidgetRating.ts           (Satisfaction rating logic)
+│   ├── useWidgetFileHandling.ts     (File upload/preview logic)
+│   └── useWidgetNavigation.ts       (View navigation logic)
+├── components/
+│   ├── WidgetContent.tsx            (Main content area)
+│   ├── WidgetLoadingScreen.tsx      (Initial loading state)
+│   └── WidgetErrorBoundary.tsx      (Error handling)
+```
+
+### Estimated Effort
+
+- 3+ hours of careful refactoring
+- Similar verification process as Phase 5
+- Low immediate impact (code works fine, just hard to maintain)
+
+### Deferral Rationale
+
+This can wait because:
+- Widget currently functions correctly
+- No production bugs related to complexity
+- Team can navigate code with IDE tools
+- Higher priority items exist
+
+---
+
+## Phase 10: React.memo Additions
+
+> **Priority**: 🟢 LOW  
+> **Status**: PENDING  
+> **Issue**: Large components without memoization
+
+### Components to Memoize
+
+#### `src/components/Sidebar.tsx` (366 lines)
+
+Currently re-renders on every route change. Wrapping with `React.memo` prevents unnecessary re-renders when props haven't changed.
+
+```typescript
+// Before
+const Sidebar = () => { ... };
+export { Sidebar };
+
+// After
+const SidebarComponent = () => { ... };
+export const Sidebar = React.memo(SidebarComponent);
+```
+
+#### `src/components/agents/sections/AriKnowledgeSection.tsx` (662 lines)
+
+Large component with internal memoization but not memoized at the component level.
+
+```typescript
+// Before
+const AriKnowledgeSection: React.FC<Props> = ({ ... }) => { ... };
+export default AriKnowledgeSection;
+
+// After
+const AriKnowledgeSectionComponent: React.FC<Props> = ({ ... }) => { ... };
+export default React.memo(AriKnowledgeSectionComponent);
+```
+
+### Verification
+
+- Use React DevTools Profiler
+- Trigger parent re-renders
+- Verify memoized components show "Did not render"
+
+---
+
+## Low Priority: Type Safety Cleanup
+
+> **Priority**: 🟢 LOW  
+> **Status**: PENDING  
+> **Issue**: `any` types reduce type safety
+
+### Files with `any` Types
+
+| File | Location | Issue |
+|------|----------|-------|
+| `src/components/ui/animated-list.tsx` | Motion variants | `as any` cast |
+| `src/components/charts/charts-base.tsx` | Recharts handlers | `eslint-disable any` |
+| `src/components/agents/embed/EmbedSettingsPanel.tsx` | Select handlers | `any` in onChange |
+| `src/components/agents/sections/AriWebhooksSection.tsx` | Handlers | `any` type |
+| `src/components/agents/sections/AriCustomToolsSection.tsx` | Handlers | `any` type |
+| `src/components/agents/DebugConsole.tsx` | Event handlers | `any` type |
+| `src/widget/ChatWidget.tsx` | `recordingIntervalRef` | `useRef<any>` |
+
+### Recommended Fixes
+
+```typescript
+// recordingIntervalRef fix
+// Before
+const recordingIntervalRef = useRef<any>(null);
+
+// After
+const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+```
+
+For Recharts handlers, use proper event types:
+```typescript
+// Before
+onClick={(data: any) => ...}
+
+// After
+onClick={(data: { payload: DataPoint }) => ...}
+```
+
+---
+
+## Low Priority: Key Prop Fixes
+
+> **Priority**: 🟢 LOW  
+> **Status**: PENDING  
+> **Issue**: Using array index as React key
+
+### Files with `key={index}`
+
+| File | Acceptable? | Reason |
+|------|-------------|--------|
+| `src/components/analytics/TrafficSourceChart.tsx` | ⚠️ Fix | Data items should have stable IDs |
+| `src/components/agents/webhooks/ResponseActionBuilder.tsx` | ⚠️ Fix | Actions can be reordered |
+| `src/components/data-table/DataTable.tsx` | ✅ OK | Loading skeleton rows |
+| `src/components/UserAccountCard.tsx` | ✅ OK | Static keyboard shortcuts |
+
+### Recommended Fixes
+
+```typescript
+// TrafficSourceChart.tsx
+// Before
+{data.map((item, index) => (
+  <div key={index}>...
+
+// After
+{data.map((item) => (
+  <div key={item.source || item.name}>...
+
+// ResponseActionBuilder.tsx
+// Before
+{actions.map((action, index) => (
+  <div key={index}>...
+
+// After
+{actions.map((action) => (
+  <div key={action.id}>...
+```
+
+---
+
+## Audit Results: What's Already Done Right
+
+The following patterns are already correctly implemented:
+
+### ✅ Icon Usage
+All components use `@untitledui/icons` exclusively. No Lucide icons found.
+
+### ✅ Query Key Factory
+Centralized in `src/lib/query-keys.ts` and used consistently across all hooks.
+
+### ✅ Logger Utility
+Main app uses `src/utils/logger.ts` with conditional logging based on `import.meta.env.DEV`.
+
+### ✅ React Query Patterns
+All data fetching uses `useSupabaseQuery` or direct `useQuery` with proper:
+- Enabled flags
+- Stale times
+- Error handling
+- Optimistic updates where appropriate
+
+### ✅ Supabase RLS
+Database linter shows 0 warnings. All tables have appropriate RLS policies.
+
+### ✅ No Debugger Statements
+Zero `debugger` statements in codebase.
+
+### ✅ No Empty Catch Blocks
+All `catch` blocks have proper error handling.
+
+### ✅ Edge Function Logging
+Edge functions use `console.log` appropriately - these go to Supabase infrastructure logs, not user browsers.
+
+### ✅ Error Boundaries
+`ErrorBoundary` component exists and is used at route level.
+
+### ✅ Type-Safe Metadata
+`src/types/metadata.ts` provides proper types for conversation metadata.
+
+### ✅ CORS Headers
+All edge functions include proper CORS configuration.
+
+### ✅ Safe HTML Rendering
+`dangerouslySetInnerHTML` only used with DOMPurify sanitization.
+
+### ✅ Phase 5 Completion
+Conversations.tsx successfully refactored with all patterns applied.
+
+---
+
+## Implementation Timeline
+
+### Immediate (Before Next Deploy)
+
+| Phase | Task | Time | Owner |
+|-------|------|------|-------|
+| 6 | Widget logging cleanup | 30 min | - |
+
+### This Sprint
+
+| Phase | Task | Time | Owner |
+|-------|------|------|-------|
+| 7 | Handler memoization | 45 min | - |
+| 8 | TODO resolution | 1 hour | - |
+| 10 | React.memo additions | 15 min | - |
+
+### Backlog
+
+| Phase | Task | Time | Owner |
+|-------|------|------|-------|
+| 9 | Widget refactor | 3+ hours | - |
+| - | Type safety cleanup | 30 min | - |
+| - | Key prop fixes | 15 min | - |
+
+---
+
+## Verification Checklist
+
+Before marking any phase complete:
+
+- [ ] All files updated per specification
+- [ ] No TypeScript errors (`npm run type-check`)
+- [ ] No ESLint warnings (`npm run lint`)
+- [ ] No console errors in browser
+- [ ] Functionality tested manually
+- [ ] No visual regressions
+- [ ] Documentation updated if needed
+
+---
+
+## Related Documentation
+
+- [ARCHITECTURE.md](./ARCHITECTURE.md) - System architecture and component structure
+- [HOOKS_REFERENCE.md](./HOOKS_REFERENCE.md) - All custom hooks with signatures
+- [DESIGN_SYSTEM.md](./DESIGN_SYSTEM.md) - UI tokens and patterns
+- [AI_ARCHITECTURE.md](./AI_ARCHITECTURE.md) - AI optimization phases 1-6
