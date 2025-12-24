@@ -14,7 +14,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { MessageChatSquare, ChevronLeft, ChevronRight, SwitchVertical01, ChevronDown } from '@untitledui/icons';
 import { ConversationItem } from './ConversationItem';
 import type { Tables } from '@/integrations/supabase/types';
-import type { ConversationMetadata } from '@/types/metadata';
+import type { VisitorPresenceData } from '@/hooks/useVisitorPresence';
 
 type Conversation = Tables<'conversations'> & {
   agents?: { name: string };
@@ -32,7 +32,7 @@ export interface ConversationsListProps {
   sortBy: SortBy;
   onSortChange: (sort: SortBy) => void;
   activeFilterLabel: string;
-  getVisitorPresence: (conversation: Conversation) => boolean | null;
+  getVisitorPresence: (conversation: Conversation) => VisitorPresenceData | null;
   loading: boolean;
 }
 
