@@ -34,6 +34,7 @@ import {
   ChevronRight,
   ArrowLeft,
   LayoutGrid01,
+  Columns03,
   List,
   Download01,
   Plus,
@@ -50,6 +51,7 @@ import { supabase } from '@/integrations/supabase/client';
 // Import types and utilities
 import type { Tables } from '@/integrations/supabase/types';
 import type { ConversationMetadata } from '@/types/metadata';
+import type { VisibilityState } from '@tanstack/react-table';
 import { useLeadStages, type LeadStage } from '@/hooks/useLeadStages';
 import {
   getFieldsByGroup,
@@ -72,6 +74,31 @@ import {
   needsConversationMetadata,
 } from '@/lib/leads-export';
 
+// Table column definitions for the settings sheet
+export interface TableColumnDef {
+  id: string;
+  label: string;
+  canHide: boolean;
+}
+
+export const TABLE_COLUMNS: TableColumnDef[] = [
+  { id: 'name', label: 'Name', canHide: true },
+  { id: 'email', label: 'Email', canHide: true },
+  { id: 'phone', label: 'Phone', canHide: true },
+  { id: 'stage_id', label: 'Stage', canHide: true },
+  { id: 'created_at', label: 'Created', canHide: true },
+];
+
+export const DEFAULT_TABLE_COLUMN_VISIBILITY: VisibilityState = {
+  name: true,
+  email: true,
+  phone: true,
+  stage_id: true,
+  created_at: true,
+};
+
+export const TABLE_VISIBILITY_STORAGE_KEY = 'leads-table-column-visibility';
+
 // DnD imports for stages
 import {
   DndContext,
@@ -92,7 +119,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 
 type Lead = Tables<'leads'>;
-type SheetView = 'main' | 'fields' | 'stages' | 'export';
+type SheetView = 'main' | 'fields' | 'columns' | 'stages' | 'export';
 const GROUP_ORDER: FieldGroup[] = ['contact', 'session', 'organization', 'timestamps', 'notes'];
 
 interface LeadsViewSettingsSheetProps {
@@ -103,6 +130,9 @@ interface LeadsViewSettingsSheetProps {
   visibleFields: Set<CardFieldKey>;
   onToggleField: (field: CardFieldKey) => void;
   onSetFields: (fields: Set<CardFieldKey>) => void;
+  // Table columns (Table view)
+  columnVisibility: VisibilityState;
+  onColumnVisibilityChange: (visibility: VisibilityState) => void;
   // Export
   allLeads: Lead[];
   filteredLeads: Lead[];
@@ -281,6 +311,8 @@ export function LeadsViewSettingsSheet({
   visibleFields,
   onToggleField,
   onSetFields,
+  columnVisibility,
+  onColumnVisibilityChange,
   allLeads,
   filteredLeads,
 }: LeadsViewSettingsSheetProps) {
@@ -302,6 +334,31 @@ export function LeadsViewSettingsSheet({
   const handleResetToDefaults = () => {
     onSetFields(getDefaultVisibleFields());
   };
+
+  // --- Table Columns logic ---
+  const visibleColumnsCount = useMemo(
+    () => TABLE_COLUMNS.filter(col => columnVisibility[col.id] !== false).length,
+    [columnVisibility]
+  );
+
+  const handleColumnToggle = useCallback((columnId: string) => {
+    onColumnVisibilityChange({
+      ...columnVisibility,
+      [columnId]: !columnVisibility[columnId],
+    });
+  }, [columnVisibility, onColumnVisibilityChange]);
+
+  const handleSelectAllColumns = useCallback(() => {
+    const allVisible: VisibilityState = {};
+    TABLE_COLUMNS.forEach(col => {
+      allVisible[col.id] = true;
+    });
+    onColumnVisibilityChange(allVisible);
+  }, [onColumnVisibilityChange]);
+
+  const handleResetColumnsToDefaults = useCallback(() => {
+    onColumnVisibilityChange({ ...DEFAULT_TABLE_COLUMN_VISIBILITY });
+  }, [onColumnVisibilityChange]);
 
   // --- Stages logic ---
   const [localStages, setLocalStages] = useState<LeadStage[]>([]);
@@ -396,7 +453,7 @@ export function LeadsViewSettingsSheet({
     [selectedColumns]
   );
 
-  const handleColumnToggle = useCallback((column: ExportColumn) => {
+  const handleExportColumnToggle = useCallback((column: ExportColumn) => {
     setSelectedColumns(prev =>
       prev.includes(column)
         ? prev.filter(c => c !== column)
@@ -404,11 +461,11 @@ export function LeadsViewSettingsSheet({
     );
   }, []);
 
-  const handleSelectAllColumns = useCallback(() => {
+  const handleExportSelectAll = useCallback(() => {
     setSelectedColumns([...ALL_COLUMNS]);
   }, []);
 
-  const handleDeselectAllColumns = useCallback(() => {
+  const handleExportDeselectAll = useCallback(() => {
     setSelectedColumns([]);
   }, []);
 
@@ -528,14 +585,23 @@ export function LeadsViewSettingsSheet({
 
                 <Separator />
 
-                {/* Navigation items */}
+                {/* Navigation items - view-aware */}
                 <div className="space-y-1">
-                  <NavItem
-                    icon={LayoutGrid01}
-                    label={viewMode === 'kanban' ? 'Card Fields' : 'Card Fields'}
-                    count={`${visibleFields.size} shown`}
-                    onClick={() => setActiveView('fields')}
-                  />
+                  {viewMode === 'kanban' ? (
+                    <NavItem
+                      icon={LayoutGrid01}
+                      label="Card Fields"
+                      count={`${visibleFields.size} shown`}
+                      onClick={() => setActiveView('fields')}
+                    />
+                  ) : (
+                    <NavItem
+                      icon={Columns03}
+                      label="Table Columns"
+                      count={`${visibleColumnsCount} shown`}
+                      onClick={() => setActiveView('columns')}
+                    />
+                  )}
                   <NavItem
                     icon={List}
                     label="Pipeline Stages"
@@ -610,6 +676,51 @@ export function LeadsViewSettingsSheet({
                     Select All
                   </Button>
                   <Button variant="outline" size="sm" onClick={handleResetToDefaults} className="flex-1">
+                    Reset to Defaults
+                  </Button>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Table Columns View */}
+            {activeView === 'columns' && (
+              <motion.div
+                key="columns"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                transition={{ duration: 0.15 }}
+              >
+                <SubViewHeader title="Table Columns" onBack={() => setActiveView('main')} />
+                
+                <p className="text-sm text-muted-foreground mb-4">
+                  Choose which columns to display in the table
+                </p>
+
+                <div className="space-y-2">
+                  {TABLE_COLUMNS.map((column) => {
+                    const isChecked = columnVisibility[column.id] !== false;
+                    
+                    return (
+                      <label
+                        key={column.id}
+                        className="flex items-center gap-3 p-2 rounded-md hover:bg-muted/50 cursor-pointer transition-colors"
+                      >
+                        <Checkbox
+                          checked={isChecked}
+                          onCheckedChange={() => handleColumnToggle(column.id)}
+                        />
+                        <span className="text-sm">{column.label}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+
+                <div className="flex gap-2 mt-6 pt-4 border-t">
+                  <Button variant="outline" size="sm" onClick={handleSelectAllColumns} className="flex-1">
+                    Select All
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={handleResetColumnsToDefaults} className="flex-1">
                     Reset to Defaults
                   </Button>
                 </div>
@@ -699,10 +810,10 @@ export function LeadsViewSettingsSheet({
                     <div className="flex items-center justify-between">
                       <Label className="text-sm font-medium">Columns to export</Label>
                       <div className="flex gap-2">
-                        <Button variant="ghost" size="sm" onClick={handleSelectAllColumns} className="h-7 px-2 text-xs">
+                        <Button variant="ghost" size="sm" onClick={handleExportSelectAll} className="h-7 px-2 text-xs">
                           Select all
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={handleDeselectAllColumns} className="h-7 px-2 text-xs">
+                        <Button variant="ghost" size="sm" onClick={handleExportDeselectAll} className="h-7 px-2 text-xs">
                           Deselect all
                         </Button>
                       </div>
@@ -714,7 +825,7 @@ export function LeadsViewSettingsSheet({
                           <Checkbox
                             id={`col-${column}`}
                             checked={selectedColumns.includes(column)}
-                            onCheckedChange={() => handleColumnToggle(column)}
+                            onCheckedChange={() => handleExportColumnToggle(column)}
                           />
                           <Label htmlFor={`col-${column}`} className="text-sm font-normal cursor-pointer">
                             {COLUMN_LABELS[column]}
