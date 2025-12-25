@@ -68,9 +68,9 @@ export function WidgetSkeletonListItem() {
 }
 
 /** Quick action card skeleton for HomeView */
-export function WidgetSkeletonCard() {
+export function WidgetSkeletonCard({ className }: WidgetSkeletonProps = {}) {
   return (
-    <div className="p-4 border rounded-lg animate-pulse">
+    <div className={cn("p-4 border rounded-lg animate-pulse", className)}>
       <div className="flex items-start gap-3">
         <div className="p-2 rounded-lg bg-muted w-10 h-10" />
         <div className="flex-1 space-y-2">

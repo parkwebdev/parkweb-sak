@@ -9,6 +9,7 @@
 
 import React, { useState } from 'react';
 import { FormHint } from '@/components/ui/form-hint';
+import { UploadProgress } from '@/components/ui/upload-progress';
 import {
   Dialog,
   DialogContent,
@@ -266,9 +267,7 @@ export const AddKnowledgeDialog: React.FC<AddKnowledgeDialogProps> = ({
                 className="max-w-xs mx-auto"
               />
               {uploading && (
-                <p className="text-sm text-muted-foreground mt-4">
-                  Uploading and processing...
-                </p>
+                <UploadProgress text="Uploading and processing..." className="mt-4" />
               )}
             </div>
           </TabsContent>

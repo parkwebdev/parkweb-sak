@@ -25,6 +25,7 @@ import { RichTextEditor } from '@/components/ui/rich-text-editor';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { EmptyState } from '@/components/ui/empty-state';
 import { SkeletonTableSection } from '@/components/ui/skeleton';
+import { UploadProgress } from '@/components/ui/upload-progress';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Badge } from '@/components/ui/badge';
@@ -1013,10 +1014,7 @@ export const HelpArticlesManager = ({ agentId, userId }: HelpArticlesManagerProp
                   />
                   <label htmlFor="featured-image-upload" className="cursor-pointer block">
                     {featuredImageUploading ? (
-                      <div className="flex flex-col items-center">
-                        <div className="h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent mb-2" />
-                        <p className="text-sm text-muted-foreground">Uploading...</p>
-                      </div>
+                      <UploadProgress text="Uploading..." />
                     ) : (
                       <>
                         <Image01 className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
