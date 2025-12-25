@@ -15,7 +15,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { AnimatedList } from '@/components/ui/animated-list';
 import { AnimatedItem } from '@/components/ui/animated-item';
-import { LoadingState } from '@/components/ui/loading-state';
+import { SkeletonSettingsCard } from '@/components/ui/skeleton';
 import { logger } from '@/utils/logger';
 
 export const GeneralSettings: React.FC = () => {
@@ -162,7 +162,12 @@ export const GeneralSettings: React.FC = () => {
   }, [preferences.compact_mode]);
 
   if (loading) {
-    return <LoadingState />;
+    return (
+      <div className="space-y-4">
+        <SkeletonSettingsCard />
+        <SkeletonSettingsCard />
+      </div>
+    );
   }
 
   return (

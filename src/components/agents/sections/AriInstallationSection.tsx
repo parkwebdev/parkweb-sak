@@ -10,7 +10,7 @@ import { useEmbeddedChatConfig } from '@/hooks/useEmbeddedChatConfig';
 import { useAgent } from '@/hooks/useAgent';
 import { InstallationSection } from '@/components/agents/embed/sections/InstallationSection';
 import { AriSectionHeader } from './AriSectionHeader';
-import { LoadingState } from '@/components/ui/loading-state';
+import { SkeletonCodeSection } from '@/components/ui/skeleton';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/utils/logger';
 
@@ -38,7 +38,7 @@ export const AriInstallationSection: React.FC<AriInstallationSectionProps> = ({ 
   }, [agentId, agent]);
 
   if (loading) {
-    return <LoadingState text="Loading installation..." />;
+    return <SkeletonCodeSection />;
   }
 
   return (

@@ -14,7 +14,7 @@ import { Users01 as Users } from '@untitledui/icons';
 import { useTeam } from '@/hooks/useTeam';
 import { useRoleAuthorization } from '@/hooks/useRoleAuthorization';
 import { TeamMember, UserRole } from '@/types/team';
-import { LoadingState } from '@/components/ui/loading-state';
+import { SkeletonTableSection } from '@/components/ui/skeleton';
 
 interface TeamSettingsProps {
   openMemberId?: string | null;
@@ -77,7 +77,7 @@ export const TeamSettings: React.FC<TeamSettingsProps> = ({ openMemberId }) => {
         <div className="flex justify-end mb-6">
           <InviteMemberDialog onInvite={handleInviteMember} />
         </div>
-        <LoadingState />
+        <SkeletonTableSection rows={3} />
       </div>
     );
   }

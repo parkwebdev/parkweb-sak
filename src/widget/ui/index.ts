@@ -29,3 +29,10 @@ export {
 } from './WidgetCard';
 export { WidgetSpinner } from './WidgetSpinner';
 export { WidgetCheckbox } from './WidgetCheckbox';
+export { 
+  WidgetSkeleton, 
+  WidgetSkeletonText, 
+  WidgetSkeletonMessage, 
+  WidgetSkeletonChatView, 
+  WidgetSkeletonListItem 
+} from './WidgetSkeleton';

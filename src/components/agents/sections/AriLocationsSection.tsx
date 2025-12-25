@@ -24,7 +24,7 @@ import { CreateLocationDialog } from '@/components/agents/locations/CreateLocati
 import { LocationDetailsSheet } from '@/components/agents/locations/LocationDetailsSheet';
 import { WordPressIntegrationSection } from '@/components/agents/locations/WordPressIntegrationSection';
 import { AriSectionHeader } from './AriSectionHeader';
-import { LoadingState } from '@/components/ui/loading-state';
+import { SkeletonTableSection } from '@/components/ui/skeleton';
 import { SimpleDeleteDialog } from '@/components/ui/simple-delete-dialog';
 import { DataTable } from '@/components/data-table/DataTable';
 import { DataTableToolbar } from '@/components/data-table/DataTableToolbar';
@@ -395,7 +395,7 @@ export const AriLocationsSection: React.FC<AriLocationsSectionProps> = ({ agentI
   const selectedCount = Object.keys(rowSelection).length;
 
   if (loading) {
-    return <LoadingState text={viewMode === 'communities' ? 'Loading locations...' : 'Loading properties...'} />;
+    return <SkeletonTableSection rows={5} />;
   }
 
   // View toggle component - same height as Filters button

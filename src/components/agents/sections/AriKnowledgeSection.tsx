@@ -27,7 +27,7 @@ import { useLocations } from '@/hooks/useLocations';
 import { AddKnowledgeDialog } from '@/components/agents/AddKnowledgeDialog';
 import { KnowledgeDetailsSheet } from '@/components/agents/knowledge';
 import { AriSectionHeader } from './AriSectionHeader';
-import { LoadingState } from '@/components/ui/loading-state';
+import { SkeletonTableSection } from '@/components/ui/skeleton';
 import { ZapSolidIcon } from '@/components/ui/zap-solid-icon';
 import { toast } from '@/lib/toast';
 import { getErrorMessage } from '@/types/errors';
@@ -380,7 +380,7 @@ const AriKnowledgeSectionComponent: React.FC<AriKnowledgeSectionProps> = ({ agen
   };
 
   if (loading) {
-    return <LoadingState text="Loading knowledge sources..." />;
+    return <SkeletonTableSection rows={5} />;
   }
 
   // Filter Popover

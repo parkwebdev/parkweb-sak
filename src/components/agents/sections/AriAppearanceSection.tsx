@@ -8,7 +8,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useEmbeddedChatConfig } from '@/hooks/useEmbeddedChatConfig';
 import { AppearanceSection } from '@/components/agents/embed/sections/AppearanceSection';
 import { AriSectionHeader } from './AriSectionHeader';
-import { LoadingState } from '@/components/ui/loading-state';
+import { SkeletonFormSection } from '@/components/ui/skeleton';
 
 interface AriAppearanceSectionProps {
   agentId: string;
@@ -43,7 +43,7 @@ export const AriAppearanceSection: React.FC<AriAppearanceSectionProps> = ({ agen
   };
 
   if (loading) {
-    return <LoadingState text="Loading appearance settings..." />;
+    return <SkeletonFormSection />;
   }
 
   return (
