@@ -49,6 +49,7 @@ import {
   useWidgetAudioRecording,
   useWidgetNavigation,
   useWidgetRating,
+  useWidgetTakeover,
 } from './hooks';
 
 // View Components - HomeView and ChatView are always needed, lazy-load the rest
@@ -95,10 +96,6 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
   // File attachment state (kept local - simple UI toggle)
   const [isAttachingFiles, setIsAttachingFiles] = useState(false);
   const [formLoadTime] = useState(() => Date.now());
-  
-  // Human typing indicator (received from hook, not takeover state)
-  const [isHumanTyping, setIsHumanTyping] = useState(false);
-  const [typingAgentName, setTypingAgentName] = useState<string | undefined>();
   
   const [unreadCount, setUnreadCount] = useState(0);
   const [headerScrollY, setHeaderScrollY] = useState(0);
@@ -160,12 +157,24 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
   // Rating state via extracted hook (PHASE 4 REFACTOR)
   const {
     showRatingPrompt,
-    setShowRatingPrompt,
     ratingTriggerType,
     triggerRating,
     dismissRating,
-    hasShownRatingRef,
   } = useWidgetRating();
+
+  // Takeover and typing state via extracted hook (PHASE 5 REFACTOR)
+  const {
+    isHumanTakeover,
+    setIsHumanTakeover,
+    takeoverAgentName,
+    setTakeoverAgentName,
+    takeoverAgentAvatar,
+    setTakeoverAgentAvatar,
+    isHumanTyping,
+    setIsHumanTyping,
+    typingAgentName,
+    setTypingAgentName,
+  } = useWidgetTakeover();
 
   // Messaging via extracted hook (PHASE 1 REFACTOR)
   const {
@@ -180,12 +189,6 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     handleSendMessage,
     handleQuickReplySelectWithSend,
     handleFormSubmit,
-    isHumanTakeover,
-    setIsHumanTakeover,
-    takeoverAgentName,
-    setTakeoverAgentName,
-    takeoverAgentAvatar,
-    setTakeoverAgentAvatar,
   } = useWidgetMessaging({
     config: config as WidgetConfig,
     chatUser,
@@ -204,6 +207,9 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     currentPageRef,
     browserLanguageRef,
     triggerRating,
+    setIsHumanTakeover,
+    setTakeoverAgentName,
+    setTakeoverAgentAvatar,
   });
 
   // Audio recording via extracted hook (PHASE 2 REFACTOR)
