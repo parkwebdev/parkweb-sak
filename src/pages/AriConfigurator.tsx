@@ -18,6 +18,7 @@ import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useEmbeddedChatConfig } from '@/hooks/useEmbeddedChatConfig';
 import { useHelpArticles } from '@/hooks/useHelpArticles';
 import { useAnnouncements } from '@/hooks/useAnnouncements';
+import { logger } from '@/utils/logger';
 import { AriSectionMenu, type AriSection } from '@/components/agents/AriSectionMenu';
 import { AriPreviewColumn } from '@/components/agents/AriPreviewColumn';
 import { MultiStepLoader } from '@/components/ui/multi-step-loader';
@@ -62,10 +63,19 @@ const VALID_SECTIONS: AriSection[] = [
 ];
 
 const AriConfigurator = () => {
+  logger.debug('AriConfigurator: Component mounting');
+  
   const prefersReducedMotion = useReducedMotion();
+  logger.debug('AriConfigurator: useReducedMotion complete', { prefersReducedMotion });
+  
   const { hasSeenAriLoader, setHasSeenAriLoader } = useAuth();
+  logger.debug('AriConfigurator: useAuth complete', { hasSeenAriLoader });
+  
   const { agent, agentId, updateAgent, loading: agentLoading } = useAgent();
+  logger.debug('AriConfigurator: useAgent complete', { agentId, agentLoading, hasAgent: !!agent });
+  
   const [searchParams] = useSearchParams();
+  logger.debug('AriConfigurator: useSearchParams complete');
   
   // Get initial section from URL or default to model-behavior
   const initialSection = useMemo(() => {
@@ -108,9 +118,15 @@ const AriConfigurator = () => {
   }, [agentLoading, showLoader, hasSeenAriLoader, setHasSeenAriLoader]);
 
   // Widget preview hooks
+  logger.debug('AriConfigurator: Initializing widget preview hooks', { agentId });
   const { config: embedConfig } = useEmbeddedChatConfig(agentId);
+  logger.debug('AriConfigurator: useEmbeddedChatConfig complete');
+  
   const { articles: helpArticles, categories: helpCategories } = useHelpArticles(agentId);
+  logger.debug('AriConfigurator: useHelpArticles complete', { articleCount: helpArticles?.length });
+  
   const { announcements: allAnnouncements } = useAnnouncements(agentId);
+  logger.debug('AriConfigurator: useAnnouncements complete', { announcementCount: allAnnouncements?.length });
 
   const handleUpdate = async (_id: string, updates: Partial<Agent>): Promise<Agent | null> => {
     if (!agent) return null;
