@@ -14,6 +14,7 @@ export interface SearchResult {
   iconName?: string;
   url?: string;
   action?: () => void;
+  shortcut?: string;
 }
 
 type Agent = Tables<'agents'>;
@@ -119,6 +120,7 @@ export const useSearchData = () => {
           description: 'Configure your AI agent',
           category: 'Navigation',
           iconName: 'AriLogo',
+          shortcut: '⌥A',
           action: () => navigate('/ari'),
         },
         {
@@ -127,6 +129,7 @@ export const useSearchData = () => {
           description: 'View all conversations',
           category: 'Navigation',
           iconName: 'MessageChatSquare',
+          shortcut: '⌥C',
           action: () => navigate('/conversations'),
         },
         {
@@ -135,6 +138,7 @@ export const useSearchData = () => {
           description: 'Manage captured leads',
           category: 'Navigation',
           iconName: 'Users01',
+          shortcut: '⌥L',
           action: () => navigate('/leads'),
         },
         {
@@ -143,6 +147,7 @@ export const useSearchData = () => {
           description: 'View insights and metrics',
           category: 'Navigation',
           iconName: 'TrendUp01',
+          shortcut: '⌥Y',
           action: () => navigate('/analytics'),
         },
         {
@@ -151,6 +156,7 @@ export const useSearchData = () => {
           description: 'Manage calendar and events',
           category: 'Navigation',
           iconName: 'Calendar',
+          shortcut: '⌥P',
           action: () => navigate('/planner'),
         },
         {
@@ -159,6 +165,7 @@ export const useSearchData = () => {
           description: 'Manage organization settings',
           category: 'Navigation',
           iconName: 'Settings01',
+          shortcut: '⌥S',
           action: () => navigate('/settings'),
         },
       ];
