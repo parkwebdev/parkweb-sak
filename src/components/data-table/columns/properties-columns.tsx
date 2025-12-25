@@ -27,6 +27,9 @@ const statusLabels: Record<PropertyStatus, string> = {
 export const createPropertiesColumns = (): ColumnDef<PropertyWithLocation>[] => [
   {
     id: 'select',
+    size: 40,
+    minSize: 40,
+    maxSize: 40,
     header: ({ table }) => (
       <Checkbox
         checked={table.getIsAllPageRowsSelected()}
@@ -45,22 +48,26 @@ export const createPropertiesColumns = (): ColumnDef<PropertyWithLocation>[] => 
     ),
     enableSorting: false,
     enableHiding: false,
-    size: 40,
   },
   {
     accessorKey: 'address',
+    size: 200,
+    minSize: 150,
+    maxSize: 280,
     header: ({ column }) => <DataTableColumnHeader column={column} title="Address" />,
     cell: ({ row }) => {
       const address = row.original.address;
       const city = row.original.city;
       const state = row.original.state;
+      const fullAddress = address || 'No address';
+      const location = [city, state].filter(Boolean).join(', ');
       
       return (
-        <div className="flex flex-col whitespace-nowrap">
-          <span className="font-medium text-sm">{address || 'No address'}</span>
-          {(city || state) && (
-            <span className="text-xs text-muted-foreground">
-              {[city, state].filter(Boolean).join(', ')}
+        <div className="flex flex-col min-w-0">
+          <span className="font-medium text-sm truncate max-w-[260px]" title={fullAddress}>{fullAddress}</span>
+          {location && (
+            <span className="text-xs text-muted-foreground truncate max-w-[260px]" title={location}>
+              {location}
             </span>
           )}
         </div>
@@ -69,6 +76,9 @@ export const createPropertiesColumns = (): ColumnDef<PropertyWithLocation>[] => 
   },
   {
     accessorKey: 'lot_number',
+    size: 80,
+    minSize: 60,
+    maxSize: 100,
     header: ({ column }) => <DataTableColumnHeader column={column} title="Lot #" />,
     cell: ({ row }) => {
       const lotNumber = row.original.lot_number;
@@ -91,10 +101,12 @@ export const createPropertiesColumns = (): ColumnDef<PropertyWithLocation>[] => 
       
       return <span className="font-mono text-sm">{lotNumber}</span>;
     },
-    size: 80,
   },
   {
     accessorKey: 'location_name',
+    size: 160,
+    minSize: 100,
+    maxSize: 200,
     header: ({ column }) => <DataTableColumnHeader column={column} title="Community" />,
     cell: ({ row }) => {
       const locationName = row.original.location_name;
@@ -115,11 +127,14 @@ export const createPropertiesColumns = (): ColumnDef<PropertyWithLocation>[] => 
         );
       }
       
-      return <span className="text-sm whitespace-nowrap">{locationName}</span>;
+      return <span className="text-sm truncate block max-w-[180px]" title={locationName}>{locationName}</span>;
     },
   },
   {
     id: 'beds_baths',
+    size: 100,
+    minSize: 80,
+    maxSize: 120,
     header: 'Beds/Baths',
     cell: ({ row }) => {
       const beds = row.original.beds;
@@ -133,10 +148,12 @@ export const createPropertiesColumns = (): ColumnDef<PropertyWithLocation>[] => 
         </span>
       );
     },
-    size: 100,
   },
   {
     accessorKey: 'price',
+    size: 120,
+    minSize: 90,
+    maxSize: 150,
     header: ({ column }) => <DataTableColumnHeader column={column} title="Price" />,
     cell: ({ row }) => {
       const price = row.original.price;
@@ -148,10 +165,12 @@ export const createPropertiesColumns = (): ColumnDef<PropertyWithLocation>[] => 
         </span>
       );
     },
-    size: 120,
   },
   {
     accessorKey: 'status',
+    size: 110,
+    minSize: 80,
+    maxSize: 130,
     header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
     cell: ({ row }) => {
       const status = (row.original.status as PropertyStatus) || 'available';
@@ -162,10 +181,12 @@ export const createPropertiesColumns = (): ColumnDef<PropertyWithLocation>[] => 
         </Badge>
       );
     },
-    size: 100,
   },
   {
     id: 'actions',
+    size: 60,
+    minSize: 50,
+    maxSize: 70,
     header: 'Actions',
     cell: ({ row }) => {
       const listingUrl = row.original.listing_url;
@@ -187,6 +208,5 @@ export const createPropertiesColumns = (): ColumnDef<PropertyWithLocation>[] => 
         </Button>
       );
     },
-    size: 60,
   },
 ];

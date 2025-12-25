@@ -30,17 +30,23 @@ const formatUrl = (url: string): string => {
 export const landingPagesColumns: ColumnDef<LandingPageData>[] = [
   {
     accessorKey: 'url',
+    size: 250,
+    minSize: 150,
+    maxSize: 350,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Page" />
     ),
-    cell: ({ row }) => (
-      <span
-        className="font-mono text-xs max-w-[200px] truncate block"
-        title={row.original.url}
-      >
-        {formatUrl(row.original.url)}
-      </span>
-    ),
+    cell: ({ row }) => {
+      const formattedUrl = formatUrl(row.original.url);
+      return (
+        <span
+          className="font-mono text-xs truncate block max-w-[320px]"
+          title={row.original.url}
+        >
+          {formattedUrl}
+        </span>
+      );
+    },
     filterFn: (row, id, value) => {
       const url = row.original.url.toLowerCase();
       const searchValue = value.toLowerCase();
@@ -49,6 +55,9 @@ export const landingPagesColumns: ColumnDef<LandingPageData>[] = [
   },
   {
     accessorKey: 'visits',
+    size: 80,
+    minSize: 60,
+    maxSize: 100,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Visits" className="justify-end" />
     ),
@@ -58,6 +67,9 @@ export const landingPagesColumns: ColumnDef<LandingPageData>[] = [
   },
   {
     accessorKey: 'avgDuration',
+    size: 100,
+    minSize: 80,
+    maxSize: 120,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Avg. Time" className="justify-end" />
     ),
@@ -69,6 +81,9 @@ export const landingPagesColumns: ColumnDef<LandingPageData>[] = [
   },
   {
     accessorKey: 'conversions',
+    size: 80,
+    minSize: 60,
+    maxSize: 100,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Leads" className="justify-end" />
     ),

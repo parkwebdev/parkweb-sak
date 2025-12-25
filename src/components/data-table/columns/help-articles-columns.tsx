@@ -128,6 +128,8 @@ export const createHelpArticlesColumns = ({
   {
     id: 'select',
     size: 40,
+    minSize: 40,
+    maxSize: 40,
     header: ({ table }) => (
       <Checkbox
         checked={table.getIsAllPageRowsSelected()}
@@ -152,6 +154,9 @@ export const createHelpArticlesColumns = ({
   {
     id: 'article',
     accessorKey: 'title',
+    size: 300,
+    minSize: 200,
+    maxSize: 400,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Article" />
     ),
@@ -178,8 +183,8 @@ export const createHelpArticlesColumns = ({
           
           {/* Title and preview */}
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-medium truncate">{article.title}</p>
-            <p className="text-xs text-muted-foreground truncate">{preview || 'No content'}</p>
+            <p className="text-sm font-medium truncate" title={article.title}>{article.title}</p>
+            <p className="text-xs text-muted-foreground truncate" title={preview || 'No content'}>{preview || 'No content'}</p>
           </div>
         </div>
       );
@@ -189,7 +194,9 @@ export const createHelpArticlesColumns = ({
   // Category badge with icon
   {
     id: 'category',
-    size: 100,
+    size: 120,
+    minSize: 80,
+    maxSize: 150,
     header: () => <span className="text-xs font-medium block text-center">Category</span>,
     cell: ({ row }) => {
       const article = row.original;
@@ -197,9 +204,9 @@ export const createHelpArticlesColumns = ({
       
       return (
         <div className="flex justify-center">
-          <Badge variant="outline" className="text-xs gap-1 max-w-[90px]">
+          <Badge variant="outline" className="text-xs gap-1 max-w-[120px]">
             <CategoryIcon className="h-3 w-3 shrink-0" />
-            <span className="truncate">{article.categoryName}</span>
+            <span className="truncate" title={article.categoryName}>{article.categoryName}</span>
           </Badge>
         </div>
       );
@@ -210,7 +217,9 @@ export const createHelpArticlesColumns = ({
   // Embedding status
   {
     id: 'status',
-    size: 80,
+    size: 90,
+    minSize: 70,
+    maxSize: 100,
     header: () => <span className="text-xs font-medium block text-center">Status</span>,
     cell: ({ row }) => {
       const hasEmbedding = row.original.hasEmbedding;
@@ -253,6 +262,8 @@ export const createHelpArticlesColumns = ({
   {
     accessorKey: 'createdAt',
     size: 100,
+    minSize: 80,
+    maxSize: 120,
     header: ({ column }) => (
       <div className="text-center">
         <DataTableColumnHeader column={column} title="Added" />
@@ -289,6 +300,8 @@ export const createHelpArticlesColumns = ({
   {
     id: 'actions',
     size: 100,
+    minSize: 80,
+    maxSize: 120,
     header: () => null,
     cell: ({ row }) => {
       const article = row.original;

@@ -49,6 +49,9 @@ export const createLocationsColumns = ({
 }: LocationsColumnsProps): ColumnDef<LocationWithCounts>[] => [
   {
     id: 'select',
+    size: 40,
+    minSize: 40,
+    maxSize: 40,
     header: ({ table }) => (
       <Checkbox
         checked={table.getIsAllPageRowsSelected()}
@@ -70,35 +73,48 @@ export const createLocationsColumns = ({
   },
   {
     accessorKey: 'name',
+    size: 180,
+    minSize: 120,
+    maxSize: 220,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Name" />
     ),
     cell: ({ row }) => (
-      <span className="font-medium">{row.original.name}</span>
+      <span className="font-medium truncate block max-w-[200px]" title={row.original.name}>{row.original.name}</span>
     ),
   },
   {
     id: 'address',
+    size: 180,
+    minSize: 120,
+    maxSize: 220,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Address" />
     ),
     cell: ({ row }) => {
       const { city, state } = row.original;
       if (!city && !state) return <span className="text-muted-foreground">-</span>;
-      return `${city || ''}${city && state ? ', ' : ''}${state || ''}`;
+      const addressText = `${city || ''}${city && state ? ', ' : ''}${state || ''}`;
+      return <span className="truncate block max-w-[200px]" title={addressText}>{addressText}</span>;
     },
   },
   {
     accessorKey: 'timezone',
+    size: 150,
+    minSize: 100,
+    maxSize: 180,
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Timezone" />
     ),
     cell: ({ row }) => (
-      <span className="text-sm">{getTimezoneLabel(row.original.timezone)}</span>
+      <span className="text-sm whitespace-nowrap">{getTimezoneLabel(row.original.timezone)}</span>
     ),
   },
   {
     id: 'calendars',
+    size: 90,
+    minSize: 70,
+    maxSize: 100,
     header: () => <span>Calendars</span>,
     cell: ({ row }) => {
       const count = row.original.calendarCount;
@@ -114,6 +130,9 @@ export const createLocationsColumns = ({
   },
   {
     id: 'actions',
+    size: 80,
+    minSize: 60,
+    maxSize: 90,
     header: () => <span>Actions</span>,
     cell: ({ row }) => (
       <div className="flex items-center justify-end">
