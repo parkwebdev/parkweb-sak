@@ -23,7 +23,7 @@ import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { Download01, Calendar as CalendarIcon } from '@untitledui/icons';
+import { Calendar as CalendarIcon } from '@untitledui/icons';
 import { toast } from 'sonner';
 import type { Tables, Enums } from '@/integrations/supabase/types';
 import {
@@ -358,7 +358,6 @@ export function ExportLeadsDialog({
             Cancel
           </Button>
           <Button size="sm" onClick={handleExport} disabled={!canExport}>
-            <Download01 size={16} className="mr-2" />
             Export CSV
           </Button>
         </DialogFooter>
