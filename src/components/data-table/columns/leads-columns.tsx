@@ -4,7 +4,13 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { DataTableColumnHeader } from '../DataTableColumnHeader';
 import type { Tables } from '@/integrations/supabase/types';
 
-export type Lead = Tables<'leads'>;
+export type Lead = Tables<'leads'> & {
+  conversations?: {
+    id: string;
+    created_at: string;
+    metadata?: unknown;
+  };
+};
 
 interface LeadsColumnsProps {
   onView: (lead: Lead) => void;
@@ -73,6 +79,13 @@ export const createLeadsColumns = ({
     },
   },
   {
+    accessorKey: 'company',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Company" />
+    ),
+    cell: ({ row }) => row.original.company || '-',
+  },
+  {
     accessorKey: 'stage_id',
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Stage" />
@@ -87,11 +100,77 @@ export const createLeadsColumns = ({
     ),
   },
   {
+    accessorKey: 'location',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Location" />
+    ),
+    cell: ({ row }) => {
+      const data = (row.original.data || {}) as Record<string, unknown>;
+      const city = data['city'] || data['City'];
+      const state = data['state'] || data['State'];
+      
+      if (city && state) return `${city}, ${state}`;
+      if (city) return String(city);
+      if (state) return String(state);
+      
+      // Try to get location from metadata if conversation is linked
+      const conversations = row.original.conversations;
+      if (conversations?.metadata) {
+        const metadata = conversations.metadata as Record<string, unknown>;
+        if (metadata.city && metadata.state) return `${metadata.city}, ${metadata.state}`;
+        if (metadata.city) return String(metadata.city);
+        if (metadata.state) return String(metadata.state);
+        if (metadata.country) return String(metadata.country);
+      }
+      
+      return '-';
+    },
+  },
+  {
+    accessorKey: 'source',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Source" />
+    ),
+    cell: ({ row }) => {
+      // Try to get source from conversation metadata
+      const conversations = row.original.conversations;
+      if (conversations?.metadata) {
+        const metadata = conversations.metadata as Record<string, unknown>;
+        const referrer = metadata.referrer_url || metadata.referrer || metadata.source;
+        if (referrer) {
+          try {
+            const url = new URL(String(referrer));
+            return url.hostname.replace('www.', '');
+          } catch {
+            return String(referrer).slice(0, 30);
+          }
+        }
+        if (metadata.entry_page) {
+          try {
+            const url = new URL(String(metadata.entry_page));
+            return url.pathname.slice(0, 30) || '/';
+          } catch {
+            return String(metadata.entry_page).slice(0, 30);
+          }
+        }
+      }
+      return '-';
+    },
+  },
+  {
     accessorKey: 'created_at',
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Created" />
     ),
     cell: ({ row }) =>
       formatDistanceToNow(new Date(row.original.created_at), { addSuffix: true }),
+  },
+  {
+    accessorKey: 'updated_at',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Last Updated" />
+    ),
+    cell: ({ row }) =>
+      formatDistanceToNow(new Date(row.original.updated_at), { addSuffix: true }),
   },
 ];

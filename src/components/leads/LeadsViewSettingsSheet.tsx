@@ -1,6 +1,6 @@
 /**
  * @fileoverview Unified settings sheet for Leads page.
- * Provides stacked navigation for Fields, Stages, and Export options.
+ * Provides stacked navigation for Fields, Columns, Stages, Sorting, Presets, and Export options.
  */
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
@@ -19,6 +19,7 @@ import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { IconButton } from '@/components/ui/icon-button';
 import { ColorPicker } from '@/components/ui/color-picker';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import {
   Select,
   SelectContent,
@@ -42,6 +43,10 @@ import {
   Check,
   DotsGrid,
   Calendar as CalendarIcon,
+  SwitchVertical01,
+  Bookmark,
+  ChevronDown,
+  ChevronUp,
 } from '@untitledui/icons';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -51,7 +56,7 @@ import { supabase } from '@/integrations/supabase/client';
 // Import types and utilities
 import type { Tables } from '@/integrations/supabase/types';
 import type { ConversationMetadata } from '@/types/metadata';
-import type { VisibilityState } from '@tanstack/react-table';
+import type { VisibilityState, SortingState } from '@tanstack/react-table';
 import { useLeadStages, type LeadStage } from '@/hooks/useLeadStages';
 import {
   getFieldsByGroup,
@@ -74,32 +79,7 @@ import {
   needsConversationMetadata,
 } from '@/lib/leads-export';
 
-// Table column definitions for the settings sheet
-export interface TableColumnDef {
-  id: string;
-  label: string;
-  canHide: boolean;
-}
-
-export const TABLE_COLUMNS: TableColumnDef[] = [
-  { id: 'name', label: 'Name', canHide: true },
-  { id: 'email', label: 'Email', canHide: true },
-  { id: 'phone', label: 'Phone', canHide: true },
-  { id: 'stage_id', label: 'Stage', canHide: true },
-  { id: 'created_at', label: 'Created', canHide: true },
-];
-
-export const DEFAULT_TABLE_COLUMN_VISIBILITY: VisibilityState = {
-  name: true,
-  email: true,
-  phone: true,
-  stage_id: true,
-  created_at: true,
-};
-
-export const TABLE_VISIBILITY_STORAGE_KEY = 'leads-table-column-visibility';
-
-// DnD imports for stages
+// DnD imports for stages and columns
 import {
   DndContext,
   closestCenter,
@@ -118,14 +98,72 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
+// Table column definitions for the settings sheet
+export interface TableColumnDef {
+  id: string;
+  label: string;
+  canHide: boolean;
+}
+
+export const TABLE_COLUMNS: TableColumnDef[] = [
+  { id: 'name', label: 'Name', canHide: true },
+  { id: 'email', label: 'Email', canHide: true },
+  { id: 'phone', label: 'Phone', canHide: true },
+  { id: 'company', label: 'Company', canHide: true },
+  { id: 'stage_id', label: 'Stage', canHide: true },
+  { id: 'location', label: 'Location', canHide: true },
+  { id: 'source', label: 'Source', canHide: true },
+  { id: 'created_at', label: 'Created', canHide: true },
+  { id: 'updated_at', label: 'Last Updated', canHide: true },
+];
+
+export const DEFAULT_TABLE_COLUMN_VISIBILITY: VisibilityState = {
+  name: true,
+  email: true,
+  phone: true,
+  company: false,
+  stage_id: true,
+  location: false,
+  source: false,
+  created_at: true,
+  updated_at: false,
+};
+
+export const TABLE_VISIBILITY_STORAGE_KEY = 'leads-table-column-visibility';
+export const TABLE_COLUMN_ORDER_STORAGE_KEY = 'leads-table-column-order';
+export const DEFAULT_VIEW_MODE_STORAGE_KEY = 'leads-default-view-mode';
+export const DEFAULT_SORT_STORAGE_KEY = 'leads-default-sort';
+export const VIEW_PRESETS_STORAGE_KEY = 'leads-view-presets';
+
+// Get default column order
+export const getDefaultColumnOrder = (): string[] => TABLE_COLUMNS.map(col => col.id);
+
+// View preset type
+export interface ViewPreset {
+  id: string;
+  name: string;
+  viewMode: 'kanban' | 'table';
+  kanbanFields: CardFieldKey[];
+  tableColumns: VisibilityState;
+  tableColumnOrder: string[];
+  defaultSort: { column: string; direction: 'asc' | 'desc' } | null;
+}
+
+// Sort option type
+export interface SortOption {
+  column: string;
+  direction: 'asc' | 'desc';
+}
+
 type Lead = Tables<'leads'>;
-type SheetView = 'main' | 'fields' | 'columns' | 'stages' | 'export';
+type SheetView = 'main' | 'fields' | 'columns' | 'stages' | 'export' | 'sorting' | 'presets';
 const GROUP_ORDER: FieldGroup[] = ['contact', 'session', 'organization', 'timestamps', 'notes'];
 
 interface LeadsViewSettingsSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   viewMode: 'kanban' | 'table';
+  onViewModeChange?: (mode: 'kanban' | 'table') => void;
   // Card fields (Kanban)
   visibleFields: Set<CardFieldKey>;
   onToggleField: (field: CardFieldKey) => void;
@@ -133,6 +171,16 @@ interface LeadsViewSettingsSheetProps {
   // Table columns (Table view)
   columnVisibility: VisibilityState;
   onColumnVisibilityChange: (visibility: VisibilityState) => void;
+  // Column order
+  columnOrder: string[];
+  onColumnOrderChange: (order: string[]) => void;
+  // Default sort
+  defaultSort: SortOption | null;
+  onDefaultSortChange: (sort: SortOption | null) => void;
+  // Presets
+  presets: ViewPreset[];
+  onPresetsChange: (presets: ViewPreset[]) => void;
+  onApplyPreset: (preset: ViewPreset) => void;
   // Export
   allLeads: Lead[];
   filteredLeads: Lead[];
@@ -260,6 +308,56 @@ function SortableStageItem({
   );
 }
 
+// Sortable column item component for reordering
+function SortableColumnItem({
+  column,
+  isVisible,
+  onToggle,
+}: {
+  column: TableColumnDef;
+  isVisible: boolean;
+  onToggle: () => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: column.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={cn(
+        'flex items-center gap-3 p-2 rounded-md hover:bg-muted/50 transition-colors',
+        isDragging && 'opacity-50 shadow-lg bg-card'
+      )}
+    >
+      <button
+        {...attributes}
+        {...listeners}
+        className="cursor-grab touch-none text-muted-foreground hover:text-foreground"
+        aria-label="Drag to reorder column"
+      >
+        <DotsGrid size={14} />
+      </button>
+      <Checkbox
+        checked={isVisible}
+        onCheckedChange={onToggle}
+      />
+      <span className="text-sm">{column.label}</span>
+    </div>
+  );
+}
+
 // Fetch conversation metadata for leads
 async function fetchConversationMetadata(
   leads: Lead[]
@@ -308,11 +406,19 @@ export function LeadsViewSettingsSheet({
   open,
   onOpenChange,
   viewMode,
+  onViewModeChange,
   visibleFields,
   onToggleField,
   onSetFields,
   columnVisibility,
   onColumnVisibilityChange,
+  columnOrder,
+  onColumnOrderChange,
+  defaultSort,
+  onDefaultSortChange,
+  presets,
+  onPresetsChange,
+  onApplyPreset,
   allLeads,
   filteredLeads,
 }: LeadsViewSettingsSheetProps) {
@@ -325,6 +431,22 @@ export function LeadsViewSettingsSheet({
       setActiveView('main');
     }
   }, [open]);
+
+  // --- Default view preference ---
+  const [defaultViewMode, setDefaultViewMode] = useState<'kanban' | 'table'>(() => {
+    try {
+      const stored = localStorage.getItem(DEFAULT_VIEW_MODE_STORAGE_KEY);
+      if (stored === 'kanban' || stored === 'table') return stored;
+    } catch {
+      // fallback
+    }
+    return 'kanban';
+  });
+
+  const handleDefaultViewModeChange = useCallback((mode: 'kanban' | 'table') => {
+    setDefaultViewMode(mode);
+    localStorage.setItem(DEFAULT_VIEW_MODE_STORAGE_KEY, mode);
+  }, []);
 
   // --- Fields logic ---
   const fieldsByGroup = getFieldsByGroup();
@@ -358,7 +480,32 @@ export function LeadsViewSettingsSheet({
 
   const handleResetColumnsToDefaults = useCallback(() => {
     onColumnVisibilityChange({ ...DEFAULT_TABLE_COLUMN_VISIBILITY });
-  }, [onColumnVisibilityChange]);
+    onColumnOrderChange(getDefaultColumnOrder());
+  }, [onColumnVisibilityChange, onColumnOrderChange]);
+
+  // --- Column order drag-and-drop ---
+  const columnSensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const orderedColumns = useMemo(() => {
+    return columnOrder
+      .map(id => TABLE_COLUMNS.find(col => col.id === id))
+      .filter((col): col is TableColumnDef => col !== undefined);
+  }, [columnOrder]);
+
+  const handleColumnDragEnd = useCallback((event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      const oldIndex = columnOrder.findIndex(id => id === active.id);
+      const newIndex = columnOrder.findIndex(id => id === over.id);
+      const newOrder = arrayMove(columnOrder, oldIndex, newIndex);
+      onColumnOrderChange(newOrder);
+    }
+  }, [columnOrder, onColumnOrderChange]);
 
   // --- Stages logic ---
   const [localStages, setLocalStages] = useState<LeadStage[]>([]);
@@ -370,14 +517,14 @@ export function LeadsViewSettingsSheet({
     setLocalStages(stages);
   }, [stages]);
 
-  const sensors = useSensors(
+  const stageSensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })
   );
 
-  const handleDragEnd = useCallback(async (event: DragEndEvent) => {
+  const handleStageDragEnd = useCallback(async (event: DragEndEvent) => {
     const { active, over } = event;
     if (over && active.id !== over.id) {
       const oldIndex = localStages.findIndex((s) => s.id === active.id);
@@ -407,6 +554,52 @@ export function LeadsViewSettingsSheet({
       setIsDeleting(false);
     }
   }, [deleteStage]);
+
+  // --- Sorting preferences ---
+  const sortableColumns = useMemo(() => [
+    { id: 'name', label: 'Name' },
+    { id: 'email', label: 'Email' },
+    { id: 'created_at', label: 'Created' },
+    { id: 'updated_at', label: 'Last Updated' },
+    { id: 'company', label: 'Company' },
+  ], []);
+
+  // --- Presets logic ---
+  const [newPresetName, setNewPresetName] = useState('');
+
+  const handleSavePreset = useCallback(() => {
+    if (!newPresetName.trim()) {
+      toast.error('Please enter a preset name');
+      return;
+    }
+
+    const newPreset: ViewPreset = {
+      id: crypto.randomUUID(),
+      name: newPresetName.trim(),
+      viewMode,
+      kanbanFields: [...visibleFields],
+      tableColumns: { ...columnVisibility },
+      tableColumnOrder: [...columnOrder],
+      defaultSort,
+    };
+
+    const updated = [...presets, newPreset];
+    onPresetsChange(updated);
+    setNewPresetName('');
+    toast.success(`Saved preset "${newPreset.name}"`);
+  }, [newPresetName, viewMode, visibleFields, columnVisibility, columnOrder, defaultSort, presets, onPresetsChange]);
+
+  const handleDeletePreset = useCallback((id: string) => {
+    const updated = presets.filter(p => p.id !== id);
+    onPresetsChange(updated);
+    toast.success('Preset deleted');
+  }, [presets, onPresetsChange]);
+
+  const handleLoadPreset = useCallback((preset: ViewPreset) => {
+    onApplyPreset(preset);
+    toast.success(`Applied preset "${preset.name}"`);
+    setActiveView('main');
+  }, [onApplyPreset]);
 
   // --- Export logic ---
   const [selectedColumns, setSelectedColumns] = useState<ExportColumn[]>(DEFAULT_COLUMNS);
@@ -571,7 +764,34 @@ export function LeadsViewSettingsSheet({
                 transition={{ duration: 0.15 }}
                 className="space-y-4"
               >
-                {/* View indicator */}
+                {/* Default view preference */}
+                <div className="space-y-3">
+                  <Label className="text-xs text-muted-foreground uppercase tracking-wide">Default View</Label>
+                  <RadioGroup
+                    value={defaultViewMode}
+                    onValueChange={(value) => handleDefaultViewModeChange(value as 'kanban' | 'table')}
+                    className="flex gap-2"
+                  >
+                    <div className="flex items-center gap-2 flex-1">
+                      <RadioGroupItem value="kanban" id="view-kanban" />
+                      <Label htmlFor="view-kanban" className="flex items-center gap-2 cursor-pointer text-sm">
+                        <LayoutAlt04 size={16} className="text-muted-foreground" />
+                        Board
+                      </Label>
+                    </div>
+                    <div className="flex items-center gap-2 flex-1">
+                      <RadioGroupItem value="table" id="view-table" />
+                      <Label htmlFor="view-table" className="flex items-center gap-2 cursor-pointer text-sm">
+                        <Rows03 size={16} className="text-muted-foreground" />
+                        Table
+                      </Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+
+                <Separator />
+
+                {/* Current view indicator */}
                 <div className="flex items-center gap-3 p-3 border rounded-lg bg-muted/30">
                   {viewMode === 'kanban' ? (
                     <LayoutAlt04 size={20} className="text-muted-foreground" />
@@ -581,9 +801,8 @@ export function LeadsViewSettingsSheet({
                   <span className="font-medium">
                     {viewMode === 'kanban' ? 'Board View' : 'Table View'}
                   </span>
+                  <span className="text-xs text-muted-foreground ml-auto">(current)</span>
                 </div>
-
-                <Separator />
 
                 {/* Navigation items - view-aware */}
                 <div className="space-y-1">
@@ -607,6 +826,18 @@ export function LeadsViewSettingsSheet({
                     label="Pipeline Stages"
                     count={`${stages.length} stages`}
                     onClick={() => setActiveView('stages')}
+                  />
+                  <NavItem
+                    icon={SwitchVertical01}
+                    label="Default Sorting"
+                    count={defaultSort ? `${sortableColumns.find(c => c.id === defaultSort.column)?.label || defaultSort.column} ${defaultSort.direction === 'asc' ? '↑' : '↓'}` : 'None'}
+                    onClick={() => setActiveView('sorting')}
+                  />
+                  <NavItem
+                    icon={Bookmark}
+                    label="Saved Views"
+                    count={`${presets.length} presets`}
+                    onClick={() => setActiveView('presets')}
                   />
                   <NavItem
                     icon={Download01}
@@ -694,27 +925,30 @@ export function LeadsViewSettingsSheet({
                 <SubViewHeader title="Table Columns" onBack={() => setActiveView('main')} />
                 
                 <p className="text-sm text-muted-foreground mb-4">
-                  Choose which columns to display in the table
+                  Drag to reorder columns. Toggle visibility with checkboxes.
                 </p>
 
-                <div className="space-y-2">
-                  {TABLE_COLUMNS.map((column) => {
-                    const isChecked = columnVisibility[column.id] !== false;
-                    
-                    return (
-                      <label
-                        key={column.id}
-                        className="flex items-center gap-3 p-2 rounded-md hover:bg-muted/50 cursor-pointer transition-colors"
-                      >
-                        <Checkbox
-                          checked={isChecked}
-                          onCheckedChange={() => handleColumnToggle(column.id)}
+                <DndContext
+                  sensors={columnSensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleColumnDragEnd}
+                >
+                  <SortableContext
+                    items={columnOrder}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    <div className="space-y-1">
+                      {orderedColumns.map((column) => (
+                        <SortableColumnItem
+                          key={column.id}
+                          column={column}
+                          isVisible={columnVisibility[column.id] !== false}
+                          onToggle={() => handleColumnToggle(column.id)}
                         />
-                        <span className="text-sm">{column.label}</span>
-                      </label>
-                    );
-                  })}
-                </div>
+                      ))}
+                    </div>
+                  </SortableContext>
+                </DndContext>
 
                 <div className="flex gap-2 mt-6 pt-4 border-t">
                   <Button variant="outline" size="sm" onClick={handleSelectAllColumns} className="flex-1">
@@ -747,9 +981,9 @@ export function LeadsViewSettingsSheet({
                     </div>
                   ) : (
                     <DndContext
-                      sensors={sensors}
+                      sensors={stageSensors}
                       collisionDetection={closestCenter}
-                      onDragEnd={handleDragEnd}
+                      onDragEnd={handleStageDragEnd}
                     >
                       <SortableContext
                         items={localStages.map((s) => s.id)}
@@ -789,6 +1023,180 @@ export function LeadsViewSettingsSheet({
                     <Plus size={16} className="mr-1" />
                     Add
                   </Button>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Sorting View */}
+            {activeView === 'sorting' && (
+              <motion.div
+                key="sorting"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                transition={{ duration: 0.15 }}
+              >
+                <SubViewHeader title="Default Sorting" onBack={() => setActiveView('main')} />
+                
+                <p className="text-sm text-muted-foreground mb-4">
+                  Set the default sort order when opening the Leads page
+                </p>
+
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Sort by column</Label>
+                    <Select
+                      value={defaultSort?.column || ''}
+                      onValueChange={(value) => {
+                        if (value) {
+                          onDefaultSortChange({
+                            column: value,
+                            direction: defaultSort?.direction || 'desc',
+                          });
+                        } else {
+                          onDefaultSortChange(null);
+                        }
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select column..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">None</SelectItem>
+                        {sortableColumns.map(col => (
+                          <SelectItem key={col.id} value={col.id}>
+                            {col.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {defaultSort && (
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Direction</Label>
+                      <div className="flex gap-2">
+                        <Button
+                          variant={defaultSort.direction === 'asc' ? 'default' : 'outline'}
+                          size="sm"
+                          className="flex-1"
+                          onClick={() => onDefaultSortChange({ ...defaultSort, direction: 'asc' })}
+                        >
+                          <ChevronUp size={16} className="mr-1" />
+                          Ascending
+                        </Button>
+                        <Button
+                          variant={defaultSort.direction === 'desc' ? 'default' : 'outline'}
+                          size="sm"
+                          className="flex-1"
+                          onClick={() => onDefaultSortChange({ ...defaultSort, direction: 'desc' })}
+                        >
+                          <ChevronDown size={16} className="mr-1" />
+                          Descending
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {defaultSort && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-muted-foreground"
+                      onClick={() => onDefaultSortChange(null)}
+                    >
+                      Clear default sorting
+                    </Button>
+                  )}
+                </div>
+              </motion.div>
+            )}
+
+            {/* Presets View */}
+            {activeView === 'presets' && (
+              <motion.div
+                key="presets"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                transition={{ duration: 0.15 }}
+              >
+                <SubViewHeader title="Saved Views" onBack={() => setActiveView('main')} />
+                
+                <p className="text-sm text-muted-foreground mb-4">
+                  Save your current view settings as a preset for quick access
+                </p>
+
+                {presets.length > 0 ? (
+                  <div className="space-y-2 mb-6">
+                    {presets.map(preset => (
+                      <div
+                        key={preset.id}
+                        className="flex items-center gap-3 p-3 border rounded-lg hover:bg-muted/50 transition-colors group"
+                      >
+                        {preset.viewMode === 'kanban' ? (
+                          <LayoutAlt04 size={16} className="text-muted-foreground" />
+                        ) : (
+                          <Rows03 size={16} className="text-muted-foreground" />
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-sm truncate">{preset.name}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {preset.viewMode === 'kanban'
+                              ? `${preset.kanbanFields.length} fields`
+                              : `${Object.values(preset.tableColumns).filter(Boolean).length} columns`
+                            }
+                            {preset.defaultSort && ` • Sorted by ${preset.defaultSort.column}`}
+                          </div>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={() => handleLoadPreset(preset)}
+                        >
+                          Apply
+                        </Button>
+                        <IconButton
+                          label="Delete preset"
+                          variant="ghost"
+                          size="sm"
+                          className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                          onClick={() => handleDeletePreset(preset.id)}
+                        >
+                          <Trash01 size={14} />
+                        </IconButton>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground mb-6">
+                    <Bookmark size={32} className="mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">No saved views yet</p>
+                  </div>
+                )}
+
+                <div className="pt-4 border-t space-y-3">
+                  <Label className="text-sm font-medium">Save current view</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      value={newPresetName}
+                      onChange={(e) => setNewPresetName(e.target.value)}
+                      placeholder="Preset name..."
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleSavePreset();
+                      }}
+                      className="flex-1"
+                    />
+                    <Button
+                      onClick={handleSavePreset}
+                      disabled={!newPresetName.trim()}
+                      size="sm"
+                    >
+                      <Plus size={16} className="mr-1" />
+                      Save
+                    </Button>
+                  </div>
                 </div>
               </motion.div>
             )}
@@ -934,45 +1342,43 @@ export function LeadsViewSettingsSheet({
                       )}
                     </div>
 
-                    {/* Current View Toggle */}
-                    <div className="flex items-center justify-between rounded-lg border bg-muted/30 p-3">
-                      <div className="space-y-0.5">
-                        <Label className="text-sm">Export current view only</Label>
-                        <p className="text-xs text-muted-foreground">
-                          Only export the {filteredLeads.length} leads in your current filtered view
-                        </p>
-                      </div>
-                      <Switch checked={useCurrentView} onCheckedChange={setUseCurrentView} />
+                    {/* Use Current View Toggle */}
+                    <div className="flex items-center justify-between">
+                      <Label className="text-sm">Export current search results only</Label>
+                      <Switch
+                        checked={useCurrentView}
+                        onCheckedChange={setUseCurrentView}
+                      />
                     </div>
                   </div>
 
                   <Separator />
 
-                  {/* Export Settings */}
-                  <div className="space-y-4">
-                    <Label className="text-sm font-medium">Export settings</Label>
+                  {/* Options */}
+                  <div className="space-y-3">
+                    <Label className="text-sm font-medium">Options</Label>
                     <div className="flex items-center justify-between">
-                      <Label className="text-sm">Include column headers</Label>
-                      <Switch checked={includeHeaders} onCheckedChange={setIncludeHeaders} />
+                      <Label className="text-sm font-normal">Include column headers</Label>
+                      <Switch
+                        checked={includeHeaders}
+                        onCheckedChange={setIncludeHeaders}
+                      />
                     </div>
                   </div>
+                </div>
 
-                  {/* Preview Count */}
-                  <div className="rounded-lg bg-muted/50 p-3 text-center">
-                    <span className="text-sm text-muted-foreground">
-                      Exporting{' '}
-                      <span className="font-semibold text-foreground">{previewCount}</span>{' '}
-                      {previewCount === 1 ? 'lead' : 'leads'}
-                    </span>
+                {/* Export Footer */}
+                <div className="mt-6 pt-4 border-t space-y-3">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Leads to export:</span>
+                    <span className="font-medium">{previewCount}</span>
                   </div>
-
-                  {/* Export Button */}
                   <Button
-                    className="w-full"
                     onClick={handleExport}
                     disabled={!canExport}
+                    className="w-full"
                   >
-                    {isExporting ? 'Exporting...' : 'Export CSV'}
+                    {isExporting ? 'Exporting...' : `Export ${previewCount} Leads`}
                   </Button>
                 </div>
               </motion.div>

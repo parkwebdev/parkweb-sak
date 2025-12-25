@@ -3,7 +3,7 @@
  * Integrates with TanStack Table for row selection, faceted filters, and bulk actions.
  */
 
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo, useCallback, useEffect } from 'react';
 import {
   useReactTable,
   getCoreRowModel,
@@ -16,6 +16,7 @@ import {
   RowSelectionState,
   ColumnFiltersState,
   VisibilityState,
+  ColumnOrderState,
 } from '@tanstack/react-table';
 import { useState } from 'react';
 import { Trash01, Settings01 } from '@untitledui/icons';
@@ -29,6 +30,7 @@ import { createLeadsColumns, type Lead } from '@/components/data-table/columns/l
 import { LeadStatusDropdown } from './LeadStatusDropdown';
 import { ViewModeToggle } from './ViewModeToggle';
 import { Button } from '@/components/ui/button';
+import type { SortOption } from './LeadsViewSettingsSheet';
 
 interface LeadsTableProps {
   leads: Lead[];
@@ -46,6 +48,10 @@ interface LeadsTableProps {
   // External column visibility control
   columnVisibility: VisibilityState;
   onColumnVisibilityChange: (visibility: VisibilityState) => void;
+  // Column order
+  columnOrder: string[];
+  // Default sorting
+  defaultSort: SortOption | null;
 }
 
 export const LeadsTable = React.memo(function LeadsTable({
@@ -63,9 +69,24 @@ export const LeadsTable = React.memo(function LeadsTable({
   onOpenSettings,
   columnVisibility,
   onColumnVisibilityChange,
+  columnOrder,
+  defaultSort,
 }: LeadsTableProps) {
-  const [sorting, setSorting] = useState<SortingState>([]);
+  // Initialize sorting from defaultSort
+  const [sorting, setSorting] = useState<SortingState>(() => {
+    if (defaultSort) {
+      return [{ id: defaultSort.column, desc: defaultSort.direction === 'desc' }];
+    }
+    return [];
+  });
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+
+  // Update sorting when defaultSort changes (only if sorting is currently empty or matches previous default)
+  useEffect(() => {
+    if (defaultSort) {
+      setSorting([{ id: defaultSort.column, desc: defaultSort.direction === 'desc' }]);
+    }
+  }, [defaultSort]);
 
   const rowSelection = useMemo(() => {
     const selection: RowSelectionState = {};
@@ -86,6 +107,30 @@ export const LeadsTable = React.memo(function LeadsTable({
       }),
     [onView, onStageChange]
   );
+
+  // Reorder columns based on columnOrder prop
+  const orderedColumns = useMemo(() => {
+    // Keep select column first, then order the rest
+    const selectCol = columns.find(col => col.id === 'select');
+    const otherCols = columns.filter(col => col.id !== 'select');
+    
+    const orderedOtherCols = columnOrder
+      .map(id => otherCols.find(col => {
+        const colId = col.id || (col as { accessorKey?: string }).accessorKey;
+        return colId === id;
+      }))
+      .filter((col): col is typeof otherCols[0] => col !== undefined);
+    
+    // Add any columns not in the order (in case new columns are added)
+    otherCols.forEach(col => {
+      const colId = col.id || (col as { accessorKey?: string }).accessorKey;
+      if (!columnOrder.includes(colId as string)) {
+        orderedOtherCols.push(col);
+      }
+    });
+    
+    return selectCol ? [selectCol, ...orderedOtherCols] : orderedOtherCols;
+  }, [columns, columnOrder]);
 
   const handleRowSelectionChange = useCallback((updater: RowSelectionState | ((prev: RowSelectionState) => RowSelectionState)) => {
     const newSelection = typeof updater === 'function' ? updater(rowSelection) : updater;
@@ -110,7 +155,7 @@ export const LeadsTable = React.memo(function LeadsTable({
 
   const table = useReactTable({
     data: leads,
-    columns,
+    columns: orderedColumns,
     state: {
       sorting,
       rowSelection,
@@ -178,7 +223,7 @@ export const LeadsTable = React.memo(function LeadsTable({
       />
       <DataTable
         table={table}
-        columns={columns}
+        columns={orderedColumns}
         onRowClick={handleRowClick}
         emptyMessage="No leads found"
       />
