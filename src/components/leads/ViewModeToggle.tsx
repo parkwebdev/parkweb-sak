@@ -27,17 +27,17 @@ export const ViewModeToggle = React.memo(function ViewModeToggle({
   return (
     <div
       className={cn(
-        'relative flex rounded-lg border p-0.5',
+        'relative flex rounded-lg border overflow-hidden',
         className
       )}
       onMouseLeave={() => setHoveredMode(null)}
     >
       {/* Sliding indicator */}
       <motion.div
-        className="absolute inset-y-0.5 w-[calc(50%-2px)] rounded-md bg-muted"
+        className="absolute inset-y-0 w-1/2 bg-muted"
         initial={false}
         animate={{
-          x: indicatorPosition === 'kanban' ? 2 : 'calc(100% + 2px)',
+          x: indicatorPosition === 'kanban' ? 0 : '100%',
         }}
         transition={{
           type: 'spring',
