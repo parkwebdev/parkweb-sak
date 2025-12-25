@@ -6,12 +6,12 @@
  * - Search and status filtering
  * - Bulk selection and deletion
  * - Lead details sheet with conversation linkage
- * - Unified settings sheet for fields, stages, and export
+ * - Unified settings sheet for fields, stages, sorting, presets, and export
  * 
  * @page
  */
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Button } from '@/components/ui/button';
 import { useLeads } from '@/hooks/useLeads';
@@ -25,6 +25,13 @@ import {
   LeadsViewSettingsSheet,
   TABLE_VISIBILITY_STORAGE_KEY,
   DEFAULT_TABLE_COLUMN_VISIBILITY,
+  TABLE_COLUMN_ORDER_STORAGE_KEY,
+  DEFAULT_VIEW_MODE_STORAGE_KEY,
+  DEFAULT_SORT_STORAGE_KEY,
+  VIEW_PRESETS_STORAGE_KEY,
+  getDefaultColumnOrder,
+  type ViewPreset,
+  type SortOption,
 } from '@/components/leads/LeadsViewSettingsSheet';
 import { type CardFieldKey, getDefaultVisibleFields, KANBAN_FIELDS_STORAGE_KEY } from '@/components/leads/KanbanCardFields';
 import { Settings01 } from '@untitledui/icons';
@@ -44,7 +51,17 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
   const { stages } = useLeadStages();
   const [selectedLead, setSelectedLead] = useState<Tables<'leads'> | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
-  const [viewMode, setViewMode] = useState<'kanban' | 'table'>('kanban');
+  
+  // Initialize view mode from localStorage
+  const [viewMode, setViewMode] = useState<'kanban' | 'table'>(() => {
+    try {
+      const stored = localStorage.getItem(DEFAULT_VIEW_MODE_STORAGE_KEY);
+      if (stored === 'kanban' || stored === 'table') return stored;
+    } catch {
+      // fallback
+    }
+    return 'kanban';
+  });
   
   // Bulk selection state
   const [selectedLeadIds, setSelectedLeadIds] = useState<Set<string>>(new Set());
@@ -84,9 +101,93 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
     return { ...DEFAULT_TABLE_COLUMN_VISIBILITY };
   });
 
+  // Column order state with localStorage persistence
+  const [columnOrder, setColumnOrder] = useState<string[]>(() => {
+    try {
+      const stored = localStorage.getItem(TABLE_COLUMN_ORDER_STORAGE_KEY);
+      if (stored) {
+        return JSON.parse(stored) as string[];
+      }
+    } catch {
+      // Fallback to defaults
+    }
+    return getDefaultColumnOrder();
+  });
+
+  // Default sorting state with localStorage persistence
+  const [defaultSort, setDefaultSort] = useState<SortOption | null>(() => {
+    try {
+      const stored = localStorage.getItem(DEFAULT_SORT_STORAGE_KEY);
+      if (stored) {
+        return JSON.parse(stored) as SortOption;
+      }
+    } catch {
+      // Fallback to null
+    }
+    return null;
+  });
+
+  // View presets state with localStorage persistence
+  const [presets, setPresets] = useState<ViewPreset[]>(() => {
+    try {
+      const stored = localStorage.getItem(VIEW_PRESETS_STORAGE_KEY);
+      if (stored) {
+        return JSON.parse(stored) as ViewPreset[];
+      }
+    } catch {
+      // Fallback to empty array
+    }
+    return [];
+  });
+
   const handleColumnVisibilityChange = useCallback((visibility: VisibilityState) => {
     setColumnVisibility(visibility);
     localStorage.setItem(TABLE_VISIBILITY_STORAGE_KEY, JSON.stringify(visibility));
+  }, []);
+
+  const handleColumnOrderChange = useCallback((order: string[]) => {
+    setColumnOrder(order);
+    localStorage.setItem(TABLE_COLUMN_ORDER_STORAGE_KEY, JSON.stringify(order));
+  }, []);
+
+  const handleDefaultSortChange = useCallback((sort: SortOption | null) => {
+    setDefaultSort(sort);
+    if (sort) {
+      localStorage.setItem(DEFAULT_SORT_STORAGE_KEY, JSON.stringify(sort));
+    } else {
+      localStorage.removeItem(DEFAULT_SORT_STORAGE_KEY);
+    }
+  }, []);
+
+  const handlePresetsChange = useCallback((newPresets: ViewPreset[]) => {
+    setPresets(newPresets);
+    localStorage.setItem(VIEW_PRESETS_STORAGE_KEY, JSON.stringify(newPresets));
+  }, []);
+
+  const handleApplyPreset = useCallback((preset: ViewPreset) => {
+    // Apply view mode
+    setViewMode(preset.viewMode);
+    localStorage.setItem(DEFAULT_VIEW_MODE_STORAGE_KEY, preset.viewMode);
+    
+    // Apply kanban fields
+    setVisibleCardFields(new Set(preset.kanbanFields));
+    localStorage.setItem(KANBAN_FIELDS_STORAGE_KEY, JSON.stringify(preset.kanbanFields));
+    
+    // Apply table columns visibility
+    setColumnVisibility(preset.tableColumns);
+    localStorage.setItem(TABLE_VISIBILITY_STORAGE_KEY, JSON.stringify(preset.tableColumns));
+    
+    // Apply column order
+    setColumnOrder(preset.tableColumnOrder);
+    localStorage.setItem(TABLE_COLUMN_ORDER_STORAGE_KEY, JSON.stringify(preset.tableColumnOrder));
+    
+    // Apply sorting
+    setDefaultSort(preset.defaultSort);
+    if (preset.defaultSort) {
+      localStorage.setItem(DEFAULT_SORT_STORAGE_KEY, JSON.stringify(preset.defaultSort));
+    } else {
+      localStorage.removeItem(DEFAULT_SORT_STORAGE_KEY);
+    }
   }, []);
 
   const handleToggleField = useCallback((field: CardFieldKey) => {
@@ -293,6 +394,8 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
                   onOpenSettings={() => setIsSettingsSheetOpen(true)}
                   columnVisibility={columnVisibility}
                   onColumnVisibilityChange={handleColumnVisibilityChange}
+                  columnOrder={columnOrder}
+                  defaultSort={defaultSort}
                 />
               </motion.div>
             )}
@@ -337,11 +440,19 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
         open={isSettingsSheetOpen}
         onOpenChange={setIsSettingsSheetOpen}
         viewMode={viewMode}
+        onViewModeChange={setViewMode}
         visibleFields={visibleCardFields}
         onToggleField={handleToggleField}
         onSetFields={handleSetFields}
         columnVisibility={columnVisibility}
         onColumnVisibilityChange={handleColumnVisibilityChange}
+        columnOrder={columnOrder}
+        onColumnOrderChange={handleColumnOrderChange}
+        defaultSort={defaultSort}
+        onDefaultSortChange={handleDefaultSortChange}
+        presets={presets}
+        onPresetsChange={handlePresetsChange}
+        onApplyPreset={handleApplyPreset}
         allLeads={leads}
         filteredLeads={filteredLeads}
       />
