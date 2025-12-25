@@ -1,9 +1,9 @@
 /**
  * @fileoverview Animated toggle between Kanban and Table views.
- * Uses a sliding indicator for smooth transitions.
+ * Uses a sliding indicator on hover for smooth transitions.
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { LayoutAlt04, List } from '@untitledui/icons';
 import { cn } from '@/lib/utils';
@@ -19,19 +19,25 @@ export const ViewModeToggle = React.memo(function ViewModeToggle({
   onViewModeChange,
   className,
 }: ViewModeToggleProps) {
+  const [hoveredMode, setHoveredMode] = useState<'kanban' | 'table' | null>(null);
+  
+  // Determine which position to show the indicator at
+  const indicatorPosition = hoveredMode ?? viewMode;
+
   return (
     <div
       className={cn(
-        'relative flex rounded-lg border bg-muted/50 p-0.5',
+        'relative flex rounded-lg border p-0.5',
         className
       )}
+      onMouseLeave={() => setHoveredMode(null)}
     >
       {/* Sliding indicator */}
       <motion.div
-        className="absolute inset-y-0.5 w-[calc(50%-2px)] rounded-md bg-background shadow-sm"
+        className="absolute inset-y-0.5 w-[calc(50%-2px)] rounded-md bg-muted"
         initial={false}
         animate={{
-          x: viewMode === 'kanban' ? 2 : 'calc(100% + 2px)',
+          x: indicatorPosition === 'kanban' ? 2 : 'calc(100% + 2px)',
         }}
         transition={{
           type: 'spring',
@@ -44,6 +50,7 @@ export const ViewModeToggle = React.memo(function ViewModeToggle({
       <button
         type="button"
         onClick={() => onViewModeChange('kanban')}
+        onMouseEnter={() => setHoveredMode('kanban')}
         className={cn(
           'relative z-10 flex h-7 w-8 items-center justify-center rounded-md transition-colors',
           viewMode === 'kanban'
@@ -60,6 +67,7 @@ export const ViewModeToggle = React.memo(function ViewModeToggle({
       <button
         type="button"
         onClick={() => onViewModeChange('table')}
+        onMouseEnter={() => setHoveredMode('table')}
         className={cn(
           'relative z-10 flex h-7 w-8 items-center justify-center rounded-md transition-colors',
           viewMode === 'table'
