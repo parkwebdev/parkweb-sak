@@ -1,7 +1,7 @@
 # ChatWidget Refactoring Plan
 
 > **Last Updated**: December 2024  
-> **Status**: Phases 1-2 COMPLETE ✅ | Phases 3-9 Ready for Implementation  
+> **Status**: Phases 1-3 COMPLETE ✅ | Phases 4-9 Ready for Implementation  
 > **Priority**: 🟡 MEDIUM  
 > **Risk Level**: LOW (documentation/hook extraction only, no UI changes)
 
@@ -21,6 +21,19 @@
 - `mediaRecorderRef`, `chunksRef`, `recordingIntervalRef` refs
 - `startAudioRecording`, `stopAudioRecording`, `cancelAudioRecording` handlers
 **Barrel exports updated**: Added Audio Hooks section
+
+## ✅ Phase 3: VERIFIED COMPLETE
+
+**Hook Created**: `src/widget/hooks/useWidgetNavigation.ts` (~162 lines)
+**ChatWidget.tsx reduced**: 578 → 547 lines (-31 lines additional)
+**Extracted**:
+- `handleQuickActionClick` function (view switching for quick actions)
+- `handleMessagesClick` function (messages tab click logic)
+- `handleStartNewConversation` function (new conversation creation)
+- `handleOpenConversation` function (opening existing conversations)
+**Note**: `currentView` state remains in ChatWidget.tsx (useConversations depends on it)
+**Barrel exports updated**: Added Navigation Hooks section
+
 
 Transform `ChatWidget.tsx` from a **954-line monolith** into a **lean ~400-line orchestrator** by extracting inline logic into dedicated hooks. This refactoring:
 

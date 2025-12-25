@@ -47,6 +47,7 @@ import {
   useConversations,
   useWidgetMessaging,
   useWidgetAudioRecording,
+  useWidgetNavigation,
 } from './hooks';
 
 // View Components - HomeView and ChatView are always needed, lazy-load the rest
@@ -207,6 +208,22 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
     cancelAudioRecording,
   } = useWidgetAudioRecording({ setMessages });
 
+  // Navigation handlers via extracted hook (PHASE 3 REFACTOR)
+  const {
+    handleQuickActionClick,
+    handleMessagesClick,
+    handleStartNewConversation,
+    handleOpenConversation,
+  } = useWidgetNavigation({
+    chatUser,
+    setCurrentView,
+    setActiveConversationId,
+    setShowConversationList,
+    setMessages,
+    clearMessagesAndFetch,
+    isOpeningConversationRef,
+  });
+
   const { notifyUnreadCount, notifyClose } = useParentMessages(
     {
       previewMode,
@@ -351,53 +368,6 @@ export const ChatWidget = ({ config: configProp, previewMode = false, containedP
       notifyClose();
     }
   };
-
-  const handleQuickActionClick = (actionType: string) => {
-    if (actionType === 'start_chat' || actionType === 'chat') {
-      setCurrentView('messages');
-      if (!chatUser) {
-        setActiveConversationId('new');
-        setShowConversationList(false);
-      } else {
-        if (chatUser.conversationId) {
-          setActiveConversationId(chatUser.conversationId);
-        }
-        setShowConversationList(true);
-      }
-    } else if (actionType === 'open_help' || actionType === 'help') {
-      setCurrentView('help');
-    }
-  };
-
-  const handleMessagesClick = () => {
-    if (!chatUser) {
-      setActiveConversationId('new');
-      setShowConversationList(false);
-    } else {
-      if (chatUser.conversationId) {
-        setActiveConversationId(chatUser.conversationId);
-      }
-      setShowConversationList(true);
-    }
-  };
-
-  const handleStartNewConversation = () => {
-    const newConvId = 'conv_' + Date.now();
-    setActiveConversationId(newConvId);
-    setShowConversationList(false);
-    if (chatUser) {
-      setMessages([{ role: 'assistant', content: `Welcome back, ${chatUser.firstName}! 👋 How can I help you today?`, read: true, timestamp: new Date(), type: 'text', reactions: [] }]);
-    } else {
-      setMessages([]);
-    }
-  };
-
-  const handleOpenConversation = (conversationId: string) => {
-    isOpeningConversationRef.current = true;
-    clearMessagesAndFetch(conversationId);
-    setShowConversationList(false);
-  };
-
 
   // Loading state
   if (loading || !config) {
