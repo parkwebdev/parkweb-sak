@@ -475,7 +475,7 @@ export function LeadsKanbanBoard({
             if (!stage) return null;
 
             return (
-              <KanbanBoard key={column.id} id={column.id}>
+              <KanbanBoard key={column.id} id={column.id} stageColor={stage.color}>
                 <KanbanHeader>
                   <InlineStageHeader
                     stage={stage}

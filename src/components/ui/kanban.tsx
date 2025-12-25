@@ -111,17 +111,37 @@ export type KanbanBoardProps = {
   id: string;
   children: ReactNode;
   className?: string;
+  stageColor?: string; // Hex color for transparent column background tint
 };
 
-export const KanbanBoard = ({ id, children, className }: KanbanBoardProps) => {
+export const KanbanBoard = ({ id, children, className, stageColor }: KanbanBoardProps) => {
   const { isOver, setNodeRef } = useDroppable({ id });
+
+  // Convert hex to rgba for transparent background
+  const getBackgroundStyle = (): React.CSSProperties | undefined => {
+    if (!stageColor) return undefined;
+    // Parse hex color
+    const hex = stageColor.replace('#', '');
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+    if (isNaN(r) || isNaN(g) || isNaN(b)) return undefined;
+    return {
+      backgroundColor: `rgba(${r}, ${g}, ${b}, ${isOver ? 0.12 : 0.08})`,
+    };
+  };
+
+  const bgStyle = getBackgroundStyle();
 
   return (
     <div
       ref={setNodeRef}
+      style={bgStyle}
       className={cn(
-        "flex w-80 shrink-0 flex-col rounded-lg bg-muted/40 p-2 transition-all duration-200",
-        isOver && "ring-2 ring-primary/20 bg-muted/60",
+        "flex w-80 shrink-0 flex-col rounded-lg p-2 transition-all duration-200",
+        !bgStyle && "bg-muted/40",
+        !bgStyle && isOver && "bg-muted/60",
+        isOver && "ring-2 ring-primary/20",
         className
       )}
     >
