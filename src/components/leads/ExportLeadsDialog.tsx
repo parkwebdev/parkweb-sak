@@ -354,10 +354,10 @@ export function ExportLeadsDialog({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleExport} disabled={!canExport}>
+          <Button size="sm" onClick={handleExport} disabled={!canExport}>
             <Download01 size={16} className="mr-2" />
             Export CSV
           </Button>
