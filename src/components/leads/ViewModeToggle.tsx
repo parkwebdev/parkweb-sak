@@ -7,6 +7,11 @@ import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { LayoutAlt04, Rows03 } from '@untitledui/icons';
 import { cn } from '@/lib/utils';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 interface ViewModeToggleProps {
   viewMode: 'kanban' | 'table';
@@ -47,38 +52,48 @@ export const ViewModeToggle = React.memo(function ViewModeToggle({
       />
 
       {/* Kanban button */}
-      <button
-        type="button"
-        onClick={() => onViewModeChange('kanban')}
-        onMouseEnter={() => setHoveredMode('kanban')}
-        className={cn(
-          'relative z-10 flex h-8 w-9 items-center justify-center rounded-md transition-colors',
-          viewMode === 'kanban'
-            ? 'text-foreground'
-            : 'text-muted-foreground hover:text-foreground'
-        )}
-        aria-label="Kanban view"
-        aria-pressed={viewMode === 'kanban'}
-      >
-        <LayoutAlt04 className="h-4 w-4" />
-      </button>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            type="button"
+            onClick={() => onViewModeChange('kanban')}
+            onMouseEnter={() => setHoveredMode('kanban')}
+            className={cn(
+              'relative z-10 flex h-8 w-9 items-center justify-center rounded-md transition-colors',
+              viewMode === 'kanban'
+                ? 'text-foreground'
+                : 'text-muted-foreground hover:text-foreground'
+            )}
+            aria-label="Kanban view"
+            aria-pressed={viewMode === 'kanban'}
+          >
+            <LayoutAlt04 className="h-4 w-4" />
+          </button>
+        </TooltipTrigger>
+        <TooltipContent side="bottom">Kanban view</TooltipContent>
+      </Tooltip>
 
       {/* Table button */}
-      <button
-        type="button"
-        onClick={() => onViewModeChange('table')}
-        onMouseEnter={() => setHoveredMode('table')}
-        className={cn(
-          'relative z-10 flex h-8 w-9 items-center justify-center rounded-md transition-colors',
-          viewMode === 'table'
-            ? 'text-foreground'
-            : 'text-muted-foreground hover:text-foreground'
-        )}
-        aria-label="Table view"
-        aria-pressed={viewMode === 'table'}
-      >
-        <Rows03 className="h-4 w-4" />
-      </button>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            type="button"
+            onClick={() => onViewModeChange('table')}
+            onMouseEnter={() => setHoveredMode('table')}
+            className={cn(
+              'relative z-10 flex h-8 w-9 items-center justify-center rounded-md transition-colors',
+              viewMode === 'table'
+                ? 'text-foreground'
+                : 'text-muted-foreground hover:text-foreground'
+            )}
+            aria-label="Table view"
+            aria-pressed={viewMode === 'table'}
+          >
+            <Rows03 className="h-4 w-4" />
+          </button>
+        </TooltipTrigger>
+        <TooltipContent side="bottom">Table view</TooltipContent>
+      </Tooltip>
     </div>
   );
 });
