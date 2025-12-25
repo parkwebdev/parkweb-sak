@@ -25,7 +25,9 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Calendar as CalendarIcon } from '@untitledui/icons';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 import type { Tables, Enums } from '@/integrations/supabase/types';
+import type { ConversationMetadata } from '@/types/metadata';
 import {
   ExportColumn,
   ExportOptions,
@@ -33,8 +35,11 @@ import {
   DEFAULT_COLUMNS,
   ALL_COLUMNS,
   STATUS_OPTIONS,
+  CONVERSATION_COLUMNS,
+  LeadWithMetadata,
   filterLeads,
   exportLeads,
+  needsConversationMetadata,
 } from '@/lib/leads-export';
 
 type Lead = Tables<'leads'>;
@@ -44,6 +49,53 @@ interface ExportLeadsDialogProps {
   onOpenChange: (open: boolean) => void;
   allLeads: Lead[];
   filteredLeads: Lead[];
+}
+
+// Fetch conversation metadata for leads with linked conversations
+async function fetchConversationMetadata(
+  leads: Lead[]
+): Promise<Map<string, ConversationMetadata>> {
+  const conversationIds = leads
+    .filter(l => l.conversation_id)
+    .map(l => l.conversation_id as string);
+
+  if (conversationIds.length === 0) return new Map();
+
+  const { data, error } = await supabase
+    .from('conversations')
+    .select('id, metadata')
+    .in('id', conversationIds);
+
+  if (error) {
+    console.error('Failed to fetch conversation metadata:', error);
+    return new Map();
+  }
+
+  return new Map(
+    data?.map(c => [c.id, (c.metadata || {}) as ConversationMetadata]) || []
+  );
+}
+
+// Enrich leads with conversation metadata
+function enrichLeadsWithMetadata(
+  leads: Lead[],
+  metadataMap: Map<string, ConversationMetadata>
+): LeadWithMetadata[] {
+  return leads.map(lead => {
+    if (!lead.conversation_id) return lead;
+
+    const metadata = metadataMap.get(lead.conversation_id);
+    if (!metadata) return lead;
+
+    return {
+      ...lead,
+      conversationMetadata: {
+        priority: metadata.priority,
+        tags: metadata.tags,
+        notes: metadata.notes,
+      },
+    };
+  });
 }
 
 export function ExportLeadsDialog({
@@ -68,6 +120,9 @@ export function ExportLeadsDialog({
   // Export settings
   const [includeHeaders, setIncludeHeaders] = useState(true);
   const [useCurrentView, setUseCurrentView] = useState(false);
+  
+  // Export state
+  const [isExporting, setIsExporting] = useState(false);
 
   // Reset state when dialog opens
   useEffect(() => {
@@ -79,6 +134,7 @@ export function ExportLeadsDialog({
       setCustomDateEnd(undefined);
       setIncludeHeaders(true);
       setUseCurrentView(false);
+      setIsExporting(false);
     }
   }, [open]);
 
@@ -106,6 +162,13 @@ export function ExportLeadsDialog({
     allLeads,
     filteredLeads,
   ]);
+
+  // Check if conversation columns are selected
+  const hasConversationColumns = useMemo(
+    () => needsConversationMetadata(selectedColumns),
+    [selectedColumns]
+  );
+
   const handleColumnToggle = useCallback((column: ExportColumn) => {
     setSelectedColumns(prev =>
       prev.includes(column)
@@ -130,33 +193,72 @@ export function ExportLeadsDialog({
     );
   }, []);
 
-  const handleExport = useCallback(() => {
+  const handleExport = useCallback(async () => {
     if (selectedColumns.length === 0) {
       toast.error('Please select at least one column to export');
       return;
     }
 
-    const options: ExportOptions = {
-      columns: selectedColumns,
-      statuses: selectedStatuses,
-      dateRange,
-      customDateStart,
-      customDateEnd,
-      includeHeaders,
-      useCurrentView,
-    };
+    setIsExporting(true);
 
-    const result = exportLeads(allLeads, filteredLeads, options);
+    try {
+      const options: ExportOptions = {
+        columns: selectedColumns,
+        statuses: selectedStatuses,
+        dateRange,
+        customDateStart,
+        customDateEnd,
+        includeHeaders,
+        useCurrentView,
+      };
 
-    if (result.success) {
-      toast.success(`Successfully exported ${result.count} leads`);
-      onOpenChange(false);
-    } else {
-      toast.error('No leads to export with the selected filters');
+      // Determine source leads
+      const sourceLeads = useCurrentView ? filteredLeads : allLeads;
+      
+      // Enrich with conversation metadata if needed
+      let enrichedAllLeads: LeadWithMetadata[] = allLeads;
+      let enrichedFilteredLeads: LeadWithMetadata[] = filteredLeads;
+
+      if (hasConversationColumns) {
+        const metadataMap = await fetchConversationMetadata(sourceLeads);
+        enrichedAllLeads = enrichLeadsWithMetadata(allLeads, metadataMap);
+        enrichedFilteredLeads = enrichLeadsWithMetadata(filteredLeads, metadataMap);
+      }
+
+      const result = exportLeads(enrichedAllLeads, enrichedFilteredLeads, options);
+
+      if (result.success) {
+        toast.success(`Successfully exported ${result.count} leads`);
+        onOpenChange(false);
+      } else {
+        toast.error('No leads to export with the selected filters');
+      }
+    } catch (error) {
+      console.error('Export failed:', error);
+      toast.error('Failed to export leads');
+    } finally {
+      setIsExporting(false);
     }
-  }, [selectedColumns, selectedStatuses, dateRange, customDateStart, customDateEnd, includeHeaders, useCurrentView, allLeads, filteredLeads, onOpenChange]);
+  }, [
+    selectedColumns,
+    selectedStatuses,
+    dateRange,
+    customDateStart,
+    customDateEnd,
+    includeHeaders,
+    useCurrentView,
+    allLeads,
+    filteredLeads,
+    hasConversationColumns,
+    onOpenChange,
+  ]);
 
-  const canExport = selectedColumns.length > 0 && previewCount > 0;
+  const canExport = selectedColumns.length > 0 && previewCount > 0 && !isExporting;
+
+  // Group columns for display
+  const leadColumns = ALL_COLUMNS.filter(col => !CONVERSATION_COLUMNS.includes(col));
+  const conversationColumns = CONVERSATION_COLUMNS;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
@@ -191,22 +293,51 @@ export function ExportLeadsDialog({
                 </Button>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-2 rounded-lg border bg-muted/30 p-3">
-              {ALL_COLUMNS.map(column => (
-                <div key={column} className="flex items-center gap-2">
-                  <Checkbox
-                    id={`col-${column}`}
-                    checked={selectedColumns.includes(column)}
-                    onCheckedChange={() => handleColumnToggle(column)}
-                  />
-                  <Label
-                    htmlFor={`col-${column}`}
-                    className="text-sm font-normal cursor-pointer"
-                  >
-                    {COLUMN_LABELS[column]}
-                  </Label>
-                </div>
-              ))}
+            
+            {/* Lead Data Columns */}
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">Lead data</Label>
+              <div className="grid grid-cols-2 gap-2 rounded-lg border bg-muted/30 p-3">
+                {leadColumns.map(column => (
+                  <div key={column} className="flex items-center gap-2">
+                    <Checkbox
+                      id={`col-${column}`}
+                      checked={selectedColumns.includes(column)}
+                      onCheckedChange={() => handleColumnToggle(column)}
+                    />
+                    <Label
+                      htmlFor={`col-${column}`}
+                      className="text-sm font-normal cursor-pointer"
+                    >
+                      {COLUMN_LABELS[column]}
+                    </Label>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Conversation Metadata Columns */}
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">
+                From linked conversation
+              </Label>
+              <div className="grid grid-cols-2 gap-2 rounded-lg border bg-muted/30 p-3">
+                {conversationColumns.map(column => (
+                  <div key={column} className="flex items-center gap-2">
+                    <Checkbox
+                      id={`col-${column}`}
+                      checked={selectedColumns.includes(column)}
+                      onCheckedChange={() => handleColumnToggle(column)}
+                    />
+                    <Label
+                      htmlFor={`col-${column}`}
+                      className="text-sm font-normal cursor-pointer"
+                    >
+                      {COLUMN_LABELS[column]}
+                    </Label>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -358,7 +489,7 @@ export function ExportLeadsDialog({
             Cancel
           </Button>
           <Button size="sm" onClick={handleExport} disabled={!canExport}>
-            Export CSV
+            {isExporting ? 'Exporting...' : 'Export CSV'}
           </Button>
         </DialogFooter>
       </DialogContent>

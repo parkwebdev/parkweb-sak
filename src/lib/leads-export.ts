@@ -3,6 +3,15 @@ import type { Tables, Enums } from '@/integrations/supabase/types';
 
 type Lead = Tables<'leads'>;
 
+// Extended lead type with conversation metadata for export
+export interface LeadWithMetadata extends Lead {
+  conversationMetadata?: {
+    priority?: string;
+    tags?: string[];
+    notes?: string;
+  };
+}
+
 export type ExportColumn = 
   | 'name'
   | 'email'
@@ -13,7 +22,10 @@ export type ExportColumn =
   | 'created_at'
   | 'updated_at'
   | 'has_conversation'
-  | 'custom_data';
+  | 'custom_data'
+  | 'priority'
+  | 'tags'
+  | 'notes';
 
 export interface ExportOptions {
   columns: ExportColumn[];
@@ -36,6 +48,9 @@ export const COLUMN_LABELS: Record<ExportColumn, string> = {
   updated_at: 'Updated Date',
   has_conversation: 'Has Conversation',
   custom_data: 'Custom Data',
+  priority: 'Priority',
+  tags: 'Tags',
+  notes: 'Internal Notes',
 };
 
 export const DEFAULT_COLUMNS: ExportColumn[] = ['name', 'email', 'phone', 'company', 'status'];
@@ -46,12 +61,18 @@ export const ALL_COLUMNS: ExportColumn[] = [
   'phone',
   'company',
   'status',
+  'priority',
+  'tags',
+  'notes',
   'id',
   'created_at',
   'updated_at',
   'has_conversation',
   'custom_data',
 ];
+
+// Columns that require conversation metadata
+export const CONVERSATION_COLUMNS: ExportColumn[] = ['priority', 'tags', 'notes'];
 
 export const STATUS_OPTIONS: { value: Enums<'lead_status'>; label: string }[] = [
   { value: 'new', label: 'New' },
@@ -73,7 +94,7 @@ function escapeCSVValue(value: string): string {
   return value;
 }
 
-function getColumnValue(lead: Lead, column: ExportColumn): string {
+function getColumnValue(lead: LeadWithMetadata, column: ExportColumn): string {
   switch (column) {
     case 'name':
       return lead.name || '';
@@ -95,12 +116,18 @@ function getColumnValue(lead: Lead, column: ExportColumn): string {
       return lead.conversation_id ? 'Yes' : 'No';
     case 'custom_data':
       return lead.data ? JSON.stringify(lead.data) : '';
+    case 'priority':
+      return lead.conversationMetadata?.priority || '';
+    case 'tags':
+      return lead.conversationMetadata?.tags?.join('; ') || '';
+    case 'notes':
+      return lead.conversationMetadata?.notes || '';
     default:
       return '';
   }
 }
 
-export function filterLeads(leads: Lead[], options: ExportOptions): Lead[] {
+export function filterLeads<T extends Lead>(leads: T[], options: ExportOptions): T[] {
   let filtered = [...leads];
 
   // Filter by status
@@ -149,7 +176,7 @@ export function filterLeads(leads: Lead[], options: ExportOptions): Lead[] {
   return filtered;
 }
 
-export function generateCSV(leads: Lead[], options: ExportOptions): string {
+export function generateCSV(leads: LeadWithMetadata[], options: ExportOptions): string {
   const rows: string[] = [];
 
   // Add headers
@@ -185,8 +212,8 @@ export function downloadCSV(csv: string, filename: string): void {
 }
 
 export function exportLeads(
-  allLeads: Lead[],
-  filteredLeads: Lead[],
+  allLeads: LeadWithMetadata[],
+  filteredLeads: LeadWithMetadata[],
   options: ExportOptions
 ): { count: number; success: boolean } {
   try {
@@ -215,4 +242,9 @@ export function exportLeads(
     console.error('Export failed:', error);
     return { count: 0, success: false };
   }
+}
+
+// Check if any selected columns require conversation metadata
+export function needsConversationMetadata(columns: ExportColumn[]): boolean {
+  return columns.some(col => CONVERSATION_COLUMNS.includes(col));
 }
