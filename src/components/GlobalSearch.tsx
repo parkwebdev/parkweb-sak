@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/command';
 import { useGlobalSearch } from '@/hooks/useGlobalSearch';
 import { useSearchData, type SearchResult } from '@/hooks/useSearchData';
+import { SkeletonSearchResults } from '@/components/ui/skeleton';
 import * as Icons from '@untitledui/icons';
 import AriAgentsIcon from '@/components/icons/AriAgentsIcon';
 
@@ -88,14 +89,7 @@ export const GlobalSearch = () => {
       />
       <CommandList>
         {loading ? (
-          <div 
-            className="py-6 text-center text-sm text-muted-foreground"
-            role="status"
-            aria-live="polite"
-            aria-label="Loading search results"
-          >
-            Loading...
-          </div>
+          <SkeletonSearchResults items={5} />
         ) : (
           <>
             <CommandEmpty>No results found.</CommandEmpty>

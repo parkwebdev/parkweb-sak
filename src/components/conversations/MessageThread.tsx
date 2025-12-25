@@ -12,6 +12,7 @@ import React, { memo, useCallback, useMemo, forwardRef } from 'react';
 import AriAgentsIcon from '@/components/icons/AriAgentsIcon';
 import { AdminMessageBubble } from './AdminMessageBubble';
 import { updateMessageReaction } from '@/lib/conversation-utils';
+import { SkeletonMessageThread } from '@/components/ui/skeleton';
 import type { Tables } from '@/integrations/supabase/types';
 import type { MessageMetadata, MessageReaction } from '@/types/metadata';
 
@@ -118,9 +119,7 @@ export const MessageThread = memo(forwardRef<HTMLDivElement, MessageThreadProps>
   return (
     <div ref={ref} className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-6 py-4">
       {loadingMessages ? (
-        <div className="text-center py-12 text-sm text-muted-foreground">
-          Loading messages...
-        </div>
+        <SkeletonMessageThread messages={4} />
       ) : messages.length === 0 ? (
         <div className="flex-1 flex items-center justify-center py-12">
           <div className="text-center">

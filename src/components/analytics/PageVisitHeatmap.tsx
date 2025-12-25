@@ -10,6 +10,7 @@ import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
+import { SkeletonHeatmap } from '@/components/ui/page-skeleton';
 
 interface PageVisitData {
   url: string;
@@ -69,14 +70,8 @@ export const PageVisitHeatmap: React.FC<PageVisitHeatmapProps> = ({ data, loadin
         <CardHeader>
           <CardTitle className="text-base">Page Visit Heatmap</CardTitle>
         </CardHeader>
-        <CardContent className="h-[300px] flex items-center justify-center">
-          <span 
-            className="text-muted-foreground text-sm"
-            role="status"
-            aria-live="polite"
-          >
-            Loading...
-          </span>
+        <CardContent className="h-[300px]">
+          <SkeletonHeatmap />
         </CardContent>
       </Card>
     );

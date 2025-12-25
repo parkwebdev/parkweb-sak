@@ -10,16 +10,15 @@
  * <UserAccountCard isCollapsed={false} />
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User01 as User, Settings04 as Settings, LogOut01 as LogOut, CreditCard01, Users01, Keyboard01, PieChart01 } from '@untitledui/icons';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/lib/toast';
-import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Spinner } from '@/components/ui/spinner';
+import { SkeletonUserCard } from '@/components/ui/skeleton';
 import { logger } from '@/utils/logger';
 import { Badge } from '@/components/ui/badge';
 import { useSidebar } from '@/hooks/use-sidebar';
@@ -130,11 +129,7 @@ export const UserAccountCard: React.FC<UserAccountCardProps> = ({ isCollapsed = 
   };
 
   if (!user || loading) {
-    return (
-      <div className="relative flex w-full gap-3 p-[11px] rounded-md">
-        <Spinner size="sm" />
-      </div>
-    );
+    return <SkeletonUserCard isCollapsed={isCollapsed} />;
   }
 
   const displayName = profile?.display_name || user.user_metadata?.display_name || user.email?.split('@')[0] || 'User';

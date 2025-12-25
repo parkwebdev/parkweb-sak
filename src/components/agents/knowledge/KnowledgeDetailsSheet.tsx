@@ -25,6 +25,7 @@ import {
 } from '@untitledui/icons';
 import { formatDistanceToNow, format } from 'date-fns';
 import { SitemapChildPages } from '../SitemapChildPages';
+import { SkeletonKnowledgeDetails } from '@/components/ui/page-skeleton';
 import type { Tables } from '@/integrations/supabase/types';
 import type { KnowledgeSourceMetadata, RefreshStrategy, KnowledgeSourceType } from '@/types/metadata';
 import { REFRESH_STRATEGY_LABELS, SOURCE_TYPE_LABELS } from '@/types/metadata';
@@ -231,7 +232,9 @@ export const KnowledgeDetailsSheet: React.FC<KnowledgeDetailsSheetProps> = ({
           </div>
         </SheetHeader>
 
-        {contentReady && (
+        {!contentReady ? (
+          <SkeletonKnowledgeDetails />
+        ) : (
           <div className="space-y-6">
             {/* Source Info Section */}
             <section className="space-y-3">

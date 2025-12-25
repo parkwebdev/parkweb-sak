@@ -9,6 +9,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
+import { SkeletonPieChart } from '@/components/ui/page-skeleton';
 
 interface TrafficSourceData {
   name: string;
@@ -45,13 +46,7 @@ export const TrafficSourceChart = React.memo(function TrafficSourceChart({ data,
           <CardTitle className="text-base">Traffic Sources</CardTitle>
         </CardHeader>
         <CardContent className="h-[300px] flex items-center justify-center">
-          <span 
-            className="text-muted-foreground text-sm"
-            role="status"
-            aria-live="polite"
-          >
-            Loading...
-          </span>
+          <SkeletonPieChart />
         </CardContent>
       </Card>
     );

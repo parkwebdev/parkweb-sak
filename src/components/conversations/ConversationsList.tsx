@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { MessageChatSquare, ChevronLeft, ChevronRight, SwitchVertical01, ChevronDown } from '@untitledui/icons';
 import { ConversationItem } from './ConversationItem';
+import { SkeletonConversationList } from '@/components/ui/skeleton';
 import type { Tables } from '@/integrations/supabase/types';
 import type { VisitorPresenceData } from '@/hooks/useVisitorPresence';
 
@@ -144,9 +145,7 @@ export const ConversationsList = memo(function ConversationsList({
         {/* Conversation List */}
         <div className="flex-1 min-h-0 overflow-y-auto">
           {loading ? (
-            <div className="p-4 text-center text-sm text-muted-foreground">
-              Loading...
-            </div>
+            <SkeletonConversationList items={5} />
           ) : conversations.length === 0 ? (
             <div className="flex-1 flex items-center justify-center p-8">
               <div className="text-center">
