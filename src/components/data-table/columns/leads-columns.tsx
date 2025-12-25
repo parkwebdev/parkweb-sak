@@ -79,13 +79,6 @@ export const createLeadsColumns = ({
     },
   },
   {
-    accessorKey: 'company',
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Company" />
-    ),
-    cell: ({ row }) => row.original.company || '-',
-  },
-  {
     accessorKey: 'stage_id',
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Stage" />
@@ -132,25 +125,39 @@ export const createLeadsColumns = ({
       <DataTableColumnHeader column={column} title="Source" />
     ),
     cell: ({ row }) => {
-      // Try to get source from conversation metadata
       const conversations = row.original.conversations;
       if (conversations?.metadata) {
         const metadata = conversations.metadata as Record<string, unknown>;
-        const referrer = metadata.referrer_url || metadata.referrer || metadata.source;
+        
+        // Check referrer_journey first (most accurate)
+        const referrerJourney = metadata.referrer_journey as Record<string, unknown> | undefined;
+        if (referrerJourney?.referrer_url) {
+          try {
+            const url = new URL(String(referrerJourney.referrer_url));
+            return url.hostname.replace('www.', '');
+          } catch {
+            return String(referrerJourney.referrer_url).slice(0, 30);
+          }
+        }
+        
+        // Fallback to landing page from referrer_journey
+        if (referrerJourney?.landing_page) {
+          try {
+            const url = new URL(String(referrerJourney.landing_page));
+            return url.pathname.slice(0, 30) || '/';
+          } catch {
+            return String(referrerJourney.landing_page).slice(0, 30);
+          }
+        }
+        
+        // Legacy fallback for older data
+        const referrer = metadata.referer_url || metadata.referrer_url;
         if (referrer) {
           try {
             const url = new URL(String(referrer));
             return url.hostname.replace('www.', '');
           } catch {
             return String(referrer).slice(0, 30);
-          }
-        }
-        if (metadata.entry_page) {
-          try {
-            const url = new URL(String(metadata.entry_page));
-            return url.pathname.slice(0, 30) || '/';
-          } catch {
-            return String(metadata.entry_page).slice(0, 30);
           }
         }
       }
