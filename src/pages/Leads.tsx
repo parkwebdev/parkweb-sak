@@ -11,13 +11,13 @@
  * @page
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Button } from '@/components/ui/button';
-import { LayoutAlt04, List } from '@untitledui/icons';
 import { useLeads } from '@/hooks/useLeads';
 import { LeadsKanbanBoard } from '@/components/leads/LeadsKanbanBoard';
 import { LeadsTable } from '@/components/leads/LeadsTable';
+import { LeadsToolbar } from '@/components/leads/LeadsToolbar';
 import { LeadDetailsSheet } from '@/components/leads/LeadDetailsSheet';
 import { CreateLeadDialog } from '@/components/leads/CreateLeadDialog';
 import { DeleteLeadDialog } from '@/components/leads/DeleteLeadDialog';
@@ -38,6 +38,9 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'kanban' | 'table'>('kanban');
   
+  // Shared filter state
+  const [searchQuery, setSearchQuery] = useState('');
+  
   // Bulk selection state
   const [selectedLeadIds, setSelectedLeadIds] = useState<Set<string>>(new Set());
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -47,6 +50,21 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
   const [singleDeleteLeadId, setSingleDeleteLeadId] = useState<string | null>(null);
   const [isSingleDeleteOpen, setIsSingleDeleteOpen] = useState(false);
 
+  // Filter leads based on search query (shared across views)
+  const filteredLeads = useMemo(() => {
+    if (!searchQuery.trim()) return leads;
+    
+    const query = searchQuery.toLowerCase();
+    return leads.filter((lead) => {
+      return (
+        lead.name?.toLowerCase().includes(query) ||
+        lead.email?.toLowerCase().includes(query) ||
+        lead.phone?.toLowerCase().includes(query) ||
+        lead.company?.toLowerCase().includes(query)
+      );
+    });
+  }, [leads, searchQuery]);
+
   const handleViewLead = useCallback((lead: Tables<'leads'>) => {
     setSelectedLead(lead);
     setIsDetailsOpen(true);
@@ -55,7 +73,7 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
   const handleExport = useCallback(() => {
     const csv = [
       ['Name', 'Email', 'Phone', 'Company', 'Status', 'Created'],
-      ...leads.map((lead) => [
+      ...filteredLeads.map((lead) => [
         lead.name || '',
         lead.email || '',
         lead.phone || '',
@@ -73,16 +91,16 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
     a.href = url;
     a.download = `leads-${new Date().toISOString()}.csv`;
     a.click();
-  }, [leads]);
+  }, [filteredLeads]);
 
   // Selection handlers
   const handleSelectAll = useCallback((checked: boolean) => {
     if (checked) {
-      setSelectedLeadIds(new Set(leads.map(l => l.id)));
+      setSelectedLeadIds(new Set(filteredLeads.map(l => l.id)));
     } else {
       setSelectedLeadIds(new Set());
     }
-  }, [leads]);
+  }, [filteredLeads]);
 
   const handleSelectLead = useCallback((id: string, checked: boolean) => {
     setSelectedLeadIds(prev => {
@@ -173,33 +191,20 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
           </div>
         </div>
 
+        {/* Shared Toolbar */}
+        <LeadsToolbar
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
+        />
+
         {/* Content */}
         {loading ? (
           <SkeletonLeadsPage />
-        ) : viewMode === 'kanban' ? (
-          <>
-            {/* View Toggle for Kanban */}
-            <div className="flex justify-end">
-              <div className="flex border rounded-lg">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => setViewMode('kanban')}
-                  aria-label="Kanban view"
-                >
-                  <LayoutAlt04 className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setViewMode('table')}
-                  aria-label="Table view"
-                >
-                  <List className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-            <AnimatePresence mode="wait">
+        ) : (
+          <AnimatePresence mode="wait">
+            {viewMode === 'kanban' ? (
               <motion.div
                 key="kanban"
                 initial={{ opacity: 0, y: 8 }}
@@ -208,38 +213,34 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
                 transition={{ duration: 0.2, ease: 'easeOut' }}
               >
                 <LeadsKanbanBoard
-                  leads={leads}
+                  leads={filteredLeads}
                   onStatusChange={(leadId, status) => updateLead(leadId, { status })}
                   onViewLead={handleViewLead}
                   onOrderChange={updateLeadOrders}
                 />
               </motion.div>
-            </AnimatePresence>
-          </>
-        ) : (
-          <AnimatePresence mode="wait">
-            <motion.div
-              key="table"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.2, ease: 'easeOut' }}
-            >
-              <LeadsTable
-                leads={leads}
-                selectedIds={selectedLeadIds}
-                onView={handleViewLead}
-                onStatusChange={(leadId, status) => updateLead(leadId, { status: status as Enums<'lead_status'> })}
-                onSelectionChange={handleSelectLead}
-                onSelectAll={handleSelectAll}
-                onBulkDelete={(ids) => {
-                  setSelectedLeadIds(new Set(ids));
-                  setIsDeleteDialogOpen(true);
-                }}
-                viewMode={viewMode}
-                onViewModeChange={setViewMode}
-              />
-            </motion.div>
+            ) : (
+              <motion.div
+                key="table"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.2, ease: 'easeOut' }}
+              >
+                <LeadsTable
+                  leads={filteredLeads}
+                  selectedIds={selectedLeadIds}
+                  onView={handleViewLead}
+                  onStatusChange={(leadId, status) => updateLead(leadId, { status: status as Enums<'lead_status'> })}
+                  onSelectionChange={handleSelectLead}
+                  onSelectAll={handleSelectAll}
+                  onBulkDelete={(ids) => {
+                    setSelectedLeadIds(new Set(ids));
+                    setIsDeleteDialogOpen(true);
+                  }}
+                />
+              </motion.div>
+            )}
           </AnimatePresence>
         )}
 
