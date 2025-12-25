@@ -13,6 +13,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { IconButton } from '@/components/ui/icon-button';
+import { ColorPicker } from '@/components/ui/color-picker';
 import { useLeadStages, LeadStage } from '@/hooks/useLeadStages';
 import { Plus, Trash01, Check, DotsGrid } from '@untitledui/icons';
 import {
@@ -39,20 +40,6 @@ interface ManageStagesDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-// Predefined color options
-const COLOR_OPTIONS = [
-  '#3b82f6', // blue
-  '#a855f7', // purple
-  '#10b981', // emerald
-  '#16a34a', // green
-  '#f59e0b', // amber
-  '#ef4444', // red
-  '#ec4899', // pink
-  '#6b7280', // gray
-  '#06b6d4', // cyan
-  '#8b5cf6', // violet
-];
-
 // Sortable stage item
 function SortableStageItem({
   stage,
@@ -67,7 +54,6 @@ function SortableStageItem({
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(stage.name);
-  const [showColors, setShowColors] = useState(false);
 
   const {
     attributes,
@@ -92,7 +78,6 @@ function SortableStageItem({
 
   const handleColorChange = useCallback((color: string) => {
     onUpdate(stage.id, { color });
-    setShowColors(false);
   }, [stage.id, onUpdate]);
 
   return (
@@ -114,31 +99,13 @@ function SortableStageItem({
         <DotsGrid size={16} />
       </button>
 
-      {/* Color picker */}
-      <div className="relative">
-        <button
-          onClick={() => setShowColors(!showColors)}
-          className="w-5 h-5 rounded-full border-2 border-background shadow-sm"
-          style={{ backgroundColor: stage.color }}
-          aria-label={`Select color for ${stage.name}`}
-        />
-        {showColors && (
-          <div className="absolute left-0 top-8 z-50 p-2 bg-popover border rounded-lg shadow-lg grid grid-cols-5 gap-1">
-            {COLOR_OPTIONS.map((color) => (
-              <button
-                key={color}
-                onClick={() => handleColorChange(color)}
-                className={cn(
-                  'w-6 h-6 rounded-full border-2 hover:scale-110 transition-transform',
-                  stage.color === color ? 'border-foreground' : 'border-transparent'
-                )}
-                style={{ backgroundColor: color }}
-                aria-label={`Select ${color} color`}
-              />
-            ))}
-          </div>
-        )}
-      </div>
+      {/* Color picker using proper component */}
+      <ColorPicker
+        value={stage.color}
+        onChange={handleColorChange}
+        showAlpha={false}
+        compact
+      />
 
       {/* Name input/display */}
       <div className="flex-1 min-w-0">

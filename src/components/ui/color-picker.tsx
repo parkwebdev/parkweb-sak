@@ -515,6 +515,8 @@ interface ColorPickerProps {
   id?: string;
   className?: string;
   showAlpha?: boolean;
+  /** Renders a compact color circle trigger instead of a full button */
+  compact?: boolean;
 }
 
 export function ColorPicker({
@@ -523,6 +525,7 @@ export function ColorPicker({
   id,
   className,
   showAlpha = true,
+  compact = false,
 }: ColorPickerProps) {
   const [open, setOpen] = React.useState(false);
   const [mode, setMode] = React.useState<ColorMode>("hex");
@@ -581,31 +584,44 @@ export function ColorPicker({
     <ColorPickerContext.Provider value={{ color, alpha, setColor, setAlpha, showAlpha }}>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <Button
-            id={id}
-            variant="outline"
-            className={cn(
-              "w-full justify-start gap-2 font-normal h-10",
-              className
-            )}
-          >
-            <div
-              className="h-5 w-5 rounded-md border border-border shrink-0"
-              style={{
-                backgroundColor: color.hex(),
-                opacity: alpha / 100,
-                backgroundImage: alpha < 100 
-                  ? "repeating-conic-gradient(#ccc 0% 25%, #fff 0% 50%) 50% / 8px 8px"
-                  : undefined,
-              }}
+          {compact ? (
+            <button
+              id={id}
+              type="button"
+              className={cn(
+                "w-5 h-5 rounded-full border-2 border-background shadow-sm hover:scale-110 transition-transform focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+                className
+              )}
+              style={{ backgroundColor: color.hex() }}
+              aria-label="Select color"
+            />
+          ) : (
+            <Button
+              id={id}
+              variant="outline"
+              className={cn(
+                "w-full justify-start gap-2 font-normal h-10",
+                className
+              )}
             >
               <div
-                className="h-full w-full rounded-md"
-                style={{ backgroundColor: color.hex(), opacity: alpha / 100 }}
-              />
-            </div>
-            <span className="text-sm font-mono truncate">{displayValue}</span>
-          </Button>
+                className="h-5 w-5 rounded-md border border-border shrink-0"
+                style={{
+                  backgroundColor: color.hex(),
+                  opacity: alpha / 100,
+                  backgroundImage: alpha < 100 
+                    ? "repeating-conic-gradient(#ccc 0% 25%, #fff 0% 50%) 50% / 8px 8px"
+                    : undefined,
+                }}
+              >
+                <div
+                  className="h-full w-full rounded-md"
+                  style={{ backgroundColor: color.hex(), opacity: alpha / 100 }}
+                />
+              </div>
+              <span className="text-sm font-mono truncate">{displayValue}</span>
+            </Button>
+          )}
         </PopoverTrigger>
         <PopoverContent className="w-64 p-3" align="start">
           <div className="space-y-3">
