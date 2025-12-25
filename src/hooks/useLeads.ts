@@ -9,7 +9,7 @@ import { queryKeys } from '@/lib/query-keys';
 import type { Tables, Enums } from '@/integrations/supabase/types';
 
 type Lead = Tables<'leads'> & {
-  conversations?: { id: string; created_at: string };
+  conversations?: { id: string; created_at: string; metadata?: unknown };
 };
 
 /**
@@ -43,7 +43,7 @@ export const useLeads = () => {
       
       const { data, error } = await supabase
         .from('leads')
-        .select('*, conversations!fk_leads_conversation(id, created_at)')
+        .select('*, conversations!fk_leads_conversation(id, created_at, metadata)')
         .eq('user_id', user.id)
         .order('status')
         .order('kanban_order', { ascending: true, nullsFirst: false })

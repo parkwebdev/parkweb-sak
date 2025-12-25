@@ -11,20 +11,30 @@ import {
   DropdownMenuContent,
   DropdownMenuLabel,
   DropdownMenuSeparator,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { CARD_FIELDS, type CardFieldKey } from "./KanbanCardFields";
+import { 
+  getFieldsByGroup, 
+  FIELD_GROUP_LABELS, 
+  type CardFieldKey,
+  type FieldGroup 
+} from "./KanbanCardFields";
 
 interface KanbanCardFieldsFilterProps {
   visibleFields: Set<CardFieldKey>;
   onToggleField: (field: CardFieldKey) => void;
 }
 
+const GROUP_ORDER: FieldGroup[] = ['contact', 'session', 'organization', 'timestamps', 'notes'];
+
 export function KanbanCardFieldsFilter({
   visibleFields,
   onToggleField,
 }: KanbanCardFieldsFilterProps) {
+  const fieldsByGroup = getFieldsByGroup();
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -33,30 +43,44 @@ export function KanbanCardFieldsFilter({
           <span className="hidden sm:inline">Fields</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-48">
+      <DropdownMenuContent align="end" className="w-52">
         <DropdownMenuLabel>Show on cards</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {CARD_FIELDS.map((field) => {
-          const Icon = field.icon;
-          const isChecked = visibleFields.has(field.key);
+        
+        {GROUP_ORDER.map((groupKey, groupIndex) => {
+          const fields = fieldsByGroup[groupKey];
+          if (!fields?.length) return null;
           
           return (
-            <DropdownMenuItem
-              key={field.key}
-              className="gap-2 cursor-pointer"
-              onSelect={(e) => {
-                e.preventDefault();
-                onToggleField(field.key);
-              }}
-            >
-              <Checkbox
-                checked={isChecked}
-                onCheckedChange={() => onToggleField(field.key)}
-                className="pointer-events-none"
-              />
-              <Icon size={14} className="text-muted-foreground" />
-              <span>{field.label}</span>
-            </DropdownMenuItem>
+            <DropdownMenuGroup key={groupKey}>
+              {groupIndex > 0 && <DropdownMenuSeparator />}
+              <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">
+                {FIELD_GROUP_LABELS[groupKey]}
+              </DropdownMenuLabel>
+              {fields.map((field) => {
+                const Icon = field.icon;
+                const isChecked = visibleFields.has(field.key);
+                
+                return (
+                  <DropdownMenuItem
+                    key={field.key}
+                    className="gap-2 cursor-pointer"
+                    onSelect={(e) => {
+                      e.preventDefault();
+                      onToggleField(field.key);
+                    }}
+                  >
+                    <Checkbox
+                      checked={isChecked}
+                      onCheckedChange={() => onToggleField(field.key)}
+                      className="pointer-events-none"
+                    />
+                    <Icon size={14} className="text-muted-foreground" />
+                    <span>{field.label}</span>
+                  </DropdownMenuItem>
+                );
+              })}
+            </DropdownMenuGroup>
           );
         })}
       </DropdownMenuContent>
