@@ -1,6 +1,6 @@
 /**
- * @fileoverview Data table toolbar with search input.
- * Supports column-specific filtering or global search with clear button.
+ * @fileoverview Data table toolbar with search input and filter controls.
+ * Supports column-specific filtering, global search, faceted filters, and view options.
  */
 
 import React from 'react';
@@ -9,6 +9,7 @@ import { SearchSm, XClose } from '@untitledui/icons';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { DataTableViewOptions } from './DataTableViewOptions';
 
 interface DataTableToolbarProps<TData> {
   table: Table<TData>;
@@ -19,6 +20,10 @@ interface DataTableToolbarProps<TData> {
   prefix?: React.ReactNode;
   className?: string;
   searchClassName?: string;
+  /** Render faceted filter components */
+  filterContent?: React.ReactNode;
+  /** Show column visibility toggle */
+  showViewOptions?: boolean;
 }
 
 export function DataTableToolbar<TData>({
@@ -30,12 +35,17 @@ export function DataTableToolbar<TData>({
   prefix,
   className,
   searchClassName,
+  filterContent,
+  showViewOptions = false,
 }: DataTableToolbarProps<TData>) {
   const isFiltered = globalFilter
     ? table.getState().globalFilter
     : searchColumn
     ? table.getColumn(searchColumn)?.getFilterValue()
     : false;
+
+  // Check if any column filters are active
+  const hasColumnFilters = table.getState().columnFilters.length > 0;
 
   const handleSearchChange = (value: string) => {
     if (globalFilter) {
@@ -53,6 +63,13 @@ export function DataTableToolbar<TData>({
     }
   };
 
+  const handleResetFilters = () => {
+    table.resetColumnFilters();
+    if (globalFilter) {
+      table.setGlobalFilter('');
+    }
+  };
+
   const searchValue = globalFilter
     ? (table.getState().globalFilter as string) ?? ''
     : searchColumn
@@ -61,9 +78,9 @@ export function DataTableToolbar<TData>({
 
   return (
     <div className={cn('flex items-center justify-between gap-2', className)}>
-      <div className="flex items-center gap-2 flex-1">
+      <div className="flex items-center gap-2 flex-1 flex-wrap">
         {prefix}
-        <div className={cn('relative w-full', searchClassName)}>
+        <div className={cn('relative w-full max-w-sm', searchClassName)}>
           <SearchSm className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder={searchPlaceholder}
@@ -83,12 +100,23 @@ export function DataTableToolbar<TData>({
             </Button>
           )}
         </div>
+        {filterContent}
+        {hasColumnFilters && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleResetFilters}
+            className="h-9 px-2 lg:px-3"
+          >
+            Reset
+            <XClose className="ml-2 h-4 w-4" />
+          </Button>
+        )}
       </div>
-      {children && (
-        <div className="flex items-center gap-2">
-          {children}
-        </div>
-      )}
+      <div className="flex items-center gap-2">
+        {children}
+        {showViewOptions && <DataTableViewOptions table={table} />}
+      </div>
     </div>
   );
 }
