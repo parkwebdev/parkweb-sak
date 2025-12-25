@@ -14,6 +14,7 @@
 import { useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Button } from '@/components/ui/button';
+import { LayoutAlt04, List } from '@untitledui/icons';
 import { useLeads } from '@/hooks/useLeads';
 import { LeadsKanbanBoard } from '@/components/leads/LeadsKanbanBoard';
 import { LeadsTable } from '@/components/leads/LeadsTable';
@@ -191,12 +192,10 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
           </div>
         </div>
 
-        {/* Shared Toolbar */}
+        {/* Shared Search */}
         <LeadsToolbar
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
-          viewMode={viewMode}
-          onViewModeChange={setViewMode}
         />
 
         {/* Content */}
@@ -211,7 +210,29 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -8 }}
                 transition={{ duration: 0.2, ease: 'easeOut' }}
+                className="space-y-4"
               >
+                {/* View toggle for Kanban */}
+                <div className="flex justify-end">
+                  <div className="flex border rounded-lg">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => setViewMode('kanban')}
+                      aria-label="Kanban view"
+                    >
+                      <LayoutAlt04 className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setViewMode('table')}
+                      aria-label="Table view"
+                    >
+                      <List className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
                 <LeadsKanbanBoard
                   leads={filteredLeads}
                   onStatusChange={(leadId, status) => updateLead(leadId, { status })}
@@ -238,6 +259,8 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
                     setSelectedLeadIds(new Set(ids));
                     setIsDeleteDialogOpen(true);
                   }}
+                  viewMode={viewMode}
+                  onViewModeChange={setViewMode}
                 />
               </motion.div>
             )}
