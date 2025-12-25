@@ -21,7 +21,8 @@ Technical documentation for the ChatPad embeddable chat widget.
 9. [Widget UI Layer](#widget-ui-layer)
 10. [Native Feature Components](#native-feature-components)
 11. [Icon Tree-Shaking](#icon-tree-shaking)
-12. [Security](#security)
+12. [Widget Hooks Reference](#widget-hooks-reference)
+13. [Security](#security)
 
 ---
 
@@ -103,9 +104,14 @@ src/widget/
 │   ├── WidgetAvatar.tsx        # Avatar (pure React, no @radix-ui)
 │   ├── WidgetCard.tsx          # Card (native div, no motion/react)
 │   └── WidgetSpinner.tsx       # Spinner (SVG + CSS animation)
-├── hooks/
+├── hooks/                      # 18 custom hooks for state management
 │   ├── index.ts                # Barrel exports with JSDoc
 │   ├── useWidgetConfig.ts      # Config fetching and state
+│   ├── useWidgetMessaging.ts   # Message sending, input, files, form submit (Phase 1)
+│   ├── useWidgetAudioRecording.ts # Voice recording controls (Phase 2)
+│   ├── useWidgetNavigation.ts  # View navigation handlers (Phase 3)
+│   ├── useWidgetRating.ts      # Satisfaction rating state (Phase 4)
+│   ├── useWidgetTakeover.ts    # Human takeover state (Phase 5)
 │   ├── useConversations.ts     # Conversation CRUD operations
 │   ├── useRealtimeMessages.ts  # Real-time message subscriptions
 │   ├── useRealtimeConfig.ts    # Real-time config change subscriptions
@@ -585,6 +591,48 @@ const iconModules: Record<string, () => Promise<{ default: ComponentType }>> = {
   // Only icons actually used are loaded
 };
 ```
+
+---
+
+## Widget Hooks Reference
+
+The widget uses 18 custom hooks organized by concern. These were refactored in the ChatWidget Refactoring Plan (Phases 1-7).
+
+### Hooks Summary Table
+
+| Hook | Purpose | Lines | Phase |
+|------|---------|-------|-------|
+| `useWidgetConfig` | Config fetching and state | ~110 | Original |
+| `useRealtimeConfig` | Config change subscriptions | ~45 | Original |
+| `useWidgetMessaging` | Message sending, input, files, form submit | ~557 | Phase 1 |
+| `useWidgetAudioRecording` | Voice recording controls | ~140 | Phase 2 |
+| `useWidgetNavigation` | View navigation handlers | ~162 | Phase 3 |
+| `useWidgetRating` | Satisfaction rating state | ~95 | Phase 4 |
+| `useWidgetTakeover` | Human takeover state | ~89 | Phase 5 |
+| `useConversations` | Conversation CRUD operations | ~285 | Original |
+| `useRealtimeMessages` | Real-time message subscriptions | ~192 | Original |
+| `useConversationStatus` | Status change subscriptions | ~85 | Original |
+| `useTypingIndicator` | Typing presence | ~75 | Original |
+| `useParentMessages` | postMessage API | ~195 | Original |
+| `useSoundSettings` | Sound preference persistence | ~40 | Original |
+| `useSystemTheme` | System theme detection | ~30 | Original |
+| `useVisitorPresence` | Visitor presence tracking | ~95 | Original |
+| `useVisitorAnalytics` | Page visit analytics | ~135 | Original |
+| `useKeyboardHeight` | Mobile keyboard detection | ~55 | Original |
+| `useLocationDetection` | Auto-detect location | ~85 | Original |
+
+### Hook Categories
+
+- **Configuration**: `useWidgetConfig`, `useRealtimeConfig`
+- **Messaging**: `useWidgetMessaging`, `useConversations`, `useRealtimeMessages`, `useConversationStatus`, `useTypingIndicator`
+- **Audio**: `useWidgetAudioRecording`
+- **Navigation**: `useWidgetNavigation`
+- **Rating**: `useWidgetRating`
+- **Takeover**: `useWidgetTakeover`
+- **Communication**: `useParentMessages`
+- **Analytics & Presence**: `useVisitorAnalytics`, `useVisitorPresence`
+- **Preferences**: `useSoundSettings`, `useSystemTheme`
+- **Mobile & Location**: `useKeyboardHeight`, `useLocationDetection`
 
 ---
 
