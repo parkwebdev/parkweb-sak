@@ -4,7 +4,7 @@
  */
 
 import { Table } from '@tanstack/react-table';
-import { Settings01 } from '@untitledui/icons';
+import { Columns03 } from '@untitledui/icons';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -39,7 +39,7 @@ export function DataTableViewOptions<TData>({
           size="sm"
           className="h-9 gap-2"
         >
-          <Settings01 className="h-4 w-4" />
+          <Columns03 className="h-4 w-4" />
           <span className="hidden sm:inline">Columns</span>
         </Button>
       </DropdownMenuTrigger>

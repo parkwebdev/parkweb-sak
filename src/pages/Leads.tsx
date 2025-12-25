@@ -173,61 +173,72 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
           </div>
         </div>
 
-        {/* View Mode Toggle */}
-        <div className="flex justify-end">
-          <div className="flex border rounded-lg">
-            <Button
-              variant={viewMode === 'kanban' ? 'secondary' : 'ghost'}
-              size="sm"
-              onClick={() => setViewMode('kanban')}
-              aria-label="Kanban view"
-            >
-              <LayoutAlt04 className="h-4 w-4" />
-            </Button>
-            <Button
-              variant={viewMode === 'table' ? 'secondary' : 'ghost'}
-              size="sm"
-              onClick={() => setViewMode('table')}
-              aria-label="Table view"
-            >
-              <List className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-
         {/* Content */}
         {loading ? (
           <SkeletonLeadsPage />
-        ) : (
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={viewMode}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.2, ease: 'easeOut' }}
-            >
-              {viewMode === 'kanban' ? (
+        ) : viewMode === 'kanban' ? (
+          <>
+            {/* View Toggle for Kanban */}
+            <div className="flex justify-end">
+              <div className="flex border rounded-lg">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setViewMode('kanban')}
+                  aria-label="Kanban view"
+                >
+                  <LayoutAlt04 className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setViewMode('table')}
+                  aria-label="Table view"
+                >
+                  <List className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key="kanban"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.2, ease: 'easeOut' }}
+              >
                 <LeadsKanbanBoard
                   leads={leads}
                   onStatusChange={(leadId, status) => updateLead(leadId, { status })}
                   onViewLead={handleViewLead}
                   onOrderChange={updateLeadOrders}
                 />
-              ) : (
-                <LeadsTable
-                  leads={leads}
-                  selectedIds={selectedLeadIds}
-                  onView={handleViewLead}
-                  onStatusChange={(leadId, status) => updateLead(leadId, { status: status as Enums<'lead_status'> })}
-                  onSelectionChange={handleSelectLead}
-                  onSelectAll={handleSelectAll}
-                  onBulkDelete={(ids) => {
-                    setSelectedLeadIds(new Set(ids));
-                    setIsDeleteDialogOpen(true);
-                  }}
-                />
-              )}
+              </motion.div>
+            </AnimatePresence>
+          </>
+        ) : (
+          <AnimatePresence mode="wait">
+            <motion.div
+              key="table"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2, ease: 'easeOut' }}
+            >
+              <LeadsTable
+                leads={leads}
+                selectedIds={selectedLeadIds}
+                onView={handleViewLead}
+                onStatusChange={(leadId, status) => updateLead(leadId, { status: status as Enums<'lead_status'> })}
+                onSelectionChange={handleSelectLead}
+                onSelectAll={handleSelectAll}
+                onBulkDelete={(ids) => {
+                  setSelectedLeadIds(new Set(ids));
+                  setIsDeleteDialogOpen(true);
+                }}
+                viewMode={viewMode}
+                onViewModeChange={setViewMode}
+              />
             </motion.div>
           </AnimatePresence>
         )}
