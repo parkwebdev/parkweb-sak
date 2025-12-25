@@ -1,3 +1,23 @@
+/**
+ * ToggleSettingRow Component
+ * 
+ * A settings row with label, optional description, and toggle switch.
+ * Used for binary on/off settings with optional saved state indicator.
+ * 
+ * @module components/ui/toggle-setting-row
+ * 
+ * @example
+ * ```tsx
+ * <ToggleSettingRow
+ *   id="notifications"
+ *   label="Enable notifications"
+ *   description="Receive alerts for new messages"
+ *   checked={enabled}
+ *   onCheckedChange={setEnabled}
+ *   showSaved={justSaved}
+ * />
+ * ```
+ */
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { SavedIndicator } from '@/components/settings/SavedIndicator';

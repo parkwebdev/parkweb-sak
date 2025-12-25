@@ -1,3 +1,27 @@
+/**
+ * Sheet Component
+ * 
+ * A modal dialog that slides in from the edge of the screen.
+ * Built on Radix UI Dialog with customizable side positioning.
+ * 
+ * @module components/ui/sheet
+ * 
+ * @example
+ * ```tsx
+ * <Sheet open={isOpen} onOpenChange={setIsOpen}>
+ *   <SheetTrigger asChild>
+ *     <Button>Open</Button>
+ *   </SheetTrigger>
+ *   <SheetContent side="right">
+ *     <SheetHeader>
+ *       <SheetTitle>Settings</SheetTitle>
+ *       <SheetDescription>Configure your preferences</SheetDescription>
+ *     </SheetHeader>
+ *     Content here...
+ *   </SheetContent>
+ * </Sheet>
+ * ```
+ */
 import * as React from "react"
 import * as SheetPrimitive from "@radix-ui/react-dialog"
 import { cva, type VariantProps } from "class-variance-authority"

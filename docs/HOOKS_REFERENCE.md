@@ -1015,22 +1015,22 @@ const {
 
 ---
 
-### useConversations (Widget)
+### useWidgetConversations
 
 Manages widget conversations.
 
 ```tsx
-import { useConversations } from '@/widget/hooks/useConversations';
+import { useWidgetConversations } from '@/widget/hooks/useWidgetConversations';
 
 const {
   conversations,         // Conversation[]
   currentConversation,   // Conversation | null
   createConversation,    // () => Promise<Conversation>
   selectConversation,    // (id) => void
-} = useConversations(agentId: string);
+} = useWidgetConversations(agentId: string);
 ```
 
-**File**: `src/widget/hooks/useConversations.ts`
+**File**: `src/widget/hooks/useWidgetConversations.ts`
 
 ---
 

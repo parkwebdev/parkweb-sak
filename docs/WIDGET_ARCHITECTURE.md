@@ -112,7 +112,7 @@ src/widget/
 │   ├── useWidgetNavigation.ts  # View navigation handlers (Phase 3)
 │   ├── useWidgetRating.ts      # Satisfaction rating state (Phase 4)
 │   ├── useWidgetTakeover.ts    # Human takeover state (Phase 5)
-│   ├── useConversations.ts     # Conversation CRUD operations
+│   ├── useWidgetConversations.ts # Conversation CRUD operations
 │   ├── useRealtimeMessages.ts  # Real-time message subscriptions
 │   ├── useRealtimeConfig.ts    # Real-time config change subscriptions
 │   ├── useTypingIndicator.ts   # Supabase presence for typing
@@ -609,7 +609,7 @@ The widget uses 18 custom hooks organized by concern. These were refactored in t
 | `useWidgetNavigation` | View navigation handlers | ~162 | Phase 3 |
 | `useWidgetRating` | Satisfaction rating state | ~95 | Phase 4 |
 | `useWidgetTakeover` | Human takeover state | ~89 | Phase 5 |
-| `useConversations` | Conversation CRUD operations | ~285 | Original |
+| `useWidgetConversations` | Conversation CRUD operations | ~285 | Original |
 | `useRealtimeMessages` | Real-time message subscriptions | ~192 | Original |
 | `useConversationStatus` | Status change subscriptions | ~85 | Original |
 | `useTypingIndicator` | Typing presence | ~75 | Original |
@@ -624,7 +624,7 @@ The widget uses 18 custom hooks organized by concern. These were refactored in t
 ### Hook Categories
 
 - **Configuration**: `useWidgetConfig`, `useRealtimeConfig`
-- **Messaging**: `useWidgetMessaging`, `useConversations`, `useRealtimeMessages`, `useConversationStatus`, `useTypingIndicator`
+- **Messaging**: `useWidgetMessaging`, `useWidgetConversations`, `useRealtimeMessages`, `useConversationStatus`, `useTypingIndicator`
 - **Audio**: `useWidgetAudioRecording`
 - **Navigation**: `useWidgetNavigation`
 - **Rating**: `useWidgetRating`
