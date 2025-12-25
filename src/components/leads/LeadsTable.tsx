@@ -1,6 +1,6 @@
 /**
- * @fileoverview Leads data table with sorting, selection, and pagination.
- * Integrates with TanStack Table for row selection and status updates.
+ * @fileoverview Leads data table with sorting, selection, filtering, and pagination.
+ * Integrates with TanStack Table for row selection, faceted filters, and bulk actions.
  */
 
 import React, { useMemo, useCallback } from 'react';
@@ -9,14 +9,26 @@ import {
   getCoreRowModel,
   getSortedRowModel,
   getFilteredRowModel,
+  getFacetedRowModel,
+  getFacetedUniqueValues,
   getPaginationRowModel,
   SortingState,
   RowSelectionState,
+  ColumnFiltersState,
+  VisibilityState,
 } from '@tanstack/react-table';
 import { useState } from 'react';
-import { DataTable, DataTablePagination } from '@/components/data-table';
+import { Trash01, Download01 } from '@untitledui/icons';
+import {
+  DataTable,
+  DataTablePagination,
+  DataTableToolbar,
+  DataTableFacetedFilter,
+  DataTableFloatingBar,
+} from '@/components/data-table';
 import { createLeadsColumns, type Lead } from '@/components/data-table/columns/leads-columns';
 import { LeadStatusDropdown } from './LeadStatusDropdown';
+import { Button } from '@/components/ui/button';
 
 interface LeadsTableProps {
   leads: Lead[];
@@ -25,7 +37,17 @@ interface LeadsTableProps {
   onStatusChange: (leadId: string, status: string) => void;
   onSelectionChange: (id: string, checked: boolean) => void;
   onSelectAll: (checked: boolean) => void;
+  onBulkDelete?: (ids: string[]) => void;
 }
+
+const STATUS_OPTIONS = [
+  { label: 'New', value: 'new' },
+  { label: 'Contacted', value: 'contacted' },
+  { label: 'Qualified', value: 'qualified' },
+  { label: 'Proposal', value: 'proposal' },
+  { label: 'Won', value: 'won' },
+  { label: 'Lost', value: 'lost' },
+];
 
 export const LeadsTable = React.memo(function LeadsTable({
   leads,
@@ -34,8 +56,11 @@ export const LeadsTable = React.memo(function LeadsTable({
   onStatusChange,
   onSelectionChange,
   onSelectAll,
+  onBulkDelete,
 }: LeadsTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
 
   const rowSelection = useMemo(() => {
     const selection: RowSelectionState = {};
@@ -60,7 +85,6 @@ export const LeadsTable = React.memo(function LeadsTable({
   const handleRowSelectionChange = useCallback((updater: RowSelectionState | ((prev: RowSelectionState) => RowSelectionState)) => {
     const newSelection = typeof updater === 'function' ? updater(rowSelection) : updater;
     
-    // Sync with parent state
     const allSelected = Object.keys(newSelection).length === leads.length;
     const noneSelected = Object.keys(newSelection).length === 0;
     
@@ -69,7 +93,6 @@ export const LeadsTable = React.memo(function LeadsTable({
     } else if (noneSelected && selectedIds.size > 0) {
       onSelectAll(false);
     } else {
-      // Individual row changes
       leads.forEach((lead, index) => {
         const wasSelected = selectedIds.has(lead.id);
         const isNowSelected = newSelection[index] ?? false;
@@ -86,22 +109,53 @@ export const LeadsTable = React.memo(function LeadsTable({
     state: {
       sorting,
       rowSelection,
+      columnFilters,
+      columnVisibility,
     },
     enableRowSelection: true,
     onSortingChange: setSorting,
     onRowSelectionChange: handleRowSelectionChange,
+    onColumnFiltersChange: setColumnFilters,
+    onColumnVisibilityChange: setColumnVisibility,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
+    getFacetedRowModel: getFacetedRowModel(),
+    getFacetedUniqueValues: getFacetedUniqueValues(),
     getPaginationRowModel: getPaginationRowModel(),
+    filterFns: {
+      arrIncludesSome: (row, columnId, filterValue: string[]) => {
+        const value = row.getValue(columnId) as string;
+        return filterValue.includes(value);
+      },
+    },
   });
 
   const handleRowClick = useCallback((lead: Lead) => {
     onView(lead);
   }, [onView]);
 
+  const handleBulkDelete = useCallback(() => {
+    const selectedRows = table.getFilteredSelectedRowModel().rows;
+    const ids = selectedRows.map((row) => row.original.id);
+    onBulkDelete?.(ids);
+  }, [table, onBulkDelete]);
+
   return (
     <div className="space-y-4">
+      <DataTableToolbar
+        table={table}
+        searchPlaceholder="Search leads..."
+        globalFilter
+        showViewOptions
+        filterContent={
+          <DataTableFacetedFilter
+            column={table.getColumn('status')}
+            title="Status"
+            options={STATUS_OPTIONS}
+          />
+        }
+      />
       <DataTable
         table={table}
         columns={columns}
@@ -111,6 +165,23 @@ export const LeadsTable = React.memo(function LeadsTable({
       {leads.length > 10 && (
         <DataTablePagination table={table} showSelectedCount />
       )}
+      <DataTableFloatingBar table={table}>
+        {onBulkDelete && (
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={handleBulkDelete}
+            className="h-7"
+          >
+            <Trash01 className="mr-2 h-4 w-4" />
+            Delete
+          </Button>
+        )}
+        <Button variant="outline" size="sm" className="h-7">
+          <Download01 className="mr-2 h-4 w-4" />
+          Export
+        </Button>
+      </DataTableFloatingBar>
     </div>
   );
 });
