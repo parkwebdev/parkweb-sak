@@ -28,6 +28,7 @@ import {
 import { formatDistanceToNow, format } from 'date-fns';
 import { toast } from '@/lib/toast';
 import { uploadFeaturedImage } from '@/lib/article-image-upload';
+import { UploadProgress } from '@/components/ui/upload-progress';
 import { CATEGORY_ICON_OPTIONS, CategoryIcon, type CategoryIconName } from '@/widget/category-icons';
 import { SkeletonArticleDetails } from '@/components/ui/page-skeleton';
 import type { HelpArticleWithMeta } from '@/components/data-table/columns/help-articles-columns';
@@ -331,10 +332,7 @@ export const ArticleDetailsSheet: React.FC<ArticleDetailsSheetProps> = ({
                   />
                   <label htmlFor="sheet-featured-image-upload" className="cursor-pointer block">
                     {featuredImageUploading ? (
-                      <div className="flex flex-col items-center py-2">
-                        <div className="h-6 w-6 animate-spin rounded-full border-2 border-solid border-primary border-r-transparent mb-2" />
-                        <p className="text-sm text-muted-foreground">Uploading...</p>
-                      </div>
+                      <UploadProgress text="Uploading..." className="py-2" />
                     ) : (
                       <>
                         <Image01 className="h-6 w-6 mx-auto mb-2 text-muted-foreground" />

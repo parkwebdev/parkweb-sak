@@ -8,7 +8,7 @@
  */
 
 import { Suspense, useRef, useEffect } from 'react';
-import { WidgetButton } from '../ui';
+import { WidgetButton, WidgetSkeleton } from '../ui';
 import { Textarea } from '@/components/ui/textarea';
 import { Send01, Microphone01, Attachment01, X } from '../icons';
 import { VoiceInput } from '../constants';
@@ -133,7 +133,7 @@ export const MessageInput = ({
       <div className="p-3">
         {isRecordingAudio ? (
           <div className="flex items-center justify-center gap-3">
-            <Suspense fallback={<div className="h-12 flex items-center justify-center text-muted-foreground text-sm">Loading...</div>}>
+            <Suspense fallback={<WidgetSkeleton className="h-12 w-full rounded-lg" />}>
               <VoiceInput
                 isRecording={isRecordingAudio}
                 recordingTime={recordingTime}

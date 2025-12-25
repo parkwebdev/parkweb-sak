@@ -11,7 +11,7 @@ import { Suspense, RefObject } from 'react';
 import { updateMessageReaction } from '../api';
 import { MessageBubble, ContactForm, MessageInput, TypingIndicator, QuickReplies, CallButton } from '../components';
 import { FileDropZone } from '../constants';
-import { WidgetSkeletonMessage } from '../ui';
+import { WidgetSkeletonMessage, WidgetSkeletonCard } from '../ui';
 import type { Message, ChatUser, BookingDay, BookingTime } from '../types';
 import type { WidgetConfig } from '../api';
 
@@ -254,7 +254,7 @@ export const ChatView = ({
         {/* File attachment overlay */}
         {isAttachingFiles && (
           <div className="p-4">
-            <Suspense fallback={<div className="h-32 flex items-center justify-center text-muted-foreground text-sm">Loading...</div>}>
+            <Suspense fallback={<WidgetSkeletonCard className="h-32" />}>
               <FileDropZone
                 onFilesSelected={(files, urls) => {
                   files.forEach((file, i) => {
