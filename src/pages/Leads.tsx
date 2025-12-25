@@ -14,9 +14,7 @@
 import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { LayoutAlt04, List, SearchLg, Trash01, XClose } from '@untitledui/icons';
+import { LayoutAlt04, List } from '@untitledui/icons';
 import { useLeads } from '@/hooks/useLeads';
 import { LeadsKanbanBoard } from '@/components/leads/LeadsKanbanBoard';
 import { LeadsTable } from '@/components/leads/LeadsTable';
@@ -38,8 +36,6 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
   const [selectedLead, setSelectedLead] = useState<Tables<'leads'> | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'kanban' | 'table'>('kanban');
   
   // Bulk selection state
@@ -51,17 +47,6 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
   const [singleDeleteLeadId, setSingleDeleteLeadId] = useState<string | null>(null);
   const [isSingleDeleteOpen, setIsSingleDeleteOpen] = useState(false);
 
-  const filteredLeads = leads.filter((lead) => {
-    const matchesSearch = 
-      (lead.name?.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (lead.email?.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (lead.company?.toLowerCase().includes(searchQuery.toLowerCase()));
-    
-    const matchesStatus = statusFilter === 'all' || lead.status === statusFilter;
-
-    return matchesSearch && matchesStatus;
-  });
-
   const handleViewLead = useCallback((lead: Tables<'leads'>) => {
     setSelectedLead(lead);
     setIsDetailsOpen(true);
@@ -70,7 +55,7 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
   const handleExport = useCallback(() => {
     const csv = [
       ['Name', 'Email', 'Phone', 'Company', 'Status', 'Created'],
-      ...filteredLeads.map((lead) => [
+      ...leads.map((lead) => [
         lead.name || '',
         lead.email || '',
         lead.phone || '',
@@ -88,16 +73,16 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
     a.href = url;
     a.download = `leads-${new Date().toISOString()}.csv`;
     a.click();
-  }, [filteredLeads]);
+  }, [leads]);
 
   // Selection handlers
   const handleSelectAll = useCallback((checked: boolean) => {
     if (checked) {
-      setSelectedLeadIds(new Set(filteredLeads.map(l => l.id)));
+      setSelectedLeadIds(new Set(leads.map(l => l.id)));
     } else {
       setSelectedLeadIds(new Set());
     }
-  }, [filteredLeads]);
+  }, [leads]);
 
   const handleSelectLead = useCallback((id: string, checked: boolean) => {
     setSelectedLeadIds(prev => {
@@ -140,10 +125,6 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
     }
   }, [deleteLead, singleDeleteLeadId]);
 
-  const clearSelection = useCallback(() => {
-    setSelectedLeadIds(new Set());
-  }, []);
-
   const stats = {
     total: leads.length,
     new: leads.filter((l) => l.status === 'new').length,
@@ -159,7 +140,7 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
         description="Track and manage leads captured from conversations"
         onMenuClick={onMenuClick}
       >
-        <Button variant="outline" size="sm" onClick={handleExport} disabled={filteredLeads.length === 0}>
+        <Button variant="outline" size="sm" onClick={handleExport} disabled={leads.length === 0}>
           Export
         </Button>
         <Button size="sm" onClick={() => setIsCreateOpen(true)}>
@@ -192,80 +173,27 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
           </div>
         </div>
 
-        {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-          <div className="relative flex-1 max-w-sm">
-            <SearchLg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search leads..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9"
-            />
-          </div>
-
-          <div className="flex gap-2 items-center">
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[140px]" size="sm">
-                <SelectValue placeholder="Filter status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Leads</SelectItem>
-                <SelectItem value="new">New</SelectItem>
-                <SelectItem value="contacted">Contacted</SelectItem>
-                <SelectItem value="qualified">Qualified</SelectItem>
-                <SelectItem value="converted">Converted</SelectItem>
-                <SelectItem value="lost">Lost</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <div className="flex border rounded-lg">
-              <Button
-                variant={viewMode === 'kanban' ? 'secondary' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode('kanban')}
-                aria-label="Kanban view"
-              >
-                <LayoutAlt04 className="h-4 w-4" />
-              </Button>
-              <Button
-                variant={viewMode === 'table' ? 'secondary' : 'ghost'}
-                size="sm"
-                onClick={() => setViewMode('table')}
-                aria-label="Table view"
-              >
-                <List className="h-4 w-4" />
-              </Button>
-            </div>
+        {/* View Mode Toggle */}
+        <div className="flex justify-end">
+          <div className="flex border rounded-lg">
+            <Button
+              variant={viewMode === 'kanban' ? 'secondary' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('kanban')}
+              aria-label="Kanban view"
+            >
+              <LayoutAlt04 className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={viewMode === 'table' ? 'secondary' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('table')}
+              aria-label="Table view"
+            >
+              <List className="h-4 w-4" />
+            </Button>
           </div>
         </div>
-
-        {/* Bulk Action Bar */}
-        {selectedLeadIds.size > 0 && (
-          <div className="flex items-center justify-between p-3 bg-muted rounded-lg border">
-            <span className="text-sm font-medium">
-              {selectedLeadIds.size} lead{selectedLeadIds.size > 1 ? 's' : ''} selected
-            </span>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={clearSelection}
-              >
-                <XClose className="h-4 w-4 mr-1" />
-                Clear
-              </Button>
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={() => setIsDeleteDialogOpen(true)}
-              >
-                <Trash01 className="h-4 w-4 mr-1" />
-                Delete
-              </Button>
-            </div>
-          </div>
-        )}
 
         {/* Content */}
         {loading ? (
@@ -281,28 +209,32 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
             >
               {viewMode === 'kanban' ? (
                 <LeadsKanbanBoard
-                  leads={filteredLeads}
+                  leads={leads}
                   onStatusChange={(leadId, status) => updateLead(leadId, { status })}
                   onViewLead={handleViewLead}
                   onOrderChange={updateLeadOrders}
                 />
               ) : (
                 <LeadsTable
-                  leads={filteredLeads}
+                  leads={leads}
                   selectedIds={selectedLeadIds}
                   onView={handleViewLead}
                   onStatusChange={(leadId, status) => updateLead(leadId, { status: status as Enums<'lead_status'> })}
                   onSelectionChange={handleSelectLead}
                   onSelectAll={handleSelectAll}
+                  onBulkDelete={(ids) => {
+                    setSelectedLeadIds(new Set(ids));
+                    setIsDeleteDialogOpen(true);
+                  }}
                 />
               )}
             </motion.div>
           </AnimatePresence>
         )}
 
-        {!loading && filteredLeads.length === 0 && (
+        {!loading && leads.length === 0 && (
           <div className="text-center py-12 text-muted-foreground">
-            No leads found. Create your first lead or adjust your filters.
+            No leads found. Create your first lead to get started.
           </div>
         )}
       </div>
