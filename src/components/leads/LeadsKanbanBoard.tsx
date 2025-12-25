@@ -5,7 +5,17 @@
 
 import React, { useMemo, useCallback, useState, useRef, useEffect } from "react";
 import { formatDistanceToNow } from "date-fns";
-import { Mail01, Phone, Building02, MessageChatCircle } from "@untitledui/icons";
+import { 
+  Mail01, 
+  Phone, 
+  MarkerPin01, 
+  Globe01, 
+  Flag01, 
+  MessageChatCircle,
+  Edit05,
+  Clock,
+  Calendar
+} from "@untitledui/icons";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -20,21 +30,50 @@ import { useLeadStages, LeadStage } from "@/hooks/useLeadStages";
 import { type CardFieldKey, getDefaultVisibleFields } from "./KanbanCardFields";
 import type { Tables } from "@/integrations/supabase/types";
 
-// Kanban-compatible lead type
+// Type for conversation metadata
+interface ConversationMetadata {
+  city?: string;
+  country?: string;
+  priority?: 'high' | 'medium' | 'low';
+  tags?: string[];
+  notes?: string;
+  referrer_journey?: {
+    landing_page?: string;
+  };
+}
+
+// Kanban-compatible lead type with extended fields
 type KanbanLead = {
   id: string;
   name: string;
   column: string;
+  firstName: string | null;
+  lastName: string | null;
   email: string | null;
   phone: string | null;
-  company: string | null;
   stage_id: string | null;
   created_at: string;
-  hasConversation?: boolean;
+  updated_at: string;
+  hasConversation: boolean;
+  // From conversation metadata
+  location: string | null;
+  entryPage: string | null;
+  priority: 'high' | 'medium' | 'low' | null;
+  tags: string[];
+  notes: string | null;
+};
+
+// Extended lead type that includes conversation (matching useLeads hook)
+type LeadWithConversation = Tables<"leads"> & {
+  conversations?: { 
+    id: string; 
+    created_at: string;
+    metadata?: unknown;
+  } | null;
 };
 
 interface LeadsKanbanBoardProps {
-  leads: Tables<"leads">[];
+  leads: LeadWithConversation[];
   onStatusChange: (leadId: string, stageId: string) => void;
   onViewLead: (lead: Tables<"leads">) => void;
   onOrderChange?: (updates: { id: string; kanban_order: number; stage_id?: string }[]) => void;
@@ -107,6 +146,35 @@ function InlineStageHeader({
   );
 }
 
+// Priority badge component
+function PriorityBadge({ priority }: { priority: 'high' | 'medium' | 'low' }) {
+  const config = {
+    high: { label: 'High', className: 'bg-destructive/10 text-destructive border-destructive/20' },
+    medium: { label: 'Medium', className: 'bg-warning/10 text-warning border-warning/20' },
+    low: { label: 'Low', className: 'bg-muted text-muted-foreground border-border' },
+  };
+  
+  const { label, className } = config[priority];
+  
+  return (
+    <Badge variant="outline" className={`h-5 text-[10px] px-1.5 ${className}`}>
+      <Flag01 size={10} className="mr-0.5" />
+      {label}
+    </Badge>
+  );
+}
+
+// Helper to extract domain/path from URL
+function formatEntryPage(url: string | undefined): string | null {
+  if (!url) return null;
+  try {
+    const parsed = new URL(url);
+    return parsed.pathname === '/' ? parsed.hostname : `${parsed.hostname}${parsed.pathname}`;
+  } catch {
+    return url.slice(0, 30);
+  }
+}
+
 // Individual lead card content - memoized for performance
 export const LeadCardContent = React.memo(function LeadCardContent({ 
   lead,
@@ -115,24 +183,29 @@ export const LeadCardContent = React.memo(function LeadCardContent({
   lead: KanbanLead;
   visibleFields?: Set<CardFieldKey>;
 }) {
+  // Build display name from first/last name fields
+  const displayName = useMemo(() => {
+    const parts: string[] = [];
+    if (visibleFields.has('firstName') && lead.firstName) parts.push(lead.firstName);
+    if (visibleFields.has('lastName') && lead.lastName) parts.push(lead.lastName);
+    return parts.length > 0 ? parts.join(' ') : lead.name || 'Unnamed Lead';
+  }, [lead.firstName, lead.lastName, lead.name, visibleFields]);
+
   return (
     <div className="space-y-2">
+      {/* Header: Name + Conversation Icon */}
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-medium text-foreground">
-            {lead.name || "Unnamed Lead"}
+            {displayName}
           </p>
-          {visibleFields.has('createdAt') && (
-            <p className="text-xs text-muted-foreground">
-              {formatDistanceToNow(new Date(lead.created_at), { addSuffix: true })}
-            </p>
-          )}
         </div>
         {visibleFields.has('conversation') && lead.hasConversation && (
           <MessageChatCircle size={14} className="shrink-0 text-primary" />
         )}
       </div>
 
+      {/* Contact Info */}
       <div className="space-y-1">
         {visibleFields.has('email') && lead.email && (
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -146,13 +219,78 @@ export const LeadCardContent = React.memo(function LeadCardContent({
             <span className="truncate">{lead.phone}</span>
           </div>
         )}
-        {visibleFields.has('company') && lead.company && (
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Building02 size={12} className="shrink-0" />
-            <span className="truncate">{lead.company}</span>
-          </div>
-        )}
       </div>
+
+      {/* Session Details */}
+      {(visibleFields.has('location') || visibleFields.has('entryPage')) && (
+        <div className="space-y-1">
+          {visibleFields.has('location') && lead.location && (
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <MarkerPin01 size={12} className="shrink-0" />
+              <span className="truncate">{lead.location}</span>
+            </div>
+          )}
+          {visibleFields.has('entryPage') && lead.entryPage && (
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Globe01 size={12} className="shrink-0" />
+              <span className="truncate">{lead.entryPage}</span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Priority & Tags */}
+      {(visibleFields.has('priority') || visibleFields.has('tags')) && (
+        <div className="flex flex-wrap items-center gap-1">
+          {visibleFields.has('priority') && lead.priority && (
+            <PriorityBadge priority={lead.priority} />
+          )}
+          {visibleFields.has('tags') && lead.tags.length > 0 && (
+            <>
+              {lead.tags.slice(0, 3).map((tag) => (
+                <Badge 
+                  key={tag} 
+                  variant="secondary" 
+                  className="h-5 text-[10px] px-1.5"
+                >
+                  {tag}
+                </Badge>
+              ))}
+              {lead.tags.length > 3 && (
+                <span className="text-[10px] text-muted-foreground">
+                  +{lead.tags.length - 3}
+                </span>
+              )}
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Notes Preview */}
+      {visibleFields.has('notes') && lead.notes && (
+        <div className="flex items-start gap-1.5 text-xs text-muted-foreground">
+          <Edit05 size={12} className="shrink-0 mt-0.5" />
+          <span className="line-clamp-2">{lead.notes}</span>
+        </div>
+      )}
+
+      {/* Timestamps */}
+      {(visibleFields.has('createdAt') || visibleFields.has('lastUpdated')) && (
+        <div className="flex flex-wrap gap-2 text-[10px] text-muted-foreground">
+          {visibleFields.has('createdAt') && (
+            <div className="flex items-center gap-1">
+              <Calendar size={10} />
+              <span>{formatDistanceToNow(new Date(lead.created_at), { addSuffix: true })}</span>
+            </div>
+          )}
+          {visibleFields.has('lastUpdated') && (
+            <div className="flex items-center gap-1">
+              <Clock size={10} />
+              <span>Updated {formatDistanceToNow(new Date(lead.updated_at), { addSuffix: true })}</span>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 });
@@ -175,23 +313,51 @@ export function LeadsKanbanBoard({
     [stages]
   );
 
-  // Transform leads to kanban format with stage_id as column
+  // Transform leads to kanban format with extended data extraction
   const kanbanLeads = useMemo<KanbanLead[]>(
     () =>
       leads.map((lead) => {
         // Find matching stage - fallback to first stage if not found
         const stageId = lead.stage_id || stages.find(s => s.is_default)?.id || stages[0]?.id || '';
         
+        // Extract data from lead.data JSONB field
+        const leadData = (lead.data || {}) as Record<string, unknown>;
+        const firstName = (leadData.firstName as string) || (leadData['First Name'] as string) || null;
+        const lastName = (leadData.lastName as string) || (leadData['Last Name'] as string) || null;
+        
+        // Get phone from column OR data field
+        const phone = lead.phone || (leadData['Phone Number'] as string) || (leadData.phone as string) || null;
+        
+        // Extract conversation metadata
+        const conversation = (lead as LeadWithConversation).conversations;
+        const metadata = (conversation?.metadata || {}) as ConversationMetadata;
+        
+        // Build location string
+        const locationParts: string[] = [];
+        if (metadata.city) locationParts.push(metadata.city);
+        if (metadata.country) locationParts.push(metadata.country);
+        const location = locationParts.length > 0 ? locationParts.join(', ') : null;
+        
+        // Format entry page
+        const entryPage = formatEntryPage(metadata.referrer_journey?.landing_page);
+        
         return {
           id: lead.id,
           name: lead.name || "Unnamed Lead",
           column: stageId,
+          firstName,
+          lastName,
           email: lead.email,
-          phone: lead.phone,
-          company: lead.company,
+          phone,
           stage_id: lead.stage_id,
           created_at: lead.created_at,
+          updated_at: lead.updated_at,
           hasConversation: !!lead.conversation_id,
+          location,
+          entryPage,
+          priority: metadata.priority || null,
+          tags: metadata.tags || [],
+          notes: metadata.notes || null,
         };
       }),
     [leads, stages]
