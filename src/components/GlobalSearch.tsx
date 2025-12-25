@@ -17,6 +17,7 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
+  CommandShortcut,
 } from '@/components/ui/command';
 import { useGlobalSearch } from '@/hooks/useGlobalSearch';
 import { useSearchData, type SearchResult } from '@/hooks/useSearchData';
@@ -83,7 +84,7 @@ export const GlobalSearch = () => {
   return (
     <CommandDialog open={open} onOpenChange={setOpen}>
       <CommandInput
-        placeholder="Search everything..."
+        placeholder="Type a command or search..."
         value={search}
         onValueChange={setSearch}
       />
@@ -100,25 +101,31 @@ export const GlobalSearch = () => {
                   const IconsRecord = Icons as Record<string, React.ComponentType<{ className?: string }>>;
                   const IconComponent = isAriLogo ? null : (result.iconName ? IconsRecord[result.iconName] : null);
                   
-                  return (
+                    return (
                     <CommandItem
                       key={result.id}
                       value={`${result.title} ${result.description || ''}`}
                       onSelect={() => handleSelect(result)}
+                      className="flex items-center justify-between"
                     >
-                      {isAriLogo ? (
-                        <AriAgentsIcon className="mr-2 h-4 w-4 text-muted-foreground" size={16} />
-                      ) : IconComponent ? (
-                        <IconComponent className="mr-2 h-4 w-4 text-muted-foreground" />
-                      ) : null}
-                      <div className="flex flex-col">
-                        <span className="font-medium">{result.title}</span>
-                        {result.description && (
-                          <span className="text-xs text-muted-foreground">
-                            {result.description}
-                          </span>
-                        )}
+                      <div className="flex items-center gap-2">
+                        {isAriLogo ? (
+                          <AriAgentsIcon className="h-4 w-4 shrink-0 text-muted-foreground" size={16} />
+                        ) : IconComponent ? (
+                          <IconComponent className="h-4 w-4 shrink-0 text-muted-foreground" />
+                        ) : null}
+                        <div className="flex flex-col">
+                          <span className="font-medium">{result.title}</span>
+                          {result.description && (
+                            <span className="text-xs text-muted-foreground">
+                              {result.description}
+                            </span>
+                          )}
+                        </div>
                       </div>
+                      {result.shortcut && (
+                        <CommandShortcut>{result.shortcut}</CommandShortcut>
+                      )}
                     </CommandItem>
                   );
                 })}
