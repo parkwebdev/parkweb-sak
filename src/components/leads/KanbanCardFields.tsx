@@ -13,8 +13,7 @@ import {
   Tag01, 
   Calendar, 
   Clock, 
-  Edit05,
-  MessageChatCircle 
+  Edit05
 } from "@untitledui/icons";
 
 /** Available field keys for Kanban card display */
@@ -29,8 +28,7 @@ export type CardFieldKey =
   | 'tags' 
   | 'createdAt' 
   | 'lastUpdated' 
-  | 'notes'
-  | 'conversation';
+  | 'notes';
 
 /** Field group for organizing in dropdown */
 export type FieldGroup = 'contact' | 'session' | 'organization' | 'timestamps' | 'notes';
@@ -68,7 +66,6 @@ export const CARD_FIELDS: CardFieldConfig[] = [
   // Organization
   { key: 'priority', label: 'Priority', icon: Flag01, defaultVisible: true, group: 'organization' },
   { key: 'tags', label: 'Tags', icon: Tag01, defaultVisible: true, group: 'organization' },
-  { key: 'conversation', label: 'Has Conversation', icon: MessageChatCircle, defaultVisible: false, group: 'organization' },
   
   // Timestamps
   { key: 'createdAt', label: 'Created', icon: Calendar, defaultVisible: false, group: 'timestamps' },

@@ -193,16 +193,11 @@ export const LeadCardContent = React.memo(function LeadCardContent({
 
   return (
     <div className="space-y-2">
-      {/* Header: Name + Conversation Icon */}
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-medium text-foreground">
-            {displayName}
-          </p>
-        </div>
-        {visibleFields.has('conversation') && lead.hasConversation && (
-          <MessageChatCircle size={14} className="shrink-0 text-primary" />
-        )}
+      {/* Header: Name */}
+      <div className="min-w-0">
+        <p className="truncate text-sm font-medium text-foreground">
+          {displayName}
+        </p>
       </div>
 
       {/* Contact Info */}

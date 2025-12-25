@@ -3,13 +3,13 @@
  * Supports column-specific filtering, global search, faceted filters, and view options.
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Table } from '@tanstack/react-table';
-import { SearchSm, XClose } from '@untitledui/icons';
+import { SearchSm, XClose, Columns03 } from '@untitledui/icons';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { DataTableViewOptions } from './DataTableViewOptions';
+import { DataTableColumnsSheet } from './DataTableColumnsSheet';
 
 interface DataTableToolbarProps<TData> {
   table: Table<TData>;
@@ -97,48 +97,70 @@ export function DataTableToolbar<TData>({
     ? (table.getColumn(searchColumn)?.getFilterValue() as string) ?? ''
     : '';
 
+  const [columnsSheetOpen, setColumnsSheetOpen] = useState(false);
+
   return (
-    <div className={cn('flex items-center justify-between gap-2', className)}>
-      <div className="flex items-center gap-2 flex-1 flex-wrap">
-        {prefix}
-        <div className={cn('relative w-full max-w-sm', searchClassName)}>
-          <SearchSm className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder={searchPlaceholder}
-            value={searchDisplayValue}
-            onChange={(e) => handleSearchChange(e.target.value)}
-            className="pl-9 pr-9"
-          />
-          {isFiltered && (
+    <>
+      <div className={cn('flex items-center justify-between gap-2', className)}>
+        <div className="flex items-center gap-2 flex-1 flex-wrap">
+          {prefix}
+          <div className={cn('relative w-full max-w-sm', searchClassName)}>
+            <SearchSm className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder={searchPlaceholder}
+              value={searchDisplayValue}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              className="pl-9 pr-9"
+            />
+            {isFiltered && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="absolute right-1 top-1/2 h-6 w-6 -translate-y-1/2 p-0"
+                onClick={handleClear}
+              >
+                <XClose className="h-4 w-4" />
+                <span className="sr-only">Clear search</span>
+              </Button>
+            )}
+          </div>
+          {filterContent}
+          {hasColumnFilters && (
             <Button
               variant="ghost"
               size="sm"
-              className="absolute right-1 top-1/2 h-6 w-6 -translate-y-1/2 p-0"
-              onClick={handleClear}
+              onClick={handleResetFilters}
+              className="h-9 px-2 lg:px-3"
             >
-              <XClose className="h-4 w-4" />
-              <span className="sr-only">Clear search</span>
+              Reset
+              <XClose className="ml-2 h-4 w-4" />
             </Button>
           )}
         </div>
-        {filterContent}
-        {hasColumnFilters && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleResetFilters}
-            className="h-9 px-2 lg:px-3"
-          >
-            Reset
-            <XClose className="ml-2 h-4 w-4" />
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {children}
+          {showViewOptions && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 gap-2"
+              onClick={() => setColumnsSheetOpen(true)}
+            >
+              <Columns03 className="h-4 w-4" />
+              <span className="hidden sm:inline">Columns</span>
+            </Button>
+          )}
+          {endContent}
+        </div>
       </div>
-      <div className="flex items-center gap-2">
-        {children}
-        {showViewOptions && <DataTableViewOptions table={table} />}
-        {endContent}
-      </div>
-    </div>
+      
+      {showViewOptions && (
+        <DataTableColumnsSheet
+          open={columnsSheetOpen}
+          onOpenChange={setColumnsSheetOpen}
+          table={table}
+        />
+      )}
+    </>
   );
 }

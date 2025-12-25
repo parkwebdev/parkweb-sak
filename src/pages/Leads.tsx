@@ -26,8 +26,9 @@ import { CreateLeadDialog } from '@/components/leads/CreateLeadDialog';
 import { DeleteLeadDialog } from '@/components/leads/DeleteLeadDialog';
 import { ExportLeadsDialog } from '@/components/leads/ExportLeadsDialog';
 import { ManageStagesDialog } from '@/components/leads/ManageStagesDialog';
-import { KanbanCardFieldsFilter } from '@/components/leads/KanbanCardFieldsFilter';
+import { KanbanCardFieldsSheet } from '@/components/leads/KanbanCardFieldsSheet';
 import { type CardFieldKey, getDefaultVisibleFields, KANBAN_FIELDS_STORAGE_KEY } from '@/components/leads/KanbanCardFields';
+import { LayoutGrid01 } from '@untitledui/icons';
 import { PageHeader } from '@/components/ui/page-header';
 import { SkeletonLeadsPage } from '@/components/ui/skeleton';
 import { Settings01 } from '@untitledui/icons';
@@ -62,6 +63,9 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
   // Manage stages dialog state
   const [isManageStagesOpen, setIsManageStagesOpen] = useState(false);
   
+  // Fields sheet state
+  const [isFieldsSheetOpen, setIsFieldsSheetOpen] = useState(false);
+  
   // Kanban card field visibility state with localStorage persistence
   const [visibleCardFields, setVisibleCardFields] = useState<Set<CardFieldKey>>(() => {
     try {
@@ -86,6 +90,11 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
       localStorage.setItem(KANBAN_FIELDS_STORAGE_KEY, JSON.stringify([...next]));
       return next;
     });
+  }, []);
+  
+  const handleSetFields = useCallback((fields: Set<CardFieldKey>) => {
+    setVisibleCardFields(fields);
+    localStorage.setItem(KANBAN_FIELDS_STORAGE_KEY, JSON.stringify([...fields]));
   }, []);
   
   // Shared search state for filtering across both views
@@ -232,10 +241,15 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
                     </svg>
                   </div>
                   <div className="flex items-center gap-2">
-                    <KanbanCardFieldsFilter
-                      visibleFields={visibleCardFields}
-                      onToggleField={handleToggleField}
-                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-2"
+                      onClick={() => setIsFieldsSheetOpen(true)}
+                    >
+                      <LayoutGrid01 size={16} />
+                      <span className="hidden sm:inline">Fields</span>
+                    </Button>
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
@@ -348,6 +362,14 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
       <ManageStagesDialog
         open={isManageStagesOpen}
         onOpenChange={setIsManageStagesOpen}
+      />
+
+      <KanbanCardFieldsSheet
+        open={isFieldsSheetOpen}
+        onOpenChange={setIsFieldsSheetOpen}
+        visibleFields={visibleCardFields}
+        onToggleField={handleToggleField}
+        onSetFields={handleSetFields}
       />
     </div>
   );
