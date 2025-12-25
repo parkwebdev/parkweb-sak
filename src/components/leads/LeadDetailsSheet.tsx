@@ -12,7 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { PhoneInputField } from '@/components/ui/phone-input';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Trash02, Save01, LinkExternal02, InfoCircle } from '@untitledui/icons';
+import { Trash02, LinkExternal02, InfoCircle } from '@untitledui/icons';
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
@@ -245,15 +245,13 @@ export const LeadDetailsSheet = ({
         ) : (
           <>
             <SheetHeader>
-              <SheetTitle className="flex items-center justify-between">
-                <span>Lead Details</span>
-                <div className="flex items-center gap-2">
-                  <LeadStatusDropdown
-                    status={{ ...lead, ...editedLead }.status}
-                    onStatusChange={(status) => setEditedLead({ ...editedLead, status: status as Enums<'lead_status'> })}
-                  />
-                </div>
-              </SheetTitle>
+              <div className="flex items-center gap-3">
+                <SheetTitle>Lead Details</SheetTitle>
+                <LeadStatusDropdown
+                  status={{ ...lead, ...editedLead }.status}
+                  onStatusChange={(status) => setEditedLead({ ...editedLead, status: status as Enums<'lead_status'> })}
+                />
+              </div>
             </SheetHeader>
 
             <div className="space-y-6 py-6">
@@ -340,29 +338,15 @@ export const LeadDetailsSheet = ({
                 </div>
               </div>
 
-              {lead.conversation_id && (
-                <>
-                  <Separator />
-                  <div className="space-y-2">
-                    <h3 className="font-semibold">Related Conversation</h3>
-                    <Button variant="outline" className="w-full" onClick={handleViewConversation}>
-                      <LinkExternal02 className="h-4 w-4 mr-2" />
-                      View Conversation
-                    </Button>
-                  </div>
-                </>
-              )}
-
               {/* Actions */}
-              <div className="flex gap-2 pt-4">
-                <Button
-                  onClick={handleSave}
-                  disabled={isSaving || (Object.keys(editedLead).length === 0 && Object.keys(editedCustomData).length === 0)}
-                  className="flex-1"
-                >
-                  <Save01 className="h-4 w-4 mr-2" />
-                  Save Changes
-                </Button>
+              <Separator />
+              <div className="flex gap-2">
+                {lead.conversation_id && (
+                  <Button variant="outline" className="flex-1" onClick={handleViewConversation}>
+                    <LinkExternal02 className="h-4 w-4 mr-2" />
+                    View Conversation
+                  </Button>
+                )}
                 <Button
                   variant="destructive"
                   size="icon"
