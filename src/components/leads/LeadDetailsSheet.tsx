@@ -1,5 +1,5 @@
 /**
- * @fileoverview Lead details sheet with editable fields and actions.
+ * @fileoverview Lead details sheet with editable fields and auto-save.
  * Displays contact info, custom data, timeline, and related conversation link.
  * Sheet is always mounted to ensure proper open/close animations.
  */
@@ -13,7 +13,7 @@ import { Separator } from '@/components/ui/separator';
 import { PhoneInputField } from '@/components/ui/phone-input';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Trash02, LinkExternal02, InfoCircle } from '@untitledui/icons';
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
 import { SkeletonLeadDetails } from '@/components/ui/page-skeleton';
@@ -38,13 +38,56 @@ export const LeadDetailsSheet = ({
   const navigate = useNavigate();
   const [editedLead, setEditedLead] = useState<Partial<Tables<'leads'>>>({});
   const [editedCustomData, setEditedCustomData] = useState<Record<string, unknown>>({});
-  const [isSaving, setIsSaving] = useState(false);
+  const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Reset edited state when lead changes
   useEffect(() => {
     setEditedLead({});
     setEditedCustomData({});
   }, [lead?.id]);
+
+  // Auto-save with debounce
+  const performAutoSave = useCallback(() => {
+    if (!lead) return;
+    
+    const hasLeadChanges = Object.keys(editedLead).length > 0;
+    const hasCustomDataChanges = Object.keys(editedCustomData).length > 0;
+    
+    if (!hasLeadChanges && !hasCustomDataChanges) return;
+
+    const currentData = (lead.data || {}) as Record<string, unknown>;
+    const mergedData = { ...currentData, ...editedCustomData };
+    
+    const updates: Partial<Tables<'leads'>> = {
+      ...editedLead,
+      ...(hasCustomDataChanges ? { data: mergedData as Json } : {}),
+    };
+    
+    onUpdate(lead.id, updates);
+    setEditedLead({});
+    setEditedCustomData({});
+  }, [lead, editedLead, editedCustomData, onUpdate]);
+
+  // Debounced auto-save effect
+  useEffect(() => {
+    const hasChanges = Object.keys(editedLead).length > 0 || Object.keys(editedCustomData).length > 0;
+    
+    if (!hasChanges) return;
+
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+    }
+
+    autoSaveTimeoutRef.current = setTimeout(() => {
+      performAutoSave();
+    }, 800);
+
+    return () => {
+      if (autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current);
+      }
+    };
+  }, [editedLead, editedCustomData, performAutoSave]);
 
   // Check if phone exists in custom data
   // Get phone value from custom data if it exists
@@ -72,25 +115,6 @@ export const LeadDetailsSheet = ({
     ];
     return Object.entries(data).filter(([key]) => !excludedFields.includes(key));
   }, [lead]);
-
-  const handleSave = async () => {
-    if (!lead) return;
-    setIsSaving(true);
-    
-    const currentData = (lead.data || {}) as Record<string, unknown>;
-    const mergedData = { ...currentData, ...editedCustomData };
-    
-    const updates: Partial<Tables<'leads'>> = {
-      ...editedLead,
-      ...(Object.keys(editedCustomData).length > 0 ? { data: mergedData as Json } : {}),
-    };
-    
-    await onUpdate(lead.id, updates);
-    setEditedLead({});
-    setEditedCustomData({});
-    setIsSaving(false);
-  };
-
   const handleDelete = () => {
     if (!lead) return;
     onDelete(lead.id);
@@ -163,7 +187,7 @@ export const LeadDetailsSheet = ({
       const strValue = String(currentValue || '');
       return (
         <div className="space-y-2">
-          <Label>{formatLabel(key)}</Label>
+          <Label className="text-muted-foreground">{formatLabel(key)}</Label>
           <p className="text-sm text-muted-foreground whitespace-pre-wrap bg-muted/50 rounded-md p-3">
             {strValue || '-'}
           </p>
@@ -179,7 +203,7 @@ export const LeadDetailsSheet = ({
       return (
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <Label>{formatLabel(key)}</Label>
+            <Label className="text-muted-foreground">{formatLabel(key)}</Label>
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -202,7 +226,7 @@ export const LeadDetailsSheet = ({
     if (strValue.length > 100) {
       return (
         <div className="space-y-2">
-          <Label htmlFor={key}>{formatLabel(key)}</Label>
+          <Label htmlFor={key} className="text-muted-foreground">{formatLabel(key)}</Label>
           <Textarea
             id={key}
             value={strValue}
@@ -215,7 +239,7 @@ export const LeadDetailsSheet = ({
     
     return (
       <div className="space-y-2">
-        <Label htmlFor={key}>{formatLabel(key)}</Label>
+        <Label htmlFor={key} className="text-muted-foreground">{formatLabel(key)}</Label>
         <Input
           id={key}
           value={strValue}
@@ -261,7 +285,7 @@ export const LeadDetailsSheet = ({
                 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
-                    <Label htmlFor="firstName">First Name</Label>
+                    <Label htmlFor="firstName" className="text-muted-foreground">First Name</Label>
                     <Input
                       id="firstName"
                       value={firstName}
@@ -270,7 +294,7 @@ export const LeadDetailsSheet = ({
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="lastName">Last Name</Label>
+                    <Label htmlFor="lastName" className="text-muted-foreground">Last Name</Label>
                     <Input
                       id="lastName"
                       value={lastName}
@@ -282,7 +306,7 @@ export const LeadDetailsSheet = ({
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="email" className="text-muted-foreground">Email</Label>
                     <Input
                       id="email"
                       type="email"
@@ -292,7 +316,7 @@ export const LeadDetailsSheet = ({
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="phone">Phone</Label>
+                    <Label htmlFor="phone" className="text-muted-foreground">Phone</Label>
                     <Input
                       id="phone"
                       value={customPhoneValue}
