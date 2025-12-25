@@ -66,24 +66,34 @@ export function DataTable<TData, TValue>({
 
   return (
     <div className="rounded-md border overflow-x-auto min-w-0">
-      <Table className="table-fixed w-full">
+      <Table className="w-full">
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
-                <TableHead 
-                  key={header.id} 
-                  colSpan={header.colSpan}
-                  style={{ width: header.column.getSize() !== 150 ? header.column.getSize() : undefined }}
-                >
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
-                </TableHead>
-              ))}
+              {headerGroup.headers.map((header) => {
+                const columnDef = header.column.columnDef;
+                const size = header.column.getSize();
+                const hasCustomSize = size !== 150; // 150 is TanStack's default
+                
+                return (
+                  <TableHead 
+                    key={header.id} 
+                    colSpan={header.colSpan}
+                    style={{ 
+                      width: hasCustomSize ? size : undefined,
+                      minWidth: columnDef.minSize,
+                      maxWidth: columnDef.maxSize,
+                    }}
+                  >
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                  </TableHead>
+                );
+              })}
             </TableRow>
           ))}
         </TableHeader>
@@ -100,14 +110,27 @@ export function DataTable<TData, TValue>({
                 )}
                 onClick={() => onRowClick?.(row.original)}
               >
-                {row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id}>
-                    {flexRender(
-                      cell.column.columnDef.cell,
-                      cell.getContext()
-                    )}
-                  </TableCell>
-                ))}
+                {row.getVisibleCells().map((cell) => {
+                  const columnDef = cell.column.columnDef;
+                  const size = cell.column.getSize();
+                  const hasCustomSize = size !== 150;
+                  
+                  return (
+                    <TableCell 
+                      key={cell.id}
+                      style={{ 
+                        width: hasCustomSize ? size : undefined,
+                        minWidth: columnDef.minSize,
+                        maxWidth: columnDef.maxSize,
+                      }}
+                    >
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
+                    </TableCell>
+                  );
+                })}
               </TableRow>
             ))
           ) : (
