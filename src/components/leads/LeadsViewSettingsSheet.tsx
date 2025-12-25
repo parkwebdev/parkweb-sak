@@ -492,9 +492,19 @@ export function LeadsViewSettingsSheet({
   );
 
   const orderedColumns = useMemo(() => {
-    return columnOrder
+    // Map stored order to columns
+    const ordered = columnOrder
       .map(id => TABLE_COLUMNS.find(col => col.id === id))
       .filter((col): col is TableColumnDef => col !== undefined);
+    
+    // Add any new columns not in the stored order
+    TABLE_COLUMNS.forEach(col => {
+      if (!columnOrder.includes(col.id)) {
+        ordered.push(col);
+      }
+    });
+    
+    return ordered;
   }, [columnOrder]);
 
   const handleColumnDragEnd = useCallback((event: DragEndEvent) => {
@@ -1046,15 +1056,15 @@ export function LeadsViewSettingsSheet({
                   <div className="space-y-2">
                     <Label className="text-sm font-medium">Sort by column</Label>
                     <Select
-                      value={defaultSort?.column || ''}
+                      value={defaultSort?.column || '__none__'}
                       onValueChange={(value) => {
-                        if (value) {
+                        if (value === '__none__') {
+                          onDefaultSortChange(null);
+                        } else {
                           onDefaultSortChange({
                             column: value,
                             direction: defaultSort?.direction || 'desc',
                           });
-                        } else {
-                          onDefaultSortChange(null);
                         }
                       }}
                     >
@@ -1062,7 +1072,7 @@ export function LeadsViewSettingsSheet({
                         <SelectValue placeholder="Select column..." />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">None</SelectItem>
+                        <SelectItem value="__none__">None</SelectItem>
                         {sortableColumns.map(col => (
                           <SelectItem key={col.id} value={col.id}>
                             {col.label}

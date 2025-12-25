@@ -30,10 +30,11 @@ import {
   DEFAULT_SORT_STORAGE_KEY,
   VIEW_PRESETS_STORAGE_KEY,
   getDefaultColumnOrder,
+  TABLE_COLUMNS,
   type ViewPreset,
   type SortOption,
 } from '@/components/leads/LeadsViewSettingsSheet';
-import { type CardFieldKey, getDefaultVisibleFields, KANBAN_FIELDS_STORAGE_KEY } from '@/components/leads/KanbanCardFields';
+import { type CardFieldKey, getDefaultVisibleFields, KANBAN_FIELDS_STORAGE_KEY, CARD_FIELDS } from '@/components/leads/KanbanCardFields';
 import { Settings01 } from '@untitledui/icons';
 import { PageHeader } from '@/components/ui/page-header';
 import { SkeletonLeadsPage } from '@/components/ui/skeleton';
@@ -106,7 +107,13 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
     try {
       const stored = localStorage.getItem(TABLE_COLUMN_ORDER_STORAGE_KEY);
       if (stored) {
-        return JSON.parse(stored) as string[];
+        const parsedOrder = JSON.parse(stored) as string[];
+        // Ensure all current columns are included (handles new columns added later)
+        const allColumnIds = getDefaultColumnOrder();
+        const missingColumns = allColumnIds.filter(id => !parsedOrder.includes(id));
+        // Remove any obsolete columns that no longer exist
+        const validOrder = parsedOrder.filter(id => allColumnIds.includes(id));
+        return [...validOrder, ...missingColumns];
       }
     } catch {
       // Fallback to defaults
@@ -169,22 +176,39 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
     setViewMode(preset.viewMode);
     localStorage.setItem(DEFAULT_VIEW_MODE_STORAGE_KEY, preset.viewMode);
     
-    // Apply kanban fields
-    setVisibleCardFields(new Set(preset.kanbanFields));
-    localStorage.setItem(KANBAN_FIELDS_STORAGE_KEY, JSON.stringify(preset.kanbanFields));
+    // Validate and apply kanban fields - filter out any that no longer exist
+    const validCardFieldKeys = CARD_FIELDS.map(f => f.key);
+    const validKanbanFields = preset.kanbanFields.filter(field => 
+      validCardFieldKeys.includes(field)
+    );
+    setVisibleCardFields(new Set(validKanbanFields.length > 0 ? validKanbanFields : getDefaultVisibleFields()));
+    localStorage.setItem(KANBAN_FIELDS_STORAGE_KEY, JSON.stringify(validKanbanFields.length > 0 ? validKanbanFields : [...getDefaultVisibleFields()]));
     
-    // Apply table columns visibility
-    setColumnVisibility(preset.tableColumns);
-    localStorage.setItem(TABLE_VISIBILITY_STORAGE_KEY, JSON.stringify(preset.tableColumns));
+    // Validate and apply table columns visibility
+    const allColumnIds = TABLE_COLUMNS.map(col => col.id);
+    const validTableColumns: VisibilityState = {};
+    allColumnIds.forEach(id => {
+      // Use preset value if valid, otherwise use default
+      validTableColumns[id] = preset.tableColumns[id] ?? DEFAULT_TABLE_COLUMN_VISIBILITY[id] ?? false;
+    });
+    setColumnVisibility(validTableColumns);
+    localStorage.setItem(TABLE_VISIBILITY_STORAGE_KEY, JSON.stringify(validTableColumns));
     
-    // Apply column order
-    setColumnOrder(preset.tableColumnOrder);
-    localStorage.setItem(TABLE_COLUMN_ORDER_STORAGE_KEY, JSON.stringify(preset.tableColumnOrder));
+    // Validate and apply column order
+    const validColumnOrder = preset.tableColumnOrder.filter(id => allColumnIds.includes(id));
+    const missingColumns = allColumnIds.filter(id => !validColumnOrder.includes(id));
+    const finalColumnOrder = [...validColumnOrder, ...missingColumns];
+    setColumnOrder(finalColumnOrder);
+    localStorage.setItem(TABLE_COLUMN_ORDER_STORAGE_KEY, JSON.stringify(finalColumnOrder));
     
-    // Apply sorting
-    setDefaultSort(preset.defaultSort);
-    if (preset.defaultSort) {
-      localStorage.setItem(DEFAULT_SORT_STORAGE_KEY, JSON.stringify(preset.defaultSort));
+    // Validate and apply sorting - ensure column still exists
+    const validSortColumns = ['name', 'email', 'created_at', 'updated_at', 'company'];
+    const validSort = preset.defaultSort && validSortColumns.includes(preset.defaultSort.column)
+      ? preset.defaultSort
+      : null;
+    setDefaultSort(validSort);
+    if (validSort) {
+      localStorage.setItem(DEFAULT_SORT_STORAGE_KEY, JSON.stringify(validSort));
     } else {
       localStorage.removeItem(DEFAULT_SORT_STORAGE_KEY);
     }
