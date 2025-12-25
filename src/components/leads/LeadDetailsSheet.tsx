@@ -147,6 +147,44 @@ export const LeadDetailsSheet = ({
     staleTime: 30_000,
   });
 
+  // Refetch conversation data when sheet opens to ensure fresh data
+  useEffect(() => {
+    if (open && lead?.conversation_id) {
+      refetchConversation();
+    }
+  }, [open, lead?.conversation_id, refetchConversation]);
+
+  // Real-time subscription for conversation metadata changes
+  useEffect(() => {
+    if (!open || !lead?.conversation_id) return;
+
+    const channel = supabase
+      .channel(`conversation-metadata-${lead.conversation_id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'conversations',
+          filter: `id=eq.${lead.conversation_id}`,
+        },
+        (payload) => {
+          // Update local cache with new metadata
+          if (payload.new) {
+            queryClient.setQueryData(['conversation-for-lead', lead.conversation_id], (old: any) => ({
+              ...old,
+              ...payload.new,
+            }));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [open, lead?.conversation_id, queryClient]);
+
   const conversationMetadata = (conversation?.metadata || {}) as ConversationMetadata;
 
   // Initialize notes from conversation metadata
