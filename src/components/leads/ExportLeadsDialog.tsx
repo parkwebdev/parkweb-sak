@@ -255,10 +255,6 @@ export function ExportLeadsDialog({
 
   const canExport = selectedColumns.length > 0 && previewCount > 0 && !isExporting;
 
-  // Group columns for display
-  const leadColumns = ALL_COLUMNS.filter(col => !CONVERSATION_COLUMNS.includes(col));
-  const conversationColumns = CONVERSATION_COLUMNS;
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
@@ -294,50 +290,22 @@ export function ExportLeadsDialog({
               </div>
             </div>
             
-            {/* Lead Data Columns */}
-            <div className="space-y-2">
-              <Label className="text-xs text-muted-foreground">Lead data</Label>
-              <div className="grid grid-cols-2 gap-2 rounded-lg border bg-muted/30 p-3">
-                {leadColumns.map(column => (
-                  <div key={column} className="flex items-center gap-2">
-                    <Checkbox
-                      id={`col-${column}`}
-                      checked={selectedColumns.includes(column)}
-                      onCheckedChange={() => handleColumnToggle(column)}
-                    />
-                    <Label
-                      htmlFor={`col-${column}`}
-                      className="text-sm font-normal cursor-pointer"
-                    >
-                      {COLUMN_LABELS[column]}
-                    </Label>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Conversation Metadata Columns */}
-            <div className="space-y-2">
-              <Label className="text-xs text-muted-foreground">
-                From linked conversation
-              </Label>
-              <div className="grid grid-cols-2 gap-2 rounded-lg border bg-muted/30 p-3">
-                {conversationColumns.map(column => (
-                  <div key={column} className="flex items-center gap-2">
-                    <Checkbox
-                      id={`col-${column}`}
-                      checked={selectedColumns.includes(column)}
-                      onCheckedChange={() => handleColumnToggle(column)}
-                    />
-                    <Label
-                      htmlFor={`col-${column}`}
-                      className="text-sm font-normal cursor-pointer"
-                    >
-                      {COLUMN_LABELS[column]}
-                    </Label>
-                  </div>
-                ))}
-              </div>
+            <div className="grid grid-cols-2 gap-2 rounded-lg border bg-muted/30 p-3">
+              {ALL_COLUMNS.map(column => (
+                <div key={column} className="flex items-center gap-2">
+                  <Checkbox
+                    id={`col-${column}`}
+                    checked={selectedColumns.includes(column)}
+                    onCheckedChange={() => handleColumnToggle(column)}
+                  />
+                  <Label
+                    htmlFor={`col-${column}`}
+                    className="text-sm font-normal cursor-pointer"
+                  >
+                    {COLUMN_LABELS[column]}
+                  </Label>
+                </div>
+              ))}
             </div>
           </div>
 
