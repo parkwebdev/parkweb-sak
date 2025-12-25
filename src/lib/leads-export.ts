@@ -15,15 +15,12 @@ export type ExportColumn =
   | 'has_conversation'
   | 'custom_data';
 
-export type DateFormatOption = 'iso' | 'us' | 'eu';
-
 export interface ExportOptions {
   columns: ExportColumn[];
   statuses: Enums<'lead_status'>[];
   dateRange: 'all' | '7days' | '30days' | '90days' | 'custom';
   customDateStart?: Date;
   customDateEnd?: Date;
-  dateFormat: DateFormatOption;
   includeHeaders: boolean;
   useCurrentView: boolean;
 }
@@ -63,20 +60,10 @@ export const STATUS_OPTIONS: { value: Enums<'lead_status'>; label: string }[] = 
   { value: 'converted', label: 'Converted' },
 ];
 
-function formatDate(date: string | null, dateFormat: DateFormatOption): string {
+function formatDate(date: string | null): string {
   if (!date) return '';
-  
   const d = new Date(date);
-  
-  switch (dateFormat) {
-    case 'us':
-      return format(d, 'MM/dd/yyyy');
-    case 'eu':
-      return format(d, 'dd/MM/yyyy');
-    case 'iso':
-    default:
-      return format(d, 'yyyy-MM-dd');
-  }
+  return format(d, 'MM/dd/yyyy');
 }
 
 function escapeCSVValue(value: string): string {
@@ -86,7 +73,7 @@ function escapeCSVValue(value: string): string {
   return value;
 }
 
-function getColumnValue(lead: Lead, column: ExportColumn, dateFormat: DateFormatOption): string {
+function getColumnValue(lead: Lead, column: ExportColumn): string {
   switch (column) {
     case 'name':
       return lead.name || '';
@@ -101,9 +88,9 @@ function getColumnValue(lead: Lead, column: ExportColumn, dateFormat: DateFormat
     case 'id':
       return lead.id;
     case 'created_at':
-      return formatDate(lead.created_at, dateFormat);
+      return formatDate(lead.created_at);
     case 'updated_at':
-      return formatDate(lead.updated_at, dateFormat);
+      return formatDate(lead.updated_at);
     case 'has_conversation':
       return lead.conversation_id ? 'Yes' : 'No';
     case 'custom_data':
@@ -174,7 +161,7 @@ export function generateCSV(leads: Lead[], options: ExportOptions): string {
   // Add data rows
   for (const lead of leads) {
     const values = options.columns.map(col => 
-      escapeCSVValue(getColumnValue(lead, col, options.dateFormat))
+      escapeCSVValue(getColumnValue(lead, col))
     );
     rows.push(values.join(','));
   }
