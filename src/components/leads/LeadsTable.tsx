@@ -18,7 +18,7 @@ import {
   VisibilityState,
 } from '@tanstack/react-table';
 import { useState } from 'react';
-import { Trash01, Download01, LayoutAlt04, List } from '@untitledui/icons';
+import { Trash01, Download01 } from '@untitledui/icons';
 import {
   DataTable,
   DataTablePagination,
@@ -38,8 +38,6 @@ interface LeadsTableProps {
   onSelectionChange: (id: string, checked: boolean) => void;
   onSelectAll: (checked: boolean) => void;
   onBulkDelete?: (ids: string[]) => void;
-  viewMode: 'kanban' | 'table';
-  onViewModeChange: (mode: 'kanban' | 'table') => void;
 }
 
 const STATUS_OPTIONS = [
@@ -59,8 +57,6 @@ export const LeadsTable = React.memo(function LeadsTable({
   onSelectionChange,
   onSelectAll,
   onBulkDelete,
-  viewMode,
-  onViewModeChange,
 }: LeadsTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -149,7 +145,7 @@ export const LeadsTable = React.memo(function LeadsTable({
     <div className="space-y-4">
       <DataTableToolbar
         table={table}
-        searchPlaceholder="Search leads..."
+        searchPlaceholder="Filter by name..."
         globalFilter
         showViewOptions
       >
@@ -158,24 +154,6 @@ export const LeadsTable = React.memo(function LeadsTable({
           title="Status"
           options={STATUS_OPTIONS}
         />
-        <div className="flex border rounded-lg">
-          <Button
-            variant={viewMode === 'kanban' ? 'secondary' : 'ghost'}
-            size="sm"
-            onClick={() => onViewModeChange('kanban')}
-            aria-label="Kanban view"
-          >
-            <LayoutAlt04 className="h-4 w-4" />
-          </Button>
-          <Button
-            variant={viewMode === 'table' ? 'secondary' : 'ghost'}
-            size="sm"
-            onClick={() => onViewModeChange('table')}
-            aria-label="Table view"
-          >
-            <List className="h-4 w-4" />
-          </Button>
-        </div>
       </DataTableToolbar>
       <DataTable
         table={table}
