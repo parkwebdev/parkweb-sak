@@ -2,11 +2,11 @@
  * Leads Page
  * 
  * Manages leads captured from widget contact forms. Features include:
- * - Grid and table view modes
+ * - Kanban and table view modes
  * - Search and status filtering
  * - Bulk selection and deletion
  * - Lead details sheet with conversation linkage
- * - CSV export functionality
+ * - Unified settings sheet for fields, stages, and export
  * 
  * @page
  */
@@ -14,21 +14,16 @@
 import { useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Button } from '@/components/ui/button';
-import { IconButton } from '@/components/ui/icon-button';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useLeads } from '@/hooks/useLeads';
 import { useLeadStages } from '@/hooks/useLeadStages';
 import { LeadsKanbanBoard } from '@/components/leads/LeadsKanbanBoard';
 import { LeadsTable } from '@/components/leads/LeadsTable';
 import { ViewModeToggle } from '@/components/leads/ViewModeToggle';
 import { LeadDetailsSheet } from '@/components/leads/LeadDetailsSheet';
-import { CreateLeadDialog } from '@/components/leads/CreateLeadDialog';
 import { DeleteLeadDialog } from '@/components/leads/DeleteLeadDialog';
-import { ExportLeadsDialog } from '@/components/leads/ExportLeadsDialog';
-import { ManageStagesDialog } from '@/components/leads/ManageStagesDialog';
-import { KanbanCardFieldsSheet } from '@/components/leads/KanbanCardFieldsSheet';
+import { LeadsViewSettingsSheet } from '@/components/leads/LeadsViewSettingsSheet';
 import { type CardFieldKey, getDefaultVisibleFields, KANBAN_FIELDS_STORAGE_KEY } from '@/components/leads/KanbanCardFields';
-import { List } from '@untitledui/icons';
+import { Settings01 } from '@untitledui/icons';
 import { PageHeader } from '@/components/ui/page-header';
 import { SkeletonLeadsPage } from '@/components/ui/skeleton';
 import type { Tables } from '@/integrations/supabase/types';
@@ -40,11 +35,10 @@ interface LeadsProps {
 }
 
 const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
-  const { leads, loading, createLead, updateLead, updateLeadOrders, deleteLead, deleteLeads, getLeadsWithConversations } = useLeads();
+  const { leads, loading, updateLead, updateLeadOrders, deleteLead, deleteLeads, getLeadsWithConversations } = useLeads();
   const { stages } = useLeadStages();
   const [selectedLead, setSelectedLead] = useState<Tables<'leads'> | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'kanban' | 'table'>('kanban');
   
   // Bulk selection state
@@ -56,14 +50,8 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
   const [singleDeleteLeadId, setSingleDeleteLeadId] = useState<string | null>(null);
   const [isSingleDeleteOpen, setIsSingleDeleteOpen] = useState(false);
   
-  // Export dialog state
-  const [isExportOpen, setIsExportOpen] = useState(false);
-  
-  // Manage stages dialog state
-  const [isManageStagesOpen, setIsManageStagesOpen] = useState(false);
-  
-  // Fields sheet state
-  const [isFieldsSheetOpen, setIsFieldsSheetOpen] = useState(false);
+  // Unified settings sheet state
+  const [isSettingsSheetOpen, setIsSettingsSheetOpen] = useState(false);
   
   // Kanban card field visibility state with localStorage persistence
   const [visibleCardFields, setVisibleCardFields] = useState<Set<CardFieldKey>>(() => {
@@ -185,14 +173,7 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
         title="Leads"
         description="Track and manage leads captured from conversations"
         onMenuClick={onMenuClick}
-      >
-        <Button variant="outline" size="sm" onClick={() => setIsExportOpen(true)} disabled={leads.length === 0}>
-          Export
-        </Button>
-        <Button size="sm" onClick={() => setIsCreateOpen(true)}>
-          Add Lead
-        </Button>
-      </PageHeader>
+      />
 
       <div className="px-4 lg:px-8 mt-6 space-y-6 min-w-0">
         {/* Stats */}
@@ -227,51 +208,33 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
               >
                 {/* Kanban toolbar with search and view toggle */}
                 <div className="flex items-center justify-between gap-2">
-                  <div className="relative w-full max-w-sm">
-                    <input
-                      type="text"
-                      placeholder="Search leads..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="h-9 w-full rounded-md border border-input bg-background pl-9 pr-3 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                    />
-                    <svg className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
-                    </svg>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-8 gap-2"
-                      onClick={() => setIsFieldsSheetOpen(true)}
-                    >
-                      <List size={16} />
-                      <span className="hidden sm:inline">Fields</span>
-                    </Button>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <IconButton
-                            label="Manage stages"
-                            variant="outline"
-                            size="sm"
-                            className="h-8 w-8"
-                            onClick={() => setIsManageStagesOpen(true)}
-                          >
-                            <List size={16} />
-                          </IconButton>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Manage pipeline stages</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
+                  <div className="flex items-center gap-2 flex-1">
                     <ViewModeToggle
                       viewMode={viewMode}
                       onViewModeChange={setViewMode}
                     />
+                    <div className="relative w-full max-w-sm">
+                      <input
+                        type="text"
+                        placeholder="Search leads..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="h-9 w-full rounded-md border border-input bg-background pl-9 pr-3 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                      />
+                      <svg className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                      </svg>
+                    </div>
                   </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 gap-2"
+                    onClick={() => setIsSettingsSheetOpen(true)}
+                  >
+                    <Settings01 size={16} />
+                    <span className="hidden sm:inline">Customize</span>
+                  </Button>
                 </div>
                 <LeadsKanbanBoard
                   leads={filteredLeads}
@@ -304,6 +267,7 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
                   onViewModeChange={setViewMode}
                   searchQuery={searchQuery}
                   onSearchChange={setSearchQuery}
+                  onOpenSettings={() => setIsSettingsSheetOpen(true)}
                 />
               </motion.div>
             )}
@@ -312,7 +276,7 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
 
         {!loading && leads.length === 0 && (
           <div className="text-center py-12 text-muted-foreground">
-            No leads found. Create your first lead to get started.
+            No leads captured yet. Leads are automatically added when visitors submit the contact form in your widget.
           </div>
         )}
       </div>
@@ -324,14 +288,6 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
         onOpenChange={setIsDetailsOpen}
         onUpdate={updateLead}
         onDelete={handleSingleDelete}
-      />
-
-      <CreateLeadDialog
-        open={isCreateOpen}
-        onOpenChange={setIsCreateOpen}
-        onCreate={async (lead) => {
-          await createLead(lead);
-        }}
       />
 
       <DeleteLeadDialog
@@ -352,24 +308,15 @@ const Leads: React.FC<LeadsProps> = ({ onMenuClick }) => {
         isDeleting={isDeleting}
       />
 
-      <ExportLeadsDialog
-        open={isExportOpen}
-        onOpenChange={setIsExportOpen}
-        allLeads={leads}
-        filteredLeads={filteredLeads}
-      />
-
-      <ManageStagesDialog
-        open={isManageStagesOpen}
-        onOpenChange={setIsManageStagesOpen}
-      />
-
-      <KanbanCardFieldsSheet
-        open={isFieldsSheetOpen}
-        onOpenChange={setIsFieldsSheetOpen}
+      <LeadsViewSettingsSheet
+        open={isSettingsSheetOpen}
+        onOpenChange={setIsSettingsSheetOpen}
+        viewMode={viewMode}
         visibleFields={visibleCardFields}
         onToggleField={handleToggleField}
         onSetFields={handleSetFields}
+        allLeads={leads}
+        filteredLeads={filteredLeads}
       />
     </div>
   );

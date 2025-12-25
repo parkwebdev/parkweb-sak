@@ -18,12 +18,11 @@ import {
   VisibilityState,
 } from '@tanstack/react-table';
 import { useState } from 'react';
-import { Trash01, Download01 } from '@untitledui/icons';
+import { Trash01, Settings01 } from '@untitledui/icons';
 import {
   DataTable,
   DataTablePagination,
   DataTableToolbar,
-  DataTableFacetedFilter,
   DataTableFloatingBar,
 } from '@/components/data-table';
 import { createLeadsColumns, type Lead } from '@/components/data-table/columns/leads-columns';
@@ -43,6 +42,7 @@ interface LeadsTableProps {
   onViewModeChange: (mode: 'kanban' | 'table') => void;
   searchQuery: string;
   onSearchChange: (query: string) => void;
+  onOpenSettings?: () => void;
 }
 
 export const LeadsTable = React.memo(function LeadsTable({
@@ -57,6 +57,7 @@ export const LeadsTable = React.memo(function LeadsTable({
   onViewModeChange,
   searchQuery,
   onSearchChange,
+  onOpenSettings,
 }: LeadsTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -149,14 +150,26 @@ export const LeadsTable = React.memo(function LeadsTable({
         showViewOptions
         searchValue={searchQuery}
         onSearchChange={onSearchChange}
-        endContent={
+        prefix={
           <ViewModeToggle
             viewMode={viewMode}
             onViewModeChange={onViewModeChange}
           />
         }
-      >
-      </DataTableToolbar>
+        endContent={
+          onOpenSettings && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 gap-2"
+              onClick={onOpenSettings}
+            >
+              <Settings01 size={16} />
+              <span className="hidden sm:inline">Customize</span>
+            </Button>
+          )
+        }
+      />
       <DataTable
         table={table}
         columns={columns}
@@ -178,10 +191,6 @@ export const LeadsTable = React.memo(function LeadsTable({
             Delete
           </Button>
         )}
-        <Button variant="outline" size="sm" className="h-7">
-          <Download01 className="mr-2 h-4 w-4" />
-          Export
-        </Button>
       </DataTableFloatingBar>
     </div>
   );
