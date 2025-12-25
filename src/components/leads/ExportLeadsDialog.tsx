@@ -29,7 +29,6 @@ import type { Tables, Enums } from '@/integrations/supabase/types';
 import {
   ExportColumn,
   ExportOptions,
-  DateFormatOption,
   COLUMN_LABELS,
   DEFAULT_COLUMNS,
   ALL_COLUMNS,
@@ -67,7 +66,6 @@ export function ExportLeadsDialog({
   const [customDateEnd, setCustomDateEnd] = useState<Date | undefined>();
   
   // Export settings
-  const [dateFormat, setDateFormat] = useState<DateFormatOption>('iso');
   const [includeHeaders, setIncludeHeaders] = useState(true);
   const [useCurrentView, setUseCurrentView] = useState(false);
 
@@ -79,7 +77,6 @@ export function ExportLeadsDialog({
       dateRange,
       customDateStart,
       customDateEnd,
-      dateFormat,
       includeHeaders,
       useCurrentView,
     };
@@ -133,7 +130,6 @@ export function ExportLeadsDialog({
       dateRange,
       customDateStart,
       customDateEnd,
-      dateFormat,
       includeHeaders,
       useCurrentView,
     };
@@ -326,23 +322,6 @@ export function ExportLeadsDialog({
           {/* Export Settings */}
           <div className="space-y-4">
             <Label className="text-sm font-medium">Export settings</Label>
-            
-            <div className="space-y-2">
-              <Label className="text-xs text-muted-foreground">Date format</Label>
-              <Select
-                value={dateFormat}
-                onValueChange={(value: DateFormatOption) => setDateFormat(value)}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select date format" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="iso">ISO 8601 (YYYY-MM-DD)</SelectItem>
-                  <SelectItem value="us">US (MM/DD/YYYY)</SelectItem>
-                  <SelectItem value="eu">EU (DD/MM/YYYY)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
 
             <div className="flex items-center justify-between">
               <Label className="text-sm">Include column headers</Label>
