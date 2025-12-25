@@ -66,3 +66,63 @@ export function WidgetSkeletonListItem() {
     </div>
   );
 }
+
+/** Quick action card skeleton for HomeView */
+export function WidgetSkeletonCard() {
+  return (
+    <div className="p-4 border rounded-lg animate-pulse">
+      <div className="flex items-start gap-3">
+        <div className="p-2 rounded-lg bg-muted w-10 h-10" />
+        <div className="flex-1 space-y-2">
+          <WidgetSkeleton className="h-4 w-24" />
+          <WidgetSkeleton className="h-3 w-40" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Article content skeleton for NewsView/HelpView */
+export function WidgetSkeletonArticleContent({ lines = 3 }: { lines?: number }) {
+  return (
+    <div className="space-y-2 animate-pulse">
+      {Array.from({ length: lines }).map((_, i) => (
+        <WidgetSkeleton 
+          key={i} 
+          className={cn(
+            "h-4",
+            i === 0 ? "w-full" : i === 1 ? "w-3/4" : "w-5/6"
+          )} 
+        />
+      ))}
+    </div>
+  );
+}
+
+/** Welcome header skeleton for HomeView */
+export function WidgetSkeletonWelcome() {
+  return (
+    <div className="space-y-2">
+      <WidgetSkeleton className="h-8 w-24 bg-foreground/20" />
+      <WidgetSkeleton className="h-5 w-48 bg-foreground/20" />
+    </div>
+  );
+}
+
+/** Booking component skeleton for Suspense fallback */
+export function WidgetSkeletonBooking() {
+  return (
+    <div className="h-32 animate-pulse bg-muted rounded-xl mt-2" />
+  );
+}
+
+/** Link preview skeleton */
+export function WidgetSkeletonLinkPreview() {
+  return (
+    <div className="rounded-lg border border-border bg-muted/30 p-3 animate-pulse">
+      <WidgetSkeleton className="h-3 w-24 mb-2" />
+      <WidgetSkeleton className="h-4 w-3/4 mb-1" />
+      <WidgetSkeleton className="h-3 w-full" />
+    </div>
+  );
+}

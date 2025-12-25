@@ -1,25 +1,21 @@
 /**
- * Loading State Components
+ * Loading State Component
  * 
- * A set of components for displaying loading states with animated
- * spinners, skeletons, and content transitions.
+ * Spinner-based loading state for page/section-level Suspense fallbacks.
+ * For content-aware skeleton loading, use components from skeleton.tsx instead.
  * 
  * @module components/ui/loading-state
  * 
  * @example
  * ```tsx
- * // Basic loading state
- * <LoadingState text="Loading..." />
- * 
- * // Skeleton list
- * <SkeletonList count={5} />
- * 
- * // Content transition wrapper
- * <ContentTransition isLoading={loading}>{content}</ContentTransition>
+ * // Page-level Suspense fallback (structure unknown)
+ * <Suspense fallback={<LoadingState text="Loading..." />}>
+ *   <DynamicPage />
+ * </Suspense>
  * ```
  */
 import * as React from "react";
-import { motion, AnimatePresence } from "motion/react";
+import { motion } from "motion/react";
 import { cn } from "@/lib/utils";
 import { Spinner } from "./spinner";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
@@ -88,128 +84,5 @@ export function LoadingState({
         </motion.p>
       )}
     </motion.div>
-  );
-}
-
-// =============================================================================
-// SKELETON COMPONENTS WITH STAGGER ANIMATION
-// =============================================================================
-
-interface SkeletonProps {
-  className?: string;
-}
-
-export function Skeleton({ className }: SkeletonProps) {
-  return (
-    <div
-      className={cn(
-        "animate-pulse rounded-md bg-muted",
-        className
-      )}
-    />
-  );
-}
-
-interface SkeletonListProps {
-  count?: number;
-  className?: string;
-  itemClassName?: string;
-}
-
-export function SkeletonList({ 
-  count = 3, 
-  className,
-  itemClassName = "h-12"
-}: SkeletonListProps) {
-  const prefersReducedMotion = useReducedMotion();
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: prefersReducedMotion ? 0 : 0.08,
-      },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 8 },
-    visible: { 
-      opacity: 1, 
-      y: 0,
-      transition: springs.smooth 
-    },
-  };
-
-  const reducedItemVariants = {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { duration: 0 } },
-  };
-
-  return (
-    <motion.div 
-      className={cn("space-y-3", className)}
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-    >
-      {Array.from({ length: count }).map((_, i) => (
-        <motion.div
-          key={i}
-          variants={prefersReducedMotion ? reducedItemVariants : itemVariants}
-        >
-          <Skeleton className={cn("w-full", itemClassName)} />
-        </motion.div>
-      ))}
-    </motion.div>
-  );
-}
-
-// =============================================================================
-// CONTENT TRANSITION WRAPPER
-// =============================================================================
-
-interface ContentTransitionProps {
-  isLoading: boolean;
-  children: React.ReactNode;
-  loadingComponent?: React.ReactNode;
-  className?: string;
-}
-
-export function ContentTransition({
-  isLoading,
-  children,
-  loadingComponent,
-  className,
-}: ContentTransitionProps) {
-  const prefersReducedMotion = useReducedMotion();
-
-  return (
-    <div className={className}>
-      <AnimatePresence mode="wait">
-        {isLoading ? (
-          <motion.div
-            key="loading"
-            variants={prefersReducedMotion ? fadeReducedVariants : fadeVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-          >
-            {loadingComponent || <LoadingState />}
-          </motion.div>
-        ) : (
-          <motion.div
-            key="content"
-            variants={prefersReducedMotion ? fadeReducedVariants : fadeVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-          >
-            {children}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
   );
 }

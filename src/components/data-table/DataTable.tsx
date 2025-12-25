@@ -17,6 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 
 interface DataTableProps<TData, TValue> {
@@ -42,7 +43,7 @@ export function DataTable<TData, TValue>({
             <TableRow>
               {columns.map((column, index) => (
                 <TableHead key={index}>
-                  <div className="h-4 w-24 animate-pulse rounded bg-muted" />
+                  <Skeleton className="h-4 w-24" />
                 </TableHead>
               ))}
             </TableRow>
@@ -52,7 +53,7 @@ export function DataTable<TData, TValue>({
               <TableRow key={rowIndex}>
                 {columns.map((_, cellIndex) => (
                   <TableCell key={cellIndex}>
-                    <div className="h-4 w-full animate-pulse rounded bg-muted" />
+                    <Skeleton className="h-4 w-full" />
                   </TableCell>
                 ))}
               </TableRow>

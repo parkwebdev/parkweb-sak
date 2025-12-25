@@ -9,7 +9,7 @@
  */
 
 import React, { Suspense, useMemo, useCallback } from 'react';
-import { WidgetAvatar, WidgetAvatarImage, WidgetAvatarFallback } from '../ui';
+import { WidgetAvatar, WidgetAvatarImage, WidgetAvatarFallback, WidgetSkeletonBooking } from '../ui';
 import { Check, CheckCircle, XCircle, Download01 } from '../icons';
 import { ChatBubbleIcon } from '@/components/agents/ChatBubbleIcon';
 import { LinkPreviewsWidget } from './LinkPreviewsWidget';
@@ -247,7 +247,7 @@ export const MessageBubble = React.memo(function MessageBubble({
 
         {/* Booking components - lazy loaded, rendered below message bubble */}
         {message.dayPicker && onBookingDaySelect && (
-          <Suspense fallback={<div className="h-32 animate-pulse bg-muted rounded-xl mt-2" />}>
+          <Suspense fallback={<WidgetSkeletonBooking />}>
             <div className="mt-2">
               <DayPicker
                 data={message.dayPicker}
@@ -258,7 +258,7 @@ export const MessageBubble = React.memo(function MessageBubble({
           </Suspense>
         )}
         {message.timePicker && onBookingTimeSelect && (
-          <Suspense fallback={<div className="h-32 animate-pulse bg-muted rounded-xl mt-2" />}>
+          <Suspense fallback={<WidgetSkeletonBooking />}>
             <div className="mt-2">
               <TimePicker
                 data={message.timePicker}
@@ -270,7 +270,7 @@ export const MessageBubble = React.memo(function MessageBubble({
           </Suspense>
         )}
         {message.bookingConfirmed && (
-          <Suspense fallback={<div className="h-32 animate-pulse bg-muted rounded-xl mt-2" />}>
+          <Suspense fallback={<WidgetSkeletonBooking />}>
             <div className="mt-2">
               <BookingConfirmed
                 data={message.bookingConfirmed}
